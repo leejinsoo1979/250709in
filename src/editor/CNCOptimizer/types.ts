@@ -18,6 +18,11 @@ export interface Panel {
   boringPositions?: number[]; // 해당 패널의 보링 Y위치 (패널 기준 mm, height 기준 상중하)
   boringDepthPositions?: number[]; // 해당 패널의 보링 X위치 (패널 기준 mm, width 기준 앞뒤)
   groovePositions?: GroovePosition[]; // 바닥판 끼우는 홈 위치
+  // 도어 힌지 보링 전용 필드
+  screwPositions?: number[]; // 나사홀 Y위치 (힌지컵 상하 각 22.5mm)
+  screwDepthPositions?: number[]; // 나사홀 X위치
+  isDoor?: boolean; // 도어 패널 여부
+  isLeftHinge?: boolean; // 힌지 방향 (left=true)
 }
 
 export interface StockPanel {

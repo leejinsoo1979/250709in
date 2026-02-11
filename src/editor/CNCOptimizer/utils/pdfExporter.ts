@@ -319,6 +319,71 @@ export class PDFExporter {
         });
       }
 
+      // ★★★ 도어 패널 보링 표시 (힌지컵 Ø35 + 나사홀 Ø8) ★★★
+      if (isDoorPanel && panel.boringPositions && panel.boringPositions.length > 0) {
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
+
+        // 힌지컵 좌표
+        const cupYPositions = panel.boringPositions;
+        const cupXPositions = (panel as any).boringDepthPositions || [];
+        // 나사홀 좌표
+        const screwYPositions = (panel as any).screwPositions || [];
+        const screwXPositions = (panel as any).screwDepthPositions || [];
+
+        const cupRadiusPdf = (35 / 2) * scale; // Ø35mm
+        const screwRadiusPdf = (8 / 2) * scale; // Ø8mm
+
+        this.pdf.setDrawColor(0, 0, 0);
+        this.pdf.setFillColor(255, 255, 255);
+        this.pdf.setLineWidth(0.15);
+
+        // 시트→PDF 좌표 변환 헬퍼
+        const toPdfCoords = (posMmX: number, posMmY: number): [number, number] => {
+          let sheetX: number, sheetY: number;
+          if (panel.rotated) {
+            const placedWidth = originalHeight;
+            const placedHeight = originalWidth;
+            const scaleX = placedWidth / originalWidth;
+            const scaleY = placedHeight / originalHeight;
+            sheetX = panel.x + posMmX * scaleX;
+            sheetY = panel.y + posMmY * scaleY;
+          } else {
+            sheetX = panel.x + posMmX;
+            sheetY = panel.y + posMmY;
+          }
+          if (isRotated) {
+            return [offsetX + sheetY * scale, offsetY + (result.stockPanel.width - sheetX) * scale];
+          } else {
+            return [offsetX + sheetX * scale, offsetY + sheetY * scale];
+          }
+        };
+
+        // 힌지컵 그리기 (Ø35)
+        cupXPositions.forEach((cx: number) => {
+          cupYPositions.forEach((cy: number) => {
+            const [px, py] = toPdfCoords(cx, cy);
+            this.pdf.circle(px, py, cupRadiusPdf, 'FD');
+            // 중심 십자
+            this.pdf.setLineWidth(0.05);
+            const cs = 2 * scale;
+            this.pdf.line(px - cs, py, px + cs, py);
+            this.pdf.line(px, py - cs, px, py + cs);
+            this.pdf.setLineWidth(0.15);
+          });
+        });
+
+        // 나사홀 그리기 (Ø8)
+        screwXPositions.forEach((sx: number) => {
+          screwYPositions.forEach((sy: number) => {
+            const [px, py] = toPdfCoords(sx, sy);
+            this.pdf.circle(px, py, screwRadiusPdf, 'FD');
+          });
+        });
+
+        this.pdf.setLineDashPattern([], 0);
+      }
+
       // ★★★ 홈가공 표시 ★★★
       // 가구 측판 백패널 홈
       const isFurnitureSidePanel = (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))

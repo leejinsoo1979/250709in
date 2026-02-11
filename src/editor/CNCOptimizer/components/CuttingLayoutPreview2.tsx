@@ -869,8 +869,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       // ★★★ 보링 표시 (panel.boringPositions 직접 사용 - 2D 뷰어와 동일한 데이터) ★★★
       // 패널에 boringPositions가 있으면 해당 측판에 선반핀 보링 표시
-      // 도어는 보링 대상이 아님 (힌지홀은 별도 처리)
-      const isDoorPanel = panel.name.includes('도어') || panel.name.includes('Door');
+      // 도어 패널은 별도 렌더링 블록에서 처리 (힌지컵 35mm + 나사홀 8mm)
+      const isDoorPanel = panel.isDoor === true || panel.name.includes('도어') || panel.name.includes('Door');
       console.log(`[PANEL CHECK] ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, isDoor=${isDoorPanel}, boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions);
       if (showBorings && panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel) {
         ctx.save();
@@ -1133,6 +1133,84 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               ctx.fill();
               ctx.stroke();
             }
+          });
+        });
+
+        ctx.restore();
+      }
+
+      // ★★★ 도어 패널 보링 표시 (힌지컵 Ø35 + 나사홀 Ø8) ★★★
+      if (showBorings && isDoorPanel && panel.boringPositions && panel.boringPositions.length > 0) {
+        ctx.save();
+
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
+        const placedWidth = panel.rotated ? originalHeight : originalWidth;
+        const placedHeight = panel.rotated ? originalWidth : originalHeight;
+
+        // 힌지컵 좌표 (boringPositions=Y, boringDepthPositions=X)
+        const cupYPositions = panel.boringPositions; // 힌지컵 Y좌표들
+        const cupXPositions = panel.boringDepthPositions || []; // 힌지컵 X좌표 (1개)
+        // 나사홀 좌표 (screwPositions=Y, screwDepthPositions=X)
+        const screwYPositions = panel.screwPositions || [];
+        const screwXPositions = panel.screwDepthPositions || [];
+
+        // 힌지컵 그리기 (Ø35mm → 반지름 17.5mm)
+        const cupRadius = 35 / 2; // 17.5mm
+        const screwRadius = 8 / 2; // 4mm
+
+        // 도어 보링 좌표 변환 헬퍼
+        const toSheetCoords = (posMmX: number, posMmY: number): [number, number] => {
+          if (panel.rotated) {
+            const scaleX = placedWidth / originalWidth;
+            const scaleY = placedHeight / originalHeight;
+            return [x + posMmX * scaleX, y + posMmY * scaleY];
+          } else {
+            return [x + posMmX, y + posMmY];
+          }
+        };
+
+        // 힌지컵 렌더링 (Ø35mm 원)
+        cupXPositions.forEach((cupX) => {
+          cupYPositions.forEach((cupY) => {
+            const [bx, by] = toSheetCoords(cupX, cupY);
+
+            // 흰색 채우기 + 검정 테두리
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.5 / (baseScale * scale);
+
+            ctx.beginPath();
+            ctx.arc(bx, by, cupRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 중심 십자 표시
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 0.5 / (baseScale * scale);
+            const crossSize = 4;
+            ctx.beginPath();
+            ctx.moveTo(bx - crossSize, by);
+            ctx.lineTo(bx + crossSize, by);
+            ctx.moveTo(bx, by - crossSize);
+            ctx.lineTo(bx, by + crossSize);
+            ctx.stroke();
+          });
+        });
+
+        // 나사홀 렌더링 (Ø8mm 원)
+        screwXPositions.forEach((screwX) => {
+          screwYPositions.forEach((screwY) => {
+            const [bx, by] = toSheetCoords(screwX, screwY);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1 / (baseScale * scale);
+
+            ctx.beginPath();
+            ctx.arc(bx, by, screwRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
           });
         });
 

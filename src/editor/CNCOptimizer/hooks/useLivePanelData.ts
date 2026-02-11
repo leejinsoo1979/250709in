@@ -89,11 +89,12 @@ export function useLivePanelData() {
         const hasDoor = placedModule.hasDoor || false;
         const material = placedModule.material || 'PB';
         const color = placedModule.color || 'MW';
+        const moduleHingePosition = (placedModule as any).hingePosition || 'left';
 
 
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
-        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t);
+        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition);
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
         console.log(`Module ${moduleIndex}: Total panel count:`, allPanelsList.length);
@@ -450,10 +451,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const hasDoor = placedModule.hasDoor || false;
       const material = placedModule.material || 'PB';
       const color = placedModule.color || 'MW';
+      const moduleHingePosition = (placedModule as any).hingePosition || 'left';
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
-      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t);
+      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition);
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
@@ -504,6 +506,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
         // 서랍 앞판: "서랍1 앞판" 등 - 마이다 보링 대상
         const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
+        // 도어 패널 여부
+        const isDoorPanel = panel.isDoor === true || panel.name.includes('도어') || panel.name.includes('Door');
         const isFurnitureSidePanel = (
           panel.name.includes('좌측') ||
           panel.name.includes('우측') ||
@@ -620,6 +624,24 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           panelBoringDepthPositions = panel.boringDepthPositions;
         }
 
+        // ★★★ 도어 패널 보링 처리 ★★★
+        let screwPositions: number[] | undefined = undefined;
+        let screwDepthPositions: number[] | undefined = undefined;
+
+        if (isDoorPanel) {
+          // 도어 패널: 힌지컵 보링 + 나사홀
+          if (panel.boringPositions && panel.boringPositions.length > 0) {
+            panelBoringPositions = panel.boringPositions;
+            panelBoringDepthPositions = panel.boringDepthPositions;
+            console.log(`[OPT BORING] ★ 도어 패널 감지! "${panel.name}" - 힌지컵 boringPositions:`, panelBoringPositions);
+          }
+          if (panel.screwPositions && panel.screwPositions.length > 0) {
+            screwPositions = panel.screwPositions;
+            screwDepthPositions = panel.screwDepthPositions;
+            console.log(`[OPT BORING]   나사홀 screwPositions:`, screwPositions);
+          }
+        }
+
         return {
           id: `m${moduleIndex}_p${panelIndex}`,
           name: panel.name,
@@ -632,7 +654,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           grain: grainValue,
           boringPositions: panelBoringPositions,
           boringDepthPositions: panelBoringDepthPositions, // 서랍 측판/앞판만
-          groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
+          groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
+          // 도어 전용 필드
+          screwPositions: isDoorPanel ? screwPositions : undefined,
+          screwDepthPositions: isDoorPanel ? screwDepthPositions : undefined,
+          isDoor: isDoorPanel || undefined,
+          isLeftHinge: isDoorPanel ? panel.isLeftHinge : undefined,
         };
       });
 
