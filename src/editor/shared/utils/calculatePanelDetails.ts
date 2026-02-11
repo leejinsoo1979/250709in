@@ -563,11 +563,18 @@ export const calculatePanelDetails = (
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
     // 도어는 상부+하부 섹션 전체를 한장으로 덮는 구조
-    // → 브라켓 타공도 전체 높이(한몸통) 기준으로 계산
+    // → 상부+하부 합산 높이를 한몸통으로 계산하여 타공점 결정
+    // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환
     const doorGapForBracket = 2;
     const doorH = height - doorGapForBracket * 2;
     const hingeYPositions = calculateHingePositions(doorH);
     const bracketYPositions = hingeYPositions.map(y => y + doorGapForBracket);
+
+    const allSidePanels = [...panels.upper, ...panels.lower];
+    const isLeftSidePanel = (name: string) =>
+      (name.includes('좌측') || name.includes('좌측판')) && !name.includes('서랍');
+    const isRightSidePanel = (name: string) =>
+      (name.includes('우측') || name.includes('우측판')) && !name.includes('서랍');
 
     // 분리 측판 가구 여부
     const isSplitSidePanelForBracket =
@@ -575,57 +582,71 @@ export const calculatePanelDetails = (
       moduleData.id.includes('2drawer-hanging') ||
       moduleData.id.includes('2hanging');
 
-    // 분리 측판 가구: 전체 높이짜리 통짜 측판을 브라켓 타공용으로 별도 생성
-    // 통짜 측판 가구: 기존 측판에 브라켓 타공 데이터 주입
+    // 하부 섹션 높이 계산 (분리 측판에서 Y좌표 변환용)
+    let lowerSectionHeight = 0;
     if (isSplitSidePanelForBracket && sections.length >= 2) {
-      const createBracketSidePanel = (side: string) => ({
-        name: `${side} (브라켓타공)`,
-        width: customDepth,
-        height: height, // 전체 높이 (한몸통)
-        thickness: basicThickness,
-        material: 'PB',
-        bracketBoringPositions: bracketYPositions,
-        bracketBoringDepthPositions: [20, 52],
-        isBracketSide: true,
-      });
-
-      if (moduleData.id.includes('dual')) {
-        panels.upper.push(createBracketSidePanel('좌측판') as any);
-        panels.upper.push(createBracketSidePanel('우측판') as any);
+      const lowerSection = sections[0];
+      if (lowerSection.heightType === 'absolute') {
+        lowerSectionHeight = lowerSection.height || 0;
       } else {
-        const isLeftHinge = (hingePosition ?? 'left') === 'left';
-        panels.upper.push(createBracketSidePanel(isLeftHinge ? '좌측판' : '우측판') as any);
+        const variableSecs = sections.filter(s => s.heightType !== 'absolute');
+        const totalPct = variableSecs.reduce((sum, s) => sum + (s.height || s.heightRatio || 100), 0);
+        const pct = (lowerSection.height || lowerSection.heightRatio || 100) / totalPct;
+        const fixedSecs = sections.filter(s => s.heightType === 'absolute');
+        const totalFixed = fixedSecs.reduce((sum, s) => sum + (s.height || 0), 0);
+        lowerSectionHeight = (height - totalFixed) * pct;
       }
-    } else {
-      // 통짜 측판: 기존 측판에 직접 주입
-      const allSidePanels = [...panels.upper, ...panels.lower];
-      const isLeftSidePanel = (name: string) =>
-        (name.includes('좌측') || name.includes('좌측판')) && !name.includes('서랍');
-      const isRightSidePanel = (name: string) =>
-        (name.includes('우측') || name.includes('우측판')) && !name.includes('서랍');
+    }
 
-      const injectBracketBoring = (panel: any) => {
+    // 측판에 브라켓 타공 주입
+    const injectBracketBoring = (panel: any) => {
+      if (isSplitSidePanelForBracket && sections.length >= 2) {
+        // 분리 측판: 전체 기준 Y좌표를 해당 섹션 범위로 필터링 후 상대좌표 변환
+        const isLowerPanel = panel.name.includes('(하)');
+        const isUpperPanel = panel.name.includes('(상)');
+
+        if (isLowerPanel) {
+          // 하부 측판: 0 ~ lowerSectionHeight 범위
+          const filtered = bracketYPositions.filter(y => y < lowerSectionHeight);
+          if (filtered.length > 0) {
+            panel.bracketBoringPositions = filtered;
+            panel.bracketBoringDepthPositions = [20, 52];
+            panel.isBracketSide = true;
+          }
+        } else if (isUpperPanel) {
+          // 상부 측판: lowerSectionHeight 이상 → 상대좌표로 변환
+          const filtered = bracketYPositions
+            .filter(y => y >= lowerSectionHeight)
+            .map(y => y - lowerSectionHeight);
+          if (filtered.length > 0) {
+            panel.bracketBoringPositions = filtered;
+            panel.bracketBoringDepthPositions = [20, 52];
+            panel.isBracketSide = true;
+          }
+        }
+      } else {
+        // 통짜 측판: 전체 기준 Y좌표 그대로
         panel.bracketBoringPositions = bracketYPositions;
         panel.bracketBoringDepthPositions = [20, 52];
         panel.isBracketSide = true;
-      };
-
-      if (moduleData.id.includes('dual')) {
-        allSidePanels.forEach((panel: any) => {
-          if (isLeftSidePanel(panel.name) || isRightSidePanel(panel.name)) {
-            injectBracketBoring(panel);
-          }
-        });
-      } else {
-        const isLeftHinge = (hingePosition ?? 'left') === 'left';
-        allSidePanels.forEach((panel: any) => {
-          if (isLeftHinge && isLeftSidePanel(panel.name)) {
-            injectBracketBoring(panel);
-          } else if (!isLeftHinge && isRightSidePanel(panel.name)) {
-            injectBracketBoring(panel);
-          }
-        });
       }
+    };
+
+    if (moduleData.id.includes('dual')) {
+      allSidePanels.forEach((panel: any) => {
+        if (isLeftSidePanel(panel.name) || isRightSidePanel(panel.name)) {
+          injectBracketBoring(panel);
+        }
+      });
+    } else {
+      const isLeftHinge = (hingePosition ?? 'left') === 'left';
+      allSidePanels.forEach((panel: any) => {
+        if (isLeftHinge && isLeftSidePanel(panel.name)) {
+          injectBracketBoring(panel);
+        } else if (!isLeftHinge && isRightSidePanel(panel.name)) {
+          injectBracketBoring(panel);
+        }
+      });
     }
 
   }
