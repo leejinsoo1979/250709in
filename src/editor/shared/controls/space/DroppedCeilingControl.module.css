@@ -1,3 +1,7 @@
+/* ================================
+   DroppedCeilingControl — Modern SaaS v2
+   ================================ */
+
 .droppedCeilingControl {
   background: var(--theme-surface);
   border-radius: 8px;
@@ -9,33 +13,35 @@
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s ease;
 }
 
 .header:hover {
-  background-color: var(--theme-hover);
+  background-color: var(--theme-background-secondary);
 }
 
 .indicator {
   width: 4px;
-  height: 16px;
+  height: 14px;
   background: var(--theme-primary);
   border-radius: 2px;
   margin-right: 12px;
 }
 
 .label {
-  font-size: 14px;
-  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--theme-text);
   margin: 0;
   flex: 1;
+  letter-spacing: -0.01em;
 }
 
 .expandIcon {
   transform: rotate(0deg);
-  transition: transform 0.2s;
-  color: var(--theme-text-secondary);
+  transition: transform 0.2s ease;
+  color: var(--theme-text-muted);
 }
 
 .expandIcon.expanded {
@@ -46,8 +52,9 @@
   padding: 0 16px 16px;
 }
 
+/* ── Enable Toggle ── */
 .enableToggle {
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--theme-border);
 }
 
@@ -63,24 +70,25 @@
 
 .toggleSwitch {
   position: relative;
-  width: 40px;
-  height: 24px;
+  width: 36px;
+  height: 20px;
   background: var(--theme-border);
-  border-radius: 12px;
-  margin-right: 12px;
-  transition: background-color 0.2s;
+  border-radius: 10px;
+  margin-right: 10px;
+  transition: background-color 0.2s ease;
 }
 
 .toggleSwitch::after {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   background: white;
   border-radius: 50%;
   top: 2px;
   left: 2px;
-  transition: transform 0.2s;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .checkbox:checked + .toggleSwitch {
@@ -92,79 +100,97 @@
 }
 
 .toggleText {
-  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 13px;
   color: var(--theme-text);
+  font-weight: 500;
 }
 
+/* ── Position Group (Segmented Control) ── */
 .positionGroup {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .inputLabel {
-  font-size: 12px;
-  color: var(--theme-text-secondary);
-  margin-bottom: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11px;
   font-weight: 500;
+  color: var(--theme-text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .toggleGroup {
   display: flex;
-  gap: 8px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 8px;
-  border: 1px solid var(--theme-border);
-  background: var(--theme-surface);
-  color: var(--theme-text);
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.2s;
-  border-radius: 4px;
-  font-size: 14px;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
-.toggleButton:hover {
-  background: var(--theme-hover);
+.toggleButton:hover:not(.active) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .toggleButton.active {
-  background: var(--theme-primary) !important;
-  color: white !important;
-  border-color: var(--theme-primary) !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
 }
 
+/* ── Number Input ── */
 .numberInput {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .inputGroup {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .inputButton {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--theme-border);
   background: var(--theme-surface);
-  color: var(--theme-text);
+  color: var(--theme-text-muted);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  transition: all 0.2s;
+  font-size: 16px;
+  transition: all 0.15s ease;
 }
 
 .inputButton:hover:not(:disabled) {
-  background: var(--theme-hover);
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-border-hover);
+  color: var(--theme-text);
 }
 
 .inputButton:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -177,45 +203,57 @@
 
 .inputField input {
   width: 100%;
-  padding: 8px 40px 8px 12px;
+  padding: 7px 36px 7px 10px;
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text);
+  background: var(--theme-background-secondary);
+  transition: border-color 0.15s ease;
 }
 
 .inputField input:focus {
   outline: none;
   border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
 }
 
 .inputUnit {
   position: absolute;
-  right: 12px;
-  font-size: 12px;
-  color: var(--theme-text-secondary);
+  right: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: var(--theme-text-muted);
   pointer-events: none;
+  font-weight: 500;
 }
 
+/* ── Info Panel ── */
 .infoPanel {
-  background: var(--theme-background);
-  padding: 12px;
-  margin-top: 16px;
-  border-radius: 4px;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
+  padding: 10px 12px;
+  margin-top: 14px;
+  border-radius: 6px;
 }
 
 .infoRow {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
-  font-size: 13px;
+  padding: 3px 0;
+  font-size: 12px;
 }
 
 .infoLabel {
-  color: var(--theme-text-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  color: var(--theme-text-muted);
+  font-weight: 500;
 }
 
 .infoValue {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   color: var(--theme-text);
-  font-weight: 500;
+  font-weight: 600;
 }

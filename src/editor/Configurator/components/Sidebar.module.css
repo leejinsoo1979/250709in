@@ -1,41 +1,48 @@
+/* ================================
+   Sidebar — Modern SaaS v2
+   Clean icon sidebar with refined active states
+   ================================ */
+
 .sidebar {
   position: fixed;
   left: 0;
-  top: var(--configurator-header-height, 56px); /* CSS 변수 사용 */
+  top: var(--configurator-header-height, 56px);
   bottom: 0;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
-  width: var(--sidebar-icon-width, 64px); /* CSS 변수 사용 */
+  width: var(--sidebar-icon-width, 64px);
   display: flex;
   flex-direction: column;
   z-index: 90;
   transition: all 0.3s ease;
+  -webkit-font-smoothing: antialiased;
 }
 
 .sidebar.open {
   box-shadow: var(--theme-shadow);
 }
 
+/* ── Tab List ── */
 .tabList {
   flex: 1;
-  padding: 16px 0;
+  padding: 12px 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
 }
 
 .tabButton {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: none;
   border: none;
-  padding: 12px 8px;
+  padding: 10px 8px;
   margin: 0 8px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   position: relative;
 }
 
@@ -57,7 +64,7 @@
   right: 0;
   bottom: 0;
   background: var(--theme-primary);
-  opacity: 0.15;
+  opacity: 0.1;
   border-radius: 8px;
   z-index: 0;
   pointer-events: none;
@@ -70,18 +77,19 @@
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 24px;
+  height: 20px;
   background: var(--theme-primary);
   border-radius: 0 2px 2px 0;
 }
 
+/* ── Tab Icon ── */
 .tabIcon {
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--theme-text-muted);
-  transition: color 0.2s ease;
-  opacity: 0.7;
+  transition: color 0.15s ease;
+  opacity: 0.65;
   position: relative;
   z-index: 1;
 }
@@ -93,34 +101,37 @@
 }
 
 .tabButton:hover .tabIcon {
-  color: var(--theme-primary);
+  color: var(--theme-text-secondary);
   opacity: 0.9;
 }
 
+/* ── Tab Label ── */
 .tabLabel {
-  font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--theme-text-secondary);
-  transition: color 0.2s ease;
-  line-height: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  transition: color 0.15s ease;
+  line-height: 14px;
   text-align: center;
   position: relative;
   z-index: 1;
+  letter-spacing: -0.01em;
 }
 
 .tabButton.active .tabLabel {
   color: var(--theme-primary) !important;
-  font-weight: 500;
+  font-weight: 600;
   z-index: 1;
 }
 
 .tabButton:hover .tabLabel {
-  color: var(--theme-text);
+  color: var(--theme-text-secondary);
 }
 
+/* ── User Section ── */
 .userSection {
-  padding: 16px;
+  padding: 14px;
   border-top: 1px solid var(--theme-border);
   display: flex;
   justify-content: center;
@@ -133,24 +144,23 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   aspect-ratio: 1/1;
   border-radius: 50%;
-  background: var(--theme-border);
+  background: var(--theme-background-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary);
-  border: 2px solid var(--theme-surface);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: var(--theme-text-muted);
+  border: 2px solid var(--theme-border);
   overflow: hidden;
 }
 
 .avatar svg {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* 비율을 유지하면서 부모 요소에 맞춤 */
+  object-fit: contain;
 }
 
 .profileImage {
@@ -161,70 +171,68 @@
 }
 
 .settingsButton {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid #ffffff;
+  border: 1px solid var(--theme-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .settingsButton:hover {
-  background: var(--theme-primary);
-  color: white;
-  transform: scale(1.05);
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+  border-color: var(--theme-border-hover);
 }
 
 .onlineIndicator {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 16px;
-  height: 16px;
-  background: var(--theme-primary);
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  background: var(--theme-success, #22c55e);
   border-radius: 50%;
   border: 2px solid var(--theme-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-surface);
 }
 
+/* ── Fold Button ── */
 .foldButton {
   position: absolute;
-  right: -16px;
+  right: -14px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 100;
-  width: 32px;
-  height: 40px;
+  width: 28px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-background-secondary);
-  border: none;
-  border-radius: 0 8px 8px 0;
-  box-shadow: var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.04));
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 16px;
   color: var(--theme-text-muted);
   font-weight: 400;
-  transition: background 0.2s, color 0.2s;
-}
-.foldButton:hover {
-  background: var(--theme-border);
-  color: var(--theme-info);
+  transition: all 0.15s ease;
 }
 
-/* Modal Styles */
+.foldButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+}
+
+/* ── Modal ── */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -241,41 +249,31 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modalContent {
   background: var(--theme-surface);
-  padding: 32px;
-  border-radius: 16px;
-  max-width: 440px;
+  padding: 28px;
+  border-radius: 14px;
+  max-width: 420px;
   width: 90%;
-  box-shadow: var(--popup-shadow);
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.25s ease;
   border: 1px solid var(--theme-border);
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modalIcon {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 20px;
-  background: var(--theme-primary-light);
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 18px;
+  background: var(--theme-background-secondary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -284,85 +282,85 @@
 }
 
 .modalTitle {
-  margin: 0 0 12px 0;
-  font-size: 20px;
+  margin: 0 0 10px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 18px;
   font-weight: 600;
   color: var(--theme-text);
   text-align: center;
   line-height: 1.4;
+  letter-spacing: -0.02em;
 }
 
 .modalDescription {
-  margin: 0 0 28px 0;
-  color: var(--theme-text-secondary);
+  margin: 0 0 24px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  color: var(--theme-text-muted);
   line-height: 1.6;
   text-align: center;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .modalActions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
 }
 
 .modalButtonCancel {
-  padding: 10px 24px;
+  padding: 9px 20px;
   border: 1px solid var(--theme-border);
   border-radius: 8px;
   background: var(--theme-surface);
   color: var(--theme-text);
   cursor: pointer;
-  font-size: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  transition: all 0.15s ease;
 }
 
 .modalButtonCancel:hover {
   background: var(--theme-background-secondary);
-  border-color: var(--theme-text-secondary);
+  border-color: var(--theme-border-hover);
 }
 
 .modalButtonConfirm {
-  padding: 10px 24px;
+  padding: 9px 20px;
   border: none;
   border-radius: 8px;
   background: var(--theme-primary);
   color: white;
   cursor: pointer;
-  font-size: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  transition: all 0.15s ease;
 }
 
 .modalButtonConfirm:hover {
-  background: var(--theme-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--theme-primary-light);
+  opacity: 0.9;
 }
 
-/* 모바일 - 사이드바 완전 숨김 (하단 탭바 사용) */
+/* ── Responsive ── */
 @media (max-width: 767px) {
   .sidebar {
     display: none !important;
   }
 }
 
-/* 반응형 디자인 - 태블릿 Portrait */
 @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
   .sidebar {
     width: 56px;
   }
 
   .tabButton {
-    padding: 10px 6px;
+    padding: 8px 6px;
     margin: 0 4px;
   }
 
   .tabLabel {
-    font-size: 11px;
+    font-size: 9px;
   }
 
   .userSection {
@@ -370,14 +368,13 @@
   }
 
   .avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 
   .onlineIndicator {
-    width: 14px;
-    height: 14px;
-    right: 4px;
+    width: 8px;
+    height: 8px;
   }
 
   .modalContent {
@@ -386,11 +383,11 @@
   }
 
   .modalTitle {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .modalDescription {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .modalActions {
@@ -402,6 +399,3 @@
     width: 100%;
   }
 }
-
-/* 모바일 Landscape - 사이드바 숨김 (하단 탭바 사용) */
-/* max-width: 767px 규칙에서 이미 display: none 처리됨 */
