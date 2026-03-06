@@ -879,7 +879,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* 카메라 설정 드롭다운 (3D only) */}
-            <div className={styles.dropdownContainer} ref={cameraMenuRef}>
+            {viewMode === '3D' && <div className={styles.dropdownContainer} ref={cameraMenuRef}>
               <button
                 className={styles.actionButton}
                 onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
@@ -923,7 +923,7 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                 </div>
               )}
-            </div>
+            </div>}
 
             {/* 그림자(3D) / 다크(2D) 토글 스위치 */}
             <div className={styles.headerToggleGroup}>
