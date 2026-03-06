@@ -415,13 +415,20 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return 2.0;
   }, [isEmbedded, isMobile]);
 
-  // 카메라 타겟 Y 좌표 계산 (모바일에서는 화면을 위로 올리기 위해 타겟을 낮춤)
+  // 하단 가구 편집 패널이 열려있는지 확인
+  const isFurnitureEditPanelOpen = activePopup?.type === 'furnitureEdit' && !!activePopup?.id;
+
+  // 카메라 타겟 Y 좌표 계산
+  // 하단 패널이 열리면 타겟을 위로 올려서 가구가 패널에 가려지지 않게 함
   const targetY = useMemo(() => {
     const height = spaceInfo?.height || 2400;
-    // 모바일에서는 0.42 (약간 아래), 데스크탑은 0.5 (중앙)
-    const ratio = isMobile ? 0.42 : 0.5;
+    let ratio = isMobile ? 0.42 : 0.5;
+    // 하단 편집 패널 열림 → 타겟을 위로 올림 (비율 +0.08)
+    if (isFurnitureEditPanelOpen) {
+      ratio += isMobile ? 0.06 : 0.08;
+    }
     return mmToThreeUnits(height * ratio);
-  }, [spaceInfo?.height, isMobile]);
+  }, [spaceInfo?.height, isMobile, isFurnitureEditPanelOpen]);
 
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
