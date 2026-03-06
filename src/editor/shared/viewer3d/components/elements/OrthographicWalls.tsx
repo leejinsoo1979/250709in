@@ -120,8 +120,8 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         -hw,  hh, 0, -hw, -hh, 0,
       ]);
       const mat = new LineMaterial({
-        color: 0x222222,
-        linewidth: 2,
+        color: 0x000000,
+        linewidth: 3.5,
         resolution: new THREE.Vector2(size.width, size.height),
       });
       const l = new Line2(geo, mat);
