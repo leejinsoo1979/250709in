@@ -6,6 +6,69 @@
 import { ProjectSummary } from '../firebase/types';
 
 /**
+ * CSS 변수에서 테마 색상 읽기
+ */
+const getThemeColor = (): string => {
+  const root = document.documentElement;
+  const color = getComputedStyle(root).getPropertyValue('--theme-primary').trim();
+  return color || '#10b981';
+};
+
+/**
+ * 테마 색상 그라데이션 배경 + 흰색 텍스트로 빈 디자인 썸네일 그리기
+ */
+const drawEmptyDesignThumbnail = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  sizeText?: string,
+): void => {
+  const themeColor = getThemeColor();
+
+  // 테마 색상 그라데이션 배경
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, themeColor);
+  gradient.addColorStop(1, adjustBrightness(themeColor, -30));
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  const fontMain = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  ctx.textAlign = 'center';
+
+  if (sizeText) {
+    // 공간 크기 (흰색 볼드)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.font = `700 ${Math.round(width * 0.045)}px ${fontMain}`;
+    ctx.fillText(sizeText, width / 2, height / 2 - Math.round(height * 0.04));
+
+    // 안내 텍스트 (흰색 라이트)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.font = `400 ${Math.round(width * 0.033)}px ${fontMain}`;
+    ctx.fillText('현재 배치된 가구가 없습니다.', width / 2, height / 2 + Math.round(height * 0.05));
+  } else {
+    // 공간 정보 없을 때
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.font = `700 ${Math.round(width * 0.06)}px ${fontMain}`;
+    ctx.fillText('디자인', width / 2, height / 2 + Math.round(height * 0.02));
+  }
+};
+
+/**
+ * 색상 밝기 조절 헬퍼 (hex → 어둡게/밝게)
+ */
+const adjustBrightness = (hex: string, amount: number): string => {
+  let color = hex.replace('#', '');
+  if (color.length === 3) {
+    color = color.split('').map(c => c + c).join('');
+  }
+  const num = parseInt(color, 16);
+  const r = Math.min(255, Math.max(0, ((num >> 16) & 0xff) + amount));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
+  const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+};
+
+/**
  * 프로젝트의 가구 배치를 기반으로 썸네일 생성
  */
 export async function generateProjectThumbnail(project: ProjectSummary): Promise<string | null> {
@@ -13,7 +76,7 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
     // Canvas 요소 생성
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) {
       console.error('Canvas 컨텍스트를 생성할 수 없습니다');
       return null;
@@ -24,8 +87,11 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
     canvas.width = thumbnailSize;
     canvas.height = thumbnailSize;
 
-    // 배경 그리기
-    ctx.fillStyle = '#f9fafb';
+    // 배경 그리기 (세련된 그라데이션)
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, thumbnailSize);
+    bgGradient.addColorStop(0, '#ffffff');
+    bgGradient.addColorStop(1, '#f8fafc');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, thumbnailSize, thumbnailSize);
 
     // 공간 정보가 있는 경우
@@ -35,7 +101,7 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
       const spaceHeight = project.spaceInfo?.height || project.spaceSize?.height || 2400;
 
       // 스케일 계산 (패딩 포함)
-      const padding = 40;
+      const padding = 60;
       const availableSize = thumbnailSize - (padding * 2);
       const scale = Math.min(availableSize / spaceWidth, availableSize / spaceDepth);
 
@@ -45,35 +111,44 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
       const floorX = (thumbnailSize - floorWidth) / 2;
       const floorY = (thumbnailSize - floorDepth) / 2;
 
-      // 바닥 그리기
-      ctx.fillStyle = '#e5e7eb';
+      // 바닥 그리기 (연한 그림자 효과와 함께)
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.03)';
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(floorX, floorY, floorWidth, floorDepth);
+      ctx.shadowBlur = 0;
 
-      // 그리드 라인 그리기
-      ctx.strokeStyle = '#d1d5db';
+      // 외곽선
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(floorX, floorY, floorWidth, floorDepth);
+
+      // 그리드 라인 (더 은은하게)
+      ctx.strokeStyle = '#f1f5f9';
       ctx.lineWidth = 0.5;
-      
-      // 가로 라인
+
       const gridSpacing = 500 * scale;
-      for (let y = floorY; y <= floorY + floorDepth; y += gridSpacing) {
+      for (let y = floorY + gridSpacing; y < floorY + floorDepth; y += gridSpacing) {
         ctx.beginPath();
         ctx.moveTo(floorX, y);
         ctx.lineTo(floorX + floorWidth, y);
         ctx.stroke();
       }
-      
-      // 세로 라인
-      for (let x = floorX; x <= floorX + floorWidth; x += gridSpacing) {
+      for (let x = floorX + gridSpacing; x < floorX + floorWidth; x += gridSpacing) {
         ctx.beginPath();
         ctx.moveTo(x, floorY);
         ctx.lineTo(x, floorY + floorDepth);
         ctx.stroke();
       }
 
-      // 벽 그리기 (선택적)
-      ctx.strokeStyle = '#6b7280';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(floorX, floorY, floorWidth, floorDepth);
+      // 텍스트 스타일링 (Inter 또는 시스템 폰트)
+      const fontMain = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+      // 상단 치수 정보
+      ctx.fillStyle = '#1e293b';
+      ctx.font = `600 16px ${fontMain}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${Math.round(spaceWidth)} × ${Math.round(spaceHeight)} × ${Math.round(spaceDepth)}mm`, thumbnailSize / 2, floorY - 25);
 
       // 가구 그리기
       if (project.placedModules && project.placedModules.length > 0) {
@@ -87,8 +162,8 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
             const moduleDepth = (module.depth || 600) * scale;
 
             // 가구 그림자
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.fillRect(moduleX + 2, moduleZ + 2, moduleWidth, moduleDepth);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(moduleX + 1, moduleZ + 1, moduleWidth, moduleDepth);
 
             // 가구 본체
             const furnitureColor = getFurnitureColor(module.type || module.moduleType);
@@ -96,70 +171,31 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
             ctx.fillRect(moduleX, moduleZ, moduleWidth, moduleDepth);
 
             // 가구 테두리
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 0.5;
             ctx.strokeRect(moduleX, moduleZ, moduleWidth, moduleDepth);
-
-            // 가구 하이라이트 (3D 효과)
-            const gradient = ctx.createLinearGradient(moduleX, moduleZ, moduleX, moduleZ + moduleDepth);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(moduleX, moduleZ, moduleWidth, moduleDepth * 0.3);
           } catch (error) {
             console.error('가구 렌더링 오류:', error, module);
           }
         });
       } else {
-        // 가구가 없는 경우 빈 공간 표시
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('빈 공간', thumbnailSize / 2, thumbnailSize / 2);
-      }
-
-      // 프로젝트 정보 표시 (선택적)
-      if (project.furnitureCount && project.furnitureCount > 0) {
-        // 배지 배경
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.9)';
-        const badgeWidth = 60;
-        const badgeHeight = 24;
-        const badgeX = thumbnailSize - badgeWidth - 10;
-        const badgeY = 10;
-        
-        // 둥근 모서리 배지
-        ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 12);
-        ctx.fill();
-
-        // 배지 텍스트
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${project.furnitureCount}개`, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2);
+        // 가구가 없는 경우: 테마 색상 기반 통일 썸네일
+        const sizeText = `${Math.round(spaceWidth)} × ${Math.round(spaceDepth)} × ${Math.round(spaceHeight)}mm`;
+        drawEmptyDesignThumbnail(ctx, thumbnailSize, thumbnailSize, sizeText);
       }
     } else {
-      // 공간 정보가 없는 경우 기본 썸네일
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(0, 0, thumbnailSize, thumbnailSize);
-      
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 24px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('디자인', thumbnailSize / 2, thumbnailSize / 2);
+      // 공간 정보가 없는 경우: 테마 색상 기반 통일 썸네일
+      drawEmptyDesignThumbnail(ctx, thumbnailSize, thumbnailSize);
     }
 
     // Canvas를 Data URL로 변환
     const dataUrl = canvas.toDataURL('image/png', 0.8);
-    console.log('✅ 썸네일 생성 완료:', { 
-      width: canvas.width, 
-      height: canvas.height, 
-      furnitureCount: project.placedModules?.length || 0 
+    console.log('✅ 썸네일 생성 완료:', {
+      width: canvas.width,
+      height: canvas.height,
+      furnitureCount: project.placedModules?.length || 0
     });
-    
+
     return dataUrl;
   } catch (error) {
     console.error('썸네일 생성 오류:', error);
@@ -190,7 +226,7 @@ function getFurnitureColor(type: string): string {
   };
 
   const typeKey = type?.toLowerCase() || 'default';
-  
+
   // 타입에서 키워드 찾기
   for (const [key, color] of Object.entries(colorMap)) {
     if (typeKey.includes(key)) {
@@ -205,7 +241,7 @@ function getFurnitureColor(type: string): string {
  * Canvas의 roundRect polyfill (일부 브라우저에서 지원하지 않을 수 있음)
  */
 if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x: number, y: number, width: number, height: number, radius: number) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x: number, y: number, width: number, height: number, radius: number) {
     if (width < 2 * radius) radius = width / 2;
     if (height < 2 * radius) radius = height / 2;
     this.beginPath();

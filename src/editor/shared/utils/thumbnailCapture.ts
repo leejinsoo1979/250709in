@@ -14,14 +14,14 @@ export const find3DViewerContainer = (): HTMLElement | null => {
     '[class*="space3d"]',
     '[class*="viewer"]'
   ];
-  
+
   for (const selector of selectors) {
     const element = document.querySelector(selector) as HTMLElement;
     if (element) {
       return element;
     }
   }
-  
+
   // 캔버스의 부모 컨테이너 찾기
   const canvas = findThreeCanvas();
   if (canvas) {
@@ -34,7 +34,7 @@ export const find3DViewerContainer = (): HTMLElement | null => {
       parent = parent.parentElement;
     }
   }
-  
+
   return null;
 };
 
@@ -42,13 +42,13 @@ export const find3DViewerContainer = (): HTMLElement | null => {
 export const findThreeCanvas = (): HTMLCanvasElement | null => {
   // React Three Fiber가 생성한 캔버스 찾기
   const canvases = document.querySelectorAll('canvas');
-  
+
   for (const canvas of canvases) {
     // Three.js 캔버스인지 확인 (WebGL 컨텍스트 존재 여부로 판단)
     try {
       // WebGL 컨텍스트가 이미 사용 중일 수 있으므로 try-catch로 처리
-      const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true }) || 
-                 canvas.getContext('webgl2', { preserveDrawingBuffer: true });
+      const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true }) ||
+        canvas.getContext('webgl2', { preserveDrawingBuffer: true });
       if (gl && canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
         return canvas;
       }
@@ -57,7 +57,7 @@ export const findThreeCanvas = (): HTMLCanvasElement | null => {
       console.warn('캔버스 WebGL 컨텍스트 접근 실패:', e);
     }
   }
-  
+
   return null;
 };
 
@@ -72,22 +72,22 @@ export const captureCanvasThumbnail = (
 ): string | null => {
   try {
     const { width = 300, height = 200, quality = 0.8 } = options;
-    
+
     // 캔버스가 실제로 렌더링되었는지 확인
     if (canvas.width === 0 || canvas.height === 0) {
       console.warn('캔버스 크기가 0입니다.');
       return null;
     }
-    
+
     // 임시 캔버스 생성 (리사이징용)
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
-    
+
     if (!tempCtx) {
       console.error('임시 캔버스 컨텍스트를 생성할 수 없습니다.');
       return null;
     }
-    
+
     // 썸네일 크기 설정
     tempCanvas.width = width;
     tempCanvas.height = height;
@@ -98,10 +98,10 @@ export const captureCanvasThumbnail = (
 
     // 원본 캔버스를 썸네일 크기로 리사이징 (비율이 이미 맞춰진 상태)
     tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, width, height);
-    
+
     // base64 이미지로 변환
     return tempCanvas.toDataURL('image/png', quality);
-    
+
   } catch (error) {
     console.error('썸네일 캡처 실패:', error);
     return null;
@@ -279,6 +279,30 @@ export const dataURLToBlob = (dataURL: string): Blob => {
   return new Blob([u8arr], { type: mime });
 };
 
+/**
+ * CSS 변수에서 테마 색상 읽기
+ */
+const getThemeColor = (): string => {
+  const root = document.documentElement;
+  const color = getComputedStyle(root).getPropertyValue('--theme-primary').trim();
+  return color || '#10b981';
+};
+
+/**
+ * 색상 밝기 조절 헬퍼
+ */
+const adjustBrightness = (hex: string, amount: number): string => {
+  let color = hex.replace('#', '');
+  if (color.length === 3) {
+    color = color.split('').map(c => c + c).join('');
+  }
+  const num = parseInt(color, 16);
+  const r = Math.min(255, Math.max(0, ((num >> 16) & 0xff) + amount));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
+  const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+};
+
 // 기본 썸네일 생성 (3D 렌더링이 없을 때 사용)
 export const generateDefaultThumbnail = (
   spaceInfo: { width: number; height: number; depth: number },
@@ -286,44 +310,64 @@ export const generateDefaultThumbnail = (
 ): string => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  
+
   if (!ctx) {
     return '';
   }
-  
-  canvas.width = 300;
-  canvas.height = 200;
-  
-  // 나무 질감 배경 그라데이션
-  const gradient = ctx.createLinearGradient(0, 0, 300, 200);
-  gradient.addColorStop(0, '#f3e8d6');
-  gradient.addColorStop(1, '#d4b896');
-  
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 300, 200);
-  
-  // 공간 정보 텍스트
-  ctx.fillStyle = '#8B4513';
-  ctx.font = 'bold 16px Arial';
-  ctx.textAlign = 'center';
-  
-  const widthMm = Math.round(spaceInfo.width);
-  const heightMm = Math.round(spaceInfo.height);
-  const depthMm = Math.round(spaceInfo.depth);
-  
-  ctx.fillText(`${widthMm} × ${heightMm} × ${depthMm}mm`, 150, 80);
-  
-  // 가구 개수
-  ctx.font = '14px Arial';
-  ctx.fillText(`가구 ${furnitureCount}개`, 150, 120);
-  
-  // V5.0 뱃지 - 테마 색상 사용
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#10b981';
-  ctx.fillRect(10, 10, 40, 20);
-  ctx.fillStyle = 'white';
-  ctx.font = 'bold 12px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText('V5.0', 15, 24);
-  
-  return canvas.toDataURL('image/png', 0.8);
+
+  const W = 300;
+  const H = 200;
+  canvas.width = W;
+  canvas.height = H;
+
+  const fontMain = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+  if (furnitureCount === 0) {
+    // 가구 없음: 테마 색상 그라데이션 배경 + 흰색 텍스트
+    const themeColor = getThemeColor();
+    const gradient = ctx.createLinearGradient(0, 0, W, H);
+    gradient.addColorStop(0, themeColor);
+    gradient.addColorStop(1, adjustBrightness(themeColor, -30));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+
+    // 공간 크기 (흰색 볼드)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.font = `700 16px ${fontMain}`;
+    ctx.textAlign = 'center';
+    const widthMm = Math.round(spaceInfo.width);
+    const heightMm = Math.round(spaceInfo.height);
+    const depthMm = Math.round(spaceInfo.depth);
+    ctx.fillText(`${widthMm} × ${depthMm} × ${heightMm}mm`, W / 2, H / 2 - 10);
+
+    // 안내 텍스트 (흰색 라이트)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.font = `400 12px ${fontMain}`;
+    ctx.fillText('현재 배치된 가구가 없습니다.', W / 2, H / 2 + 15);
+  } else {
+    // 가구 있음: 기존 스타일 유지
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(1, '#f0f2f5');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = '#e1e4e8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, W, H);
+
+    ctx.fillStyle = '#1a1d21';
+    ctx.font = `600 18px ${fontMain}`;
+    ctx.textAlign = 'center';
+    const widthMm = Math.round(spaceInfo.width);
+    const heightMm = Math.round(spaceInfo.height);
+    const depthMm = Math.round(spaceInfo.depth);
+    ctx.fillText(`${widthMm} × ${heightMm} × ${depthMm}mm`, W / 2, 85);
+
+    ctx.font = `400 13px ${fontMain}`;
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`배치된 가구 ${furnitureCount}개`, W / 2, 115);
+  }
+
+  return canvas.toDataURL('image/png', 0.9);
 }; 
