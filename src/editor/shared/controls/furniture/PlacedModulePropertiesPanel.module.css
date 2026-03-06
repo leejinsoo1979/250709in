@@ -1,3 +1,8 @@
+/* ============================================
+   가구 편집 패널 - 하단 가로 바 레이아웃
+   뷰어를 최소한으로 가리는 가로형 슬라이드업
+   ============================================ */
+
 .overlay {
   position: absolute;
   bottom: 0;
@@ -5,17 +10,13 @@
   right: 0;
   z-index: 1000;
   pointer-events: none;
-  display: flex;
-  justify-content: center;
 }
 
 .panel {
   background: var(--theme-surface);
   border-radius: 12px 12px 0 0;
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.18);
-  width: 420px;
-  max-width: 100%;
-  max-height: 45vh;
+  width: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -34,11 +35,13 @@
   }
 }
 
+/* ---- 헤더: 탭 + 닫기 (컴팩트) ---- */
 .header {
   display: flex;
   align-items: stretch;
   position: relative;
-  border-bottom: 2px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
+  flex-shrink: 0;
 }
 
 .headerTabs {
@@ -48,11 +51,11 @@
 
 .tabButton {
   flex: 1;
-  padding: 10px 14px;
+  padding: 7px 14px;
   border: none;
   background: var(--theme-surface-variant);
   color: var(--theme-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -90,66 +93,10 @@
   gap: 8px;
 }
 
-.deleteButton {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--theme-surface);
-  transition: all 0.2s ease;
-}
-
-.deleteButton:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-/* 삭제 버튼 스타일 - content 섹션 내에서 직접 사용 */
-.content .deleteButton {
-  width: 100%;
-  height: 34px;
-  background: var(--theme-background-secondary);
-  color: var(--theme-primary);
-  border: 1px solid var(--theme-primary);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.content .deleteButton:hover {
-  background: var(--theme-primary-light);
-  color: var(--theme-primary);
-  border-color: var(--theme-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--theme-primary-light);
-}
-
-.content .deleteButton:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px var(--theme-primary-light);
-}
-
-.content .deleteButton svg {
-  width: 16px;
-  height: 16px;
-}
-
+/* ---- 닫기 버튼 ---- */
 .closeButton {
-  width: 50px;
-  min-width: 50px;
+  width: 40px;
+  min-width: 40px;
   border: none;
   background: var(--theme-surface-variant);
   border-top-right-radius: 12px;
@@ -157,7 +104,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--theme-text-secondary);
   transition: all 0.2s ease;
   position: relative;
@@ -165,14 +112,15 @@
 
 .closeButton::before {
   content: '✕';
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: transparent;
   transition: all 0.2s ease;
+  font-size: 12px;
 }
 
 .closeButton:hover::before {
@@ -181,27 +129,32 @@
   transform: scale(1.1);
 }
 
+/* ---- content: 가로 3분할 레이아웃 ---- */
 .content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   min-height: 0;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
+/* ---- 모듈 정보 (왼쪽 고정) ---- */
 .moduleInfo {
+  flex-shrink: 0;
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--theme-border);
+  flex-direction: column;
   align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--theme-border);
+  width: 90px;
+  justify-content: center;
 }
 
 .modulePreview {
   flex-shrink: 0;
-  width: 48px;
-  height: 56px;
+  width: 44px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,53 +172,134 @@
   border-radius: 4px;
 }
 
-/* 상세보기 버튼 스타일 */
-.detailsButton {
-  padding: 8px 16px;
-  background: var(--theme-primary);
-  color: var(--theme-surface);
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
+.moduleBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.moduleDetails {
+  text-align: center;
+  min-width: 0;
+}
+
+.moduleName {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.property {
+  display: flex;
+  align-items: flex-start;
+}
+
+.property:last-child {
+  margin-bottom: 0;
+}
+
+.propertyLabel {
+  flex-shrink: 0;
+  font-size: 10px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-left: 12px;
+  color: var(--theme-text-secondary);
+}
+
+.propertyValue {
+  font-size: 10px;
+  color: var(--theme-text-secondary);
   white-space: nowrap;
 }
 
-.detailsButton:hover {
-  background: var(--theme-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--theme-primary-light);
+/* ---- 설정 영역 (가로 스크롤) ---- */
+.settingsScroll {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 2px;
+  padding: 8px 0;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.detailsButton:active {
-  transform: translateY(0);
+/* 스크롤바 최소화 */
+.settingsScroll::-webkit-scrollbar {
+  height: 3px;
+}
+.settingsScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.settingsScroll::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 3px;
 }
 
-/* 상세보기 섹션 스타일 */
+/* ---- 각 설정 섹션 = 가로 카드 ---- */
+.propertySection {
+  flex-shrink: 0;
+  min-width: 150px;
+  max-width: 200px;
+  padding: 6px 12px;
+  border-right: 1px solid var(--theme-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 130px;
+}
+
+.propertySection:last-child {
+  border-right: none;
+}
+
+.sectionTitle {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--theme-primary);
+  margin: 0 0 2px 0;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--theme-border);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ---- 상세보기 섹션 (가로 스크롤 내) ---- */
 .detailsSection {
+  flex-shrink: 0;
+  min-width: 280px;
+  max-width: 500px;
   background: var(--theme-background-secondary);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 20px;
-  margin-top: -8px;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 8px;
+  overflow-y: auto;
+  max-height: 130px;
 }
 
 .panelList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 2px;
 }
 
 .panelSectionHeader {
-  padding: 10px 0 6px 0;
-  margin-top: 12px;
-  border-bottom: 2px solid var(--theme-primary);
+  padding: 4px 0 2px 0;
+  margin-top: 4px;
+  border-bottom: 1px solid var(--theme-primary);
   color: var(--theme-primary);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -277,9 +311,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
+  padding: 3px 0;
   border-bottom: 1px solid var(--theme-border);
-  font-size: 12px;
+  font-size: 11px;
   transition: all 0.2s ease;
 }
 
@@ -289,9 +323,9 @@
 
 .panelItemSelected {
   background: var(--theme-primary-light, rgba(59, 130, 246, 0.1));
-  padding: 8px 12px;
-  margin: 0 -12px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 0 -8px;
+  border-radius: 4px;
   opacity: 1 !important;
   font-weight: 600;
 }
@@ -303,80 +337,44 @@
 .panelName {
   font-weight: 500;
   color: var(--theme-text);
-  min-width: 80px;
+  min-width: 60px;
+  font-size: 11px;
 }
 
 .panelSize {
   color: var(--theme-text-secondary);
   text-align: right;
   font-family: monospace;
+  font-size: 10px;
 }
 
-.moduleBox {
-  width: 45px;
-  height: 45px;
-  border-radius: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.moduleDetails {
-  flex: 1;
-}
-
-.moduleName {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--theme-text);
-  margin: 0 0 2px 0;
-}
-
-.property {
-  display: flex;
-  margin-bottom: 8px;
-  align-items: flex-start;
-}
-
-.property:last-child {
-  margin-bottom: 0;
-}
-
-.propertyLabel {
-  flex-shrink: 0;
-  width: 60px;
+/* 상세보기 버튼 */
+.detailsButton {
+  padding: 6px 12px;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  border: none;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.propertyValue {
-  flex: 1;
-  font-size: 12px;
-  color: var(--theme-text);
-  word-break: break-word;
+.detailsButton:hover {
+  background: var(--theme-primary-hover);
 }
 
-.propertySection {
-  margin-bottom: 12px;
+.detailsButton:active {
+  transform: translateY(0);
 }
 
-.propertySection:last-child {
-  margin-bottom: 0;
-}
-
-.sectionTitle {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--theme-text);
-  margin: 0 0 6px 0;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--theme-border);
-}
-
-/* 깊이 입력 필드 스타일 */
+/* ---- 입력 필드 (컴팩트) ---- */
 .depthInputWrapper {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .inputWithUnit {
@@ -387,10 +385,10 @@
 
 .depthInput {
   width: 100%;
-  padding: 7px 36px 7px 10px;
+  padding: 5px 30px 5px 8px;
   border: 1px solid var(--theme-border) !important;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 4px;
+  font-size: 12px;
   background-color: var(--theme-background-secondary) !important;
   color: var(--theme-text) !important;
   -webkit-text-fill-color: var(--theme-text) !important;
@@ -403,7 +401,7 @@
 .depthInput:focus {
   outline: none;
   border-color: var(--theme-primary) !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
   background-color: var(--theme-background-secondary) !important;
   color: var(--theme-text) !important;
   -webkit-text-fill-color: var(--theme-text) !important;
@@ -416,40 +414,37 @@
 
 .unit {
   position: absolute;
-  right: 12px;
-  font-size: 12px;
+  right: 8px;
+  font-size: 10px;
   color: var(--theme-text-secondary);
   pointer-events: none;
 }
 
 .errorMessage {
-  font-size: 12px;
+  font-size: 10px;
   color: var(--theme-danger);
-  margin-top: 4px;
 }
 
 .depthRange {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--theme-text-secondary);
-  margin-top: 4px;
 }
 
-/* 도어 설정 스타일 */
+/* ---- 도어 설정 (컴팩트) ---- */
 .doorTabSelector {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 4px;
 }
 
 .doorTab {
   flex: 1;
-  padding: 7px 10px;
+  padding: 5px 6px;
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--theme-text);
   text-align: center;
@@ -468,31 +463,31 @@
 
 .doorTabSubtitle {
   display: block;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 400;
   opacity: 0.7;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .doorTab.activeDoorTab .doorTabSubtitle {
   opacity: 0.9;
 }
 
-/* 경첩 방향 선택 스타일 */
+/* ---- 경첩 방향 (컴팩트) ---- */
 .hingeTabSelector {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .hingeTab {
   flex: 1;
-  padding: 10px 12px;
+  padding: 6px 8px;
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--theme-text);
   text-align: center;
@@ -513,38 +508,260 @@
 }
 
 .hingeTabSubtitle {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 400;
   opacity: 0.7;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .hingeTab.activeHingeTab .hingeTabSubtitle {
   opacity: 0.9;
 }
 
+.hingeSubSection {
+  margin-top: 6px;
+}
+
+.subSectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 4px 0;
+}
+
 .coverDoorNote {
-  margin-top: 12px;
-  padding: 8px 12px;
+  margin-top: 6px;
+  padding: 4px 8px;
   background-color: var(--theme-primary-light);
   border: 1px solid var(--theme-primary);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--theme-success);
 }
 
 .backPanelDisabledNote {
-  margin-top: 8px;
-  padding: 12px;
+  margin-top: 4px;
+  padding: 6px 8px;
   background-color: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 4px;
+  font-size: 11px;
   color: var(--theme-text-secondary);
   text-align: center;
 }
 
-/* 경고 팝업 스타일 */
+/* ---- 도어 갭 (컴팩트) ---- */
+.doorGapContainer {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.doorGapField {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.doorGapLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
+/* ---- 섹션별 깊이 (컴팩트) ---- */
+.sectionDepthContainer {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sectionDepthField {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.sectionDepthLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
+.sectionDepthNote {
+  font-size: 9px;
+  color: var(--theme-text-tertiary);
+  font-style: italic;
+}
+
+/* ---- 액션 버튼 영역 (오른쪽 고정) ---- */
+.actionButtons {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-left: 1px solid var(--theme-border);
+  justify-content: center;
+  width: 80px;
+}
+
+/* 삭제 버튼 (액션 영역 내) */
+.actionButtons .deleteButton {
+  width: 100%;
+  padding: 6px 4px;
+  background: var(--theme-background-secondary);
+  color: var(--theme-danger, #ef4444);
+  border: 1px solid var(--theme-danger, #ef4444);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.actionButtons .deleteButton:hover {
+  background: var(--theme-danger, #ef4444);
+  color: white;
+}
+
+.actionButtons .deleteButton svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* 기존 deleteButton (헤더 등에서 사용) */
+.deleteButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--theme-surface);
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* 확인/취소 버튼 (confirmButtons 제거, actionButtons 내 직접 배치) */
+.confirmButtons {
+  display: none; /* 더이상 사용 안 함 */
+}
+
+.confirmButton {
+  width: 100%;
+  padding: 7px 4px;
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
+  color: var(--theme-surface);
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirmButton:hover {
+  box-shadow: 0 2px 8px var(--theme-primary-light);
+  transform: translateY(-1px);
+}
+
+.confirmButton:active {
+  transform: translateY(0);
+}
+
+.cancelButton {
+  width: 100%;
+  padding: 6px 4px;
+  background-color: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: var(--theme-border);
+}
+
+/* ---- 편집 가이드 ---- */
+.editGuide {
+  margin-top: 4px;
+  padding: 4px 6px;
+  background-color: var(--theme-background-secondary);
+  border-radius: 4px;
+}
+
+.editGuide p {
+  font-size: 10px;
+  color: var(--theme-text-secondary);
+  margin: 0 0 2px 0;
+  line-height: 1.3;
+}
+
+.editGuide p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- 기둥 C 분할 버튼 ---- */
+.splitButton {
+  width: 100%;
+  height: 32px;
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.splitButton:hover {
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+}
+
+.splitButton:active {
+  transform: translateY(0);
+}
+
+.splitButton svg {
+  width: 14px;
+  height: 14px;
+}
+
+.splitDescription {
+  font-size: 10px;
+  color: var(--theme-text-secondary);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ============================================
+   경고/삭제확인 모달 (변경 없음)
+   ============================================ */
 .warningOverlay {
   position: fixed;
   top: 0;
@@ -596,7 +813,6 @@
   background-color: var(--theme-primary-hover);
 }
 
-/* 삭제 확인 다이얼로그 스타일 */
 .deleteConfirmOverlay {
   position: fixed;
   top: 0;
@@ -678,212 +894,51 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.hingeSubSection {
-  margin-top: 16px;
-}
-
-.subSectionTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--theme-text);
-  margin: 0 0 8px 0;
-}
-
-/* 도어 상하 갭 스타일 */
-.doorGapContainer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.doorGapField {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.doorGapLabel {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--theme-text-secondary);
-}
-
-/* 섹션별 깊이 설정 스타일 */
-.sectionDepthContainer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.sectionDepthField {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sectionDepthLabel {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--theme-text-secondary);
-}
-
-.sectionDepthNote {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--theme-text-tertiary);
-  font-style: italic;
-}
-
-.editGuide {
-  margin-top: 10px;
-  padding: 8px;
-  background-color: var(--theme-background-secondary);
-  border-radius: 8px;
-}
-
-.editGuide p {
-  font-size: 12px;
-  color: var(--theme-text-secondary);
-  margin: 0 0 6px 0;
-  line-height: 1.4;
-}
-
-.editGuide p:last-child {
-  margin-bottom: 0;
-}
-
-/* 확인/취소 버튼 스타일 */
-.confirmButtons {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 8px 16px 12px;
-  border-top: 1px solid var(--theme-border);
-  position: sticky;
-  bottom: 0;
-  background: var(--theme-surface);
-  z-index: 1;
-}
-
-.cancelButton {
-  flex: 1;
-  padding: 8px 12px;
-  background-color: var(--theme-background-secondary);
-  color: var(--theme-text-secondary);
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cancelButton:hover {
-  background-color: var(--theme-border);
-  border-color: var(--theme-text-muted);
-}
-
-.confirmButton {
-  flex: 1;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
-  color: var(--theme-surface);
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.confirmButton:hover {
-  background: linear-gradient(135deg, var(--theme-primary-hover), var(--theme-primary-hover));
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--theme-primary-light);
-}
-
-.confirmButton:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px var(--theme-primary-light);
-}
-
-/* 기둥 C 분할 버튼 스타일 */
-.splitButton {
-  width: 100%;
-  height: 44px;
-  background: var(--theme-surface);
-  color: var(--theme-primary);
-  border: 2px solid var(--theme-primary);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.splitButton:hover {
-  background: var(--theme-primary);
-  color: var(--theme-surface);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--theme-primary-light);
-}
-
-.splitButton:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px var(--theme-primary-light);
-}
-
-.splitButton svg {
-  width: 18px;
-  height: 18px;
-}
-
-.splitDescription {
-  font-size: 12px;
-  color: var(--theme-text-secondary);
-  text-align: center;
-  line-height: 1.4;
-}
-
+/* ============================================
+   모바일 (768px 이하)
+   ============================================ */
 @media (max-width: 768px) {
   .panel {
-    width: 100%;
-    max-height: 50vh;
-    border-radius: 12px 12px 0 0;
+    border-radius: 10px 10px 0 0;
   }
 
-  .depthSelector {
-    flex-direction: column;
+  .moduleInfo {
+    width: 70px;
+    padding: 8px;
+  }
+
+  .modulePreview {
+    width: 36px;
+    height: 42px;
+  }
+
+  .propertySection {
+    min-width: 130px;
+    max-width: 170px;
+  }
+
+  .actionButtons {
+    width: 68px;
+    padding: 6px;
+  }
+
+  .detailsSection {
+    min-width: 240px;
   }
 }
 
-/* 가구 편집 팝업 내부의 모든 input 요소 - 테마 대응 */
+/* ============================================
+   테마 대응 input 스타일
+   ============================================ */
 .overlay .panel input[type="text"],
 .overlay .panel input[type="number"],
 .depthInputWrapper input,
@@ -896,7 +951,6 @@
   caret-color: var(--theme-text) !important;
 }
 
-/* 가구 편집 패널 내의 모든 input 요소 */
 .panel input,
 .panel input:focus,
 .panel input:hover,
@@ -906,21 +960,18 @@
   background-color: var(--theme-background-secondary) !important;
 }
 
-/* number 타입 input에 대한 추가 스타일 */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Firefox - panel 내부로 제한 */
 .panel input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* 입력 필드 placeholder 스타일 */
 .depthInput::placeholder {
   color: var(--theme-text-muted) !important;
   -webkit-text-fill-color: var(--theme-text-muted) !important;
   opacity: 1 !important;
-} 
+}

@@ -1521,7 +1521,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
+          <div className={styles.settingsScroll}>
           {/* 상세보기 패널 */}
           {showDetails && (() => {
             // 실제 패널 개수 계산 (섹션 구분자와 정보성 항목 제외)
@@ -2213,33 +2214,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
 
-          {/* 삭제 버튼 */}
-          <button 
-            className={styles.deleteButton}
-            onClick={handleDeleteClick}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              <line x1="10" y1="11" x2="10" y2="17"></line>
-              <line x1="14" y1="11" x2="14" y2="17"></line>
-            </svg>
-            {t('common.delete')}
-          </button>
+          </div>{/* settingsScroll 끝 */}
 
-          {/* 확인/취소 버튼 */}
-          <div className={styles.confirmButtons}>
+          <div className={styles.actionButtons}>
+            {/* 삭제 버튼 */}
             <button
-              className={styles.cancelButton}
-              onClick={handleCancel}
+              className={styles.deleteButton}
+              onClick={handleDeleteClick}
             >
-              {t('common.cancel')}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              {t('common.delete')}
             </button>
+
+            {/* 확인/취소 버튼 */}
             <button
               className={styles.confirmButton}
               onClick={handleClose}
             >
               {t('common.confirm')}
+            </button>
+            <button
+              className={styles.cancelButton}
+              onClick={handleCancel}
+            >
+              {t('common.cancel')}
             </button>
           </div>
         </div>
