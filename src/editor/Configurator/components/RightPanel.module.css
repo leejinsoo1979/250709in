@@ -477,9 +477,10 @@
 .toggleButton.active:hover,
 .toggleButton.active:focus,
 .toggleButton.active:active {
-  background: var(--theme-primary) !important;
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 /* ── Door Slider ── */
@@ -572,10 +573,10 @@
 }
 
 .sliderLabels span.active {
-  color: #fff !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
-  background: var(--theme-primary) !important;
-  border: none;
+  background: var(--theme-background-secondary) !important;
+  border: 1.5px solid var(--theme-primary) !important;
   box-shadow: none;
 }
 

@@ -155,9 +155,10 @@
 }
 
 .toggleButton.active {
-  background: var(--theme-primary) !important;
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 /* ── Number Input ── */
