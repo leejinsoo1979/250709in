@@ -5,10 +5,11 @@
 .configurator {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh / 0.9);
   font-family: -apple-system, 'Apple SD Gothic Neo', Roboto, sans-serif;
   background-color: var(--theme-background-secondary);
   overflow: hidden;
+  zoom: 0.9;
 }
 
 /* 메인 컨텐츠 영역 */
