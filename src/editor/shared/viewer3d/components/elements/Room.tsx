@@ -1691,7 +1691,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 바닥 마감재가 있는 경우 - 전체 가구 폭으로 설치 */}
       {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
         <BoxWithEdges
-          hideEdges={hideEdges || renderMode === 'wireframe'}
+          hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
           args={[width, floorFinishHeight, extendedPanelDepth]}
           position={[xOffset + width / 2, yOffset + floorFinishHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
           material={new THREE.MeshLambertMaterial({ color: floorColor, transparent: true, opacity: 0.3 })}
@@ -1929,7 +1929,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
-                hideEdges={hideEdges || renderMode === 'wireframe'}
+                hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                 key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
@@ -1971,7 +1971,7 @@ const Room: React.FC<RoomProps> = ({
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
-                  hideEdges={hideEdges || renderMode === 'wireframe'}
+                  hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
                     frameThickness.left,
@@ -2061,7 +2061,7 @@ const Room: React.FC<RoomProps> = ({
         console.log('🎯🎯🎯 [왼쪽 일반 구간 프레임 position]', leftPosition, 'sideFrameCenterY:', sideFrameCenterY, 'adjustedPanelHeight:', adjustedPanelHeight);
         return (!(hasDroppedCeiling && isLeftDropped) ? (
           <BoxWithEdges
-            hideEdges={hideEdges || renderMode === 'wireframe'}
+            hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
             key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
@@ -2237,7 +2237,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
-                hideEdges={hideEdges || renderMode === 'wireframe'}
+                hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                 key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
@@ -2302,7 +2302,7 @@ const Room: React.FC<RoomProps> = ({
 
         return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
-            hideEdges={hideEdges || renderMode === 'wireframe'}
+            hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
@@ -2413,7 +2413,7 @@ const Room: React.FC<RoomProps> = ({
 
               return (
                 <BoxWithEdges
-                  hideEdges={hideEdges || renderMode === 'wireframe'}
+                  hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                   name="top-frame"
                   args={[
                     frameWidth, // 이미 엔드패널이 조정된 너비
@@ -2560,7 +2560,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시 */}
                   {showDroppedFrame && (
                     <BoxWithEdges
-                      hideEdges={hideEdges || renderMode === 'wireframe'}
+                      hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                       args={[
                         droppedFrameWidth,
                         topBottomFrameHeight,
@@ -2580,7 +2580,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 일반 영역 상부 프레임 - 측면뷰에서 일반 구간 선택시만 표시 */}
                   {showNormalFrame && (
                     <BoxWithEdges
-                      hideEdges={hideEdges || renderMode === 'wireframe'}
+                      hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                       args={[
                         normalFrameWidth,
                         topBottomFrameHeight,
@@ -2657,7 +2657,7 @@ const Room: React.FC<RoomProps> = ({
             if (frameSegments.length === 0) {
               return (
                 <BoxWithEdges
-                  hideEdges={hideEdges || renderMode === 'wireframe'}
+                  hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                   args={[
                     frameWidth, // 노서라운드 모드에서는 전체 너비 사용
                     topBottomFrameHeight,
@@ -2693,7 +2693,7 @@ const Room: React.FC<RoomProps> = ({
 
               return (
                 <BoxWithEdges
-                  hideEdges={hideEdges || renderMode === 'wireframe'}
+                  hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                   key={`top-frame-segment-${index}`}
                   args={[
                     segment.width,
@@ -3184,7 +3184,7 @@ const Room: React.FC<RoomProps> = ({
 
                   return (
                     <BoxWithEdges
-                      hideEdges={hideEdges || renderMode === 'wireframe'}
+                      hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                       key={`base-frame-zone-${zoneIndex}`}
                       name="base-frame"
                       args={[
@@ -3266,7 +3266,7 @@ const Room: React.FC<RoomProps> = ({
                 if (frameSegments.length === 0) {
                   return (
                     <BoxWithEdges
-                      hideEdges={hideEdges || renderMode === 'wireframe'}
+                      hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                       key={`base-frame-zone-${zoneIndex}`}
                       args={[
                         frameWidth,
@@ -3307,7 +3307,7 @@ const Room: React.FC<RoomProps> = ({
 
                   return (
                     <BoxWithEdges
-                      hideEdges={hideEdges || renderMode === 'wireframe'}
+                      hideEdges={hideEdges || (renderMode === 'wireframe' && viewMode === '3D')}
                       key={`base-frame-zone-${zoneIndex}-segment-${segmentIndex}`}
                       args={[
                         segment.width,
