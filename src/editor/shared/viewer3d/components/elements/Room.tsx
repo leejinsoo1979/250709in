@@ -1746,7 +1746,33 @@ const Room: React.FC<RoomProps> = ({
               lines.push([x2, floorY, z1, x2, ceilingY, z1]);
             }
 
-            // 단내림 천장기둥 윤곽선은 천장/바닥/좌우벽과 동일하게 표시하지 않음
+            // === 단내림 경계벽 윤곽선 (벽만 표시, 천장면 선은 제외) ===
+            if (spaceInfo.droppedCeiling?.enabled) {
+              const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              const dcDropHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
+              const isLeft = spaceInfo.droppedCeiling.position === 'left';
+              const droppedCeilingY = ceilingY - dcDropHeight;
+              const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
+
+              // 경계 수직벽 - 수직선 (뒷벽 쪽)
+              lines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]);
+
+              // 경계 수직벽 - 수직선 (앞쪽)
+              lines.push([bx, droppedCeilingY, z2, bx, ceilingY, z2]);
+
+              // 경계 수직벽 - 상단 앞뒤 연결 (벽 상단 모서리)
+              lines.push([bx, ceilingY, z1, bx, ceilingY, z2]);
+
+              // 경계 수직벽 - 하단 앞뒤 연결 (벽 하단 모서리)
+              lines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]);
+
+              // 단내림 측 벽면 천장 경계 (앞뒤 연결 - 벽과 단내림 천장이 만나는 선)
+              if (isLeft && hasLeftWall) {
+                lines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
+              } else if (!isLeft && hasRightWall) {
+                lines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
+              }
+            }
 
             const positions = new Float32Array(lines.length * 6);
             lines.forEach((line, i) => {
@@ -2053,7 +2079,7 @@ const Room: React.FC<RoomProps> = ({
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
-                  hideEdges
+                  hideEdges={hideEdges}
                   isOuterFrame
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
