@@ -114,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'module' as SidebarTab,
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
           <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
           <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
@@ -125,22 +125,22 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'material' as SidebarTab,
-      icon: <HiOutlineColorSwatch size={22} />,
+      icon: <HiOutlineColorSwatch size={18} />,
       label: t('sidebar.material')
     },
     {
       id: 'structure' as SidebarTab,
-      icon: <TbBoxAlignRight size={22} />,
+      icon: <TbBoxAlignRight size={18} />,
       label: '기둥'
     },
     {
       id: 'etc' as SidebarTab,
-      icon: <TbBrandAsana size={22} />,
+      icon: <TbBrandAsana size={18} />,
       label: t('sidebar.etc')
     },
     {
       id: 'custom' as SidebarTab,
-      icon: <HiPencilSquare size={22} />,
+      icon: <HiPencilSquare size={18} />,
       label: '커스텀'
     }
   ];
