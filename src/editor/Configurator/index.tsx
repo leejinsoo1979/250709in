@@ -62,10 +62,6 @@ import { BoringExportDialog } from '@/editor/shared/controls/boring';
 import { useFurnitureBoring } from '@/domain/boring';
 
 import styles from './style.module.css';
-import sidebarStyles from './styles/sidebar.module.css';
-import viewerStyles from './styles/viewer.module.css';
-import rpStyles from './styles/rightPanelConfig.module.css';
-import ctrlStyles from './styles/controls.module.css';
 import responsiveStyles from './responsive.module.css';
 import rightPanelStyles from './components/RightPanel.module.css';
 
@@ -2664,31 +2660,31 @@ const Configurator: React.FC = () => {
     switch (activeSidebarTab) {
       case 'module':
         return (
-          <div className={sidebarStyles.sidebarPanel}>
-            <div className={sidebarStyles.modulePanelContent}>
+          <div className={styles.sidebarPanel}>
+            <div className={styles.modulePanelContent}>
               {/* 키큰장/상부장/하부장 토글 탭 */}
-              <div className={sidebarStyles.moduleCategoryTabs}>
+              <div className={styles.moduleCategoryTabs}>
                 <button
-                  className={`${sidebarStyles.moduleCategoryTab} ${moduleCategory === 'tall' ? sidebarStyles.active : ''}`}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('tall')}
                 >
                   키큰장
                 </button>
                 <button
-                  className={`${sidebarStyles.moduleCategoryTab} ${moduleCategory === 'upper' ? sidebarStyles.active : ''}`}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upper' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('upper')}
                 >
                   상부장
                 </button>
                 <button
-                  className={`${sidebarStyles.moduleCategoryTab} ${moduleCategory === 'lower' ? sidebarStyles.active : ''}`}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('lower')}
                 >
                   하부장
                 </button>
               </div>
 
-              <div className={sidebarStyles.moduleSection}>
+              <div className={styles.moduleSection}>
                 <ModuleGallery
                   moduleCategory={moduleCategory}
                 />
@@ -2699,13 +2695,13 @@ const Configurator: React.FC = () => {
 
       case 'material':
         return (
-          <div className={sidebarStyles.sidebarPanel}>
+          <div className={styles.sidebarPanel}>
             <MaterialPanel />
           </div>
         );
       case 'structure':
         return (
-          <div className={sidebarStyles.sidebarPanel}>
+          <div className={styles.sidebarPanel}>
             <ColumnControl
               columns={spaceInfo.columns || []}
               onColumnsChange={(columns) => setSpaceInfo({ columns })}
@@ -2714,7 +2710,7 @@ const Configurator: React.FC = () => {
         );
       case 'etc':
         return (
-          <div className={sidebarStyles.sidebarPanel}>
+          <div className={styles.sidebarPanel}>
             <div className={styles.preparingPanel}>
               <h3>악세서리</h3>
               <p>준비중입니다.</p>
@@ -2723,31 +2719,31 @@ const Configurator: React.FC = () => {
         );
       case 'custom':
         return (
-          <div className={sidebarStyles.sidebarPanel}>
-            <div className={sidebarStyles.modulePanelContent}>
+          <div className={styles.sidebarPanel}>
+            <div className={styles.modulePanelContent}>
               {/* 전체장/상부장/하부장 토글 탭 */}
-              <div className={sidebarStyles.moduleCategoryTabs}>
+              <div className={styles.moduleCategoryTabs}>
                 <button
-                  className={`${sidebarStyles.moduleCategoryTab} ${customCategory === 'full' ? sidebarStyles.active : ''}`}
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'full' ? styles.active : ''}`}
                   onClick={() => setCustomCategory('full')}
                 >
                   전체장
                 </button>
                 <button
-                  className={`${sidebarStyles.moduleCategoryTab} ${customCategory === 'upper' ? sidebarStyles.active : ''}`}
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'upper' ? styles.active : ''}`}
                   onClick={() => setCustomCategory('upper')}
                 >
                   상부장
                 </button>
                 <button
-                  className={`${sidebarStyles.moduleCategoryTab} ${customCategory === 'lower' ? sidebarStyles.active : ''}`}
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'lower' ? styles.active : ''}`}
                   onClick={() => setCustomCategory('lower')}
                 >
                   하부장
                 </button>
               </div>
 
-              <div className={sidebarStyles.moduleSection}>
+              <div className={styles.moduleSection}>
                 <CustomFurnitureLibrary
                   filter={customCategory}
                   showHeader={false}
@@ -2757,7 +2753,7 @@ const Configurator: React.FC = () => {
 
             {/* 업로드 모달 */}
             {showCustomUploadModal && (
-              <div className={sidebarStyles.customModalOverlay}>
+              <div className={styles.customModalOverlay}>
                 <CustomFurnitureUpload
                   onClose={() => setShowCustomUploadModal(false)}
                   onSuccess={() => setShowCustomUploadModal(false)}
@@ -2774,12 +2770,12 @@ const Configurator: React.FC = () => {
   // 우측 패널 컨텐츠 렌더링
   const renderRightPanelContent = () => {
     return (
-      <div className={rpStyles.spaceControls}>
+      <div className={styles.spaceControls}>
         {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
-        <div className={rpStyles.configSection}>
-          <div className={rpStyles.sectionHeader}>
-            <span className={rpStyles.sectionDot}></span>
-            <h3 className={rpStyles.sectionTitle}>공간 설정</h3>
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>공간 설정</h3>
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -2807,10 +2803,10 @@ const Configurator: React.FC = () => {
         </div>
 
         {/* 공간 유형 - 공간 설정과 단내림 사이 */}
-        <div className={rpStyles.configSection}>
-          <div className={rpStyles.sectionHeader}>
-            <span className={rpStyles.sectionDot}></span>
-            <h3 className={rpStyles.sectionTitle}>공간 유형</h3>
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>공간 유형</h3>
           </div>
           <InstallTypeControls
             spaceInfo={spaceInfo}
@@ -2819,15 +2815,15 @@ const Configurator: React.FC = () => {
         </div>
 
         {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
-        <div className={rpStyles.configSection}>
-          <div className={rpStyles.sectionHeader}>
-            <span className={rpStyles.sectionDot}></span>
-            <h3 className={rpStyles.sectionTitle}>단내림</h3>
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>단내림</h3>
           </div>
 
-          <div className={ctrlStyles.toggleButtonGroup}>
+          <div className={styles.toggleButtonGroup}>
             <button
-              className={`${ctrlStyles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? ctrlStyles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
               onClick={() => {
                 // 단내림 비활성화
                 clearAllModules(); // 가구 제거
@@ -2845,7 +2841,7 @@ const Configurator: React.FC = () => {
               없음
             </button>
             <button
-              className={`${ctrlStyles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? ctrlStyles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
               onClick={() => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   // 단내림 활성화
@@ -2884,10 +2880,10 @@ const Configurator: React.FC = () => {
           {/* 단내림이 활성화된 경우 위치 선택 */}
           {spaceInfo.droppedCeiling?.enabled && (
             <div style={{ marginTop: '16px' }}>
-              <div className={ctrlStyles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
-              <div className={ctrlStyles.toggleButtonGroup}>
+              <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
+              <div className={styles.toggleButtonGroup}>
                 <button
-                  className={`${ctrlStyles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? ctrlStyles.toggleButtonActive : ''}`}
+                  className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     handleSpaceInfoUpdate({
                       droppedCeiling: {
@@ -2901,7 +2897,7 @@ const Configurator: React.FC = () => {
                   좌측
                 </button>
                 <button
-                  className={`${ctrlStyles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? ctrlStyles.toggleButtonActive : ''}`}
+                  className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     handleSpaceInfoUpdate({
                       droppedCeiling: {
@@ -2921,17 +2917,17 @@ const Configurator: React.FC = () => {
 
         {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
         {spaceInfo.droppedCeiling?.enabled && (
-          <div className={rpStyles.configSection}>
-            <div className={rpStyles.sectionHeader}>
-              <span className={rpStyles.sectionDot}></span>
-              <h3 className={rpStyles.sectionTitle}>메인구간 사이즈</h3>
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
               {/* 메인구간 폭 */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
-                <div className={ctrlStyles.inputWithUnit} style={{ flex: 1 }}>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
                     min="100"
@@ -2990,16 +2986,16 @@ const Configurator: React.FC = () => {
                         });
                       }
                     }}
-                    className={`${ctrlStyles.input} ${ctrlStyles.inputWithUnitField}`}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
                   />
-                  <span className={ctrlStyles.unit}>mm</span>
+                  <span className={styles.unit}>mm</span>
                 </div>
               </div>
 
               {/* 메인구간 높이 */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
-                <div className={ctrlStyles.inputWithUnit} style={{ flex: 1 }}>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
                     defaultValue={spaceInfo.height || 2400}
@@ -3058,10 +3054,10 @@ const Configurator: React.FC = () => {
                         }
                       }
                     }}
-                    className={`${ctrlStyles.input} ${ctrlStyles.inputWithUnitField}`}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
                     placeholder="1800-3000"
                   />
-                  <span className={ctrlStyles.unit}>mm</span>
+                  <span className={styles.unit}>mm</span>
                 </div>
               </div>
             </div>
@@ -3070,17 +3066,17 @@ const Configurator: React.FC = () => {
 
         {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 */}
         {spaceInfo.droppedCeiling?.enabled && (
-          <div className={rpStyles.configSection}>
-            <div className={rpStyles.sectionHeader}>
-              <span className={rpStyles.sectionDot}></span>
-              <h3 className={rpStyles.sectionTitle}>단내림 구간 사이즈</h3>
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
               {/* 단내림 구간 폭 */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
-                <div className={ctrlStyles.inputWithUnit} style={{ flex: 1 }}>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
                     min="100"
@@ -3138,16 +3134,16 @@ const Configurator: React.FC = () => {
                         });
                       }
                     }}
-                    className={`${ctrlStyles.input} ${ctrlStyles.inputWithUnitField}`}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
                   />
-                  <span className={ctrlStyles.unit}>mm</span>
+                  <span className={styles.unit}>mm</span>
                 </div>
               </div>
 
               {/* 단내림 구간 높이 */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
-                <div className={ctrlStyles.inputWithUnit} style={{ flex: 1 }}>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
                     min="1800"
@@ -3207,9 +3203,9 @@ const Configurator: React.FC = () => {
                         });
                       }
                     }}
-                    className={`${ctrlStyles.input} ${ctrlStyles.inputWithUnitField}`}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
                   />
-                  <span className={ctrlStyles.unit}>mm</span>
+                  <span className={styles.unit}>mm</span>
                 </div>
               </div>
             </div>
@@ -3218,10 +3214,10 @@ const Configurator: React.FC = () => {
 
 
         {/* 컬럼수 표시 */}
-        <div className={rpStyles.configSection}>
-          <div className={rpStyles.sectionHeader}>
-            <span className={rpStyles.sectionDot}></span>
-            <h3 className={rpStyles.sectionTitle}>컬럼수</h3>
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>컬럼수</h3>
           </div>
           {console.log('🔍 레이아웃 섹션 렌더링:', {
             activeTab: activeRightPanelTab,
@@ -3233,7 +3229,7 @@ const Configurator: React.FC = () => {
           {/* 도어 개수 입력 - 제거 */}
           {!spaceInfo.droppedCeiling?.enabled ? (
             // 단내림이 없을 때 - 컬럼 개수만 표시
-            <div className={rpStyles.inputGroup}>
+            <div className={styles.inputGroup}>
               <DoorSlider
                 value={getCurrentColumnCount()}
                 onChange={(value) => {
@@ -3245,7 +3241,7 @@ const Configurator: React.FC = () => {
           ) : (
             // 단내림이 있을 때 - 도어 개수 입력 숨김
             <div>
-              <div className={rpStyles.inputGroup}>
+              <div className={styles.inputGroup}>
                 <DoorSlider
                   value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
                   onChange={(value) => {
@@ -3256,7 +3252,7 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 단내림구간 도어 개수 */}
-              <div className={rpStyles.inputGroup} style={{ marginTop: '24px' }}>
+              <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
                 <DoorSlider
                   value={spaceInfo.droppedCeilingDoorCount || 1}
                   onChange={(value) => {
@@ -3271,22 +3267,22 @@ const Configurator: React.FC = () => {
         </div>
 
         {/* 프레임 설정 - 양쪽 탭에서 모두 표시 */}
-        <div className={rpStyles.configSection}>
-          <div className={rpStyles.sectionHeader}>
-            <span className={rpStyles.sectionDot}></span>
-            <h3 className={rpStyles.sectionTitle}>프레임 설정</h3>
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>프레임 설정</h3>
           </div>
 
           {/* 프레임 타입 */}
-          <div className={ctrlStyles.toggleButtonGroup}>
+          <div className={styles.toggleButtonGroup}>
             <button
-              className={`${ctrlStyles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? ctrlStyles.active : ''}`}
+              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
               onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
             >
               서라운드
             </button>
             <button
-              className={`${ctrlStyles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? ctrlStyles.active : ''}`}
+              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
               onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
             >
               노서라운드
@@ -3295,21 +3291,21 @@ const Configurator: React.FC = () => {
 
           {/* 프레임 속성 설정 */}
           {(spaceInfo.surroundType || 'surround') === 'surround' ? (
-            <div className={ctrlStyles.subSetting}>
-              <label className={ctrlStyles.subLabel}>프레임 폭 설정</label>
+            <div className={styles.subSetting}>
+              <label className={styles.subLabel}>프레임 폭 설정</label>
 
-              <div className={ctrlStyles.frameGrid}>
+              <div className={styles.frameGrid}>
                 {/* 좌측 */}
-                <div className={ctrlStyles.frameItem}>
-                  <label className={ctrlStyles.frameItemLabel}>
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>
                     {spaceInfo.installType === 'builtin' ? '좌측' :
                       spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
                           spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
                   </label>
-                  <div className={ctrlStyles.frameItemInput}>
+                  <div className={styles.frameItemInput}>
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentLeft = spaceInfo.frameSize?.left || 50;
                         const newLeft = Math.max(10, currentLeft - 1);
@@ -3331,14 +3327,14 @@ const Configurator: React.FC = () => {
                       onFocus={() => handleFrameInputFocus('left')}
                       onBlur={() => handleFrameInputBlur('left', 10, 100, 50)}
                       onKeyDown={(e) => handleFrameInputKeyDown(e, 'left', 10, 100, 50)}
-                      className={ctrlStyles.frameNumberInput}
+                      className={styles.frameNumberInput}
                       disabled={
                         (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
                         spaceInfo.installType === 'freestanding'
                       }
                     />
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentLeft = spaceInfo.frameSize?.left || 50;
                         const newLeft = Math.min(100, currentLeft + 1);
@@ -3355,16 +3351,16 @@ const Configurator: React.FC = () => {
                 </div>
 
                 {/* 우측 */}
-                <div className={ctrlStyles.frameItem}>
-                  <label className={ctrlStyles.frameItemLabel}>
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>
                     {spaceInfo.installType === 'builtin' ? '우측' :
                       spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
                           spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
                   </label>
-                  <div className={ctrlStyles.frameItemInput}>
+                  <div className={styles.frameItemInput}>
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentRight = spaceInfo.frameSize?.right || 50;
                         const newRight = Math.max(10, currentRight - 1);
@@ -3386,14 +3382,14 @@ const Configurator: React.FC = () => {
                       onFocus={() => handleFrameInputFocus('right')}
                       onBlur={() => handleFrameInputBlur('right', 10, 100, 50)}
                       onKeyDown={(e) => handleFrameInputKeyDown(e, 'right', 10, 100, 50)}
-                      className={ctrlStyles.frameNumberInput}
+                      className={styles.frameNumberInput}
                       disabled={
                         (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
                         spaceInfo.installType === 'freestanding'
                       }
                     />
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentRight = spaceInfo.frameSize?.right || 50;
                         const newRight = Math.min(100, currentRight + 1);
@@ -3410,11 +3406,11 @@ const Configurator: React.FC = () => {
                 </div>
 
                 {/* 상부 */}
-                <div className={ctrlStyles.frameItem}>
-                  <label className={ctrlStyles.frameItemLabel}>상부</label>
-                  <div className={ctrlStyles.frameItemInput}>
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>상부</label>
+                  <div className={styles.frameItemInput}>
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentTop = spaceInfo.frameSize?.top || 50;
                         const newTop = Math.max(10, currentTop - 1);
@@ -3432,10 +3428,10 @@ const Configurator: React.FC = () => {
                       onFocus={() => handleFrameInputFocus('top')}
                       onBlur={() => handleFrameInputBlur('top', 10, 100, 50)}
                       onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 100, 50)}
-                      className={ctrlStyles.frameNumberInput}
+                      className={styles.frameNumberInput}
                     />
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentTop = spaceInfo.frameSize?.top || 50;
                         const newTop = Math.min(100, currentTop + 1);
@@ -3448,19 +3444,19 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-              <div className={ctrlStyles.frameUnit}>단위: mm</div>
+              <div className={styles.frameUnit}>단위: mm</div>
             </div>
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
-            <div className={ctrlStyles.subSetting}>
-              <label className={ctrlStyles.subLabel}>상부 프레임 설정</label>
+            <div className={styles.subSetting}>
+              <label className={styles.subLabel}>상부 프레임 설정</label>
 
-              <div className={ctrlStyles.frameGrid}>
+              <div className={styles.frameGrid}>
                 {/* 상부 프레임만 표시 */}
-                <div className={ctrlStyles.frameItem}>
-                  <label className={ctrlStyles.frameItemLabel}>상부</label>
-                  <div className={ctrlStyles.frameItemInput}>
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>상부</label>
+                  <div className={styles.frameItemInput}>
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentTop = spaceInfo.frameSize?.top || 10;
                         const newTop = Math.max(10, currentTop - 1);
@@ -3478,10 +3474,10 @@ const Configurator: React.FC = () => {
                       onFocus={() => handleFrameInputFocus('top')}
                       onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
                       onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 10)}
-                      className={ctrlStyles.frameNumberInput}
+                      className={styles.frameNumberInput}
                     />
                     <button
-                      className={ctrlStyles.frameButton}
+                      className={styles.frameButton}
                       onClick={() => {
                         const currentTop = spaceInfo.frameSize?.top || 10;
                         const newTop = Math.min(200, currentTop + 1);
@@ -3494,7 +3490,7 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-              <div className={ctrlStyles.frameUnit}>단위: mm</div>
+              <div className={styles.frameUnit}>단위: mm</div>
             </div>
           ) : null}
 
@@ -3508,10 +3504,10 @@ const Configurator: React.FC = () => {
 
 
         {/* 받침대 - 양쪽 탭에서 모두 표시 */}
-        <div className={rpStyles.configSection}>
-          <div className={rpStyles.sectionHeader}>
-            <span className={rpStyles.sectionDot}></span>
-            <h3 className={rpStyles.sectionTitle}>받침대</h3>
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>받침대</h3>
           </div>
           <BaseControls
             spaceInfo={spaceInfo}
@@ -3527,7 +3523,7 @@ const Configurator: React.FC = () => {
   // readonly 모드가 아닐 때만 로딩 화면 표시
   if (loading && !isReadOnly) {
     return (
-      <div className={rpStyles.loadingContainer}>
+      <div className={styles.loadingContainer}>
         <LoadingSpinner
           message="에디터를 준비하는 중..."
           size="large"
@@ -3789,7 +3785,7 @@ const Configurator: React.FC = () => {
 
           {/* 사이드바 컨텐츠 패널 */}
           <div
-            className={sidebarStyles.sidebarContent}
+            className={styles.sidebarContent}
             style={{
               transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
               opacity: activeSidebarTab ? 1 : 0,
@@ -3802,7 +3798,7 @@ const Configurator: React.FC = () => {
 
         {/* 중앙 뷰어 영역 */}
         <div
-          className={viewerStyles.viewerArea}
+          className={styles.viewerArea}
           data-main-viewer="true"
           style={isMobile ? {
             position: 'absolute',
@@ -3882,12 +3878,12 @@ const Configurator: React.FC = () => {
           )}
 
           {/* 3D 뷰어 */}
-          <div className={`${viewerStyles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`}>
+          <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`}>
             {/* 도어가 설치된 경우에만 뷰어 상단에 Close/Open 토글 버튼 표시 */}
             {hasDoorsInstalled && (
-              <div className={viewerStyles.viewerDoorToggle}>
+              <div className={styles.viewerDoorToggle}>
                 <button
-                  className={`${viewerStyles.viewerDoorButton} ${!doorsOpen ? viewerStyles.active : ''}`}
+                  className={`${styles.viewerDoorButton} ${!doorsOpen ? styles.active : ''}`}
                   onClick={() => {
                     console.log('🚪 Close 버튼 클릭됨');
                     console.log('전역 doorsOpen:', doorsOpen);
@@ -3923,7 +3919,7 @@ const Configurator: React.FC = () => {
                   Close
                 </button>
                 <button
-                  className={`${viewerStyles.viewerDoorButton} ${doorsOpen ? viewerStyles.active : ''}`}
+                  className={`${styles.viewerDoorButton} ${doorsOpen ? styles.active : ''}`}
                   onClick={() => {
                     console.log('🚪 Open 버튼 클릭됨');
                     console.log('전역 doorsOpen:', doorsOpen);
@@ -3979,8 +3975,6 @@ const Configurator: React.FC = () => {
           </div>
           {isMobile && <div className={responsiveStyles.mobileViewerDivider} aria-hidden="true" />}
 
-          {/* 가구 편집 패널 - 뷰어 하단 슬라이드업 */}
-          <PlacedModulePropertiesPanel />
         </div>
 
         {/* 우측 패널 폴드/언폴드 버튼 - 읽기 전용 모드에서는 숨김 */}
@@ -4009,7 +4003,7 @@ const Configurator: React.FC = () => {
 
             {/* 우측 패널 */}
             <div
-              className={rpStyles.rightPanel}
+              className={styles.rightPanel}
               style={{
                 transform: isRightPanelOpen ? 'translateX(0)' : 'translateX(100%)',
                 opacity: isRightPanelOpen ? 1 : 0,
@@ -4020,7 +4014,7 @@ const Configurator: React.FC = () => {
               <PreviewViewer />
 
               {/* 패널 컨텐츠 */}
-              <div className={rpStyles.rightPanelContent}>
+              <div className={styles.rightPanelContent}>
                 {renderRightPanelContent()}
               </div>
             </div>
@@ -4028,8 +4022,9 @@ const Configurator: React.FC = () => {
         )}
       </div>
 
-      {/* 가구 편집 창 - 모듈 속성 */}
+      {/* 가구 편집 창들 - 기존 기능 유지 */}
       <ModulePropertiesPanel />
+      <PlacedModulePropertiesPanel />
 
       {/* 기둥 편집 모달 */}
       <ColumnEditModal
