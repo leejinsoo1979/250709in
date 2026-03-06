@@ -1,6 +1,6 @@
 /**
  * 길로틴 컷(Guillotine Cut) 최적화 알고리즘
- * 한 방향으로 먼저 전체를 자른 후 다른 방향으로 자르는 방식
+ * 같은 크기 패널을 그룹화하여 정돈된 스트립(선반)으로 배치
  * 실제 컷쏘 작업 방식을 반영한 최적화
  */
 
@@ -12,11 +12,18 @@ interface Strip {
   width: number;
   height: number;
   panels: PlacedRect[];
-  horizontal: boolean; // true: 가로 스트립, false: 세로 스트립
+  horizontal: boolean;
 }
 
 interface PlacedRect extends Rect {
   stripIndex?: number;
+}
+
+/** 같은 크기끼리 묶은 그룹 */
+interface SizeGroup {
+  width: number;
+  height: number;
+  panels: Rect[];
 }
 
 export class GuillotinePacker {
@@ -25,558 +32,338 @@ export class GuillotinePacker {
   private kerf: number;
   private strips: Strip[] = [];
   private bestLayout: { strips: Strip[], efficiency: number } | null = null;
-  
+
   constructor(width: number, height: number, kerf: number = 5) {
     this.binWidth = width;
     this.binHeight = height;
     this.kerf = kerf;
   }
-  
+
   /**
    * 길로틴 방식으로 패널 배치
-   * stripDirection이 지정되면 해당 방향만, auto면 모든 방법 시도
    */
   packAll(panels: Rect[], stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'): PackedBin {
-    // 더 큰 패널들을 먼저 배치하기 위해 정렬
-    const sortedPanels = [...panels].sort((a, b) => {
-      const areaA = a.width * a.height;
-      const areaB = b.width * b.height;
-      return areaB - areaA;
-    });
-    
-    let bestResult, bestEfficiency, bestStrategy;
-    
+    let bestResult: Strip[];
+    let bestEfficiency: number;
+
     if (stripDirection === 'horizontal') {
-      // 가로 스트립 = 가로로 먼저 자름 = BY_LENGTH (L방향 우선)
-      console.log('📐 packAll: horizontal strip mode (BY_LENGTH)');
-      bestResult = this.packWithStrips(sortedPanels, true);
+      bestResult = this.packShelves(panels, true);
       bestEfficiency = this.calculateEfficiency(bestResult);
-      bestStrategy = 'horizontal';
     } else if (stripDirection === 'vertical') {
-      // 세로 스트립 = 세로로 먼저 자름 = BY_WIDTH (W방향 우선)
-      console.log('📐 packAll: vertical strip mode (BY_WIDTH)');
-      bestResult = this.packWithStrips(sortedPanels, false);
+      bestResult = this.packShelves(panels, false);
       bestEfficiency = this.calculateEfficiency(bestResult);
-      bestStrategy = 'vertical';
     } else {
-      // auto: 모든 방법 시도하고 최적 선택
-      const horizontalResult = this.packWithStrips(sortedPanels, true);
-      const horizontalEfficiency = this.calculateEfficiency(horizontalResult);
-      
-      const verticalResult = this.packWithStrips(sortedPanels, false);
-      const verticalEfficiency = this.calculateEfficiency(verticalResult);
-      
-      const mixedResult = this.packWithMixedStrategy(sortedPanels);
-      const mixedEfficiency = this.calculateEfficiency(mixedResult);
-      
-      // 가장 효율적인 레이아웃 선택
-      bestResult = horizontalResult;
-      bestEfficiency = horizontalEfficiency;
-      bestStrategy = 'horizontal';
-      
-      if (verticalEfficiency > bestEfficiency) {
-        bestResult = verticalResult;
-        bestEfficiency = verticalEfficiency;
-        bestStrategy = 'vertical';
-      }
-      
-      if (mixedEfficiency > bestEfficiency) {
-        bestResult = mixedResult;
-        bestEfficiency = mixedEfficiency;
-        bestStrategy = 'mixed';
+      // auto: 가로/세로 모두 시도하여 효율 높은 것 선택
+      const hResult = this.packShelves(panels, true);
+      const hEff = this.calculateEfficiency(hResult);
+
+      const vResult = this.packShelves(panels, false);
+      const vEff = this.calculateEfficiency(vResult);
+
+      if (hEff >= vEff) {
+        bestResult = hResult;
+        bestEfficiency = hEff;
+      } else {
+        bestResult = vResult;
+        bestEfficiency = vEff;
       }
     }
-    
+
     this.strips = bestResult;
     this.bestLayout = { strips: bestResult, efficiency: bestEfficiency };
-    
+
     return this.getResult();
   }
-  
+
   /**
-   * 혼합 전략으로 패널 배치 (큰 패널은 가로, 작은 패널은 세로)
+   * 선반(Shelf) 기반 정돈된 패킹
+   * 1. 동일 크기 패널끼리 그룹화
+   * 2. 각 그룹을 하나의 선반(스트립)에 일렬로 배치
+   * 3. 선반들을 위에서 아래(가로) 또는 왼쪽에서 오른쪽(세로)으로 쌓기
    */
-  private packWithMixedStrategy(panels: Rect[]): Strip[] {
+  private packShelves(panels: Rect[], horizontal: boolean): Strip[] {
     const strips: Strip[] = [];
-    const remainingPanels = [...panels];
-    
-    // 패널을 크기별로 분류
-    const totalArea = panels.reduce((sum, p) => sum + p.width * p.height, 0);
-    const avgArea = totalArea / panels.length;
-    
-    const largePanels = remainingPanels.filter(p => p.width * p.height > avgArea * 1.5);
-    const smallPanels = remainingPanels.filter(p => p.width * p.height <= avgArea * 1.5);
-    
-    let currentY = 0;
-    
-    // 큰 패널들은 가로 스트립으로 배치
-    if (largePanels.length > 0) {
-      const largeStrips = this.packWithStrips(largePanels, true);
-      for (const strip of largeStrips) {
-        if (currentY + strip.height <= this.binHeight) {
-          // 스트립 내 패널들의 좌표도 조정
-          const adjustedPanels = strip.panels.map(panel => ({
-            ...panel,
-            y: currentY
-          }));
-          const adjustedStrip: Strip = { 
-            ...strip, 
-            y: currentY,
-            panels: adjustedPanels 
-          };
-          strips.push(adjustedStrip);
-          currentY += strip.height + this.kerf;
+
+    // 1단계: 동일 크기끼리 그룹화
+    const groups = this.groupBySize(panels);
+
+    // 2단계: 그룹을 선반 방향에 맞게 정렬
+    //   가로 선반: 높이가 큰 그룹 먼저 (위→아래로 쌓으므로 큰 높이 먼저)
+    //   세로 선반: 너비가 큰 그룹 먼저 (왼→오로 쌓으므로 큰 너비 먼저)
+    this.sortGroups(groups, horizontal);
+
+    // 3단계: 각 그룹을 선반으로 변환하여 배치
+    let currentPos = 0; // 가로면 Y축, 세로면 X축 위치
+    const maxPos = horizontal ? this.binHeight : this.binWidth;
+
+    for (const group of groups) {
+      if (group.panels.length === 0) continue;
+
+      // 이 그룹의 패널들로 선반 생성
+      const newStrips = this.createShelvesFromGroup(group, currentPos, horizontal, maxPos);
+
+      for (const strip of newStrips) {
+        if (strip.panels.length === 0) continue;
+        strips.push(strip);
+
+        // 다음 선반 위치 업데이트
+        if (horizontal) {
+          const stripEnd = strip.y + strip.height + this.kerf;
+          if (stripEnd > currentPos) currentPos = stripEnd;
+        } else {
+          const stripEnd = strip.x + strip.width + this.kerf;
+          if (stripEnd > currentPos) currentPos = stripEnd;
         }
       }
+
+      if (currentPos >= maxPos) break;
     }
-    
-    // 남은 공간에 작은 패널들을 세로 스트립으로 배치
-    if (smallPanels.length > 0 && currentY < this.binHeight) {
-      const remainingHeight = this.binHeight - currentY;
-      const tempPacker = new GuillotinePacker(this.binWidth, remainingHeight, this.kerf);
-      const smallStrips = tempPacker.packWithStrips(smallPanels, false);
-      
-      for (const strip of smallStrips) {
-        // 스트립 내 패널들의 좌표도 조정
-        const adjustedPanels = strip.panels.map(panel => ({
-          ...panel,
-          y: panel.y + currentY
-        }));
-        const adjustedStrip: Strip = { 
-          ...strip, 
-          y: strip.y + currentY,
-          panels: adjustedPanels 
-        };
-        strips.push(adjustedStrip);
-      }
-    }
-    
+
     return strips;
   }
-  
-  /**
-   * 지정된 방향의 스트립으로 패널 배치
-   */
-  private packWithStrips(panels: Rect[], horizontal: boolean): Strip[] {
-    console.log(`🔨 packWithStrips: horizontal=${horizontal} (${horizontal ? '가로 스트립' : '세로 스트립'})`);
-    const strips: Strip[] = [];
-    const sortedPanels = this.sortPanels(panels, horizontal);
-    const remainingPanels = [...sortedPanels];
 
-    let currentPos = 0;
-    
-    while (remainingPanels.length > 0) {
-      // 새 스트립 생성
-      const strip = this.createStrip(remainingPanels, currentPos, horizontal);
-      
-      if (!strip || strip.panels.length === 0) {
-        break;
-      }
-      
-      strips.push(strip);
-      
-      // 배치된 패널 제거
-      strip.panels.forEach(placedPanel => {
-        const index = remainingPanels.findIndex(p => 
-          p.id === placedPanel.id && 
-          p.width === placedPanel.width && 
-          p.height === placedPanel.height
-        );
-        if (index !== -1) {
-          remainingPanels.splice(index, 1);
+  /**
+   * 동일 크기 패널끼리 그룹화
+   * 1mm 이내 차이는 동일 크기로 취급
+   */
+  private groupBySize(panels: Rect[]): SizeGroup[] {
+    const groups: SizeGroup[] = [];
+    const assigned = new Set<number>();
+
+    for (let i = 0; i < panels.length; i++) {
+      if (assigned.has(i)) continue;
+
+      const base = panels[i];
+      const group: SizeGroup = {
+        width: base.width,
+        height: base.height,
+        panels: [base]
+      };
+      assigned.add(i);
+
+      // 같은 크기 패널 찾기 (1mm 이내)
+      for (let j = i + 1; j < panels.length; j++) {
+        if (assigned.has(j)) continue;
+        const other = panels[j];
+
+        if (Math.abs(other.width - base.width) <= 1 &&
+            Math.abs(other.height - base.height) <= 1) {
+          group.panels.push(other);
+          assigned.add(j);
         }
-      });
-      
-      // 다음 스트립 위치 계산
-      if (horizontal) {
-        currentPos = strip.y + strip.height + this.kerf;
-      } else {
-        currentPos = strip.x + strip.width + this.kerf;
       }
-      
-      // 공간 초과 체크
-      if ((horizontal && currentPos >= this.binHeight) || 
-          (!horizontal && currentPos >= this.binWidth)) {
-        break;
-      }
+
+      groups.push(group);
     }
-    
-    return strips;
+
+    return groups;
   }
-  
+
   /**
-   * 새 스트립 생성 및 패널 배치
+   * 그룹 정렬: 선반 방향 기준 치수 내림차순
+   * 같은 치수면 패널 수가 많은 그룹 먼저 (한 줄 가득 채우기 유리)
    */
-  private createStrip(panels: Rect[], position: number, horizontal: boolean): Strip | null {
-    if (panels.length === 0) return null;
-    
-    const strip: Strip = {
-      x: horizontal ? 0 : position,
-      y: horizontal ? position : 0,
-      width: horizontal ? this.binWidth : 0,
-      height: horizontal ? 0 : this.binHeight,
-      panels: [],
-      horizontal
-    };
-    
-    if (horizontal) {
-      // 가로 스트립: 가장 적합한 높이 찾기
-      // 첫 번째 패널의 높이를 기준으로 시작
-      let stripHeight = 0;
-      let bestFit = 0;
-      
-      // 남은 공간 확인
-      const remainingHeight = this.binHeight - position;
-      if (remainingHeight <= 0) return null;
-      
-      // 패널들의 높이 분포 분석
-      const heights = panels.map(p => p.height);
-      const rotatedHeights = panels.filter(p => p.canRotate).map(p => p.width);
-      const allHeights = [...heights, ...rotatedHeights].sort((a, b) => b - a);
-      
-      // 가장 큰 높이부터 시도
-      for (const h of allHeights) {
-        if (h <= remainingHeight) {
-          // 이 높이로 얼마나 많은 패널을 배치할 수 있는지 계산
-          let testWidth = 0;
-          let testCount = 0;
-          
-          for (const panel of panels) {
-            const tolerance = 0.1; // 10% 허용 오차로 줄임
-            const heightMatch = Math.abs(panel.height - h) / h <= tolerance;
-            const rotatedMatch = panel.canRotate && Math.abs(panel.width - h) / h <= tolerance;
-            
-            if ((heightMatch || rotatedMatch) && testWidth + panel.width <= this.binWidth) {
-              testWidth += (heightMatch ? panel.width : panel.height) + this.kerf;
-              testCount++;
-            }
-          }
-          
-          // 공간 활용도 계산
-          const utilization = (testWidth / this.binWidth) * testCount;
-          if (utilization > bestFit) {
-            stripHeight = h;
-            bestFit = utilization;
-          }
-        }
-      }
-      
-      if (stripHeight === 0) return null;
-      
-      strip.height = stripHeight;
-      
-      // 스트립이 빈 영역을 벗어나는지 체크
-      if (strip.y + strip.height > this.binHeight) {
-        return null;
-      }
-      
-      // 높이가 맞는 패널들을 가로로 배치
-      let currentX = 0;
-      const placedSet = new Set<Rect>();
-
-      // 1차: 정확히 같은 높이의 패널 배치 (오차 2% 이내)
-      for (const panel of panels) {
-        if (placedSet.has(panel)) continue;
-
-        const heightDiff = Math.abs(panel.height - strip.height) / strip.height;
-
-        if (heightDiff <= 0.02 && currentX + panel.width <= this.binWidth && panel.height <= strip.height) {
-          const placedPanel: PlacedRect = {
-            ...panel,
-            x: currentX,
-            y: strip.y,
-            stripIndex: this.strips.length
-          };
-          strip.panels.push(placedPanel);
-          currentX += panel.width + this.kerf;
-          placedSet.add(panel);
-        }
-      }
-
-      // 2차: 유사한 높이의 패널 배치 (오차 10% 이내, 스트립 높이 이내)
-      for (const panel of panels) {
-        if (placedSet.has(panel)) continue;
-
-        const heightDiff = Math.abs(panel.height - strip.height) / strip.height;
-
-        if (heightDiff <= 0.1 && currentX + panel.width <= this.binWidth && panel.height <= strip.height) {
-          const placedPanel: PlacedRect = {
-            ...panel,
-            x: currentX,
-            y: strip.y,
-            stripIndex: this.strips.length
-          };
-          strip.panels.push(placedPanel);
-          currentX += panel.width + this.kerf;
-          placedSet.add(panel);
-        }
-      }
-
-      // 3차: 회전 가능한 패널 중 맞는 것 배치
-      for (const panel of panels) {
-        if (placedSet.has(panel) || !panel.canRotate) continue;
-
-        const rotatedHeightDiff = Math.abs(panel.width - strip.height) / strip.height;
-        if (rotatedHeightDiff <= 0.1 && currentX + panel.height <= this.binWidth && panel.width <= strip.height) {
-          const placedPanel: PlacedRect = {
-            ...panel,
-            x: currentX,
-            y: strip.y,
-            rotated: true,
-            stripIndex: this.strips.length
-          };
-          strip.panels.push(placedPanel);
-          currentX += panel.height + this.kerf;
-          placedSet.add(panel);
-        }
-      }
-    } else {
-      // 세로 스트립: 너비가 비슷한 패널들을 묶음
-      let stripWidth = 0;
-      let bestFit = 0;
-      
-      // 남은 공간 확인
-      const remainingWidth = this.binWidth - position;
-      if (remainingWidth <= 0) return null;
-      
-      // 패널들의 너비 분포 분석
-      const widths = panels.map(p => p.width);
-      const rotatedWidths = panels.filter(p => p.canRotate).map(p => p.height);
-      const allWidths = [...widths, ...rotatedWidths].sort((a, b) => b - a);
-      
-      // 가장 큰 너비부터 시도
-      for (const w of allWidths) {
-        if (w <= remainingWidth) {
-          // 이 너비로 얼마나 많은 패널을 배치할 수 있는지 계산
-          let testHeight = 0;
-          let testCount = 0;
-          
-          for (const panel of panels) {
-            const tolerance = 0.1; // 10% 허용 오차로 줄임
-            const widthMatch = Math.abs(panel.width - w) / w <= tolerance;
-            const rotatedMatch = panel.canRotate && Math.abs(panel.height - w) / w <= tolerance;
-            
-            if ((widthMatch || rotatedMatch) && testHeight + panel.height <= this.binHeight) {
-              testHeight += (widthMatch ? panel.height : panel.width) + this.kerf;
-              testCount++;
-            }
-          }
-          
-          // 공간 활용도 계산
-          const utilization = (testHeight / this.binHeight) * testCount;
-          if (utilization > bestFit) {
-            stripWidth = w;
-            bestFit = utilization;
-          }
-        }
-      }
-      
-      if (stripWidth === 0) return null;
-      
-      strip.width = stripWidth;
-      
-      // 스트립이 빈 영역을 벗어나는지 체크
-      if (strip.x + strip.width > this.binWidth) {
-        return null;
-      }
-      
-      // 너비가 맞는 패널들을 세로로 배치
-      let currentY = 0;
-      const placedSet = new Set<Rect>();
-
-      // 1차: 정확히 같은 너비의 패널 배치 (오차 2% 이내)
-      for (const panel of panels) {
-        if (placedSet.has(panel)) continue;
-
-        const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
-
-        if (widthDiff <= 0.02 && strip.y + currentY + panel.height <= this.binHeight && panel.width <= strip.width) {
-          const placedPanel: PlacedRect = {
-            ...panel,
-            x: strip.x,
-            y: strip.y + currentY,
-            stripIndex: this.strips.length
-          };
-          strip.panels.push(placedPanel);
-          currentY += panel.height + this.kerf;
-          placedSet.add(panel);
-        }
-      }
-
-      // 2차: 유사한 너비의 패널 배치 (오차 10% 이내, 스트립 너비 이내)
-      for (const panel of panels) {
-        if (placedSet.has(panel)) continue;
-
-        const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
-
-        if (widthDiff <= 0.1 && strip.y + currentY + panel.height <= this.binHeight && panel.width <= strip.width) {
-          const placedPanel: PlacedRect = {
-            ...panel,
-            x: strip.x,
-            y: strip.y + currentY,
-            stripIndex: this.strips.length
-          };
-          strip.panels.push(placedPanel);
-          currentY += panel.height + this.kerf;
-          placedSet.add(panel);
-        }
-      }
-
-      // 3차: 회전 가능한 패널 중 맞는 것 배치
-      for (const panel of panels) {
-        if (placedSet.has(panel) || !panel.canRotate) continue;
-
-        const rotatedWidthDiff = Math.abs(panel.height - strip.width) / strip.width;
-        if (rotatedWidthDiff <= 0.1 && strip.y + currentY + panel.width <= this.binHeight && panel.height <= strip.width) {
-          const placedPanel: PlacedRect = {
-            ...panel,
-            x: strip.x,
-            y: strip.y + currentY,
-            rotated: true,
-            stripIndex: this.strips.length
-          };
-          strip.panels.push(placedPanel);
-          currentY += panel.width + this.kerf;
-          placedSet.add(panel);
-        }
-      }
-    }
-    
-    return strip.panels.length > 0 ? strip : null;
-  }
-  
-  /**
-   * 패널 정렬 (스트립 방향에 따라)
-   * 같은 크기의 패널들을 그룹화하여 효율적인 배치 유도
-   */
-  private sortPanels(panels: Rect[], horizontal: boolean): Rect[] {
-    // 1단계: 크기별로 패널 그룹화 (정확히 같은 크기끼리)
-    const sizeGroups = new Map<string, Rect[]>();
-
-    for (const panel of panels) {
-      // 크기 기준 키 생성 (소수점 반올림)
-      const key = `${Math.round(panel.width)}_${Math.round(panel.height)}`;
-      if (!sizeGroups.has(key)) {
-        sizeGroups.set(key, []);
-      }
-      sizeGroups.get(key)!.push(panel);
-    }
-
-    // 2단계: 그룹을 스트립 방향에 따라 정렬
-    const sortedGroups = [...sizeGroups.entries()].sort((a, b) => {
-      const [keyA] = a;
-      const [keyB] = b;
-      const [widthA, heightA] = keyA.split('_').map(Number);
-      const [widthB, heightB] = keyB.split('_').map(Number);
-
+  private sortGroups(groups: SizeGroup[], horizontal: boolean): void {
+    groups.sort((a, b) => {
       if (horizontal) {
-        // 가로 스트립: 높이 기준 정렬 (큰 것 먼저), 그 다음 개수 (많은 것 먼저)
-        const heightDiff = heightB - heightA;
-        if (heightDiff !== 0) return heightDiff;
-        return b[1].length - a[1].length;
+        // 가로 선반: 높이가 큰 것 먼저 → 같으면 개수 많은 것 먼저
+        const hDiff = b.height - a.height;
+        if (Math.abs(hDiff) > 1) return hDiff;
+        return b.panels.length - a.panels.length;
       } else {
-        // 세로 스트립: 너비 기준 정렬 (큰 것 먼저), 그 다음 개수 (많은 것 먼저)
-        const widthDiff = widthB - widthA;
-        if (widthDiff !== 0) return widthDiff;
-        return b[1].length - a[1].length;
+        // 세로 선반: 너비가 큰 것 먼저 → 같으면 개수 많은 것 먼저
+        const wDiff = b.width - a.width;
+        if (Math.abs(wDiff) > 1) return wDiff;
+        return b.panels.length - a.panels.length;
       }
     });
+  }
 
-    // 3단계: 정렬된 그룹들을 순서대로 펼침
-    const result: Rect[] = [];
-    for (const [, group] of sortedGroups) {
-      result.push(...group);
+  /**
+   * 하나의 크기 그룹에서 선반(들) 생성
+   * 한 줄에 안 들어가면 같은 높이의 다음 줄로 이어서 배치
+   */
+  private createShelvesFromGroup(
+    group: SizeGroup,
+    startPos: number,
+    horizontal: boolean,
+    maxPos: number
+  ): Strip[] {
+    const strips: Strip[] = [];
+    const remaining = [...group.panels];
+    let currentPos = startPos;
+
+    while (remaining.length > 0 && currentPos < maxPos) {
+      if (horizontal) {
+        // 가로 선반: 높이 = 그룹 높이, 패널을 왼→오로 배치
+        const shelfHeight = group.height;
+
+        // 공간 체크
+        if (currentPos + shelfHeight > this.binHeight) break;
+
+        const strip: Strip = {
+          x: 0,
+          y: currentPos,
+          width: this.binWidth,
+          height: shelfHeight,
+          panels: [],
+          horizontal: true
+        };
+
+        let currentX = 0;
+        const toRemove: number[] = [];
+
+        for (let i = 0; i < remaining.length; i++) {
+          const panel = remaining[i];
+          const panelW = panel.width;
+
+          // 이 패널이 현재 X 위치에 들어가는지 체크
+          if (currentX + panelW <= this.binWidth) {
+            const placed: PlacedRect = {
+              ...panel,
+              x: currentX,
+              y: currentPos,
+              rotated: false,
+              stripIndex: this.strips.length + strips.length
+            };
+            strip.panels.push(placed);
+            currentX += panelW + this.kerf;
+            toRemove.push(i);
+          }
+        }
+
+        // 배치된 패널 제거 (역순으로)
+        for (let i = toRemove.length - 1; i >= 0; i--) {
+          remaining.splice(toRemove[i], 1);
+        }
+
+        if (strip.panels.length > 0) {
+          strips.push(strip);
+          currentPos += shelfHeight + this.kerf;
+        } else {
+          break; // 더 이상 배치 불가
+        }
+      } else {
+        // 세로 선반: 너비 = 그룹 너비, 패널을 위→아래로 배치
+        const shelfWidth = group.width;
+
+        // 공간 체크
+        if (currentPos + shelfWidth > this.binWidth) break;
+
+        const strip: Strip = {
+          x: currentPos,
+          y: 0,
+          width: shelfWidth,
+          height: this.binHeight,
+          panels: [],
+          horizontal: false
+        };
+
+        let currentY = 0;
+        const toRemove: number[] = [];
+
+        for (let i = 0; i < remaining.length; i++) {
+          const panel = remaining[i];
+          const panelH = panel.height;
+
+          if (currentY + panelH <= this.binHeight) {
+            const placed: PlacedRect = {
+              ...panel,
+              x: currentPos,
+              y: currentY,
+              rotated: false,
+              stripIndex: this.strips.length + strips.length
+            };
+            strip.panels.push(placed);
+            currentY += panelH + this.kerf;
+            toRemove.push(i);
+          }
+        }
+
+        for (let i = toRemove.length - 1; i >= 0; i--) {
+          remaining.splice(toRemove[i], 1);
+        }
+
+        if (strip.panels.length > 0) {
+          strips.push(strip);
+          currentPos += shelfWidth + this.kerf;
+        } else {
+          break;
+        }
+      }
     }
 
-    return result;
+    return strips;
   }
-  
+
   /**
    * 레이아웃 효율 계산
    */
   private calculateEfficiency(strips: Strip[]): number {
     let usedArea = 0;
-    
+
     for (const strip of strips) {
       for (const panel of strip.panels) {
-        // 회전 여부와 관계없이 원본 크기로 면적 계산
         usedArea += panel.width * panel.height;
       }
     }
-    
+
     const totalArea = this.binWidth * this.binHeight;
     return totalArea > 0 ? (usedArea / totalArea) * 100 : 0;
   }
-  
+
   /**
-   * 패킹 결과 반환
+   * 패킹 결과 반환 (검증 포함)
    */
   getResult(): PackedBin {
     const panels: Rect[] = [];
     let usedArea = 0;
-    const placedPanels = new Set<string>();
-    // 겹침 감지를 위한 배치된 패널 영역 목록
+    const placedIds = new Set<string>();
     const placedRects: { x: number; y: number; w: number; h: number }[] = [];
 
     for (const strip of this.strips) {
       for (const panel of strip.panels) {
-        // 중복 패널 방지
+        // 중복 방지
         const panelKey = `${panel.id}-${panel.x}-${panel.y}`;
-        if (placedPanels.has(panelKey)) {
-          console.warn(`Duplicate panel detected: ${panelKey}`);
-          continue;
-        }
-        placedPanels.add(panelKey);
+        if (placedIds.has(panelKey)) continue;
+        placedIds.add(panelKey);
 
-        // 패널이 스트립 경계를 벗어나지 않도록 검증
         const finalPanel = { ...panel };
 
-        // 좌표가 음수가 되지 않도록 보장
+        // 좌표 음수 방지
         if (finalPanel.x < 0) finalPanel.x = 0;
         if (finalPanel.y < 0) finalPanel.y = 0;
 
-        // 패널이 빈 영역을 벗어나지 않도록 보장
-        const actualWidth = finalPanel.rotated ? finalPanel.height : finalPanel.width;
-        const actualHeight = finalPanel.rotated ? finalPanel.width : finalPanel.height;
+        // 빈 경계 초과 체크
+        const actualW = finalPanel.rotated ? finalPanel.height : finalPanel.width;
+        const actualH = finalPanel.rotated ? finalPanel.width : finalPanel.height;
 
-        if (finalPanel.x + actualWidth > this.binWidth) {
-          console.warn(`Panel extends beyond bin width: ${finalPanel.x + actualWidth} > ${this.binWidth}`);
-          continue;
-        }
-        if (finalPanel.y + actualHeight > this.binHeight) {
-          console.warn(`Panel extends beyond bin height: ${finalPanel.y + actualHeight} > ${this.binHeight}`);
-          continue;
-        }
+        if (finalPanel.x + actualW > this.binWidth + 0.5) continue;
+        if (finalPanel.y + actualH > this.binHeight + 0.5) continue;
 
-        // 겹침 감지: 이미 배치된 패널과 겹치는지 확인
-        const newRect = { x: finalPanel.x, y: finalPanel.y, w: actualWidth, h: actualHeight };
+        // 겹침 감지
+        const newRect = { x: finalPanel.x, y: finalPanel.y, w: actualW, h: actualH };
         const overlaps = placedRects.some(r => {
-          const margin = 0.5; // 0.5mm 허용 오차
+          const margin = 0.5;
           return newRect.x < r.x + r.w - margin &&
                  newRect.x + newRect.w > r.x + margin &&
                  newRect.y < r.y + r.h - margin &&
                  newRect.y + newRect.h > r.y + margin;
         });
 
-        if (overlaps) {
-          console.warn(`Panel overlap detected: ${finalPanel.name || finalPanel.id} at (${finalPanel.x}, ${finalPanel.y}) ${actualWidth}x${actualHeight}`);
-          continue; // 겹치는 패널은 스킵 (다음 빈에서 배치됨)
-        }
+        if (overlaps) continue;
 
         placedRects.push(newRect);
         panels.push(finalPanel);
-        // 회전 여부와 관계없이 원본 크기로 면적 계산
         usedArea += finalPanel.width * finalPanel.height;
       }
     }
-    
-    const efficiency = this.bestLayout?.efficiency || 0;
-    
+
     return {
       width: this.binWidth,
       height: this.binHeight,
       panels,
-      efficiency,
+      efficiency: this.bestLayout?.efficiency || 0,
       usedArea
     };
   }
@@ -593,45 +380,34 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
-  console.log('🔧 packGuillotine called:', { stripDirection, binWidth, binHeight, panelCount: panels.length });
-
   const bins: PackedBin[] = [];
   let currentBin = 0;
   const remainingPanels = [...panels];
 
   while (remainingPanels.length > 0 && currentBin < maxBins) {
-
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
     const result = packer.packAll(remainingPanels, stripDirection);
-    console.log(`📦 Bin ${currentBin}: placed ${result.panels.length} panels, stripDirection=${stripDirection}`);
-    
+
     if (result.panels.length === 0) {
-      console.warn('[packGuillotine] Cannot place any more panels!');
-      console.warn(`[packGuillotine] Remaining ${remainingPanels.length} panels:`);
-      remainingPanels.forEach(p => {
-        console.warn(`  - ${p.name || p.id}: ${p.width}x${p.height}mm, canRotate=${p.canRotate}`);
-      });
-      console.warn(`[packGuillotine] Bin size: ${binWidth}x${binHeight}mm, kerf: ${kerf}mm`);
+      console.warn(`[packGuillotine] Cannot place ${remainingPanels.length} remaining panels`);
       break;
     }
-    
-    // 배치된 패널들을 제거
-    // ID가 같은 패널이 여러 개 있을 수 있으므로 개수를 세어야 함
+
+    // 배치된 패널 제거
     for (const placedPanel of result.panels) {
-      const index = remainingPanels.findIndex(p => 
-        p.id === placedPanel.id && 
-        p.width === placedPanel.width && 
+      const index = remainingPanels.findIndex(p =>
+        p.id === placedPanel.id &&
+        p.width === placedPanel.width &&
         p.height === placedPanel.height
       );
       if (index !== -1) {
         remainingPanels.splice(index, 1);
       }
     }
-    
+
     bins.push(result);
-    
     currentBin++;
   }
-  
+
   return bins;
 }
