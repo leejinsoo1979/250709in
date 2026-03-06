@@ -3975,6 +3975,8 @@ const Configurator: React.FC = () => {
           </div>
           {isMobile && <div className={responsiveStyles.mobileViewerDivider} aria-hidden="true" />}
 
+          {/* 가구 편집 패널 - 뷰어 하단 슬라이드업 */}
+          <PlacedModulePropertiesPanel />
         </div>
 
         {/* 우측 패널 폴드/언폴드 버튼 - 읽기 전용 모드에서는 숨김 */}
@@ -4022,9 +4024,8 @@ const Configurator: React.FC = () => {
         )}
       </div>
 
-      {/* 가구 편집 창들 - 기존 기능 유지 */}
+      {/* 가구 편집 창 - 모듈 속성 */}
       <ModulePropertiesPanel />
-      <PlacedModulePropertiesPanel />
 
       {/* 기둥 편집 모달 */}
       <ColumnEditModal

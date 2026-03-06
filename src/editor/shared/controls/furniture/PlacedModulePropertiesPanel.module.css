@@ -1,36 +1,29 @@
 .overlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: auto; /* 패널 크기만큼만 차지 */
-  height: 100vh;
-  background-color: transparent; /* 회색 반투명 오버레이 제거 */
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
-  padding-top: 60px;
-  padding-right: 25px; /* 우측 여백 */
-  pointer-events: none; /* overlay는 클릭 이벤트를 패스, 자식 요소만 클릭 가능 */
+  pointer-events: none;
 }
 
 .panel {
   background: var(--theme-surface);
-  border-radius: 12px;
-  box-shadow: var(--popup-shadow);
-  width: 350px;
-  max-height: calc(100vh - 120px);
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.18);
+  width: 380px;
+  max-height: 240px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.2s ease-out;
-  pointer-events: auto; /* 패널만 클릭 이벤트 받음 */
+  animation: slideUp 0.25s ease-out;
+  pointer-events: auto;
 }
 
-@keyframes slideIn {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -52,14 +45,14 @@
 
 .tabButton {
   flex: 1;
-  padding: 16px 20px;
+  padding: 10px 14px;
   border: none;
   background: var(--theme-surface-variant);
   color: var(--theme-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -117,20 +110,20 @@
 /* 삭제 버튼 스타일 - content 섹션 내에서 직접 사용 */
 .content .deleteButton {
   width: 100%;
-  height: 40px;
+  height: 34px;
   background: var(--theme-background-secondary);
   color: var(--theme-primary);
   border: 1px solid var(--theme-primary);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .content .deleteButton:hover {
@@ -188,30 +181,30 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 12px 16px;
 }
 
 .moduleInfo {
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--theme-border);
-  align-items: flex-start;
+  align-items: center;
 }
 
 .modulePreview {
   flex-shrink: 0;
-  width: 120px;
-  height: 160px;
+  width: 48px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--theme-background-secondary);
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--theme-border);
   overflow: hidden;
-  padding: 4px;
+  padding: 2px;
 }
 
 .moduleImage {
@@ -326,10 +319,10 @@
 }
 
 .moduleName {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--theme-text);
-  margin: 0 0 12px 0;
+  margin: 0 0 2px 0;
 }
 
 .property {
@@ -358,7 +351,7 @@
 }
 
 .propertySection {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .propertySection:last-child {
@@ -366,11 +359,11 @@
 }
 
 .sectionTitle {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--theme-text);
-  margin: 0 0 12px 0;
-  padding-bottom: 8px;
+  margin: 0 0 6px 0;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--theme-border);
 }
 
@@ -389,10 +382,10 @@
 
 .depthInput {
   width: 100%;
-  padding: 10px 40px 10px 12px;
+  padding: 7px 36px 7px 10px;
   border: 1px solid var(--theme-border) !important;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   background-color: var(--theme-background-secondary) !important;
   color: var(--theme-text) !important;
   -webkit-text-fill-color: var(--theme-text) !important;
@@ -445,13 +438,13 @@
 
 .doorTab {
   flex: 1;
-  padding: 12px 16px;
+  padding: 7px 10px;
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   background: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--theme-text);
   text-align: center;
@@ -758,8 +751,8 @@
 }
 
 .editGuide {
-  margin-top: 24px;
-  padding: 16px;
+  margin-top: 10px;
+  padding: 8px;
   background-color: var(--theme-background-secondary);
   border-radius: 8px;
 }
@@ -778,20 +771,20 @@
 /* 확인/취소 버튼 스타일 */
 .confirmButtons {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--theme-border);
 }
 
 .cancelButton {
   flex: 1;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background-color: var(--theme-background-secondary);
   color: var(--theme-text-secondary);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -804,12 +797,12 @@
 
 .confirmButton {
   flex: 1;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
   color: var(--theme-surface);
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -871,15 +864,17 @@
 
 @media (max-width: 768px) {
   .overlay {
-    width: 100%;
-    padding-top: 20px;
+    left: 0;
+    right: 0;
+    transform: none;
   }
-  
+
   .panel {
-    width: 90%;
-    max-width: 350px;
+    width: 100%;
+    max-height: 200px;
+    border-radius: 10px 10px 0 0;
   }
-  
+
   .depthSelector {
     flex-direction: column;
   }
