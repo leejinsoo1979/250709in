@@ -420,8 +420,9 @@
 }
 
 .cameraToggle button.active {
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
 }
 
 .fovSlider {
@@ -754,8 +755,9 @@
   }
 
   .viewModeButton.active {
-    background: var(--theme-primary);
-    color: white;
+    background: var(--theme-background-secondary);
+    color: var(--theme-primary);
+    border: 1.5px solid var(--theme-primary);
   }
 
   .viewModeButton svg {

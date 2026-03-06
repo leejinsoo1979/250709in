@@ -108,8 +108,9 @@
 }
 
 .iconButton.active {
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
 }
 
 .iconButton:not(.active):hover {
@@ -147,8 +148,9 @@
 }
 
 .viewToggleButton.active {
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
 }
 
 .viewToggleButton:not(.active):hover {

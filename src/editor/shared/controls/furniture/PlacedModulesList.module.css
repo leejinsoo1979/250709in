@@ -65,20 +65,20 @@
 }
 
 .itemContainer.selected {
-  background: var(--theme-primary);
+  background: var(--theme-background-secondary);
   border-color: var(--theme-primary);
 }
 
 .itemContainer.selected .name,
 .itemContainer.selected .dimensions,
 .itemContainer.selected .slotInfo {
-  color: white;
+  color: var(--theme-primary);
 }
 
 .itemContainer.selected .removeButton {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
 }
 
 .itemContainer.selected .removeButton:hover {

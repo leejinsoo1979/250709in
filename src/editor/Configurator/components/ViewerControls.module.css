@@ -132,9 +132,9 @@
 .chip:active { transform: scale(0.97); }
 
 .chipActive {
-  color: #fff !important;
+  color: var(--theme-primary) !important;
   border-color: var(--theme-primary) !important;
-  background: var(--theme-primary) !important;
+  background: var(--theme-background-secondary) !important;
   font-weight: 600;
 }
 
@@ -174,12 +174,12 @@
 
 .segmentButton:active { transform: scale(0.97); }
 
-/* Neutral active — same as accent (primary) */
+/* Neutral active */
 .segmentActive {
-  background: var(--theme-primary) !important;
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
-  box-shadow: 0 1px 3px var(--theme-primary-shadow), 0 0 0 0.5px var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
 }
 
 /* Accent active (3D/2D, Door) */
@@ -189,9 +189,9 @@
 }
 
 .segmentAccentActive {
-  background: var(--theme-primary) !important;
-  color: #fff !important;
-  box-shadow: 0 1px 3px var(--theme-primary-shadow), 0 0 0 0.5px var(--theme-primary);
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+  border: 1.5px solid var(--theme-primary);
 }
 
 /* Icon + text variant */
@@ -347,9 +347,9 @@
 }
 
 .mobileButton.active {
-  background: var(--theme-primary);
-  color: white;
-  box-shadow: 0 1px 3px var(--theme-primary-shadow);
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
 }
 
 .mobileButton:active { transform: scale(0.97); }
@@ -373,8 +373,9 @@
 }
 
 .mobileIconButton.active {
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border: 1.5px solid var(--theme-primary);
 }
 
 .mobileIconButton:active { transform: scale(0.95); }

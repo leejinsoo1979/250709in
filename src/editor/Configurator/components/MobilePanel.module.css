@@ -42,14 +42,14 @@
 }
 
 .categoryTab.active {
-    background: var(--theme-primary);
-    color: #fff !important;
+    background: var(--theme-background-secondary);
+    color: var(--theme-primary) !important;
     border-color: var(--theme-primary);
 }
 
 .categoryTab.active:focus,
 .categoryTab.active:hover {
-    color: #fff;
+    color: var(--theme-primary);
 }
 
 .panelContent {
@@ -134,8 +134,8 @@
 }
 
 .typeButton.active {
-    background: var(--theme-primary);
-    color: white;
+    background: var(--theme-background-secondary);
+    color: var(--theme-primary);
     border-color: var(--theme-primary);
 }
 
