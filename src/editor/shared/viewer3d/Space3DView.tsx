@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
+import { Sun, Moon } from 'lucide-react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
@@ -1904,6 +1905,46 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 title="치수 지우개 (클릭하여 삭제 모드 활성화)"
               >
                 <LuEraser size={20} />
+              </button>
+
+              {/* 2D 다크/라이트 모드 토글 버튼 - 지우개 버튼 아래 */}
+              <button
+                onClick={() => {
+                  const { toggleView2DTheme } = useUIStore.getState();
+                  toggleView2DTheme();
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '148px',
+                  right: '10px',
+                  width: '36px',
+                  height: '36px',
+                  backgroundColor: view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
+                  border: `1px solid ${view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+                  borderRadius: '4px',
+                  color: view2DTheme === 'dark' ? '#ffffff' : '#000000',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  zIndex: 20,
+                  padding: '0',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
+                  e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
+                  e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              >
+                {view2DTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
               </button>
             </>
           )}

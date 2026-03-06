@@ -939,18 +939,7 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                 </div>
               )}
-              {viewMode === '2D' && (
-                <div className={styles.headerToggleItem}>
-                  <span className={styles.headerToggleLabel}>{view2DTheme === 'dark' ? '다크' : '라이트'}</span>
-                  <button
-                    className={`${styles.headerToggleSwitch} ${view2DTheme === 'dark' ? styles.active : ''}`}
-                    onClick={toggleView2DTheme}
-                    title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-                  >
-                    <div className={styles.headerToggleKnob} />
-                  </button>
-                </div>
-              )}
+              {/* 2D 다크/라이트 토글은 캔버스 우측 도구 버튼으로 이동 */}
             </div>
           </div>
         )}
