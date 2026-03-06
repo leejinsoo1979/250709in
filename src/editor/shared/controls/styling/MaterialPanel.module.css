@@ -36,17 +36,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 12px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
   cursor: pointer;
   transition: all 0.15s ease;
   color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
   gap: 4px;
-  min-height: 32px;
+  min-height: 36px;
   border-radius: 6px;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
@@ -62,14 +62,15 @@
 }
 
 .tab.activeTab {
-  background: var(--theme-primary);
-  color: #fff;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 .tab.activeTab:hover {
-  background: var(--theme-primary-hover, var(--theme-primary));
-  color: #fff;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
 }
 
 .tabIcon {
