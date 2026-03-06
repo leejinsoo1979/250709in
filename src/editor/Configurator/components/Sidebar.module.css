@@ -24,7 +24,7 @@
   padding: 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* ── Tab Button ── */
@@ -73,15 +73,18 @@
   width: 24px;
   height: 24px;
   color: var(--theme-text-muted);
-  transition: color 0.12s ease;
+  opacity: 0.5;
+  transition: all 0.12s ease;
 }
 
 .tabButton.active .tabIcon {
   color: var(--theme-primary);
+  opacity: 1;
 }
 
 .tabButton:hover .tabIcon {
   color: var(--theme-text-secondary);
+  opacity: 0.8;
 }
 
 /* ── Tab Label ── */
@@ -90,6 +93,7 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--theme-text-muted);
+  opacity: 0.5;
   line-height: 1;
   text-align: center;
   letter-spacing: -0.01em;
@@ -101,11 +105,13 @@
 
 .tabButton.active .tabLabel {
   color: var(--theme-primary);
+  opacity: 1;
   font-weight: 600;
 }
 
 .tabButton:hover .tabLabel {
   color: var(--theme-text-secondary);
+  opacity: 0.8;
 }
 
 /* ── Bottom Action Group ── */
