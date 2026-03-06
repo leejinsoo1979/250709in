@@ -1631,9 +1631,9 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[xOffset + width / 2, panelStartY + height, zOffset + panelDepth / 2]}
             rotation={[0, 0, Math.PI / 2]}
-            renderOrder={10}
+            renderOrder={-1}
           >
-            <planeGeometry args={[0.05, width]} />
+            <planeGeometry args={[0.02, width]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
@@ -1641,9 +1641,9 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[xOffset + width / 2, panelStartY, zOffset + panelDepth / 2]}
             rotation={[0, 0, Math.PI / 2]}
-            renderOrder={10}
+            renderOrder={-1}
           >
-            <planeGeometry args={[0.05, width]} />
+            <planeGeometry args={[0.02, width]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
@@ -1651,9 +1651,8 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[-width / 2, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
             rotation={[Math.PI / 2, 0, 0]}
-            renderOrder={10}
           >
-            <planeGeometry args={[0.05, extendedPanelDepth]} />
+            <planeGeometry args={[0.02, extendedPanelDepth]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
@@ -1661,9 +1660,8 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[width / 2, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
             rotation={[Math.PI / 2, 0, 0]}
-            renderOrder={10}
           >
-            <planeGeometry args={[0.05, extendedPanelDepth]} />
+            <planeGeometry args={[0.02, extendedPanelDepth]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
@@ -1671,9 +1669,8 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[-width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
             rotation={[Math.PI / 2, 0, 0]}
-            renderOrder={10}
           >
-            <planeGeometry args={[0.05, extendedPanelDepth]} />
+            <planeGeometry args={[0.02, extendedPanelDepth]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
@@ -1681,9 +1678,8 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
             rotation={[Math.PI / 2, 0, 0]}
-            renderOrder={10}
           >
-            <planeGeometry args={[0.05, extendedPanelDepth]} />
+            <planeGeometry args={[0.02, extendedPanelDepth]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
         </>
