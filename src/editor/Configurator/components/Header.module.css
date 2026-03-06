@@ -140,7 +140,7 @@
 .centerActions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   position: absolute;
   left: 50%;
   transform: translateX(-55%);
