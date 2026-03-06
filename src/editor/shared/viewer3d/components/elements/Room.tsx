@@ -1193,7 +1193,14 @@ const Room: React.FC<RoomProps> = ({
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                       <primitive object={opaqueLeftWallMaterial} />
                     </mesh>
-                  ) : null;
+                  ) : (
+                    <PlaneOutline
+                      args={[extendedPanelDepth, droppedWallHeight]}
+                      position={[-width / 2 - 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                      color={theme?.mode === 'dark' ? "#ffffff" : "#333333"}
+                    />
+                  );
                 }
 
                 // 단내림이 없거나 오른쪽 단내림인 경우 기존 렌더링
@@ -1209,7 +1216,14 @@ const Room: React.FC<RoomProps> = ({
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
                     </mesh>
-                  ) : null;
+                  ) : (
+                    <PlaneOutline
+                      args={[extendedPanelDepth, height]}
+                      position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                      color={theme?.mode === 'dark' ? "#ffffff" : "#333333"}
+                    />
+                  );
                 }
 
                 return null;
@@ -1262,7 +1276,14 @@ const Room: React.FC<RoomProps> = ({
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                       <primitive object={opaqueRightWallMaterial} />
                     </mesh>
-                  ) : null;
+                  ) : (
+                    <PlaneOutline
+                      args={[extendedPanelDepth, droppedWallHeight]}
+                      position={[width / 2 + 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
+                      color={theme?.mode === 'dark' ? "#ffffff" : "#333333"}
+                    />
+                  );
                 }
 
                 // 단내림이 없거나 왼쪽에 있는 경우 전체 높이로 렌더링
@@ -1278,7 +1299,14 @@ const Room: React.FC<RoomProps> = ({
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
                     </mesh>
-                  ) : null;
+                  ) : (
+                    <PlaneOutline
+                      args={[extendedPanelDepth, height]}
+                      position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
+                      color={theme?.mode === 'dark' ? "#ffffff" : "#333333"}
+                    />
+                  );
                 }
 
                 return null;
@@ -1309,7 +1337,14 @@ const Room: React.FC<RoomProps> = ({
                     ref={topWallMaterialRef}
                     object={topWallMaterial} />
                 </mesh>
-              ) : null;
+              ) : (
+                <PlaneOutline
+                  args={[width, extendedPanelDepth]}
+                  position={[xOffset + width / 2, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                  color={theme?.mode === 'dark' ? "#ffffff" : "#333333"}
+                />
+              );
             }
 
             // 천장은 프레임 영역을 포함한 전체 너비로 렌더링
@@ -1393,6 +1428,7 @@ const Room: React.FC<RoomProps> = ({
               }
             })();
 
+            const wfColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
             return renderMode === 'solid' ? (
               <>
                 {/* 단내림 영역 천장 (낮은 높이) - 불투명 그라데이션 */}
@@ -1430,11 +1466,32 @@ const Room: React.FC<RoomProps> = ({
                     object={droppedWallMaterial} />
                 </mesh>
               </>
-            ) : null;
+            ) : (
+              <>
+                <PlaneOutline
+                  args={[droppedAreaWidth, extendedPanelDepth]}
+                  position={[droppedAreaX, panelStartY + height - droppedCeilingHeight + 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                  color={wfColor}
+                />
+                <PlaneOutline
+                  args={[normalAreaWidth, extendedPanelDepth]}
+                  position={[normalAreaX, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                  color={wfColor}
+                />
+                <PlaneOutline
+                  args={[extendedPanelDepth, droppedCeilingHeight]}
+                  position={[boundaryWallX, panelStartY + height - droppedCeilingHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[0, Math.PI / 2, 0]}
+                  color={wfColor}
+                />
+              </>
+            );
           })()}
 
           {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰에서는 숨김 */}
-          {viewMode !== '2D' && renderMode === 'solid' && (
+          {viewMode !== '2D' && (renderMode === 'solid' ? (
               <mesh
                 position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
                 rotation={[-Math.PI / 2, 0, 0]}
@@ -1442,7 +1499,14 @@ const Room: React.FC<RoomProps> = ({
                 <planeGeometry args={[width, extendedPanelDepth]} />
                 <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode)} />
               </mesh>
-          )}
+          ) : (
+              <PlaneOutline
+                args={[width, extendedPanelDepth]}
+                position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                color={theme?.mode === 'dark' ? "#ffffff" : "#333333"}
+              />
+          ))}
 
           {/* 벽장 공간의 3면에서 나오는 그라데이션 오버레이들 - 입체감 효과 */}
 
