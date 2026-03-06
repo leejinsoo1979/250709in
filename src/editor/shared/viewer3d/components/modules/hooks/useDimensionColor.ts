@@ -22,8 +22,8 @@ export const useDimensionColor = () => {
     ? getThemeColor() 
     : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
   
-  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
-  
+  const baseFontSize = viewMode === '3D' ? 0.55 : 0.32;
+
   return {
     dimensionColor,
     baseFontSize,

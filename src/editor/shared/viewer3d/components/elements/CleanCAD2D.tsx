@@ -420,12 +420,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return fallback;
   };
 
-  // 3D 모드에서는 회색, 2D 모드에서는 라이트/다크에 따라 검정/흰색
+  // 3D 모드에서는 진한 색상, 2D 모드에서는 라이트/다크에 따라 검정/흰색
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
-  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 2D: 라이트-검정, 다크-흰색
-  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 2D: 라이트-검정, 다크-흰색
-  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#cccccc' : '#000000');  // 2D: 라이트-검정, 다크-밝은회색
-  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#888888' : '#000000');  // 2D: 라이트-검정, 다크-중간회색
+  const dimensionColor = currentViewDirection === '3D' ? '#333333' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 3D: 진한 회색으로 명확하게
+  const textColor = currentViewDirection === '3D' ? '#222222' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 3D: 더 진한 색으로 가독성 향상
+  const guideColor = currentViewDirection === '3D' ? '#888888' : (view2DTheme === 'dark' ? '#cccccc' : '#000000');  // 2D: 라이트-검정, 다크-밝은회색
+  const subGuideColor = currentViewDirection === '3D' ? '#bbbbbb' : (view2DTheme === 'dark' ? '#888888' : '#000000');  // 2D: 라이트-검정, 다크-중간회색
   const gridColor = currentViewDirection === '3D' 
     ? primaryColor  // 3D에서는 테마 색상 사용
     : getThemeColorFromCSS('--theme-border', '#e5e7eb');  // 2D에서는 border 색상
@@ -704,10 +704,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 치수 표시가 비활성화된 경우에도 기둥은 렌더링 (hooks 호출 후에 체크)
   // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시
   
-  // 폰트 크기 - 적당한 고정값 사용
-  const baseFontSize = 0.4; // 적당한 크기
-  const largeFontSize = 0.5; // 큰 텍스트
-  const smallFontSize = 0.35; // 작은 텍스트
+  // 폰트 크기 - 3D에서 더 크게 표시
+  const baseFontSize = currentViewDirection === '3D' ? 0.5 : 0.4;
+  const largeFontSize = currentViewDirection === '3D' ? 0.6 : 0.5;
+  const smallFontSize = currentViewDirection === '3D' ? 0.42 : 0.35;
+  // 3D 텍스트 외곽선 (배경과 구분되게)
+  const textOutlineWidth = currentViewDirection === '3D' ? 0.06 : 0;
+  const textOutlineColor = '#ffffff';
+  // 3D 치수선 굵기 (더 명확하게)
+  const dimLineWidth = currentViewDirection === '3D' ? 2 : 1;
+  const dimMainLineWidth = currentViewDirection === '3D' ? 2.5 : 2;
   
   // 인덱싱은 이미 상단에서 계산됨
   const { threeUnitBoundaries, columnCount } = indexing;
@@ -966,6 +972,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                 >
                   {displayWidth}
                 </Text>
@@ -1209,6 +1217,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                   >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
@@ -1267,6 +1277,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                   >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
@@ -1394,6 +1406,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={textColor}
                           anchorX="center"
                           anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
                         >
                           {boundaryGapMm.toFixed(1)}
                         </Text>
@@ -1547,6 +1561,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
             >
               {frameSize.left}
             </Text>
@@ -1713,6 +1729,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
             >
               {frameSize.right}
             </Text>
@@ -1782,6 +1800,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
             >
               {Math.round(internalWidthMm)}
             </Text>
@@ -1850,6 +1870,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {spaceInfo.droppedCeiling.dropHeight}
@@ -1893,6 +1915,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {spaceInfo.height}
@@ -1939,6 +1963,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
               rotation={[0, 0, -Math.PI / 2]}
             >
               {spaceInfo.height}
@@ -2069,6 +2095,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     띄움 {floatHeight}
@@ -2126,6 +2154,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {bottomFrameHeight}
@@ -2165,6 +2195,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {maxLowerCabinetHeightMm}
@@ -2183,6 +2215,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   (D{bottomFrameDepth})
@@ -2223,6 +2257,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {furnitureHeightValue}
@@ -2262,6 +2298,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {maxUpperCabinetHeightMm}
@@ -2338,6 +2376,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {extraFurnitureHeightMm}
@@ -2580,6 +2620,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
               renderOrder={1000000}
               depthTest={false}
             >
@@ -2671,6 +2713,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
                     {(() => {
@@ -2730,6 +2774,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
                     {(() => {
@@ -2832,6 +2878,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={textColor}
                           anchorX="center"
                           anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
                           rotation={[-Math.PI / 2, 0, 0]}
                         >
                           {boundaryGapMm.toFixed(1)}
@@ -2937,6 +2985,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
               rotation={[0, Math.PI / 2, 0]}
             >
               {spaceInfo.depth}
@@ -3067,6 +3117,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {floatHeight}
@@ -3100,6 +3152,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {bottomFrameHeight}
@@ -3134,6 +3188,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {maxLowerCabinetHeightMm}
@@ -3167,6 +3223,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {furnitureHeightValue}
@@ -3200,6 +3258,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {adjustedUpperCabinetHeightMm}
@@ -3232,6 +3292,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {topFrameHeight}
@@ -3264,6 +3326,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {extraFurnitureHeightMm}
@@ -3366,6 +3430,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={textColor}
                 anchorX="center"
                 anchorY="middle"
+                outlineWidth={textOutlineWidth}
+                outlineColor={textOutlineColor}
               >
                 {actualDepth}
               </Text>
@@ -3497,6 +3563,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                   >
                     {(() => {
                       const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -3564,6 +3632,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                   >
                     {(() => {
                       const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -3699,6 +3769,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
               rotation={[0, -Math.PI / 2, 0]}
             >
               {spaceInfo.depth}
@@ -3769,6 +3841,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={textColor}
                       anchorX="center"
                       anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
                       rotation={[0, 0, -Math.PI / 2]}
                     >
                       {spaceInfo.droppedCeiling.dropHeight}
@@ -3808,6 +3882,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={textColor}
                       anchorX="center"
                       anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
                       rotation={[0, 0, -Math.PI / 2]}
                     >
                       {spaceInfo.height}
@@ -3850,6 +3926,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {spaceInfo.height}
@@ -3982,6 +4060,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {floatHeight}
@@ -4015,6 +4095,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {bottomFrameHeight}
@@ -4049,6 +4131,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {maxLowerCabinetHeightMm}
@@ -4082,6 +4166,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {furnitureHeightValue}
@@ -4115,6 +4201,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {adjustedUpperCabinetHeightMm}
@@ -4147,6 +4235,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {topFrameHeight}
@@ -4179,6 +4269,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {extraFurnitureHeightMm}
@@ -4429,6 +4521,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
                 >
                   {spaceInfo.width}
@@ -4569,6 +4663,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
                   renderOrder={1000}
                   depthTest={false}
@@ -4680,6 +4776,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
                   renderOrder={1000}
                   depthTest={false}
@@ -4749,6 +4847,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
                     {(() => {
@@ -4806,6 +4906,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
                     {(() => {

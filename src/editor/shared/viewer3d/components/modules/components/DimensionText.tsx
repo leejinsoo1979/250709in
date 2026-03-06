@@ -102,9 +102,13 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const normalColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
   const textColor = isHovered ? highlightColor : normalColor;
   
-  // 폰트 크기
-  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
+  // 폰트 크기 - 3D에서 더 크게
+  const baseFontSize = viewMode === '3D' ? 0.55 : 0.32;
   const fontSize = baseFontSize * sizeMultiplier;
+
+  // 3D 외곽선 (배경과 구분)
+  const outlineW = viewMode === '3D' ? 0.06 : 0;
+  const outlineC = '#ffffff';
   
   // 텍스트 내용 (소수점 2자리까지 표시, 불필요한 0 제거)
   const formattedValue = parseFloat(value.toFixed(2));
@@ -121,6 +125,8 @@ const DimensionText: React.FC<DimensionTextProps> = ({
       anchorX={anchorX}
       anchorY={anchorY}
       rotation={rotation}
+      outlineWidth={outlineW}
+      outlineColor={outlineC}
       onPointerOver={(e) => {
         e.stopPropagation();
         setIsHovered(true);
