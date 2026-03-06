@@ -424,15 +424,16 @@ export const optimizePanelsMultiple = async (
       'horizontal'
     );
   } else {
-    // OPTIMAL_CNC (Nesting): MaxRects 자유배치 방식 — 자재 효율 최우선
-    // 길로틴 제약 없이 빈 공간 어디든 배치하여 최대 효율 달성
-    console.log('📍 OPTIMAL_CNC (Nesting) selected → MaxRects free placement');
-    bins = packMaxRects(
+    // OPTIMAL_CNC (Nesting): 길로틴 auto — 가로/세로 중 효율+재단길이 최적 방향 자동 선택
+    // 실제 컷쏘 공장에서는 자유배치가 불가능하므로 길로틴 제약 내에서 최적화
+    console.log('📍 OPTIMAL_CNC (Nesting) selected → guillotine auto (최적 방향 자동 선택)');
+    bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
-      maxSheets
+      maxSheets,
+      'auto'
     );
   }
 
