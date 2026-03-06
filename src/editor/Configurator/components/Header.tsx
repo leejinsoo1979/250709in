@@ -878,7 +878,7 @@ const Header: React.FC<HeaderProps> = ({
               {t('help.title')}
             </button>
 
-            {/* 카메라 설정 드롭다운 */}
+            {/* 카메라 설정 드롭다운 (3D only) */}
             <div className={styles.dropdownContainer} ref={cameraMenuRef}>
               <button
                 className={styles.actionButton}
