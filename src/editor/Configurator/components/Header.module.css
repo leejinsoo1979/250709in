@@ -2,7 +2,7 @@
   background: var(--theme-surface);
   border-bottom: 1px solid var(--theme-border);
   box-shadow: var(--theme-shadow);
-  height: 56px;
+  height: var(--configurator-header-height, 56px);
   position: relative;
   z-index: 100;
 }
@@ -10,7 +10,7 @@
 .container {
   height: 100%;
   width: 100%;
-  padding: 0 16px;
+  padding: 0 var(--spacing-lg, 16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -20,7 +20,7 @@
 .logoSection {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-lg, 16px);
   flex: 0 0 auto;
   min-width: 0;
 }
@@ -51,7 +51,7 @@
 
 .projectName {
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 16px;
+  font-size: var(--font-size-md, 16px);
   font-weight: 600;
   color: var(--theme-text);
   line-height: 40px;
@@ -111,7 +111,7 @@
 
 .designFileName {
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: var(--font-size-sm, 14px);
   font-weight: 400;
   color: var(--theme-text-secondary);
   cursor: pointer;
@@ -130,7 +130,7 @@
 
 .title {
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 18px;
+  font-size: var(--font-size-lg, 18px);
   font-weight: 400;
   color: var(--theme-text);
   margin: 0;
@@ -153,18 +153,18 @@
   gap: 3px;
   background: none;
   border: none;
-  padding: 6px 8px;
-  border-radius: 6px;
+  padding: var(--spacing-xs, 6px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-md, 6px);
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: var(--font-size-xs, 12px);
   font-weight: 500;
   color: var(--theme-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 18px;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  height: var(--button-height-sm, 32px);
+  min-height: var(--button-height-sm, 32px);
+  max-height: var(--button-height-sm, 32px);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -220,11 +220,11 @@
 .convertButton {
   background: var(--theme-primary);
   border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: var(--radius-md, 6px);
+  padding: var(--spacing-xs, 6px) var(--spacing-md, 12px);
   color: white;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: var(--font-size-xs, 12px);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -232,9 +232,9 @@
   align-items: center;
   gap: 4px;
   line-height: 18px;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  height: var(--button-height-sm, 32px);
+  min-height: var(--button-height-sm, 32px);
+  max-height: var(--button-height-sm, 32px);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -246,11 +246,11 @@
 .logoutButton {
   background: none;
   border: 1px solid var(--theme-primary);
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: var(--radius-md, 6px);
+  padding: var(--spacing-xs, 6px) var(--spacing-md, 12px);
   color: var(--theme-primary);
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: var(--font-size-xs, 12px);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -258,9 +258,9 @@
   align-items: center;
   gap: 4px;
   line-height: 18px;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  height: var(--button-height-sm, 32px);
+  min-height: var(--button-height-sm, 32px);
+  max-height: var(--button-height-sm, 32px);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -273,11 +273,11 @@
 .loginButton {
   background: var(--theme-primary);
   border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: var(--radius-md, 6px);
+  padding: var(--spacing-xs, 6px) var(--spacing-md, 12px);
   color: white;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: var(--font-size-xs, 12px);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -285,9 +285,9 @@
   align-items: center;
   gap: 4px;
   line-height: 18px;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  height: var(--button-height-sm, 32px);
+  min-height: var(--button-height-sm, 32px);
+  max-height: var(--button-height-sm, 32px);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -337,7 +337,7 @@
 }
 
 .userProfileName {
-  font-size: 14px;
+  font-size: var(--font-size-sm, 14px);
   color: var(--theme-text);
   font-weight: 500;
 }

@@ -162,6 +162,48 @@
    clamp()로 부드러운 스케일링 + 극단적 케이스만 미디어 쿼리
    ============================== */
 
+/* FHD 모니터 (1513px ~ 1919px) - 95% 스케일 */
+@media (max-width: 1919px) and (min-width: 1513px) {
+  :root {
+    /* 폰트 크기 95% */
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 15px;
+    --font-size-lg: 17px;
+    --font-size-xl: 19px;
+    --font-size-2xl: 23px;
+    --font-size-3xl: 27px;
+
+    /* 간격 95% */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 11px;
+    --spacing-lg: 15px;
+    --spacing-xl: 23px;
+    --spacing-2xl: 30px;
+    --spacing-3xl: 46px;
+
+    /* 반지름 95% */
+    --radius-sm: 3px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 11px;
+
+    /* 레이아웃 요소 95% */
+    --header-height: 61px;
+    --sidebar-width: 266px;
+    --input-height: 38px;
+    --input-height-sm: 34px;
+    --input-height-lg: 42px;
+    --button-height: 38px;
+    --button-height-sm: 34px;
+    --button-height-lg: 42px;
+
+    /* 컨피규레이터 헤더 95% */
+    --configurator-header-height: 53px;
+  }
+}
+
 /* 14인치 맥북 등 소형 노트북 (1200px ~ 1512px) - 90% 스케일 */
 @media (max-width: 1512px) and (min-width: 1200px) {
   :root {
