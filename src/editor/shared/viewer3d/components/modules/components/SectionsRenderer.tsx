@@ -902,8 +902,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             );
           })()}
           
-          {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
+          {/* 첫 번째 섹션의 하단 프레임 두께 표시 - 3D에서는 숨김 */}
+          {showDimensions && showDimensionsText && viewMode !== '3D' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               <Text
@@ -951,8 +951,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           )}
           
           
-          {/* 마지막 섹션의 상단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && !(
+          {/* 마지막 섹션의 상단 프레임 두께 표시 - 3D에서는 숨김 */}
+          {showDimensions && showDimensionsText && viewMode !== '3D' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && !(
             section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)
           ) && (
             <group>

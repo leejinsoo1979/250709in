@@ -412,8 +412,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                // 측면뷰/탑뷰에서는 선반 두께 표시 안함
-                if (isSideView || isTopView) {
+                // 3D/측면뷰/탑뷰에서는 선반 두께 표시 안함
+                if (viewMode === '3D' || isSideView || isTopView) {
                   return;
                 }
 
@@ -499,8 +499,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               const topFrameTopY = topFrameY + basicThickness / 2; // 상단 프레임의 상단
               const topFrameBottomY = topFrameY - basicThickness / 2; // 상단 프레임의 하단
 
-              // 상단 프레임 치수는 showTopFrameDimension이 true이고 측면뷰/탑뷰가 아닐 때만 표시
-              if (showTopFrameDimension && !isSideView && !isTopView) {
+              // 상단 프레임 치수는 showTopFrameDimension이 true이고 3D/측면뷰/탑뷰가 아닐 때만 표시
+              if (showTopFrameDimension && viewMode !== '3D' && !isSideView && !isTopView) {
                 console.log('🟣 상단 프레임 엔드포인트:', {
                   'topFrameTopY_mm': topFrameTopY * 100,
                   'topFrameBottomY_mm': topFrameBottomY * 100,
