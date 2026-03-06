@@ -21,11 +21,9 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-    circle at 20% 50%,
-    var(--theme-primary-light) 0%,
-    transparent 30%
-  );
+  background: radial-gradient(circle at 20% 50%,
+      var(--theme-primary-light) 0%,
+      transparent 30%);
   opacity: 0.15;
   pointer-events: none;
   z-index: 0;
@@ -33,15 +31,30 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(30px, -30px) rotate(120deg); }
-  66% { transform: translate(-20px, 20px) rotate(240deg); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  33% {
+    transform: translate(30px, -30px) rotate(120deg);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg);
+  }
 }
 
 /* 스켈레톤 로딩 애니메이션 */
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* 좌측 사이드바 */
@@ -78,19 +91,22 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--theme-primary),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      var(--theme-primary),
+      transparent);
   opacity: 0.3;
   animation: shimmer 3s ease-in-out infinite;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .logo {
@@ -661,18 +677,18 @@
 
 /* 프로젝트 트리 */
 .projectTree {
-  width: 240px;
-  min-width: 200px;
+  width: 260px;
+  min-width: 220px;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -696,22 +712,23 @@
 
 .treeToggleButton {
   position: fixed;
-  left: 460px; /* 220px (sidebar) + 240px (tree) */
+  left: 480px;
+  /* 220px (sidebar) + 260px (tree) */
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
-  height: 28px;
+  height: 32px;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-left: none;
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 4px 4px 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              background-color 0.2s ease,
-              transform 0.2s ease;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    transform 0.2s ease;
   z-index: 1000;
 }
 
@@ -731,7 +748,8 @@
 }
 
 .projectTree.collapsed .treeToggleButton {
-  left: 220px; /* 사이드바 너비만큼 */
+  left: 220px;
+  /* 사이드바 너비만큼 */
   width: 20px;
   height: 28px;
   background: var(--theme-primary);
@@ -774,11 +792,11 @@
 
 .projectTree.collapsed .projectSelectorContainer,
 .projectTree.collapsed .treeContent,
-.projectTree.collapsed .treeHeader > *:not(.treeToggleButton) {
+.projectTree.collapsed .treeHeader>*:not(.treeToggleButton) {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-              visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .projectSelectorContainer {
@@ -819,18 +837,31 @@
   pointer-events: auto;
   cursor: pointer;
   margin-left: auto;
-  margin-right: 8px;
+  margin-right: 4px;
   font-size: 8px;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
+  opacity: 0.5;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+}
+
+.folderDropdown:hover {
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .folderDropdown.expanded {
   transform: rotate(180deg);
+  opacity: 0.7;
 }
 
 .treeContent {
   flex: 1;
-  padding: 16px;
+  padding: 8px 10px;
   /* overflow-y: auto; 제거하여 중복 스크롤 방지 */
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
@@ -838,32 +869,49 @@
 .treeItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  margin-bottom: 4px;
-  border-radius: 6px;
+  gap: 10px;
+  padding: 9px 12px;
+  margin-bottom: 2px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--theme-text-secondary);
-  transition: background-color 0.2s;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   position: relative;
+  letter-spacing: -0.01em;
 }
 
 .treeItem:hover {
-  background: var(--theme-surface, #ffffff) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--theme-text);
 }
 
 .treeItem.active {
-  background: var(--theme-primary-light, var(--theme-primary-light));
+  background: var(--theme-primary-light, rgba(99, 102, 241, 0.12));
   color: var(--theme-primary);
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.15);
 }
 
 .treeItemIcon {
-  width: 16px;
-  height: 16px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+.treeItem:hover .treeItemIcon {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.treeItem.active .treeItemIcon {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--theme-primary);
 }
 
 /* Tree toggle arrow for expanding/collapsing projects */
@@ -871,59 +919,74 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  margin-right: 4px;
+  width: 18px;
+  height: 18px;
+  margin-right: 2px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.15s ease;
   color: var(--theme-text-secondary);
-  font-size: 10px;
+  font-size: 9px;
   flex-shrink: 0;
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.treeToggleArrow:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .treeToggleArrow.expanded {
   transform: rotate(90deg);
+  opacity: 0.8;
 }
 
 /* Project children container for expanded items */
 .projectChildren {
-  margin-left: 24px;
-  margin-top: 4px;
-  padding-left: 12px;
-  border-left: 1px solid var(--theme-border);
+  margin-left: 16px;
+  margin-top: 2px;
+  padding-left: 14px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 4px;
 }
 
 .treeItemCount {
-  background: var(--theme-border);
-  color: var(--theme-text);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--theme-text-secondary);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
   margin-left: auto;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* 새 폴더 생성 버튼 */
 .createFolderBtn {
   width: 100%;
-  padding: 12px 16px;
-  background: var(--theme-background-secondary);
-  border: 1px solid var(--theme-border);
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
-  transition: all 0.2s;
-  font-size: 14px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+  font-size: 12.5px;
   color: var(--theme-text-secondary);
+  opacity: 0.7;
 }
 
 .createFolderBtn:hover {
-  background: var(--theme-primary-light);
-  border-color: var(--theme-primary);
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+  border-style: dashed;
   color: var(--theme-primary);
+  opacity: 1;
 }
 
 .createFolderIcon {
@@ -950,16 +1013,21 @@
 /* 트리 아이템 액션 버튼 */
 .treeItemActions {
   margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.treeItem:hover .treeItemActions {
   opacity: 1;
-  transition: opacity 0.2s;
 }
 
 .treeItemActionBtn {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border: none;
   background: transparent;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -967,31 +1035,33 @@
   color: var(--theme-text-secondary);
   font-size: 14px;
   font-weight: 700;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  letter-spacing: 1px;
 }
 
 .treeItemActionBtn:hover {
-  background: var(--theme-background-secondary);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--theme-text);
 }
 
 /* 디자인 아이콘 */
 .designIcon {
-  width: 16px;
-  height: 16px;
-  background: var(--theme-primary);
-  border-radius: 2px;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, var(--theme-primary), #818cf8);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 10px;
   font-weight: bold;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
 }
 
 .designIcon svg {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   color: white;
 }
 
@@ -1071,23 +1141,27 @@
 
 /* 폴더 자식 아이템 */
 .folderChildren {
-  margin-left: 20px;
-  border-left: 1px solid var(--theme-border);
-  padding-left: 8px;
+  margin-left: 12px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.06);
+  padding-left: 10px;
   min-height: 0;
 }
 
 .childItem {
-  font-size: 13px;
-  padding: 6px 12px;
-  margin-bottom: 2px;
+  font-size: 12.5px;
+  padding: 6px 10px;
+  margin-bottom: 1px;
   cursor: pointer !important;
   pointer-events: auto !important;
+  font-weight: 400;
+  color: var(--theme-text-secondary);
+  opacity: 0.85;
 }
 
 .childItem:hover {
-  background: var(--theme-background-secondary);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  opacity: 1;
 }
 
 /* 드래그 중인 카드 */
@@ -1186,7 +1260,8 @@
   transition: all 0.3s ease;
   z-index: 10;
   border-radius: 0;
-  pointer-events: none; /* 기본적으로 클릭 이벤트 차단 */
+  pointer-events: none;
+  /* 기본적으로 클릭 이벤트 차단 */
 }
 
 /* 오버레이는 모든 디자인 카드에 적용 (폴더와 new-design 제외) */
@@ -1195,7 +1270,8 @@
 .designCard.forceHover .designCardOverlay {
   opacity: 1;
   visibility: visible;
-  pointer-events: auto; /* 호버 시에만 클릭 이벤트 활성화 */
+  pointer-events: auto;
+  /* 호버 시에만 클릭 이벤트 활성화 */
 }
 
 /* 프로필/팀 메뉴에서는 오버레이 완전히 숨김 */
@@ -1317,13 +1393,14 @@
 }
 
 /* When tree is collapsed, expand the design area to use full width */
-.projectTree.collapsed ~ .designArea {
+.projectTree.collapsed~.designArea {
   margin-left: 0;
-  padding-left: 20px; /* Normal padding */
+  padding-left: 20px;
+  /* Normal padding */
 }
 
 /* 메인 영역의 브레드크럼 */
-.designArea > .breadcrumb {
+.designArea>.breadcrumb {
   font-size: 14px;
   color: var(--theme-text-secondary);
   font-weight: 400;
@@ -1351,7 +1428,7 @@
 }
 
 /* When tree is collapsed, adjust grid */
-.projectTree.collapsed ~ .designArea .designGrid {
+.projectTree.collapsed~.designArea .designGrid {
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
 }
@@ -1503,18 +1580,21 @@
   white-space: nowrap;
   overflow: visible;
   margin: 0;
-  padding-left: 0; /* 패딩 제거 */
+  padding-left: 0;
+  /* 패딩 제거 */
   justify-self: start;
   align-self: center;
   display: flex;
   align-items: center;
   gap: 6px;
   width: 100%;
-  min-width: 0; /* 텍스트 오버플로우가 제대로 작동하도록 */
-  max-width: 100%; /* 최대 너비 제한 */
+  min-width: 0;
+  /* 텍스트 오버플로우가 제대로 작동하도록 */
+  max-width: 100%;
+  /* 최대 너비 제한 */
 }
 
-.designGrid.listView .cardTitle > span {
+.designGrid.listView .cardTitle>span {
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1533,12 +1613,14 @@
 /* 리스트 뷰에서 프로젝트 카드 제목 수정 */
 .designGrid.listView .designCard[data-item-type="project"] .cardTitle,
 .designGrid.listView .designCard[data-item-type="folder"] .cardTitle {
-  padding-left: 0; /* 패딩 제거 */
+  padding-left: 0;
+  /* 패딩 제거 */
 }
 
 /* 리스트 뷰에서 폴더 카드 레이아웃 */
 .designGrid.listView .folderContent {
-  display: contents; /* 그리드 레이아웃에 맞게 조정 */
+  display: contents;
+  /* 그리드 레이아웃에 맞게 조정 */
   padding: 0;
   border-top: none;
 }
@@ -2239,12 +2321,19 @@
 }
 
 .cardBadge {
-  background: var(--theme-border);
-  color: var(--theme-text);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  /* Emerald to Green */
+  color: white !important;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
 }
 
 /* 빈 상태 */
@@ -2641,11 +2730,11 @@
   .sidebar {
     width: 200px;
   }
-  
+
   .projectTree {
     width: 240px;
   }
-  
+
   .designGrid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
@@ -2818,6 +2907,7 @@
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2980,6 +3070,7 @@
   height: 16px;
   color: var(--theme-text-secondary);
 }
+
 /* 리스트 뷰 내부 디자인 생성 버튼 */
 .createDesignBtnInList {
   display: flex;
@@ -3438,6 +3529,7 @@
 
 /* 모바일에서 데스크톱 UI 숨김 */
 @media (max-width: 767px) {
+
   .sidebar,
   .mainContent {
     display: none !important;
@@ -3527,6 +3619,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
