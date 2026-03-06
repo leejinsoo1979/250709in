@@ -192,8 +192,8 @@ const BoxWithEdges: React.FC<{
         <lineSegments name={name || "space-frame"} geometry={edgesGeometry}>
           <lineBasicMaterial
             color={
-              // 3D 은선모드에서 외곽 프레임은 배경색으로 숨김
-              isOuterFrame && renderMode === 'wireframe' && viewMode === '3D'
+              // 3D solid 모드에서 외곽 프레임은 배경색으로 숨김 (은선모드에서는 일반 색상 사용)
+              isOuterFrame && renderMode === 'solid' && viewMode === '3D'
                 ? (theme?.mode === 'dark' ? "#1a1a2e" : "#f5f5f5")
                 : // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
                 material instanceof THREE.MeshBasicMaterial
@@ -2118,10 +2118,10 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략, 엣지 항상 숨김 */}
+              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
-                  hideEdges
+                  hideEdges={hideEdges}
                   isOuterFrame
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
@@ -2712,10 +2712,10 @@ const Room: React.FC<RoomProps> = ({
               // 단내림 영역과 일반 영역 프레임 렌더링
               return (
                 <>
-                  {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시, 엣지 항상 숨김 */}
+                  {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시 */}
                   {showDroppedFrame && (
                     <BoxWithEdges
-                      hideEdges
+                      hideEdges={hideEdges}
                       isOuterFrame
                       args={[
                         droppedFrameWidth,
