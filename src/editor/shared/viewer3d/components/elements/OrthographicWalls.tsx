@@ -95,9 +95,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
       : context.createLinearGradient(0, 0, 0, 256);
       
     gradient.addColorStop(0, startColor);
-    gradient.addColorStop(0.5, `${startColor}cc`);
-    gradient.addColorStop(0.85, `${startColor}55`);
-    gradient.addColorStop(1, `${startColor}22`);
+    gradient.addColorStop(0.6, startColor);
+    gradient.addColorStop(0.85, `${startColor}aa`);
+    gradient.addColorStop(1, `${startColor}66`);
     
     context.fillStyle = gradient;
     context.fillRect(0, 0, 256, 256);
