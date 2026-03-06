@@ -75,7 +75,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, activePopup } = useUIStore();
 
   // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
   const cameraMode = cameraModeFromProps || cameraModeFromStore;
@@ -812,6 +812,66 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       });
     }
   }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp]);
+
+  // 가구 편집 패널 열림/닫힘 시 카메라 타겟 Y를 부드럽게 이동
+  const isFurnitureEditPanelOpen = activePopup?.type === 'furnitureEdit' && !!activePopup?.id;
+  const panelAnimRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!controlsRef.current) return;
+    const controls = controlsRef.current;
+    if (!controls.target || !controls.object) return;
+
+    // 패널 높이만큼 카메라 타겟과 위치를 동시에 올림/내림
+    // 공간 높이에 비례한 오프셋 (Three.js 단위)
+    const spaceHeight = spaceInfo?.height || 2400;
+    const offsetY = (spaceHeight * (isMobile ? 0.06 : 0.08)) / 1000; // mm → Three.js units
+
+    const targetYGoal = isFurnitureEditPanelOpen
+      ? controls.target.y + offsetY
+      : controls.target.y - offsetY;
+
+    // 이미 같은 방향으로 이동 중이면 무시
+    const startY = controls.target.y;
+    const diff = targetYGoal - startY;
+    if (Math.abs(diff) < 0.001) return;
+
+    // 이전 애니메이션 취소
+    if (panelAnimRef.current) {
+      cancelAnimationFrame(panelAnimRef.current);
+    }
+
+    const duration = 300; // ms
+    const startTime = performance.now();
+    const startPosY = controls.object.position.y;
+    const posYGoal = startPosY + diff;
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      // easeOutCubic
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      controls.target.y = startY + diff * ease;
+      controls.object.position.y = startPosY + diff * ease;
+      controls.update();
+
+      if (t < 1) {
+        panelAnimRef.current = requestAnimationFrame(animate);
+      } else {
+        panelAnimRef.current = null;
+      }
+    };
+
+    panelAnimRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (panelAnimRef.current) {
+        cancelAnimationFrame(panelAnimRef.current);
+        panelAnimRef.current = null;
+      }
+    };
+  }, [isFurnitureEditPanelOpen]);
 
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {
