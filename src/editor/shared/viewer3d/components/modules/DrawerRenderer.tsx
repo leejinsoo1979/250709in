@@ -711,18 +711,20 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               />
             )}
             
-            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용 */}
-            <DimensionText
-              value={(actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100}
-              position={[
-                centerX,
-                centerY,
-                viewMode === '3D' ? depth/2 + 0.1 : centerZ + actualDrawerDepth/2 + 0.1
-              ]}
-              prefix="D"
-              color="#008B8B"
-              forceShow={true}
-            />
+            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용 (3D에서는 숨김) */}
+            {viewMode !== '3D' && (
+              <DimensionText
+                value={(actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100}
+                position={[
+                  centerX,
+                  centerY,
+                  centerZ + actualDrawerDepth/2 + 0.1
+                ]}
+                prefix="D"
+                color="#008B8B"
+                forceShow={true}
+              />
+            )}
           </group>
         )}
       </group>
