@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, Menu, User, ChevronDown, Undo, Redo } from 'lucide-react';
+import { Settings, Menu, User, ChevronDown, Undo, Redo, Sun, Moon } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { TbTableExport } from 'react-icons/tb';
@@ -164,7 +164,7 @@ const Header: React.FC<HeaderProps> = ({
   // UIStore에서 카메라 및 그림자 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
   const { colors } = useThemeColors();
-  const { theme } = useTheme();
+  const { theme, toggleMode } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -876,6 +876,15 @@ const Header: React.FC<HeaderProps> = ({
             <button className={styles.actionButton} onClick={handleHelpClick}>
               <FaRegKeyboard size={20} />
               {t('help.title')}
+            </button>
+
+            {/* 앱 다크/라이트 모드 토글 */}
+            <button
+              className={styles.actionButton}
+              onClick={toggleMode}
+              title={theme.mode === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            >
+              {theme.mode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
             {/* 카메라 설정 드롭다운 (3D only) */}
