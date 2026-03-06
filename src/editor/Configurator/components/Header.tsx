@@ -937,16 +937,18 @@ const Header: React.FC<HeaderProps> = ({
                   <div className={styles.headerToggleKnob} />
                 </button>
               </div>
-              <div className={styles.headerToggleItem}>
-                <span className={styles.headerToggleLabel}>{view2DTheme === 'dark' ? '다크' : '라이트'}</span>
-                <button
-                  className={`${styles.headerToggleSwitch} ${view2DTheme === 'dark' ? styles.active : ''}`}
-                  onClick={toggleView2DTheme}
-                  title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-                >
-                  <div className={styles.headerToggleKnob} />
-                </button>
-              </div>
+              {viewMode === '2D' && (
+                <div className={styles.headerToggleItem}>
+                  <span className={styles.headerToggleLabel}>{view2DTheme === 'dark' ? '다크' : '라이트'}</span>
+                  <button
+                    className={`${styles.headerToggleSwitch} ${view2DTheme === 'dark' ? styles.active : ''}`}
+                    onClick={toggleView2DTheme}
+                    title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+                  >
+                    <div className={styles.headerToggleKnob} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
