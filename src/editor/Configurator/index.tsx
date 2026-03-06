@@ -3996,7 +3996,8 @@ const Configurator: React.FC = () => {
             className={styles.rightPanelContainer}
             style={{
               width: isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0',
-              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+              visibility: isRightPanelOpen ? 'visible' : 'hidden',
+              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear ' + (isRightPanelOpen ? '0s' : '0.3s')
             }}
           >
 
