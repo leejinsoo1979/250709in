@@ -142,6 +142,9 @@ interface UIState {
   // 그림자 설정
   shadowEnabled: boolean;
 
+  // 윤곽선(엣지) 설정
+  edgeOutlineEnabled: boolean;
+
   // 보링 시각화 상태
   showBorings: boolean;
 
@@ -218,6 +221,7 @@ interface UIState {
   setCameraFov: (fov: number) => void;
   setCameraZoom: (zoom: number) => void;
   setShadowEnabled: (enabled: boolean) => void;
+  setEdgeOutlineEnabled: (enabled: boolean) => void;
   setShowBorings: (show: boolean) => void;
   toggleBorings: () => void;
   setSelectedFurnitureId: (id: string | null) => void;
@@ -285,6 +289,7 @@ const initialUIState = {
   cameraFov: 50,  // 기본값: FOV 50도
   cameraZoom: 1,  // 기본값: 줌 배율 1
   shadowEnabled: true,  // 기본값: 그림자 활성화
+  edgeOutlineEnabled: true,  // 기본값: 윤곽선 활성화
   showBorings: false,  // 기본값: 보링 시각화 비활성화
   isMeasureMode: false,  // 기본값: 측정 모드 비활성화
   measurePoints: null,  // 기본값: 측정 포인트 없음
@@ -596,6 +601,9 @@ export const useUIStore = create<UIState>()(
       setShadowEnabled: (enabled) =>
         set({ shadowEnabled: enabled }),
 
+      setEdgeOutlineEnabled: (enabled) =>
+        set({ edgeOutlineEnabled: enabled }),
+
       setShowBorings: (show) =>
         set({ showBorings: show }),
 
@@ -684,6 +692,8 @@ export const useUIStore = create<UIState>()(
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,  // localStorage에 저장
         showDimensions: state.showDimensions,  // localStorage에 저장
+        shadowEnabled: state.shadowEnabled,  // 그래픽 설정 유지
+        edgeOutlineEnabled: state.edgeOutlineEnabled,  // 그래픽 설정 유지
         // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
         // doorsOpen과 activePopup은 세션별로 초기화
       }),

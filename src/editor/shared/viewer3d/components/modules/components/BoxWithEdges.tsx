@@ -66,7 +66,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }
 
   const { viewMode } = useSpace3DView();
-  const { view2DDirection, shadowEnabled } = useUIStore(); // view2DDirection, shadowEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { gl } = useThree();
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
@@ -405,8 +405,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           />
         )}
       </mesh>
-      {/* 윤곽선 렌더링 */}
-      {!hideEdges && (() => {
+      {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
+      {!hideEdges && edgeOutlineEnabled && (() => {
         if (hideTopEdge || hideBottomEdge) {
           // 특정 엣지만 숨기기: 수동으로 선 그리기
           const [width, height, depth] = args;
