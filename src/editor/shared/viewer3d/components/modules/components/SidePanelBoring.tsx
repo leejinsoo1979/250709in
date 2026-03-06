@@ -45,8 +45,11 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   boringPositions = [],
   mmToThreeUnits,
 }) => {
-  const { viewMode } = useSpace3DView();
+  const { viewMode, renderMode } = useSpace3DView();
   const view2DDirection = useUIStore(state => state.view2DDirection);
+
+  // wireframe 모드에서는 보링 홀 표시하지 않음
+  if (renderMode === 'wireframe') return null;
 
   // 2D 뷰가 아니면 렌더링하지 않음
   if (viewMode !== '2D') {

@@ -24,7 +24,7 @@ const MullionPanel: React.FC<MullionPanelProps> = ({
   slotIndex,
   slotWidth
 }) => {
-  const { viewMode } = useSpace3DView();
+  const { viewMode, renderMode } = useSpace3DView();
   const { shadowEnabled } = useUIStore();
   
   // mm를 Three.js 단위로 변환
@@ -59,9 +59,11 @@ const MullionPanel: React.FC<MullionPanelProps> = ({
   return (
     <group position={[mullionX, column.position[1], 0]}>
       {/* 멍장 패널 본체 */}
-      <mesh castShadow={shadowEnabled} receiveShadow={shadowEnabled} geometry={panelGeometry}>
-        <meshLambertMaterial color={panelColor} />
-      </mesh>
+      {renderMode !== 'wireframe' && (
+        <mesh castShadow={shadowEnabled} receiveShadow={shadowEnabled} geometry={panelGeometry}>
+          <meshLambertMaterial color={panelColor} />
+        </mesh>
+      )}
       
       {/* 멍장 패널 윤곽선 */}
       {viewMode === '3D' ? (

@@ -10,13 +10,12 @@ interface IndirectLightProps {
 }
 
 const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, position }) => {
-  const { viewMode } = useSpace3DView();
+  const { viewMode, renderMode } = useSpace3DView();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [loadError, setLoadError] = useState(false);
-  
-  // 2D 모드에서는 아예 렌더링하지 않음
-  if (viewMode === '2D') {
-    console.log('🚫 2D 모드라서 간접조명 렌더링 안함');
+
+  // 2D 모드 또는 wireframe 모드에서는 렌더링하지 않음
+  if (viewMode === '2D' || renderMode === 'wireframe') {
     return null;
   }
   

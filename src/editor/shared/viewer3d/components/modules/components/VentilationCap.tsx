@@ -33,7 +33,10 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   renderMode: _renderMode
 }) => {
   const { view2DDirection } = useUIStore();
-  const { viewMode } = useSpace3DView();
+  const { viewMode, renderMode: contextRenderMode } = useSpace3DView();
+
+  // wireframe 모드에서는 렌더링하지 않음
+  if (contextRenderMode === 'wireframe') return null;
 
   // 단위 변환 함수
   const mmToThreeUnits = (mm: number): number => mm * 0.01;

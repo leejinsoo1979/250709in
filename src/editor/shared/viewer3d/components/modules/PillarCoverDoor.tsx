@@ -23,7 +23,7 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
   doorConfig,
   slotWidth
 }) => {
-  const { viewMode } = useSpace3DView();
+  const { viewMode, renderMode } = useSpace3DView();
   const { shadowEnabled } = useUIStore();
   
   // mm를 Three.js 단위로 변환
@@ -49,9 +49,11 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
   return (
     <group position={[column.position[0], column.position[1], doorZ]}>
       {/* 도어 본체 */}
-      <mesh castShadow={shadowEnabled} receiveShadow={shadowEnabled} geometry={doorGeometry}>
-        <meshLambertMaterial color={doorColor} />
-      </mesh>
+      {renderMode !== 'wireframe' && (
+        <mesh castShadow={shadowEnabled} receiveShadow={shadowEnabled} geometry={doorGeometry}>
+          <meshLambertMaterial color={doorColor} />
+        </mesh>
+      )}
       
       {/* 도어 윤곽선 */}
       {viewMode === '3D' ? (
@@ -77,13 +79,15 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
       )}
       
       {/* 도어 손잡이 */}
-      <mesh 
-        position={[doorWidth * 0.35, 0, doorThickness / 2 + 0.005]}
-        castShadow={shadowEnabled}
-      >
-        <boxGeometry args={[0.02, 0.15, 0.01]} />
-        <meshLambertMaterial color={handleColor} />
-      </mesh>
+      {renderMode !== 'wireframe' && (
+        <mesh
+          position={[doorWidth * 0.35, 0, doorThickness / 2 + 0.005]}
+          castShadow={shadowEnabled}
+        >
+          <boxGeometry args={[0.02, 0.15, 0.01]} />
+          <meshLambertMaterial color={handleColor} />
+        </mesh>
+      )}
       
       {/* 비수납 표시 (시각적 구별을 위한 작은 표시) */}
       <mesh 
