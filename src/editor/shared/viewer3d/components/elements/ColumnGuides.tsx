@@ -190,7 +190,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
     return null;
   }
-  
+
+  // 자유배치 모드에서는 슬롯 가이드 숨김
+  if (spaceInfo.layoutMode === 'free-placement') {
+    return null;
+  }
+
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   

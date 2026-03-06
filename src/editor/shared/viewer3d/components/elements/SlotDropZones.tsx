@@ -54,6 +54,8 @@ declare global {
 
 const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true }) => {
   if (!spaceInfo) return null;
+  // 자유배치 모드에서는 슬롯 드롭존 비활성화
+  if (spaceInfo.layoutMode === 'free-placement') return null;
   const columns = spaceInfo.columns ?? [];
   if (!columns) {
     return null;

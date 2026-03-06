@@ -94,6 +94,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     return null;
   }
 
+  // 자유배치 모드에서는 슬롯 드롭존 비활성화
+  if (spaceInfo.layoutMode === 'free-placement') return null;
+
   debugLog('🔍 SlotDropZonesSimple - spaceInfo:', {
     width: spaceInfo.width,
     height: spaceInfo.height,

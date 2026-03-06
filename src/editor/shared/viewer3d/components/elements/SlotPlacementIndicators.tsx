@@ -22,6 +22,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
   const { view2DTheme } = useUIStore();
 
+  // 자유배치 모드에서는 슬롯 배치 인디케이터 숨김
+  if (spaceInfo.layoutMode === 'free-placement') return null;
+
   console.log('🔵🔵🔵 SlotPlacementIndicators 렌더링:', { selectedFurnitureId, placedModulesCount: placedModules.length });
 
   // 선택된 가구 정보 가져오기

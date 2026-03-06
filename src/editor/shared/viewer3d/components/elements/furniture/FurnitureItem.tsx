@@ -1115,7 +1115,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 가구 높이 계산 (Y 위치 계산 전에 필요)
-  let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
+  // 자유배치 모드에서는 사용자 지정 치수를 우선 사용
+  let furnitureHeightMm = (placedModule.isFreePlacement && placedModule.freeHeight)
+    ? placedModule.freeHeight
+    : (actualModuleData?.dimensions.height || 0);
   let adjustedCustomSections = placedModule.customSections;
 
   // 섹션 높이 조정 (actualModuleData.dimensions.height가 이미 조정된 경우를 대비)
@@ -1210,6 +1213,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData?.dimensions.width || 0; // 기본값
 
+  // 자유배치 모드에서는 사용자 지정 너비를 우선 사용 (슬롯/기둥 관련 조정 건너뜀)
+  if (placedModule.isFreePlacement && placedModule.freeWidth) {
+    furnitureWidthMm = placedModule.freeWidth;
+  }
 
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
@@ -1732,7 +1739,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 노서라운드 모드에서 엔드패널 위치 조정은 나중에 적용
 
-  let adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
+  // 자유배치 모드에서는 사용자 지정 깊이를 우선 사용
+  let adjustedDepthMm = (placedModule.isFreePlacement && placedModule.freeDepth)
+    ? placedModule.freeDepth
+    : (actualModuleData?.dimensions.depth || 0);
 
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {

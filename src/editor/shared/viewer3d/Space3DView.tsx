@@ -25,6 +25,7 @@ import { MeasurementTool } from './components/elements/MeasurementTool';
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import SlotPlacementIndicators from './components/elements/SlotPlacementIndicators';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
+import FreePlacementDropZone from './components/elements/FreePlacementDropZone';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
@@ -1743,6 +1744,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} view2DDirection={view2DDirection} />
 
+              {/* 자유배치 모드 드롭존 */}
+              <FreePlacementDropZone />
+
               {/* 슬롯 배치 인디케이터 - 가구 선택 시 + 아이콘 표시 */}
               <SlotPlacementIndicators onSlotClick={placeFurniture} />
 
@@ -2032,6 +2036,9 @@ const QuadrantContent: React.FC<{
 
       {/* 슬롯 드롭존 */}
       <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" view2DDirection={viewDirection} />
+
+      {/* 자유배치 모드 드롭존 */}
+      <FreePlacementDropZone />
 
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🔵 QuadrantContent - Room 렌더링:', {
