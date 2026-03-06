@@ -95,7 +95,8 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
       : context.createLinearGradient(0, 0, 0, 256);
       
     gradient.addColorStop(0, startColor);
-    gradient.addColorStop(0.5, `${startColor}88`);
+    gradient.addColorStop(0.4, `${startColor}99`);
+    gradient.addColorStop(0.75, `${startColor}33`);
     gradient.addColorStop(1, endColor);
     
     context.fillStyle = gradient;
@@ -144,9 +145,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         <planeGeometry args={[depth, height]} />
         <meshStandardMaterial
           ref={leftWallRef}
-          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#a0a0a0', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.7}
+          opacity={0.85}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -158,9 +159,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         <planeGeometry args={[depth, height]} />
         <meshStandardMaterial
           ref={rightWallRef}
-          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#a0a0a0', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.7}
+          opacity={0.85}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -172,9 +173,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         <planeGeometry args={[width, height]} />
         <meshStandardMaterial
           ref={frontWallRef}
-          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#a0a0a0', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.7}
+          opacity={0.85}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -186,9 +187,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         <planeGeometry args={[width, height]} />
         <meshStandardMaterial
           ref={backWallRef}
-          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#a0a0a0', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.7}
+          opacity={0.85}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -200,9 +201,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         <planeGeometry args={[width, depth]} />
         <meshStandardMaterial
           ref={ceilingRef}
-          map={createGradientTexture('#e0e0e0', '#ffffff00', 'horizontal')}
+          map={createGradientTexture('#909090', '#ffffff00', 'horizontal')}
           transparent
-          opacity={0.5}
+          opacity={0.7}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -214,9 +215,9 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
         <planeGeometry args={[width, depth]} />
         <meshStandardMaterial
           ref={floorRef}
-          map={createGradientTexture('#d0d0d0', '#ffffff00', 'horizontal')}
+          map={createGradientTexture('#989898', '#ffffff00', 'horizontal')}
           transparent
-          opacity={0.5}
+          opacity={0.7}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
