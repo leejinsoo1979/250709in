@@ -52,6 +52,12 @@ export interface PlacedModule {
   hingeType?: 'A' | 'B'; // 경첩 타입 (A: 45mm, B: 48mm, 기본값: 'A')
   isSplit?: boolean; // 기둥 C 분할 배치 여부
   
+  // 자유배치 모드 속성
+  isFreePlacement?: boolean; // 자유배치 모드로 배치된 가구 여부
+  freeWidth?: number;        // 자유배치 모드에서 사용자 지정 너비 (mm)
+  freeHeight?: number;       // 자유배치 모드에서 사용자 지정 높이 (mm)
+  freeDepth?: number;        // 자유배치 모드에서 사용자 지정 깊이 (mm)
+
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
   isDualSlot?: boolean; // 듀얼 가구 여부 (2개 슬롯을 차지하는지)
@@ -96,6 +102,12 @@ export interface CurrentDragData {
   isDualSlot?: boolean;
   zone?: 'normal' | 'dropped';
   indexing?: any;
+  isFreePlacement?: boolean;
+  freeDimensions?: {
+    width: number;
+    height: number;
+    depth: number;
+  };
   isCustomFurniture?: boolean;
   customFurnitureData?: {
     id: string;

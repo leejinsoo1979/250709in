@@ -63,6 +63,9 @@ export interface SpaceInfo {
   gapConfig?: GapConfig;
   baseConfig?: BaseConfig;
   
+  // 배치 방식 설정
+  layoutMode?: 'equal-division' | 'free-placement';
+
   // 컬럼 수 사용자 지정 속성
   customColumnCount?: number;
   columnMode?: 'auto' | 'custom';
