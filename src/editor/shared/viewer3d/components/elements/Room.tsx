@@ -1710,14 +1710,32 @@ const Room: React.FC<RoomProps> = ({
             // z축 방향(앞뒤) 그라데이션 선: [x1,y1,z1, x2,y2,z2] (z1=뒷벽=진한색, z2=앞쪽=투명)
             const gradientLines: [number, number, number, number, number, number][] = [];
 
-            // === 천장 경계선 ===
-            solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]); // 천장-뒷벽
+            // === 천장 경계선 (단내림 고려) ===
+            const hasDC = spaceInfo.droppedCeiling?.enabled;
+            const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
+            const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
+            const dcW = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 900) : 0;
+            const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW; // 경계벽 X
+
+            if (hasDC) {
+              // 단내림이 있으면 천장 수평선을 메인 구간만
+              if (dcIsLeft) {
+                solidLines.push([dcBx, ceilingY, z1, x2, ceilingY, z1]); // 경계벽~우측
+              } else {
+                solidLines.push([x1, ceilingY, z1, dcBx, ceilingY, z1]); // 좌측~경계벽
+              }
+            } else {
+              solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]); // 전체
+            }
 
             if (hasLeftWall) {
-              gradientLines.push([x1, ceilingY, z1, x1, ceilingY, z2]); // 천장-좌벽
+              // 좌벽이 단내림 영역이면 droppedCeilingY, 아니면 ceilingY
+              const leftCeilingY = dcIsLeft ? (ceilingY - mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200)) : ceilingY;
+              gradientLines.push([x1, leftCeilingY, z1, x1, leftCeilingY, z2]); // 천장-좌벽
             }
             if (hasRightWall) {
-              gradientLines.push([x2, ceilingY, z1, x2, ceilingY, z2]); // 천장-우벽
+              const rightCeilingY = dcIsRight ? (ceilingY - mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200)) : ceilingY;
+              gradientLines.push([x2, rightCeilingY, z1, x2, rightCeilingY, z2]); // 천장-우벽
             }
 
             // === 바닥 경계선 ===
@@ -1730,12 +1748,15 @@ const Room: React.FC<RoomProps> = ({
               gradientLines.push([x2, floorY, z1, x2, floorY, z2]); // 바닥-우벽
             }
 
-            // === 뒷벽 수직 경계선 ===
+            // === 뒷벽 수직 경계선 (단내림 측은 droppedCeilingY까지) ===
+            const dcDropH = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             if (hasLeftWall) {
-              solidLines.push([x1, floorY, z1, x1, ceilingY, z1]); // 뒷벽-좌벽
+              const leftTopY = dcIsLeft ? (ceilingY - dcDropH) : ceilingY;
+              solidLines.push([x1, floorY, z1, x1, leftTopY, z1]); // 뒷벽-좌벽
             }
             if (hasRightWall) {
-              solidLines.push([x2, floorY, z1, x2, ceilingY, z1]); // 뒷벽-우벽
+              const rightTopY = dcIsRight ? (ceilingY - dcDropH) : ceilingY;
+              solidLines.push([x2, floorY, z1, x2, rightTopY, z1]); // 뒷벽-우벽
             }
 
             // === 단내림 경계벽 윤곽선 ===
