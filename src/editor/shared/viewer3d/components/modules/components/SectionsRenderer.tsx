@@ -471,6 +471,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             });
 
             const shouldShow = !isUpperOrLowerCabinet && !hideSectionDimensions && showDimensions && showDimensionsText &&
+                              viewMode !== '3D' &&
                               !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
                               (section.type === 'hanging' || section.type === 'drawer') &&
                               !shouldHide2HangingUpper;

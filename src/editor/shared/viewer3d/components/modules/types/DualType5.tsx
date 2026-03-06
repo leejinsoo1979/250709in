@@ -370,8 +370,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             {separatorPanel}
             
-            {/* 좌측 섹션 치수 표시 */}
+            {/* 좌측 섹션 치수 표시 - 3D 모드에서는 숨김 */}
             {showDimensions && showDimensionsText &&
+             viewMode !== '3D' &&
              !(viewMode === '2D' && view2DDirection === 'top') &&
              !(viewMode === '2D' && view2DDirection === 'right') && (
               <>
@@ -701,8 +702,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           <group key={`right-section-${index}`}>
             {sectionContent}
             
-            {/* 우측 섹션 치수 표시 */}
+            {/* 우측 섹션 치수 표시 - 3D 모드에서는 숨김 */}
             {showDimensions && showDimensionsText &&
+             viewMode !== '3D' &&
              !(viewMode === '2D' && view2DDirection === 'top') &&
              !(viewMode === '2D' && view2DDirection === 'left') && (
               <group>
