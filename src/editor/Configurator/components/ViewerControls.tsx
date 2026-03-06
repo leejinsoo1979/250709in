@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
-import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, Settings2 } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -68,8 +68,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileOptions, setShowMobileOptions] = useState(false);
-  const [showGraphicsMenu, setShowGraphicsMenu] = useState(false);
-  const graphicsMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -77,18 +75,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // 그래픽 설정 드롭다운 외부 클릭 감지
-  useEffect(() => {
-    if (!showGraphicsMenu) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (graphicsMenuRef.current && !graphicsMenuRef.current.contains(e.target as Node)) {
-        setShowGraphicsMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showGraphicsMenu]);
 
   useEffect(() => {
     try {
@@ -336,41 +322,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
       </div>
-
-      {/* ─── Graphics Settings (3D only) ─── */}
-      {viewMode === '3D' && (
-        <div className={styles.graphicsMenuWrapper} ref={graphicsMenuRef}>
-          <button
-            className={`${styles.iconButton} ${showGraphicsMenu ? styles.iconButtonActive : ''}`}
-            onClick={() => setShowGraphicsMenu(!showGraphicsMenu)}
-            title="그래픽 설정"
-          >
-            <Settings2 size={15} />
-          </button>
-          {showGraphicsMenu && (
-            <div className={styles.graphicsDropdown}>
-              <button
-                className={`${styles.graphicsItem} ${shadowEnabled ? styles.graphicsItemActive : ''}`}
-                onClick={() => setShadowEnabled(!shadowEnabled)}
-              >
-                <span className={styles.graphicsItemLabel}>그림자</span>
-                <span className={`${styles.graphicsToggle} ${shadowEnabled ? styles.graphicsToggleOn : ''}`}>
-                  <span className={styles.graphicsToggleHandle} />
-                </span>
-              </button>
-              <button
-                className={`${styles.graphicsItem} ${edgeOutlineEnabled ? styles.graphicsItemActive : ''}`}
-                onClick={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)}
-              >
-                <span className={styles.graphicsItemLabel}>윤곽선</span>
-                <span className={`${styles.graphicsToggle} ${edgeOutlineEnabled ? styles.graphicsToggleOn : ''}`}>
-                  <span className={styles.graphicsToggleHandle} />
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       <div className={styles.spacer} />
 

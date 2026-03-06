@@ -153,6 +153,8 @@ const Header: React.FC<HeaderProps> = ({
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [isGraphicsMenuOpen, setIsGraphicsMenuOpen] = useState(false);
+  const graphicsMenuRef = useRef<HTMLDivElement>(null);
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
@@ -161,8 +163,8 @@ const Header: React.FC<HeaderProps> = ({
   const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
-  // UIStore에서 카메라 및 그림자 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
+  // UIStore에서 카메라 및 그래픽 설정 가져오기
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
   const { colors } = useThemeColors();
   const { theme, toggleMode } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -189,6 +191,18 @@ const Header: React.FC<HeaderProps> = ({
       }
     };
   }, []);
+
+  // 그래픽 설정 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    if (!isGraphicsMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (graphicsMenuRef.current && !graphicsMenuRef.current.contains(e.target as Node)) {
+        setIsGraphicsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isGraphicsMenuOpen]);
 
   // 설정 패널 열기 이벤트 리스너
   useEffect(() => {
@@ -934,18 +948,41 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>}
 
-            {/* 그림자(3D) / 다크(2D) 토글 스위치 */}
+            {/* 그래픽 설정 드롭다운 (3D) / 다크(2D) 토글 */}
             <div className={styles.headerToggleGroup}>
               {viewMode === '3D' && (
-                <div className={styles.headerToggleItem}>
-                  <span className={styles.headerToggleLabel}>그림자</span>
+                <div className={styles.graphicsDropdownWrapper} ref={graphicsMenuRef}>
                   <button
-                    className={`${styles.headerToggleSwitch} ${shadowEnabled ? styles.active : ''}`}
-                    onClick={() => setShadowEnabled(!shadowEnabled)}
-                    title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+                    className={styles.graphicsDropdownButton}
+                    onClick={() => setIsGraphicsMenuOpen(!isGraphicsMenuOpen)}
                   >
-                    <div className={styles.headerToggleKnob} />
+                    그래픽
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 3 }}>
+                      <path d="M2 4L5 7L8 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
+                  {isGraphicsMenuOpen && (
+                    <div className={styles.graphicsDropdownMenu}>
+                      <button
+                        className={styles.graphicsMenuItem}
+                        onClick={() => setShadowEnabled(!shadowEnabled)}
+                      >
+                        <span>그림자</span>
+                        <span className={`${styles.miniToggle} ${shadowEnabled ? styles.miniToggleOn : ''}`}>
+                          <span className={styles.miniToggleKnob} />
+                        </span>
+                      </button>
+                      <button
+                        className={styles.graphicsMenuItem}
+                        onClick={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)}
+                      >
+                        <span>윤곽선</span>
+                        <span className={`${styles.miniToggle} ${edgeOutlineEnabled ? styles.miniToggleOn : ''}`}>
+                          <span className={styles.miniToggleKnob} />
+                        </span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               {/* 2D 다크/라이트 토글은 캔버스 우측 도구 버튼으로 이동 */}
