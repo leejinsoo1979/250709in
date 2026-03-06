@@ -280,7 +280,7 @@ export class GuillotinePacker {
 
         const heightDiff = Math.abs(panel.height - strip.height) / strip.height;
 
-        if (heightDiff <= 0.02 && currentX + panel.width <= this.binWidth) {
+        if (heightDiff <= 0.02 && currentX + panel.width <= this.binWidth && panel.height <= strip.height) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: currentX,
@@ -293,13 +293,13 @@ export class GuillotinePacker {
         }
       }
 
-      // 2차: 유사한 높이의 패널 배치 (오차 10% 이내)
+      // 2차: 유사한 높이의 패널 배치 (오차 10% 이내, 스트립 높이 이내)
       for (const panel of panels) {
         if (placedSet.has(panel)) continue;
 
         const heightDiff = Math.abs(panel.height - strip.height) / strip.height;
 
-        if (heightDiff <= 0.1 && currentX + panel.width <= this.binWidth) {
+        if (heightDiff <= 0.1 && currentX + panel.width <= this.binWidth && panel.height <= strip.height) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: currentX,
@@ -317,7 +317,7 @@ export class GuillotinePacker {
         if (placedSet.has(panel) || !panel.canRotate) continue;
 
         const rotatedHeightDiff = Math.abs(panel.width - strip.height) / strip.height;
-        if (rotatedHeightDiff <= 0.1 && currentX + panel.height <= this.binWidth) {
+        if (rotatedHeightDiff <= 0.1 && currentX + panel.height <= this.binWidth && panel.width <= strip.height) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: currentX,
@@ -390,7 +390,7 @@ export class GuillotinePacker {
 
         const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
 
-        if (widthDiff <= 0.02 && strip.y + currentY + panel.height <= this.binHeight) {
+        if (widthDiff <= 0.02 && strip.y + currentY + panel.height <= this.binHeight && panel.width <= strip.width) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: strip.x,
@@ -403,13 +403,13 @@ export class GuillotinePacker {
         }
       }
 
-      // 2차: 유사한 너비의 패널 배치 (오차 10% 이내)
+      // 2차: 유사한 너비의 패널 배치 (오차 10% 이내, 스트립 너비 이내)
       for (const panel of panels) {
         if (placedSet.has(panel)) continue;
 
         const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
 
-        if (widthDiff <= 0.1 && strip.y + currentY + panel.height <= this.binHeight) {
+        if (widthDiff <= 0.1 && strip.y + currentY + panel.height <= this.binHeight && panel.width <= strip.width) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: strip.x,
@@ -427,7 +427,7 @@ export class GuillotinePacker {
         if (placedSet.has(panel) || !panel.canRotate) continue;
 
         const rotatedWidthDiff = Math.abs(panel.height - strip.width) / strip.width;
-        if (rotatedWidthDiff <= 0.1 && strip.y + currentY + panel.width <= this.binHeight) {
+        if (rotatedWidthDiff <= 0.1 && strip.y + currentY + panel.width <= this.binHeight && panel.height <= strip.width) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: strip.x,
@@ -515,7 +515,9 @@ export class GuillotinePacker {
     const panels: Rect[] = [];
     let usedArea = 0;
     const placedPanels = new Set<string>();
-    
+    // 겹침 감지를 위한 배치된 패널 영역 목록
+    const placedRects: { x: number; y: number; w: number; h: number }[] = [];
+
     for (const strip of this.strips) {
       for (const panel of strip.panels) {
         // 중복 패널 방지
@@ -525,18 +527,18 @@ export class GuillotinePacker {
           continue;
         }
         placedPanels.add(panelKey);
-        
+
         // 패널이 스트립 경계를 벗어나지 않도록 검증
         const finalPanel = { ...panel };
-        
+
         // 좌표가 음수가 되지 않도록 보장
         if (finalPanel.x < 0) finalPanel.x = 0;
         if (finalPanel.y < 0) finalPanel.y = 0;
-        
+
         // 패널이 빈 영역을 벗어나지 않도록 보장
         const actualWidth = finalPanel.rotated ? finalPanel.height : finalPanel.width;
         const actualHeight = finalPanel.rotated ? finalPanel.width : finalPanel.height;
-        
+
         if (finalPanel.x + actualWidth > this.binWidth) {
           console.warn(`Panel extends beyond bin width: ${finalPanel.x + actualWidth} > ${this.binWidth}`);
           continue;
@@ -545,7 +547,23 @@ export class GuillotinePacker {
           console.warn(`Panel extends beyond bin height: ${finalPanel.y + actualHeight} > ${this.binHeight}`);
           continue;
         }
-        
+
+        // 겹침 감지: 이미 배치된 패널과 겹치는지 확인
+        const newRect = { x: finalPanel.x, y: finalPanel.y, w: actualWidth, h: actualHeight };
+        const overlaps = placedRects.some(r => {
+          const margin = 0.5; // 0.5mm 허용 오차
+          return newRect.x < r.x + r.w - margin &&
+                 newRect.x + newRect.w > r.x + margin &&
+                 newRect.y < r.y + r.h - margin &&
+                 newRect.y + newRect.h > r.y + margin;
+        });
+
+        if (overlaps) {
+          console.warn(`Panel overlap detected: ${finalPanel.name || finalPanel.id} at (${finalPanel.x}, ${finalPanel.y}) ${actualWidth}x${actualHeight}`);
+          continue; // 겹치는 패널은 스킵 (다음 빈에서 배치됨)
+        }
+
+        placedRects.push(newRect);
         panels.push(finalPanel);
         // 회전 여부와 관계없이 원본 크기로 면적 계산
         usedArea += finalPanel.width * finalPanel.height;
