@@ -1704,8 +1704,10 @@ const Room: React.FC<RoomProps> = ({
             const x1 = xOffset;
             const x2 = xOffset + width;
 
+            const floorY = panelStartY;
             const lines: [number, number, number, number, number, number][] = [];
 
+            // === 천장 경계선 ===
             // 천장-뒷벽 경계 (좌→우 수평선, z=뒤쪽)
             lines.push([x1, ceilingY, z1, x2, ceilingY, z1]);
 
@@ -1717,6 +1719,31 @@ const Room: React.FC<RoomProps> = ({
             // 천장-우벽 경계 (앞→뒤, x=오른쪽)
             if (hasRightWall) {
               lines.push([x2, ceilingY, z1, x2, ceilingY, z2]);
+            }
+
+            // === 바닥 경계선 ===
+            // 바닥-뒷벽 경계 (좌→우 수평선, z=뒤쪽)
+            lines.push([x1, floorY, z1, x2, floorY, z1]);
+
+            // 바닥-좌벽 경계 (앞→뒤, x=왼쪽)
+            if (hasLeftWall) {
+              lines.push([x1, floorY, z1, x1, floorY, z2]);
+            }
+
+            // 바닥-우벽 경계 (앞→뒤, x=오른쪽)
+            if (hasRightWall) {
+              lines.push([x2, floorY, z1, x2, floorY, z2]);
+            }
+
+            // === 뒷벽 수직 경계선 ===
+            // 뒷벽-좌벽 수직 경계 (z=뒤쪽, x=왼쪽)
+            if (hasLeftWall) {
+              lines.push([x1, floorY, z1, x1, ceilingY, z1]);
+            }
+
+            // 뒷벽-우벽 수직 경계 (z=뒤쪽, x=오른쪽)
+            if (hasRightWall) {
+              lines.push([x2, floorY, z1, x2, ceilingY, z1]);
             }
 
             const positions = new Float32Array(lines.length * 6);
