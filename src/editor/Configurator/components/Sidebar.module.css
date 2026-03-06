@@ -72,19 +72,16 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  color: var(--theme-text-muted);
-  opacity: 0.65;
-  transition: all 0.12s ease;
+  color: #9ca3af;
+  transition: color 0.12s ease;
 }
 
 .tabButton.active .tabIcon {
   color: var(--theme-primary);
-  opacity: 1;
 }
 
 .tabButton:hover .tabIcon {
   color: var(--theme-text-secondary);
-  opacity: 0.8;
 }
 
 /* ── Tab Label ── */
@@ -92,8 +89,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  color: var(--theme-text-muted);
-  opacity: 0.65;
+  color: #9ca3af;
   line-height: 1;
   text-align: center;
   letter-spacing: -0.01em;
@@ -105,13 +101,11 @@
 
 .tabButton.active .tabLabel {
   color: var(--theme-primary);
-  opacity: 1;
   font-weight: 600;
 }
 
 .tabButton:hover .tabLabel {
   color: var(--theme-text-secondary);
-  opacity: 0.8;
 }
 
 /* ── Bottom Action Group ── */
