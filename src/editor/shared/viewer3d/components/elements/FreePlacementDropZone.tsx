@@ -15,6 +15,8 @@ import {
   FurnitureBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
+import BoxModule from '../modules/BoxModule';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // window 타입 확장
 declare global {
@@ -33,6 +35,7 @@ const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, currentDragData, placedModules, addModule } = useFurnitureStore();
   const { view2DTheme } = useUIStore();
+  const { theme } = useTheme();
   const { camera } = useThree();
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
@@ -275,11 +278,36 @@ const FreePlacementDropZone: React.FC = () => {
     return (floorFinishMm + baseHeightMm + floatHeightMm + activeDimensions.height / 2) * 0.01;
   }, [activeDimensions, activeCategory, spaceInfo]);
 
+  // 고스트 모듈 데이터 (BoxModule에 전달)
+  const ghostModuleData = useMemo(() => {
+    if (!activeModuleId) return null;
+    // getModuleById로 실제 모듈 데이터를 가져옴
+    const modData = getModuleById(activeModuleId, internalSpace, spaceInfo);
+    if (modData) return modData;
+    // 못 찾으면 activeModuleData에서 생성
+    if (!activeModuleData) return null;
+    return activeModuleData;
+  }, [activeModuleId, internalSpace, spaceInfo, activeModuleData]);
+
+  // 고스트 Z 위치 계산 (SlotDropZonesSimple과 동일한 로직)
+  const ghostZPosition = useMemo(() => {
+    if (!activeDimensions) return 0;
+    const panelDepthMm = spaceInfo.depth || 600;
+    const panelDepth = panelDepthMm * 0.01;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const furnitureDepth = furnitureDepthMm * 0.01;
+    const zOffset = -panelDepth / 2;
+    const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+    const doorThickness = 20 * 0.01;
+    const previewDepth = activeDimensions.depth * 0.01;
+    return furnitureZOffset + furnitureDepth / 2 - doorThickness - previewDepth / 2;
+  }, [activeDimensions, spaceInfo.depth]);
+
   // 고스트 위치
   const ghostPosition = useMemo(() => {
     if (hoverXmm === null || !activeDimensions) return null;
-    return { x: hoverXmm * 0.01, y: ghostYThree, z: 0 };
-  }, [hoverXmm, activeDimensions, ghostYThree]);
+    return { x: hoverXmm * 0.01, y: ghostYThree, z: ghostZPosition };
+  }, [hoverXmm, activeDimensions, ghostYThree, ghostZPosition]);
 
   // 남은 공간 사이즈 계산 (배치된 가구 사이의 갭)
   const remainingGaps = useMemo(() => {
@@ -347,9 +375,6 @@ const FreePlacementDropZone: React.FC = () => {
   const hasActiveModule = !!(activeModuleId && activeDimensions);
   if (!isFreePlacement) return null;
 
-  const ghostColor = isColliding ? '#ef4444' : '#22c55e';
-  const ghostOpacity = 0.4;
-
   return (
     <>
       {/* 투명 raycasting 평면 (클릭-앤-플레이스 모드) */}
@@ -366,8 +391,24 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       )}
 
-      {/* 고스트 프리뷰 */}
-      {ghostPosition && activeDimensions && (
+      {/* 고스트 프리뷰 - 실제 BoxModule 사용 */}
+      {ghostPosition && activeDimensions && ghostModuleData && !isColliding && (
+        <group position={[ghostPosition.x, ghostPosition.y, ghostPosition.z]}>
+          <BoxModule
+            moduleData={ghostModuleData}
+            color={theme.color}
+            isDragging={true}
+            hasDoor={false}
+            customDepth={activeDimensions.depth}
+            adjustedWidth={activeDimensions.width}
+            internalHeight={activeDimensions.height}
+            spaceInfo={spaceInfo}
+          />
+        </group>
+      )}
+
+      {/* 충돌 시 빨간 박스 고스트 */}
+      {ghostPosition && activeDimensions && isColliding && (
         <group position={[ghostPosition.x, ghostPosition.y, ghostPosition.z]}>
           <mesh>
             <boxGeometry
@@ -378,9 +419,9 @@ const FreePlacementDropZone: React.FC = () => {
               ]}
             />
             <meshBasicMaterial
-              color={ghostColor}
+              color="#ef4444"
               transparent
-              opacity={ghostOpacity}
+              opacity={0.4}
               side={THREE.DoubleSide}
             />
           </mesh>
@@ -394,27 +435,30 @@ const FreePlacementDropZone: React.FC = () => {
                 ),
               ]}
             />
-            <lineBasicMaterial color={ghostColor} linewidth={2} />
+            <lineBasicMaterial color="#ef4444" linewidth={2} />
           </lineSegments>
-          {/* 고스트 위에 너비 표시 */}
-          <Html
-            position={[0, (activeDimensions.height * 0.01) / 2 + 0.15, 0]}
-            center
-            style={{ pointerEvents: 'none', userSelect: 'none' }}
-          >
-            <div style={{
-              background: isColliding ? '#ef4444' : '#22c55e',
-              color: 'white',
-              padding: '2px 8px',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              whiteSpace: 'nowrap',
-            }}>
-              {activeDimensions.width}mm
-            </div>
-          </Html>
         </group>
+      )}
+
+      {/* 고스트 위 너비 표시 */}
+      {ghostPosition && activeDimensions && (
+        <Html
+          position={[ghostPosition.x, ghostPosition.y + (activeDimensions.height * 0.01) / 2 + 0.15, ghostPosition.z]}
+          center
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          <div style={{
+            background: isColliding ? '#ef4444' : '#22c55e',
+            color: 'white',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+          }}>
+            {activeDimensions.width}mm
+          </div>
+        </Html>
       )}
 
       {/* 남은 공간 사이즈 표시 */}
