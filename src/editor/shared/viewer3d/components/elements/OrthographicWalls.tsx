@@ -102,7 +102,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
   };
   
   // 윤곽선 색상 및 투명도
-  const edgeColor = '#444444';
+  const edgeColor = '#000000';
   const edgeOpacity = 1.0;
 
   return (
