@@ -211,6 +211,30 @@ const BoxWithEdges: React.FC<{
   );
 };
 
+// Wireframe 모드에서 PlaneGeometry의 4변 외곽선만 렌더링
+const PlaneOutline: React.FC<{
+  args: [number, number];
+  position: [number, number, number];
+  rotation: [number, number, number];
+  color?: string;
+}> = ({ args, position, rotation, color = "#333333" }) => {
+  const geometry = useMemo(() => new THREE.PlaneGeometry(args[0], args[1]), [args[0], args[1]]);
+  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      edgesGeometry.dispose();
+    };
+  }, [geometry, edgesGeometry]);
+
+  return (
+    <lineSegments position={position} rotation={rotation} geometry={edgesGeometry}>
+      <lineBasicMaterial color={color} />
+    </lineSegments>
+  );
+};
+
 const Room: React.FC<RoomProps> = ({
   spaceInfo,
   floorColor = '#FF9966',
@@ -241,6 +265,7 @@ const Room: React.FC<RoomProps> = ({
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
 
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
@@ -1155,7 +1180,7 @@ const Room: React.FC<RoomProps> = ({
                     'droppedCenterY': droppedCenterY
                   });
 
-                  return (
+                  return renderMode === 'solid' ? (
                     <mesh
                       position={[-width / 2 - 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
@@ -1164,12 +1189,14 @@ const Room: React.FC<RoomProps> = ({
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                       <primitive object={opaqueLeftWallMaterial} />
                     </mesh>
+                  ) : (
+                    <PlaneOutline args={[extendedPanelDepth, droppedWallHeight]} position={[-width / 2 - 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]} rotation={[0, Math.PI / 2, 0]} color={wireframeColor} />
                   );
                 }
 
                 // 단내림이 없거나 오른쪽 단내림인 경우 기존 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
-                  return (
+                  return renderMode === 'solid' ? (
                     <mesh
                       position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
@@ -1180,6 +1207,8 @@ const Room: React.FC<RoomProps> = ({
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
                     </mesh>
+                  ) : (
+                    <PlaneOutline args={[extendedPanelDepth, height]} position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]} rotation={[0, Math.PI / 2, 0]} color={wireframeColor} />
                   );
                 }
 
@@ -1224,7 +1253,7 @@ const Room: React.FC<RoomProps> = ({
                     'droppedCenterY': droppedCenterY
                   });
 
-                  return (
+                  return renderMode === 'solid' ? (
                     <mesh
                       position={[width / 2 + 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
@@ -1233,12 +1262,14 @@ const Room: React.FC<RoomProps> = ({
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                       <primitive object={opaqueRightWallMaterial} />
                     </mesh>
+                  ) : (
+                    <PlaneOutline args={[extendedPanelDepth, droppedWallHeight]} position={[width / 2 + 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]} rotation={[0, -Math.PI / 2, 0]} color={wireframeColor} />
                   );
                 }
 
                 // 단내림이 없거나 왼쪽에 있는 경우 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
-                  return (
+                  return renderMode === 'solid' ? (
                     <mesh
                       position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
@@ -1249,6 +1280,8 @@ const Room: React.FC<RoomProps> = ({
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
                     </mesh>
+                  ) : (
+                    <PlaneOutline args={[extendedPanelDepth, height]} position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]} rotation={[0, -Math.PI / 2, 0]} color={wireframeColor} />
                   );
                 }
 
@@ -1270,7 +1303,7 @@ const Room: React.FC<RoomProps> = ({
 
             if (!hasDroppedCeiling) {
               // 단내림이 없는 경우 기존처럼 전체 천장 렌더링
-              return (
+              return renderMode === 'solid' ? (
                 <mesh
                   position={[xOffset + width / 2, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
@@ -1280,6 +1313,8 @@ const Room: React.FC<RoomProps> = ({
                     ref={topWallMaterialRef}
                     object={topWallMaterial} />
                 </mesh>
+              ) : (
+                <PlaneOutline args={[width, extendedPanelDepth]} position={[xOffset + width / 2, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]} rotation={[Math.PI / 2, 0, 0]} color={wireframeColor} />
               );
             }
 
@@ -1353,7 +1388,18 @@ const Room: React.FC<RoomProps> = ({
               '200mm 분절 확인': droppedCeilingHeight / 0.01 === 200 ? '✅' : '❌'
             });
 
-            return (
+            // 단내림 경계벽 X 위치 계산
+            const boundaryWallX = (() => {
+              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+              const BOUNDARY_OFFSET = 3; // mm
+              if (isLeftDropped) {
+                return mmToThreeUnits(zoneInfo.normal.startX - BOUNDARY_OFFSET);
+              } else {
+                return mmToThreeUnits(zoneInfo.dropped!.startX + BOUNDARY_OFFSET);
+              }
+            })();
+
+            return renderMode === 'solid' ? (
               <>
                 {/* 단내림 영역 천장 (낮은 높이) - 불투명 그라데이션 */}
                 <mesh
@@ -1378,46 +1424,10 @@ const Room: React.FC<RoomProps> = ({
                     object={topWallMaterial} />
                 </mesh>
 
-                {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
+                {/* 단내림 경계 수직 벽 */}
                 <mesh
                   renderOrder={-1}
-                  position={[
-                    (() => {
-                      // ColumnIndexer의 계산과 동일하게 처리
-                      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-
-                      const boundaryX = isLeftDropped
-                        ? mmToThreeUnits(zoneInfo.normal.startX)
-                        : mmToThreeUnits(zoneInfo.dropped.startX);
-
-                      // 단내림 안쪽 내벽을 단내림 바깥쪽으로 3mm 이동
-                      const BOUNDARY_OFFSET = 3; // mm
-
-                      console.log('🔥 단내림 경계벽 위치:', {
-                        isLeftDropped,
-                        '기준 경계 X 위치(mm)': isLeftDropped ? zoneInfo.normal.startX : zoneInfo.dropped.startX,
-                        '오프셋(mm)': BOUNDARY_OFFSET,
-                        '최종 경계 X 위치(mm)': isLeftDropped
-                          ? zoneInfo.normal.startX - BOUNDARY_OFFSET
-                          : zoneInfo.dropped.startX + BOUNDARY_OFFSET,
-                        '단내림 폭(mm)': spaceInfo.droppedCeiling?.width || 900,
-                        droppedCeilingHeight: droppedCeilingHeight / 0.01,
-                        '벽 상단 Y': (panelStartY + height) / 0.01,
-                        '벽 하단 Y': (panelStartY + height - droppedCeilingHeight) / 0.01,
-                        '천장에서 거리(mm)': droppedCeilingHeight / 0.01
-                      });
-
-                      if (isLeftDropped) {
-                        // 왼쪽 단내림: 단내림 끝 = 메인 시작, 단내림 바깥쪽(왼쪽)으로 3mm 이동
-                        return mmToThreeUnits(zoneInfo.normal.startX - BOUNDARY_OFFSET);
-                      } else {
-                        // 오른쪽 단내림: 메인 끝 = 단내림 시작, 단내림 바깥쪽(오른쪽)으로 3mm 이동
-                        return mmToThreeUnits(zoneInfo.dropped.startX + BOUNDARY_OFFSET);
-                      }
-                    })(),
-                    panelStartY + height - droppedCeilingHeight / 2,
-                    extendedZOffset + extendedPanelDepth / 2  // 천장면과 동일한 Z 위치 사용
-                  ]}
+                  position={[boundaryWallX, panelStartY + height - droppedCeilingHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
@@ -1426,18 +1436,28 @@ const Room: React.FC<RoomProps> = ({
                     object={droppedWallMaterial} />
                 </mesh>
               </>
+            ) : (
+              <>
+                <PlaneOutline args={[droppedAreaWidth, extendedPanelDepth]} position={[droppedAreaX, panelStartY + height - droppedCeilingHeight + 0.001, extendedZOffset + extendedPanelDepth / 2]} rotation={[Math.PI / 2, 0, 0]} color={wireframeColor} />
+                <PlaneOutline args={[normalAreaWidth, extendedPanelDepth]} position={[normalAreaX, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]} rotation={[Math.PI / 2, 0, 0]} color={wireframeColor} />
+                <PlaneOutline args={[extendedPanelDepth, droppedCeilingHeight]} position={[boundaryWallX, panelStartY + height - droppedCeilingHeight / 2, extendedZOffset + extendedPanelDepth / 2]} rotation={[0, Math.PI / 2, 0]} color={wireframeColor} />
+              </>
             );
           })()}
 
           {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰에서는 숨김 */}
           {viewMode !== '2D' && (
-            <mesh
-              position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <planeGeometry args={[width, extendedPanelDepth]} />
-              <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode)} />
-            </mesh>
+            renderMode === 'solid' ? (
+              <mesh
+                position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={[width, extendedPanelDepth]} />
+                <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode)} />
+              </mesh>
+            ) : (
+              <PlaneOutline args={[width, extendedPanelDepth]} position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]} rotation={[-Math.PI / 2, 0, 0]} color={wireframeColor} />
+            )
           )}
 
           {/* 벽장 공간의 3면에서 나오는 그라데이션 오버레이들 - 입체감 효과 */}
@@ -1605,8 +1625,9 @@ const Room: React.FC<RoomProps> = ({
             </mesh>
           )}
 
-          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 */}
-
+          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe에서는 숨김) */}
+          {renderMode === 'solid' && (
+          <>
           {/* 왼쪽 세로 모서리 (좌측벽과 뒷벽 사이) */}
           <mesh
             position={[-width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
@@ -1682,6 +1703,8 @@ const Room: React.FC<RoomProps> = ({
             <planeGeometry args={[0.02, extendedPanelDepth]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
+          </>
+          )}
         </>
       )}
 
