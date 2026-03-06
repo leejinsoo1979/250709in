@@ -257,7 +257,7 @@
 .modulePanelTitle {
   font-size: 18px;
   font-weight: 600;
-  color: var(--theme-text, #1f2937);
+  color: var(--theme-text);
   margin: 0 0 20px 0;
 }
 
@@ -312,7 +312,7 @@
 
 .doorStatusText {
   font-size: 14px;
-  color: var(--theme-text, #374151);
+  color: var(--theme-text);
   font-weight: 500;
 }
 
@@ -690,14 +690,14 @@
   border: none;
   font-size: 11px; /* 폰트 크기 축소 */
   font-weight: 500;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.2s;
   border-bottom: 2px solid transparent;
 }
 
 .rightPanelTab:hover {
-  color: var(--theme-text, #374151);
+  color: var(--theme-text);
   background: var(--theme-background-secondary, #f9fafb);
 }
 
@@ -825,7 +825,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   transition: background-color 0.2s;
 }
 
@@ -842,7 +842,7 @@
   text-align: right;
   padding-right: 4px; /* 패딩 축소 */
   font-size: 10px; /* 폰트 크기 축소 */
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   outline: none;
 }
 
@@ -913,7 +913,7 @@
 
 .sliderLabels span {
   font-size: 11px;
-  color: var(--theme-text-muted, #9ca3af);
+  color: var(--theme-text-muted);
   font-weight: 500;
   cursor: pointer;
   padding: 4px 6px;
@@ -975,7 +975,7 @@
 
 .sliderLabel {
   font-size: 12px;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   font-weight: 400;
   transition: color 0.2s;
 }
@@ -996,7 +996,7 @@
 .sectionLabel {
   font-size: 14px;
   font-weight: 600;
-  color: var(--theme-text, #374151);
+  color: var(--theme-text);
 }
 
 .dimensionsSummary {
@@ -1008,7 +1008,7 @@
 
 .summaryText {
   font-size: 14px;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
 
@@ -1027,7 +1027,7 @@
 .placeholder {
   padding: 40px 20px;
   text-align: center;
-  color: var(--theme-text-muted, #9ca3af);
+  color: var(--theme-text-muted);
   font-size: 14px;
   font-style: italic;
   background: var(--theme-background-secondary, #f9fafb);
@@ -1047,7 +1047,7 @@
 }
 
 .loadingContainer p {
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   font-size: 16px;
 }
 
@@ -1608,7 +1608,7 @@
 
 .slotInfoText {
   font-size: 11px;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   line-height: 1.4;
   margin: 0;
 }
@@ -1624,7 +1624,7 @@
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: var(--theme-text, #374151);
+  color: var(--theme-text);
   margin-bottom: 6px;
 }
 
@@ -1644,7 +1644,7 @@
 
 .frameItemLabel {
   font-size: 10px;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   margin-bottom: 4px;
   font-weight: 500;
   text-align: center;
@@ -1692,7 +1692,7 @@
   text-align: center;
   font-size: 11px;
   font-weight: 600;
-  color: var(--theme-text, #374151);
+  color: var(--theme-text);
   padding: 0;
   width: 100%;
   height: 24px;
@@ -1715,7 +1715,7 @@
 
 .frameUnit {
   font-size: 10px;
-  color: var(--theme-text-muted, #9ca3af);
+  color: var(--theme-text-muted);
   text-align: center;
   margin-top: 4px;
 }

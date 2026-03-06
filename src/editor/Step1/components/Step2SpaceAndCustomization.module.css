@@ -122,7 +122,7 @@
   padding: 8px 20px;
   border: none;
   background: transparent;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -140,7 +140,7 @@
 }
 
 .toggleButton:hover:not(.active) {
-  color: var(--theme-text-secondary, #4b5563);
+  color: var(--theme-text-secondary);
 }
 
 /* 3D 에디터 뷰어 */
@@ -227,7 +227,7 @@
   padding: 6px 12px;
   border: none;
   background: transparent;
-  color: var(--theme-text-muted, #6b7280);
+  color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 12px;
   font-weight: 500;
@@ -245,7 +245,7 @@
 }
 
 .toggleButton:hover:not(.active) {
-  color: var(--theme-text-secondary, #4b5563);
+  color: var(--theme-text-secondary);
 }
 
 /* 레인지 인풋 */
@@ -405,9 +405,9 @@
 
 .typeButton {
   padding: 8px 16px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  color: #6b7280;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text-muted);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
@@ -423,7 +423,7 @@
 }
 
 .typeButton:hover:not(.active) {
-  background: #f3f4f6;
+  background: var(--theme-background-secondary);
   border-color: var(--theme-primary);
 }
 
