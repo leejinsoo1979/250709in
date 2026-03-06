@@ -1746,6 +1746,55 @@ const Room: React.FC<RoomProps> = ({
               lines.push([x2, floorY, z1, x2, ceilingY, z1]);
             }
 
+            // === 단내림 천장기둥 윤곽선 ===
+            if (spaceInfo.droppedCeiling?.enabled) {
+              const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              const dcDropHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
+              const isLeft = spaceInfo.droppedCeiling.position === 'left';
+              const droppedCeilingY = ceilingY - dcDropHeight; // 단내림 천장 높이
+
+              // 경계벽 X 위치
+              const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
+
+              // 1. 단내림 천장 수평선 (뒷벽 쪽, z=z1)
+              if (isLeft) {
+                lines.push([x1, droppedCeilingY, z1, bx, droppedCeilingY, z1]);
+              } else {
+                lines.push([bx, droppedCeilingY, z1, x2, droppedCeilingY, z1]);
+              }
+
+              // 2. 단내림 천장 수평선 (앞쪽, z=z2)
+              if (isLeft) {
+                lines.push([x1, droppedCeilingY, z2, bx, droppedCeilingY, z2]);
+              } else {
+                lines.push([bx, droppedCeilingY, z2, x2, droppedCeilingY, z2]);
+              }
+
+              // 3. 단내림 천장 앞뒤 연결선 (경계벽 위치에서)
+              lines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]);
+
+              // 4. 경계 수직벽 - 수직선 (뒷벽 쪽)
+              lines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]);
+
+              // 5. 경계 수직벽 - 수직선 (앞쪽)
+              lines.push([bx, droppedCeilingY, z2, bx, ceilingY, z2]);
+
+              // 6. 천장 높이 경계선 (경계벽 상단 앞뒤 연결)
+              lines.push([bx, ceilingY, z1, bx, ceilingY, z2]);
+
+              // 7. 단내림 측 벽면 천장 경계 (앞뒤 연결)
+              if (isLeft && hasLeftWall) {
+                lines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
+              } else if (!isLeft && hasRightWall) {
+                lines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
+              }
+
+              // 8. 단내림 측 벽면 수직선 수정 (기존 천장높이까지 → 단내림 높이까지)
+              // 기존 뒷벽 수직선은 ceilingY까지 그려져 있으므로,
+              // 단내림 측 벽의 droppedCeilingY~ceilingY 구간 수직선 추가 (뒷벽쪽)
+              // (이미 위에서 전체 높이로 그려져 있으므로 경계벽 부분만 보완)
+            }
+
             const positions = new Float32Array(lines.length * 6);
             lines.forEach((line, i) => {
               for (let j = 0; j < 6; j++) positions[i * 6 + j] = line[j];
