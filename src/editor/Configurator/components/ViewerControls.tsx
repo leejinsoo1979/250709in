@@ -292,7 +292,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               onViewModeChange(mode.id);
               if (mode.id === '2D') {
                 if (renderMode !== 'wireframe') onRenderModeChange('wireframe');
-                setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
+                requestAnimationFrame(() => {
+                  setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
+                });
               }
             }}
           >{mode.label}</button>
