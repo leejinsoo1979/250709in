@@ -9,7 +9,7 @@
  * 핵심 원칙:
  *   - 같은 치수 패널끼리만 한 스트립에 배치 (모자이크/계단 패턴 방지)
  *   - 스트립 간 여백(kerf)만큼 간격 유지
- *   - 스트립 끝 남는 공간에는 더 작은 패널로 2차 채움
+ *   - 스트립 끝 남는 공간은 여유분으로 남김 (다른 치수 패널 혼합 금지)
  */
 
 import { Rect, PackedBin } from './simpleBinPacking';
@@ -189,68 +189,14 @@ export class GuillotinePacker {
 
       // 마지막 스트립 저장
       if (currentStrip.panels.length > 0) {
-        // 스트립 끝 남는 공간에 더 작은 치수 패널로 2차 채움
-        this.fillResidual(currentStrip, strips.length, groups, sortedDims, dim, fillPos, fillMax, horizontal, currentPos);
+        // ※ fillResidual 제거: 다른 치수 패널을 같은 스트립에 넣으면 계단 패턴 발생
+        // 실제 공장에서는 같은 폭(또는 높이)으로 자른 스트립에 다른 치수 패널을 넣지 않음
         strips.push(currentStrip);
         currentPos += dim + this.kerf;
       }
     }
 
     return strips;
-  }
-
-  /**
-   * 스트립 끝 남는 공간에 더 작은 패널 채우기
-   * (같은 치수 그룹이 다 배치된 후 남는 가로/세로 공간 활용)
-   */
-  private fillResidual(
-    strip: Strip,
-    stripIndex: number,
-    groups: Map<number, Rect[]>,
-    sortedDims: number[],
-    currentDim: number,
-    fillPos: number,
-    fillMax: number,
-    horizontal: boolean,
-    currentPos: number
-  ): void {
-    // 남은 공간이 최소 크기 이하면 스킵
-    const remainingSpace = fillMax - fillPos;
-    if (remainingSpace < 50) return; // 50mm 미만이면 의미 없음
-
-    // 더 작은 치수 그룹에서 들어갈 수 있는 패널 찾기
-    for (const dim of sortedDims) {
-      if (dim > currentDim) continue; // 현재 스트립보다 큰 치수는 스킵
-      if (dim === currentDim) continue; // 같은 치수는 이미 처리됨
-
-      const groupPanels = groups.get(dim);
-      if (!groupPanels || groupPanels.length === 0) continue;
-
-      // 이 그룹에서 남은 공간에 들어갈 수 있는 패널 찾기
-      const toRemove: number[] = [];
-      for (let i = 0; i < groupPanels.length; i++) {
-        const panel = groupPanels[i];
-        const panelFillDim = horizontal ? panel.width : panel.height;
-
-        if (fillPos + panelFillDim <= fillMax) {
-          const placed: PlacedRect = {
-            ...panel,
-            x: horizontal ? fillPos : currentPos,
-            y: horizontal ? currentPos : fillPos,
-            rotated: false,
-            stripIndex
-          };
-          strip.panels.push(placed);
-          fillPos += panelFillDim + this.kerf;
-          toRemove.push(i);
-        }
-      }
-
-      // 배치된 패널 제거 (역순)
-      for (let i = toRemove.length - 1; i >= 0; i--) {
-        groupPanels.splice(toRemove[i], 1);
-      }
-    }
   }
 
   private calculateEfficiency(strips: Strip[]): number {
