@@ -1747,6 +1747,12 @@ const Room: React.FC<RoomProps> = ({
               const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
 
               solidLines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]); // 경계벽 수직선 (뒷벽)
+              // 경계벽 하단 뒷벽 수평선 (droppedCeilingY에서 경계벽~외벽)
+              if (isLeft) {
+                solidLines.push([x1, droppedCeilingY, z1, bx, droppedCeilingY, z1]);
+              } else {
+                solidLines.push([bx, droppedCeilingY, z1, x2, droppedCeilingY, z1]);
+              }
               gradientLines.push([bx, ceilingY, z1, bx, ceilingY, z2]); // 경계벽 상단 연결
               gradientLines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]); // 경계벽 하단 연결
 
