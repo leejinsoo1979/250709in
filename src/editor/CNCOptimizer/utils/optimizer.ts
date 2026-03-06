@@ -424,13 +424,16 @@ export const optimizePanelsMultiple = async (
       'horizontal'
     );
   } else {
-    // OPTIMAL_CNC는 개선된 MaxRects 알고리즘 사용
-    bins = packMaxRects(
+    // OPTIMAL_CNC도 길로틴 방식 사용 (auto: 가로/세로 중 효율 높은 방향 자동 선택)
+    // 실제 공장 컷쏘 재단 방식 준수
+    console.log('📍 OPTIMAL_CNC selected → guillotine auto (가로/세로 중 효율 높은 방향)');
+    bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
-      maxSheets
+      maxSheets,
+      'auto'
     );
   }
 

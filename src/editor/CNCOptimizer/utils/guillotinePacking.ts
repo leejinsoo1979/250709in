@@ -83,6 +83,9 @@ export class GuillotinePacker {
   private packStrips(panels: Rect[], horizontal: boolean): Strip[] {
     const strips: Strip[] = [];
 
+    console.log(`🔵 [guillotinePacking] packStrips 호출됨! horizontal=${horizontal}, panels=${panels.length}개`);
+    console.log(`🔵 [guillotinePacking] binWidth=${this.binWidth}, binHeight=${this.binHeight}, kerf=${this.kerf}`);
+
     // 1단계: 스트립 방향 치수로 그룹핑 (같은 높이/너비끼리)
     const groups = new Map<number, Rect[]>();
     for (const panel of panels) {
@@ -97,6 +100,11 @@ export class GuillotinePacker {
 
     // 2단계: 그룹을 치수 내림차순으로 정렬 (큰 패널 먼저)
     const sortedDims = [...groups.keys()].sort((a, b) => b - a);
+
+    console.log(`🔵 [guillotinePacking] 그룹 수: ${sortedDims.length}개`);
+    sortedDims.forEach(d => {
+      console.log(`   - 치수 ${d}mm: ${groups.get(d)!.length}개 패널`);
+    });
 
     // 각 그룹 내에서 채우기 방향 치수 내림차순 정렬
     for (const [dim, groupPanels] of groups) {
@@ -262,6 +270,14 @@ export class GuillotinePacker {
     const placedIds = new Set<string>();
     const placedRects: { x: number; y: number; w: number; h: number }[] = [];
 
+    console.log(`🔵 [guillotinePacking] getResult: ${this.strips.length}개 스트립`);
+    this.strips.forEach((s, i) => {
+      console.log(`   스트립${i}: pos=(${s.x},${s.y}), size=${s.width}x${s.height}, panels=${s.panels.length}개, horizontal=${s.horizontal}`);
+      s.panels.forEach(p => {
+        console.log(`     - ${p.name||p.id}: pos=(${p.x},${p.y}), size=${p.width}x${p.height}, rotated=${p.rotated}`);
+      });
+    });
+
     for (const strip of this.strips) {
       for (const panel of strip.panels) {
         const panelKey = `${panel.id}-${panel.x}-${panel.y}`;
@@ -314,6 +330,7 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
+  console.log(`🟢🟢🟢 [packGuillotine] 새 그룹핑 알고리즘 v2 호출됨! panels=${panels.length}, bin=${binWidth}x${binHeight}, kerf=${kerf}, direction=${stripDirection}`);
   const bins: PackedBin[] = [];
   let currentBin = 0;
   const remainingPanels = [...panels];
