@@ -244,39 +244,94 @@
 }
 
 /* 레인지 인풋 */
-.rangeInput {
+.rangeWrapper {
   flex: 1;
-  height: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rangeInput {
+  width: 100%;
+  height: 6px;
   background: #e5e7eb;
-  border-radius: 2px;
+  border-radius: 3px;
   outline: none;
   -webkit-appearance: none;
+  cursor: pointer;
 }
 
 .rangeInput::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   background: var(--theme-primary);
+  border: 3px solid white;
   border-radius: 50%;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rangeInput::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.rangeInput::-webkit-slider-thumb:active {
+  transform: scale(1.05);
 }
 
 .rangeInput::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   background: var(--theme-primary);
+  border: 3px solid white;
   border-radius: 50%;
-  border: none;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.rangeInput::-moz-range-track {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+}
+
+.rangeTicks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.rangeTick {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 500;
+  min-width: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.rangeTick:hover {
+  color: var(--theme-primary);
+}
+
+.rangeTickActive {
+  color: var(--theme-primary);
+  font-weight: 700;
 }
 
 .rangeValue {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  min-width: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--theme-primary);
+  min-width: 28px;
   text-align: center;
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.1));
+  border-radius: 6px;
+  padding: 2px 8px;
 }
 
 /* 스크롤바 스타일링 */

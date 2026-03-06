@@ -514,23 +514,42 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                     }
                   }
                   
+                  const ticks = Array.from(
+                    { length: columnLimits.maxColumns - columnLimits.minColumns + 1 },
+                    (_, i) => columnLimits.minColumns + i
+                  );
+
+                  const handleColumnChange = (value: number) => {
+                    if (spaceInfo.droppedCeiling?.enabled) {
+                      handleUpdate({ mainDoorCount: value });
+                    } else {
+                      handleUpdate({ customColumnCount: value });
+                    }
+                  };
+
                   return (
                     <>
-                      <input
-                        type="range"
-                        min={columnLimits.minColumns}
-                        max={columnLimits.maxColumns}
-                        value={validValue}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (spaceInfo.droppedCeiling?.enabled) {
-                            handleUpdate({ mainDoorCount: value });
-                          } else {
-                            handleUpdate({ customColumnCount: value });
-                          }
-                        }}
-                        className={styles.rangeInput}
-                      />
+                      <div className={styles.rangeWrapper}>
+                        <input
+                          type="range"
+                          min={columnLimits.minColumns}
+                          max={columnLimits.maxColumns}
+                          value={validValue}
+                          onChange={(e) => handleColumnChange(parseInt(e.target.value))}
+                          className={styles.rangeInput}
+                        />
+                        <div className={styles.rangeTicks}>
+                          {ticks.map((tick) => (
+                            <span
+                              key={tick}
+                              className={`${styles.rangeTick} ${tick === validValue ? styles.rangeTickActive : ''}`}
+                              onClick={() => handleColumnChange(tick)}
+                            >
+                              {tick}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                       <span className={styles.rangeValue}>
                         {validValue}
                       </span>
