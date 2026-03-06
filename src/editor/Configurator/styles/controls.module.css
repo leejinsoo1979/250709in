@@ -1,0 +1,343 @@
+/* ================================
+   Controls — 토글/프레임/폴드/단내림설정
+   ================================ */
+
+/* ── 폴드 토글 ── */
+.foldToggleButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 32px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-background-secondary);
+  border: none;
+  border-radius: 8px;
+  box-shadow: var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.04));
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.foldToggleButton:hover {
+  background: var(--theme-border);
+}
+
+.foldToggleIcon {
+  font-size: 20px;
+  color: var(--theme-text-muted);
+  font-weight: 400;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.foldToggleButton:hover .foldToggleIcon {
+  color: var(--theme-info);
+}
+
+.sidebar .foldToggleButton {
+  right: -16px;
+  border-radius: 0 8px 8px 0;
+}
+
+.rightPanel .foldToggleButton {
+  left: -14px;
+  border-radius: 8px 0 0 8px;
+  position: absolute;
+}
+
+/* ── 토글 버튼 그룹 ── */
+.toggleButtonGroup {
+  display: flex;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: 0;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.toggleButton:hover:not(.active):not(.toggleButtonActive) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.toggleButton:active {
+  transform: scale(0.97);
+}
+
+.toggleButton.active,
+.toggleButton.active:hover {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+  font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
+}
+
+.toggleButtonActive {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+  font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
+}
+
+.toggleButtonActive:hover {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+}
+
+/* ── 슬롯 정보 ── */
+.slotInfoSimple {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--theme-background-secondary, #f9fafb);
+  border-radius: 4px;
+  border: 1px solid var(--theme-border);
+}
+
+.slotInfoText {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ── 서브 설정 ── */
+.subSetting {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-border-light);
+}
+
+.subLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text);
+  margin-bottom: 6px;
+}
+
+/* ── 프레임 설정 ── */
+.frameGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.frameItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.frameItemLabel {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.frameItemInput {
+  display: flex;
+  align-items: center;
+  background: var(--theme-background-secondary, #f9fafb);
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 80px;
+}
+
+.frameButton {
+  background: var(--theme-surface);
+  border: none;
+  width: 20px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.frameButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+.frameButton:active {
+  background: var(--theme-border);
+}
+
+.frameNumberInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text);
+  padding: 0;
+  width: 100%;
+  height: 24px;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.frameNumberInput::-webkit-outer-spin-button,
+.frameNumberInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.frameNumberInput:focus {
+  background: var(--theme-surface);
+}
+
+.frameUnit {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ── 단내림 설정 ── */
+.stepDownSettings {
+  animation: fadeIn 0.3s ease-out;
+  padding: 12px 0;
+}
+
+.stepDownDescription {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.stepDownNote {
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.stepDownNote p {
+  margin: 0 0 4px 0;
+}
+
+.stepDownNote p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── 입력 필드 (컨트롤용) ── */
+.inputGroupTwoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  margin-bottom: 4px;
+}
+
+.inputWithUnit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--theme-background-secondary);
+  color: var(--theme-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
+}
+
+.inputWithUnitField {
+  padding-right: 40px;
+}
+
+.unit {
+  position: absolute;
+  right: 12px;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.sliderSectionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+
+/* ── 반응형 ── */
+@media (hover: none) and (pointer: coarse) {
+  .toggleButton {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+  .input {
+    height: 44px;
+    font-size: 16px;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

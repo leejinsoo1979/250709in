@@ -1,0 +1,310 @@
+/* ================================
+   Sidebar — 좌측 사이드바 + 모듈탭 + 도어관리
+   ================================ */
+
+.sidebarContent {
+  position: fixed;
+  left: var(--sidebar-icon-width, 64px);
+  top: var(--configurator-header-height, 56px);
+  bottom: 0;
+  width: var(--sidebar-content-width, 240px);
+  min-width: 200px;
+  max-width: 320px;
+  background: var(--theme-surface, white);
+  border-right: 1px solid var(--theme-border);
+  box-shadow: 2px 0 8px var(--theme-shadow, rgba(0, 0, 0, 0.08));
+  z-index: 10;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease,
+              box-shadow 0.3s ease,
+              width 0.3s ease;
+  transform-origin: left center;
+}
+
+.sidebarPanel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modulePanelContent {
+  padding: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+}
+
+.modulePanelTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 20px 0;
+}
+
+/* ── 도어 관리 ── */
+.doorManagementSection {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--theme-background-secondary, #f8fafc);
+  border-radius: 8px;
+  border: 1px solid var(--theme-border, var(--theme-border));
+}
+
+.doorInstallButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doorInstallButton:hover {
+  background: var(--theme-primary-hover);
+}
+
+.doorManagementGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doorStatusInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.doorStatusLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.doorStatusIcon {
+  font-size: 16px;
+}
+
+.doorStatusText {
+  font-size: 14px;
+  color: var(--theme-text);
+  font-weight: 500;
+}
+
+.doorToggleButton {
+  padding: 6px 12px;
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doorToggleButton:hover {
+  background: var(--theme-primary-hover);
+}
+
+.doorRemoveButton {
+  width: 100%;
+  padding: 10px;
+  background: var(--theme-danger);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doorRemoveButton:hover {
+  background: var(--theme-danger-hover);
+}
+
+/* ── Module Category Tabs ── */
+.moduleCategoryTabs {
+  display: flex;
+  margin-bottom: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.moduleCategoryTab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.moduleCategoryTab:hover:not(.active) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.moduleCategoryTab:active {
+  transform: scale(0.97);
+}
+
+.moduleCategoryTab.active {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+  font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
+}
+
+.moduleCategoryTab.active:hover {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+}
+
+/* ── Upper/Lower Tabs ── */
+.upperLowerTabs {
+  display: flex;
+  margin-bottom: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.upperLowerTab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.upperLowerTab:hover:not(.active) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.upperLowerTab:active {
+  transform: scale(0.97);
+}
+
+.upperLowerTab.active {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+  font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
+}
+
+.upperLowerTab.active:hover {
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
+}
+
+.moduleSection {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ── 커스텀 가구 ── */
+.customAddButton {
+  flex: 0 0 auto;
+  width: 32px;
+  min-width: 32px;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--theme-border);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customAddButton:hover {
+  background: var(--theme-primary);
+  color: #ffffff !important;
+}
+
+.customModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* ── 반응형 ── */
+@media (min-width: 1920px) {
+  .modulePanelContent { padding: 16px; }
+}
+
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .modulePanelContent { padding: 14px; }
+}
+
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .modulePanelContent { padding: 14px; }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+  .modulePanelContent { padding: 12px; }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .sidebarContent { width: 200px; }
+  .modulePanelContent { padding: 8px; }
+}
+
+@media (max-width: 767px) {
+  .sidebarContent { display: none !important; }
+}

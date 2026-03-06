@@ -1,0 +1,87 @@
+/* ================================
+   Modal — 모달 + 준비중
+   ================================ */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-width: 480px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  position: relative;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modalCloseButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  font-size: 16px;
+  color: var(--theme-text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.modalCloseButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+/* ── Coming Soon ── */
+.comingSoon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.comingSoonTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin-bottom: 8px;
+}
+
+.comingSoonMessage {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 20px;
+}
+
+.comingSoonIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}

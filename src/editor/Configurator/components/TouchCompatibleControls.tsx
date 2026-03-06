@@ -2,7 +2,7 @@ import React from 'react';
 import { useResponsive } from '@/hooks/useResponsive';
 import { TouchSlider } from '@/components/TouchUI/TouchSlider';
 import { TouchNumberInput } from '@/components/TouchUI/TouchNumberInput';
-import styles from '../style.module.css';
+import rpStyles from '../styles/rightPanelConfig.module.css';
 import rightPanelStyles from './RightPanel.module.css';
 
 interface ControlWrapperProps {
@@ -124,9 +124,9 @@ export const TouchCompatibleControl: React.FC<ControlWrapperProps> = ({
     const sliderPosition = getSliderPosition(value);
     
     return (
-      <div className={styles.inputGroup}>
-        <div className={styles.inputRow}>
-          <label className={styles.inputLabel}>{label}</label>
+      <div className={rpStyles.inputGroup}>
+        <div className={rpStyles.inputRow}>
+          <label className={rpStyles.inputLabel}>{label}</label>
           <div className={rightPanelStyles.doorSlider}>
             <div 
               className={rightPanelStyles.sliderTrack}
@@ -170,12 +170,12 @@ export const TouchCompatibleControl: React.FC<ControlWrapperProps> = ({
   
   // 숫자 타입일 때는 기존 그대로
   return (
-    <div className={styles.inputGroup}>
-      <div className={styles.inputRow}>
-        <label className={styles.inputLabel}>{label}</label>
-        <div className={styles.numberInputGroup}>
+    <div className={rpStyles.inputGroup}>
+      <div className={rpStyles.inputRow}>
+        <label className={rpStyles.inputLabel}>{label}</label>
+        <div className={rpStyles.numberInputGroup}>
           <button 
-            className={styles.decrementButton}
+            className={rpStyles.decrementButton}
             onClick={() => onChange(Math.max(min, value - step))}
             disabled={disabled || value <= min}
           >
@@ -188,11 +188,11 @@ export const TouchCompatibleControl: React.FC<ControlWrapperProps> = ({
             step={step}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
-            className={styles.numberInput}
+            className={rpStyles.numberInput}
             disabled={disabled}
           />
           <button 
-            className={styles.incrementButton}
+            className={rpStyles.incrementButton}
             onClick={() => onChange(Math.min(max, value + step))}
             disabled={disabled || value >= max}
           >

@@ -66,8 +66,6 @@ import sidebarStyles from './styles/sidebar.module.css';
 import viewerStyles from './styles/viewer.module.css';
 import rpStyles from './styles/rightPanelConfig.module.css';
 import ctrlStyles from './styles/controls.module.css';
-import modalStyles from './styles/modal.module.css';
-import furnitureStyles from './styles/furniture.module.css';
 import responsiveStyles from './responsive.module.css';
 import rightPanelStyles from './components/RightPanel.module.css';
 
