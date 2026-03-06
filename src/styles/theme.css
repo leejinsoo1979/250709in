@@ -21,14 +21,14 @@
   --theme-primary-gradient: linear-gradient(135deg, hsl(var(--theme-500)) 0%, hsl(var(--theme-700)) 100%);
   --theme-primary-shadow: hsl(var(--theme-500) / 0.3);
   
-  --theme-background: #121212;
-  --theme-background-secondary: #121212;
-  --theme-surface: #121212;
+  --theme-background: #0f0f0f;
+  --theme-background-secondary: #1a1a1a;
+  --theme-surface: #141414;
   --theme-text: #ffffff;
   --theme-text-secondary: #cccccc;
   --theme-text-muted: #999999;
-  --theme-border: #333333;
-  --theme-border-hover: #555555;
+  --theme-border: #2a2a2a;
+  --theme-border-hover: #444444;
   --theme-shadow: rgba(0, 0, 0, 0.5);
   --theme-overlay: rgba(0, 0, 0, 0.8);
   
