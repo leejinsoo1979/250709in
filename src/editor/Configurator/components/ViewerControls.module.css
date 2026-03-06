@@ -174,12 +174,12 @@
 
 .segmentButton:active { transform: scale(0.97); }
 
-/* Neutral active */
+/* Neutral active — same as accent (primary) */
 .segmentActive {
-  background: color-mix(in srgb, var(--theme-text) 15%, var(--theme-surface)) !important;
-  color: var(--theme-text) !important;
+  background: var(--theme-primary) !important;
+  color: #fff !important;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 0.5px color-mix(in srgb, var(--theme-text) 10%, transparent);
+  box-shadow: 0 1px 3px var(--theme-primary-shadow), 0 0 0 0.5px var(--theme-primary);
 }
 
 /* Accent active (3D/2D, Door) */
