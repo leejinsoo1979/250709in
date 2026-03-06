@@ -1,8 +1,9 @@
 /* ================================
-   RightPanel — Modern SaaS v2
-   Clean, neutral panel with refined form controls
+   RightPanel — Modern SaaS v3
+   Notion/Linear-inspired property panel
    ================================ */
 
+/* ── Panel Shell ── */
 .rightPanel {
   background: var(--theme-surface);
   border-left: 1px solid var(--theme-border);
@@ -12,17 +13,17 @@
   flex-direction: column;
   position: relative;
   z-index: 85;
-  transition: all 0.3s ease;
 }
 
 .rightPanel.open {
-  box-shadow: var(--theme-shadow);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.04);
 }
 
 /* ── Tab Header ── */
 .tabHeader {
   border-bottom: 1px solid var(--theme-border);
   padding: 0;
+  flex-shrink: 0;
 }
 
 .tabGroup {
@@ -33,13 +34,13 @@
   flex: 0 0 auto;
   background: transparent;
   border: none;
-  padding: 11px 20px;
+  padding: 10px 18px;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.12s ease;
   line-height: 20px;
   border-bottom: 2px solid transparent;
   white-space: nowrap;
@@ -66,7 +67,7 @@
 }
 
 .panelContent::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 .panelContent::-webkit-scrollbar-track {
@@ -75,7 +76,7 @@
 
 .panelContent::-webkit-scrollbar-thumb {
   background: var(--theme-border);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .panelContent::-webkit-scrollbar-thumb:hover {
@@ -84,16 +85,16 @@
 
 /* ── Form Container ── */
 .formContainer {
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* ── Form Card ── */
+/* ── Collapsible Form Section ── */
 .formControl {
   border: 1px solid var(--theme-border);
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   background: var(--theme-surface);
 }
@@ -101,29 +102,29 @@
 .formHeader {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  background: var(--theme-background-secondary);
+  padding: 10px 14px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.1s ease;
   gap: 10px;
-  border-bottom: 1px solid var(--theme-border);
 }
 
 .formHeader:hover {
   background: var(--theme-background-secondary);
 }
 
+/* Small colored dot → now a thin vertical accent bar */
 .formIndicator {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
   background: var(--theme-primary);
   flex-shrink: 0;
+  opacity: 0.6;
 }
 
 .formLabel {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--theme-text);
   margin: 0;
@@ -134,6 +135,7 @@
 .expandIcon {
   color: var(--theme-text-muted);
   transition: transform 0.2s ease;
+  opacity: 0.5;
 }
 
 .expandIcon.expanded {
@@ -141,7 +143,7 @@
 }
 
 .formContent {
-  padding: 14px;
+  padding: 12px 14px;
   border-top: 1px solid var(--theme-border);
 }
 
@@ -149,7 +151,7 @@
 .brandType {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .brandLabel {
@@ -158,7 +160,7 @@
   font-weight: 500;
   color: var(--theme-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
 }
 
 .brandOptions {
@@ -177,7 +179,7 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .brandOption:hover {
@@ -190,10 +192,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 10px 12px;
   background: var(--theme-background-secondary);
-  border-radius: 6px;
-  border: 1px solid var(--theme-border);
+  border-radius: 8px;
 }
 
 .priceLabel {
@@ -215,8 +216,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 14px;
+  gap: 12px;
+  padding: 12px;
 }
 
 .colorWheelCircle {
@@ -245,9 +246,9 @@
 
 .colorSlider {
   width: 100%;
-  height: 20px;
+  height: 18px;
   background: linear-gradient(to right, #000000, #ffffff);
-  border-radius: 10px;
+  border-radius: 9px;
   position: relative;
   cursor: pointer;
 }
@@ -256,13 +257,14 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--theme-surface);
   border: 2px solid var(--theme-text-muted);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .colorPreview {
@@ -270,24 +272,23 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 7px;
+  padding: 6px;
   background: var(--theme-background-secondary);
   border-radius: 6px;
-  border: 1px solid var(--theme-border);
 }
 
 .colorValue {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--theme-text);
+  color: var(--theme-text-secondary);
   font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
 }
 
-/* ── Material Toggle ── */
+/* ── Material / Frame ── */
 .materialToggle {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .materialLabel {
@@ -296,14 +297,13 @@
   font-weight: 500;
   color: var(--theme-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
 }
 
-/* ── Frame Color ── */
 .frameColor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .frameColorOption {
@@ -314,7 +314,7 @@
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .frameColorOption:hover {
@@ -323,10 +323,10 @@
 }
 
 .frameColorSwatch {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
-  border: 1px solid var(--theme-border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .frameColorOption span {
@@ -336,11 +336,11 @@
   color: var(--theme-text);
 }
 
-/* ── Number Input ── */
+/* ── Number Input (stepper) ── */
 .numberInput {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .inputLabel {
@@ -349,28 +349,32 @@
   font-weight: 500;
   color: var(--theme-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
 }
 
 .inputGroup {
   display: flex;
   align-items: center;
-  gap: 0;
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  overflow: hidden;
   background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .inputButton {
-  background: var(--theme-background-secondary);
+  background: transparent;
   border: none;
-  padding: 7px 11px;
+  width: 36px;
+  min-width: 36px;
+  height: 34px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 400;
   color: var(--theme-text-muted);
-  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
 }
 
 .inputButton:hover {
@@ -379,18 +383,17 @@
 }
 
 .inputButton:active {
-  background: var(--theme-border);
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
 .inputButton:disabled {
   color: var(--theme-text-muted);
   cursor: not-allowed;
-  opacity: 0.4;
+  opacity: 0.3;
 }
 
 .inputButton:disabled:hover {
-  background: var(--theme-background-secondary);
+  background: transparent;
   transform: none;
 }
 
@@ -401,8 +404,10 @@
 
 .inputField input {
   width: 100%;
-  padding: 7px 10px;
+  padding: 7px 8px;
   border: none;
+  border-left: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-border);
   outline: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 13px;
@@ -425,7 +430,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--theme-text-muted);
   pointer-events: none;
   font-weight: 500;
@@ -444,13 +449,13 @@
   flex: 1;
   background: transparent;
   border: none;
-  padding: 7px 10px;
+  padding: 6px 8px;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   border-radius: 6px;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
@@ -458,11 +463,10 @@
 
 .toggleButton:hover:not(.active) {
   color: var(--theme-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .toggleButton:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .toggleButton.active,
@@ -471,13 +475,13 @@
 .toggleButton.active:active {
   background: var(--theme-surface) !important;
   color: var(--theme-text) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
   font-weight: 600;
 }
 
 /* ── Door Slider ── */
 .doorSlider {
-  margin: 14px 0;
+  margin: 10px 0;
   user-select: none;
 }
 
@@ -486,7 +490,8 @@
   background: var(--theme-border);
   border-radius: 2px;
   position: relative;
-  margin: 12px 0 8px 0;
+  margin: 10px 0;
+  cursor: pointer;
 }
 
 .sliderActiveTrack {
@@ -496,67 +501,66 @@
   border-radius: 2px;
   left: 0;
   top: 0;
+  pointer-events: none;
 }
 
 .sliderHandle {
   position: absolute;
   top: 50%;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--theme-primary);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   cursor: grab;
-  transition: transform 0.1s ease, box-shadow 0.15s ease;
+  transition: transform 0.1s ease, box-shadow 0.12s ease;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   z-index: 10;
-  /* 터치 타겟 확대 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 44px;
-    height: 44px;
-    transform: translate(-50%, -50%);
-  }
+}
+
+.sliderHandle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 
 .sliderHandle:hover {
-  transform: translate(-50%, -50%) scale(1.15);
+  transform: translate(-50%, -50%) scale(1.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .sliderHandle:active {
   cursor: grabbing;
-  transform: translate(-50%, -50%) scale(0.95);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, -50%) scale(0.9);
 }
 
-/* ── Slider Labels (Segmented Style) ── */
+/* ── Slider Labels (as segmented pills) ── */
 .sliderLabels {
   display: flex;
   background: var(--theme-background-secondary);
   border-radius: 8px;
   padding: 3px;
-  margin-top: 10px;
+  margin-top: 8px;
   gap: 2px;
 }
 
 .sliderLabels span {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--theme-text-muted);
   font-weight: 500;
   cursor: pointer;
-  padding: 5px 6px;
+  padding: 4px 0;
   border-radius: 6px;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
 }
 
 .sliderLabels span:hover:not(.active) {
@@ -568,16 +572,15 @@
   font-weight: 600;
   background: var(--theme-surface) !important;
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
 }
 
 /* ── Info Box ── */
 .infoBox {
   background: var(--theme-background-secondary);
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 10px 12px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .infoBox p {
@@ -589,7 +592,7 @@
 }
 
 .infoBox p:not(:last-child) {
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .infoBox p:last-child {
@@ -597,46 +600,39 @@
   color: var(--theme-text-secondary);
 }
 
-/* ── Slot Inner Dimensions ── */
+/* ── Slot Dimensions ── */
 .slotInnerDimensions {
   background: var(--theme-background-secondary);
-  border: 1px solid var(--theme-border);
   border-radius: 8px;
   padding: 14px;
-  margin-top: 14px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .slotLabel {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--theme-text-muted);
-  text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.04em;
 }
 
 .slotValue {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 18px;
+  font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+  font-size: 20px;
   font-weight: 700;
   color: var(--theme-text);
-  text-align: center;
-  background: var(--theme-surface);
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--theme-border);
+  letter-spacing: -0.02em;
 }
 
 .slotInfo {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 10px;
   color: var(--theme-text-muted);
-  text-align: center;
   font-weight: 500;
 }
 
@@ -646,11 +642,10 @@
   gap: 2px;
   margin-top: 6px;
   padding: 8px;
-  background: var(--theme-background-secondary);
-  border-radius: 4px;
+  background: var(--theme-surface);
+  border-radius: 6px;
   font-size: 10px;
   color: var(--theme-text-muted);
-  text-align: left;
   width: 100%;
 }
 
@@ -662,21 +657,19 @@
 .warningText {
   color: var(--theme-danger);
   font-weight: 600;
-  margin-top: 3px;
 }
 
 .successText {
   color: var(--theme-success);
   font-weight: 600;
-  margin-top: 3px;
 }
 
 /* ── Module Settings ── */
 .moduleSettings {
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .placeholder {
@@ -684,16 +677,16 @@
   color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 12px;
-  padding: 28px 16px;
+  padding: 32px 16px;
   background: var(--theme-background-secondary);
-  border-radius: 6px;
-  border: 1px dashed var(--theme-border);
+  border-radius: 8px;
 }
 
-/* ── Panel Footer ── */
+/* ── Footer CTA ── */
 .panelFooter {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-top: 1px solid var(--theme-border);
+  flex-shrink: 0;
 }
 
 .completeButton {
@@ -707,7 +700,7 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   letter-spacing: -0.01em;
 }
 
@@ -721,11 +714,10 @@
 
 /* ── Zone Info ── */
 .zoneInfo {
-  margin-top: 10px;
+  margin-top: 8px;
   padding: 10px 12px;
   background: var(--theme-background-secondary);
-  border-radius: 6px;
-  border: 1px solid var(--theme-border);
+  border-radius: 8px;
 }
 
 .zoneInfoItem {
@@ -743,9 +735,10 @@
 }
 
 .zoneValue {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
   color: var(--theme-text);
   font-weight: 600;
+  font-size: 12px;
 }
 
 /* ── Responsive ── */
@@ -755,28 +748,23 @@
   }
 
   .formContainer {
-    padding: 12px;
+    padding: 10px;
   }
 
   .formHeader {
-    padding: 10px 12px;
+    padding: 9px 12px;
   }
 
   .formContent {
-    padding: 12px;
+    padding: 10px 12px;
   }
 
   .toggleButton {
-    padding: 6px 8px;
-    font-size: 11.5px;
+    padding: 5px 6px;
+    font-size: 11px;
   }
 
   .panelFooter {
-    padding: 12px;
-  }
-
-  .completeButton {
-    padding: 10px 16px;
-    font-size: 12px;
+    padding: 10px;
   }
 }

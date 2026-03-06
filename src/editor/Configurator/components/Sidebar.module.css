@@ -1,8 +1,9 @@
 /* ================================
-   Sidebar — Modern SaaS v2
-   Clean icon sidebar with refined active states
+   Sidebar — Modern SaaS v3
+   Minimal icon rail (Linear/Figma style)
    ================================ */
 
+/* ── Rail Container ── */
 .sidebar {
   position: fixed;
   left: 0;
@@ -10,39 +11,36 @@
   bottom: 0;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
-  width: var(--sidebar-icon-width, 64px);
+  width: var(--sidebar-icon-width, 56px);
   display: flex;
   flex-direction: column;
   z-index: 90;
-  transition: all 0.3s ease;
   -webkit-font-smoothing: antialiased;
 }
 
-.sidebar.open {
-  box-shadow: var(--theme-shadow);
-}
-
-/* ── Tab List ── */
+/* ── Navigation ── */
 .tabList {
   flex: 1;
-  padding: 12px 0;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
+/* ── Tab Button ── */
 .tabButton {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 2px;
   background: none;
   border: none;
-  padding: 10px 8px;
+  padding: 10px 0;
   margin: 0 8px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.12s ease;
   position: relative;
 }
 
@@ -50,24 +48,9 @@
   background: var(--theme-background-secondary);
 }
 
+/* Active: clean left indicator only */
 .tabButton.active {
-  background: transparent !important;
-  position: relative;
-  isolation: isolate;
-}
-
-.tabButton.active::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--theme-primary);
-  opacity: 0.1;
-  border-radius: 8px;
-  z-index: 0;
-  pointer-events: none;
+  background: var(--theme-background-secondary);
 }
 
 .tabButton.active::before {
@@ -79,7 +62,7 @@
   width: 3px;
   height: 20px;
   background: var(--theme-primary);
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 3px 3px 0;
 }
 
 /* ── Tab Icon ── */
@@ -87,149 +70,102 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  height: 20px;
   color: var(--theme-text-muted);
-  transition: color 0.15s ease;
-  opacity: 0.65;
-  position: relative;
-  z-index: 1;
+  transition: color 0.12s ease;
 }
 
 .tabButton.active .tabIcon {
-  color: var(--theme-primary) !important;
-  opacity: 1;
-  z-index: 1;
+  color: var(--theme-primary);
 }
 
 .tabButton:hover .tabIcon {
   color: var(--theme-text-secondary);
-  opacity: 0.9;
 }
 
 /* ── Tab Label ── */
 .tabLabel {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   color: var(--theme-text-muted);
-  transition: color 0.15s ease;
-  line-height: 14px;
+  line-height: 1;
   text-align: center;
-  position: relative;
-  z-index: 1;
   letter-spacing: -0.01em;
+  max-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tabButton.active .tabLabel {
-  color: var(--theme-primary) !important;
+  color: var(--theme-primary);
   font-weight: 600;
-  z-index: 1;
 }
 
 .tabButton:hover .tabLabel {
   color: var(--theme-text-secondary);
 }
 
-/* ── User Section ── */
-.userSection {
-  padding: 14px;
+/* ── Bottom Action Group ── */
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0;
   border-top: 1px solid var(--theme-border);
-  display: flex;
-  justify-content: center;
 }
 
-.userAvatar {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  aspect-ratio: 1/1;
-  border-radius: 50%;
-  background: var(--theme-background-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-text-muted);
-  border: 2px solid var(--theme-border);
-  overflow: hidden;
-}
-
-.avatar svg {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.profileImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.settingsButton {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 50%;
+.actionButton {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
   background: transparent;
-  border: 1px solid var(--theme-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+  position: relative;
 }
 
-.settingsButton:hover {
+.actionButton:hover {
   background: var(--theme-background-secondary);
   color: var(--theme-text);
-  border-color: var(--theme-border-hover);
 }
 
-.onlineIndicator {
-  position: absolute;
-  bottom: 1px;
-  right: 1px;
-  width: 10px;
-  height: 10px;
-  background: var(--theme-success, #22c55e);
-  border-radius: 50%;
-  border: 2px solid var(--theme-surface);
+.actionButton:active {
+  transform: scale(0.92);
 }
 
-/* ── Fold Button ── */
-.foldButton {
+/* Tooltip on hover */
+.actionButton[data-tooltip]:hover::after,
+.tabButton[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
   position: absolute;
-  right: -14px;
+  left: calc(100% + 8px);
   top: 50%;
   transform: translateY(-50%);
-  z-index: 100;
-  width: 28px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  border-left: none;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--theme-text-muted);
-  font-weight: 400;
-  transition: all 0.15s ease;
+  background: var(--theme-text);
+  color: var(--theme-surface);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  animation: tooltipIn 0.15s ease 0.4s forwards;
 }
 
-.foldButton:hover {
-  background: var(--theme-background-secondary);
-  color: var(--theme-text-secondary);
+@keyframes tooltipIn {
+  to { opacity: 1; }
 }
 
 /* ── Modal ── */
@@ -239,13 +175,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--theme-overlay);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.15s ease;
 }
 
 @keyframes fadeIn {
@@ -257,38 +193,37 @@
   background: var(--theme-surface);
   padding: 28px;
   border-radius: 14px;
-  max-width: 420px;
+  max-width: 400px;
   width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.25s ease;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  animation: modalIn 0.2s ease;
   border: 1px solid var(--theme-border);
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(-16px) scale(0.96); }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modalIcon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 18px;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 16px;
   background: var(--theme-background-secondary);
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-primary);
+  color: var(--theme-text-secondary);
 }
 
 .modalTitle {
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--theme-text);
   text-align: center;
-  line-height: 1.4;
   letter-spacing: -0.02em;
 }
 
@@ -296,51 +231,63 @@
   margin: 0 0 24px 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   color: var(--theme-text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .modalActions {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 8px;
 }
 
-.modalButtonCancel {
-  padding: 9px 20px;
+.modalButtonSecondary {
+  flex: 1;
+  padding: 9px 16px;
   border: 1px solid var(--theme-border);
   border-radius: 8px;
   background: var(--theme-surface);
   color: var(--theme-text);
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
-.modalButtonCancel:hover {
+.modalButtonSecondary:hover {
   background: var(--theme-background-secondary);
   border-color: var(--theme-border-hover);
 }
 
-.modalButtonConfirm {
-  padding: 9px 20px;
+.modalButtonDanger {
+  flex: 1;
+  padding: 9px 16px;
   border: none;
   border-radius: 8px;
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-danger, #ef4444);
+  color: #fff;
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
-.modalButtonConfirm:hover {
+.modalButtonDanger:hover {
   opacity: 0.9;
 }
+
+/* ── Legacy compat ── */
+.settingsButton { display: none; }
+.userSection { display: none; }
+.userAvatar { display: none; }
+.avatar { display: none; }
+.profileImage { display: none; }
+.onlineIndicator { display: none; }
+.foldButton { display: none; }
+.modalButtonCancel { display: none; }
+.modalButtonConfirm { display: none; }
 
 /* ── Responsive ── */
 @media (max-width: 767px) {
@@ -351,51 +298,20 @@
 
 @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
   .sidebar {
-    width: 56px;
+    width: 48px;
   }
 
   .tabButton {
-    padding: 8px 6px;
     margin: 0 4px;
+    padding: 8px 0;
   }
 
   .tabLabel {
-    font-size: 9px;
+    display: none;
   }
 
-  .userSection {
-    padding: 12px;
-  }
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .onlineIndicator {
-    width: 8px;
-    height: 8px;
-  }
-
-  .modalContent {
-    padding: 24px;
-    margin: 0 20px;
-  }
-
-  .modalTitle {
-    font-size: 16px;
-  }
-
-  .modalDescription {
-    font-size: 13px;
-  }
-
-  .modalActions {
-    flex-direction: column-reverse;
-  }
-
-  .modalButtonCancel,
-  .modalButtonConfirm {
-    width: 100%;
+  .actionButton {
+    width: 30px;
+    height: 30px;
   }
 }
