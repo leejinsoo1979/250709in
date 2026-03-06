@@ -97,9 +97,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 테마에 따른 배경색 결정 - 무조건 라이트 테마
   const getBackgroundColor = useCallback(() => {
-    // 디자인 미리보기는 항상 라이트 테마
+    if (viewMode === '2D' && view2DTheme === 'dark') {
+      return '#1a1a1a';
+    }
     return '#ffffff';
-  }, []);
+  }, [viewMode, view2DTheme]);
 
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
