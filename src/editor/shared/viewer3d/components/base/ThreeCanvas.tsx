@@ -153,12 +153,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         setIsTransitioning(false);
       }, 50); // 50ms 지연
       prevViewModeRef.current = viewMode;
+
+      // viewMode 전환 시에만 Canvas 재생성
+      setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
       return () => clearTimeout(timer);
     }
+  }, [viewMode]);
 
-    // view2DDirection 변경 시에도 캔버스 키 업데이트 (단, 전환 애니메이션 없이)
-    setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  }, [viewMode, view2DDirection]);
+  // view2DDirection 변경 시에는 Canvas를 재생성하지 않음 (카메라만 변경)
+  useEffect(() => {
+    // 카메라 재설정은 useCameraManager에서 처리됨
+    canvasLog('📐 ThreeCanvas - view2DDirection 변경:', view2DDirection);
+  }, [view2DDirection]);
 
   // 단내림 설정 변경 시 캔버스 강제 업데이트
   useEffect(() => {
