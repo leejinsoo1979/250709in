@@ -2,13 +2,14 @@
  * 길로틴 컷(Guillotine Cut) 최적화 알고리즘
  *
  * 실제 공장 컷쏘 재단 방식:
- *   1. 시트를 한 방향으로 쭉 잘라 스트립(행/열)을 만듦
- *   2. 각 스트립 안에서 반대 방향으로 잘라 개별 패널 분리
+ *   1. 같은 높이(또는 너비) 패널끼리 그룹핑
+ *   2. 그룹별로 스트립(행/열)을 만들어 한 줄로 쭉 배치
+ *   3. 스트립 내 남는 공간에 같은 높이의 다른 패널 채움
  *
  * 핵심 원칙:
- *   - 같은 높이(또는 너비) 패널끼리 한 스트립에 나란히 배치
- *   - 스트립 높이는 첫 번째(가장 큰) 패널 기준, 작은 패널도 같이 넣음
- *   - 스트립 내 빈 공간에는 더 작은 패널을 채워넣어 효율 극대화
+ *   - 같은 치수 패널끼리만 한 스트립에 배치 (모자이크/계단 패턴 방지)
+ *   - 스트립 간 여백(kerf)만큼 간격 유지
+ *   - 스트립 끝 남는 공간에는 더 작은 패널로 2차 채움
  */
 
 import { Rect, PackedBin } from './simpleBinPacking';
@@ -69,78 +70,72 @@ export class GuillotinePacker {
   }
 
   /**
-   * 스트립 기반 패킹
+   * 스트립 기반 패킹 (같은 높이 그룹핑)
    *
    * horizontal=true (가로 스트립):
-   *   시트를 가로로 잘라 행(row) 생성. 행 높이 = 가장 큰 패널 높이.
-   *   행 안에서 패널을 왼→오 순서로 배치.
+   *   시트를 가로로 잘라 행(row) 생성.
+   *   같은 height 패널끼리 한 행에 배치.
    *
    * horizontal=false (세로 스트립):
-   *   시트를 세로로 잘라 열(column) 생성. 열 너비 = 가장 큰 패널 너비.
-   *   열 안에서 패널을 위→아래 순서로 배치.
+   *   시트를 세로로 잘라 열(column) 생성.
+   *   같은 width 패널끼리 한 열에 배치.
    */
   private packStrips(panels: Rect[], horizontal: boolean): Strip[] {
     const strips: Strip[] = [];
-    // 스트립 방향 기준 치수로 내림차순 정렬
-    // 같은 치수면 반대 방향 치수도 내림차순
-    const remaining = [...panels].sort((a, b) => {
-      if (horizontal) {
-        const hDiff = b.height - a.height;
-        if (Math.abs(hDiff) > 1) return hDiff;
-        return b.width - a.width;
-      } else {
-        const wDiff = b.width - a.width;
-        if (Math.abs(wDiff) > 1) return wDiff;
-        return b.height - a.height;
-      }
-    });
 
+    // 1단계: 스트립 방향 치수로 그룹핑 (같은 높이/너비끼리)
+    const groups = new Map<number, Rect[]>();
+    for (const panel of panels) {
+      const dim = horizontal ? panel.height : panel.width;
+      // 1mm 이내 차이는 같은 그룹으로 (부동소수점 대응)
+      const roundedDim = Math.round(dim);
+      if (!groups.has(roundedDim)) {
+        groups.set(roundedDim, []);
+      }
+      groups.get(roundedDim)!.push(panel);
+    }
+
+    // 2단계: 그룹을 치수 내림차순으로 정렬 (큰 패널 먼저)
+    const sortedDims = [...groups.keys()].sort((a, b) => b - a);
+
+    // 각 그룹 내에서 채우기 방향 치수 내림차순 정렬
+    for (const [dim, groupPanels] of groups) {
+      groupPanels.sort((a, b) => {
+        const fillA = horizontal ? a.width : a.height;
+        const fillB = horizontal ? b.width : b.height;
+        return fillB - fillA;
+      });
+    }
+
+    // 3단계: 그룹별로 스트립 생성
     let currentPos = 0;
     const maxPos = horizontal ? this.binHeight : this.binWidth;
+    const fillMax = horizontal ? this.binWidth : this.binHeight;
 
-    while (remaining.length > 0 && currentPos < maxPos) {
-      // 첫 번째(가장 큰) 패널의 치수를 스트립 크기로 사용
-      const firstPanel = remaining[0];
-      const stripDim = horizontal ? firstPanel.height : firstPanel.width;
+    for (const dim of sortedDims) {
+      const groupPanels = groups.get(dim)!;
+      if (groupPanels.length === 0) continue;
 
-      // 공간 체크
-      if (currentPos + stripDim > maxPos) {
-        // 이 패널은 안 들어감 → 더 작은 패널 찾기
-        const smallerIdx = remaining.findIndex(p => {
-          const dim = horizontal ? p.height : p.width;
-          return currentPos + dim <= maxPos;
-        });
-        if (smallerIdx === -1) break;
-        // 더 작은 패널을 맨 앞으로 옮겨서 재시도
-        const [smaller] = remaining.splice(smallerIdx, 1);
-        remaining.unshift(smaller);
-        continue;
-      }
+      // 이 치수의 스트립이 시트에 들어가는지 확인
+      if (currentPos + dim > maxPos) continue; // 안 들어가면 스킵
 
-      // 스트립 생성
-      const strip: Strip = {
+      // 같은 치수 패널들로 스트립을 채움
+      // 하나의 스트립 폭을 넘으면 새 스트립 생성 (같은 치수)
+      let fillPos = 0;
+      let currentStrip: Strip = {
         x: horizontal ? 0 : currentPos,
         y: horizontal ? currentPos : 0,
-        width: horizontal ? this.binWidth : stripDim,
-        height: horizontal ? stripDim : this.binHeight,
+        width: horizontal ? this.binWidth : dim,
+        height: horizontal ? dim : this.binHeight,
         panels: [],
         horizontal
       };
 
-      // 스트립에 패널 채우기
-      let fillPos = 0; // 채워진 길이 (가로면 X, 세로면 Y)
-      const fillMax = horizontal ? this.binWidth : this.binHeight;
-      const toRemove: number[] = [];
+      for (const panel of groupPanels) {
+        const panelFillDim = horizontal ? panel.width : panel.height;
 
-      for (let i = 0; i < remaining.length; i++) {
-        if (toRemove.includes(i)) continue;
-
-        const panel = remaining[i];
-        const panelStripDim = horizontal ? panel.height : panel.width; // 스트립 방향 치수
-        const panelFillDim = horizontal ? panel.width : panel.height; // 채우기 방향 치수
-
-        // 스트립 치수 이하이고, 채우기 방향으로 공간이 있으면 배치
-        if (panelStripDim <= stripDim && fillPos + panelFillDim <= fillMax) {
+        if (fillPos + panelFillDim <= fillMax) {
+          // 현재 스트립에 넣기
           const placed: PlacedRect = {
             ...panel,
             x: horizontal ? fillPos : currentPos,
@@ -148,44 +143,106 @@ export class GuillotinePacker {
             rotated: false,
             stripIndex: strips.length
           };
-          strip.panels.push(placed);
+          currentStrip.panels.push(placed);
           fillPos += panelFillDim + this.kerf;
-          toRemove.push(i);
-        }
-        // 회전해서 들어가는지
-        else if (panel.canRotate) {
-          const rotStripDim = horizontal ? panel.width : panel.height;
-          const rotFillDim = horizontal ? panel.height : panel.width;
-          if (rotStripDim <= stripDim && fillPos + rotFillDim <= fillMax) {
+        } else {
+          // 현재 스트립이 꽉 참 → 스트립 저장 후 새 스트립
+          if (currentStrip.panels.length > 0) {
+            strips.push(currentStrip);
+            currentPos += dim + this.kerf;
+
+            // 새 스트립 공간 확인
+            if (currentPos + dim > maxPos) break; // 더 이상 공간 없음
+          }
+
+          fillPos = 0;
+          currentStrip = {
+            x: horizontal ? 0 : currentPos,
+            y: horizontal ? currentPos : 0,
+            width: horizontal ? this.binWidth : dim,
+            height: horizontal ? dim : this.binHeight,
+            panels: [],
+            horizontal
+          };
+
+          if (fillPos + panelFillDim <= fillMax) {
             const placed: PlacedRect = {
               ...panel,
               x: horizontal ? fillPos : currentPos,
               y: horizontal ? currentPos : fillPos,
-              rotated: true,
+              rotated: false,
               stripIndex: strips.length
             };
-            strip.panels.push(placed);
-            fillPos += rotFillDim + this.kerf;
-            toRemove.push(i);
+            currentStrip.panels.push(placed);
+            fillPos += panelFillDim + this.kerf;
           }
+        }
+      }
+
+      // 마지막 스트립 저장
+      if (currentStrip.panels.length > 0) {
+        // 스트립 끝 남는 공간에 더 작은 치수 패널로 2차 채움
+        this.fillResidual(currentStrip, strips.length, groups, sortedDims, dim, fillPos, fillMax, horizontal, currentPos);
+        strips.push(currentStrip);
+        currentPos += dim + this.kerf;
+      }
+    }
+
+    return strips;
+  }
+
+  /**
+   * 스트립 끝 남는 공간에 더 작은 패널 채우기
+   * (같은 치수 그룹이 다 배치된 후 남는 가로/세로 공간 활용)
+   */
+  private fillResidual(
+    strip: Strip,
+    stripIndex: number,
+    groups: Map<number, Rect[]>,
+    sortedDims: number[],
+    currentDim: number,
+    fillPos: number,
+    fillMax: number,
+    horizontal: boolean,
+    currentPos: number
+  ): void {
+    // 남은 공간이 최소 크기 이하면 스킵
+    const remainingSpace = fillMax - fillPos;
+    if (remainingSpace < 50) return; // 50mm 미만이면 의미 없음
+
+    // 더 작은 치수 그룹에서 들어갈 수 있는 패널 찾기
+    for (const dim of sortedDims) {
+      if (dim > currentDim) continue; // 현재 스트립보다 큰 치수는 스킵
+      if (dim === currentDim) continue; // 같은 치수는 이미 처리됨
+
+      const groupPanels = groups.get(dim);
+      if (!groupPanels || groupPanels.length === 0) continue;
+
+      // 이 그룹에서 남은 공간에 들어갈 수 있는 패널 찾기
+      const toRemove: number[] = [];
+      for (let i = 0; i < groupPanels.length; i++) {
+        const panel = groupPanels[i];
+        const panelFillDim = horizontal ? panel.width : panel.height;
+
+        if (fillPos + panelFillDim <= fillMax) {
+          const placed: PlacedRect = {
+            ...panel,
+            x: horizontal ? fillPos : currentPos,
+            y: horizontal ? currentPos : fillPos,
+            rotated: false,
+            stripIndex
+          };
+          strip.panels.push(placed);
+          fillPos += panelFillDim + this.kerf;
+          toRemove.push(i);
         }
       }
 
       // 배치된 패널 제거 (역순)
       for (let i = toRemove.length - 1; i >= 0; i--) {
-        remaining.splice(toRemove[i], 1);
-      }
-
-      if (strip.panels.length > 0) {
-        strips.push(strip);
-        currentPos += stripDim + this.kerf;
-      } else {
-        // 아무것도 못 넣었으면 첫 번째 패널 건너뛰기 (무한루프 방지)
-        remaining.shift();
+        groupPanels.splice(toRemove[i], 1);
       }
     }
-
-    return strips;
   }
 
   private calculateEfficiency(strips: Strip[]): number {
