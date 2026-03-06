@@ -1801,11 +1801,12 @@ const Room: React.FC<RoomProps> = ({
               gradColors[i * 6 + 0] = baseColor.r;
               gradColors[i * 6 + 1] = baseColor.g;
               gradColors[i * 6 + 2] = baseColor.b;
-              // 두 번째 꼭짓점(z=z2, 앞쪽): 배경색(흰색/어두운색)으로 페이드
+              // 두 번째 꼭짓점(z=z2, 앞쪽): 배경색 방향으로 페이드 (30% 원색 유지)
               const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
-              gradColors[i * 6 + 3] = bgColor.r;
-              gradColors[i * 6 + 4] = bgColor.g;
-              gradColors[i * 6 + 5] = bgColor.b;
+              const blendRatio = 0.3; // 앞쪽 끝에서도 30% 원색 유지
+              gradColors[i * 6 + 3] = baseColor.r * blendRatio + bgColor.r * (1 - blendRatio);
+              gradColors[i * 6 + 4] = baseColor.g * blendRatio + bgColor.g * (1 - blendRatio);
+              gradColors[i * 6 + 5] = baseColor.b * blendRatio + bgColor.b * (1 - blendRatio);
             });
 
             return (
