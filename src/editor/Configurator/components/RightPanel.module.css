@@ -473,9 +473,8 @@
 .toggleButton.active:hover,
 .toggleButton.active:focus,
 .toggleButton.active:active {
-  background: var(--theme-surface) !important;
-  color: var(--theme-text) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  background: var(--theme-primary) !important;
+  color: #fff !important;
   font-weight: 600;
 }
 
@@ -568,11 +567,11 @@
 }
 
 .sliderLabels span.active {
-  color: var(--theme-text) !important;
+  color: #fff !important;
   font-weight: 600;
-  background: var(--theme-surface) !important;
+  background: var(--theme-primary) !important;
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
 }
 
 /* ── Info Box ── */

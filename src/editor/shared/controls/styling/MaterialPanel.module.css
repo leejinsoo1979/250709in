@@ -62,15 +62,14 @@
 }
 
 .tab.activeTab {
-  background: var(--theme-surface);
-  color: var(--theme-text);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  background: var(--theme-primary);
+  color: #fff;
   font-weight: 600;
 }
 
 .tab.activeTab:hover {
-  background: var(--theme-surface);
-  color: var(--theme-text);
+  background: var(--theme-primary-hover, var(--theme-primary));
+  color: #fff;
 }
 
 .tabIcon {
