@@ -929,10 +929,10 @@
 }
 
 .sliderLabels span.active {
-  color: #ffffff !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
-  background: var(--theme-primary) !important;
-  border: 1px solid var(--theme-primary);
+  background: var(--theme-background-secondary) !important;
+  border: 1.5px solid var(--theme-primary);
 }
 
 .doorSlider {
@@ -1563,7 +1563,7 @@
 
 .toggleButton {
   flex: 1;
-  padding: 7px 12px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
@@ -1573,7 +1573,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
-  min-height: 32px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1592,9 +1592,10 @@
 
 .toggleButton.active,
 .toggleButton.active:hover {
-  background: var(--theme-primary) !important;
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 /* 간단한 슬롯 정보 */
@@ -1824,7 +1825,7 @@
 
 .toggleButton {
   flex: 1;
-  padding: 7px 12px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
@@ -1834,7 +1835,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
-  min-height: 32px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1850,14 +1851,15 @@
 }
 
 .toggleButtonActive {
-  background: var(--theme-primary) !important;
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 .toggleButtonActive:hover {
-  background: var(--theme-primary-hover, var(--theme-primary)) !important;
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
 }
 
 .stepDownSettings {
