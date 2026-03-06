@@ -21,10 +21,10 @@
 /* ── Navigation ── */
 .tabList {
   flex: 1;
-  padding: 12px 0;
+  padding: 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 
 /* ── Tab Button ── */
@@ -72,7 +72,7 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  color: color-mix(in srgb, var(--theme-text-muted) 70%, transparent);
+  color: color-mix(in srgb, var(--theme-text-muted) 50%, transparent);
   transition: color 0.12s ease;
 }
 
@@ -81,7 +81,7 @@
 }
 
 .tabButton:hover .tabIcon {
-  color: var(--theme-text-secondary);
+  color: var(--theme-text-muted);
 }
 
 /* ── Tab Label ── */
@@ -89,7 +89,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  color: color-mix(in srgb, var(--theme-text-muted) 70%, transparent);
+  color: color-mix(in srgb, var(--theme-text-muted) 50%, transparent);
   line-height: 1;
   text-align: center;
   letter-spacing: -0.01em;
@@ -105,7 +105,7 @@
 }
 
 .tabButton:hover .tabLabel {
-  color: var(--theme-text-secondary);
+  color: var(--theme-text-muted);
 }
 
 /* ── Bottom Action Group ── */
