@@ -2076,10 +2076,10 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
+              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략, 엣지 항상 숨김 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
-                  hideEdges={hideEdges}
+                  hideEdges
                   isOuterFrame
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
