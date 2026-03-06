@@ -110,34 +110,37 @@
 /* 2D/3D 토글 버튼 */
 .viewToggle {
   display: flex;
-  gap: 0;
+  gap: 2px;
   margin-bottom: 20px;
   border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  background: white;
+  padding: 3px;
+  background: var(--theme-background-secondary, #f3f4f6);
   width: fit-content;
 }
 
 .toggleButton {
-  padding: 10px 24px;
+  padding: 8px 20px;
   border: none;
-  background: white;
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 600;
+  background: transparent;
+  color: var(--theme-text-muted, #6b7280);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  border-radius: 6px;
   min-width: 60px;
 }
 
 .toggleButton.active {
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-surface, white);
+  color: var(--theme-text, #1f2937);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
 }
 
 .toggleButton:hover:not(.active) {
-  background: #f3f4f6;
+  color: var(--theme-text-secondary, #4b5563);
 }
 
 /* 3D 에디터 뷰어 */
@@ -204,43 +207,45 @@
 /* 토글 버튼 그룹 */
 .toggleButtons {
   display: flex;
-  gap: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  background: white;
+  gap: 2px;
+  border-radius: 8px;
+  padding: 3px;
+  background: var(--theme-background-secondary, #f3f4f6);
 }
 
 /* 넓은 토글 버튼 그룹 */
 .toggleButtonsWide {
   display: flex;
-  gap: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  background: white;
+  gap: 2px;
+  border-radius: 8px;
+  padding: 3px;
+  background: var(--theme-background-secondary, #f3f4f6);
   flex: 1;
 }
 
 .toggleButton {
-  padding: 6px 16px;
+  padding: 6px 12px;
   border: none;
-  background: white;
-  color: #6b7280;
+  background: transparent;
+  color: var(--theme-text-muted, #6b7280);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  border-radius: 6px;
   flex: 1;
 }
 
 .toggleButton.active {
-  background: var(--theme-primary);
-  color: white;
+  background: var(--theme-surface, white);
+  color: var(--theme-text, #1f2937);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
 }
 
 .toggleButton:hover:not(.active) {
-  background: #f3f4f6;
+  color: var(--theme-text-secondary, #4b5563);
 }
 
 /* 레인지 인풋 */

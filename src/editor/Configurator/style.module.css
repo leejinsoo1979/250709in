@@ -347,100 +347,108 @@
   background: var(--theme-danger-hover);
 }
 
-/* 모듈 카테고리 탭 */
+/* ── Module Category Tabs (Segmented Control) ── */
 .moduleCategoryTabs {
   display: flex;
-  margin-bottom: 16px;
-  border: 1px solid var(--theme-primary);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--theme-surface, #ffffff);
+  margin-bottom: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
 }
 
 .moduleCategoryTab {
   flex: 1 1 0;
   min-width: 0;
-  padding: 8px 12px;
-  background: var(--theme-surface, #ffffff);
+  padding: 7px 12px;
+  background: transparent;
   border: none;
-  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--theme-primary) !important;
+  color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: all 0.15s ease;
+  border-radius: 6px;
   min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
-.moduleCategoryTab:not(:last-child) {
-  border-right: 1px solid var(--theme-primary);
+.moduleCategoryTab:hover:not(.active) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.moduleCategoryTab:hover {
-  background: var(--theme-background-secondary, #f9fafb);
-  color: var(--theme-text, #1f2937);
+.moduleCategoryTab:active {
+  transform: scale(0.97);
 }
 
 .moduleCategoryTab.active {
-  background: var(--theme-primary, var(--theme-primary));
-  color: #ffffff !important;
+  background: var(--theme-surface);
+  color: var(--theme-text) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
   font-weight: 600;
 }
 
 .moduleCategoryTab.active:hover {
-  background: var(--theme-primary-hover, var(--theme-primary-hover));
-  color: #ffffff !important;
+  background: var(--theme-surface);
+  color: var(--theme-text) !important;
 }
 
-/* 상부장/하부장 탭 - 메인 카테고리 탭과 동일한 스타일 */
+/* ── Upper/Lower Tabs (Segmented Control) ── */
 .upperLowerTabs {
   display: flex;
-  margin-bottom: 16px;
-  border: 1px solid var(--theme-primary);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--theme-surface, #ffffff);
+  margin-bottom: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
 }
 
 .upperLowerTab {
   flex: 1 1 0;
   min-width: 0;
-  padding: 8px 12px;
-  background: var(--theme-surface, #ffffff);
+  padding: 7px 12px;
+  background: transparent;
   border: none;
-  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--theme-text, #374151);
+  color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: all 0.15s ease;
+  border-radius: 6px;
   min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
-.upperLowerTab:not(:last-child) {
-  border-right: 1px solid var(--theme-primary);
+.upperLowerTab:hover:not(.active) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.upperLowerTab:hover {
-  background: var(--theme-background-secondary, #f9fafb);
-  color: var(--theme-text, #1f2937);
+.upperLowerTab:active {
+  transform: scale(0.97);
 }
 
 .upperLowerTab.active {
-  background: var(--theme-primary, var(--theme-primary));
-  color: #ffffff !important;
+  background: var(--theme-surface);
+  color: var(--theme-text) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
   font-weight: 600;
 }
 
 .upperLowerTab.active:hover {
-  background: var(--theme-primary-hover, var(--theme-primary-hover));
-  color: #ffffff !important;
+  background: var(--theme-surface);
+  color: var(--theme-text) !important;
 }
 
 .moduleSection {
@@ -456,14 +464,14 @@
   width: 32px;
   min-width: 32px;
   padding: 8px;
-  background: var(--theme-surface, #ffffff);
+  background: transparent;
   border: none;
-  border-left: 1px solid var(--theme-primary);
+  border-left: 1px solid var(--theme-border);
   font-size: 16px;
   font-weight: 600;
-  color: var(--theme-primary) !important;
+  color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1545,50 +1553,50 @@
   position: absolute;
 }
 
-/* 토글 버튼 그룹 스타일 */
+/* ── Toggle Button Group (Segmented Control) ── */
 .toggleButtonGroup {
   display: flex;
-  border: 1px solid var(--theme-primary);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--theme-surface);
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 8px 12px;
-  background: var(--theme-surface);
+  padding: 7px 12px;
+  background: transparent;
   border: none;
-  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--theme-text-secondary);
+  color: var(--theme-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: all 0.15s ease;
+  border-radius: 6px;
   min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
-.toggleButton:not(:last-child) {
-  border-right: 1px solid var(--theme-primary);
+.toggleButton:hover:not(.active):not(.toggleButtonActive) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.toggleButton:hover {
-  background: var(--theme-background-secondary);
-  color: var(--theme-text);
+.toggleButton:active {
+  transform: scale(0.97);
 }
 
-.toggleButton.active {
-  background: var(--theme-primary) !important;
-  color: #ffffff !important;
-  font-weight: 600;
-}
-
+.toggleButton.active,
 .toggleButton.active:hover {
-  background: var(--theme-primary-hover) !important;
-  color: #ffffff !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
 }
 
 /* 간단한 슬롯 정보 */
@@ -1806,52 +1814,53 @@
   opacity: 0.5;
 }
 
-/* 토글 버튼 그룹 (공통 스타일과 동일) */
+/* ── Toggle Button Group (Segmented Control — duplicate kept for specificity) ── */
 .toggleButtonGroup {
   display: flex;
-  border: 1px solid var(--theme-primary);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--theme-surface);
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
   margin-bottom: 16px;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 8px 16px;
+  padding: 7px 12px;
   border: none;
-  background: var(--theme-surface);
-  color: var(--theme-primary);
-  font-size: 14px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
   font-weight: 500;
-  font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-right: 1px solid var(--theme-primary);
-  min-height: 36px;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
   min-width: 0;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
-.toggleButton:last-child {
-  border-right: none;
-}
-
-.toggleButton:hover {
-  background: var(--theme-primary-light);
+.toggleButton:hover:not(.toggleButtonActive) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .toggleButtonActive {
-  background: var(--theme-primary);
-  color: #ffffff !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
 }
 
 .toggleButtonActive:hover {
-  background: var(--theme-primary-hover);
-  color: #ffffff !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
 }
 
 .stepDownSettings {

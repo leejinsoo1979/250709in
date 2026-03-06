@@ -1,4 +1,9 @@
-/* 컨테이너 및 레이아웃 */
+/* ================================
+   Common Controls — Modern SaaS v2
+   Shared styles for all sidebar controls
+   ================================ */
+
+/* ── Layout ── */
 .container {
   display: flex;
   flex-direction: column;
@@ -24,7 +29,6 @@
   gap: 8px;
 }
 
-/* 기본 정보 한 줄 레이아웃 */
 .inlineLayout {
   display: flex;
   gap: 16px;
@@ -39,79 +43,73 @@
   flex: 0 0 calc(25% - 8px);
 }
 
-/* 라벨 */
+/* ── Labels ── */
 .label {
   color: var(--theme-text);
-  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12px;
   font-weight: 600;
-}
-
-/* 비활성화 메시지 */
-.disabledMessage {
-  color: var(--theme-text-secondary);
-  font-size: 13px;
-  font-style: italic;
-  padding: 8px;
-  background-color: var(--theme-background-secondary);
-  border-radius: 4px;
-  text-align: center;
+  letter-spacing: -0.01em;
 }
 
 .inputLabel {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 11px;
-  color: var(--theme-text-secondary);
+  font-weight: 500;
+  color: var(--theme-text-muted);
   line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
 }
 
-/* 입력 필드 */
+.disabledMessage {
+  color: var(--theme-text-muted);
+  font-size: 12px;
+  font-style: normal;
+  padding: 10px 12px;
+  background-color: var(--theme-background-secondary);
+  border-radius: 6px;
+  text-align: center;
+}
+
+/* ── Input Fields ── */
 .inputGroup {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Step0에서 3개 필드를 한 줄로 배치하는 스타일 */
 .inputGroupThreeColumns {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Configurator에서 2개 필드를 한 줄로 배치하는 스타일 */
 .inputGroupTwoColumns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* 반응형 처리 - 작은 화면에서는 세로 배치 */
 @media (max-width: 768px) {
   .inputGroupThreeColumns,
-  .inputGroupTwoColumns {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-}
-
-/* 반응형 처리 - 작은 화면에서는 세로 배치 */
-@media (max-width: 768px) {
+  .inputGroupTwoColumns,
   .inputGroup {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 }
 
-/* 크기 요약 표시 (컨피규레이터용) */
 .dimensionsSummary {
   padding: 8px 12px;
   background-color: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
+  border-radius: 6px;
   margin-bottom: 8px;
 }
 
 .summaryText {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--theme-text);
   font-weight: 500;
 }
@@ -119,7 +117,7 @@
 .inputWrapper {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .inputWithUnit {
@@ -130,13 +128,16 @@
 
 .input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
   background-color: var(--theme-background-secondary);
   color: var(--theme-text);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.1s ease, background-color 0.1s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-font-smoothing: antialiased;
 }
 
 .input:focus {
@@ -145,31 +146,38 @@
   box-shadow: 0 0 0 2px var(--theme-primary-light);
 }
 
+.input:hover:not(:focus):not(:disabled) {
+  border-color: var(--theme-border-hover);
+}
+
 .inputWithUnitField {
-  padding-right: 40px; /* 단위 표시 영역 확보 */
+  padding-right: 36px;
 }
 
 .unit {
   position: absolute;
-  right: 12px;
-  color: var(--theme-text-secondary);
-  font-size: 14px;
+  right: 10px;
+  color: var(--theme-text-muted);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
   pointer-events: none;
 }
 
-/* 에러 상태 */
+/* ── Error ── */
 .inputError {
-  border-color: var(--theme-danger);
+  border-color: var(--theme-danger) !important;
   background-color: var(--theme-danger-light);
 }
 
 .errorMessage {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--theme-danger);
-  margin-top: 4px;
+  margin-top: 2px;
+  font-weight: 500;
 }
 
-/* 토글 및 라디오 */
+/* ── Toggle Group (legacy — used in some components) ── */
 .toggleGroup {
   display: flex;
   gap: 8px;
@@ -178,7 +186,7 @@
 
 .radioGroup {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -188,9 +196,9 @@
   gap: 8px;
   padding: 6px 10px;
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .radioOption:hover {
@@ -209,92 +217,114 @@
 }
 
 .radioLabel {
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   margin: 0;
 }
 
-/* 토글 버튼 그룹 (피그마 디자인) */
+/* ── Toggle Button Group (Segmented Control) ── */
 .toggleButtonGroup {
   display: flex;
-  border: 1px solid var(--theme-primary);
-  border-radius: 6px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 3px;
   overflow: hidden;
-  background: var(--theme-surface);
+  border: none;
+  gap: 2px;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 8px 16px;
+  padding: 7px 12px;
   border: none;
-  background: var(--theme-surface);
-  color: var(--theme-primary);
-  font-size: 14px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12.5px;
   font-weight: 500;
-  font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-right: 1px solid var(--theme-primary);
-  min-height: 36px;
+  transition: all 0.15s ease;
+  border-right: none;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
   min-width: 0;
+  border-radius: 6px;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
 .toggleButton:last-child {
   border-right: none;
 }
 
-.toggleButton:hover {
-  background: var(--theme-primary-light);
+.toggleButton:hover:not(.toggleButtonActive) {
+  color: var(--theme-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.toggleButton:active {
+  transform: scale(0.98);
 }
 
 .toggleButtonActive {
-  background: var(--theme-primary) !important;
-  color: white !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
 }
 
 .toggleButtonActive:hover {
-  background: var(--theme-primary-hover) !important;
-  color: white !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
 }
 
-/* 버튼 */
+/* ── Buttons ── */
 .button {
-  padding: 6px 12px;
+  padding: 7px 12px;
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: var(--theme-surface);
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  color: var(--theme-text);
 }
 
 .button:hover {
-  border-color: var(--theme-primary);
-  background-color: var(--theme-primary-light);
+  border-color: var(--theme-border-hover);
+  background-color: var(--theme-background-secondary);
+}
+
+.button:active {
+  transform: scale(0.98);
 }
 
 .buttonActive {
-  border-color: var(--theme-primary);
-  background-color: var(--theme-primary);
-  color: var(--theme-surface);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04);
+  border-color: var(--theme-border);
+  font-weight: 600;
 }
 
-/* 설명 텍스트 */
+/* ── Description ── */
 .description {
-  font-size: 12px;
-  color: var(--theme-text-secondary);
+  font-size: 11px;
+  color: var(--theme-text-muted);
   margin-top: 2px;
+  line-height: 1.4;
 }
 
-/* 알림 박스 스타일 */
+/* ── Info Box ── */
 .infoBox {
   background-color: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 8px 12px;
   margin: 8px 0;
   display: flex;
@@ -303,11 +333,11 @@
 }
 
 .infoDetail {
-  font-size: 0.85em;
-  color: var(--theme-text-secondary);
+  font-size: 11px;
+  color: var(--theme-text-muted);
 }
 
-/* 슬라이더 스타일 */
+/* ── Slider ── */
 .slider {
   width: 100%;
   height: 4px;
@@ -320,47 +350,49 @@
 }
 
 .slider:hover {
-  background: var(--theme-border);
+  background: var(--theme-border-hover);
 }
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--theme-primary);
   border-radius: 50%;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .slider::-webkit-slider-thumb:hover {
-  background: var(--theme-primary-hover);
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--theme-primary);
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  transition: background 0.2s;
+  transition: all 0.15s ease;
 }
 
 .slider::-moz-range-thumb:hover {
-  background: var(--theme-primary-hover);
+  transform: scale(1.15);
 }
 
-/* 비활성화 스타일 */
+/* ── Disabled States ── */
 .disabledLabel {
   color: var(--theme-text-muted) !important;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .disabledText {
   font-size: 11px;
-  color: var(--theme-primary);
+  color: var(--theme-text-muted);
   font-weight: normal;
 }
 
@@ -369,6 +401,7 @@
   color: var(--theme-text-muted) !important;
   cursor: not-allowed;
   border-color: var(--theme-border) !important;
+  opacity: 0.5;
 }
 
 .button:disabled {
@@ -376,16 +409,19 @@
   color: var(--theme-text-muted) !important;
   cursor: not-allowed;
   border-color: var(--theme-border) !important;
+  opacity: 0.5;
 }
 
 .button:disabled:hover {
   background-color: var(--theme-background-secondary) !important;
   border-color: var(--theme-border) !important;
+  transform: none;
 }
 
 .slider:disabled {
   background: var(--theme-background-secondary) !important;
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .slider:disabled::-webkit-slider-thumb {
@@ -396,4 +432,4 @@
 .slider:disabled::-moz-range-thumb {
   background: var(--theme-border) !important;
   cursor: not-allowed;
-} 
+}
