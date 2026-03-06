@@ -168,11 +168,11 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
         <>
           <lineSegments name="adjustable-foot-plate-wireframe" position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
-            <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
+            <lineBasicMaterial attach="material" color="#333333" />
           </lineSegments>
           <lineSegments name="adjustable-foot-cylinder-wireframe" position={[0, -plateHeight - cylinderHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32)]} />
-            <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
+            <lineBasicMaterial attach="material" color="#333333" />
           </lineSegments>
         </>
       ) : null}

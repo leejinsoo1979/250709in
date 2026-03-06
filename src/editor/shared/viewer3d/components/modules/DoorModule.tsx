@@ -74,9 +74,9 @@ const BoxWithEdges: React.FC<{
       {viewMode === '3D' ? (
         <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 0}>
           <lineBasicMaterial
-            color={isEditMode ? getThemeColor() : "#505050"}
-            transparent={true}
-            opacity={isEditMode ? 0.3 : 0.9}
+            color={isEditMode ? getThemeColor() : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : "#505050")}
+            transparent={renderMode !== 'wireframe'}
+            opacity={isEditMode ? 0.3 : (renderMode === 'wireframe' ? 1.0 : 0.9)}
             depthTest={true}
             depthWrite={false}
             polygonOffset={true}

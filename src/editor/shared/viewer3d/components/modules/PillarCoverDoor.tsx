@@ -58,10 +58,10 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
       {/* 도어 윤곽선 */}
       {viewMode === '3D' ? (
         <lineSegments geometry={edgesGeometry}>
-          <lineBasicMaterial 
-            color="#505050"
-            transparent={true}
-            opacity={0.9}
+          <lineBasicMaterial
+            color={renderMode === 'wireframe' ? "#333333" : "#505050"}
+            transparent={renderMode !== 'wireframe'}
+            opacity={renderMode === 'wireframe' ? 1.0 : 0.9}
             depthTest={true}
             depthWrite={false}
             polygonOffset={true}
