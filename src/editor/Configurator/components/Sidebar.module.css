@@ -81,7 +81,7 @@
 }
 
 .tabButton:hover .tabIcon {
-  color: var(--theme-text-muted);
+  color: var(--theme-text);
 }
 
 /* ── Tab Label ── */
@@ -105,7 +105,7 @@
 }
 
 .tabButton:hover .tabLabel {
-  color: var(--theme-text-muted);
+  color: var(--theme-text);
 }
 
 /* ── Bottom Action Group ── */
