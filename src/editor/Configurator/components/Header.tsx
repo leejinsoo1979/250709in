@@ -925,18 +925,20 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* 그림자 / 다크 토글 스위치 */}
+            {/* 그림자(3D) / 다크(2D) 토글 스위치 */}
             <div className={styles.headerToggleGroup}>
-              <div className={styles.headerToggleItem}>
-                <span className={styles.headerToggleLabel}>그림자</span>
-                <button
-                  className={`${styles.headerToggleSwitch} ${shadowEnabled ? styles.active : ''}`}
-                  onClick={() => setShadowEnabled(!shadowEnabled)}
-                  title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-                >
-                  <div className={styles.headerToggleKnob} />
-                </button>
-              </div>
+              {viewMode === '3D' && (
+                <div className={styles.headerToggleItem}>
+                  <span className={styles.headerToggleLabel}>그림자</span>
+                  <button
+                    className={`${styles.headerToggleSwitch} ${shadowEnabled ? styles.active : ''}`}
+                    onClick={() => setShadowEnabled(!shadowEnabled)}
+                    title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+                  >
+                    <div className={styles.headerToggleKnob} />
+                  </button>
+                </div>
+              )}
               {viewMode === '2D' && (
                 <div className={styles.headerToggleItem}>
                   <span className={styles.headerToggleLabel}>{view2DTheme === 'dark' ? '다크' : '라이트'}</span>
