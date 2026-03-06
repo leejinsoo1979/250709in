@@ -390,11 +390,11 @@ export class GuillotinePacker {
 
         const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
 
-        if (widthDiff <= 0.02 && currentY + panel.height <= this.binHeight) {
+        if (widthDiff <= 0.02 && strip.y + currentY + panel.height <= this.binHeight) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: strip.x,
-            y: currentY,
+            y: strip.y + currentY,
             stripIndex: this.strips.length
           };
           strip.panels.push(placedPanel);
@@ -409,11 +409,11 @@ export class GuillotinePacker {
 
         const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
 
-        if (widthDiff <= 0.1 && currentY + panel.height <= this.binHeight) {
+        if (widthDiff <= 0.1 && strip.y + currentY + panel.height <= this.binHeight) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: strip.x,
-            y: currentY,
+            y: strip.y + currentY,
             stripIndex: this.strips.length
           };
           strip.panels.push(placedPanel);
@@ -427,11 +427,11 @@ export class GuillotinePacker {
         if (placedSet.has(panel) || !panel.canRotate) continue;
 
         const rotatedWidthDiff = Math.abs(panel.height - strip.width) / strip.width;
-        if (rotatedWidthDiff <= 0.1 && currentY + panel.width <= this.binHeight) {
+        if (rotatedWidthDiff <= 0.1 && strip.y + currentY + panel.width <= this.binHeight) {
           const placedPanel: PlacedRect = {
             ...panel,
             x: strip.x,
-            y: currentY,
+            y: strip.y + currentY,
             rotated: true,
             stripIndex: this.strips.length
           };
