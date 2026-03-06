@@ -327,13 +327,13 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   const modeColors = {
     light: {
       background: '#ffffff',
-      backgroundSecondary: '#f9fafb',
+      backgroundSecondary: '#f0f0f0',
       surface: '#ffffff',
       text: '#111827',
       textSecondary: '#6b7280',
       textMuted: '#9ca3af',
       border: '#e5e7eb',
-      borderHover: '#d1d5db',
+      borderHover: '#cbd5e1',
       shadow: 'rgba(0, 0, 0, 0.1)',
       overlay: 'rgba(0, 0, 0, 0.5)',
     },
