@@ -3,6 +3,7 @@ import styles from './RightPanel.module.css';
 import commonStyles from '@/editor/shared/controls/styles/common.module.css';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -637,11 +638,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onFrameTypeChange
 }) => {
   const { spaceInfo, updateSpaceInfo } = useSpaceConfigStore();
+  const { placedModules, clearAllModules } = useFurnitureStore();
   const { setActiveDroppedCeilingTab } = useUIStore();
   const { t, currentLanguage } = useTranslation();
-  
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['brand', 'price', 'material', 'space', 'droppedCeiling', 'mainSpace', 'layout', 'floor', 'frame'])
+    new Set(['brand', 'price', 'material', 'space', 'droppedCeiling', 'mainSpace', 'layoutMode', 'layout', 'floor', 'frame'])
   );
   
   // 초기 렌더링 시 UIStore 동기화
@@ -1049,29 +1051,56 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 컬럼수 */}
+            {/* 배치 방식 */}
             <FormControl
-              label={t('space.columnCount')}
-              expanded={expandedSections.has('layout')}
-              onToggle={() => toggleSection('layout')}
+              label={t('space.layoutMode')}
+              expanded={expandedSections.has('layoutMode')}
+              onToggle={() => toggleSection('layoutMode')}
             >
-              <NumberInput
-                label={spaceInfo.droppedCeiling?.enabled ? t('space.columnCount') : t('space.columnCount')}
-                value={doorCount}
-                onChange={onDoorCountChange}
-                min={minDoors}
-                max={maxDoors}
-                unit={t('common.unit')}
+              <ToggleGroup
+                key={`layout-mode-${currentLanguage}`}
+                options={[
+                  { id: 'equal-division', label: t('space.equalDivision') },
+                  { id: 'free-placement', label: t('space.freePlacement') },
+                ]}
+                selected={spaceInfo.layoutMode || 'equal-division'}
+                onChange={(value) => {
+                  const newMode = value as 'equal-division' | 'free-placement';
+                  const currentMode = spaceInfo.layoutMode || 'equal-division';
+                  if (newMode === currentMode) return;
+                  if (placedModules.length > 0) {
+                    if (!window.confirm(t('space.modeSwitchWarning'))) return;
+                    clearAllModules();
+                  }
+                  updateSpaceInfo({ layoutMode: newMode });
+                }}
               />
-              
-              <DoorSlider
-                value={doorCount}
-                onChange={onDoorCountChange}
-                width={width}
-              />
-
-
             </FormControl>
+
+            {/* 컬럼수 - 균등분할 모드에서만 표시 */}
+            {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
+              <FormControl
+                label={t('space.columnCount')}
+                expanded={expandedSections.has('layout')}
+                onToggle={() => toggleSection('layout')}
+              >
+                <NumberInput
+                  label={spaceInfo.droppedCeiling?.enabled ? t('space.columnCount') : t('space.columnCount')}
+                  value={doorCount}
+                  onChange={onDoorCountChange}
+                  min={minDoors}
+                  max={maxDoors}
+                  unit={t('common.unit')}
+                />
+
+                <DoorSlider
+                  value={doorCount}
+                  onChange={onDoorCountChange}
+                  width={width}
+                />
+
+              </FormControl>
+            )}
 
             {/* 바닥 마감재 - 띄워서 배치일 때는 숨김 */}
             {(() => {
