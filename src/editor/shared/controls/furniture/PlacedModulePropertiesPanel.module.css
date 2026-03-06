@@ -1,36 +1,32 @@
 .overlay {
-  position: fixed;
-  top: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
   right: 0;
-  width: auto; /* 패널 크기만큼만 차지 */
-  height: 100vh;
-  background-color: transparent; /* 회색 반투명 오버레이 제거 */
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
   z-index: 1000;
-  padding-top: 60px;
-  padding-right: 25px; /* 우측 여백 */
   pointer-events: none; /* overlay는 클릭 이벤트를 패스, 자식 요소만 클릭 가능 */
 }
 
 .panel {
   background: var(--theme-surface);
-  border-radius: 12px;
-  box-shadow: var(--popup-shadow);
-  width: 350px;
-  max-height: calc(100vh - 120px);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-height: 50vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.2s ease-out;
+  animation: slideUp 0.3s ease-out;
   pointer-events: auto; /* 패널만 클릭 이벤트 받음 */
 }
 
-@keyframes slideIn {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(100%);
   }
   to {
     opacity: 1;
@@ -65,7 +61,7 @@
 }
 
 .tabButton:first-child {
-  border-top-left-radius: 12px;
+  border-top-left-radius: 16px;
 }
 
 .tabButton:hover:not(.activeTab) {
@@ -156,7 +152,7 @@
   min-width: 50px;
   border: none;
   background: var(--theme-surface-variant);
-  border-top-right-radius: 12px;
+  border-top-right-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -870,16 +866,10 @@
 }
 
 @media (max-width: 768px) {
-  .overlay {
-    width: 100%;
-    padding-top: 20px;
-  }
-  
   .panel {
-    width: 90%;
-    max-width: 350px;
+    max-height: 60vh;
   }
-  
+
   .depthSelector {
     flex-direction: column;
   }
