@@ -15,37 +15,37 @@ interface ViewerControlsProps {
   // 뷰 모드 관련
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  
+
   // 뷰 방향 관련 (UIStore와 연동)
   viewDirection: ViewDirection;
   onViewDirectionChange: (direction: ViewDirection) => void;
-  
+
   // 렌더링 모드 관련
   renderMode: RenderMode;
   onRenderModeChange: (mode: RenderMode) => void;
-  
+
   // 옵션 토글들
   showAll: boolean;
   onShowAllToggle: () => void;
-  
+
   showDimensions: boolean;
   onShowDimensionsToggle: () => void;
-  
+
   showDimensionsText: boolean;
   onShowDimensionsTextToggle: () => void;
-  
+
   showGuides: boolean;
   onShowGuidesToggle: () => void;
-  
+
   showAxis: boolean;
   onShowAxisToggle: () => void;
-  
+
   showFurniture: boolean;
   onShowFurnitureToggle: () => void;
-  
+
   doorsOpen: boolean;
   onDoorsToggle: () => void;
-  
+
   // 도어 설치 관련
   hasDoorsInstalled?: boolean;
   onDoorInstallationToggle?: () => void;
@@ -77,10 +77,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 }) => {
   // UIStore에서 2D 뷰 방향 상태 및 측정 모드 상태 가져오기
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
-  
+
   // 테마 컨텍스트
   const { theme } = useTheme();
-  
+
   // QR 코드 생성기 표시 상태
   const [showQRGenerator, setShowQRGenerator] = useState(false);
 
@@ -94,7 +94,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   // 컴포넌트 마운트 시 localStorage 캐시 정리 및 초기 동기화
   useEffect(() => {
     // localStorage에서 ui-store의 view2DTheme 제거
@@ -110,13 +110,13 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     } catch (e) {
       console.warn('localStorage 정리 실패:', e);
     }
-    
+
     // 앱 테마와 동기화
     const desiredTheme = theme.mode === 'dark' ? 'dark' : 'light';
     console.log('ViewerControls mount - theme mode:', theme.mode, 'setting 2D theme to:', desiredTheme);
     setView2DTheme(desiredTheme);
   }, [theme, setView2DTheme]); // theme 변경 시 동기화
-  
+
   const { t } = useTranslation();
 
   const viewModes = [
@@ -128,12 +128,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     { id: 'front' as ViewDirection, label: t('viewer.front') },
     { id: 'top' as ViewDirection, label: t('viewer.top') },
     { id: 'left' as ViewDirection, label: t('viewer.left') }
-  ];
-
-  // 2D 모드에서 사용할 뷰 방향들 (all 포함)
-  const viewDirectionsWithAll = [
-    { id: 'all' as ViewDirection, label: t('viewer.all') },
-    ...viewDirections
   ];
 
   const renderModes = [
@@ -304,121 +298,112 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   // 데스크탑 UI
   return (
     <div className={styles.viewerControls}>
-      {/* 좌측 옵션 토글들 */}
+      {/* 좌측: 토글 + 옵션 칩 */}
       <div className={styles.leftControls}>
-        {/* 치수 표시 토글 */}
+        {/* 치수 표시 ON/OFF 토글 */}
         <div className={styles.toggleGroup}>
-          <span 
+          <span
             className={`${styles.toggleLabel} ${styles.clickable}`}
-            onClick={() => {
-              // 단순히 치수 표시만 토글
-              onShowDimensionsToggle();
-            }}
-            style={{ cursor: 'pointer' }}
+            onClick={onShowDimensionsToggle}
           >
             {showDimensions ? t('viewer.on').toUpperCase() : t('viewer.off').toUpperCase()}
           </span>
-          <button 
+          <button
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
-            onClick={() => {
-              // 단순히 치수 표시만 토글
-              onShowDimensionsToggle();
-            }}
+            onClick={onShowDimensionsToggle}
           >
             <div className={styles.switchHandle}></div>
           </button>
         </div>
 
-        {/* 체크박스 옵션들 - showDimensions가 true일 때만 표시 */}
+        {/* 옵션 칩 그룹 - showDimensions ON일 때만 */}
         {showDimensions && (
-        <div className={styles.checkboxGroup}>
-          {/* 가구 체크박스 - 2D 모드에서만 표시 */}
-          {viewMode === '2D' && (
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showFurniture}
-                onChange={(e) => {
-                  console.log('🔘 Furniture checkbox clicked - current:', showFurniture, '-> new:', !showFurniture);
-                  onShowFurnitureToggle();
-                }}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              {t('furniture.title')}
-            </label>
-          )}
+          <>
+            <div className={styles.divider} />
+            <div className={styles.checkboxGroup}>
+              {/* 가구 - 2D만 */}
+              {viewMode === '2D' && (
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={showFurniture}
+                    onChange={() => onShowFurnitureToggle()}
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.checkmark}></span>
+                  {t('furniture.title')}
+                </label>
+              )}
 
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showAll}
-              onChange={onShowAllToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            {t('viewer.column')}
-          </label>
-
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showDimensionsText}
-              onChange={onShowDimensionsTextToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            {t('viewer.dimensions')}
-          </label>
-
-          {viewMode === '3D' && (
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showFurnitureEditHandles}
-                onChange={(e) => setShowFurnitureEditHandles(e.target.checked)}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              아이콘
-            </label>
-          )}
-
-          {/* 그리드와 축 - 2D 모드에서만 표시 */}
-          {viewMode === '2D' && (
-            <>
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={showGuides}
-                  onChange={onShowGuidesToggle}
+                  checked={showAll}
+                  onChange={onShowAllToggle}
                   className={styles.checkbox}
                 />
                 <span className={styles.checkmark}></span>
-                {t('viewer.grid')}
+                {t('viewer.column')}
               </label>
 
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={showAxis}
-                  onChange={onShowAxisToggle}
+                  checked={showDimensionsText}
+                  onChange={onShowDimensionsTextToggle}
                   className={styles.checkbox}
                 />
                 <span className={styles.checkmark}></span>
-                {t('viewer.axis')}
+                {t('viewer.dimensions')}
               </label>
-            </>
-          )}
-        </div>
+
+              {viewMode === '3D' && (
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={showFurnitureEditHandles}
+                    onChange={(e) => setShowFurnitureEditHandles(e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.checkmark}></span>
+                  아이콘
+                </label>
+              )}
+
+              {/* 그리드/축 - 2D만 */}
+              {viewMode === '2D' && (
+                <>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showGuides}
+                      onChange={onShowGuidesToggle}
+                      className={styles.checkbox}
+                    />
+                    <span className={styles.checkmark}></span>
+                    {t('viewer.grid')}
+                  </label>
+
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showAxis}
+                      onChange={onShowAxisToggle}
+                      className={styles.checkbox}
+                    />
+                    <span className={styles.checkmark}></span>
+                    {t('viewer.axis')}
+                  </label>
+                </>
+              )}
+            </div>
+          </>
         )}
-
-        {/* 두 번째 도어 토글 제거 (불필요) */}
       </div>
 
-      {/* 중앙 뷰 컨트롤들 */}
+      {/* 중앙: 뷰 컨트롤들 */}
       <div className={styles.centerControls}>
-        {/* 보기 옵션 (Solid/Wireframe) */}
+        {/* Solid / Wireframe */}
         <div className={styles.renderModeGroup}>
           {renderModes.map((mode) => (
             <button
@@ -431,7 +416,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           ))}
         </div>
 
-        {/* 3D/2D 토글 */}
+        {/* 3D / 2D */}
         <div className={styles.viewModeGroup}>
           {viewModes.map((mode) => (
             <button
@@ -440,13 +425,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={`${styles.viewModeButton} ${viewMode === mode.id ? styles.active : ''}`}
               onClick={() => {
                 onViewModeChange(mode.id);
-                // 2D 모드로 전환 시
                 if (mode.id === '2D') {
-                  // 와이어프레임을 기본으로 설정
                   if (renderMode !== 'wireframe') {
                     onRenderModeChange('wireframe');
                   }
-                  // 앱 테마에 따라 2D 테마 자동 설정 (2D 모드 진입 시에만)
                   const desiredTheme = theme.mode === 'dark' ? 'dark' : 'light';
                   setView2DTheme(desiredTheme);
                 }
@@ -458,23 +440,22 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           ))}
         </div>
 
-        {/* 도어 설치 버튼 */}
+        {/* 도어 설치 */}
         {onDoorInstallationToggle && (
           <div className={styles.doorButtonGroup}>
             <button
               className={`${styles.doorButton} ${hasDoorsInstalled ? styles.active : ''}`}
               onClick={onDoorInstallationToggle}
             >
-              <BiDoorOpen size={24} />
+              <BiDoorOpen size={14} />
               {t('viewer.doorInstallation')}
             </button>
           </div>
         )}
-        </div>
+      </div>
 
-      {/* 우측 뷰 컨트롤들 */}
+      {/* 우측: 뷰 방향 + 테마 */}
       <div className={styles.rightControls}>
-        {/* 뷰 방향 선택 - 2D/3D 모드 모두 표시 (2D 미리보기에 반영) */}
         <div className={styles.viewDirectionGroup}>
           {viewDirections.map((direction) => (
             <button
@@ -488,59 +469,32 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           ))}
         </div>
 
-        {/* 다크모드/라이트모드 토글 */}
+        {/* 다크/라이트 토글 */}
         <button
           className={styles.themeToggle}
-          onClick={() => {
-            toggleView2DTheme();
-          }}
+          onClick={toggleView2DTheme}
           title={view2DTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
         >
-            {view2DTheme === 'dark' ? (
-              // 달 아이콘 (다크 모드 상태)
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            ) : (
-              // 해 아이콘 (라이트 모드 상태)
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            )}
+          {view2DTheme === 'dark' ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          )}
         </button>
-
-        {/* AR 버튼 - 3D 모드에서만 표시 */}
-        {/* {viewMode === '3D' && (
-          <button
-            className={styles.arButton}
-            onClick={() => setShowQRGenerator(true)}
-            title="AR로 보기"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              {/* 스마트폰 프레임 */}
-              {/* <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth="2"/> */}
-              {/* 스크린 */}
-              {/* <rect x="7" y="4" width="10" height="14" strokeWidth="1" opacity="0.5"/> */}
-              {/* AR 큐브 */}
-              {/* <path d="M9 10 L9 14 L12 16 L15 14 L15 10 L12 8 L9 10Z" strokeWidth="1.5" fill="none"/>
-              <path d="M9 10 L12 8 L15 10" strokeWidth="1.5" fill="none"/>
-              <path d="M12 16 L12 12" strokeWidth="1.5" fill="none"/> */}
-              {/* AR 포인터 */}
-              {/* <circle cx="12" cy="12" r="1" fill="currentColor"/> */}
-            {/* </svg>
-            <span>AR</span>
-          </button>
-        )} */}
       </div>
-      
+
       {/* QR 코드 생성기 모달 */}
       {showQRGenerator && (
         <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />
@@ -549,4 +503,4 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   );
 };
 
-export default ViewerControls; 
+export default ViewerControls;
