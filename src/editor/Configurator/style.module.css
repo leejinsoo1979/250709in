@@ -360,7 +360,7 @@
 .moduleCategoryTab {
   flex: 1 1 0;
   min-width: 0;
-  padding: 7px 12px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
@@ -370,7 +370,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
-  min-height: 32px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -388,14 +388,15 @@
 }
 
 .moduleCategoryTab.active {
-  background: var(--theme-primary);
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 .moduleCategoryTab.active:hover {
-  background: var(--theme-primary-hover, var(--theme-primary));
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
 }
 
 /* ── Upper/Lower Tabs (Segmented Control) ── */
@@ -411,7 +412,7 @@
 .upperLowerTab {
   flex: 1 1 0;
   min-width: 0;
-  padding: 7px 12px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
@@ -421,7 +422,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
-  min-height: 32px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -439,14 +440,15 @@
 }
 
 .upperLowerTab.active {
-  background: var(--theme-primary);
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600;
+  border: 1.5px solid var(--theme-primary) !important;
 }
 
 .upperLowerTab.active:hover {
-  background: var(--theme-primary-hover, var(--theme-primary));
-  color: #fff !important;
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-primary) !important;
 }
 
 .moduleSection {
