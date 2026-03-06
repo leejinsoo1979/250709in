@@ -55,12 +55,24 @@ export class GuillotinePacker {
       const hEff = this.calculateEfficiency(hResult);
       const vResult = this.packStrips(panels, false);
       const vEff = this.calculateEfficiency(vResult);
-      if (hEff >= vEff) {
+
+      // 효율이 같으면 스트립 수가 적은 쪽 선택 (적은 컷 = 더 효율적 재단)
+      // 스트립 수도 같으면 vertical 우선 (L방향 우선이 공장 기본)
+      if (hEff > vEff) {
         bestResult = hResult;
         bestEfficiency = hEff;
-      } else {
+      } else if (vEff > hEff) {
         bestResult = vResult;
         bestEfficiency = vEff;
+      } else {
+        // 효율 동일 → 스트립 수 비교
+        if (hResult.length < vResult.length) {
+          bestResult = hResult;
+          bestEfficiency = hEff;
+        } else {
+          bestResult = vResult;
+          bestEfficiency = vEff;
+        }
       }
     }
 
