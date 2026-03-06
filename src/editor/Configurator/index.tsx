@@ -3313,13 +3313,13 @@ const Configurator: React.FC = () => {
           {/* 프레임 타입 */}
           <div className={styles.toggleButtonGroup}>
             <button
-              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
+              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.toggleButtonActive : ''}`}
               onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
             >
               서라운드
             </button>
             <button
-              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
+              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.toggleButtonActive : ''}`}
               onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
             >
               노서라운드

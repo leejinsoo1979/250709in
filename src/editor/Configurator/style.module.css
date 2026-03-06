@@ -1554,52 +1554,6 @@
   position: absolute;
 }
 
-/* ── Toggle Button Group (Segmented Control) ── */
-.toggleButtonGroup {
-  display: flex;
-  background: var(--theme-background-secondary);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.toggleButton {
-  flex: 1;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-radius: 6px;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
-}
-
-.toggleButton:hover:not(.active):not(.toggleButtonActive) {
-  color: var(--theme-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.toggleButton:active {
-  transform: scale(0.97);
-}
-
-.toggleButton.active,
-.toggleButton.active:hover {
-  background: var(--theme-background-secondary) !important;
-  color: var(--theme-primary) !important;
-  font-weight: 600;
-  border: 1.5px solid var(--theme-primary) !important;
-}
-
 /* 간단한 슬롯 정보 */
 .slotInfoSimple {
   margin-top: 8px;
@@ -1815,7 +1769,7 @@
   opacity: 0.5;
 }
 
-/* ── Toggle Button Group (Segmented Control — duplicate kept for specificity) ── */
+/* ── Toggle Button Group (Segmented Control) ── */
 .toggleButtonGroup {
   display: flex;
   background: var(--theme-background-secondary);
