@@ -154,51 +154,176 @@ export class GuillotinePacker {
   
   /**
    * 지정된 방향의 스트립으로 패널 배치
+   * 스트립 배치 후 남는 잔여 공간에 추가 패널을 채워넣음
    */
   private packWithStrips(panels: Rect[], horizontal: boolean): Strip[] {
     const strips: Strip[] = [];
     const sortedPanels = this.sortPanels(panels, horizontal);
     const remainingPanels = [...sortedPanels];
-    
+
     let currentPos = 0;
-    
+
+    // 각 스트립의 잔여 공간 정보를 추적
+    // { stripIdx, x, y, width, height } - 스트립 내에서 패널 오른쪽/아래 빈 공간
+    const residualSpaces: { x: number; y: number; width: number; height: number }[] = [];
+
     while (remainingPanels.length > 0) {
       // 새 스트립 생성
       const strip = this.createStrip(remainingPanels, currentPos, horizontal);
-      
+
       if (!strip || strip.panels.length === 0) {
         break;
       }
-      
+
       strips.push(strip);
-      
+
       // 배치된 패널 제거
       strip.panels.forEach(placedPanel => {
-        const index = remainingPanels.findIndex(p => 
-          p.id === placedPanel.id && 
-          p.width === placedPanel.width && 
+        const index = remainingPanels.findIndex(p =>
+          p.id === placedPanel.id &&
+          p.width === placedPanel.width &&
           p.height === placedPanel.height
         );
         if (index !== -1) {
           remainingPanels.splice(index, 1);
         }
       });
-      
+
+      // 스트립 내 잔여 공간 계산
+      if (horizontal) {
+        // 가로 스트립: 패널들 오른쪽 끝 이후의 공간
+        let maxX = 0;
+        for (const p of strip.panels) {
+          const endX = p.x! + (p.rotated ? p.height : p.width);
+          if (endX > maxX) maxX = endX;
+        }
+        const residualWidth = this.binWidth - maxX - this.kerf;
+        if (residualWidth >= 100 && strip.height >= 100) { // 최소 100mm 이상 빈 공간만
+          residualSpaces.push({
+            x: maxX + this.kerf,
+            y: strip.y,
+            width: residualWidth,
+            height: strip.height
+          });
+        }
+      } else {
+        // 세로 스트립: 패널들 아래쪽 끝 이후의 공간
+        let maxY = 0;
+        for (const p of strip.panels) {
+          const endY = p.y! + (p.rotated ? p.width : p.height);
+          if (endY > maxY) maxY = endY;
+        }
+        const residualHeight = this.binHeight - maxY - this.kerf;
+        if (residualHeight >= 100 && strip.width >= 100) {
+          residualSpaces.push({
+            x: strip.x,
+            y: maxY + this.kerf,
+            width: strip.width,
+            height: residualHeight
+          });
+        }
+      }
+
       // 다음 스트립 위치 계산
       if (horizontal) {
         currentPos = strip.y + strip.height + this.kerf;
       } else {
         currentPos = strip.x + strip.width + this.kerf;
       }
-      
+
       // 공간 초과 체크
-      if ((horizontal && currentPos >= this.binHeight) || 
+      if ((horizontal && currentPos >= this.binHeight) ||
           (!horizontal && currentPos >= this.binWidth)) {
         break;
       }
     }
-    
+
+    // 잔여 공간에 남은 패널 채워넣기
+    if (remainingPanels.length > 0 && residualSpaces.length > 0) {
+      this.fillResidualSpaces(strips, remainingPanels, residualSpaces);
+    }
+
     return strips;
+  }
+
+  /**
+   * 스트립 배치 후 남은 잔여 공간에 패널 채워넣기
+   * 큰 잔여 공간부터 처리하여 효율 극대화
+   */
+  private fillResidualSpaces(
+    strips: Strip[],
+    remainingPanels: Rect[],
+    residualSpaces: { x: number; y: number; width: number; height: number }[]
+  ): void {
+    // 큰 잔여 공간부터 처리
+    residualSpaces.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+
+    for (const space of residualSpaces) {
+      if (remainingPanels.length === 0) break;
+
+      // 이 잔여 공간에 들어갈 수 있는 패널 찾기
+      // 공간을 위→아래로 채움
+      let fillY = space.y;
+      const toRemove: number[] = [];
+
+      // 패널을 면적 내림차순으로 시도 (큰 것부터)
+      const sortedByArea = remainingPanels
+        .map((p, i) => ({ panel: p, idx: i }))
+        .sort((a, b) => (b.panel.width * b.panel.height) - (a.panel.width * a.panel.height));
+
+      for (const { panel, idx } of sortedByArea) {
+        if (toRemove.includes(idx)) continue;
+
+        const pw = panel.width;
+        const ph = panel.height;
+
+        // 정상 방향으로 들어가는지
+        if (pw <= space.width && fillY + ph <= space.y + space.height) {
+          // 해당 스트립을 찾아서 패널 추가
+          const targetStrip = strips.find(s =>
+            s.y <= space.y && s.y + s.height >= space.y + space.height &&
+            s.x <= space.x
+          ) || strips[strips.length - 1];
+
+          if (targetStrip) {
+            const placedPanel: PlacedRect = {
+              ...panel,
+              x: space.x,
+              y: fillY,
+              rotated: false
+            };
+            targetStrip.panels.push(placedPanel);
+            fillY += ph + this.kerf;
+            toRemove.push(idx);
+          }
+        }
+        // 회전해서 들어가는지
+        else if (panel.canRotate && ph <= space.width && fillY + pw <= space.y + space.height) {
+          const targetStrip = strips.find(s =>
+            s.y <= space.y && s.y + s.height >= space.y + space.height &&
+            s.x <= space.x
+          ) || strips[strips.length - 1];
+
+          if (targetStrip) {
+            const placedPanel: PlacedRect = {
+              ...panel,
+              x: space.x,
+              y: fillY,
+              rotated: true
+            };
+            targetStrip.panels.push(placedPanel);
+            fillY += pw + this.kerf;
+            toRemove.push(idx);
+          }
+        }
+      }
+
+      // 배치된 패널 제거 (역순)
+      toRemove.sort((a, b) => b - a);
+      for (const idx of toRemove) {
+        remainingPanels.splice(idx, 1);
+      }
+    }
   }
   
   /**
