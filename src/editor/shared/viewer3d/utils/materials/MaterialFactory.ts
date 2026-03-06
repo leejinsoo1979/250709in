@@ -340,7 +340,7 @@ export class MaterialFactory {
         fragmentShader,
         uniforms: {
           colorStart: { value: new THREE.Color('#ffffff') },
-          colorEnd: { value: new THREE.Color('#e8e8e8') },  // 더 밝은 회색으로 변경
+          colorEnd: { value: new THREE.Color('#c0c0c0') },  // 진한 회색으로 입체감 강화
           direction: { value: directionValue },
           reverse: { value: isReverse ? 1.0 : 0.0 },
           opacity: { value: 1.0 }
@@ -506,11 +506,10 @@ export class MaterialFactory {
    */
   static createEdgeShadowMaterial(): THREE.MeshBasicMaterial {
     return new THREE.MeshBasicMaterial({
-      color: '#333333',
+      color: '#888888',
       transparent: true,
-      opacity: 0.7,
-      side: THREE.DoubleSide,
-      depthTest: false
+      opacity: 0.3,
+      side: THREE.DoubleSide
     });
   }
 
