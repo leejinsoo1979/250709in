@@ -390,37 +390,30 @@
 .depthInput {
   width: 100%;
   padding: 10px 40px 10px 12px;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid var(--theme-border) !important;
   border-radius: 6px;
   font-size: 14px;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  caret-color: #000000 !important;
+  background-color: var(--theme-background-secondary) !important;
+  color: var(--theme-text) !important;
+  -webkit-text-fill-color: var(--theme-text) !important;
+  caret-color: var(--theme-text) !important;
   transition: all 0.2s ease;
   -webkit-appearance: none;
   -moz-appearance: textfield;
 }
 
-/* 포커스 상태에서도 색상 유지 */
-.depthInput:focus {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
-}
-
 .depthInput:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: var(--theme-primary) !important;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
+  background-color: var(--theme-background-secondary) !important;
+  color: var(--theme-text) !important;
+  -webkit-text-fill-color: var(--theme-text) !important;
 }
 
 .depthInput.inputError {
-  border-color: #ef4444;
-  background-color: #fef2f2 !important;
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.1) !important;
 }
 
 .unit {
@@ -892,27 +885,27 @@
   }
 }
 
-/* 가구 편집 팝업 내부의 모든 input 요소에 대한 스타일 강제 적용 */
+/* 가구 편집 팝업 내부의 모든 input 요소 - 테마 대응 */
 .overlay .panel input[type="text"],
 .overlay .panel input[type="number"],
 .depthInputWrapper input,
 .inputWithUnit input,
 .furniture-depth-input {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: var(--theme-text) !important;
+  -webkit-text-fill-color: var(--theme-text) !important;
   opacity: 1 !important;
-  background-color: #ffffff !important;
-  caret-color: #000000 !important;
+  background-color: var(--theme-background-secondary) !important;
+  caret-color: var(--theme-text) !important;
 }
 
-/* 가구 편집 패널 내의 모든 input 요소 - 최우선 순위 */
+/* 가구 편집 패널 내의 모든 input 요소 */
 .panel input,
 .panel input:focus,
 .panel input:hover,
 .panel input:active {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
+  color: var(--theme-text) !important;
+  -webkit-text-fill-color: var(--theme-text) !important;
+  background-color: var(--theme-background-secondary) !important;
 }
 
 /* number 타입 input에 대한 추가 스타일 */
@@ -929,53 +922,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 /* 입력 필드 placeholder 스타일 */
 .depthInput::placeholder {
-  color: #9ca3af !important;
-  -webkit-text-fill-color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* 가구 깊이 입력 필드 특별 스타일 - 최우선 순위 */
-.furniture-depth-input,
-.furniture-depth-input:focus,
-.furniture-depth-input:hover,
-.furniture-depth-input:active {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
-  opacity: 1 !important;
-  -webkit-appearance: none !important;
-}
-
-/* 가구 편집 패널 내의 모든 텍스트 입력 필드 */
-.panel .depthInput,
-.panel .furniture-depth-input {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
-}
-
-/* 다크모드에서도 input은 항상 흰 배경에 검은 텍스트 */
-:global([data-theme="dark"]) .depthInput,
-:global([data-theme="dark"]) .furniture-depth-input,
-:global([data-theme="dark"]) .panel input,
-:global(.theme-dark) .depthInput,
-:global(.theme-dark) .furniture-depth-input,
-:global(.theme-dark) .panel input,
-:global(body.theme-dark) .depthInput,
-:global(body.theme-dark) .panel input {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-/* 모든 경우에 대해 깊이 입력 필드 강제 스타일 */
-.depthInputWrapper input[type="text"],
-.depthInputWrapper input[type="number"],
-.inputWithUnit input[type="text"],
-.inputWithUnit input[type="number"] {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background-color: #ffffff !important;
+  color: var(--theme-text-muted) !important;
+  -webkit-text-fill-color: var(--theme-text-muted) !important;
   opacity: 1 !important;
 } 
