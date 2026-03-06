@@ -52,21 +52,23 @@ const EmptyDesignThumbnail: React.FC<{
       justifyContent: 'center',
       background: 'linear-gradient(135deg, var(--theme-primary, #10b981), color-mix(in srgb, var(--theme-primary, #10b981) 80%, black))',
       color: 'white',
-      gap: '6px',
+      gap: 'clamp(2px, 0.5vw, 6px)',
       width: '100%',
       height: '100%',
+      padding: '8px',
+      boxSizing: 'border-box',
     }}>
       {hasDimensions ? (
         <>
-          <span style={{ fontSize: '18px', fontWeight: '700', opacity: 0.95, letterSpacing: '0.5px' }}>
-            (W) {Math.round(spaceConfig!.width)} x (H) {Math.round(spaceConfig!.height)}
+          <span style={{ fontSize: 'clamp(10px, 1.2vw, 16px)', fontWeight: '700', opacity: 0.95, letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.2 }}>
+            {Math.round(spaceConfig!.width)} x {Math.round(spaceConfig!.height)}
           </span>
-          <span style={{ fontSize: '13px', fontWeight: '400', opacity: 0.75 }}>
+          <span style={{ fontSize: 'clamp(8px, 0.8vw, 11px)', fontWeight: '400', opacity: 0.75, textAlign: 'center' }}>
             현재 배치된 가구가 없습니다.
           </span>
         </>
       ) : (
-        <span style={{ fontSize: '18px', fontWeight: '600' }}>디자인</span>
+        <span style={{ fontSize: 'clamp(11px, 1.2vw, 16px)', fontWeight: '600' }}>디자인</span>
       )}
     </div>
   );
