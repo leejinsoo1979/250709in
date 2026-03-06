@@ -132,9 +132,9 @@
 .chip:active { transform: scale(0.97); }
 
 .chipActive {
-  color: var(--theme-primary) !important;
+  color: #fff !important;
   border-color: var(--theme-primary) !important;
-  background: color-mix(in srgb, var(--theme-primary) 6%, transparent) !important;
+  background: var(--theme-primary) !important;
   font-weight: 600;
 }
 
