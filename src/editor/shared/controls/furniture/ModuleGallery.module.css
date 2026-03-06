@@ -90,7 +90,7 @@
   position: relative;
   aspect-ratio: 3 / 4; /* 모든 탭에서 동일한 비율로 통일 */
   background-color: var(--theme-surface);
-  border: 1px solid #e5e7eb; /* 테두리 얇게 */
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   cursor: grab;
   transition: all 0.2s ease;
@@ -134,14 +134,14 @@
 
 /* 선택된 상태 */
 .thumbnailItem.selected {
-  border-color: var(--theme-text);
+  border-color: var(--theme-primary);
   border-width: 2px;
-  box-shadow: 0 0 0 1px var(--theme-text);
+  box-shadow: 0 0 0 1px var(--theme-primary);
 }
 
 .thumbnailItem.selected:hover {
   transform: none;
-  box-shadow: 0 0 0 1px var(--theme-text);
+  box-shadow: 0 0 0 1px var(--theme-primary);
 }
 
 /* 비활성화 상태 */
