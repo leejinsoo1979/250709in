@@ -59,7 +59,7 @@ const EmptyDesignThumbnail: React.FC<{
       {hasDimensions ? (
         <>
           <span style={{ fontSize: '18px', fontWeight: '700', opacity: 0.95, letterSpacing: '0.5px' }}>
-            {Math.round(spaceConfig!.width)} × {Math.round(spaceConfig!.height)}mm
+            (W) {Math.round(spaceConfig!.width)} x (H) {Math.round(spaceConfig!.height)}
           </span>
           <span style={{ fontSize: '13px', fontWeight: '400', opacity: 0.75 }}>
             현재 배치된 가구가 없습니다.
