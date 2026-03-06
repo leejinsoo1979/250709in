@@ -70,36 +70,39 @@
 }
 
 
-/* 좌측 패널 토글 버튼 - 항상 같은 위치에 고정 */
+/* 좌측 패널 토글 버튼 */
 .leftPanelToggle {
   position: fixed;
-  left: var(--sidebar-icon-width, 64px); /* CSS 변수 사용 */
+  left: var(--sidebar-icon-width, 64px);
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 40px;
+  width: 20px;
+  height: 48px;
   background: var(--theme-background-secondary);
   color: var(--theme-text-muted);
   border: none;
-  border-radius: 0 8px 8px 0;
-  font-size: 20px;
-  font-weight: 400;
+  border-radius: 0 6px 6px 0;
   cursor: pointer;
   z-index: 12;
-  box-shadow: var(--theme-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.45;
+  backdrop-filter: blur(8px);
+  padding: 0;
 }
 
 .leftPanelToggle.open {
-  left: var(--sidebar-total-width, 304px); /* CSS 변수 사용 */
+  left: var(--sidebar-total-width, 304px);
 }
 
 .leftPanelToggle:hover {
-  background: var(--theme-border);
-  color: var(--theme-info);
+  opacity: 1;
+  width: 24px;
+  background: var(--theme-info);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
 }
 
 /* 우측 패널 컨테이너 */
@@ -117,33 +120,37 @@
 /* 우측 패널 토글 버튼 */
 .rightPanelToggle {
   position: fixed;
-  right: var(--right-panel-width, 320px); /* CSS 변수 사용 */
+  right: var(--right-panel-width, 320px);
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 40px;
+  width: 20px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--theme-background-secondary);
   color: var(--theme-text-muted);
   border: none;
-  border-radius: 8px 0 0 8px;
-  box-shadow: var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.04));
+  border-radius: 6px 0 0 6px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 11;
+  opacity: 0.45;
+  backdrop-filter: blur(8px);
+  padding: 0;
 }
 
 /* 패널이 닫혔을 때 버튼 위치 */
 .rightPanelToggle:not(.open) {
   right: 0;
-  border-radius: 8px 0 0 8px;
 }
 
 .rightPanelToggle:hover {
-  background: var(--theme-border);
-  color: var(--theme-info);
+  opacity: 1;
+  width: 24px;
+  background: var(--theme-info);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
 }
 
 @keyframes fadeIn {

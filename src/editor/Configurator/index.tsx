@@ -3732,7 +3732,9 @@ const Configurator: React.FC = () => {
             onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
             title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
           >
-            <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d={activeSidebarTab ? "M6 1L1 6L6 11" : "M1 1L6 6L1 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
 
           {/* 사이드바 - 읽기 전용 모드에서는 재질 탭만 보임 */}
@@ -3982,7 +3984,9 @@ const Configurator: React.FC = () => {
             onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
             title={isRightPanelOpen ? "우측 패널 접기" : "우측 패널 펼치기"}
           >
-            <span className={styles.foldToggleIcon}>{isRightPanelOpen ? '>' : '<'}</span>
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d={isRightPanelOpen ? "M1 1L6 6L1 11" : "M6 1L1 6L6 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         )}
 
