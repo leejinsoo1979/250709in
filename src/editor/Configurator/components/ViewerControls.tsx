@@ -313,19 +313,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       <div className={styles.spacer} />
 
-      {/* ─── Right: View direction (2D only) ─── */}
-      {viewMode === '2D' && (
-        <div className={styles.segmentedControl}>
-          {viewDirections.map((direction) => (
-            <button
-              key={direction.id}
-              data-view-direction={direction.id}
-              className={`${styles.segmentButton} ${view2DDirection === direction.id ? styles.segmentActive : ''}`}
-              onClick={() => handleViewDirectionChange(direction.id)}
-            >{direction.label}</button>
-          ))}
-        </div>
-      )}
+      {/* ─── Right: View direction ─── */}
+      <div className={styles.segmentedControl}>
+        {viewDirections.map((direction) => (
+          <button
+            key={direction.id}
+            data-view-direction={direction.id}
+            className={`${styles.segmentButton} ${view2DDirection === direction.id ? styles.segmentActive : ''}`}
+            onClick={() => handleViewDirectionChange(direction.id)}
+          >{direction.label}</button>
+        ))}
+      </div>
 
       {showQRGenerator && (
         <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />
