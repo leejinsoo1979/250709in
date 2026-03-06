@@ -580,6 +580,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
   const [columnPlacementMode, setColumnPlacementMode] = useState<'beside' | 'front'>('beside'); // 기둥 C 배치 모드
 
+  // 자유배치 모드 치수 상태
+  const [freeWidthInput, setFreeWidthInput] = useState<string>('');
+  const [freeHeightInput, setFreeHeightInput] = useState<string>('');
+  const [freeDepthInput, setFreeDepthInput] = useState<string>('');
+
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
@@ -828,6 +833,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const placementModeVal = currentPlacedModule.columnPlacementMode || 'beside';
       setColumnPlacementMode(placementModeVal);
       setOriginalColumnPlacementMode(placementModeVal);
+
+      // 자유배치 모드 치수 초기화
+      if (currentPlacedModule.isFreePlacement) {
+        setFreeWidthInput((currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
+        setFreeHeightInput((currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
+        setFreeDepthInput((currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
+      }
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
       // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
@@ -1756,6 +1768,90 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 {widthError && <div className={styles.errorMessage}>{widthError}</div>}
                 <div className={styles.depthRange}>
                   {t('furniture.range')}: 150mm ~ {moduleData.dimensions.width}mm
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 자유배치 모드 치수 편집 */}
+          {currentPlacedModule?.isFreePlacement && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>{t('furniture.furnitureWidth')} / {t('furniture.furnitureHeight')} / {t('furniture.furnitureDepth')}</h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* 가로 */}
+                <div className={styles.depthInputWrapper}>
+                  <label style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>{t('furniture.furnitureWidth')}</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={freeWidthInput}
+                      onChange={(e) => setFreeWidthInput(e.target.value)}
+                      onBlur={() => {
+                        const val = parseInt(freeWidthInput, 10);
+                        if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { freeWidth: val });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      }}
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="100-2400"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+                {/* 세로 */}
+                <div className={styles.depthInputWrapper}>
+                  <label style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>{t('furniture.furnitureHeight')}</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={freeHeightInput}
+                      onChange={(e) => setFreeHeightInput(e.target.value)}
+                      onBlur={() => {
+                        const val = parseInt(freeHeightInput, 10);
+                        if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      }}
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="100-3000"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+                {/* 깊이 */}
+                <div className={styles.depthInputWrapper}>
+                  <label style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>{t('furniture.furnitureDepth')}</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={freeDepthInput}
+                      onChange={(e) => setFreeDepthInput(e.target.value)}
+                      onBlur={() => {
+                        const val = parseInt(freeDepthInput, 10);
+                        if (!isNaN(val) && val >= 100 && val <= 800 && currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { freeDepth: val });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      }}
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="100-800"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
                 </div>
               </div>
             </div>

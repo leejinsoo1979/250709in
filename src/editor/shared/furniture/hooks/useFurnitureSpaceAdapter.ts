@@ -6,6 +6,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { getModuleById } from '@/data/modules';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { clampToSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface UseFurnitureSpaceAdapterProps {
   setPlacedModules: React.Dispatch<React.SetStateAction<PlacedModule[]>>;
@@ -32,6 +33,19 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {
+        // 자유배치 모듈은 공간 경계 내로 클램핑
+        if (module.isFreePlacement) {
+          const moduleWidth = module.freeWidth || module.moduleWidth || 450;
+          const centerXmm = module.position.x * 100;
+          const clampedX = clampToSpaceBoundsX(centerXmm, moduleWidth, newSpaceInfo);
+          updatedModules.push({
+            ...module,
+            position: { ...module.position, x: clampedX * 0.01 },
+            isValidInCurrentSpace: true
+          });
+          return;
+        }
+
         // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
           const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(newSpaceInfo, newSpaceInfo.customColumnCount);
