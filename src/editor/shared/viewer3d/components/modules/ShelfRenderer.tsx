@@ -204,8 +204,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               furnitureId={furnitureId}
         />
         
-        {/* 상판 두께 치수 표시 */}
-        {showDimensions && showDimensionsText && (
+        {/* 상판 두께 치수 표시 - 3D에서는 숨김 */}
+        {showDimensions && showDimensionsText && viewMode !== '3D' && (
           <group>
             {/* 상판 두께 텍스트 */}
             <Text
