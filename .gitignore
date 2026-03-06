@@ -55,5 +55,3 @@ out/
 
 # Local Netlify folder
 .netlify
-pyright-langserver
-typescript-language-server
