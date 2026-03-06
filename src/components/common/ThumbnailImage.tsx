@@ -34,6 +34,44 @@ interface ThumbnailImageProps {
   alt?: string;
 }
 
+/**
+ * 빈 디자인용 CSS 기반 썸네일 (테마 색상 실시간 반영)
+ * Canvas 이미지와 달리 var(--theme-primary)가 테마 변경 시 즉시 반영됨
+ */
+const EmptyDesignThumbnail: React.FC<{
+  className: string;
+  spaceConfig?: { width: number; height: number; depth: number };
+}> = ({ className, spaceConfig }) => {
+  const hasDimensions = spaceConfig?.width && spaceConfig?.depth && spaceConfig?.height;
+
+  return (
+    <div className={`${className} thumbnail-empty-design`} style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, var(--theme-primary, #10b981), color-mix(in srgb, var(--theme-primary, #10b981) 80%, black))',
+      color: 'white',
+      gap: '4px',
+      width: '100%',
+      height: '100%',
+    }}>
+      {hasDimensions ? (
+        <>
+          <span style={{ fontSize: '12px', fontWeight: '700', opacity: 0.95 }}>
+            {Math.round(spaceConfig!.width)} × {Math.round(spaceConfig!.depth)} × {Math.round(spaceConfig!.height)}mm
+          </span>
+          <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.75 }}>
+            현재 배치된 가구가 없습니다.
+          </span>
+        </>
+      ) : (
+        <span style={{ fontSize: '12px', fontWeight: '600' }}>디자인</span>
+      )}
+    </div>
+  );
+};
+
 const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   project,
   designFile,
@@ -43,6 +81,24 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // 가구가 있는지 판별
+  const furnitureCount = designFile?.furniture?.placedModules?.length
+    ?? project.placedModules?.length
+    ?? 0;
+  const isEmpty = furnitureCount === 0;
+
+  // 빈 디자인이면 Canvas 생성 없이 바로 CSS div 렌더링
+  if (isEmpty) {
+    const spaceConfig = designFile?.spaceConfig || (
+      (project.spaceInfo || project.spaceSize) ? {
+        width: (project.spaceInfo as any)?.width || (project.spaceSize as any)?.width || 0,
+        height: (project.spaceInfo as any)?.height || (project.spaceSize as any)?.height || 0,
+        depth: (project.spaceInfo as any)?.depth || (project.spaceSize as any)?.depth || 0,
+      } : undefined
+    );
+    return <EmptyDesignThumbnail className={className} spaceConfig={spaceConfig} />;
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -54,20 +110,8 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
 
         // 디자인 파일 전용 썸네일 생성
         if (designFile && designFile.spaceConfig && designFile.furniture) {
-          console.log('🎨 디자인 파일 썸네일 생성 시작:', {
-            hasSpaceConfig: !!designFile.spaceConfig,
-            hasFurniture: !!designFile.furniture,
-            furnitureCount: designFile.furniture?.placedModules?.length || 0,
-            hasThumbnail: !!designFile.thumbnail,
-            spaceConfigData: designFile.spaceConfig,
-            furnitureData: designFile.furniture
-          });
-
-          // 디자인 파일이 있으면 저장된 썸네일 우선 사용
-          // 단, 가구가 0개인 빈 디자인은 저장된 썸네일을 무시하고 항상 새로 생성 (통일된 스타일 적용)
-          const hasFurniture = designFile.furniture?.placedModules?.length > 0;
-          if (designFile.thumbnail && hasFurniture) {
-            console.log('💾 저장된 디자인 썸네일 사용 (가구 있음)');
+          // 가구가 있으면 저장된 썸네일 우선 사용
+          if (designFile.thumbnail) {
             setThumbnailUrl(designFile.thumbnail);
             setLoading(false);
             return;
@@ -85,20 +129,10 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
             placedModules: designFile.furniture.placedModules || []
           };
 
-          console.log('🔧 디자인 전용 ProjectSummary 생성:', designProjectData);
-
           const generatedThumbnail = await generateProjectThumbnail(designProjectData);
 
-          console.log('📸 디자인 썸네일 생성 완료:', {
-            success: !!generatedThumbnail,
-            thumbnailLength: generatedThumbnail?.length || 0,
-            isDataUrl: generatedThumbnail?.startsWith('data:') || false
-          });
-
           if (mounted) {
-            // 썸네일 생성에 실패했으면 fallback 사용
             if (!generatedThumbnail || generatedThumbnail.length === 0) {
-              console.warn('⚠️ 썸네일 생성 실패, fallback 사용');
               setError(true);
             } else {
               setThumbnailUrl(generatedThumbnail);
@@ -109,11 +143,6 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
         }
 
         // 기존 project.thumbnail이 있으면 우선 사용
-        // 하지만 프로젝트가 최근에 업데이트되었거나 가구가 변경된 경우 새로 생성
-        const isRecentlyUpdated = project.updatedAt &&
-          new Date(project.updatedAt.seconds * 1000).getTime() > Date.now() - 300000; // 5분 이내
-
-        const hasPlacedModules = project.placedModules && project.placedModules.length > 0;
         const shouldRegenerateThumbnail = true; // [DEBUG] 신규 디자인 반영을 위해 강제로 다시 생성
 
         if (project.thumbnail && !shouldRegenerateThumbnail) {
@@ -167,33 +196,7 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   }
 
   if (error || !thumbnailUrl) {
-    const spaceConfig = designFile?.spaceConfig;
-    const hasDimensions = spaceConfig?.width && spaceConfig?.depth && spaceConfig?.height;
-
-    return (
-      <div className={`${className} thumbnail-fallback`} style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, var(--theme-primary, #10b981), color-mix(in srgb, var(--theme-primary, #10b981) 80%, black))',
-        color: 'white',
-        gap: '4px'
-      }}>
-        {hasDimensions ? (
-          <>
-            <span style={{ fontSize: '12px', fontWeight: '700', opacity: 0.95 }}>
-              {Math.round(spaceConfig.width)} × {Math.round(spaceConfig.depth)} × {Math.round(spaceConfig.height)}mm
-            </span>
-            <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.75 }}>
-              현재 배치된 가구가 없습니다.
-            </span>
-          </>
-        ) : (
-          <span style={{ fontSize: '12px', fontWeight: '600' }}>디자인</span>
-        )}
-      </div>
-    );
+    return <EmptyDesignThumbnail className={className} spaceConfig={designFile?.spaceConfig} />;
   }
 
   return (
