@@ -122,10 +122,12 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
       const mat = new LineMaterial({
         color: 0x000000,
         linewidth: 3.5,
+        depthTest: false,
         resolution: new THREE.Vector2(size.width, size.height),
       });
       const l = new Line2(geo, mat);
       l.computeLineDistances();
+      l.renderOrder = 999;
       return l;
     }, [w, h, size.width, size.height]);
 
