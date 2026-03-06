@@ -1,66 +1,71 @@
 /* ================================
-   ViewerControls — Modern SaaS Toolbar v2
-   Single-row flow layout with divider rhythm
+   ViewerControls — Premium SaaS Toolbar
+   Inspired by Linear, Figma, Notion
    ================================ */
 
 /* ── Base Container ── */
 .viewerControls {
   background: var(--theme-surface);
-  border-bottom: 1px solid var(--theme-border);
-  padding: 0 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 60%, transparent);
+  padding: 0 16px;
   display: flex;
   align-items: center;
-  height: 42px;
-  min-height: 42px;
+  height: 40px;
+  min-height: 40px;
   position: relative;
   z-index: 10;
   flex-shrink: 0;
-  gap: 10px;
+  gap: 6px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
-.viewerControls::-webkit-scrollbar {
-  display: none;
-}
+.viewerControls::-webkit-scrollbar { display: none; }
+.viewerControls { -ms-overflow-style: none; scrollbar-width: none; }
 
-.viewerControls {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* ── Spacer (flex grow to push groups apart) ── */
+/* ── Spacer ── */
 .spacer {
   flex: 1 1 0;
-  min-width: 8px;
+  min-width: 4px;
 }
 
 /* ── Vertical Divider ── */
 .divider {
   width: 1px;
-  height: 16px;
+  height: 14px;
   background: var(--theme-border);
   flex-shrink: 0;
-  opacity: 0.6;
+  opacity: 0.4;
+  margin: 0 2px;
 }
 
-/* ── Toggle Switch ── */
+/* ── Toggle Switch (ON label) ── */
 .toggleGroup {
   display: flex;
   align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
+.toggleLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
 .switch {
-  width: 30px;
-  height: 17px;
-  border-radius: 9px;
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   position: relative;
-  transition: background 0.2s ease;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   padding: 0;
   flex-shrink: 0;
@@ -71,41 +76,31 @@
 }
 
 .switch.off {
-  background: var(--theme-border-hover) !important;
+  background: color-mix(in srgb, var(--theme-text-muted) 25%, transparent) !important;
 }
 
-.switch:hover {
-  opacity: 0.85;
-}
-
-.switch:active {
-  transform: scale(0.95);
-}
+.switch:hover { opacity: 0.9; }
+.switch:active { transform: scale(0.96); }
 
 .switchHandle {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   background: #fff;
   border-radius: 50%;
   position: absolute;
   top: 2px;
   transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
-.switch.on .switchHandle {
-  left: 15px;
-}
+.switch.on .switchHandle { left: 14px; }
+.switch.off .switchHandle { left: 2px; }
 
-.switch.off .switchHandle {
-  left: 2px;
-}
-
-/* ── Chip Group (option toggles) ── */
+/* ── Chip Group (option pills) ── */
 .chipGroup {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -114,45 +109,43 @@
   align-items: center;
   justify-content: center;
   height: 26px;
-  padding: 0 9px;
+  padding: 0 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   color: var(--theme-text-muted);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   line-height: 1;
   letter-spacing: -0.01em;
+  position: relative;
 }
 
 .chip:hover {
   color: var(--theme-text-secondary);
-  background: var(--theme-background-secondary);
+  background: color-mix(in srgb, var(--theme-text-muted) 8%, transparent);
 }
 
-.chip:active {
-  transform: scale(0.97);
-}
+.chip:active { transform: scale(0.97); }
 
 .chipActive {
-  color: var(--theme-text) !important;
-  background: var(--theme-background-secondary) !important;
-  box-shadow: inset 0 0 0 1px var(--theme-border);
+  color: var(--theme-primary) !important;
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent) !important;
+  font-weight: 600;
 }
 
 /* ── Segmented Control ── */
 .segmentedControl {
   display: flex;
   align-items: center;
-  background: var(--theme-background-secondary);
-  border-radius: 7px;
-  padding: 3px;
+  background: color-mix(in srgb, var(--theme-text-muted) 6%, transparent);
+  border-radius: 8px;
+  padding: 2px;
   flex-shrink: 0;
-  gap: 2px;
+  gap: 1px;
 }
 
 .segmentButton {
@@ -160,16 +153,15 @@
   align-items: center;
   justify-content: center;
   height: 26px;
-  padding: 0 11px;
+  padding: 0 12px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   color: var(--theme-text-muted);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   line-height: 1;
   letter-spacing: -0.01em;
@@ -179,20 +171,17 @@
   color: var(--theme-text-secondary);
 }
 
-.segmentButton:active {
-  transform: scale(0.97);
-}
+.segmentButton:active { transform: scale(0.97); }
 
-/* Neutral active (elevated tab) */
+/* Neutral active */
 .segmentActive {
   background: var(--theme-surface) !important;
   color: var(--theme-text) !important;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
-/* Accent active (primary fill — 3D/2D, Door) */
+/* Accent active (3D/2D, Door) */
 .segmentAccent {
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -201,24 +190,22 @@
 .segmentAccentActive {
   background: var(--theme-primary) !important;
   color: #fff !important;
-  box-shadow: 0 1px 4px var(--theme-primary-shadow);
+  box-shadow: 0 1px 3px var(--theme-primary-shadow), 0 0 0 0.5px var(--theme-primary);
 }
 
-/* Icon + text variant (door button) */
+/* Icon + text variant */
 .segmentIconText {
   gap: 4px;
   padding: 0 10px;
 }
 
-.segmentIconText svg {
-  flex-shrink: 0;
-}
+.segmentIconText svg { flex-shrink: 0; }
 
-/* ── Icon Button (theme toggle etc.) ── */
+/* ── Icon Button ── */
 .iconButton {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
@@ -232,24 +219,13 @@
 }
 
 .iconButton:hover {
-  background: var(--theme-background-secondary);
+  background: color-mix(in srgb, var(--theme-text-muted) 10%, transparent);
   color: var(--theme-text);
 }
 
-.iconButton:active {
-  transform: scale(0.92);
-}
+.iconButton:active { transform: scale(0.92); }
 
-.iconButton svg {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.iconButton:hover svg {
-  transform: rotate(20deg);
-}
-
-/* ── Legacy compat (unused but kept for CSS module hash stability) ── */
-.toggleLabel { display: none; }
+/* ── Legacy compat ── */
 .toggleIcon { display: none; }
 .checkboxGroup { display: none; }
 .checkboxLabel { display: none; }
@@ -276,82 +252,31 @@
 
 @media (min-width: 1920px) {
   .viewerControls {
-    padding: 0 28px;
-    height: 46px;
-    min-height: 46px;
-    gap: 12px;
+    padding: 0 20px;
+    height: 44px;
+    min-height: 44px;
+    gap: 8px;
   }
 }
 
 @media (max-width: 1399px) and (min-width: 1200px) {
-  .viewerControls {
-    padding: 0 16px;
-    gap: 8px;
-  }
-
-  .chip {
-    padding: 0 7px;
-    font-size: 11px;
-  }
-
-  .segmentButton {
-    padding: 0 9px;
-    font-size: 11px;
-  }
+  .viewerControls { padding: 0 14px; gap: 5px; }
+  .chip { padding: 0 8px; font-size: 11px; }
+  .segmentButton { padding: 0 10px; font-size: 11px; }
 }
 
 @media (max-width: 1199px) and (min-width: 1024px) {
-  .viewerControls {
-    padding: 0 12px;
-    height: 40px;
-    gap: 6px;
-  }
-
-  .chip {
-    padding: 0 6px;
-    font-size: 10.5px;
-    height: 24px;
-  }
-
-  .segmentButton {
-    padding: 0 8px;
-    font-size: 10.5px;
-    height: 24px;
-  }
-
-  .segmentedControl {
-    padding: 2px;
-  }
-
-  .iconButton {
-    width: 28px;
-    height: 28px;
-  }
+  .viewerControls { padding: 0 10px; height: 38px; gap: 4px; }
+  .chip { padding: 0 7px; font-size: 10.5px; height: 24px; }
+  .segmentButton { padding: 0 8px; font-size: 10.5px; height: 24px; }
+  .segmentedControl { padding: 2px; }
 }
 
 @media (max-width: 1023px) and (min-width: 768px) {
-  .viewerControls {
-    padding: 0 10px;
-    height: 38px;
-    gap: 5px;
-  }
-
-  .chip {
-    padding: 0 5px;
-    font-size: 10px;
-    height: 22px;
-  }
-
-  .segmentButton {
-    padding: 0 7px;
-    font-size: 10px;
-    height: 22px;
-  }
-
-  .segmentedControl {
-    padding: 2px;
-    border-radius: 6px;
-  }
+  .viewerControls { padding: 0 8px; height: 36px; gap: 3px; }
+  .chip { padding: 0 6px; font-size: 10px; height: 22px; }
+  .segmentButton { padding: 0 6px; font-size: 10px; height: 22px; }
+  .segmentedControl { padding: 2px; border-radius: 6px; }
 }
 
 @media (max-width: 480px) {
@@ -363,23 +288,12 @@
     gap: 6px;
     justify-content: center;
   }
-
-  .spacer {
-    display: none;
-  }
+  .spacer { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
-  .viewerControls {
-    height: 34px;
-    min-height: 34px;
-    padding: 0 8px;
-  }
-
-  .chip, .segmentButton {
-    height: 22px;
-    font-size: 10px;
-  }
+  .viewerControls { height: 34px; min-height: 34px; padding: 0 8px; }
+  .chip, .segmentButton { height: 22px; font-size: 10px; }
 }
 
 /* ================================
@@ -388,7 +302,7 @@
 
 .mobileViewerControls {
   background: var(--theme-surface);
-  border-bottom: 1px solid var(--theme-border);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 60%, transparent);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -407,7 +321,7 @@
 
 .mobileButtonGroup {
   display: flex;
-  background: var(--theme-background-secondary);
+  background: color-mix(in srgb, var(--theme-text-muted) 6%, transparent);
   border-radius: 8px;
   padding: 2px;
   border: none;
@@ -423,7 +337,7 @@
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -437,9 +351,7 @@
   box-shadow: 0 1px 3px var(--theme-primary-shadow);
 }
 
-.mobileButton:active {
-  transform: scale(0.97);
-}
+.mobileButton:active { transform: scale(0.97); }
 
 .mobileIconButton {
   display: flex;
@@ -456,7 +368,7 @@
 }
 
 .mobileIconButton:hover {
-  background: var(--theme-background-secondary);
+  background: color-mix(in srgb, var(--theme-text-muted) 8%, transparent);
 }
 
 .mobileIconButton.active {
@@ -464,16 +376,14 @@
   color: white;
 }
 
-.mobileIconButton:active {
-  transform: scale(0.95);
-}
+.mobileIconButton:active { transform: scale(0.95); }
 
 .mobileViewDirections {
   display: flex;
   justify-content: center;
   gap: 2px;
   padding: 4px 12px 8px;
-  background: var(--theme-background-secondary);
+  background: color-mix(in srgb, var(--theme-text-muted) 4%, transparent);
 }
 
 .mobileDirectionButton {
@@ -484,7 +394,7 @@
   border-radius: 6px;
   background: transparent;
   color: var(--theme-text-muted);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -497,9 +407,7 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.mobileDirectionButton:active {
-  transform: scale(0.95);
-}
+.mobileDirectionButton:active { transform: scale(0.95); }
 
 .mobileOptionsPanel {
   position: absolute;
@@ -508,9 +416,9 @@
   right: 0;
   background: var(--theme-surface);
   border-bottom: 1px solid var(--theme-border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   z-index: 100;
-  animation: slideDown 0.15s ease;
+  animation: slideDown 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideDown {
@@ -534,7 +442,7 @@
   padding: 10px 6px;
   border: none;
   border-radius: 8px;
-  background: var(--theme-background-secondary);
+  background: color-mix(in srgb, var(--theme-text-muted) 6%, transparent);
   color: var(--theme-text-muted);
   font-size: 10px;
   cursor: pointer;
@@ -542,14 +450,9 @@
 }
 
 .mobileOptionItem.active {
-  background: var(--theme-primary-light);
+  background: color-mix(in srgb, var(--theme-primary) 12%, transparent);
   color: var(--theme-primary);
 }
 
-.mobileOptionItem:active {
-  transform: scale(0.95);
-}
-
-.mobileOptionItem span {
-  white-space: nowrap;
-}
+.mobileOptionItem:active { transform: scale(0.95); }
+.mobileOptionItem span { white-space: nowrap; }

@@ -212,12 +212,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   }
 
   // ── Desktop UI ──
-  // Single-row flow layout with divider rhythm
   return (
     <div className={styles.viewerControls}>
 
-      {/* ─── Group 1: Dimensions toggle ─── */}
+      {/* ─── Left: Display toggle + options ─── */}
       <div className={styles.toggleGroup}>
+        <span className={styles.toggleLabel}>ON</span>
         <button
           className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
           onClick={onShowDimensionsToggle}
@@ -227,7 +227,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         </button>
       </div>
 
-      {/* ─── Group 2: Option chips (when ON) ─── */}
       {showDimensions && (
         <>
           <Divider />
@@ -268,10 +267,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         </>
       )}
 
-      {/* ─── Spacer ─── */}
       <div className={styles.spacer} />
 
-      {/* ─── Group 3: Render mode ─── */}
+      {/* ─── Center: Render + View mode ─── */}
       <div className={styles.segmentedControl}>
         {renderModes.map((mode) => (
           <button
@@ -282,7 +280,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         ))}
       </div>
 
-      {/* ─── Group 4: View mode ─── */}
       <div className={styles.segmentedControl}>
         {viewModes.map((mode) => (
           <button
@@ -300,7 +297,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         ))}
       </div>
 
-      {/* ─── Group 5: Door install ─── */}
       {onDoorInstallationToggle && (
         <div className={styles.segmentedControl}>
           <button
@@ -313,10 +309,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         </div>
       )}
 
-      {/* ─── Spacer ─── */}
       <div className={styles.spacer} />
 
-      {/* ─── Group 6: View direction ─── */}
+      {/* ─── Right: View direction ─── */}
       <div className={styles.segmentedControl}>
         {viewDirections.map((direction) => (
           <button
