@@ -506,10 +506,11 @@ export class MaterialFactory {
    */
   static createEdgeShadowMaterial(): THREE.MeshBasicMaterial {
     return new THREE.MeshBasicMaterial({
-      color: '#888888', // 어두운 회색
+      color: '#333333',
       transparent: true,
-      opacity: 0.3,
-      side: THREE.DoubleSide
+      opacity: 0.7,
+      side: THREE.DoubleSide,
+      depthTest: false
     });
   }
 
