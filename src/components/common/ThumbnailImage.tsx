@@ -64,8 +64,10 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
           });
 
           // 디자인 파일이 있으면 저장된 썸네일 우선 사용
-          if (designFile.thumbnail) {
-            console.log('💾 저장된 디자인 썸네일 사용');
+          // 단, 가구가 0개인 빈 디자인은 저장된 썸네일을 무시하고 항상 새로 생성 (통일된 스타일 적용)
+          const hasFurniture = designFile.furniture?.placedModules?.length > 0;
+          if (designFile.thumbnail && hasFurniture) {
+            console.log('💾 저장된 디자인 썸네일 사용 (가구 있음)');
             setThumbnailUrl(designFile.thumbnail);
             setLoading(false);
             return;
