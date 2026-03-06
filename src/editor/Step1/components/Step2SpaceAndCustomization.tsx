@@ -550,9 +550,6 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                           ))}
                         </div>
                       </div>
-                      <span className={styles.rangeValue}>
-                        {validValue}
-                      </span>
                     </>
                   );
                 })()}
