@@ -1,7 +1,12 @@
-import React, { useRef, useEffect } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
+import React, { useRef, useMemo } from 'react';
+import { useThree, useFrame, extend } from '@react-three/fiber';
 import * as THREE from 'three';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { useUIStore } from '@/store/uiStore';
+
+extend({ Line2, LineMaterial, LineGeometry });
 
 interface OrthographicWallsProps {
   width: number;
@@ -101,9 +106,36 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
     return texture;
   };
   
-  // 윤곽선 색상 및 투명도
-  const edgeColor = '#000000';
-  const edgeOpacity = 1.0;
+  // 굵은 윤곽선을 위한 Line2 헬퍼
+  const FatRect = ({ w, h, position, rotation }: { w: number; h: number; position: [number, number, number]; rotation?: [number, number, number] }) => {
+    const { size } = useThree();
+    const line = useMemo(() => {
+      const geo = new LineGeometry();
+      const hw = w / 2, hh = h / 2;
+      geo.setPositions([
+        -hw, -hh, 0,  hw, -hh, 0,
+         hw, -hh, 0,  hw,  hh, 0,
+         hw,  hh, 0, -hw,  hh, 0,
+        -hw,  hh, 0, -hw, -hh, 0,
+      ]);
+      const mat = new LineMaterial({
+        color: 0x222222,
+        linewidth: 2,
+        resolution: new THREE.Vector2(size.width, size.height),
+      });
+      const l = new Line2(geo, mat);
+      l.computeLineDistances();
+      return l;
+    }, [w, h, size.width, size.height]);
+
+    return (
+      <primitive
+        object={line}
+        position={position}
+        rotation={rotation || [0, 0, 0]}
+      />
+    );
+  };
 
   return (
     <group>
@@ -119,10 +151,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
           depthWrite={false}
         />
       </mesh>
-      <lineSegments position={[-width/2, height/2, 0]}>
-        <edgesGeometry args={[new THREE.PlaneGeometry(depth, height)]} />
-        <lineBasicMaterial color={edgeColor} transparent opacity={edgeOpacity} />
-      </lineSegments>
+      <FatRect w={depth} h={height} position={[-width/2, height/2, 0]} />
 
       {/* 오른쪽 벽 */}
       <mesh position={[width/2, height/2, 0]} rotation={[0, Math.PI, 0]}>
@@ -136,10 +165,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
           depthWrite={false}
         />
       </mesh>
-      <lineSegments position={[width/2, height/2, 0]} rotation={[0, Math.PI, 0]}>
-        <edgesGeometry args={[new THREE.PlaneGeometry(depth, height)]} />
-        <lineBasicMaterial color={edgeColor} transparent opacity={edgeOpacity} />
-      </lineSegments>
+      <FatRect w={depth} h={height} position={[width/2, height/2, 0]} rotation={[0, Math.PI, 0]} />
 
       {/* 앞 벽 */}
       <mesh position={[0, height/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
@@ -153,10 +179,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
           depthWrite={false}
         />
       </mesh>
-      <lineSegments position={[0, height/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
-        <edgesGeometry args={[new THREE.PlaneGeometry(width, height)]} />
-        <lineBasicMaterial color={edgeColor} transparent opacity={edgeOpacity} />
-      </lineSegments>
+      <FatRect w={width} h={height} position={[0, height/2, depth/2]} rotation={[0, Math.PI/2, 0]} />
 
       {/* 뒤 벽 */}
       <mesh position={[0, height/2, -depth/2]} rotation={[0, -Math.PI/2, 0]}>
@@ -170,10 +193,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
           depthWrite={false}
         />
       </mesh>
-      <lineSegments position={[0, height/2, -depth/2]} rotation={[0, -Math.PI/2, 0]}>
-        <edgesGeometry args={[new THREE.PlaneGeometry(width, height)]} />
-        <lineBasicMaterial color={edgeColor} transparent opacity={edgeOpacity} />
-      </lineSegments>
+      <FatRect w={width} h={height} position={[0, height/2, -depth/2]} rotation={[0, -Math.PI/2, 0]} />
 
       {/* 천장 */}
       <mesh position={[0, height, 0]} rotation={[-Math.PI/2, 0, 0]}>
@@ -187,10 +207,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
           depthWrite={false}
         />
       </mesh>
-      <lineSegments position={[0, height, 0]} rotation={[-Math.PI/2, 0, 0]}>
-        <edgesGeometry args={[new THREE.PlaneGeometry(width, depth)]} />
-        <lineBasicMaterial color={edgeColor} transparent opacity={edgeOpacity} />
-      </lineSegments>
+      <FatRect w={width} h={depth} position={[0, height, 0]} rotation={[-Math.PI/2, 0, 0]} />
 
       {/* 바닥 */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]}>
@@ -204,10 +221,7 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
           depthWrite={false}
         />
       </mesh>
-      <lineSegments position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]}>
-        <edgesGeometry args={[new THREE.PlaneGeometry(width, depth)]} />
-        <lineBasicMaterial color={edgeColor} transparent opacity={edgeOpacity} />
-      </lineSegments>
+      <FatRect w={width} h={depth} position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]} />
     </group>
   );
 };
