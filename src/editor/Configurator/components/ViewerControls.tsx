@@ -275,38 +275,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
               >{showFurnitureEditHandles && <Check size={13} strokeWidth={2.5} />}아이콘</button>
             )}
-            {viewMode === '3D' && (
-              <div className={styles.graphicsMenuWrapper} ref={graphicsMenuRef}>
-                <button
-                  className={`${styles.chip} ${showGraphicsMenu ? styles.chipActive : ''}`}
-                  onClick={() => setShowGraphicsMenu(!showGraphicsMenu)}
-                >
-                  <Settings2 size={13} />그래픽
-                </button>
-                {showGraphicsMenu && (
-                  <div className={styles.graphicsDropdown}>
-                    <button
-                      className={`${styles.graphicsItem} ${shadowEnabled ? styles.graphicsItemActive : ''}`}
-                      onClick={() => setShadowEnabled(!shadowEnabled)}
-                    >
-                      <span className={styles.graphicsItemLabel}>그림자</span>
-                      <span className={`${styles.graphicsToggle} ${shadowEnabled ? styles.graphicsToggleOn : ''}`}>
-                        <span className={styles.graphicsToggleHandle} />
-                      </span>
-                    </button>
-                    <button
-                      className={`${styles.graphicsItem} ${edgeOutlineEnabled ? styles.graphicsItemActive : ''}`}
-                      onClick={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)}
-                    >
-                      <span className={styles.graphicsItemLabel}>윤곽선</span>
-                      <span className={`${styles.graphicsToggle} ${edgeOutlineEnabled ? styles.graphicsToggleOn : ''}`}>
-                        <span className={styles.graphicsToggleHandle} />
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
             {viewMode === '2D' && (
               <>
                 <button
@@ -368,6 +336,41 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
       </div>
+
+      {/* ─── Graphics Settings (3D only) ─── */}
+      {viewMode === '3D' && (
+        <div className={styles.graphicsMenuWrapper} ref={graphicsMenuRef}>
+          <button
+            className={`${styles.iconButton} ${showGraphicsMenu ? styles.iconButtonActive : ''}`}
+            onClick={() => setShowGraphicsMenu(!showGraphicsMenu)}
+            title="그래픽 설정"
+          >
+            <Settings2 size={15} />
+          </button>
+          {showGraphicsMenu && (
+            <div className={styles.graphicsDropdown}>
+              <button
+                className={`${styles.graphicsItem} ${shadowEnabled ? styles.graphicsItemActive : ''}`}
+                onClick={() => setShadowEnabled(!shadowEnabled)}
+              >
+                <span className={styles.graphicsItemLabel}>그림자</span>
+                <span className={`${styles.graphicsToggle} ${shadowEnabled ? styles.graphicsToggleOn : ''}`}>
+                  <span className={styles.graphicsToggleHandle} />
+                </span>
+              </button>
+              <button
+                className={`${styles.graphicsItem} ${edgeOutlineEnabled ? styles.graphicsItemActive : ''}`}
+                onClick={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)}
+              >
+                <span className={styles.graphicsItemLabel}>윤곽선</span>
+                <span className={`${styles.graphicsToggle} ${edgeOutlineEnabled ? styles.graphicsToggleOn : ''}`}>
+                  <span className={styles.graphicsToggleHandle} />
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={styles.spacer} />
 
