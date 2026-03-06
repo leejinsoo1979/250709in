@@ -1705,48 +1705,40 @@ const Room: React.FC<RoomProps> = ({
             const x2 = xOffset + width;
 
             const floorY = panelStartY;
-            const lines: [number, number, number, number, number, number][] = [];
+            // 뒷벽(z=z1)에 있는 단색 선
+            const solidLines: [number, number, number, number, number, number][] = [];
+            // z축 방향(앞뒤) 그라데이션 선: [x1,y1,z1, x2,y2,z2] (z1=뒷벽=진한색, z2=앞쪽=투명)
+            const gradientLines: [number, number, number, number, number, number][] = [];
 
             // === 천장 경계선 ===
-            // 천장-뒷벽 경계 (좌→우 수평선, z=뒤쪽)
-            lines.push([x1, ceilingY, z1, x2, ceilingY, z1]);
+            solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]); // 천장-뒷벽
 
-            // 천장-좌벽 경계 (앞→뒤, x=왼쪽)
             if (hasLeftWall) {
-              lines.push([x1, ceilingY, z1, x1, ceilingY, z2]);
+              gradientLines.push([x1, ceilingY, z1, x1, ceilingY, z2]); // 천장-좌벽
             }
-
-            // 천장-우벽 경계 (앞→뒤, x=오른쪽)
             if (hasRightWall) {
-              lines.push([x2, ceilingY, z1, x2, ceilingY, z2]);
+              gradientLines.push([x2, ceilingY, z1, x2, ceilingY, z2]); // 천장-우벽
             }
 
             // === 바닥 경계선 ===
-            // 바닥-뒷벽 경계 (좌→우 수평선, z=뒤쪽)
-            lines.push([x1, floorY, z1, x2, floorY, z1]);
+            solidLines.push([x1, floorY, z1, x2, floorY, z1]); // 바닥-뒷벽
 
-            // 바닥-좌벽 경계 (앞→뒤, x=왼쪽)
             if (hasLeftWall) {
-              lines.push([x1, floorY, z1, x1, floorY, z2]);
+              gradientLines.push([x1, floorY, z1, x1, floorY, z2]); // 바닥-좌벽
             }
-
-            // 바닥-우벽 경계 (앞→뒤, x=오른쪽)
             if (hasRightWall) {
-              lines.push([x2, floorY, z1, x2, floorY, z2]);
+              gradientLines.push([x2, floorY, z1, x2, floorY, z2]); // 바닥-우벽
             }
 
             // === 뒷벽 수직 경계선 ===
-            // 뒷벽-좌벽 수직 경계 (z=뒤쪽, x=왼쪽)
             if (hasLeftWall) {
-              lines.push([x1, floorY, z1, x1, ceilingY, z1]);
+              solidLines.push([x1, floorY, z1, x1, ceilingY, z1]); // 뒷벽-좌벽
             }
-
-            // 뒷벽-우벽 수직 경계 (z=뒤쪽, x=오른쪽)
             if (hasRightWall) {
-              lines.push([x2, floorY, z1, x2, ceilingY, z1]);
+              solidLines.push([x2, floorY, z1, x2, ceilingY, z1]); // 뒷벽-우벽
             }
 
-            // === 단내림 경계벽 윤곽선 (벽만 표시, 천장면 선은 제외) ===
+            // === 단내림 경계벽 윤곽선 ===
             if (spaceInfo.droppedCeiling?.enabled) {
               const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
               const dcDropHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
@@ -1754,38 +1746,63 @@ const Room: React.FC<RoomProps> = ({
               const droppedCeilingY = ceilingY - dcDropHeight;
               const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
 
-              // 경계 수직벽 - 수직선 (뒷벽 쪽)
-              lines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]);
+              solidLines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]); // 경계벽 수직선 (뒷벽)
+              gradientLines.push([bx, ceilingY, z1, bx, ceilingY, z2]); // 경계벽 상단 연결
+              gradientLines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]); // 경계벽 하단 연결
 
-              // 경계 수직벽 - 상단 앞뒤 연결 (벽 상단 모서리)
-              lines.push([bx, ceilingY, z1, bx, ceilingY, z2]);
-
-              // 경계 수직벽 - 하단 앞뒤 연결 (벽 하단 모서리)
-              lines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]);
-
-              // 단내림 측 벽면 천장 경계 (앞뒤 연결)
               if (isLeft && hasLeftWall) {
-                lines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
+                gradientLines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
               } else if (!isLeft && hasRightWall) {
-                lines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
+                gradientLines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
               }
             }
 
-            const positions = new Float32Array(lines.length * 6);
-            lines.forEach((line, i) => {
-              for (let j = 0; j < 6; j++) positions[i * 6 + j] = line[j];
+            // 단색 선 positions
+            const solidPositions = new Float32Array(solidLines.length * 6);
+            solidLines.forEach((line, i) => {
+              for (let j = 0; j < 6; j++) solidPositions[i * 6 + j] = line[j];
+            });
+
+            // 그라데이션 선 positions + vertex colors
+            const gradPositions = new Float32Array(gradientLines.length * 6);
+            const gradColors = new Float32Array(gradientLines.length * 6); // RGB per vertex
+            const baseColor = new THREE.Color(wfLineColor);
+
+            gradientLines.forEach((line, i) => {
+              for (let j = 0; j < 6; j++) gradPositions[i * 6 + j] = line[j];
+              // 첫 번째 꼭짓점(z=z1, 뒷벽): 진한 색
+              gradColors[i * 6 + 0] = baseColor.r;
+              gradColors[i * 6 + 1] = baseColor.g;
+              gradColors[i * 6 + 2] = baseColor.b;
+              // 두 번째 꼭짓점(z=z2, 앞쪽): 배경색(흰색/어두운색)으로 페이드
+              const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+              gradColors[i * 6 + 3] = bgColor.r;
+              gradColors[i * 6 + 4] = bgColor.g;
+              gradColors[i * 6 + 5] = bgColor.b;
             });
 
             return (
-              <lineSegments>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    args={[positions, 3]}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={wfLineColor} />
-              </lineSegments>
+              <>
+                {/* 뒷벽 단색 선 */}
+                {solidLines.length > 0 && (
+                  <lineSegments>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" args={[solidPositions, 3]} />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={wfLineColor} />
+                  </lineSegments>
+                )}
+                {/* z축 그라데이션 선 (뒷벽 진한색 → 앞쪽 배경색) */}
+                {gradientLines.length > 0 && (
+                  <lineSegments>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" args={[gradPositions, 3]} />
+                      <bufferAttribute attach="attributes-color" args={[gradColors, 3]} />
+                    </bufferGeometry>
+                    <lineBasicMaterial vertexColors />
+                  </lineSegments>
+                )}
+              </>
             );
           })()}
         </>
