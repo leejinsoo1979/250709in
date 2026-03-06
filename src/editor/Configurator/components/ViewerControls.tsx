@@ -328,19 +328,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         ))}
       </div>
 
-      {/* ─── Group 7: Theme toggle ─── */}
-      <button
-        className={styles.iconButton}
-        onClick={toggleView2DTheme}
-        title={view2DTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
-      >
-        {view2DTheme === 'dark' ? (
-          <Moon size={14} strokeWidth={1.8} />
-        ) : (
-          <Sun size={14} strokeWidth={1.8} />
-        )}
-      </button>
-
       {showQRGenerator && (
         <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />
       )}

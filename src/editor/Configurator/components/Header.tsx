@@ -162,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
   const { colors } = useThemeColors();
   const { theme } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -952,6 +952,41 @@ const Header: React.FC<HeaderProps> = ({
                     borderRadius: '50%',
                     transition: 'transform 0.3s ease, background-color 0.3s ease',
                     transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
+                    boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 다크/라이트 토글 스위치 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--theme-text-secondary)' }}>
+                {view2DTheme === 'dark' ? '다크' : '라이트'}
+              </span>
+              <div
+                onClick={toggleView2DTheme}
+                style={{
+                  position: 'relative',
+                  width: '36px',
+                  height: '20px',
+                  backgroundColor: view2DTheme === 'dark' ? 'var(--theme-primary)' : (theme.mode === 'dark' ? 'rgba(128,128,128,0.3)' : 'rgba(200,200,200,0.5)'),
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '2px'
+                }}
+                title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              >
+                <div
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
+                    borderRadius: '50%',
+                    transition: 'transform 0.3s ease, background-color 0.3s ease',
+                    transform: view2DTheme === 'dark' ? 'translateX(16px)' : 'translateX(0)',
                     boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
                   }}
                 />
