@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './RightPanel.module.css';
+import commonStyles from '@/editor/shared/controls/styles/common.module.css';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
@@ -154,11 +155,11 @@ interface ToggleGroupProps {
 
 const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }) => {
   return (
-    <div className={styles.toggleGroup}>
+    <div className={commonStyles.toggleButtonGroup}>
       {options.map((option) => (
         <button
           key={option.id}
-          className={`${styles.toggleButton} ${selected === option.id ? styles.active : ''}`}
+          className={`${commonStyles.toggleButton} ${selected === option.id ? commonStyles.toggleButtonActive : ''}`}
           onClick={() => onChange(option.id)}
         >
           {option.label}
