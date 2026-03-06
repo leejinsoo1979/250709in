@@ -925,71 +925,27 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* 그림자 토글 스위치 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--theme-text-secondary)' }}>그림자</span>
-              <div
-                onClick={() => setShadowEnabled(!shadowEnabled)}
-                style={{
-                  position: 'relative',
-                  width: '36px',
-                  height: '20px',
-                  backgroundColor: shadowEnabled ? 'var(--theme-primary)' : (theme.mode === 'dark' ? 'rgba(128,128,128,0.3)' : 'rgba(200,200,200,0.5)'),
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '2px'
-                }}
-                title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-              >
-                <div
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
-                    borderRadius: '50%',
-                    transition: 'transform 0.3s ease, background-color 0.3s ease',
-                    transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
-                    boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
-                  }}
-                />
+            {/* 그림자 / 다크 토글 스위치 */}
+            <div className={styles.headerToggleGroup}>
+              <div className={styles.headerToggleItem}>
+                <span className={styles.headerToggleLabel}>그림자</span>
+                <button
+                  className={`${styles.headerToggleSwitch} ${shadowEnabled ? styles.active : ''}`}
+                  onClick={() => setShadowEnabled(!shadowEnabled)}
+                  title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+                >
+                  <div className={styles.headerToggleKnob} />
+                </button>
               </div>
-            </div>
-
-            {/* 다크/라이트 토글 스위치 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--theme-text-secondary)' }}>
-                {view2DTheme === 'dark' ? '다크' : '라이트'}
-              </span>
-              <div
-                onClick={toggleView2DTheme}
-                style={{
-                  position: 'relative',
-                  width: '36px',
-                  height: '20px',
-                  backgroundColor: view2DTheme === 'dark' ? 'var(--theme-primary)' : (theme.mode === 'dark' ? 'rgba(128,128,128,0.3)' : 'rgba(200,200,200,0.5)'),
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '2px'
-                }}
-                title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-              >
-                <div
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
-                    borderRadius: '50%',
-                    transition: 'transform 0.3s ease, background-color 0.3s ease',
-                    transform: view2DTheme === 'dark' ? 'translateX(16px)' : 'translateX(0)',
-                    boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
-                  }}
-                />
+              <div className={styles.headerToggleItem}>
+                <span className={styles.headerToggleLabel}>{view2DTheme === 'dark' ? '다크' : '라이트'}</span>
+                <button
+                  className={`${styles.headerToggleSwitch} ${view2DTheme === 'dark' ? styles.active : ''}`}
+                  onClick={toggleView2DTheme}
+                  title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+                >
+                  <div className={styles.headerToggleKnob} />
+                </button>
               </div>
             </div>
           </div>
