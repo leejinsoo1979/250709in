@@ -267,51 +267,51 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         </>
       )}
 
-      <div className={styles.spacer} />
+      {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
+      <div className={styles.centerAbsolute}>
+        {viewMode === '3D' && (
+          <div className={styles.segmentedControl}>
+            {renderModes.map((mode) => (
+              <button
+                key={mode.id}
+                className={`${styles.segmentButton} ${renderMode === mode.id ? styles.segmentActive : ''}`}
+                onClick={() => onRenderModeChange(mode.id)}
+              >{mode.label}</button>
+            ))}
+          </div>
+        )}
 
-      {/* ─── Center: Render + View mode ─── */}
-      {viewMode === '3D' && (
         <div className={styles.segmentedControl}>
-          {renderModes.map((mode) => (
+          {viewModes.map((mode) => (
             <button
               key={mode.id}
-              className={`${styles.segmentButton} ${renderMode === mode.id ? styles.segmentActive : ''}`}
-              onClick={() => onRenderModeChange(mode.id)}
+              data-view-mode={mode.id}
+              className={`${styles.segmentButton} ${styles.segmentAccent} ${viewMode === mode.id ? styles.segmentAccentActive : ''}`}
+              onClick={() => {
+                onViewModeChange(mode.id);
+                if (mode.id === '2D') {
+                  if (renderMode !== 'wireframe') onRenderModeChange('wireframe');
+                  requestAnimationFrame(() => {
+                    setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
+                  });
+                }
+              }}
             >{mode.label}</button>
           ))}
         </div>
-      )}
 
-      <div className={styles.segmentedControl}>
-        {viewModes.map((mode) => (
-          <button
-            key={mode.id}
-            data-view-mode={mode.id}
-            className={`${styles.segmentButton} ${styles.segmentAccent} ${viewMode === mode.id ? styles.segmentAccentActive : ''}`}
-            onClick={() => {
-              onViewModeChange(mode.id);
-              if (mode.id === '2D') {
-                if (renderMode !== 'wireframe') onRenderModeChange('wireframe');
-                requestAnimationFrame(() => {
-                  setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
-                });
-              }
-            }}
-          >{mode.label}</button>
-        ))}
+        {onDoorInstallationToggle && (
+          <div className={styles.segmentedControl}>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${hasDoorsInstalled ? styles.segmentAccentActive : ''}`}
+              onClick={onDoorInstallationToggle}
+            >
+              <BiDoorOpen size={13} />
+              {t('viewer.doorInstallation')}
+            </button>
+          </div>
+        )}
       </div>
-
-      {onDoorInstallationToggle && (
-        <div className={styles.segmentedControl}>
-          <button
-            className={`${styles.segmentButton} ${styles.segmentIconText} ${hasDoorsInstalled ? styles.segmentAccentActive : ''}`}
-            onClick={onDoorInstallationToggle}
-          >
-            <BiDoorOpen size={13} />
-            {t('viewer.doorInstallation')}
-          </button>
-        </div>
-      )}
 
       <div className={styles.spacer} />
 

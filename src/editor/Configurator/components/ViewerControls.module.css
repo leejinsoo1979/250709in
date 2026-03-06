@@ -26,6 +26,17 @@
 .viewerControls::-webkit-scrollbar { display: none; }
 .viewerControls { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Absolute Center Group ── */
+.centerAbsolute {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+}
+
 /* ── Spacer ── */
 .spacer {
   flex: 1 1 0;
@@ -290,6 +301,10 @@
     justify-content: center;
   }
   .spacer { display: none; }
+  .centerAbsolute {
+    position: static;
+    transform: none;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
