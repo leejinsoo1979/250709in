@@ -1,25 +1,27 @@
 /* ================================
-   Modern SaaS Toolbar - Figma/Linear Style
+   ViewerControls — Modern SaaS Toolbar v2
+   Single-row flow layout with divider rhythm
    ================================ */
 
+/* ── Base Container ── */
 .viewerControls {
   background: var(--theme-surface);
   border-bottom: 1px solid var(--theme-border);
-  padding: 0 16px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 44px;
+  height: 42px;
+  min-height: 42px;
   position: relative;
   z-index: 10;
-  min-height: 44px;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hide scrollbar but allow scroll */
 .viewerControls::-webkit-scrollbar {
   display: none;
 }
@@ -29,88 +31,32 @@
   scrollbar-width: none;
 }
 
-/* ================================
-   Section Layout
-   ================================ */
-
-.leftControls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  justify-content: flex-start;
+/* ── Spacer (flex grow to push groups apart) ── */
+.spacer {
+  flex: 1 1 0;
+  min-width: 8px;
 }
 
-.centerControls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1 1 auto;
-  justify-content: center;
-}
-
-.rightControls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  justify-content: flex-end;
-  min-width: 0;
-}
-
-.rightControls:empty {
-  display: none;
-}
-
-/* ================================
-   Vertical Divider
-   ================================ */
-
+/* ── Vertical Divider ── */
 .divider {
   width: 1px;
   height: 16px;
   background: var(--theme-border);
   flex-shrink: 0;
-  margin: 0 4px;
+  opacity: 0.6;
 }
 
-/* ================================
-   Toggle Switch (iOS-style, compact)
-   ================================ */
-
+/* ── Toggle Switch ── */
 .toggleGroup {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.toggleLabel {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--theme-text-muted);
-  min-width: 22px;
-  text-align: left;
-  line-height: 1;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.toggleLabel.clickable {
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s ease;
-}
-
-.toggleLabel.clickable:hover {
-  color: var(--theme-text);
+  flex-shrink: 0;
 }
 
 .switch {
-  width: 28px;
-  height: 16px;
-  border-radius: 8px;
+  width: 30px;
+  height: 17px;
+  border-radius: 9px;
   border: none;
   cursor: pointer;
   position: relative;
@@ -128,254 +74,151 @@
   background: var(--theme-border-hover) !important;
 }
 
+.switch:hover {
+  opacity: 0.85;
+}
+
+.switch:active {
+  transform: scale(0.95);
+}
+
 .switchHandle {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   background: #fff;
   border-radius: 50%;
   position: absolute;
   top: 2px;
   transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .switch.on .switchHandle {
-  left: 14px;
+  left: 15px;
 }
 
 .switch.off .switchHandle {
   left: 2px;
 }
 
-/* ================================
-   Option Toggles (pill-style chips)
-   ================================ */
-
-.checkboxGroup {
+/* ── Chip Group (option toggles) ── */
+.chipGroup {
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: var(--theme-background-secondary);
-  border-radius: 6px;
-  padding: 2px;
+  gap: 3px;
+  flex-shrink: 0;
 }
 
-.checkboxLabel {
+.chip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  cursor: pointer;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--theme-text-muted);
-  line-height: 1;
-  white-space: nowrap;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  user-select: none;
   height: 26px;
-}
-
-.checkboxLabel:hover {
-  color: var(--theme-text);
-  background: var(--theme-surface);
-}
-
-.checkbox {
-  display: none;
-}
-
-/* Hide the old radio-circle checkmark */
-.checkmark {
-  display: none;
-}
-
-/* Active state for checked options */
-.checkbox:checked ~ span:last-child,
-.checkbox:checked + .checkmark + span {
-  color: var(--theme-text);
-}
-
-/* Apply active style to the label when checkbox is checked */
-.checkboxLabel:has(.checkbox:checked) {
-  color: var(--theme-text);
-  background: var(--theme-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
-}
-
-/* ================================
-   Segmented Control (shared base for all button groups)
-   ================================ */
-
-.renderModeGroup,
-.viewModeGroup,
-.doorButtonGroup,
-.viewDirectionGroup {
-  display: flex;
-  align-items: center;
-  background: var(--theme-background-secondary);
-  border-radius: 6px;
-  padding: 2px;
+  padding: 0 9px;
   border: none;
-  overflow: visible;
-  gap: 1px;
-}
-
-/* ================================
-   Render Mode (Solid/Wireframe)
-   ================================ */
-
-.renderModeButton {
-  padding: 0 10px;
-  border: none;
+  border-radius: 5px;
   background: transparent;
   color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   white-space: nowrap;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  border-radius: 4px;
   line-height: 1;
+  letter-spacing: -0.01em;
 }
 
-.renderModeButton:hover:not(.active) {
+.chip:hover {
   color: var(--theme-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--theme-background-secondary);
 }
 
-.renderModeButton.active {
-  background: var(--theme-surface);
-  color: var(--theme-text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+.chip:active {
+  transform: scale(0.97);
 }
 
-/* ================================
-   View Mode (3D/2D)
-   ================================ */
+.chipActive {
+  color: var(--theme-text) !important;
+  background: var(--theme-background-secondary) !important;
+  box-shadow: inset 0 0 0 1px var(--theme-border);
+}
 
-.viewModeButton {
-  background: transparent;
-  border: none;
-  padding: 0 12px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-  height: 26px;
+/* ── Segmented Control ── */
+.segmentedControl {
+  display: flex;
+  align-items: center;
+  background: var(--theme-background-secondary);
+  border-radius: 7px;
+  padding: 3px;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.segmentButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  height: 26px;
+  padding: 0 11px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.segmentButton:hover:not(.segmentActive):not(.segmentAccentActive) {
+  color: var(--theme-text-secondary);
+}
+
+.segmentButton:active {
+  transform: scale(0.97);
+}
+
+/* Neutral active (elevated tab) */
+.segmentActive {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Accent active (primary fill — 3D/2D, Door) */
+.segmentAccent {
+  font-weight: 600;
   letter-spacing: 0.01em;
 }
 
-.viewModeButton:hover:not(.active) {
-  color: var(--theme-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+.segmentAccentActive {
+  background: var(--theme-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 4px var(--theme-primary-shadow);
 }
 
-.viewModeButton.active {
-  background: var(--theme-primary);
-  color: #fff;
-  box-shadow: 0 1px 3px var(--theme-primary-shadow);
-}
-
-/* ================================
-   Door Button
-   ================================ */
-
-.doorButton {
-  background: transparent;
-  border: none;
-  padding: 0 10px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Icon + text variant (door button) */
+.segmentIconText {
   gap: 4px;
-  white-space: nowrap;
-  border-radius: 4px;
+  padding: 0 10px;
 }
 
-.doorButton svg {
-  width: 14px;
-  height: 14px;
+.segmentIconText svg {
   flex-shrink: 0;
 }
 
-.doorButton:hover:not(.active) {
-  color: var(--theme-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.doorButton.active {
-  background: var(--theme-primary);
-  color: #fff;
-  box-shadow: 0 1px 3px var(--theme-primary-shadow);
-}
-
-/* ================================
-   View Direction (Front/Top/Left)
-   ================================ */
-
-.viewDirectionButton {
-  background: transparent;
-  border: none;
-  padding: 0 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.viewDirectionButton:hover:not(.active) {
-  color: var(--theme-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.viewDirectionButton.active {
-  background: var(--theme-surface);
-  color: var(--theme-text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
-}
-
-/* ================================
-   Theme Toggle
-   ================================ */
-
-.themeToggle {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+/* ── Icon Button (theme toggle etc.) ── */
+.iconButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
@@ -388,250 +231,159 @@
   flex-shrink: 0;
 }
 
-.themeToggle:hover {
+.iconButton:hover {
   background: var(--theme-background-secondary);
   color: var(--theme-text);
 }
 
-.themeToggle svg {
-  width: 14px;
-  height: 14px;
+.iconButton:active {
+  transform: scale(0.92);
+}
+
+.iconButton svg {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.themeToggle:hover svg {
-  transform: rotate(30deg);
+.iconButton:hover svg {
+  transform: rotate(20deg);
 }
+
+/* ── Legacy compat (unused but kept for CSS module hash stability) ── */
+.toggleLabel { display: none; }
+.toggleIcon { display: none; }
+.checkboxGroup { display: none; }
+.checkboxLabel { display: none; }
+.checkbox { display: none; }
+.checkmark { display: none; }
+.leftControls { display: none; }
+.centerControls { display: none; }
+.rightControls { display: none; }
+.renderModeGroup { display: none; }
+.renderModeButton { display: none; }
+.viewModeGroup { display: none; }
+.viewModeButton { display: none; }
+.doorButtonGroup { display: none; }
+.doorButton { display: none; }
+.viewDirectionGroup { display: none; }
+.viewDirectionButton { display: none; }
+.themeToggle { display: none; }
+.arButton { display: none; }
+.measureButton { display: none; }
 
 /* ================================
-   AR Button (commented out in JSX, keeping for compat)
-   ================================ */
-
-.arButton {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--theme-primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.15s ease;
-  height: 28px;
-}
-
-.arButton:hover {
-  opacity: 0.9;
-}
-
-.arButton svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ================================
-   Measure Button
-   ================================ */
-
-.measureButton {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.measureButton:hover {
-  background: var(--theme-background-secondary);
-  color: var(--theme-text);
-}
-
-.measureButton.active {
-  background: var(--theme-primary);
-  color: #fff;
-}
-
-.measureButton svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* ================================
-   Responsive - Large Desktop (1920+)
+   Responsive
    ================================ */
 
 @media (min-width: 1920px) {
   .viewerControls {
-    padding: 0 24px;
-    height: 48px;
-    min-height: 48px;
-  }
-
-  .leftControls,
-  .centerControls,
-  .rightControls {
-    gap: 8px;
+    padding: 0 28px;
+    height: 46px;
+    min-height: 46px;
+    gap: 12px;
   }
 }
-
-/* ================================
-   Responsive - Desktop (1400-1919)
-   ================================ */
-
-@media (max-width: 1919px) and (min-width: 1400px) {
-  .viewerControls {
-    padding: 0 20px;
-    height: 44px;
-  }
-}
-
-/* ================================
-   Responsive - MacBook Pro 16" (1200-1399)
-   ================================ */
 
 @media (max-width: 1399px) and (min-width: 1200px) {
   .viewerControls {
     padding: 0 16px;
-    height: 44px;
-    min-height: 44px;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 0 7px;
+    font-size: 11px;
+  }
+
+  .segmentButton {
+    padding: 0 9px;
+    font-size: 11px;
   }
 }
-
-/* ================================
-   Responsive - MacBook Air 13" (1024-1199)
-   ================================ */
 
 @media (max-width: 1199px) and (min-width: 1024px) {
   .viewerControls {
     padding: 0 12px;
     height: 40px;
+    gap: 6px;
   }
 
-  .leftControls {
-    flex: 0 1 auto;
-    max-width: 30%;
+  .chip {
+    padding: 0 6px;
+    font-size: 10.5px;
+    height: 24px;
   }
 
-  .centerControls {
-    flex: 0 1 auto;
-    max-width: 45%;
+  .segmentButton {
+    padding: 0 8px;
+    font-size: 10.5px;
+    height: 24px;
   }
 
-  .rightControls {
-    flex: 0 1 auto;
-    max-width: 25%;
+  .segmentedControl {
+    padding: 2px;
+  }
+
+  .iconButton {
+    width: 28px;
+    height: 28px;
   }
 }
-
-/* ================================
-   Responsive - Tablet Landscape (768-1023)
-   ================================ */
 
 @media (max-width: 1023px) and (min-width: 768px) {
   .viewerControls {
-    padding: 0 12px;
-    height: 40px;
-    flex-wrap: nowrap;
-  }
-
-  .checkboxLabel {
-    font-size: 10px;
-    padding: 3px 6px;
-  }
-}
-
-/* ================================
-   Responsive - Tablet Portrait (481-767)
-   ================================ */
-
-@media (max-width: 767px) and (min-width: 481px) {
-  .viewerControls {
     padding: 0 10px;
-    height: 40px;
+    height: 38px;
+    gap: 5px;
   }
 
-  .checkboxLabel {
+  .chip {
+    padding: 0 5px;
     font-size: 10px;
-    padding: 3px 5px;
+    height: 22px;
+  }
+
+  .segmentButton {
+    padding: 0 7px;
+    font-size: 10px;
+    height: 22px;
+  }
+
+  .segmentedControl {
+    padding: 2px;
+    border-radius: 6px;
   }
 }
-
-/* ================================
-   Responsive - Small Mobile (480 and below)
-   ================================ */
 
 @media (max-width: 480px) {
   .viewerControls {
-    flex-direction: column;
-    align-items: stretch;
+    padding: 6px 10px;
     height: auto;
-    padding: 8px 12px;
-    gap: 6px;
-  }
-
-  .leftControls,
-  .centerControls,
-  .rightControls {
-    width: 100%;
-    justify-content: center;
+    min-height: auto;
     flex-wrap: wrap;
     gap: 6px;
-  }
-
-  .leftControls { order: 2; }
-  .centerControls { order: 1; }
-  .rightControls { order: 3; }
-
-  .renderModeGroup,
-  .viewModeGroup,
-  .viewDirectionGroup {
-    flex: 1;
-  }
-}
-
-/* ================================
-   Responsive - Portrait Mobile
-   ================================ */
-
-@media (orientation: portrait) and (max-width: 768px) {
-  .viewerControls {
-    flex-direction: column;
-    height: auto;
-    padding: 6px 8px;
-  }
-
-  .leftControls,
-  .centerControls,
-  .rightControls {
-    width: 100%;
     justify-content: center;
   }
-}
 
-/* ================================
-   Responsive - Landscape Low Height
-   ================================ */
+  .spacer {
+    display: none;
+  }
+}
 
 @media (orientation: landscape) and (max-height: 600px) {
   .viewerControls {
-    height: 36px;
+    height: 34px;
+    min-height: 34px;
     padding: 0 8px;
+  }
+
+  .chip, .segmentButton {
+    height: 22px;
+    font-size: 10px;
   }
 }
 
 /* ================================
-   Mobile ViewerControls UI
+   Mobile ViewerControls
    ================================ */
 
 .mobileViewerControls {
@@ -659,7 +411,6 @@
   border-radius: 8px;
   padding: 2px;
   border: none;
-  overflow: hidden;
 }
 
 .mobileButton {
@@ -717,7 +468,6 @@
   transform: scale(0.95);
 }
 
-/* 2D View Direction Bar */
 .mobileViewDirections {
   display: flex;
   justify-content: center;
@@ -751,7 +501,6 @@
   transform: scale(0.95);
 }
 
-/* More Options Panel */
 .mobileOptionsPanel {
   position: absolute;
   top: 100%;
@@ -765,14 +514,8 @@
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .mobileOptionsGrid {
