@@ -430,8 +430,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     ? primaryColor  // 3D에서는 테마 색상 사용
     : getThemeColorFromCSS('--theme-border', '#e5e7eb');  // 2D에서는 border 색상
   
-  // 프레임 치수 색상도 2D에서는 라이트/다크에 따라 검정/흰색
-  const frameDimensionColor = currentViewDirection === '3D' ? primaryColor : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
+  // 프레임 치수 색상 - 다른 치수와 동일하게 통일
+  const frameDimensionColor = dimensionColor;
 
   // 기둥 간격 편집 핸들러
   const handleColumnDistanceEdit = (columnId: string, side: 'left' | 'right' | 'width', currentValue: number) => {
