@@ -52,21 +52,21 @@ const EmptyDesignThumbnail: React.FC<{
       justifyContent: 'center',
       background: 'linear-gradient(135deg, var(--theme-primary, #10b981), color-mix(in srgb, var(--theme-primary, #10b981) 80%, black))',
       color: 'white',
-      gap: '4px',
+      gap: '6px',
       width: '100%',
       height: '100%',
     }}>
       {hasDimensions ? (
         <>
-          <span style={{ fontSize: '12px', fontWeight: '700', opacity: 0.95 }}>
+          <span style={{ fontSize: '18px', fontWeight: '700', opacity: 0.95, letterSpacing: '0.5px' }}>
             {Math.round(spaceConfig!.width)} × {Math.round(spaceConfig!.depth)} × {Math.round(spaceConfig!.height)}mm
           </span>
-          <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.75 }}>
+          <span style={{ fontSize: '13px', fontWeight: '400', opacity: 0.75 }}>
             현재 배치된 가구가 없습니다.
           </span>
         </>
       ) : (
-        <span style={{ fontSize: '12px', fontWeight: '600' }}>디자인</span>
+        <span style={{ fontSize: '18px', fontWeight: '600' }}>디자인</span>
       )}
     </div>
   );
