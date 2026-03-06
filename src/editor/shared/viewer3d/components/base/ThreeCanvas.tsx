@@ -1029,8 +1029,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                   });
                 }
 
-                // window.handleSlotDrop이 있으면 직접 호출
-                if (typeof (window as any).handleSlotDrop === 'function') {
+                // 자유배치 모드: handleFreeDrop 우선 호출
+                const isFreePlacementMode = useSpaceConfigStore.getState().spaceInfo?.layoutMode === 'free-placement';
+
+                if (isFreePlacementMode && typeof (window as any).handleFreeDrop === 'function') {
+                  canvasLog('🎯 Canvas에서 직접 handleFreeDrop 호출 (자유배치 모드)');
+                  const result = (window as any).handleFreeDrop(e, canvas);
+                  canvasLog('🎯 handleFreeDrop 결과:', result);
+                } else if (typeof (window as any).handleSlotDrop === 'function') {
                   canvasLog('🎯 Canvas에서 직접 handleSlotDrop 호출 with activeZone:', activeZone);
                   const result = (window as any).handleSlotDrop(e, canvas, activeZone);
                   canvasLog('🎯 handleSlotDrop 결과:', result);

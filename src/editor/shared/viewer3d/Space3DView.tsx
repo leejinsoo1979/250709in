@@ -523,7 +523,20 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         return;
       }
 
-      // 기존 가구 드롭 처리
+      // 자유배치 모드: handleFreeDrop 우선 호출
+      const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      if (currentSpaceInfo.layoutMode === 'free-placement' && typeof (window as any).handleFreeDrop === 'function') {
+        console.log('🎯 Space3DView - handleFreeDrop 호출 (자유배치 모드)');
+        try {
+          const result = (window as any).handleFreeDrop(e.nativeEvent, canvas);
+          console.log('🎯 Space3DView handleFreeDrop - result:', result);
+        } catch (error) {
+          console.error('❌ handleFreeDrop 실행 중 에러:', error);
+        }
+        return;
+      }
+
+      // 균등분할 모드: 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
       console.log('🎯 Space3DView - window.handleSlotDrop 확인:', {
         hasHandleSlotDrop: !!handleSlotDrop,
