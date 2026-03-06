@@ -1754,24 +1754,8 @@ const Room: React.FC<RoomProps> = ({
               const droppedCeilingY = ceilingY - dcDropHeight;
               const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
 
-              // 경계 수직벽 - 수직선 (뒷벽 쪽)
+              // 경계 수직벽 - 수직선 (뒷벽 쪽만 표시)
               lines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]);
-
-              // 경계 수직벽 - 수직선 (앞쪽)
-              lines.push([bx, droppedCeilingY, z2, bx, ceilingY, z2]);
-
-              // 경계 수직벽 - 상단 앞뒤 연결 (벽 상단 모서리)
-              lines.push([bx, ceilingY, z1, bx, ceilingY, z2]);
-
-              // 경계 수직벽 - 하단 앞뒤 연결 (벽 하단 모서리)
-              lines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]);
-
-              // 단내림 측 벽면 천장 경계 (앞뒤 연결 - 벽과 단내림 천장이 만나는 선)
-              if (isLeft && hasLeftWall) {
-                lines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
-              } else if (!isLeft && hasRightWall) {
-                lines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
-              }
             }
 
             const positions = new Float32Array(lines.length * 6);
