@@ -100,8 +100,11 @@
 .chipGroup {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
+  background: var(--theme-background-secondary, #f0f0f0);
+  border-radius: 8px;
+  padding: 3px;
 }
 
 .chip {
@@ -109,7 +112,7 @@
   align-items: center;
   justify-content: center;
   height: 26px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -125,16 +128,16 @@
 }
 
 .chip:hover {
-  color: var(--theme-text-secondary);
-  background: color-mix(in srgb, var(--theme-text-muted) 8%, transparent);
+  color: var(--theme-text);
 }
 
 .chip:active { transform: scale(0.97); }
 
 .chipActive {
-  color: var(--theme-primary) !important;
-  background: color-mix(in srgb, var(--theme-primary) 10%, transparent) !important;
+  color: var(--theme-text) !important;
+  background: var(--theme-surface, #ffffff) !important;
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* ── Segmented Control ── */
