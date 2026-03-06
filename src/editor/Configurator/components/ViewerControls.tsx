@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
-import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -235,32 +235,32 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <button
                 className={`${styles.chip} ${showFurniture ? styles.chipActive : ''}`}
                 onClick={onShowFurnitureToggle}
-              >{t('furniture.title')}</button>
+              >{showFurniture && <Check size={13} strokeWidth={2.5} />}{t('furniture.title')}</button>
             )}
             <button
               className={`${styles.chip} ${showAll ? styles.chipActive : ''}`}
               onClick={onShowAllToggle}
-            >{t('viewer.column')}</button>
+            >{showAll && <Check size={13} strokeWidth={2.5} />}{t('viewer.column')}</button>
             <button
               className={`${styles.chip} ${showDimensionsText ? styles.chipActive : ''}`}
               onClick={onShowDimensionsTextToggle}
-            >{t('viewer.dimensions')}</button>
+            >{showDimensionsText && <Check size={13} strokeWidth={2.5} />}{t('viewer.dimensions')}</button>
             {viewMode === '3D' && (
               <button
                 className={`${styles.chip} ${showFurnitureEditHandles ? styles.chipActive : ''}`}
                 onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
-              >아이콘</button>
+              >{showFurnitureEditHandles && <Check size={13} strokeWidth={2.5} />}아이콘</button>
             )}
             {viewMode === '2D' && (
               <>
                 <button
                   className={`${styles.chip} ${showGuides ? styles.chipActive : ''}`}
                   onClick={onShowGuidesToggle}
-                >{t('viewer.grid')}</button>
+                >{showGuides && <Check size={13} strokeWidth={2.5} />}{t('viewer.grid')}</button>
                 <button
                   className={`${styles.chip} ${showAxis ? styles.chipActive : ''}`}
                   onClick={onShowAxisToggle}
-                >{t('viewer.axis')}</button>
+                >{showAxis && <Check size={13} strokeWidth={2.5} />}{t('viewer.axis')}</button>
               </>
             )}
           </div>
