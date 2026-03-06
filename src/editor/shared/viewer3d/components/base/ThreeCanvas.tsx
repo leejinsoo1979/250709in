@@ -145,26 +145,20 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 뷰모드 변경 시 전환 애니메이션 처리
   useEffect(() => {
+    // viewMode 또는 view2DDirection 변경 시 캔버스 키 업데이트
+    const newKey = `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setCanvasKey(newKey);
+
     // viewMode가 실제로 변경된 경우에만 전환 애니메이션 적용
     if (prevViewModeRef.current !== viewMode) {
       setIsTransitioning(true);
-      // 짧은 지연 후 Canvas 표시 (카메라 설정이 적용된 후)
       const timer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 50); // 50ms 지연
+      }, 50);
       prevViewModeRef.current = viewMode;
-
-      // viewMode 전환 시에만 Canvas 재생성
-      setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
       return () => clearTimeout(timer);
     }
-  }, [viewMode]);
-
-  // view2DDirection 변경 시에는 Canvas를 재생성하지 않음 (카메라만 변경)
-  useEffect(() => {
-    // 카메라 재설정은 useCameraManager에서 처리됨
-    canvasLog('📐 ThreeCanvas - view2DDirection 변경:', view2DDirection);
-  }, [view2DDirection]);
+  }, [viewMode, view2DDirection]);
 
   // 단내림 설정 변경 시 캔버스 강제 업데이트
   useEffect(() => {
@@ -915,7 +909,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }}
       >
         <Canvas
-          key={`${canvasKey}-shadow-${shadowEnabled}`}
+          key={`${canvasKey}-shadow-${shadowEnabled}-rm-${renderMode}`}
           shadows={viewMode === '3D' && shadowEnabled}
           style={{
             ...style,
