@@ -53,13 +53,9 @@ declare global {
 }
 
 const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true }) => {
-  if (!spaceInfo) return null;
-  // 자유배치 모드에서는 슬롯 드롭존 비활성화
-  if (spaceInfo.layoutMode === 'free-placement') return null;
-  const columns = spaceInfo.columns ?? [];
-  if (!columns) {
-    return null;
-  }
+  const isInvalid = !spaceInfo;
+  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const columns = spaceInfo?.columns ?? [];
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
   const removeModule = useFurnitureStore(state => state.removeModule);
@@ -1531,7 +1527,9 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   
   // mm를 Three.js 단위로 변환하는 함수
   const mmToThreeUnits = (mm: number) => mm * 0.01;
-  
+
+  if (isInvalid || isFreePlacement) return null;
+
   return (
     <group>
         {/* 레이캐스팅용 투명 콜라이더들 - 단내림 영역별로 생성 */}

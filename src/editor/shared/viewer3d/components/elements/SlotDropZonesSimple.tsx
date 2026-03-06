@@ -88,14 +88,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
   const [hoveredZone, setHoveredZone] = useState<'normal' | 'dropped' | null>(null);
 
-  // spaceInfo가 없으면 null 반환
-  if (!spaceInfo) {
-    console.error('❌ No spaceInfo provided to SlotDropZonesSimple');
-    return null;
-  }
-
-  // 자유배치 모드에서는 슬롯 드롭존 비활성화
-  if (spaceInfo.layoutMode === 'free-placement') return null;
+  // 자유배치 모드 플래그 (early return 하지 않고 렌더링 단계에서 null 반환)
+  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const isInvalidSpaceInfo = !spaceInfo;
 
   debugLog('🔍 SlotDropZonesSimple - spaceInfo:', {
     width: spaceInfo.width,
@@ -2560,6 +2555,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     indexing: indexing,
     hasIndexingPositions: !!indexing?.threeUnitPositions
   });
+
+  if (isInvalidSpaceInfo || isFreePlacement) return null;
 
   return (
     <group>

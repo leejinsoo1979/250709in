@@ -35,8 +35,7 @@ const FreePlacementDropZone: React.FC = () => {
   const [isColliding, setIsColliding] = useState(false);
   const planeRef = useRef<THREE.Mesh>(null);
 
-  // 자유배치 모드가 아니면 렌더링하지 않음
-  if (spaceInfo.layoutMode !== 'free-placement') return null;
+  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
   // 선택된 가구 모듈 데이터
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
@@ -126,9 +125,6 @@ const FreePlacementDropZone: React.FC = () => {
     [selectedFurnitureId, moduleData, dimensions, hoverXmm, isColliding, spaceInfo, placedModules, addModule]
   );
 
-  // 선택된 가구가 없으면 렌더링하지 않음
-  if (!selectedFurnitureId || !moduleData || !dimensions) return null;
-
   // 고스트 프리뷰 위치 계산
   const ghostPosition = useMemo(() => {
     if (hoverXmm === null) return null;
@@ -150,6 +146,9 @@ const FreePlacementDropZone: React.FC = () => {
 
     return { x: xThree, y: yThree, z: 0 };
   }, [hoverXmm, spaceInfo, moduleData, dimensions]);
+
+  // 자유배치 모드가 아니거나 선택된 가구가 없으면 렌더링하지 않음
+  if (!isFreePlacement || !selectedFurnitureId || !moduleData || !dimensions) return null;
 
   // 고스트 색상
   const ghostColor = isColliding ? '#ef4444' : '#22c55e';
