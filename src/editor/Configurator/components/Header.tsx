@@ -884,7 +884,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={toggleMode}
               title={theme.mode === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
             >
-              {theme.mode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {theme.mode === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
             {/* 카메라 설정 드롭다운 (3D only) */}
