@@ -2670,10 +2670,10 @@ const Room: React.FC<RoomProps> = ({
               // 단내림 영역과 일반 영역 프레임 렌더링
               return (
                 <>
-                  {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시 */}
+                  {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시, 엣지 항상 숨김 */}
                   {showDroppedFrame && (
                     <BoxWithEdges
-                      hideEdges={hideEdges}
+                      hideEdges
                       isOuterFrame
                       args={[
                         droppedFrameWidth,
