@@ -43,10 +43,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   const furnitureWidth = placedModule.freeWidth || placedModule.moduleWidth || 600;
   const furnitureHeight = placedModule.freeHeight || 2000;
+  const furnitureDepth = placedModule.freeDepth || 580;
   const panelThickness = config.panelThickness || 18;
 
   // 내부 유효 높이 (상하판 두께 제외)
   const innerHeight = furnitureHeight - 2 * panelThickness;
+
+  // 너비 변경 핸들러
+  const handleWidthChange = (newWidth: number) => {
+    const clamped = Math.max(200, Math.min(2400, newWidth));
+    if (moduleId) {
+      updatePlacedModule(moduleId, { freeWidth: clamped, moduleWidth: clamped });
+    }
+  };
+
+  // 깊이 변경 핸들러
+  const handleDepthChange = (newDepth: number) => {
+    const clamped = Math.max(200, Math.min(800, newDepth));
+    if (moduleId) {
+      updatePlacedModule(moduleId, { freeDepth: clamped });
+    }
+  };
 
   // 섹션 분할 토글
   const handleSectionSplit = (split: boolean) => {
@@ -405,14 +422,20 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
         {/* 본문 */}
         <div className={styles.body}>
-          {/* 기본 치수 표시 */}
+          {/* 기본 치수 */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>치수</div>
             <div className={styles.row}>
               <span className={styles.label}>너비</span>
-              <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
-                {furnitureWidth}
-              </span>
+              <input
+                type="number"
+                className={styles.input}
+                value={furnitureWidth}
+                min={200}
+                max={2400}
+                step={10}
+                onChange={(e) => handleWidthChange(Number(e.target.value))}
+              />
               <span className={styles.unit}>mm</span>
             </div>
             <div className={styles.row}>
@@ -420,6 +443,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
               <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
                 {furnitureHeight}
               </span>
+              <span className={styles.unit}>mm</span>
+            </div>
+            <div className={styles.row}>
+              <span className={styles.label}>깊이</span>
+              <input
+                type="number"
+                className={styles.input}
+                value={furnitureDepth}
+                min={200}
+                max={800}
+                step={10}
+                onChange={(e) => handleDepthChange(Number(e.target.value))}
+              />
               <span className={styles.unit}>mm</span>
             </div>
           </div>
