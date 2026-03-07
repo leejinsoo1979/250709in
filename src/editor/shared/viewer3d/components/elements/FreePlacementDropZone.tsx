@@ -753,27 +753,6 @@ const FreePlacementDropZone: React.FC = () => {
         </group>
       )}
 
-      {/* 고스트 위 너비 표시 */}
-      {ghostPosition && activeDimensions && (
-        <Html
-          position={[ghostPosition.x, ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2 + 0.15, ghostPosition.z]}
-          center
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
-        >
-          <div style={{
-            background: isColliding ? '#ef4444' : '#22c55e',
-            color: 'white',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-          }}>
-            {activeDimensions.width}mm
-          </div>
-        </Html>
-      )}
-
       {/* 실시간 이격거리 가이드 (고스트 이동 중) */}
       {ghostDistanceGuides && ghostPosition && activeDimensions && !isColliding && (
         <>
