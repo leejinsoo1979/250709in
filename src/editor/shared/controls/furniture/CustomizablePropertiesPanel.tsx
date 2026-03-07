@@ -885,7 +885,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
         <div className={styles.header}>
           <span className={styles.headerTitle}>
             {focusedSectionIndex !== undefined
-              ? `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
+              ? config.sections.length === 1
+                ? '섹션 설정'
+                : `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
               : '커스터마이징 가구 편집'}
           </span>
           <button className={styles.closeButton} onClick={closeAllPopups}>
@@ -898,9 +900,82 @@ const CustomizablePropertiesPanel: React.FC = () => {
           {focusedSectionIndex !== undefined ? (
             /* 톱니 아이콘 클릭: 해당 섹션 세부설정만 */
             <>
-              {config.sections[focusedSectionIndex] &&
-                renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
-              }
+              {/* 섹션 분할 토글 (톱니 메뉴에서도 상하부 분할 가능) */}
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>섹션 분할</div>
+                <div className={styles.row}>
+                  <div className={styles.toggleGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${config.sections.length === 1 ? styles.active : ''}`}
+                      onClick={() => handleSectionSplit(false)}
+                    >
+                      분할 없음
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${config.sections.length === 2 ? styles.active : ''}`}
+                      onClick={() => handleSectionSplit(true)}
+                    >
+                      2단 분할
+                    </button>
+                  </div>
+                </div>
+                {/* 2단 분할 시 상부/하부 높이 입력 */}
+                {config.sections.length === 2 && (
+                  <>
+                    <div className={styles.row} style={{ marginTop: '8px' }}>
+                      <span className={styles.label}>하부 높이</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`${styles.input} ${styles.inputSmall}`}
+                        value={sectionHeightInputs[0] ?? config.sections[0].height.toString()}
+                        onChange={(e) => handleSectionHeightInputChange(0, e.target.value)}
+                        onBlur={() => handleSectionHeightBlur(0)}
+                        onKeyDown={handleInputKeyDown}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                    <div className={styles.row}>
+                      <span className={styles.label}>상부 높이</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`${styles.input} ${styles.inputSmall}`}
+                        value={sectionHeightInputs[1] ?? config.sections[1]?.height.toString()}
+                        onChange={(e) => handleSectionHeightInputChange(1, e.target.value)}
+                        onBlur={() => handleSectionHeightBlur(1)}
+                        onKeyDown={handleInputKeyDown}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className={styles.divider} />
+
+              {/* 현재 섹션 세부설정 (분할 시 해당 섹션만, 미분할 시 전체) */}
+              {config.sections.length === 2 ? (
+                /* 분할됨: 하부/상부 각각 세부설정 표시 */
+                [...config.sections].reverse().map((sec, _i) => {
+                  const realIdx = config.sections.length - 1 - _i;
+                  return (
+                    <React.Fragment key={realIdx}>
+                      <div className={styles.sectionTitle} style={{ marginTop: realIdx < config.sections.length - 1 ? '12px' : 0 }}>
+                        {realIdx === 0 ? '하부 섹션' : '상부 섹션'}
+                        <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
+                          {sec.height}mm
+                        </span>
+                      </div>
+                      {renderSectionEditor(sec, realIdx)}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                /* 미분할: 단일 섹션 세부설정 */
+                config.sections[focusedSectionIndex] &&
+                  renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
+              )}
             </>
           ) : (
             /* 연필 아이콘 클릭: 치수 + 섹션 분할/크기 + 전체 섹션 편집 */
