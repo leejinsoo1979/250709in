@@ -306,6 +306,8 @@ const FreePlacementDropZone: React.FC = () => {
       centerX: number; centerY: number;
       adjacentModuleId: string | null; // 이격거리 변경 시 이동할 가구
       isWallGap: 'left' | 'right' | null; // 벽과의 갭인 경우
+      gapType: 'left-wall' | 'right-wall' | 'between'; // 갭 유형
+      anchorX: number; // 갭 기준점 (가구 이동 계산용, mm)
     }> = [];
     const { startX, endX } = spaceBounds;
 
@@ -315,7 +317,7 @@ const FreePlacementDropZone: React.FC = () => {
     const labelYmm = floorFinishMm + baseHeightMm + 30; // 바닥 위 30mm
 
     // 왼쪽 벽 ~ 첫 가구
-    if (bounds[0].left - startX > 5) {
+    if (bounds[0].left - startX > 0.5) {
       const gapWidth = bounds[0].left - startX;
       gaps.push({
         startX,
@@ -325,6 +327,8 @@ const FreePlacementDropZone: React.FC = () => {
         centerY: labelYmm * 0.01,
         adjacentModuleId: bounds[0].id,
         isWallGap: 'left',
+        gapType: 'left-wall',
+        anchorX: startX, // 왼쪽 벽 위치
       });
     }
 
@@ -332,22 +336,24 @@ const FreePlacementDropZone: React.FC = () => {
     for (let i = 0; i < bounds.length - 1; i++) {
       const gapStart = bounds[i].right;
       const gapEnd = bounds[i + 1].left;
-      if (gapEnd - gapStart > 5) {
+      if (gapEnd - gapStart > 0.5) {
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
           width: Math.round(gapEnd - gapStart),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: labelYmm * 0.01,
-          adjacentModuleId: null, // 가구 사이 갭은 편집 불가
+          adjacentModuleId: bounds[i + 1].id, // 오른쪽 가구를 이동
           isWallGap: null,
+          gapType: 'between',
+          anchorX: gapStart, // 왼쪽 가구의 오른쪽 끝
         });
       }
     }
 
     // 마지막 가구 ~ 오른쪽 벽
     const lastBound = bounds[bounds.length - 1];
-    if (endX - lastBound.right > 5) {
+    if (endX - lastBound.right > 0.5) {
       const gapWidth = endX - lastBound.right;
       gaps.push({
         startX: lastBound.right,
@@ -357,6 +363,8 @@ const FreePlacementDropZone: React.FC = () => {
         centerY: labelYmm * 0.01,
         adjacentModuleId: lastBound.id,
         isWallGap: 'right',
+        gapType: 'right-wall',
+        anchorX: endX, // 오른쪽 벽 위치
       });
     }
 
@@ -377,7 +385,7 @@ const FreePlacementDropZone: React.FC = () => {
   const handleGapEditSubmit = useCallback(() => {
     if (editingGapIndex === null) return;
     const gap = remainingGaps[editingGapIndex];
-    if (!gap || !gap.adjacentModuleId || !gap.isWallGap) {
+    if (!gap || !gap.adjacentModuleId) {
       setEditingGapIndex(null);
       setEditingGapValue('');
       return;
@@ -401,10 +409,15 @@ const FreePlacementDropZone: React.FC = () => {
     const halfWidth = moduleWidthMm / 2;
 
     let newCenterXmm: number;
-    if (gap.isWallGap === 'left') {
+    if (gap.gapType === 'left-wall') {
+      // 왼쪽 벽에서 newGapMm 만큼 떨어지게
       newCenterXmm = spaceBounds.startX + newGapMm + halfWidth;
-    } else {
+    } else if (gap.gapType === 'right-wall') {
+      // 오른쪽 벽에서 newGapMm 만큼 떨어지게
       newCenterXmm = spaceBounds.endX - newGapMm - halfWidth;
+    } else {
+      // between: 왼쪽 가구의 오른쪽 끝(anchorX)에서 newGapMm 만큼 떨어지게
+      newCenterXmm = gap.anchorX + newGapMm + halfWidth;
     }
 
     const clampedX = clampToSpaceBoundsX(newCenterXmm, moduleWidthMm, spaceInfo);
@@ -849,8 +862,8 @@ const FreePlacementDropZone: React.FC = () => {
             </bufferGeometry>
             <lineBasicMaterial color="#3b82f6" linewidth={1} />
           </line>
-          {/* 치수 라벨 - 벽 갭이면 클릭 편집 가능 */}
-          {editingGapIndex === i && gap.isWallGap ? (
+          {/* 치수 라벨 - 클릭하면 인라인 편집 */}
+          {editingGapIndex === i ? (
             <Html
               position={[gap.centerX, gap.centerY + 0.1, 0.02]}
               center
@@ -897,24 +910,22 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[gap.centerX, gap.centerY + 0.1, 0.02]}
               center
-              style={{ pointerEvents: gap.isWallGap ? 'auto' : 'none', userSelect: 'none' }}
+              style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
               <div
                 style={{
-                  background: '#3b82f6',
+                  background: gap.gapType === 'between' ? '#f59e0b' : '#3b82f6',
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
                   fontSize: '11px',
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
-                  cursor: gap.isWallGap ? 'pointer' : 'default',
+                  cursor: 'pointer',
                 }}
                 onClick={(e) => {
-                  if (gap.isWallGap) {
-                    e.stopPropagation();
-                    handleGapLabelClick(i, gap.width);
-                  }
+                  e.stopPropagation();
+                  handleGapLabelClick(i, gap.width);
                 }}
               >
                 {gap.width}mm
