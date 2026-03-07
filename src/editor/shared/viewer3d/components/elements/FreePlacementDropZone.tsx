@@ -10,6 +10,7 @@ import {
   clampToSpaceBoundsX,
   checkFreeCollision,
   getModuleBoundsX,
+  detectDroppedZone,
   FurnitureBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
@@ -354,8 +355,12 @@ const FreePlacementDropZone: React.FC = () => {
     const rightDistance = Math.round(rightObstacle - modRight);
 
     const guideY = mod.position.y;
+    const heightMm = mod.freeHeight || 2325;
+    const halfHeightThree = (heightMm * 0.01) / 2;
+    const modTop = guideY + halfHeightThree;
+    const modBottom = guideY - halfHeightThree;
 
-    return { leftObstacle, rightObstacle, leftDistance, rightDistance, modLeft, modRight, guideY };
+    return { leftObstacle, rightObstacle, leftDistance, rightDistance, modLeft, modRight, guideY, modTop, modBottom };
   }, [movingModuleId, editingFreeModuleId, placedModules, spaceBounds]);
 
   // 고스트 모듈 데이터 (BoxModule에 전달)
@@ -912,6 +917,36 @@ const FreePlacementDropZone: React.FC = () => {
       {/* 드래그 이동 중인 가구의 실시간 이격거리 가이드 (편집 팝업 시에는 remainingGaps 사용) */}
       {editingDistanceGuides && isDraggingPlaced && (
         <>
+          {/* 가구 좌우 수직 연장선 (가이드선과 가구를 시각적으로 연결) */}
+          <line>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                array={new Float32Array([
+                  editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.modBottom, guideZPosition,
+                  editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.modTop, guideZPosition,
+                ])}
+                count={2}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color={themeColor} linewidth={1} />
+          </line>
+          <line>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                array={new Float32Array([
+                  editingDistanceGuides.modRight * 0.01, editingDistanceGuides.modBottom, guideZPosition,
+                  editingDistanceGuides.modRight * 0.01, editingDistanceGuides.modTop, guideZPosition,
+                ])}
+                count={2}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color={themeColor} linewidth={1} />
+          </line>
+
           {/* 왼쪽 이격거리 */}
           {editingDistanceGuides.leftDistance > 2 && (
             <group>
@@ -937,21 +972,6 @@ const FreePlacementDropZone: React.FC = () => {
                     array={new Float32Array([
                       editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
                       editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 오른쪽 틱 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
-                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
