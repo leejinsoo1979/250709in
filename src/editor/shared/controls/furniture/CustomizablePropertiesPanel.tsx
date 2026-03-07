@@ -195,6 +195,60 @@ const CustomizablePropertiesPanel: React.FC = () => {
     setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
   };
 
+  // 서랍 단수별 표준 높이 (mm) - 서랍 1개당 약 200mm
+  const DRAWER_HEIGHT_PER_UNIT = 200;
+
+  // 섹션 타입 변경 (연필 메뉴용) — 서랍 선택 시 단수도 함께 처리
+  const handleSectionTypeChange = (sIdx: number, elementType: CustomElement['type'], drawerCount?: number) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+
+    let newElement: CustomElement;
+    switch (elementType) {
+      case 'shelf':
+        newElement = { type: 'shelf', heights: [Math.round(sec.height / 2)] };
+        break;
+      case 'drawer': {
+        const count = drawerCount || 2;
+        // 서랍 단수에 따라 하부 섹션 높이 자동 조절 (2단 분할 시)
+        if (config.sections.length === 2 && sIdx === 0) {
+          const availableHeight = furnitureHeight - 4 * panelThickness;
+          const lowerH = Math.min(count * DRAWER_HEIGHT_PER_UNIT, availableHeight - 100);
+          const upperH = availableHeight - lowerH;
+          sec.height = lowerH;
+          sections[1] = { ...sections[1], height: upperH };
+          setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
+        }
+        // 균등 분배 서랍 높이 배열
+        const perDrawer = Math.round(sec.height / count);
+        const heights = Array.from({ length: count }, (_, i) => perDrawer * (i + 1));
+        newElement = { type: 'drawer', heights };
+        break;
+      }
+      case 'rod':
+        newElement = { type: 'rod', height: Math.round(sec.height * 0.85) };
+        break;
+      default:
+        newElement = { type: 'open' };
+    }
+
+    sec.elements = [newElement];
+    sec.hasPartition = false;
+    sec.partitionPosition = undefined;
+    sec.leftElements = undefined;
+    sec.rightElements = undefined;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 현재 섹션의 주요 타입과 서랍 단수 추출
+  const getSectionTypeInfo = (section: CustomSection) => {
+    const el = section.elements?.[0] || section.leftElements?.[0] || { type: 'open' as const };
+    const type = el.type;
+    const drawerCount = type === 'drawer' && 'heights' in el ? el.heights.length : 0;
+    return { type, drawerCount };
+  };
+
   // 칸막이 토글
   const handlePartitionToggle = (sIdx: number, hasPartition: boolean) => {
     const sections = [...config.sections];
@@ -634,14 +688,95 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
               <div className={styles.divider} />
 
-              {/* 섹션별 편집 (상부→하부 순서로 표시) */}
-              {config.sections.length > 1
-                ? [...config.sections].reverse().map((section, _i) => {
-                    const realIdx = config.sections.length - 1 - _i;
-                    return renderSectionEditor(section, realIdx);
-                  })
-                : config.sections.map((section, sIdx) => renderSectionEditor(section, sIdx))
-              }
+              {/* 섹션별 타입 선택 (연필 메뉴) */}
+              {config.sections.length > 1 ? (
+                /* 2단 분할: 상부→하부 순서로 타입 선택 */
+                [...config.sections].reverse().map((section, _i) => {
+                  const realIdx = config.sections.length - 1 - _i;
+                  const isUpper = realIdx === 1;
+                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
+                  const typeOptions = isUpper
+                    ? (['open', 'shelf', 'rod'] as const)
+                    : (['open', 'shelf', 'drawer', 'rod'] as const);
+
+                  return (
+                    <div key={realIdx} className={styles.section}>
+                      <div className={styles.sectionTitle}>
+                        {isUpper ? '상부 섹션' : '하부 섹션'}
+                        <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
+                          {section.height}mm
+                        </span>
+                      </div>
+                      <div className={styles.elementSelector}>
+                        {typeOptions.map((type) => (
+                          <button
+                            key={type}
+                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
+                            onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
+                          >
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : '옷봉'}
+                          </button>
+                        ))}
+                      </div>
+                      {/* 서랍 단수 선택 (하부만) */}
+                      {currentType === 'drawer' && !isUpper && (
+                        <div style={{ marginTop: '8px' }}>
+                          <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
+                          <div className={styles.elementSelector}>
+                            {[1, 2, 3, 4].map((count) => (
+                              <button
+                                key={count}
+                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
+                                onClick={() => handleSectionTypeChange(realIdx, 'drawer', count)}
+                              >
+                                {count}단
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                /* 분할 없음: 단일 섹션 타입 선택 */
+                (() => {
+                  const section = config.sections[0];
+                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
+                  return (
+                    <div className={styles.section}>
+                      <div className={styles.sectionTitle}>내부 구조</div>
+                      <div className={styles.elementSelector}>
+                        {(['open', 'shelf', 'drawer', 'rod'] as const).map((type) => (
+                          <button
+                            key={type}
+                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
+                            onClick={() => handleSectionTypeChange(0, type, type === 'drawer' ? 2 : undefined)}
+                          >
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : '옷봉'}
+                          </button>
+                        ))}
+                      </div>
+                      {currentType === 'drawer' && (
+                        <div style={{ marginTop: '8px' }}>
+                          <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
+                          <div className={styles.elementSelector}>
+                            {[1, 2, 3, 4].map((count) => (
+                              <button
+                                key={count}
+                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
+                                onClick={() => handleSectionTypeChange(0, 'drawer', count)}
+                              >
+                                {count}단
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
+              )}
             </>
           )}
         </div>
