@@ -11,7 +11,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
-import { SettingsIcon } from '@/components/common/Icons';
+import { EditIcon } from '@/components/common/Icons';
 
 interface CustomizableBoxModuleProps {
   width: number;   // mm
@@ -184,7 +184,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           onMouseLeave={() => setHoveredIcon(null)}
           title="섹션 편집"
         >
-          <SettingsIcon color={themeColor} size={14} />
+          <EditIcon color={themeColor} size={14} />
         </div>
       </Html>
     );
