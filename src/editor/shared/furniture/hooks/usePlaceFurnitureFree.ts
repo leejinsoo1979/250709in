@@ -25,6 +25,7 @@ export interface PlaceFurnitureFreeParams {
   };
   existingModules: PlacedModule[];
   moduleData?: ModuleData;
+  skipCollisionCheck?: boolean;
 }
 
 export interface PlaceFurnitureFreeResult {
@@ -61,7 +62,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     category: moduleData.category as 'full' | 'upper' | 'lower',
   };
 
-  if (checkFreeCollision(existingModules, newBounds)) {
+  if (!params.skipCollisionCheck && checkFreeCollision(existingModules, newBounds)) {
     return { success: false, error: '다른 가구와 겹칩니다' };
   }
 

@@ -33,6 +33,7 @@ const FreePlacementDropZone: React.FC = () => {
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
   const [isColliding, setIsColliding] = useState(false);
+  const [isSnapped, setIsSnapped] = useState(false);
   const planeRef = useRef<THREE.Mesh>(null);
 
   // 배치된 가구 이동 상태
@@ -129,6 +130,7 @@ const FreePlacementDropZone: React.FC = () => {
     };
 
     // 스냅 위치에서는 충돌 판정 안함 (정확히 붙은 상태이므로)
+    setIsSnapped(snapped);
     if (snapped) {
       setIsColliding(false);
     } else {
@@ -137,7 +139,7 @@ const FreePlacementDropZone: React.FC = () => {
   }, [spaceInfo, placedModules, spaceBounds]);
 
   // 배치 실행 공통 함수
-  const executePlacement = useCallback((moduleId: string, xMm: number, dims: { width: number; height: number; depth: number }, modData: any) => {
+  const executePlacement = useCallback((moduleId: string, xMm: number, dims: { width: number; height: number; depth: number }, modData: any, skipCollision?: boolean) => {
     const result = placeFurnitureFree({
       moduleId,
       xPositionMM: xMm,
@@ -145,6 +147,7 @@ const FreePlacementDropZone: React.FC = () => {
       dimensions: dims,
       existingModules: placedModules,
       moduleData: modData,
+      skipCollisionCheck: skipCollision,
     });
 
     if (result.success && result.module) {
@@ -179,7 +182,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (!activeModuleId || !activeModuleData || !activeDimensions || hoverXmm === null || isColliding)
         return;
       e.stopPropagation();
-      const placed = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData);
+      const placed = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData, isSnapped);
       if (placed) {
         // 배치 성공 후 선택 해제 (고스트 제거)
         useFurnitureStore.getState().setSelectedFurnitureId(null);
@@ -188,7 +191,7 @@ const FreePlacementDropZone: React.FC = () => {
         setIsColliding(false);
       }
     },
-    [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, executePlacement]
+    [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
   );
 
   // 고스트 Y 위치 계산
