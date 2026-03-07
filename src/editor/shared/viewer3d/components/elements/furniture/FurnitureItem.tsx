@@ -1148,6 +1148,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let furnitureHeightMm = (placedModule.isFreePlacement && placedModule.freeHeight)
     ? placedModule.freeHeight
     : (actualModuleData?.dimensions.height || 0);
+
+  // 자유배치 띄움배치: 가구 높이를 가용 공간에 맞춰 클램핑 (천장 뚫림 방지)
+  if (placedModule.isFreePlacement && !isUpperCabinetForY) {
+    const isFloatMode = spaceInfo.baseConfig?.type === 'stand' &&
+      spaceInfo.baseConfig?.placementType === 'float' &&
+      (spaceInfo.baseConfig?.floatHeight || 0) > 0;
+    if (isFloatMode) {
+      const ffMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      const topFrMM = spaceInfo.frameSize?.top || 10;
+      const floatMM = spaceInfo.baseConfig?.floatHeight || 0;
+      const availMM = spaceInfo.height - ffMM - topFrMM - floatMM;
+      if (furnitureHeightMm > availMM) {
+        furnitureHeightMm = Math.max(availMM, 0);
+      }
+    }
+  }
+
   let adjustedCustomSections = placedModule.customSections;
 
   // 섹션 높이 조정 (actualModuleData.dimensions.height가 이미 조정된 경우를 대비)
