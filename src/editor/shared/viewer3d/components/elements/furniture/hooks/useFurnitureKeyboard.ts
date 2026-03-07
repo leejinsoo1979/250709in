@@ -48,7 +48,10 @@ export const useFurnitureKeyboard = ({
       if ((editMode && editingModuleId) || (activePopup.type === 'furnitureEdit' && activePopup.id)) {
         const editingModule = placedModules.find(m => m.id === targetModuleId);
         if (!editingModule) return;
-        
+
+        // 자유배치 가구는 FreePlacementDropZone의 키보드 핸들러에서 처리
+        if (editingModule.isFreePlacement) return;
+
         // 편집 중인 가구의 데이터 가져오기
         const moduleData = getModuleById(editingModule.moduleId, internalSpace, spaceInfo);
         if (!moduleData) return;

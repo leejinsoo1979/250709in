@@ -311,10 +311,11 @@ const FreePlacementDropZone: React.FC = () => {
     }> = [];
     const { startX, endX } = spaceBounds;
 
-    // 바닥 기준 Y 위치 계산
+    // Y 위치 계산 - 벽 갭은 공간 중간, 가구 사이 갭은 바닥 근처
     const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
-    const labelYmm = floorFinishMm + baseHeightMm + 30; // 바닥 위 30mm
+    const midYmm = spaceInfo.height / 2; // 공간 중간 높이
+    const bottomYmm = floorFinishMm + baseHeightMm + 30; // 바닥 위 30mm
 
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left - startX > 0.5) {
@@ -324,11 +325,11 @@ const FreePlacementDropZone: React.FC = () => {
         endX: bounds[0].left,
         width: Math.round(gapWidth),
         centerX: ((startX + bounds[0].left) / 2) * 0.01,
-        centerY: labelYmm * 0.01,
+        centerY: midYmm * 0.01,
         adjacentModuleId: bounds[0].id,
         isWallGap: 'left',
         gapType: 'left-wall',
-        anchorX: startX, // 왼쪽 벽 위치
+        anchorX: startX,
       });
     }
 
@@ -342,11 +343,11 @@ const FreePlacementDropZone: React.FC = () => {
           endX: gapEnd,
           width: Math.round(gapEnd - gapStart),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
-          centerY: labelYmm * 0.01,
-          adjacentModuleId: bounds[i + 1].id, // 오른쪽 가구를 이동
+          centerY: bottomYmm * 0.01,
+          adjacentModuleId: bounds[i + 1].id,
           isWallGap: null,
           gapType: 'between',
-          anchorX: gapStart, // 왼쪽 가구의 오른쪽 끝
+          anchorX: gapStart,
         });
       }
     }
@@ -360,11 +361,11 @@ const FreePlacementDropZone: React.FC = () => {
         endX,
         width: Math.round(gapWidth),
         centerX: ((lastBound.right + endX) / 2) * 0.01,
-        centerY: labelYmm * 0.01,
+        centerY: midYmm * 0.01,
         adjacentModuleId: lastBound.id,
         isWallGap: 'right',
         gapType: 'right-wall',
-        anchorX: endX, // 오른쪽 벽 위치
+        anchorX: endX,
       });
     }
 
