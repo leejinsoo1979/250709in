@@ -819,9 +819,50 @@ const FreePlacementDropZone: React.FC = () => {
       ) : null}
 
       {/* 배치 후 남은 공간 사이즈 표시 */}
-      {remainingGaps.map((gap, i) => (
+      {remainingGaps.map((gap, i) => {
+        const isWall = gap.gapType !== 'between';
+        const lineColor = isWall ? '#ef4444' : '#3b82f6';
+        const guideBottomY = 0;
+        const guideTopY = spaceInfo.height * 0.01;
+
+        return (
         <group key={`gap-${i}`}>
-          {/* 갭 영역 표시선 (바닥 위) */}
+          {/* 벽 갭: 세로 가이드 라인 (바닥~천장) */}
+          {isWall && (
+            <>
+              {/* 왼쪽 세로 가이드 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      gap.startX * 0.01, guideBottomY, 0.02,
+                      gap.startX * 0.01, guideTopY, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={lineColor} linewidth={1} transparent opacity={0.4} />
+              </line>
+              {/* 오른쪽 세로 가이드 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      (gap.startX + gap.width) * 0.01, guideBottomY, 0.02,
+                      (gap.startX + gap.width) * 0.01, guideTopY, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={lineColor} linewidth={1} transparent opacity={0.4} />
+              </line>
+            </>
+          )}
+          {/* 가로 치수선 */}
           <line>
             <bufferGeometry>
               <bufferAttribute
@@ -834,7 +875,7 @@ const FreePlacementDropZone: React.FC = () => {
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial color="#3b82f6" linewidth={1} />
+            <lineBasicMaterial color={lineColor} linewidth={1} />
           </line>
           {/* 양쪽 틱 마크 */}
           <line>
@@ -842,28 +883,28 @@ const FreePlacementDropZone: React.FC = () => {
               <bufferAttribute
                 attach="attributes-position"
                 array={new Float32Array([
-                  gap.startX * 0.01, gap.centerY - 0.05, 0.02,
-                  gap.startX * 0.01, gap.centerY + 0.05, 0.02,
+                  gap.startX * 0.01, gap.centerY - 0.08, 0.02,
+                  gap.startX * 0.01, gap.centerY + 0.08, 0.02,
                 ])}
                 count={2}
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial color="#3b82f6" linewidth={1} />
+            <lineBasicMaterial color={lineColor} linewidth={1} />
           </line>
           <line>
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"
                 array={new Float32Array([
-                  (gap.startX + gap.width) * 0.01, gap.centerY - 0.05, 0.02,
-                  (gap.startX + gap.width) * 0.01, gap.centerY + 0.05, 0.02,
+                  (gap.startX + gap.width) * 0.01, gap.centerY - 0.08, 0.02,
+                  (gap.startX + gap.width) * 0.01, gap.centerY + 0.08, 0.02,
                 ])}
                 count={2}
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial color="#3b82f6" linewidth={1} />
+            <lineBasicMaterial color={lineColor} linewidth={1} />
           </line>
           {/* 치수 라벨 - 클릭하면 인라인 편집 */}
           {editingGapIndex === i ? (
@@ -917,7 +958,7 @@ const FreePlacementDropZone: React.FC = () => {
             >
               <div
                 style={{
-                  background: gap.gapType === 'between' ? '#f59e0b' : '#3b82f6',
+                  background: gap.gapType === 'between' ? '#3b82f6' : '#ef4444',
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
@@ -936,7 +977,8 @@ const FreePlacementDropZone: React.FC = () => {
             </Html>
           )}
         </group>
-      ))}
+        );
+      })}
     </>
   );
 };
