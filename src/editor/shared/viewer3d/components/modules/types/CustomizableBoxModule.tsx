@@ -368,8 +368,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         furnitureId={placedFurnitureId}
       />
 
-      {/* 내부 구조 */}
-      {!isDragging && renderSections()}
+      {/* 내부 구조 (편집 모드에서도 보여줘야 실시간 반영 확인 가능) */}
+      {(!isDragging || isEditMode) && renderSections()}
 
       {/* 조절발 (upper가 아닌 경우, 띄움배치 아닐 때) */}
       {showFurniture && category !== 'upper' && (
