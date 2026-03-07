@@ -2114,7 +2114,7 @@ const Room: React.FC<RoomProps> = ({
                       ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(7))  // 단내림 구간: 가구 앞면에서 7mm 앞
                 ]}
-                material={createFrameMaterial('left')}
+                material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
@@ -2230,7 +2230,7 @@ const Room: React.FC<RoomProps> = ({
                   : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={leftPosition}
-            material={createFrameMaterial('left')}
+            material={leftFrameMaterial ?? createFrameMaterial('left')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
           />
@@ -2426,7 +2426,7 @@ const Room: React.FC<RoomProps> = ({
                   console.log('🎯 [단내림 오른쪽 프레임 position]', pos);
                   return pos;
                 })()}
-                material={createFrameMaterial('right')}
+                material={rightFrameMaterial ?? createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
@@ -2493,7 +2493,7 @@ const Room: React.FC<RoomProps> = ({
                   ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                   : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))  // 일반 구간: 가구 앞면에서 3mm 앞
             ]}
-            material={createFrameMaterial('right')}
+            material={rightFrameMaterial ?? createFrameMaterial('right')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
           />
@@ -2582,7 +2582,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('top')}
+                  material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
 
                   shadowEnabled={shadowEnabled}
@@ -2728,7 +2728,7 @@ const Room: React.FC<RoomProps> = ({
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
-                      material={createFrameMaterial('top')}
+                      material={topFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2749,7 +2749,7 @@ const Room: React.FC<RoomProps> = ({
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
-                      material={createFrameMaterial('top')}
+                      material={topFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
@@ -2828,7 +2828,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('top')}
+                  material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
 
                   shadowEnabled={shadowEnabled}
@@ -2866,7 +2866,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('top')}
+                  material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
 
                   shadowEnabled={shadowEnabled}
@@ -2921,7 +2921,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={createFrameMaterial('top')}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
 
                     shadowEnabled={shadowEnabled}
@@ -2995,7 +2995,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={createFrameMaterial('top')}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
 
                     shadowEnabled={shadowEnabled}
@@ -3075,7 +3075,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={createFrameMaterial('left')}
+                      material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -3097,7 +3097,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={createFrameMaterial('left')}
+                      material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -3129,7 +3129,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={createFrameMaterial('left')}
+                      material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -3181,7 +3181,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={createFrameMaterial('right')}
+                      material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -3205,7 +3205,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={createFrameMaterial('right')}
+                      material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -3237,7 +3237,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={createFrameMaterial('right')}
+                      material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -3361,7 +3361,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
                         mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                       ]}
-                      material={createFrameMaterial('base')}
+                      material={baseFrameMaterial ?? createFrameMaterial('base')}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
@@ -3443,7 +3443,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
                         mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                       ]}
-                      material={createFrameMaterial('base')}
+                      material={baseFrameMaterial ?? createFrameMaterial('base')}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
@@ -3484,7 +3484,7 @@ const Room: React.FC<RoomProps> = ({
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(END_PANEL_THICKNESS) -
                         mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                       ]}
-                      material={createFrameMaterial('base')}
+                      material={baseFrameMaterial ?? createFrameMaterial('base')}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
