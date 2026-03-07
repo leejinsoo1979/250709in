@@ -8,9 +8,9 @@ import styles from './CustomizableFurnitureLibrary.module.css';
 
 // 커스터마이징 가구 카테고리별 기본 치수 (mm)
 const CUSTOMIZABLE_DEFAULTS: Record<string, { width: number; height: number; depth: number; label: string }> = {
-  full: { width: 600, height: 0, depth: 580, label: '커스텀 캐비닛' },   // height는 공간 높이에 따라 동적
-  upper: { width: 600, height: 700, depth: 340, label: '커스텀 상부장' },
-  lower: { width: 600, height: 800, depth: 580, label: '커스텀 하부장' },
+  full: { width: 1000, height: 0, depth: 580, label: '커스텀 캐비닛' },   // height는 공간 높이에 따라 동적
+  upper: { width: 1000, height: 700, depth: 340, label: '커스텀 상부장' },
+  lower: { width: 1000, height: 800, depth: 580, label: '커스텀 하부장' },
 };
 
 // 커스터마이징 가구를 위한 기본 빈 설정 생성
