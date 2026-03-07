@@ -15,6 +15,8 @@ import {
 } from '@/editor/shared/utils/freePlacementUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
+import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 
 export interface PlaceFurnitureFreeParams {
   moduleId: string;
@@ -28,6 +30,7 @@ export interface PlaceFurnitureFreeParams {
   existingModules: PlacedModule[];
   moduleData?: ModuleData;
   skipCollisionCheck?: boolean;
+  pendingPlacement?: PendingPlacement | null; // My캐비닛 배치 데이터
 }
 
 export interface PlaceFurnitureFreeResult {
@@ -115,6 +118,15 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   const isCustomizable = isCustomizableModuleId(moduleId);
 
+  // My캐비닛에서 pendingPlacement의 customConfig 사용, 없으면 기본 생성
+  const pp = params.pendingPlacement;
+  let customConfig: CustomFurnitureConfig | undefined;
+  if (isCustomizable) {
+    customConfig = pp?.customConfig
+      ? JSON.parse(JSON.stringify(pp.customConfig))
+      : createDefaultCustomConfig(effectiveHeight - 36); // 상하판 두께 제외
+  }
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId,
@@ -131,9 +143,14 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     hasTopFrame: moduleData.category !== 'lower',
     ...(isCustomizable && {
       isCustomizable: true,
-      customConfig: createDefaultCustomConfig(effectiveHeight - 36), // 상하판 두께 제외
+      customConfig,
     }),
   };
+
+  // 배치 완료 후 pendingPlacement 초기화
+  if (pp) {
+    useMyCabinetStore.getState().setPendingPlacement(null);
+  }
 
   console.log('✅ [placeFurnitureFree] 배치 완료:', newModule);
   return { success: true, module: newModule };

@@ -19,6 +19,7 @@ import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
@@ -56,6 +57,7 @@ const FreePlacementDropZone: React.FC = () => {
   const { selectedFurnitureId, placedModules, addModule, updatePlacedModule } = useFurnitureStore();
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
+  const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
   const [isColliding, setIsColliding] = useState(false);
@@ -108,17 +110,24 @@ const FreePlacementDropZone: React.FC = () => {
       const category = getCustomizableCategory(selectedFurnitureId);
       const defaults = CUSTOMIZABLE_DEFAULTS[category];
       const height = category === 'full' ? internalSpace.height : defaults.height;
+
+      // pendingPlacement가 있으면 저장된 치수 사용 (My캐비닛)
+      const pp = pendingPlacement;
+      const useWidth = pp ? pp.width : defaults.width;
+      const useHeight = pp ? pp.height : height;
+      const useDepth = pp ? pp.depth : defaults.depth;
+
       return {
         id: selectedFurnitureId,
-        name: defaults.label,
-        category: category as 'full' | 'upper' | 'lower',
-        dimensions: { width: defaults.width, height, depth: defaults.depth },
+        name: pp ? 'My캐비닛' : defaults.label,
+        category: (pp ? pp.category : category) as 'full' | 'upper' | 'lower',
+        dimensions: { width: useWidth, height: useHeight, depth: useDepth },
         color: '#D4C5A9',
-        description: defaults.label,
+        description: pp ? 'My캐비닛' : defaults.label,
         hasDoor: false,
         isDynamic: false,
         type: 'box' as const,
-        defaultDepth: defaults.depth,
+        defaultDepth: useDepth,
         modelConfig: {
           basicThickness: 18,
           hasOpenFront: true,
@@ -129,7 +138,7 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     return getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
-  }, [selectedFurnitureId, internalSpace, spaceInfo]);
+  }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement]);
 
   // 활성 가구 치수
   const activeDimensions = useMemo(() => {
@@ -269,6 +278,7 @@ const FreePlacementDropZone: React.FC = () => {
       existingModules: placedModules,
       moduleData: modData,
       skipCollisionCheck: skipCollision,
+      pendingPlacement,
     });
 
     if (result.success && result.module) {
@@ -279,7 +289,7 @@ const FreePlacementDropZone: React.FC = () => {
       console.warn('❌ [FreePlacement] 배치 실패:', result.error);
       return false;
     }
-  }, [spaceInfo, placedModules, addModule]);
+  }, [spaceInfo, placedModules, addModule, pendingPlacement]);
 
   // R3F onPointerMove - 고스트가 마우스를 따라다님
   const handlePointerMove = useCallback(
