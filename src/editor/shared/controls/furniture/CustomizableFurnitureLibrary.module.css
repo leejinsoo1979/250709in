@@ -1,0 +1,60 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--theme-border, #e0e0e0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--theme-surface, #fff);
+}
+
+.item:hover {
+  border-color: var(--theme-primary, #4a90d9);
+  background: var(--theme-surface-hover, #f5f8ff);
+}
+
+.itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  background: var(--theme-surface-alt, #f5f5f5);
+  color: var(--theme-text-secondary, #666);
+  flex-shrink: 0;
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text, #333);
+}
+
+.itemDimension {
+  font-size: 11px;
+  color: var(--theme-text-secondary, #999);
+}
+
+.helpText {
+  font-size: 11px;
+  color: var(--theme-text-secondary, #999);
+  line-height: 1.5;
+  margin: 0;
+  padding: 0 4px;
+}

@@ -18,6 +18,7 @@ import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furnitur
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
@@ -101,6 +102,32 @@ const FreePlacementDropZone: React.FC = () => {
   const activeModuleId = selectedFurnitureId;
   const activeModuleData = useMemo(() => {
     if (!selectedFurnitureId) return null;
+
+    // 커스터마이징 가구 ID 처리
+    if (isCustomizableModuleId(selectedFurnitureId)) {
+      const category = getCustomizableCategory(selectedFurnitureId);
+      const defaults = CUSTOMIZABLE_DEFAULTS[category];
+      const height = category === 'full' ? internalSpace.height : defaults.height;
+      return {
+        id: selectedFurnitureId,
+        name: defaults.label,
+        category: category as 'full' | 'upper' | 'lower',
+        dimensions: { width: defaults.width, height, depth: defaults.depth },
+        color: '#D4C5A9',
+        description: defaults.label,
+        hasDoor: false,
+        isDynamic: false,
+        type: 'box' as const,
+        defaultDepth: defaults.depth,
+        modelConfig: {
+          basicThickness: 18,
+          hasOpenFront: true,
+          hasShelf: false,
+          sections: [],
+        },
+      };
+    }
+
     return getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
   }, [selectedFurnitureId, internalSpace, spaceInfo]);
 

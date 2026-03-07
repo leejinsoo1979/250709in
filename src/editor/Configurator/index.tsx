@@ -37,6 +37,7 @@ import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModuleProp
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
 import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFurnitureLibrary';
 import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurnitureUpload';
+import CustomizableFurnitureLibrary from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -2718,6 +2719,40 @@ const Configurator: React.FC = () => {
           </div>
         );
       case 'custom':
+        return (
+          <div className={styles.sidebarPanel}>
+            <div className={styles.modulePanelContent}>
+              {/* 전체장/상부장/하부장 토글 탭 */}
+              <div className={styles.moduleCategoryTabs}>
+                <button
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'full' ? styles.active : ''}`}
+                  onClick={() => setCustomCategory('full')}
+                >
+                  전체장
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'upper' ? styles.active : ''}`}
+                  onClick={() => setCustomCategory('upper')}
+                >
+                  상부장
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'lower' ? styles.active : ''}`}
+                  onClick={() => setCustomCategory('lower')}
+                >
+                  하부장
+                </button>
+              </div>
+
+              <div className={styles.moduleSection}>
+                <CustomizableFurnitureLibrary
+                  filter={customCategory}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      case 'upload':
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>

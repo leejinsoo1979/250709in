@@ -14,6 +14,7 @@ import {
   FurnitureBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
 export interface PlaceFurnitureFreeParams {
   moduleId: string;
@@ -89,6 +90,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   const baseType = moduleId.replace(/-[\d.]+$/, '');
 
+  const isCustomizable = isCustomizableModuleId(moduleId);
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId,
@@ -101,6 +104,10 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     freeHeight: effectiveHeight,
     freeDepth: dimensions.depth,
     zone: effectiveZone,
+    ...(isCustomizable && {
+      isCustomizable: true,
+      customConfig: createDefaultCustomConfig(effectiveHeight - 36), // 상하판 두께 제외
+    }),
   };
 
   console.log('✅ [placeFurnitureFree] 배치 완료:', newModule);
