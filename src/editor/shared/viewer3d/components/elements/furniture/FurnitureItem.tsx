@@ -1771,6 +1771,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 단내림 구간에서는 zone별 columnWidth 사용
   let originalSlotWidthMm: number;
 
+  // 자유배치 모드에서는 freeWidth를 도어 기준 너비로 사용
+  if (placedModule.isFreePlacement && placedModule.freeWidth) {
+    originalSlotWidthMm = placedModule.freeWidth;
+  } else {
+
   // 노서라운드 모드에서 끝 슬롯인지 확인
   const isEndSlotInNoSurround = spaceInfo.surroundType === 'no-surround' &&
     normalizedSlotIndex !== undefined &&
@@ -1833,6 +1838,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
   }
+  } // end else (slot-based originalSlotWidthMm)
 
   // 도어 크기 디버깅
   if (placedModule.hasDoor) {
@@ -1858,7 +1864,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 벽없음 + 노서라운드 모드에서 벽이 없는 쪽의 가구는 도어가 엔드패널을 덮도록 확장
   let doorWidthExpansion = 0;
-  let doorWidth = actualModuleData?.dimensions.width || 0;
+  let doorWidth = (placedModule.isFreePlacement && placedModule.freeWidth)
+    ? placedModule.freeWidth
+    : (actualModuleData?.dimensions.width || 0);
   let doorXOffset = 0;
   let originalSlotWidthForDoor = originalSlotWidthMm;
 
