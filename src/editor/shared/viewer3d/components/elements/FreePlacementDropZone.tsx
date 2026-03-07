@@ -339,6 +339,18 @@ const FreePlacementDropZone: React.FC = () => {
     return furnitureZOffset + furnitureDepth / 2 - doorThickness - previewDepth / 2;
   }, [activeDimensions, spaceInfo.depth]);
 
+  // 치수선 Z 좌표 (가구 도어 앞면보다 약간 앞)
+  const guideZPosition = useMemo(() => {
+    const panelDepthMm = spaceInfo.depth || 600;
+    const panelDepth = panelDepthMm * 0.01;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const furnitureDepth = furnitureDepthMm * 0.01;
+    const zOffset = -panelDepth / 2;
+    const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+    // 가구 앞면 + 약간 앞으로
+    return furnitureZOffset + furnitureDepth / 2 + 0.02;
+  }, [spaceInfo.depth]);
+
   // 고스트 위치
   const ghostPosition = useMemo(() => {
     if (hoverXmm === null || !activeDimensions) return null;
@@ -724,8 +736,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY, 0.02,
-                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY, 0.02,
+                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY, guideZPosition,
+                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -739,8 +751,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
-                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -754,8 +766,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
-                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -768,7 +780,7 @@ const FreePlacementDropZone: React.FC = () => {
                 position={[
                   ((ghostDistanceGuides.leftObstacle + ghostDistanceGuides.ghostLeft) / 2) * 0.01,
                   ghostDistanceGuides.guideY + 0.15,
-                  0.02,
+                  guideZPosition,
                 ]}
                 center
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
@@ -797,8 +809,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY, 0.02,
-                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY, 0.02,
+                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY, guideZPosition,
+                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -812,8 +824,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
-                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -827,8 +839,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
-                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -841,7 +853,7 @@ const FreePlacementDropZone: React.FC = () => {
                 position={[
                   ((ghostDistanceGuides.ghostRight + ghostDistanceGuides.rightObstacle) / 2) * 0.01,
                   ghostDistanceGuides.guideY + 0.15,
-                  0.02,
+                  guideZPosition,
                 ]}
                 center
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
@@ -874,8 +886,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY, 0.02,
-                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY, 0.02,
+                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY, guideZPosition,
+                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -889,8 +901,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
-                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -904,8 +916,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
-                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -918,7 +930,7 @@ const FreePlacementDropZone: React.FC = () => {
                 position={[
                   ((editingDistanceGuides.leftObstacle + editingDistanceGuides.modLeft) / 2) * 0.01,
                   editingDistanceGuides.guideY + 0.15,
-                  0.02,
+                  guideZPosition,
                 ]}
                 center
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
@@ -946,8 +958,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY, 0.02,
-                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY, 0.02,
+                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY, guideZPosition,
+                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -961,8 +973,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
-                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -976,8 +988,8 @@ const FreePlacementDropZone: React.FC = () => {
                   <bufferAttribute
                     attach="attributes-position"
                     array={new Float32Array([
-                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
-                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
                     ])}
                     count={2}
                     itemSize={3}
@@ -990,7 +1002,7 @@ const FreePlacementDropZone: React.FC = () => {
                 position={[
                   ((editingDistanceGuides.modRight + editingDistanceGuides.rightObstacle) / 2) * 0.01,
                   editingDistanceGuides.guideY + 0.15,
-                  0.02,
+                  guideZPosition,
                 ]}
                 center
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
@@ -1039,8 +1051,8 @@ const FreePlacementDropZone: React.FC = () => {
               <bufferAttribute
                 attach="attributes-position"
                 array={new Float32Array([
-                  gap.startX * 0.01, gap.centerY, 0.02,
-                  gap.endX * 0.01, gap.centerY, 0.02,
+                  gap.startX * 0.01, gap.centerY, guideZPosition,
+                  gap.endX * 0.01, gap.centerY, guideZPosition,
                 ])}
                 count={2}
                 itemSize={3}
@@ -1054,8 +1066,8 @@ const FreePlacementDropZone: React.FC = () => {
               <bufferAttribute
                 attach="attributes-position"
                 array={new Float32Array([
-                  gap.startX * 0.01, gap.centerY - 0.08, 0.02,
-                  gap.startX * 0.01, gap.centerY + 0.08, 0.02,
+                  gap.startX * 0.01, gap.centerY - 0.08, guideZPosition,
+                  gap.startX * 0.01, gap.centerY + 0.08, guideZPosition,
                 ])}
                 count={2}
                 itemSize={3}
@@ -1068,8 +1080,8 @@ const FreePlacementDropZone: React.FC = () => {
               <bufferAttribute
                 attach="attributes-position"
                 array={new Float32Array([
-                  gap.endX * 0.01, gap.centerY - 0.08, 0.02,
-                  gap.endX * 0.01, gap.centerY + 0.08, 0.02,
+                  gap.endX * 0.01, gap.centerY - 0.08, guideZPosition,
+                  gap.endX * 0.01, gap.centerY + 0.08, guideZPosition,
                 ])}
                 count={2}
                 itemSize={3}
@@ -1080,7 +1092,7 @@ const FreePlacementDropZone: React.FC = () => {
           {/* 치수 라벨 - 클릭하면 인라인 편집 */}
           {editingGapIndex === i ? (
             <Html
-              position={[gap.centerX, gap.centerY + 0.1, 0.02]}
+              position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
               style={{ pointerEvents: 'auto' }}
               zIndexRange={[10000, 10001]}
@@ -1123,7 +1135,7 @@ const FreePlacementDropZone: React.FC = () => {
             </Html>
           ) : (
             <Html
-              position={[gap.centerX, gap.centerY + 0.1, 0.02]}
+              position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
               style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
