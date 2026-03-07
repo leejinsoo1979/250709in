@@ -141,6 +141,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     posY: number,
     posZ: number,
     sectionIndex: number,
+    areaSide?: 'left' | 'right',
   ) => {
     const isHov = hoveredIcon === key;
     const themeColor = getThemeColor();
@@ -177,7 +178,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             if (isEditMode) {
               useUIStore.getState().closeAllPopups();
             } else if (placedFurnitureId) {
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex);
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide);
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}
@@ -209,8 +210,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
           const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
           const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-          icons.push(renderSectionIcon(`${prefix}-left`, leftCenterX, centerY, frontZ, sIdx));
-          icons.push(renderSectionIcon(`${prefix}-right`, rightCenterX, centerY, frontZ, sIdx));
+          icons.push(renderSectionIcon(`${prefix}-left`, leftCenterX, centerY, frontZ, sIdx, 'left'));
+          icons.push(renderSectionIcon(`${prefix}-right`, rightCenterX, centerY, frontZ, sIdx, 'right'));
         } else {
           icons.push(renderSectionIcon(prefix, 0, centerY, frontZ, sIdx));
         }
@@ -223,8 +224,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const partX = -innerW / 2 + mmToUnit(sections[0].partitionPosition);
         const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
         const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-        icons.push(renderSectionIcon('single-left', leftCenterX, 0, frontZ, 0));
-        icons.push(renderSectionIcon('single-right', rightCenterX, 0, frontZ, 0));
+        icons.push(renderSectionIcon('single-left', leftCenterX, 0, frontZ, 0, 'left'));
+        icons.push(renderSectionIcon('single-right', rightCenterX, 0, frontZ, 0, 'right'));
       } else {
         icons.push(renderSectionIcon('single', 0, 0, frontZ, 0));
       }

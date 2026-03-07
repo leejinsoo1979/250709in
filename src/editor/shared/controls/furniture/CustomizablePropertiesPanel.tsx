@@ -19,6 +19,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const placedModule = placedModules.find((m) => m.id === moduleId);
   // sectionIndex가 있으면 톱니 아이콘 클릭 → 해당 섹션 세부설정만 표시
   const focusedSectionIndex = activePopup.sectionIndex;
+  // areaSide가 있으면 칸막이 좌/우 중 특정 영역만 편집
+  const focusedAreaSide = activePopup.areaSide;
 
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
@@ -751,9 +753,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 섹션 편집 UI 렌더링
-  const renderSectionEditor = (section: CustomSection, sIdx: number) => {
+  const renderSectionEditor = (section: CustomSection, sIdx: number, areaSide?: 'left' | 'right') => {
     const innerW = furnitureWidth - 2 * panelThickness;
     const hasPartition = section.hasPartition || false;
+
+    // areaSide가 지정되면 해당 영역의 요소 편집만 표시
+    if (areaSide) {
+      const elements = areaSide === 'left' ? section.leftElements : section.rightElements;
+      const areaLabel = areaSide === 'left' ? '좌측' : '우측';
+      return (
+        <div key={`${sIdx}-${areaSide}`} className={styles.section}>
+          <div className={styles.sectionTitle}>{areaLabel} 영역</div>
+          <div className={styles.areaCard}>
+            {renderElementEditor(sIdx, areaSide, elements, section.height)}
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div key={sIdx} className={styles.section}>
@@ -885,9 +901,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
         <div className={styles.header}>
           <span className={styles.headerTitle}>
             {focusedSectionIndex !== undefined
-              ? config.sections.length === 1
-                ? '섹션 설정'
-                : `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
+              ? focusedAreaSide
+                ? `${focusedAreaSide === 'left' ? '좌측' : '우측'} 영역 설정`
+                : config.sections.length === 1
+                  ? '섹션 설정'
+                  : `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
               : '커스터마이징 가구 편집'}
           </span>
           <button className={styles.closeButton} onClick={closeAllPopups}>
@@ -898,7 +916,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
         {/* 본문 */}
         <div className={styles.body}>
           {focusedSectionIndex !== undefined ? (
-            /* 톱니 아이콘 클릭: 해당 섹션 세부설정만 */
+            focusedAreaSide ? (
+              /* 칸막이 좌/우 영역 톱니 아이콘 클릭: 해당 영역만 편집 */
+              config.sections[focusedSectionIndex] &&
+                renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex, focusedAreaSide)
+            ) : (
+            /* 톱니 아이콘 클릭: 해당 섹션 세부설정 */
             <>
               {/* 섹션 분할 토글 (톱니 메뉴에서도 상하부 분할 가능) */}
               <div className={styles.section}>
@@ -977,6 +1000,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
               )}
             </>
+            )
           ) : (
             /* 연필 아이콘 클릭: 치수 + 섹션 분할/크기 + 전체 섹션 편집 */
             <>
@@ -1376,22 +1400,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
           )}
         </div>
 
-        {/* My캐비닛 저장 */}
-        <div style={{ padding: '0 20px 8px' }}>
-          <button className={styles.saveButton} onClick={handleSaveToCabinet}>
-            My캐비닛에 저장
-          </button>
-        </div>
-
-        {/* 하단 버튼 */}
-        <div className={styles.footer}>
-          <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={handleDelete}>
-            취소
-          </button>
-          <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
-            생성
-          </button>
-        </div>
+        {/* My캐비닛 저장 + 하단 버튼 (연필 메뉴에서만 표시) */}
+        {focusedSectionIndex === undefined && (
+          <>
+            <div style={{ padding: '0 20px 8px' }}>
+              <button className={styles.saveButton} onClick={handleSaveToCabinet}>
+                My캐비닛에 저장
+              </button>
+            </div>
+            <div className={styles.footer}>
+              <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={handleDelete}>
+                취소
+              </button>
+              <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
+                생성
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
