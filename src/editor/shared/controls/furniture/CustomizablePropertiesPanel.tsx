@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
-import { CustomFurnitureConfig, CustomSection, CustomElement } from '@/editor/shared/furniture/types';
+import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
 import styles from './CustomizablePropertiesPanel.module.css';
 
@@ -38,6 +38,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [shelfRefDir, setShelfRefDir] = useState<Record<string, 'top' | 'bottom'>>({});
   // 칸막이 좌/우 거리 입력용 문자열 상태 - 키: "sIdx-left" / "sIdx-right"
   const [partitionInputs, setPartitionInputs] = useState<Record<string, string>>({});
+  // 영역 서브분할 높이 입력 - 키: "sIdx-areaKey"
+  const [subSplitHeightInputs, setSubSplitHeightInputs] = useState<Record<string, string>>({});
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -350,6 +352,100 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handlePartitionPosition = (sIdx: number, pos: number) => {
     const sections = [...config.sections];
     sections[sIdx] = { ...sections[sIdx], partitionPosition: pos };
+    applyConfig({ ...config, sections });
+  };
+
+  // 영역별 상하 서브분할 토글
+  const handleAreaSubSplitToggle = (sIdx: number, areaKey: 'full' | 'left' | 'right', enabled: boolean) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const subSplits = { ...(sec.areaSubSplits || {}) };
+    if (enabled) {
+      const halfH = Math.round(sec.height / 2);
+      // 기존 요소를 하부로 이동
+      const existingElements = areaKey === 'full'
+        ? sec.elements || [{ type: 'open' as const }]
+        : areaKey === 'left'
+          ? sec.leftElements || [{ type: 'open' as const }]
+          : sec.rightElements || [{ type: 'open' as const }];
+      subSplits[areaKey] = {
+        enabled: true,
+        lowerHeight: halfH,
+        lowerElements: existingElements,
+        upperElements: [{ type: 'open' }],
+      };
+    } else {
+      // 서브분할 해제: 하부 요소를 원래 영역으로 복원
+      const sub = subSplits[areaKey];
+      const restoredElements = sub?.lowerElements || [{ type: 'open' as const }];
+      if (areaKey === 'full') {
+        sec.elements = restoredElements;
+      } else if (areaKey === 'left') {
+        sec.leftElements = restoredElements;
+      } else {
+        sec.rightElements = restoredElements;
+      }
+      delete subSplits[areaKey];
+    }
+    sec.areaSubSplits = Object.keys(subSplits).length > 0 ? subSplits : undefined;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 영역별 서브분할 높이 변경
+  const handleAreaSubSplitHeight = (sIdx: number, areaKey: string, lowerHeight: number) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const subSplits = { ...(sec.areaSubSplits || {}) };
+    const sub = subSplits[areaKey];
+    if (sub) {
+      subSplits[areaKey] = { ...sub, lowerHeight };
+      sec.areaSubSplits = subSplits;
+      sections[sIdx] = sec;
+      applyConfig({ ...config, sections });
+    }
+  };
+
+  // 서브분할 요소 변경
+  const handleSubSplitElementChange = (
+    sIdx: number,
+    areaKey: string,
+    subPart: 'upper' | 'lower',
+    elementType: CustomElement['type'],
+  ) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const subSplits = { ...(sec.areaSubSplits || {}) };
+    const sub = subSplits[areaKey];
+    if (!sub) return;
+
+    const subHeight = subPart === 'lower' ? sub.lowerHeight : sec.height - sub.lowerHeight;
+    let newElement: CustomElement;
+    switch (elementType) {
+      case 'shelf':
+        newElement = { type: 'shelf', heights: [Math.round(subHeight / 2)] };
+        break;
+      case 'drawer': {
+        const gapTotal = 23.6 * 2;
+        const usable = Math.max(subHeight - gapTotal, 80);
+        newElement = { type: 'drawer', heights: [Math.round(usable)] };
+        break;
+      }
+      case 'rod':
+        newElement = { type: 'rod', height: Math.round(subHeight * 0.85) };
+        break;
+      case 'pants':
+        newElement = { type: 'pants', height: Math.round(subHeight * 0.85) };
+        break;
+      default:
+        newElement = { type: 'open' };
+    }
+    subSplits[areaKey] = {
+      ...sub,
+      [subPart === 'upper' ? 'upperElements' : 'lowerElements']: [newElement],
+    };
+    sec.areaSubSplits = subSplits;
+    sections[sIdx] = sec;
     applyConfig({ ...config, sections });
   };
 
@@ -752,21 +848,160 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
+  // 서브분할 영역 요소 편집기 (상부/하부)
+  const renderSubSplitElementEditor = (
+    sIdx: number,
+    areaKey: string,
+    subPart: 'upper' | 'lower',
+    elements: CustomElement[] | undefined,
+    subHeight: number,
+  ) => {
+    const el = elements?.[0] || { type: 'open' as const };
+    const currentType = el.type;
+
+    // 상부에는 서랍 불가
+    const availableTypes = subPart === 'upper'
+      ? (['open', 'shelf', 'rod'] as const)
+      : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
+
+    return (
+      <div>
+        <div className={styles.elementSelector}>
+          {availableTypes.map((type) => (
+            <button
+              key={type}
+              className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
+              onClick={() => handleSubSplitElementChange(sIdx, areaKey, subPart, type)}
+            >
+              {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+            </button>
+          ))}
+        </div>
+
+        {/* 옷봉 자동 배치 안내 */}
+        {currentType === 'rod' && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
+            상판 바로 아래에 설치됩니다
+          </div>
+        )}
+
+        {/* 선반 + 옷봉 추가 안내 */}
+        {currentType === 'shelf' && el.type === 'shelf' && el.hasRod && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
+            최상단 선반 바로 아래에 옷봉이 설치됩니다
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 섹션 편집 UI 렌더링
   const renderSectionEditor = (section: CustomSection, sIdx: number, areaSide?: 'left' | 'right') => {
     const innerW = furnitureWidth - 2 * panelThickness;
     const hasPartition = section.hasPartition || false;
 
-    // areaSide가 지정되면 해당 영역의 요소 편집만 표시
+    // areaSide가 지정되면 해당 영역의 요소 편집 + 상하 서브분할 표시
     if (areaSide) {
       const elements = areaSide === 'left' ? section.leftElements : section.rightElements;
       const areaLabel = areaSide === 'left' ? '좌측' : '우측';
+      const subSplit = section.areaSubSplits?.[areaSide];
+      const isSubSplit = subSplit?.enabled || false;
+      const subSplitKey = `${sIdx}-${areaSide}`;
+
       return (
-        <div key={`${sIdx}-${areaSide}`} className={styles.section}>
-          <div className={styles.sectionTitle}>{areaLabel} 영역</div>
-          <div className={styles.areaCard}>
-            {renderElementEditor(sIdx, areaSide, elements, section.height)}
+        <div key={`${sIdx}-${areaSide}`}>
+          {/* 상,하 분할 토글 */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>섹션 분할</div>
+            <div className={styles.row}>
+              <span className={styles.label}>상,하</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${!isSubSplit ? styles.active : ''}`}
+                  onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, false)}
+                >
+                  없음
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${isSubSplit ? styles.active : ''}`}
+                  onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, true)}
+                >
+                  분할
+                </button>
+              </div>
+            </div>
+            {/* 상하 분할 시 높이 입력 */}
+            {isSubSplit && subSplit && (
+              <>
+                <div className={styles.row} style={{ marginTop: '4px' }}>
+                  <span className={styles.label}>하부 높이</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    value={subSplitHeightInputs[subSplitKey] ?? subSplit.lowerHeight.toString()}
+                    onChange={(e) => {
+                      setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKey]: e.target.value }));
+                    }}
+                    onBlur={() => {
+                      const val = parseInt(subSplitHeightInputs[subSplitKey] || '0');
+                      const minH = 100;
+                      const maxH = section.height - 100;
+                      const clamped = Math.max(minH, Math.min(maxH, isNaN(val) ? Math.round(section.height / 2) : val));
+                      handleAreaSubSplitHeight(sIdx, areaSide, clamped);
+                      setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKey]: clamped.toString() }));
+                    }}
+                    onKeyDown={handleInputKeyDown}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                <div className={styles.row}>
+                  <span className={styles.label}>상부 높이</span>
+                  <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
+                    {section.height - subSplit.lowerHeight}
+                  </span>
+                  <span className={styles.unit}>mm</span>
+                </div>
+              </>
+            )}
           </div>
+
+          <div className={styles.divider} />
+
+          {/* 내부 요소 편집 */}
+          {isSubSplit && subSplit ? (
+            <>
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>
+                  상부
+                  <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
+                    {section.height - subSplit.lowerHeight}mm
+                  </span>
+                </div>
+                <div className={styles.areaCard}>
+                  {renderSubSplitElementEditor(sIdx, areaSide, 'upper', subSplit.upperElements, section.height - subSplit.lowerHeight)}
+                </div>
+              </div>
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>
+                  하부
+                  <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
+                    {subSplit.lowerHeight}mm
+                  </span>
+                </div>
+                <div className={styles.areaCard}>
+                  {renderSubSplitElementEditor(sIdx, areaSide, 'lower', subSplit.lowerElements, subSplit.lowerHeight)}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>{areaLabel} 영역</div>
+              <div className={styles.areaCard}>
+                {renderElementEditor(sIdx, areaSide, elements, section.height)}
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -921,85 +1156,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
               config.sections[focusedSectionIndex] &&
                 renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex, focusedAreaSide)
             ) : (
-            /* 톱니 아이콘 클릭: 해당 섹션 세부설정 */
-            <>
-              {/* 섹션 분할 토글 (톱니 메뉴에서도 상하부 분할 가능) */}
-              <div className={styles.section}>
-                <div className={styles.sectionTitle}>섹션 분할</div>
-                <div className={styles.row}>
-                  <div className={styles.toggleGroup}>
-                    <button
-                      className={`${styles.toggleButton} ${config.sections.length === 1 ? styles.active : ''}`}
-                      onClick={() => handleSectionSplit(false)}
-                    >
-                      분할 없음
-                    </button>
-                    <button
-                      className={`${styles.toggleButton} ${config.sections.length === 2 ? styles.active : ''}`}
-                      onClick={() => handleSectionSplit(true)}
-                    >
-                      2단 분할
-                    </button>
-                  </div>
-                </div>
-                {/* 2단 분할 시 상부/하부 높이 입력 */}
-                {config.sections.length === 2 && (
-                  <>
-                    <div className={styles.row} style={{ marginTop: '8px' }}>
-                      <span className={styles.label}>하부 높이</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={`${styles.input} ${styles.inputSmall}`}
-                        value={sectionHeightInputs[0] ?? config.sections[0].height.toString()}
-                        onChange={(e) => handleSectionHeightInputChange(0, e.target.value)}
-                        onBlur={() => handleSectionHeightBlur(0)}
-                        onKeyDown={handleInputKeyDown}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                    <div className={styles.row}>
-                      <span className={styles.label}>상부 높이</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={`${styles.input} ${styles.inputSmall}`}
-                        value={sectionHeightInputs[1] ?? config.sections[1]?.height.toString()}
-                        onChange={(e) => handleSectionHeightInputChange(1, e.target.value)}
-                        onBlur={() => handleSectionHeightBlur(1)}
-                        onKeyDown={handleInputKeyDown}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className={styles.divider} />
-
-              {/* 현재 섹션 세부설정 (분할 시 해당 섹션만, 미분할 시 전체) */}
-              {config.sections.length === 2 ? (
-                /* 분할됨: 하부/상부 각각 세부설정 표시 */
-                [...config.sections].reverse().map((sec, _i) => {
-                  const realIdx = config.sections.length - 1 - _i;
-                  return (
-                    <React.Fragment key={realIdx}>
-                      <div className={styles.sectionTitle} style={{ marginTop: realIdx < config.sections.length - 1 ? '12px' : 0 }}>
-                        {realIdx === 0 ? '하부 섹션' : '상부 섹션'}
-                        <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
-                          {sec.height}mm
-                        </span>
-                      </div>
-                      {renderSectionEditor(sec, realIdx)}
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                /* 미분할: 단일 섹션 세부설정 */
-                config.sections[focusedSectionIndex] &&
-                  renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
-              )}
-            </>
+            /* 톱니 아이콘 클릭: 해당 섹션 세부설정 (칸막이 + 내부 요소) */
+            config.sections[focusedSectionIndex] &&
+              renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
             )
           ) : (
             /* 연필 아이콘 클릭: 치수 + 섹션 분할/크기 + 전체 섹션 편집 */
