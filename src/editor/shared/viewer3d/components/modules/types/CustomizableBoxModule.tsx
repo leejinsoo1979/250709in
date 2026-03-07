@@ -251,6 +251,85 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
    * @param sectionLabel - 섹션 이름 ("(상)", "(하)" 등)
    * @param keyPrefix - 키 접두사
    */
+  /**
+   * 영역 렌더링 (서브분할 처리 포함)
+   * 서브분할이 있으면 상/하부로 나누어 각각 renderSectionElements 호출
+   */
+  const renderAreaWithSubSplit = (
+    section: CustomSection,
+    areaKey: 'full' | 'left' | 'right',
+    elements: CustomElement[] | undefined,
+    areaInnerWidth: number,
+    areaInnerHeight: number,
+    sectionCenterY: number,
+    offsetX: number,
+    sectionDepth: number,
+    sectionLabel: string,
+    keyPrefix: string,
+    _sIdx: number,
+  ): React.ReactNode[] => {
+    const subSplit = section.areaSubSplits?.[areaKey];
+
+    if (subSplit?.enabled) {
+      const nodes: React.ReactNode[] = [];
+      const lowerH = mmToUnit(subSplit.lowerHeight);
+      const upperH = areaInnerHeight - lowerH;
+      const lowerCenterY = sectionCenterY - areaInnerHeight / 2 + lowerH / 2;
+      const upperCenterY = sectionCenterY + areaInnerHeight / 2 - upperH / 2;
+
+      // 서브분할 수평 패널 (구분판)
+      const dividerY = sectionCenterY - areaInnerHeight / 2 + lowerH;
+      nodes.push(
+        <BoxWithEdges
+          key={`${keyPrefix}-subsplit-divider`}
+          position={[offsetX, dividerY, 0]}
+          args={[areaInnerWidth, t, sectionDepth - t]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}서브분할판`}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+        />
+      );
+
+      // 하부 요소
+      if (subSplit.lowerElements && subSplit.lowerElements.length > 0) {
+        nodes.push(
+          ...renderSectionElements(
+            subSplit.lowerElements, areaInnerWidth, lowerH - t / 2,
+            lowerCenterY - t / 4, offsetX, sectionDepth,
+            `${sectionLabel}하`, `${keyPrefix}-lower`
+          )
+        );
+      }
+
+      // 상부 요소
+      if (subSplit.upperElements && subSplit.upperElements.length > 0) {
+        nodes.push(
+          ...renderSectionElements(
+            subSplit.upperElements, areaInnerWidth, upperH - t / 2,
+            upperCenterY + t / 4, offsetX, sectionDepth,
+            `${sectionLabel}상`, `${keyPrefix}-upper`
+          )
+        );
+      }
+
+      return nodes;
+    }
+
+    // 서브분할 없음: 기존 방식
+    if (elements && elements.length > 0) {
+      return renderSectionElements(
+        elements, areaInnerWidth, areaInnerHeight,
+        sectionCenterY, offsetX, sectionDepth,
+        sectionLabel, keyPrefix
+      );
+    }
+    return [];
+  };
+
   const renderSectionElements = (
     elements: CustomElement[],
     areaInnerWidth: number,   // Three.js 단위
@@ -430,37 +509,34 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const leftWidthMm = section.partitionPosition - panelThickness;
       const leftInnerW = mmToUnit(leftWidthMm);
       const leftCenterX = -bInnerW / 2 + leftInnerW / 2;
-      if (section.leftElements && section.leftElements.length > 0) {
-        meshes.push(
-          ...renderSectionElements(
-            section.leftElements, leftInnerW, bInnerH,
-            centerY, leftCenterX, boxD, `${sectionLabel}좌`, `s${sIdx}-left`
-          )
-        );
-      }
+      meshes.push(
+        ...renderAreaWithSubSplit(
+          section, 'left', section.leftElements,
+          leftInnerW, bInnerH, centerY, leftCenterX, boxD,
+          `${sectionLabel}좌`, `s${sIdx}-left`, sIdx
+        )
+      );
 
       // 우측 영역
       const rightWidthMm = innerWidthMm - section.partitionPosition - panelThickness;
       const rightInnerW = mmToUnit(rightWidthMm);
       const rightCenterX = partitionX + t / 2 + rightInnerW / 2;
-      if (section.rightElements && section.rightElements.length > 0) {
-        meshes.push(
-          ...renderSectionElements(
-            section.rightElements, rightInnerW, bInnerH,
-            centerY, rightCenterX, boxD, `${sectionLabel}우`, `s${sIdx}-right`
-          )
-        );
-      }
+      meshes.push(
+        ...renderAreaWithSubSplit(
+          section, 'right', section.rightElements,
+          rightInnerW, bInnerH, centerY, rightCenterX, boxD,
+          `${sectionLabel}우`, `s${sIdx}-right`, sIdx
+        )
+      );
     } else {
       // 칸막이 없는 경우
-      if (section.elements && section.elements.length > 0) {
-        meshes.push(
-          ...renderSectionElements(
-            section.elements, bInnerW, bInnerH,
-            centerY, 0, boxD, sectionLabel, `s${sIdx}`
-          )
-        );
-      }
+      meshes.push(
+        ...renderAreaWithSubSplit(
+          section, 'full', section.elements,
+          bInnerW, bInnerH, centerY, 0, boxD,
+          sectionLabel, `s${sIdx}`, sIdx
+        )
+      );
     }
 
     return meshes;
