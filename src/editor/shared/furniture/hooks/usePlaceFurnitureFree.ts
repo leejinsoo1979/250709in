@@ -104,6 +104,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     freeHeight: effectiveHeight,
     freeDepth: dimensions.depth,
     zone: effectiveZone,
+    hasBase: moduleData.category !== 'upper',
     ...(isCustomizable && {
       isCustomizable: true,
       customConfig: createDefaultCustomConfig(effectiveHeight - 36), // 상하판 두께 제외

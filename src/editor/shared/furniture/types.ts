@@ -83,6 +83,7 @@ export interface PlacedModule {
   freeWidth?: number;        // 자유배치 모드에서 사용자 지정 너비 (mm)
   freeHeight?: number;       // 자유배치 모드에서 사용자 지정 높이 (mm)
   freeDepth?: number;        // 자유배치 모드에서 사용자 지정 깊이 (mm)
+  hasBase?: boolean;         // 자유배치 걸래받이 표시 여부 (기본: full/lower=true, upper=false)
 
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)

@@ -7,6 +7,7 @@ import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import FurnitureItem from './FurnitureItem';
+import FreeBaseStripRenderer from './FreeBaseStripRenderer';
 
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
@@ -311,6 +312,12 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   return (
     <group name="FurnitureContainer">
+      {/* 자유배치 걸래받이 스트립 (2D 탑뷰 제외) */}
+      {spaceInfo.layoutMode === 'free-placement' &&
+       spaceInfo.baseConfig?.type !== 'stand' &&
+       !(viewMode === '2D' && finalView2DDirection === 'top') && (
+        <FreeBaseStripRenderer viewMode={viewMode} renderMode={renderMode} />
+      )}
       {filteredModules.map((placedModule, index) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = (activePopup.type === 'furnitureEdit' || activePopup.type === 'customizableEdit') && activePopup.id === placedModule.id;

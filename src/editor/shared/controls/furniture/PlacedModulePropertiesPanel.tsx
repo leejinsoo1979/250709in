@@ -1864,6 +1864,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
+          {/* 자유배치 걸래받이 토글 (상부장 제외, floor 타입만) */}
+          {currentPlacedModule?.isFreePlacement &&
+           moduleData &&
+           moduleData.category !== 'upper' &&
+           spaceInfo.baseConfig?.type === 'floor' && (
+            <div className={styles.propertySection}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={currentPlacedModule.hasBase !== false}
+                  onChange={() => {
+                    const newValue = currentPlacedModule.hasBase === false;
+                    updatePlacedModule(currentPlacedModule.id, { hasBase: newValue });
+                  }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '13px', color: '#333' }}>걸래받이</span>
+              </label>
+            </div>
+          )}
+
           {/* 기둥 C 배치 모드 선택 (기둥 C인 경우만 표시) */}
           {isColumnC && (
             <div className={styles.propertySection}>
