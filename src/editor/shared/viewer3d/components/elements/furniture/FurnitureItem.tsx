@@ -2967,7 +2967,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               return (
                 <BoxModule
                   moduleData={actualModuleData}
-                  isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
+                  isDragging={isDraggingThis || isEditMode} // 드래그 중 또는 더블클릭 편집 모드일 때 고스트 투명 표시
                   color={furnitureColor}
                   internalHeight={furnitureHeightMm}
                   viewMode={viewMode}
@@ -3061,7 +3061,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 roughness={0.7}
                 reflectivity={0.2}
                 transparent={isDraggingThis || isEditMode}
-                opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
+                opacity={isDraggingThis || isEditMode ? 0.35 : 1.0}
               />
             </Box>
             <Edges
@@ -3201,12 +3201,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               moduleDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={spaceInfo}
-              color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
+              color={(isDraggingThis || isEditMode) ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               originalSlotWidth={originalSlotWidthForDoor}
               slotCenterX={doorXOffset}
               moduleData={actualModuleData}
-              isDragging={isDraggingThis}
+              isDragging={isDraggingThis || isEditMode}
               isEditMode={isEditMode}
               adjustedWidth={furnitureWidthMm}
               floatHeight={
