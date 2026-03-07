@@ -29,8 +29,8 @@
   width: 56px;
   height: 56px;
   border-radius: 6px;
-  background: var(--theme-surface-alt, #f5f5f5);
-  color: var(--theme-text-secondary, #666);
+  background: var(--theme-background-secondary, #f5f5f5);
+  color: var(--theme-text, #333);
   flex-shrink: 0;
 }
 
