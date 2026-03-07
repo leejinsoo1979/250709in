@@ -879,7 +879,6 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
-                distanceFactor={12}
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -914,7 +913,6 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
-                distanceFactor={12}
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -946,7 +944,6 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[ghostPosition.x, slotDimY + 0.12, 0.002]}
               center
-              distanceFactor={12}
               style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
               <div style={{
@@ -997,7 +994,6 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
-                distanceFactor={12}
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -1034,7 +1030,6 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
-                distanceFactor={12}
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -1089,7 +1084,6 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
-              distanceFactor={12}
               style={{ pointerEvents: 'auto' }}
               zIndexRange={[10000, 10001]}
             >
@@ -1133,7 +1127,6 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
-              distanceFactor={12}
               style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
               <div
