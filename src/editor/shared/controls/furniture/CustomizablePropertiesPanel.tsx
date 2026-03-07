@@ -1234,10 +1234,82 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
               <div className={styles.divider} />
 
+              {/* 섹션 설정: 높이 + 타입 */}
+              {config.sections.length > 1 ? (
+                /* 2단 분할: 상부→하부 순서 */
+                [...config.sections].reverse().map((section, _i) => {
+                  const realIdx = config.sections.length - 1 - _i;
+                  const isUpper = realIdx === 1;
+                  const { type: currentType } = getSectionTypeInfo(section);
+                  const typeOptions = isUpper
+                    ? (['open', 'shelf', 'rod'] as const)
+                    : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
+
+                  return (
+                    <div key={realIdx} className={styles.section}>
+                      <div className={styles.sectionTitle}>
+                        {isUpper ? '상부 섹션' : '하부 섹션'}
+                      </div>
+                      <div className={styles.row}>
+                        <span className={styles.label}>높이</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className={`${styles.input} ${styles.inputSmall}`}
+                          value={sectionHeightInputs[realIdx] ?? section.height.toString()}
+                          onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
+                          onBlur={() => handleSectionHeightBlur(realIdx)}
+                          onKeyDown={handleInputKeyDown}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                      <div className={styles.row} style={{ marginTop: '8px' }}>
+                        <span className={styles.label}>타입</span>
+                      </div>
+                      <div className={styles.elementSelector}>
+                        {typeOptions.map((type) => (
+                          <button
+                            key={type}
+                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
+                            onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
+                          >
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                /* 단일 섹션 타입 선택 */
+                (() => {
+                  const section = config.sections[0];
+                  const { type: currentType } = getSectionTypeInfo(section);
+                  return (
+                    <div className={styles.section}>
+                      <div className={styles.sectionTitle}>내부 구조</div>
+                      <div className={styles.elementSelector}>
+                        {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
+                          <button
+                            key={type}
+                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
+                            onClick={() => handleSectionTypeChange(0, type, type === 'drawer' ? 2 : undefined)}
+                          >
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+
+              <div className={styles.divider} />
+
               {/* 안내 */}
               <div className={styles.section}>
                 <p className={styles.helpText} style={{ margin: '0', fontSize: '12px', color: '#999' }}>
-                  각 섹션의 내부 구조(칸막이, 선반, 서랍 등)는 3D 뷰에서 해당 섹션의 ⚙️ 아이콘을 클릭하여 설정하세요.
+                  각 섹션의 세부 구조(칸막이, 선반 높이, 서랍 높이 등)는 3D 뷰에서 해당 섹션의 ⚙️ 아이콘을 클릭하여 설정하세요.
                 </p>
               </div>
             </>
