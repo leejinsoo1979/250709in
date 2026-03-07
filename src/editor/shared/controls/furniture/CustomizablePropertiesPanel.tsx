@@ -25,7 +25,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   }, [placedModule?.id, placedModule?.customConfig]);
 
-  // 렌더링 조건 체크
+  // config 업데이트 + 즉시 store 반영 (useCallback은 조건부 return 전에 호출해야 함)
+  const applyConfig = useCallback(
+    (newConfig: CustomFurnitureConfig) => {
+      setConfig(newConfig);
+      if (moduleId) {
+        updatePlacedModule(moduleId, { customConfig: newConfig });
+      }
+    },
+    [moduleId, updatePlacedModule],
+  );
+
+  // 렌더링 조건 체크 (모든 hooks 호출 이후)
   if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {
     return null;
   }
@@ -36,15 +47,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 내부 유효 높이 (상하판 두께 제외)
   const innerHeight = furnitureHeight - 2 * panelThickness;
-
-  // config 업데이트 + 즉시 store 반영
-  const applyConfig = useCallback(
-    (newConfig: CustomFurnitureConfig) => {
-      setConfig(newConfig);
-      updatePlacedModule(moduleId, { customConfig: newConfig });
-    },
-    [moduleId, updatePlacedModule],
-  );
 
   // 섹션 분할 토글
   const handleSectionSplit = (split: boolean) => {
