@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -27,7 +26,6 @@ const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules, addModule } = useFurnitureStore();
   const { theme } = useTheme();
-  const { camera } = useThree();
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
   const [isColliding, setIsColliding] = useState(false);
@@ -142,43 +140,6 @@ const FreePlacementDropZone: React.FC = () => {
     [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, executePlacement]
   );
 
-  // 고스트 이동 중 실시간 이격거리 계산 (좌/우 벽 또는 가구와의 거리)
-  const ghostDistanceGuides = useMemo(() => {
-    if (hoverXmm === null || !activeDimensions) return null;
-
-    const ghostLeft = hoverXmm - activeDimensions.width / 2;
-    const ghostRight = hoverXmm + activeDimensions.width / 2;
-    const { startX, endX } = spaceBounds;
-
-    // 배치된 가구의 X범위
-    const freeModules = placedModules.filter(m => m.isFreePlacement);
-    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
-
-    // 왼쪽 이격: 고스트 왼쪽 가장자리 ~ 가장 가까운 왼쪽 장애물
-    let leftObstacle = startX; // 기본은 왼쪽 벽
-    for (const b of bounds) {
-      if (b.right <= ghostLeft) {
-        leftObstacle = b.right; // 더 가까운 가구가 있으면 갱신
-      }
-    }
-    const leftDistance = Math.round(ghostLeft - leftObstacle);
-
-    // 오른쪽 이격: 고스트 오른쪽 가장자리 ~ 가장 가까운 오른쪽 장애물
-    let rightObstacle = endX; // 기본은 오른쪽 벽
-    for (const b of bounds) {
-      if (b.left >= ghostRight) {
-        rightObstacle = b.left;
-        break; // 정렬되어 있으므로 첫 번째가 가장 가까움
-      }
-    }
-    const rightDistance = Math.round(rightObstacle - ghostRight);
-
-    // Y 위치 (고스트 중앙 높이)
-    const guideY = ghostYThree;
-
-    return { leftObstacle, rightObstacle, leftDistance, rightDistance, ghostLeft, ghostRight, guideY };
-  }, [hoverXmm, activeDimensions, spaceBounds, placedModules, ghostYThree]);
-
   // 고스트 Y 위치 계산
   const ghostYThree = useMemo(() => {
     if (!activeDimensions) return 0;
@@ -193,6 +154,42 @@ const FreePlacementDropZone: React.FC = () => {
     }
     return (floorFinishMm + baseHeightMm + floatHeightMm + activeDimensions.height / 2) * 0.01;
   }, [activeDimensions, activeCategory, spaceInfo]);
+
+  // 고스트 이동 중 실시간 이격거리 계산 (좌/우 벽 또는 가구와의 거리)
+  const ghostDistanceGuides = useMemo(() => {
+    if (hoverXmm === null || !activeDimensions) return null;
+
+    const ghostLeft = hoverXmm - activeDimensions.width / 2;
+    const ghostRight = hoverXmm + activeDimensions.width / 2;
+    const { startX, endX } = spaceBounds;
+
+    // 배치된 가구의 X범위
+    const freeModules = placedModules.filter(m => m.isFreePlacement);
+    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+    // 왼쪽 이격: 고스트 왼쪽 가장자리 ~ 가장 가까운 왼쪽 장애물
+    let leftObstacle = startX;
+    for (const b of bounds) {
+      if (b.right <= ghostLeft) {
+        leftObstacle = b.right;
+      }
+    }
+    const leftDistance = Math.round(ghostLeft - leftObstacle);
+
+    // 오른쪽 이격: 고스트 오른쪽 가장자리 ~ 가장 가까운 오른쪽 장애물
+    let rightObstacle = endX;
+    for (const b of bounds) {
+      if (b.left >= ghostRight) {
+        rightObstacle = b.left;
+        break;
+      }
+    }
+    const rightDistance = Math.round(rightObstacle - ghostRight);
+
+    const guideY = ghostYThree;
+
+    return { leftObstacle, rightObstacle, leftDistance, rightDistance, ghostLeft, ghostRight, guideY };
+  }, [hoverXmm, activeDimensions, spaceBounds, placedModules, ghostYThree]);
 
   // 고스트 모듈 데이터 (BoxModule에 전달)
   const ghostModuleData = useMemo(() => {
