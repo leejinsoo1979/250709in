@@ -34,6 +34,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [heightInputs, setHeightInputs] = useState<Record<string, string>>({});
   // 선반 위치 기준 (위에서/아래에서) - 키: "sIdx-side-hIdx"
   const [shelfRefDir, setShelfRefDir] = useState<Record<string, 'top' | 'bottom'>>({});
+  // 칸막이 좌/우 거리 입력용 문자열 상태 - 키: "sIdx-left" / "sIdx-right"
+  const [partitionInputs, setPartitionInputs] = useState<Record<string, string>>({});
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -62,6 +64,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
       });
       setHeightInputs(hInputs);
       setShelfRefDir({});
+      // 칸막이 좌/우 입력 초기화
+      const pInputs: Record<string, string> = {};
+      const iW = (placedModule?.freeWidth || placedModule?.moduleWidth || 600) - 2 * (cfg.panelThickness || 18);
+      cfg.sections.forEach((s, sIdx) => {
+        if (s.hasPartition && s.partitionPosition) {
+          pInputs[`${sIdx}-left`] = s.partitionPosition.toString();
+          pInputs[`${sIdx}-right`] = Math.round(iW - s.partitionPosition).toString();
+        }
+      });
+      setPartitionInputs(pInputs);
     }
     if (placedModule) {
       const w = placedModule.freeWidth || placedModule.moduleWidth || 600;
@@ -309,11 +321,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sec = { ...sections[sIdx] };
     if (hasPartition) {
       const innerW = furnitureWidth - 2 * panelThickness;
+      const halfW = Math.round(innerW / 2);
       sec.hasPartition = true;
-      sec.partitionPosition = Math.round(innerW / 2);
+      sec.partitionPosition = halfW;
       sec.leftElements = sec.elements || [{ type: 'open' }];
       sec.rightElements = [{ type: 'open' }];
       sec.elements = undefined;
+      // 칸막이 좌/우 입력 초기화
+      setPartitionInputs((prev) => ({
+        ...prev,
+        [`${sIdx}-left`]: halfW.toString(),
+        [`${sIdx}-right`]: (innerW - halfW).toString(),
+      }));
     } else {
       sec.hasPartition = false;
       sec.partitionPosition = undefined;
@@ -778,20 +797,63 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* 칸막이 위치 */}
+        {/* 칸막이 좌/우 거리 입력 */}
         {hasPartition && (
-          <div className={styles.sliderRow}>
-            <span className={styles.label}>위치</span>
-            <input
-              type="range"
-              className={styles.slider}
-              min={panelThickness + 100}
-              max={innerW - 100}
-              value={section.partitionPosition || Math.round(innerW / 2)}
-              onChange={(e) => handlePartitionPosition(sIdx, parseInt(e.target.value))}
-            />
-            <span className={styles.sliderValue}>{section.partitionPosition || Math.round(innerW / 2)}mm</span>
-          </div>
+          <>
+            <div className={styles.row}>
+              <span className={styles.label}>좌</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${styles.inputSmall}`}
+                value={partitionInputs[`${sIdx}-left`] ?? (section.partitionPosition || Math.round(innerW / 2)).toString()}
+                onChange={(e) => {
+                  setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-left`]: e.target.value }));
+                }}
+                onBlur={() => {
+                  const val = parseInt(partitionInputs[`${sIdx}-left`] || '0');
+                  const minV = 100;
+                  const maxV = innerW - 100;
+                  const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
+                  handlePartitionPosition(sIdx, clamped);
+                  setPartitionInputs((prev) => ({
+                    ...prev,
+                    [`${sIdx}-left`]: clamped.toString(),
+                    [`${sIdx}-right`]: (innerW - clamped).toString(),
+                  }));
+                }}
+                style={{ width: '70px' }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+            <div className={styles.row}>
+              <span className={styles.label}>우</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${styles.inputSmall}`}
+                value={partitionInputs[`${sIdx}-right`] ?? (innerW - (section.partitionPosition || Math.round(innerW / 2))).toString()}
+                onChange={(e) => {
+                  setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-right`]: e.target.value }));
+                }}
+                onBlur={() => {
+                  const val = parseInt(partitionInputs[`${sIdx}-right`] || '0');
+                  const minV = 100;
+                  const maxV = innerW - 100;
+                  const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
+                  const newPos = innerW - clamped;
+                  handlePartitionPosition(sIdx, newPos);
+                  setPartitionInputs((prev) => ({
+                    ...prev,
+                    [`${sIdx}-left`]: newPos.toString(),
+                    [`${sIdx}-right`]: clamped.toString(),
+                  }));
+                }}
+                style={{ width: '70px' }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          </>
         )}
 
         {/* 내부 요소 편집 */}
@@ -960,22 +1022,63 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                    {config.sections[0].hasPartition && (
-                      <div className={styles.sliderRow}>
-                        <span className={styles.label}>위치</span>
-                        <input
-                          type="range"
-                          className={styles.slider}
-                          min={panelThickness + 100}
-                          max={(furnitureWidth - 2 * panelThickness) - 100}
-                          value={config.sections[0].partitionPosition || Math.round((furnitureWidth - 2 * panelThickness) / 2)}
-                          onChange={(e) => handlePartitionPosition(0, parseInt(e.target.value))}
-                        />
-                        <span className={styles.sliderValue}>
-                          {config.sections[0].partitionPosition || Math.round((furnitureWidth - 2 * panelThickness) / 2)}mm
-                        </span>
-                      </div>
-                    )}
+                    {config.sections[0].hasPartition && (() => {
+                      const innerW0 = furnitureWidth - 2 * panelThickness;
+                      const pos0 = config.sections[0].partitionPosition || Math.round(innerW0 / 2);
+                      return (
+                        <>
+                          <div className={styles.row}>
+                            <span className={styles.label}>좌</span>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              className={`${styles.input} ${styles.inputSmall}`}
+                              value={partitionInputs['0-left'] ?? pos0.toString()}
+                              onChange={(e) => {
+                                setPartitionInputs((prev) => ({ ...prev, '0-left': e.target.value }));
+                              }}
+                              onBlur={() => {
+                                const val = parseInt(partitionInputs['0-left'] || '0');
+                                const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
+                                handlePartitionPosition(0, clamped);
+                                setPartitionInputs((prev) => ({
+                                  ...prev,
+                                  '0-left': clamped.toString(),
+                                  '0-right': (innerW0 - clamped).toString(),
+                                }));
+                              }}
+                              style={{ width: '70px' }}
+                            />
+                            <span className={styles.unit}>mm</span>
+                          </div>
+                          <div className={styles.row}>
+                            <span className={styles.label}>우</span>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              className={`${styles.input} ${styles.inputSmall}`}
+                              value={partitionInputs['0-right'] ?? (innerW0 - pos0).toString()}
+                              onChange={(e) => {
+                                setPartitionInputs((prev) => ({ ...prev, '0-right': e.target.value }));
+                              }}
+                              onBlur={() => {
+                                const val = parseInt(partitionInputs['0-right'] || '0');
+                                const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
+                                const newPos = innerW0 - clamped;
+                                handlePartitionPosition(0, newPos);
+                                setPartitionInputs((prev) => ({
+                                  ...prev,
+                                  '0-left': newPos.toString(),
+                                  '0-right': clamped.toString(),
+                                }));
+                              }}
+                              style={{ width: '70px' }}
+                            />
+                            <span className={styles.unit}>mm</span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </>
               )}
