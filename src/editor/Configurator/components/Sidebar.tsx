@@ -5,7 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { HiPencilSquare } from 'react-icons/hi2';
-import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
+import { TbBoxAlignRight, TbBrandAsana, TbUpload } from 'react-icons/tb';
 import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -14,7 +14,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'custom';
+export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'custom' | 'upload';
 
 interface SidebarProps {
   activeTab: SidebarTab | null;
@@ -142,6 +142,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'custom' as SidebarTab,
       icon: <HiPencilSquare size={22} />,
       label: '커스텀'
+    },
+    {
+      id: 'upload' as SidebarTab,
+      icon: <TbUpload size={22} />,
+      label: '업로드'
     }
   ];
 
