@@ -2693,7 +2693,7 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 커스텀 캐비닛 */}
-              <div className={styles.moduleSection}>
+              <div style={{ flex: '0 0 auto', padding: '8px 12px', borderTop: '1px solid var(--theme-border)' }}>
                 <CustomizableFurnitureLibrary
                   filter={moduleCategory === 'tall' ? 'full' : moduleCategory as 'upper' | 'lower'}
                 />
