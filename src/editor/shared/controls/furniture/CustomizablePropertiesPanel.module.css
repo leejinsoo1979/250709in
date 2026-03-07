@@ -377,3 +377,39 @@
   color: var(--theme-primary);
   background: var(--theme-primary-light, rgba(59, 130, 246, 0.05));
 }
+
+/* 선반 위치 기준 (위에서/아래에서) 토글 */
+.refDirToggle {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.refDirButton {
+  padding: 3px 6px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-background);
+  color: var(--theme-text-tertiary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.refDirButton:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.refDirButton:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.refDirButton:hover {
+  background: var(--theme-surface-hover);
+}
+
+.refDirButton.active {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
+}

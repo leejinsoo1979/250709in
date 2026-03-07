@@ -217,8 +217,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
     setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
   };
 
-  // 서랍 단수별 표준 높이 (mm) - 서랍 1개당 약 200mm
-  const DRAWER_HEIGHT_PER_UNIT = 200;
+  // 기존 모듈 기준 서랍 단수별 표준 사양 (shelving.ts FURNITURE_SPECS 참조)
+  const DRAWER_STANDARD: Record<number, { sectionHeight: number; heights: number[] }> = {
+    1: { sectionHeight: 400, heights: [255] },
+    2: { sectionHeight: 600, heights: [255, 255] },
+    3: { sectionHeight: 800, heights: [255, 255, 176] },
+    4: { sectionHeight: 1000, heights: [255, 255, 176, 176] },
+  };
 
   // 섹션 타입 변경 (연필 메뉴용) — 서랍 선택 시 단수도 함께 처리
   const handleSectionTypeChange = (sIdx: number, elementType: CustomElement['type'], drawerCount?: number) => {
@@ -232,23 +237,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       case 'drawer': {
         const count = drawerCount || 2;
+        const standard = DRAWER_STANDARD[count] || DRAWER_STANDARD[2];
         // 서랍 단수에 따라 하부 섹션 높이 자동 조절 (2단 분할 시)
         if (config.sections.length === 2 && sIdx === 0) {
           const availableHeight = furnitureHeight - 4 * panelThickness;
-          const lowerH = Math.min(count * DRAWER_HEIGHT_PER_UNIT, availableHeight - 100);
+          const lowerH = Math.min(standard.sectionHeight, availableHeight - 100);
           const upperH = availableHeight - lowerH;
           sec.height = lowerH;
           sections[1] = { ...sections[1], height: upperH };
           setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
         }
-        // 균등 분배 서랍 개별 높이 배열 (DrawerRenderer는 각 값을 개별 서랍 높이로 사용)
-        // gap 공간(상하 + 서랍 사이)을 제외한 유효 높이로 계산
-        const gapPerDrawer = 23.6; // DrawerRenderer의 gapHeight와 동일
-        const totalGap = gapPerDrawer * (count + 1); // 상단 + 서랍 사이 + 하단
-        const usableHeight = Math.max(sec.height - totalGap, count * 80);
-        const perDrawer = Math.round(usableHeight / count);
-        const heights = Array.from({ length: count }, () => perDrawer);
-        newElement = { type: 'drawer', heights };
+        // 기존 모듈과 동일한 개별 서랍 높이 적용
+        newElement = { type: 'drawer', heights: [...standard.heights] };
         break;
       }
       case 'rod':
@@ -900,6 +900,47 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 </div>
               </div>
 
+              {/* 세로 칸막이 (1단일 때 메인 화면에 노출) */}
+              {config.sections.length === 1 && (
+                <>
+                  <div className={styles.section}>
+                    <div className={styles.sectionTitle}>세로 칸막이</div>
+                    <div className={styles.row}>
+                      <div className={styles.toggleGroup}>
+                        <button
+                          className={`${styles.toggleButton} ${!config.sections[0].hasPartition ? styles.active : ''}`}
+                          onClick={() => handlePartitionToggle(0, false)}
+                        >
+                          없음
+                        </button>
+                        <button
+                          className={`${styles.toggleButton} ${config.sections[0].hasPartition ? styles.active : ''}`}
+                          onClick={() => handlePartitionToggle(0, true)}
+                        >
+                          추가
+                        </button>
+                      </div>
+                    </div>
+                    {config.sections[0].hasPartition && (
+                      <div className={styles.sliderRow}>
+                        <span className={styles.label}>위치</span>
+                        <input
+                          type="range"
+                          className={styles.slider}
+                          min={panelThickness + 100}
+                          max={(furnitureWidth - 2 * panelThickness) - 100}
+                          value={config.sections[0].partitionPosition || Math.round((furnitureWidth - 2 * panelThickness) / 2)}
+                          onChange={(e) => handlePartitionPosition(0, parseInt(e.target.value))}
+                        />
+                        <span className={styles.sliderValue}>
+                          {config.sections[0].partitionPosition || Math.round((furnitureWidth - 2 * panelThickness) / 2)}mm
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
               <div className={styles.divider} />
 
               {/* 섹션별 타입 선택 (연필 메뉴) */}
@@ -989,6 +1030,57 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 /* 분할 없음: 단일 섹션 타입 선택 */
                 (() => {
                   const section = config.sections[0];
+                  const hasPartitionNow = section.hasPartition || false;
+
+                  if (hasPartitionNow) {
+                    // 칸막이 있음 → 좌/우 영역 각각 타입 선택
+                    const leftInfo = getSectionTypeInfo({ ...section, elements: section.leftElements });
+                    const rightInfo = getSectionTypeInfo({ ...section, elements: section.rightElements });
+                    return (
+                      <>
+                        <div className={styles.section}>
+                          <div className={styles.sectionTitle}>좌측 영역</div>
+                          <div className={styles.elementSelector}>
+                            {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
+                              <button
+                                key={type}
+                                className={`${styles.elementButton} ${leftInfo.type === type ? styles.active : ''}`}
+                                onClick={() => handleElementChange(0, 'left', type)}
+                              >
+                                {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+                              </button>
+                            ))}
+                          </div>
+                          {leftInfo.type !== 'open' && (
+                            <div style={{ marginTop: '8px' }}>
+                              {renderElementEditor(0, 'left', section.leftElements, section.height)}
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.section}>
+                          <div className={styles.sectionTitle}>우측 영역</div>
+                          <div className={styles.elementSelector}>
+                            {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
+                              <button
+                                key={type}
+                                className={`${styles.elementButton} ${rightInfo.type === type ? styles.active : ''}`}
+                                onClick={() => handleElementChange(0, 'right', type)}
+                              >
+                                {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+                              </button>
+                            ))}
+                          </div>
+                          {rightInfo.type !== 'open' && (
+                            <div style={{ marginTop: '8px' }}>
+                              {renderElementEditor(0, 'right', section.rightElements, section.height)}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  }
+
+                  // 칸막이 없음 → 기존 전체 영역 타입 선택
                   const { type: currentType, drawerCount } = getSectionTypeInfo(section);
                   return (
                     <div className={styles.section}>
