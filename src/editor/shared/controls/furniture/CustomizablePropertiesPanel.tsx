@@ -23,11 +23,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [depthInput, setDepthInput] = useState<string>('');
   const [widthError, setWidthError] = useState<string>('');
   const [depthError, setDepthError] = useState<string>('');
+  // 섹션 높이 입력용 문자열 상태 (직접 바인딩 시 입력 불가 문제 방지)
+  const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
     if (placedModule?.customConfig) {
-      setConfig(JSON.parse(JSON.stringify(placedModule.customConfig)));
+      const cfg = JSON.parse(JSON.stringify(placedModule.customConfig)) as CustomFurnitureConfig;
+      setConfig(cfg);
+      // 섹션 높이 입력 초기화
+      const heightInputs: Record<number, string> = {};
+      cfg.sections.forEach((s, i) => { heightInputs[i] = s.height.toString(); });
+      setSectionHeightInputs(heightInputs);
     }
     if (placedModule) {
       const w = placedModule.freeWidth || placedModule.moduleWidth || 600;
@@ -138,31 +145,49 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (split && config.sections.length === 1) {
       const availableHeight = furnitureHeight - 4 * panelThickness;
       const halfH = Math.round(availableHeight / 2);
+      const sec1H = availableHeight - halfH;
       applyConfig({
         ...config,
         sections: [
           { ...config.sections[0], id: 'section-0', height: halfH },
-          { id: 'section-1', height: availableHeight - halfH, elements: [{ type: 'open' }] },
+          { id: 'section-1', height: sec1H, elements: [{ type: 'open' }] },
         ],
       });
+      setSectionHeightInputs({ 0: halfH.toString(), 1: sec1H.toString() });
     } else if (!split && config.sections.length > 1) {
       applyConfig({
         ...config,
         sections: [{ id: 'section-0', height: innerHeight, elements: config.sections[0].elements || [{ type: 'open' }] }],
       });
+      setSectionHeightInputs({ 0: innerHeight.toString() });
     }
   };
 
-  // 섹션 높이 변경 (2단 분할 시)
-  // 각 독립 박스가 2*pt를 사용하므로 내부 높이 합 = furnitureHeight - 4*pt
-  const handleSectionHeightChange = (idx: number, newHeight: number) => {
+  // 섹션 높이 입력 변경 (문자열 state만 업데이트, 확정은 blur에서)
+  const handleSectionHeightInputChange = (idx: number, value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: value }));
+    }
+  };
+
+  // 섹션 높이 확정 (onBlur / Enter)
+  const handleSectionHeightBlur = (idx: number) => {
     if (config.sections.length !== 2) return;
     const availableHeight = furnitureHeight - 4 * panelThickness;
-    const clamped = Math.max(100, Math.min(availableHeight - 100, newHeight));
+    const raw = sectionHeightInputs[idx] ?? '';
+    if (raw === '') {
+      // 빈 값이면 원래 값으로 복원
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: config.sections[idx].height.toString() }));
+      return;
+    }
+    const num = parseInt(raw, 10);
+    const clamped = Math.max(100, Math.min(availableHeight - 100, num));
+    const otherH = availableHeight - clamped;
     const sections = [...config.sections];
     sections[idx] = { ...sections[idx], height: clamped };
-    sections[1 - idx] = { ...sections[1 - idx], height: availableHeight - clamped };
+    sections[1 - idx] = { ...sections[1 - idx], height: otherH };
     applyConfig({ ...config, sections });
+    setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
   };
 
   // 칸막이 토글
@@ -413,11 +438,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
           <div className={styles.row}>
             <span className={styles.label}>높이</span>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               className={`${styles.input} ${styles.inputSmall}`}
-              value={section.height}
-              onChange={(e) => handleSectionHeightChange(sIdx, parseInt(e.target.value) || 0)}
-              min={100}
+              value={sectionHeightInputs[sIdx] ?? section.height.toString()}
+              onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
+              onBlur={() => handleSectionHeightBlur(sIdx)}
+              onKeyDown={handleInputKeyDown}
             />
             <span className={styles.unit}>mm</span>
           </div>
