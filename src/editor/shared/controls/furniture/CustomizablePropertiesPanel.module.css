@@ -353,3 +353,27 @@
   min-width: 50px;
   text-align: right;
 }
+
+/* My캐비닛 저장 버튼 */
+.saveButton {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px dashed var(--theme-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.saveButton:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  background: var(--theme-primary-light, rgba(59, 130, 246, 0.05));
+}

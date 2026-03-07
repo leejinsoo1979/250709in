@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement } from '@/editor/shared/furniture/types';
+import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
 import styles from './CustomizablePropertiesPanel.module.css';
 
 /**
@@ -11,6 +13,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
 const CustomizablePropertiesPanel: React.FC = () => {
   const { activePopup, closeAllPopups } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
+  const { saveCabinet } = useMyCabinetStore();
 
   const moduleId = activePopup.id;
   const placedModule = placedModules.find((m) => m.id === moduleId);
@@ -343,6 +346,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // My캐비닛에 저장
+  const handleSaveToCabinet = async () => {
+    const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
+    if (!name) return;
+
+    const category = getCustomizableCategory(placedModule.moduleId);
+    const { error } = await saveCabinet({
+      name,
+      category,
+      width: furnitureWidth,
+      height: furnitureHeight,
+      depth: furnitureDepth,
+      customConfig: config,
+    });
+
+    if (error) {
+      alert(error);
+    } else {
+      alert('My캐비닛에 저장되었습니다.');
+    }
+  };
+
   // 가구 삭제
   const handleDelete = () => {
     removeModule(moduleId);
@@ -595,6 +620,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
               })
             : config.sections.map((section, sIdx) => renderSectionEditor(section, sIdx))
           }
+        </div>
+
+        {/* My캐비닛 저장 */}
+        <div style={{ padding: '0 20px 8px' }}>
+          <button className={styles.saveButton} onClick={handleSaveToCabinet}>
+            My캐비닛에 저장
+          </button>
         </div>
 
         {/* 하단 버튼 */}
