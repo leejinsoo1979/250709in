@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
@@ -271,6 +271,8 @@ const Room: React.FC<RoomProps> = ({
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
+  const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
+  const isFreePlacement = layoutMode === 'free-placement';
 
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
@@ -2505,7 +2507,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
       {/* 상부 프레임 - 측면 뷰에서도 표시 (자유배치 모드에서는 숨김) */}
-      {showFrame && topBottomFrameHeightMm > 0 && spaceInfo.layoutMode !== 'free-placement' && (
+      {showFrame && topBottomFrameHeightMm > 0 && !isFreePlacement && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
@@ -3251,7 +3253,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 측면 뷰에서도 표시 (자유배치 모드에서는 숨김) */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && spaceInfo.layoutMode !== 'free-placement' && (() => {
+      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && !isFreePlacement && (() => {
         console.log('🎯 베이스프레임 높이 확인:', {
           '최종_높이': baseFrameHeightMm,
           baseFrameHeight_ThreeUnits: baseFrameHeight,
