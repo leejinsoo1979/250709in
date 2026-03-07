@@ -1225,8 +1225,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureWidthMm = placedModule.freeWidth;
   }
 
-  // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
-  if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+  // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스) - 자유배치는 제외
+  if (!placedModule.isFreePlacement && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
   } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
     // customWidth가 있지만 기둥도 있으면 기둥 조정 우선
