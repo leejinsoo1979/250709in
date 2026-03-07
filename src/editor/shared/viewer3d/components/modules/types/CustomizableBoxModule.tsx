@@ -371,8 +371,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {/* 내부 구조 */}
       {!isDragging && renderSections()}
 
-      {/* 조절발 (stand 모드 + upper가 아닌 경우) */}
-      {showFurniture && category !== 'upper' && spaceInfo.baseConfig?.type === 'stand' && (
+      {/* 조절발 (upper가 아닌 경우, 띄움배치 아닐 때) */}
+      {showFurniture && category !== 'upper' && (
         <AdjustableFootsRenderer
           width={W}
           depth={D}
