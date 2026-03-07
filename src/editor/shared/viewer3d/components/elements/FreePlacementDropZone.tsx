@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -16,20 +16,29 @@ import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurn
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 
+// 키보드 이동 단위 (mm)
+const KEYBOARD_STEP_MM = 1;
+
 /**
- * 자유배치 모드 - 클릭 배치
+ * 자유배치 모드 - 클릭 배치 + 배치된 가구 이동
  * 1. 썸네일 클릭 → 고스트 나타남
  * 2. 마우스 이동 → 고스트 따라다니며 좌우 이격거리 실시간 표시
  * 3. 클릭 → 즉시 배치
+ * 4. 배치된 가구 클릭 → 선택 후 마우스 드래그 또는 키보드 좌우키로 이동
  */
 const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, placedModules, addModule } = useFurnitureStore();
+  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule } = useFurnitureStore();
   const { theme } = useTheme();
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
   const [isColliding, setIsColliding] = useState(false);
   const planeRef = useRef<THREE.Mesh>(null);
+
+  // 배치된 가구 이동 상태
+  const [movingModuleId, setMovingModuleId] = useState<string | null>(null);
+  const [isDraggingPlaced, setIsDraggingPlaced] = useState(false);
+  const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
@@ -326,6 +335,123 @@ const FreePlacementDropZone: React.FC = () => {
     return gaps;
   }, [placedModules, spaceBounds, spaceInfo]);
 
+  // === 배치된 가구 이동 관련 로직 ===
+
+  // 이동 중인 가구의 스냅 + 클램핑 계산 (자기 자신 제외)
+  const calcMovedPosition = useCallback((xMm: number, moduleId: string) => {
+    const movingModule = placedModules.find(m => m.id === moduleId);
+    if (!movingModule) return { x: xMm, snapped: false, colliding: false };
+
+    const widthMm = movingModule.freeWidth || getModuleBoundsX(movingModule).right - getModuleBoundsX(movingModule).left;
+    let clampedX = clampToSpaceBoundsX(xMm, widthMm, spaceInfo);
+    const halfWidth = widthMm / 2;
+    const { startX, endX } = spaceBounds;
+
+    // 자기 자신 제외한 가구의 X범위
+    const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== moduleId);
+    const bounds = otherModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+    // 스냅 포인트 수집
+    const snapPoints: number[] = [];
+    snapPoints.push(startX + halfWidth);
+    snapPoints.push(endX - halfWidth);
+    for (const b of bounds) {
+      snapPoints.push(b.right + halfWidth);
+      snapPoints.push(b.left - halfWidth);
+    }
+
+    let snapped = false;
+    let bestSnap = clampedX;
+    let bestDist = SNAP_DISTANCE_MM + 1;
+    for (const sp of snapPoints) {
+      const dist = Math.abs(clampedX - sp);
+      if (dist < bestDist) { bestDist = dist; bestSnap = sp; }
+    }
+    if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
+
+    clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
+
+    // 충돌 체크 (자기 자신 제외)
+    const newBounds: FurnitureBoundsX = {
+      left: clampedX - halfWidth,
+      right: clampedX + halfWidth,
+      category: (movingModule as any).category || 'full',
+    };
+    const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
+
+    return { x: clampedX, snapped, colliding };
+  }, [placedModules, spaceInfo, spaceBounds]);
+
+  // 배치된 가구 마우스 드래그 시작
+  const handlePlacedPointerDown = useCallback((e: any, moduleId: string) => {
+    // 새 가구 배치 모드 중이면 무시
+    if (selectedFurnitureId) return;
+    e.stopPropagation();
+    setMovingModuleId(moduleId);
+    setIsDraggingPlaced(true);
+  }, [selectedFurnitureId]);
+
+  // 배치된 가구 드래그 중
+  const handleDragPointerMove = useCallback((e: any) => {
+    if (!isDraggingPlaced || !movingModuleId) return;
+    e.stopPropagation();
+    const xMm = e.point.x * 100;
+    const result = calcMovedPosition(xMm, movingModuleId);
+    if (!result.colliding) {
+      const mod = placedModules.find(m => m.id === movingModuleId);
+      if (mod) {
+        updatePlacedModule(movingModuleId, {
+          position: { x: result.x * 0.01, y: mod.position.y, z: mod.position.z },
+        });
+      }
+    }
+  }, [isDraggingPlaced, movingModuleId, calcMovedPosition, placedModules, updatePlacedModule]);
+
+  // 배치된 가구 드래그 종료
+  const handleDragPointerUp = useCallback(() => {
+    setIsDraggingPlaced(false);
+  }, []);
+
+  // 키보드 좌우 화살표로 미세 이동
+  useEffect(() => {
+    if (!isFreePlacement) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 입력 필드에서는 무시
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape') return;
+
+      // 이동할 가구: movingModuleId 또는 선택된 배치 가구
+      const targetId = movingModuleId || useFurnitureStore.getState().selectedPlacedModuleId;
+      if (!targetId) return;
+      const mod = placedModules.find(m => m.id === targetId && m.isFreePlacement);
+      if (!mod) return;
+
+      if (e.key === 'Escape') {
+        setMovingModuleId(null);
+        e.preventDefault();
+        return;
+      }
+
+      e.preventDefault();
+      const direction = e.key === 'ArrowLeft' ? -1 : 1;
+      const currentXmm = mod.position.x * 100;
+      const newXmm = currentXmm + direction * KEYBOARD_STEP_MM;
+
+      const result = calcMovedPosition(newXmm, targetId);
+      if (!result.colliding) {
+        updatePlacedModule(targetId, {
+          position: { x: result.x * 0.01, y: mod.position.y, z: mod.position.z },
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isFreePlacement, movingModuleId, placedModules, calcMovedPosition, updatePlacedModule]);
+
   // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && activeDimensions);
   if (!isFreePlacement) return null;
@@ -566,6 +692,38 @@ const FreePlacementDropZone: React.FC = () => {
           )}
         </>
       )}
+
+      {/* 배치된 가구 드래그용 투명 평면 (드래그 중에만 표시) */}
+      {isDraggingPlaced && movingModuleId && (
+        <mesh
+          ref={dragPlaneRef}
+          position={[planeConfig.planeCenterX, planeConfig.planeCenterY, 0.02]}
+          onPointerMove={handleDragPointerMove}
+          onPointerUp={handleDragPointerUp}
+          onPointerLeave={handleDragPointerUp}
+        >
+          <planeGeometry args={[planeConfig.planeWidth * 2, planeConfig.planeHeight * 2]} />
+          <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+
+      {/* 배치된 자유배치 가구의 클릭 영역 (이동 시작용) */}
+      {!hasActiveModule && placedModules.filter(m => m.isFreePlacement).map((mod) => {
+        const b = getModuleBoundsX(mod);
+        const widthMm = b.right - b.left;
+        const modData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
+        const heightMm = mod.freeHeight || modData?.dimensions.height || 2400;
+        return (
+          <mesh
+            key={`free-click-${mod.id}`}
+            position={[mod.position.x, mod.position.y, 0.005]}
+            onPointerDown={(e) => handlePlacedPointerDown(e, mod.id)}
+          >
+            <planeGeometry args={[widthMm * 0.01, heightMm * 0.01]} />
+            <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+          </mesh>
+        );
+      })}
 
       {/* 배치 후 남은 공간 사이즈 표시 */}
       {remainingGaps.map((gap, i) => (

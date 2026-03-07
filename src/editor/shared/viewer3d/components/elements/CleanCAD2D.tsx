@@ -588,8 +588,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
       const indexing = calculateSpaceIndexing(spaceInfo);
       
-      // 기본 너비 설정 - customWidth를 우선적으로 사용 (탑뷰와 동일하게)
-      let actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
+      // 기본 너비 설정 - 자유배치 가구는 freeWidth 우선, 그 외 customWidth 우선
+      let actualWidth = (module.isFreePlacement && module.freeWidth)
+        ? module.freeWidth
+        : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
       let actualPositionX = module.position.x;
       
       // 커스텀 깊이가 있는 경우 전용 가구로 취급
@@ -912,7 +914,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moduleData = getModuleById(module.moduleId);
               if (moduleData) {
                 const moduleX = module.position.x;
-                const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+                const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
                 const moduleLeft = moduleX - moduleWidth / 2;
                 const moduleRight = moduleX + moduleWidth / 2;
                 
@@ -1433,7 +1435,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const moduleData = getModuleById(module.moduleId);
                 if (moduleData) {
                   const moduleX = module.position.x;
-                  const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+                  const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
                   const moduleLeft = moduleX - moduleWidth / 2;
                   if (leftmostFurnitureX === null || moduleLeft < leftmostFurnitureX) {
                     leftmostFurnitureX = moduleLeft;
@@ -1601,7 +1603,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const moduleData = getModuleById(module.moduleId);
                 if (moduleData) {
                   const moduleX = module.position.x;
-                  const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+                  const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
                   const moduleRight = moduleX + moduleWidth / 2;
                   if (rightmostFurnitureX === null || moduleRight > rightmostFurnitureX) {
                     rightmostFurnitureX = moduleRight;
@@ -2912,7 +2914,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (!moduleData) return null;
         
         const moduleX = module.position.x;
-        const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+        const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
         
         // 가구 하단 중앙에 발통 심볼 배치
         return (
