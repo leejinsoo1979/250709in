@@ -1051,26 +1051,50 @@ const CustomizablePropertiesPanel: React.FC = () => {
               {/* 섹션 분할 */}
               <div className={styles.section}>
                 <div className={styles.sectionTitle}>섹션 분할</div>
+                {/* 좌,우 분할 */}
                 <div className={styles.row}>
+                  <span className={styles.label}>좌,우</span>
+                  <div className={styles.toggleGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${!config.sections[0].hasPartition ? styles.active : ''}`}
+                      onClick={() => {
+                        config.sections.forEach((_, i) => handlePartitionToggle(i, false));
+                      }}
+                    >
+                      없음
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${config.sections[0].hasPartition ? styles.active : ''}`}
+                      onClick={() => {
+                        config.sections.forEach((_, i) => handlePartitionToggle(i, true));
+                      }}
+                    >
+                      분할
+                    </button>
+                  </div>
+                </div>
+                {/* 상,하 분할 */}
+                <div className={styles.row}>
+                  <span className={styles.label}>상,하</span>
                   <div className={styles.toggleGroup}>
                     <button
                       className={`${styles.toggleButton} ${config.sections.length === 1 ? styles.active : ''}`}
                       onClick={() => handleSectionSplit(false)}
                     >
-                      분할 없음
+                      없음
                     </button>
                     <button
                       className={`${styles.toggleButton} ${config.sections.length === 2 ? styles.active : ''}`}
                       onClick={() => handleSectionSplit(true)}
                     >
-                      2단 분할
+                      분할
                     </button>
                   </div>
                 </div>
-                {/* 2단 분할 시 상부/하부 높이 입력 */}
+                {/* 상하 분할 시 높이 입력 */}
                 {config.sections.length === 2 && (
                   <>
-                    <div className={styles.row} style={{ marginTop: '8px' }}>
+                    <div className={styles.row} style={{ marginTop: '4px' }}>
                       <span className={styles.label}>하부 높이</span>
                       <input
                         type="text"
@@ -1100,87 +1124,90 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 )}
               </div>
 
-              {/* 세로 칸막이 (1단일 때 메인 화면에 노출) */}
-              {config.sections.length === 1 && (
-                <>
-                  <div className={styles.section}>
-                    <div className={styles.sectionTitle}>세로 칸막이</div>
-                    <div className={styles.row}>
-                      <div className={styles.toggleGroup}>
-                        <button
-                          className={`${styles.toggleButton} ${!config.sections[0].hasPartition ? styles.active : ''}`}
-                          onClick={() => handlePartitionToggle(0, false)}
-                        >
-                          없음
-                        </button>
-                        <button
-                          className={`${styles.toggleButton} ${config.sections[0].hasPartition ? styles.active : ''}`}
-                          onClick={() => handlePartitionToggle(0, true)}
-                        >
-                          추가
-                        </button>
-                      </div>
-                    </div>
-                    {config.sections[0].hasPartition && (() => {
-                      const innerW0 = furnitureWidth - 2 * panelThickness;
-                      const pos0 = config.sections[0].partitionPosition || Math.round(innerW0 / 2);
-                      return (
-                        <>
-                          <div className={styles.row}>
-                            <span className={styles.label}>좌</span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              className={`${styles.input} ${styles.inputSmall}`}
-                              value={partitionInputs['0-left'] ?? pos0.toString()}
-                              onChange={(e) => {
-                                setPartitionInputs((prev) => ({ ...prev, '0-left': e.target.value }));
-                              }}
-                              onBlur={() => {
-                                const val = parseInt(partitionInputs['0-left'] || '0');
-                                const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
-                                handlePartitionPosition(0, clamped);
-                                setPartitionInputs((prev) => ({
-                                  ...prev,
-                                  '0-left': clamped.toString(),
-                                  '0-right': (innerW0 - clamped).toString(),
-                                }));
-                              }}
-                              style={{ width: '70px' }}
-                            />
-                            <span className={styles.unit}>mm</span>
-                          </div>
-                          <div className={styles.row}>
-                            <span className={styles.label}>우</span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              className={`${styles.input} ${styles.inputSmall}`}
-                              value={partitionInputs['0-right'] ?? (innerW0 - pos0).toString()}
-                              onChange={(e) => {
-                                setPartitionInputs((prev) => ({ ...prev, '0-right': e.target.value }));
-                              }}
-                              onBlur={() => {
-                                const val = parseInt(partitionInputs['0-right'] || '0');
-                                const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
-                                const newPos = innerW0 - clamped;
-                                handlePartitionPosition(0, newPos);
-                                setPartitionInputs((prev) => ({
-                                  ...prev,
-                                  '0-left': newPos.toString(),
-                                  '0-right': clamped.toString(),
-                                }));
-                              }}
-                              style={{ width: '70px' }}
-                            />
-                            <span className={styles.unit}>mm</span>
-                          </div>
-                        </>
-                      );
-                    })()}
+              <div className={styles.divider} />
+
+              {/* 세로 칸막이 추가 */}
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>세로 칸막이 추가</div>
+                <div className={styles.row}>
+                  <div className={styles.toggleGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${!config.sections[0].hasPartition ? styles.active : ''}`}
+                      onClick={() => {
+                        config.sections.forEach((_, i) => handlePartitionToggle(i, false));
+                      }}
+                    >
+                      없음
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${config.sections[0].hasPartition ? styles.active : ''}`}
+                      onClick={() => {
+                        config.sections.forEach((_, i) => handlePartitionToggle(i, true));
+                      }}
+                    >
+                      추가
+                    </button>
                   </div>
-                </>
-              )}
+                </div>
+                {/* 칸막이 위치 입력 */}
+                {config.sections[0].hasPartition && (() => {
+                  const innerW0 = furnitureWidth - 2 * panelThickness;
+                  const pos0 = config.sections[0].partitionPosition || Math.round(innerW0 / 2);
+                  return (
+                    <>
+                      <div className={styles.row}>
+                        <span className={styles.label}>좌</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className={`${styles.input} ${styles.inputSmall}`}
+                          value={partitionInputs['0-left'] ?? pos0.toString()}
+                          onChange={(e) => {
+                            setPartitionInputs((prev) => ({ ...prev, '0-left': e.target.value }));
+                          }}
+                          onBlur={() => {
+                            const val = parseInt(partitionInputs['0-left'] || '0');
+                            const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
+                            config.sections.forEach((_, i) => handlePartitionPosition(i, clamped));
+                            setPartitionInputs((prev) => ({
+                              ...prev,
+                              '0-left': clamped.toString(),
+                              '0-right': (innerW0 - clamped).toString(),
+                            }));
+                          }}
+                          style={{ width: '70px' }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                      <div className={styles.row}>
+                        <span className={styles.label}>우</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className={`${styles.input} ${styles.inputSmall}`}
+                          value={partitionInputs['0-right'] ?? (innerW0 - pos0).toString()}
+                          onChange={(e) => {
+                            setPartitionInputs((prev) => ({ ...prev, '0-right': e.target.value }));
+                          }}
+                          onBlur={() => {
+                            const val = parseInt(partitionInputs['0-right'] || '0');
+                            const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
+                            const newPos = innerW0 - clamped;
+                            config.sections.forEach((_, i) => handlePartitionPosition(i, newPos));
+                            setPartitionInputs((prev) => ({
+                              ...prev,
+                              '0-left': newPos.toString(),
+                              '0-right': clamped.toString(),
+                            }));
+                          }}
+                          style={{ width: '70px' }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
 
               <div className={styles.divider} />
 
