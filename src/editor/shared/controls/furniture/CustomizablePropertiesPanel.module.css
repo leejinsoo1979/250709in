@@ -120,6 +120,16 @@
   border-color: var(--theme-primary);
 }
 
+.inputError {
+  border-color: var(--theme-error, #ef4444);
+}
+
+.errorMessage {
+  font-size: 11px;
+  color: var(--theme-error, #ef4444);
+  margin: -4px 0 4px 60px;
+}
+
 .inputSmall {
   width: 70px;
   flex: none;

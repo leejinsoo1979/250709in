@@ -18,12 +18,26 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
 
-  // 팝업 열릴 때 config 초기화
+  // 너비/깊이 입력용 문자열 상태 (기존 가구 패턴과 동일)
+  const [widthInput, setWidthInput] = useState<string>('');
+  const [depthInput, setDepthInput] = useState<string>('');
+  const [widthError, setWidthError] = useState<string>('');
+  const [depthError, setDepthError] = useState<string>('');
+
+  // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
     if (placedModule?.customConfig) {
       setConfig(JSON.parse(JSON.stringify(placedModule.customConfig)));
     }
-  }, [placedModule?.id, placedModule?.customConfig]);
+    if (placedModule) {
+      const w = placedModule.freeWidth || placedModule.moduleWidth || 600;
+      const d = placedModule.freeDepth || 580;
+      setWidthInput(w.toString());
+      setDepthInput(d.toString());
+      setWidthError('');
+      setDepthError('');
+    }
+  }, [placedModule?.id]);
 
   // config 업데이트 + 즉시 store 반영 (useCallback은 조건부 return 전에 호출해야 함)
   const applyConfig = useCallback(
@@ -49,19 +63,70 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 내부 유효 높이 (상하판 두께 제외)
   const innerHeight = furnitureHeight - 2 * panelThickness;
 
-  // 너비 변경 핸들러
-  const handleWidthChange = (newWidth: number) => {
-    const clamped = Math.max(200, Math.min(2400, newWidth));
-    if (moduleId) {
-      updatePlacedModule(moduleId, { freeWidth: clamped, moduleWidth: clamped });
+  // 너비/깊이 범위 (기존 가구와 동일 패턴)
+  const MIN_WIDTH = 150;
+  const MAX_WIDTH = 2400;
+  const MIN_DEPTH = 200;
+  const MAX_DEPTH = 800;
+
+  // 너비 입력 핸들러 (숫자와 빈 문자열만 허용)
+  const handleWidthInputChange = (value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setWidthInput(value);
+      setWidthError('');
     }
   };
 
-  // 깊이 변경 핸들러
-  const handleDepthChange = (newDepth: number) => {
-    const clamped = Math.max(200, Math.min(800, newDepth));
-    if (moduleId) {
-      updatePlacedModule(moduleId, { freeDepth: clamped });
+  // 너비 확정 (onBlur / Enter)
+  const handleWidthInputBlur = () => {
+    if (widthInput === '') {
+      setWidthInput(furnitureWidth.toString());
+      return;
+    }
+    const num = parseInt(widthInput, 10);
+    if (num < MIN_WIDTH) {
+      setWidthError(`최소 ${MIN_WIDTH}mm`);
+      setWidthInput(furnitureWidth.toString());
+    } else if (num > MAX_WIDTH) {
+      setWidthError(`최대 ${MAX_WIDTH}mm`);
+      setWidthInput(furnitureWidth.toString());
+    } else {
+      setWidthError('');
+      updatePlacedModule(moduleId, { freeWidth: num, moduleWidth: num });
+    }
+  };
+
+  // 깊이 입력 핸들러
+  const handleDepthInputChange = (value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setDepthInput(value);
+      setDepthError('');
+    }
+  };
+
+  // 깊이 확정 (onBlur / Enter)
+  const handleDepthInputBlur = () => {
+    if (depthInput === '') {
+      setDepthInput(furnitureDepth.toString());
+      return;
+    }
+    const num = parseInt(depthInput, 10);
+    if (num < MIN_DEPTH) {
+      setDepthError(`최소 ${MIN_DEPTH}mm`);
+      setDepthInput(furnitureDepth.toString());
+    } else if (num > MAX_DEPTH) {
+      setDepthError(`최대 ${MAX_DEPTH}mm`);
+      setDepthInput(furnitureDepth.toString());
+    } else {
+      setDepthError('');
+      updatePlacedModule(moduleId, { freeDepth: num });
+    }
+  };
+
+  // Enter 키 핸들러
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
     }
   };
 
@@ -428,16 +493,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
             <div className={styles.row}>
               <span className={styles.label}>너비</span>
               <input
-                type="number"
-                className={styles.input}
-                value={furnitureWidth}
-                min={200}
-                max={2400}
-                step={10}
-                onChange={(e) => handleWidthChange(Number(e.target.value))}
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${widthError ? styles.inputError : ''}`}
+                value={widthInput}
+                placeholder={`${MIN_WIDTH}-${MAX_WIDTH}`}
+                onChange={(e) => handleWidthInputChange(e.target.value)}
+                onBlur={handleWidthInputBlur}
+                onKeyDown={handleInputKeyDown}
               />
               <span className={styles.unit}>mm</span>
             </div>
+            {widthError && <div className={styles.errorMessage}>{widthError}</div>}
             <div className={styles.row}>
               <span className={styles.label}>높이</span>
               <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
@@ -448,16 +515,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
             <div className={styles.row}>
               <span className={styles.label}>깊이</span>
               <input
-                type="number"
-                className={styles.input}
-                value={furnitureDepth}
-                min={200}
-                max={800}
-                step={10}
-                onChange={(e) => handleDepthChange(Number(e.target.value))}
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${depthError ? styles.inputError : ''}`}
+                value={depthInput}
+                placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                onChange={(e) => handleDepthInputChange(e.target.value)}
+                onBlur={handleDepthInputBlur}
+                onKeyDown={handleInputKeyDown}
               />
               <span className={styles.unit}>mm</span>
             </div>
+            {depthError && <div className={styles.errorMessage}>{depthError}</div>}
           </div>
 
           <div className={styles.divider} />
