@@ -209,59 +209,93 @@ const FreePlacementDropZone: React.FC = () => {
     };
   }, [isFreePlacement, currentDragData, clientToXmm, updateHoverState]);
 
-  // window.handleFreeDrop 등록 (Space3DView에서 호출)
-  const handleFreeDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-    console.log('🎯 [handleFreeDrop] 호출됨!');
-
-    const dragData = currentDragData;
-    if (!dragData || !dragData.moduleData) {
-      // dataTransfer에서 fallback
-      try {
-        const raw = dragEvent.dataTransfer?.getData('application/json');
-        if (!raw) return false;
-        const parsed = JSON.parse(raw);
-        if (parsed.type !== 'furniture' || !parsed.moduleData) return false;
-
-        const xMm = clientToXmm(dragEvent.clientX, dragEvent.clientY);
-        if (xMm === null) return false;
-
-        const dims = parsed.moduleData.dimensions;
-        const clampedX = clampToSpaceBoundsX(xMm, dims.width, spaceInfo);
-
-        const newBounds: FurnitureBoundsX = {
-          left: clampedX - dims.width / 2,
-          right: clampedX + dims.width / 2,
-          category: (parsed.moduleData.category as 'full' | 'upper' | 'lower') || 'full',
-        };
-        if (checkFreeCollision(placedModules, newBounds)) return false;
-
-        return executePlacement(parsed.moduleData.id, clampedX, dims, parsed.moduleData);
-      } catch {
-        return false;
-      }
-    }
-
-    const xMm = clientToXmm(dragEvent.clientX, dragEvent.clientY);
-    if (xMm === null) return false;
-
-    const dims = dragData.moduleData.dimensions;
-    const clampedX = clampToSpaceBoundsX(xMm, dims.width, spaceInfo);
-
-    const newBounds: FurnitureBoundsX = {
-      left: clampedX - dims.width / 2,
-      right: clampedX + dims.width / 2,
-      category: (dragData.moduleData.category as 'full' | 'upper' | 'lower') || 'full',
-    };
-    if (checkFreeCollision(placedModules, newBounds)) return false;
-
-    return executePlacement(dragData.moduleData.id, clampedX, dims, dragData.moduleData);
-  }, [currentDragData, clientToXmm, spaceInfo, placedModules, executePlacement]);
-
+  // window.handleFreeDrop 등록 (Space3DView/ThreeCanvas에서 호출)
+  // store에서 직접 읽어 stale closure 방지
   useEffect(() => {
     if (!isFreePlacement) return;
-    window.handleFreeDrop = handleFreeDrop;
+
+    window.handleFreeDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
+      console.log('🎯 [handleFreeDrop] 호출됨!');
+
+      // store에서 최신 상태 직접 읽기
+      const store = useFurnitureStore.getState();
+      const latestDragData = store.currentDragData;
+      const latestPlacedModules = store.placedModules;
+      const latestSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+
+      // 드래그 데이터 결정: store → dataTransfer fallback
+      let moduleData: any = null;
+      let dims: { width: number; height: number; depth: number } | null = null;
+      let moduleId: string | null = null;
+
+      if (latestDragData?.moduleData) {
+        moduleData = latestDragData.moduleData;
+        dims = moduleData.dimensions;
+        moduleId = moduleData.id;
+      } else {
+        try {
+          const raw = dragEvent.dataTransfer?.getData('application/json');
+          if (!raw) return false;
+          const parsed = JSON.parse(raw);
+          if (parsed.type !== 'furniture' || !parsed.moduleData) return false;
+          moduleData = parsed.moduleData;
+          dims = moduleData.dimensions;
+          moduleId = moduleData.id;
+        } catch {
+          return false;
+        }
+      }
+
+      if (!moduleId || !dims || !moduleData) return false;
+
+      // X 좌표 계산
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return false;
+      const rect = canvas.getBoundingClientRect();
+      const normalizedX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
+      const normalizedY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(normalizedX, normalizedY), camera);
+      const ray = raycaster.ray;
+      const t = -ray.origin.z / ray.direction.z;
+      if (t <= 0) return false;
+      const xMm = (ray.origin.x + ray.direction.x * t) * 100;
+
+      const clampedX = clampToSpaceBoundsX(xMm, dims.width, latestSpaceInfo);
+
+      // 충돌 체크
+      const newBounds: FurnitureBoundsX = {
+        left: clampedX - dims.width / 2,
+        right: clampedX + dims.width / 2,
+        category: (moduleData.category as 'full' | 'upper' | 'lower') || 'full',
+      };
+      if (checkFreeCollision(latestPlacedModules, newBounds)) return false;
+
+      // 배치 실행
+      const result = placeFurnitureFree({
+        moduleId,
+        xPositionMM: clampedX,
+        spaceInfo: latestSpaceInfo,
+        dimensions: dims,
+        existingModules: latestPlacedModules,
+        moduleData,
+      });
+
+      if (result.success && result.module) {
+        store.addModule(result.module);
+        console.log('✅ [handleFreeDrop] 배치 완료:', result.module.id);
+        // 고스트 초기화
+        setHoverXmm(null);
+        setIsColliding(false);
+        return true;
+      }
+      console.warn('❌ [handleFreeDrop] 배치 실패:', result.error);
+      return false;
+    };
+
     return () => { delete window.handleFreeDrop; };
-  }, [isFreePlacement, handleFreeDrop]);
+  }, [isFreePlacement, camera]);
 
   // 고스트 Y 위치 계산
   const ghostYThree = useMemo(() => {
