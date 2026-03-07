@@ -293,30 +293,35 @@ const FreePlacementDropZone: React.FC = () => {
     if (hoverXmm === null || !activeDimensions || !spaceInfo.droppedCeiling?.enabled) {
       return { zone: 'normal' as const, droppedInternalHeight: undefined };
     }
-    return detectDroppedZone(hoverXmm, spaceInfo, activeDimensions.width);
+    const result = detectDroppedZone(hoverXmm, spaceInfo, activeDimensions.width);
+    console.log('👻 [ghostDroppedZone]', {
+      hoverXmm,
+      furnitureWidth: activeDimensions.width,
+      droppedEnabled: spaceInfo.droppedCeiling?.enabled,
+      droppedPosition: spaceInfo.droppedCeiling?.position,
+      droppedWidth: spaceInfo.droppedCeiling?.width,
+      dropHeight: spaceInfo.droppedCeiling?.dropHeight,
+      result,
+    });
+    return result;
   }, [hoverXmm, spaceInfo, activeDimensions]);
 
   const ghostEffectiveHeight = useMemo(() => {
     if (!activeDimensions) return 0;
-    if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined) {
+    // full 카테고리만 단내림 높이 적용 (placeFurnitureFree와 동일 로직)
+    if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined
+      && activeCategory === 'full') {
+      console.log('👻 [ghostEffectiveHeight] 단내림 적용:', ghostDroppedZone.droppedInternalHeight, 'from', activeDimensions.height);
       return ghostDroppedZone.droppedInternalHeight;
     }
+    console.log('👻 [ghostEffectiveHeight] 기본 높이:', activeDimensions.height, 'zone:', ghostDroppedZone.zone, 'category:', activeCategory);
     return activeDimensions.height;
   }, [activeDimensions, ghostDroppedZone, activeCategory]);
 
-  // 고스트 Y 위치 계산
+  // 고스트 Y 위치 계산 — calculateYPosition과 동일 로직 사용
   const ghostYThree = useMemo(() => {
     if (!activeDimensions) return 0;
-    const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-    const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
-    const floatHeightMm = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-
-    if (activeCategory === 'upper') {
-      const topFrameMm = spaceInfo.frameSize?.top || 10;
-      const upperTopY = spaceInfo.height - topFrameMm;
-      return (upperTopY - activeDimensions.height / 2) * 0.01;
-    }
-    return (floorFinishMm + baseHeightMm + floatHeightMm + ghostEffectiveHeight / 2) * 0.01;
+    return calculateYPosition(activeCategory, ghostEffectiveHeight, spaceInfo);
   }, [activeDimensions, activeCategory, spaceInfo, ghostEffectiveHeight]);
 
   // 고스트 이동 중 실시간 이격거리 계산 (좌/우 벽 또는 가구와의 거리)

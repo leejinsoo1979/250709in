@@ -126,6 +126,13 @@ export function detectDroppedZone(
     isInDropped = (xPositionMM + halfW) > endX - droppedWidth;
   }
 
+  console.log('🔍 [detectDroppedZone]', {
+    xPositionMM, furnitureWidthMM, halfW,
+    startX, endX, droppedWidth, droppedPosition,
+    checkValue: droppedPosition === 'right' ? `${xPositionMM + halfW} > ${endX - droppedWidth}` : `${xPositionMM - halfW} < ${startX + droppedWidth}`,
+    isInDropped,
+  });
+
   if (!isInDropped) {
     return { zone: 'normal' };
   }
