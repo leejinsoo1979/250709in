@@ -267,17 +267,22 @@ const FreePlacementDropZone: React.FC = () => {
     [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
   );
 
-  // 단내림 구간 감지 → 고스트 높이 조정 (full 카테고리만)
+  // 단내림 구간 감지 → 고스트 높이 조정
+  const ghostDroppedZone = useMemo(() => {
+    if (hoverXmm === null || !spaceInfo.droppedCeiling?.enabled) {
+      return { zone: 'normal' as const, droppedInternalHeight: undefined };
+    }
+    return detectDroppedZone(hoverXmm, spaceInfo);
+  }, [hoverXmm, spaceInfo]);
+
   const ghostEffectiveHeight = useMemo(() => {
     if (!activeDimensions) return 0;
-    if (hoverXmm === null || activeCategory !== 'full') return activeDimensions.height;
-    const droppedZone = detectDroppedZone(hoverXmm, spaceInfo);
-    console.log('👻 [ghost] detectDroppedZone:', { hoverXmm, zone: droppedZone.zone, droppedH: droppedZone.droppedInternalHeight, activeCategory, origH: activeDimensions.height });
-    if (droppedZone.zone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
-      return droppedZone.droppedInternalHeight;
+    if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined) {
+      console.log('👻 [ghost] 단내림 높이 적용:', { droppedH: ghostDroppedZone.droppedInternalHeight, origH: activeDimensions.height, category: activeCategory });
+      return ghostDroppedZone.droppedInternalHeight;
     }
     return activeDimensions.height;
-  }, [activeDimensions, hoverXmm, activeCategory, spaceInfo]);
+  }, [activeDimensions, ghostDroppedZone, activeCategory]);
 
   // 고스트 Y 위치 계산
   const ghostYThree = useMemo(() => {
@@ -764,7 +769,7 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 실시간 이격거리 가이드 (고스트 이동 중) */}
       {ghostDistanceGuides && ghostPosition && activeDimensions && !isColliding && (
-        <>
+        <group key={`ghost-guide-${ghostDistanceGuides.ghostLeft}-${ghostDistanceGuides.ghostRight}`}>
           {/* 왼쪽 이격거리 */}
           {ghostDistanceGuides.leftDistance > 2 && (
             <group>
@@ -910,7 +915,7 @@ const FreePlacementDropZone: React.FC = () => {
               </Html>
             </group>
           )}
-        </>
+        </group>
       )}
 
       {/* 고스트 가구 너비 치수 (상단 CAD 스타일) */}
@@ -971,7 +976,7 @@ const FreePlacementDropZone: React.FC = () => {
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
               }}>
-                {activeDimensions.width}mm
+                {activeDimensions.width}mm (H:{Math.round(ghostEffectiveHeight)} {ghostDroppedZone.zone})
               </div>
             </Html>
           </group>
@@ -980,7 +985,7 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 드래그 이동 중인 가구의 실시간 이격거리 가이드 (편집 팝업 시에는 remainingGaps 사용) */}
       {editingDistanceGuides && isDraggingPlaced && (
-        <>
+        <group key={`drag-guide-${editingDistanceGuides.modLeft}-${editingDistanceGuides.modRight}`}>
           {/* 가구 좌우 수직 연장선 (가이드선과 가구를 시각적으로 연결) */}
           <line>
             <bufferGeometry>
@@ -1139,7 +1144,7 @@ const FreePlacementDropZone: React.FC = () => {
               </Html>
             </group>
           )}
-        </>
+        </group>
       )}
 
       {/* 배치된 가구 드래그용 투명 평면 (드래그 중 또는 편집 모드에서 표시) */}
@@ -1162,7 +1167,7 @@ const FreePlacementDropZone: React.FC = () => {
         const lineColor = themeColor;
 
         return (
-        <group key={`gap-${i}`}>
+        <group key={`gap-${i}-${gap.startX}-${gap.endX}`}>
           {/* 가로 치수선 */}
           <line>
             <bufferGeometry>
