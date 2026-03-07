@@ -2691,6 +2691,13 @@ const Configurator: React.FC = () => {
                   moduleCategory={moduleCategory}
                 />
               </div>
+
+              {/* 커스텀 캐비닛 */}
+              <div className={styles.moduleSection}>
+                <CustomizableFurnitureLibrary
+                  filter={moduleCategory === 'tall' ? 'full' : moduleCategory as 'upper' | 'lower'}
+                />
+              </div>
             </div>
           </div>
         );
@@ -2716,40 +2723,6 @@ const Configurator: React.FC = () => {
             <div className={styles.preparingPanel}>
               <h3>악세서리</h3>
               <p>준비중입니다.</p>
-            </div>
-          </div>
-        );
-      case 'custom':
-        return (
-          <div className={styles.sidebarPanel}>
-            <div className={styles.modulePanelContent}>
-              {/* 전체장/상부장/하부장 토글 탭 */}
-              <div className={styles.moduleCategoryTabs}>
-                <button
-                  className={`${styles.moduleCategoryTab} ${customCategory === 'full' ? styles.active : ''}`}
-                  onClick={() => setCustomCategory('full')}
-                >
-                  전체장
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${customCategory === 'upper' ? styles.active : ''}`}
-                  onClick={() => setCustomCategory('upper')}
-                >
-                  상부장
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${customCategory === 'lower' ? styles.active : ''}`}
-                  onClick={() => setCustomCategory('lower')}
-                >
-                  하부장
-                </button>
-              </div>
-
-              <div className={styles.moduleSection}>
-                <CustomizableFurnitureLibrary
-                  filter={customCategory}
-                />
-              </div>
             </div>
           </div>
         );

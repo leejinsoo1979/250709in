@@ -4,7 +4,6 @@ import { LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { HiPencilSquare } from 'react-icons/hi2';
 import { TbBoxAlignRight, TbBrandAsana, TbUpload } from 'react-icons/tb';
 import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +13,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'custom' | 'upload';
+export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload';
 
 interface SidebarProps {
   activeTab: SidebarTab | null;
@@ -122,11 +121,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         </svg>
       ),
       label: t('sidebar.module')
-    },
-    {
-      id: 'custom' as SidebarTab,
-      icon: <HiPencilSquare size={22} />,
-      label: '커스텀'
     },
     {
       id: 'material' as SidebarTab,
