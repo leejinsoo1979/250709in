@@ -1878,9 +1878,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const newValue = currentPlacedModule.hasBase === false;
                     updatePlacedModule(currentPlacedModule.id, { hasBase: newValue });
                   }}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                 />
                 <span style={{ fontSize: '13px', color: '#333' }}>걸래받이</span>
+              </label>
+            </div>
+          )}
+
+          {/* 자유배치 상부프레임 토글 (하부장 제외) */}
+          {currentPlacedModule?.isFreePlacement &&
+           moduleData &&
+           moduleData.category !== 'lower' && (
+            <div className={styles.propertySection}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={currentPlacedModule.hasTopFrame !== false}
+                  onChange={() => {
+                    const newValue = currentPlacedModule.hasTopFrame === false;
+                    updatePlacedModule(currentPlacedModule.id, { hasTopFrame: newValue });
+                  }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
+                />
+                <span style={{ fontSize: '13px', color: '#333' }}>상부프레임</span>
               </label>
             </div>
           )}

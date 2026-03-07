@@ -91,6 +91,7 @@ export function computeTopStripGroups(
 ): BaseStripGroup[] {
   const topModules = placedModules.filter((m) => {
     if (!m.isFreePlacement) return false;
+    if (m.hasTopFrame === false) return false;
     const category = getModuleCategory(m);
     return category === 'upper' || category === 'full';
   });
