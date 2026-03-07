@@ -242,7 +242,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
           setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
         }
         // 균등 분배 서랍 개별 높이 배열 (DrawerRenderer는 각 값을 개별 서랍 높이로 사용)
-        const perDrawer = Math.round(sec.height / count);
+        // gap 공간(상하 + 서랍 사이)을 제외한 유효 높이로 계산
+        const gapPerDrawer = 23.6; // DrawerRenderer의 gapHeight와 동일
+        const totalGap = gapPerDrawer * (count + 1); // 상단 + 서랍 사이 + 하단
+        const usableHeight = Math.max(sec.height - totalGap, count * 80);
+        const perDrawer = Math.round(usableHeight / count);
         const heights = Array.from({ length: count }, () => perDrawer);
         newElement = { type: 'drawer', heights };
         break;
@@ -326,9 +330,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
       case 'shelf':
         newElement = { type: 'shelf', heights: [Math.round(sectionHeight / 2)] };
         break;
-      case 'drawer':
-        newElement = { type: 'drawer', heights: [Math.round(sectionHeight / 3)] };
+      case 'drawer': {
+        const gapTotal = 23.6 * 2; // 1단 서랍 기본: 상하 gap
+        const usable = Math.max(sectionHeight - gapTotal, 80);
+        newElement = { type: 'drawer', heights: [Math.round(usable)] };
         break;
+      }
       case 'rod':
         newElement = { type: 'rod', height: Math.round(sectionHeight * 0.85) };
         break;
@@ -402,6 +409,45 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const refDir = shelfRefDir[refKey] || 'bottom';
     if (el.type === 'shelf' && refDir === 'top') {
       num = sectionHeight - num;
+    }
+
+    if (el.type === 'drawer') {
+      // 서랍: 개별 높이 변경 시 나머지 서랍에 잔여 높이 재분배
+      const gapPerDrawer = 23.6; // DrawerRenderer의 gapHeight와 동일
+      const totalGap = gapPerDrawer * (el.heights.length + 1);
+      const usableHeight = sectionHeight - totalGap;
+      const minDrawerH = 80;
+      const clamped = Math.max(minDrawerH, Math.min(usableHeight - minDrawerH * (el.heights.length - 1), num));
+
+      const heights = [...el.heights];
+      heights[heightIdx] = clamped;
+
+      // 나머지 서랍에 잔여 높이 균등 재분배
+      const othersCount = heights.length - 1;
+      if (othersCount > 0) {
+        const remaining = usableHeight - clamped;
+        const perOther = Math.max(minDrawerH, Math.round(remaining / othersCount));
+        for (let i = 0; i < heights.length; i++) {
+          if (i !== heightIdx) heights[i] = perOther;
+        }
+      }
+
+      elements[0] = { ...el, heights };
+
+      if (side === 'full') sec.elements = elements;
+      else if (side === 'left') sec.leftElements = elements;
+      else sec.rightElements = elements;
+
+      sections[sIdx] = sec;
+      applyConfig({ ...config, sections });
+
+      // heightInputs 전체 갱신
+      const newHInputs: Record<string, string> = {};
+      heights.forEach((h, hIdx) => {
+        newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+      });
+      setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+      return;
     }
 
     const clamped = Math.max(50, Math.min(sectionHeight, num));
@@ -886,7 +932,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           </button>
                         ))}
                       </div>
-                      {/* 서랍 단수 선택 (하부만) */}
+                      {/* 서랍 단수 선택 + 개별 높이 편집 (하부만) */}
                       {currentType === 'drawer' && !isUpper && (
                         <div style={{ marginTop: '8px' }}>
                           <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
@@ -901,6 +947,39 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               </button>
                             ))}
                           </div>
+                          {/* 개별 서랍 높이 편집 */}
+                          {section.elements?.[0]?.type === 'drawer' && 'heights' in section.elements[0] && (
+                            <div style={{ marginTop: '8px' }}>
+                              <span className={styles.label} style={{ marginBottom: '4px', display: 'block' }}>서랍 개별 높이</span>
+                              <div className={styles.heightList}>
+                                {(section.elements[0] as { type: 'drawer'; heights: number[] }).heights.map((h, hi) => {
+                                  const inputKey = `${realIdx}-full-0-${hi}`;
+                                  const displayVal = heightInputs[inputKey] ?? h.toString();
+                                  return (
+                                    <div key={hi} className={styles.heightItem}>
+                                      <span className={styles.heightIndex}>{hi + 1}단</span>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        className={`${styles.input} ${styles.inputSmall}`}
+                                        value={displayVal}
+                                        onChange={(e) => handleHeightInputChange(realIdx, 'full', hi, e.target.value)}
+                                        onBlur={() => handleHeightInputBlur(realIdx, 'full', hi, section.height)}
+                                        onKeyDown={handleInputKeyDown}
+                                      />
+                                      <span className={styles.unit}>mm</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* 선반/옷봉/바지걸이 세부 설정 */}
+                      {currentType !== 'open' && currentType !== 'drawer' && (
+                        <div style={{ marginTop: '8px' }}>
+                          {renderElementEditor(realIdx, 'full', section.elements, section.height)}
                         </div>
                       )}
                     </div>
@@ -939,6 +1018,39 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               </button>
                             ))}
                           </div>
+                          {/* 개별 서랍 높이 편집 */}
+                          {section.elements?.[0]?.type === 'drawer' && 'heights' in section.elements[0] && (
+                            <div style={{ marginTop: '8px' }}>
+                              <span className={styles.label} style={{ marginBottom: '4px', display: 'block' }}>서랍 개별 높이</span>
+                              <div className={styles.heightList}>
+                                {(section.elements[0] as { type: 'drawer'; heights: number[] }).heights.map((h, hi) => {
+                                  const inputKey = `0-full-0-${hi}`;
+                                  const displayVal = heightInputs[inputKey] ?? h.toString();
+                                  return (
+                                    <div key={hi} className={styles.heightItem}>
+                                      <span className={styles.heightIndex}>{hi + 1}단</span>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        className={`${styles.input} ${styles.inputSmall}`}
+                                        value={displayVal}
+                                        onChange={(e) => handleHeightInputChange(0, 'full', hi, e.target.value)}
+                                        onBlur={() => handleHeightInputBlur(0, 'full', hi, section.height)}
+                                        onKeyDown={handleInputKeyDown}
+                                      />
+                                      <span className={styles.unit}>mm</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* 선반/옷봉/바지걸이 세부 설정 */}
+                      {currentType !== 'open' && currentType !== 'drawer' && (
+                        <div style={{ marginTop: '8px' }}>
+                          {renderElementEditor(0, 'full', section.elements, section.height)}
                         </div>
                       )}
                     </div>
