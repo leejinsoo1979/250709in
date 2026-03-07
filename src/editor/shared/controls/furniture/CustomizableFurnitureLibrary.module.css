@@ -43,18 +43,18 @@
 .itemLabel {
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-primary, #4a90d9);
+  color: var(--theme-primary) !important;
 }
 
 .itemDimension {
   font-size: 11px;
-  color: var(--theme-primary, #4a90d9);
+  color: var(--theme-primary) !important;
   opacity: 0.7;
 }
 
 .helpText {
   font-size: 11px;
-  color: var(--theme-primary, #4a90d9);
+  color: var(--theme-primary) !important;
   opacity: 0.6;
   line-height: 1.5;
   margin: 0;
