@@ -213,6 +213,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sections = [...config.sections];
     sections[idx] = { ...sections[idx], height: clamped };
     sections[1 - idx] = { ...sections[1 - idx], height: otherH };
+
+    // 서랍이 설정된 섹션의 높이가 변경되면 서랍 높이 재계산
+    for (let sIdx = 0; sIdx < 2; sIdx++) {
+      const sec = sections[sIdx];
+      const el = sec.elements?.[0];
+      if (el?.type === 'drawer' && 'heights' in el) {
+        const newH = sIdx === idx ? clamped : otherH;
+        const gapTotal = 23.6 * (el.heights.length + 1);
+        const usable = Math.max(newH - gapTotal, el.heights.length * 80);
+        const perDrawer = Math.round(usable / el.heights.length);
+        sections[sIdx] = {
+          ...sec,
+          elements: [{ type: 'drawer', heights: Array.from({ length: el.heights.length }, () => perDrawer) }],
+        };
+      }
+    }
+
     applyConfig({ ...config, sections });
     setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
   };
@@ -898,6 +915,37 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                {/* 2단 분할 시 상부/하부 높이 입력 */}
+                {config.sections.length === 2 && (
+                  <>
+                    <div className={styles.row} style={{ marginTop: '8px' }}>
+                      <span className={styles.label}>하부 높이</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`${styles.input} ${styles.inputSmall}`}
+                        value={sectionHeightInputs[0] ?? config.sections[0].height.toString()}
+                        onChange={(e) => handleSectionHeightInputChange(0, e.target.value)}
+                        onBlur={() => handleSectionHeightBlur(0)}
+                        onKeyDown={handleInputKeyDown}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                    <div className={styles.row}>
+                      <span className={styles.label}>상부 높이</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`${styles.input} ${styles.inputSmall}`}
+                        value={sectionHeightInputs[1] ?? config.sections[1].height.toString()}
+                        onChange={(e) => handleSectionHeightInputChange(1, e.target.value)}
+                        onBlur={() => handleSectionHeightBlur(1)}
+                        onKeyDown={handleInputKeyDown}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* 세로 칸막이 (1단일 때 메인 화면에 노출) */}
@@ -978,7 +1026,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         <div style={{ marginTop: '8px' }}>
                           <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
                           <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].map((count) => (
+                            {[1, 2, 3, 4].filter((count) => {
+                              const std = DRAWER_STANDARD[count];
+                              return std && std.sectionHeight <= section.height + 50;
+                            }).map((count) => (
                               <button
                                 key={count}
                                 className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
@@ -1100,7 +1151,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         <div style={{ marginTop: '8px' }}>
                           <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
                           <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].map((count) => (
+                            {[1, 2, 3, 4].filter((count) => {
+                              const std = DRAWER_STANDARD[count];
+                              return std && std.sectionHeight <= section.height + 50;
+                            }).map((count) => (
                               <button
                                 key={count}
                                 className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
