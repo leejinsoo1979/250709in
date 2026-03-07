@@ -272,6 +272,7 @@ const FreePlacementDropZone: React.FC = () => {
     if (!activeDimensions) return 0;
     if (hoverXmm === null || activeCategory !== 'full') return activeDimensions.height;
     const droppedZone = detectDroppedZone(hoverXmm, spaceInfo);
+    console.log('👻 [ghost] detectDroppedZone:', { hoverXmm, zone: droppedZone.zone, droppedH: droppedZone.droppedInternalHeight, activeCategory, origH: activeDimensions.height });
     if (droppedZone.zone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
       return droppedZone.droppedInternalHeight;
     }
@@ -399,8 +400,16 @@ const FreePlacementDropZone: React.FC = () => {
     return furnitureZOffset + furnitureDepth / 2 - doorThickness - previewDepth / 2;
   }, [activeDimensions, spaceInfo.depth]);
 
-  // 치수선 Z 좌표 (가구 측판과 동일 평면 z=0)
-  const guideZPosition = 0;
+  // 치수선 Z 좌표 (가구 앞면에 표시)
+  const guideZPosition = useMemo(() => {
+    const panelDepthMm = spaceInfo.depth || 600;
+    const panelDepth = panelDepthMm * 0.01;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const furnitureDepth = furnitureDepthMm * 0.01;
+    const zOffset = -panelDepth / 2;
+    const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+    return furnitureZOffset + furnitureDepth / 2 + 0.01; // 가구 앞면 + 약간 앞
+  }, [spaceInfo.depth]);
 
   // 고스트 위치
   const ghostPosition = useMemo(() => {
