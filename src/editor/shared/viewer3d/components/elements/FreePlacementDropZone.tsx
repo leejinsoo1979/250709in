@@ -382,7 +382,7 @@ const FreePlacementDropZone: React.FC = () => {
     };
     const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
 
-    return { x: clampedX, snapped, colliding };
+    return { x: Math.round(clampedX), snapped, colliding };
   }, [placedModules, spaceInfo, spaceBounds]);
 
   // 배치된 가구 마우스 드래그 시작
@@ -394,11 +394,11 @@ const FreePlacementDropZone: React.FC = () => {
     setIsDraggingPlaced(true);
   }, [selectedFurnitureId]);
 
-  // 배치된 가구 드래그 중
+  // 배치된 가구 드래그 중 (1mm 단위로 이동)
   const handleDragPointerMove = useCallback((e: any) => {
     if (!isDraggingPlaced || !movingModuleId) return;
     e.stopPropagation();
-    const xMm = e.point.x * 100;
+    const xMm = Math.round(e.point.x * 100); // 1mm 단위로 반올림
     const result = calcMovedPosition(xMm, movingModuleId);
     if (!result.colliding) {
       const mod = placedModules.find(m => m.id === movingModuleId);

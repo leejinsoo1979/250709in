@@ -1790,7 +1790,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeWidth: val });
+                          updatePlacedModule(currentPlacedModule.id, { freeWidth: val, moduleWidth: val });
                         }
                       }}
                       onKeyDown={(e) => {
