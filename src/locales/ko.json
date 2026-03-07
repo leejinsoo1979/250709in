@@ -77,7 +77,7 @@
     "surround": "서라운드",
     "noSurround": "노서라운드",
     "layoutMode": "배치 방식",
-    "equalDivision": "균등분할",
+    "equalDivision": "슬롯배치",
     "freePlacement": "자유배치",
     "modeSwitchWarning": "배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?",
     "columnCount": "컬럼 수",

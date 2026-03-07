@@ -3266,7 +3266,7 @@ const Configurator: React.FC = () => {
                 handleSpaceInfoUpdate({ layoutMode: 'equal-division' });
               }}
             >
-              균등분할
+              슬롯배치
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.layoutMode === 'free-placement' ? styles.toggleButtonActive : ''}`}
