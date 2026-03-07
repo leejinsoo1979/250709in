@@ -335,8 +335,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return state.placedModules.find(m => m.id === furnitureId);
   });
 
-  // 자유배치 감지: props로 받은 것 OR 스토어에서 직접 감지
-  const isFree = isFreePlacement || (storePlacedModule?.isFreePlacement ?? false);
+  // 자유배치 감지: 3단 fallback (가장 확실한 것부터)
+  // 1. spaceConfigStore의 layoutMode (전역 설정, 가장 확실)
+  // 2. store의 placedModule.isFreePlacement (개별 모듈)
+  // 3. props isFreePlacement (부모에서 전달)
+  const isLayoutModeFree = storeSpaceInfo?.layoutMode === 'free-placement';
+  const isFree = isLayoutModeFree || isFreePlacement || (storePlacedModule?.isFreePlacement ?? false);
   const storeFreeWidth = storePlacedModule?.freeWidth;
   const storeFreeHeight = storePlacedModule?.freeHeight;
   // 자유배치에서 실제 사용할 높이: props internalHeight > store freeHeight > 기본값
@@ -344,6 +348,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
     furnitureId,
+    isLayoutModeFree,
     isFreePlacement_prop: isFreePlacement,
     storePlacedModule_exists: !!storePlacedModule,
     storePlacedModule_isFreePlacement: storePlacedModule?.isFreePlacement,
@@ -353,6 +358,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     internalHeight,
     effectiveInternalHeight,
     moduleWidth,
+    originalSlotWidth,
     moduleDataId: moduleData?.id
   });
 
@@ -588,8 +594,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   // 듀얼 가구인지 먼저 확인 - moduleData가 있으면 그것으로 판단, 없으면 너비로 추정
+  // 자유배치 모드에서는 슬롯 기반 너비 비교가 무의미하므로 moduleData.id로만 판단
   const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
-    Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50;
+    (!isFree && Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50);
 
   // 도어 크기 계산
   let actualDoorWidth: number;
@@ -1361,8 +1368,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
     // 도어 위치 계산 (개별 슬롯 너비 기반)
-    const leftSlotWidth = slotWidths?.[0] || effectiveColumnWidth;
-    const rightSlotWidth = slotWidths?.[1] || effectiveColumnWidth;
+    // 자유배치: 슬롯 너비 대신 totalWidth를 균등 분할하여 사용
+    const leftSlotWidth = isFree ? totalWidth / 2 : (slotWidths?.[0] || effectiveColumnWidth);
+    const rightSlotWidth = isFree ? totalWidth / 2 : (slotWidths?.[1] || effectiveColumnWidth);
     
     const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
     const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
