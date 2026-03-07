@@ -11,7 +11,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
  * activePopup.type === 'customizableEdit' 일 때 렌더링
  */
 const CustomizablePropertiesPanel: React.FC = () => {
-  const { activePopup, closeAllPopups } = useUIStore();
+  const { activePopup, closeAllPopups, openCustomizableEditPopup } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
   const { saveCabinet } = useMyCabinetStore();
 
@@ -1243,6 +1243,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </>
           )}
         </div>
+
+        {/* 섹션 설정 하단 버튼 (톱니 메뉴에서 표시) */}
+        {focusedSectionIndex !== undefined && moduleId && (
+          <div className={styles.footer}>
+            <button
+              className={`${styles.footerButton} ${styles.secondaryButton}`}
+              onClick={() => openCustomizableEditPopup(moduleId)}
+            >
+              취소
+            </button>
+            <button
+              className={`${styles.footerButton} ${styles.primaryButton}`}
+              onClick={() => openCustomizableEditPopup(moduleId)}
+            >
+              확인
+            </button>
+          </div>
+        )}
 
         {/* My캐비닛 저장 + 하단 버튼 (연필 메뉴에서만 표시) */}
         {focusedSectionIndex === undefined && (
