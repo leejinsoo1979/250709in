@@ -626,9 +626,47 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
         spaceInfo
       );
-      
-      if (!moduleData) return null;
-      
+
+      if (!moduleData) {
+        // 커스터마이징 가구 등 getModuleById로 못 찾는 경우 freeWidth/freeHeight로 fallback
+        if (module.isFreePlacement && module.freeWidth) {
+          const fbW = module.freeWidth;
+          const fbH = module.freeHeight || 2000;
+          const fbD = module.freeDepth || 580;
+          const mX = module.position.x;
+          const hasStepDownFb = spaceInfo.droppedCeiling?.enabled || false;
+          const stepDownPositionFb = spaceInfo.droppedCeiling?.position || 'right';
+          // 카테고리 추출
+          const fbCategory = module.moduleId.includes('-upper-') ? 'upper'
+            : module.moduleId.includes('-lower-') ? 'lower' : 'full';
+          return {
+            module,
+            moduleData: {
+              id: module.moduleId,
+              name: module.moduleId,
+              category: fbCategory,
+              dimensions: { width: fbW, height: fbH, depth: fbD },
+              modelConfig: undefined,
+            },
+            actualWidth: fbW,
+            actualDepth: fbD,
+            hasCustomDepth: false,
+            moduleX: mX,
+            moduleY: spaceHeight / 2,
+            moduleLeft: mX - fbW / 2,
+            moduleRight: mX + fbW / 2,
+            nearestLeftDistance: 0,
+            nearestRightDistance: 0,
+            leftBoundaryDistance: 0,
+            rightBoundaryDistance: 0,
+            isSpacerHandled: false,
+            hasStepDown: hasStepDownFb,
+            stepDownPosition: stepDownPositionFb,
+          };
+        }
+        return null;
+      }
+
       // 단내림 여부 확인
       const hasStepDown = spaceInfo.droppedCeiling?.enabled || false;
       const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
