@@ -77,12 +77,22 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
       >
         <div className={styles.itemIcon}>
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <rect x="8" y="4" width="32" height="40" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
-            <line x1="8" y1="24" x2="40" y2="24" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-            <line x1="24" y1="4" x2="24" y2="44" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-            <circle cx="24" cy="24" r="6" stroke="currentColor" strokeWidth="1.2" fill="none" />
-            <line x1="24" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="20" y1="24" x2="28" y2="24" stroke="currentColor" strokeWidth="1.2" />
+            {/* 외곽 캐비닛 */}
+            <rect x="8" y="4" width="32" height="40" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            {/* 상부 칸 */}
+            <line x1="8" y1="18" x2="40" y2="18" stroke="currentColor" strokeWidth="1" />
+            {/* 하부 칸 */}
+            <line x1="8" y1="32" x2="40" y2="32" stroke="currentColor" strokeWidth="1" />
+            {/* 상부 선반 */}
+            <rect x="11" y="7" width="26" height="8" rx="1" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.5" />
+            {/* 중간 행거바 */}
+            <line x1="14" y1="25" x2="34" y2="25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            {/* 하부 서랍 손잡이 */}
+            <line x1="20" y1="38" x2="28" y2="38" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            {/* + 아이콘 */}
+            <circle cx="38" cy="42" r="5" fill="currentColor" opacity="0.15" />
+            <line x1="38" y1="39.5" x2="38" y2="44.5" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="35.5" y1="42" x2="40.5" y2="42" stroke="currentColor" strokeWidth="1.2" />
           </svg>
         </div>
         <div className={styles.itemInfo}>
