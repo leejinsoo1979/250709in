@@ -17,6 +17,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   const moduleId = activePopup.id;
   const placedModule = placedModules.find((m) => m.id === moduleId);
+  // sectionIndex가 있으면 톱니 아이콘 클릭 → 해당 섹션 세부설정만 표시
+  const focusedSectionIndex = activePopup.sectionIndex;
 
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
@@ -537,7 +539,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
       <div className={styles.panel}>
         {/* 헤더 */}
         <div className={styles.header}>
-          <span className={styles.headerTitle}>커스터마이징 가구 편집</span>
+          <span className={styles.headerTitle}>
+            {focusedSectionIndex !== undefined
+              ? `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
+              : '커스터마이징 가구 편집'}
+          </span>
           <button className={styles.closeButton} onClick={closeAllPopups}>
             ×
           </button>
@@ -545,81 +551,93 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
         {/* 본문 */}
         <div className={styles.body}>
-          {/* 기본 치수 */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>치수</div>
-            <div className={styles.row}>
-              <span className={styles.label}>너비</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                className={`${styles.input} ${widthError ? styles.inputError : ''}`}
-                value={widthInput}
-                placeholder={`${MIN_WIDTH}-${MAX_WIDTH}`}
-                onChange={(e) => handleWidthInputChange(e.target.value)}
-                onBlur={handleWidthInputBlur}
-                onKeyDown={handleInputKeyDown}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
-            {widthError && <div className={styles.errorMessage}>{widthError}</div>}
-            <div className={styles.row}>
-              <span className={styles.label}>높이</span>
-              <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
-                {furnitureHeight}
-              </span>
-              <span className={styles.unit}>mm</span>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.label}>깊이</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                className={`${styles.input} ${depthError ? styles.inputError : ''}`}
-                value={depthInput}
-                placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
-                onChange={(e) => handleDepthInputChange(e.target.value)}
-                onBlur={handleDepthInputBlur}
-                onKeyDown={handleInputKeyDown}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
-            {depthError && <div className={styles.errorMessage}>{depthError}</div>}
-          </div>
-
-          <div className={styles.divider} />
-
-          {/* 섹션 분할 */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>섹션 분할</div>
-            <div className={styles.row}>
-              <div className={styles.toggleGroup}>
-                <button
-                  className={`${styles.toggleButton} ${config.sections.length === 1 ? styles.active : ''}`}
-                  onClick={() => handleSectionSplit(false)}
-                >
-                  분할 없음
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${config.sections.length === 2 ? styles.active : ''}`}
-                  onClick={() => handleSectionSplit(true)}
-                >
-                  2단 분할
-                </button>
+          {focusedSectionIndex !== undefined ? (
+            /* 톱니 아이콘 클릭: 해당 섹션 세부설정만 */
+            <>
+              {config.sections[focusedSectionIndex] &&
+                renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
+              }
+            </>
+          ) : (
+            /* 연필 아이콘 클릭: 치수 + 섹션 분할/크기 + 전체 섹션 편집 */
+            <>
+              {/* 기본 치수 */}
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>치수</div>
+                <div className={styles.row}>
+                  <span className={styles.label}>너비</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${widthError ? styles.inputError : ''}`}
+                    value={widthInput}
+                    placeholder={`${MIN_WIDTH}-${MAX_WIDTH}`}
+                    onChange={(e) => handleWidthInputChange(e.target.value)}
+                    onBlur={handleWidthInputBlur}
+                    onKeyDown={handleInputKeyDown}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                {widthError && <div className={styles.errorMessage}>{widthError}</div>}
+                <div className={styles.row}>
+                  <span className={styles.label}>높이</span>
+                  <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
+                    {furnitureHeight}
+                  </span>
+                  <span className={styles.unit}>mm</span>
+                </div>
+                <div className={styles.row}>
+                  <span className={styles.label}>깊이</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${depthError ? styles.inputError : ''}`}
+                    value={depthInput}
+                    placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                    onChange={(e) => handleDepthInputChange(e.target.value)}
+                    onBlur={handleDepthInputBlur}
+                    onKeyDown={handleInputKeyDown}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                {depthError && <div className={styles.errorMessage}>{depthError}</div>}
               </div>
-            </div>
-          </div>
 
-          <div className={styles.divider} />
+              <div className={styles.divider} />
 
-          {/* 섹션별 편집 (상부→하부 순서로 표시, 3D 렌더링은 index 0=하부, 1=상부) */}
-          {config.sections.length > 1
-            ? [...config.sections].reverse().map((section, _i) => {
-                const realIdx = config.sections.length - 1 - _i;
-                return renderSectionEditor(section, realIdx);
-              })
-            : config.sections.map((section, sIdx) => renderSectionEditor(section, sIdx))
-          }
+              {/* 섹션 분할 */}
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>섹션 분할</div>
+                <div className={styles.row}>
+                  <div className={styles.toggleGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${config.sections.length === 1 ? styles.active : ''}`}
+                      onClick={() => handleSectionSplit(false)}
+                    >
+                      분할 없음
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${config.sections.length === 2 ? styles.active : ''}`}
+                      onClick={() => handleSectionSplit(true)}
+                    >
+                      2단 분할
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.divider} />
+
+              {/* 섹션별 편집 (상부→하부 순서로 표시) */}
+              {config.sections.length > 1
+                ? [...config.sections].reverse().map((section, _i) => {
+                    const realIdx = config.sections.length - 1 - _i;
+                    return renderSectionEditor(section, realIdx);
+                  })
+                : config.sections.map((section, sIdx) => renderSectionEditor(section, sIdx))
+              }
+            </>
+          )}
         </div>
 
         {/* My캐비닛 저장 */}

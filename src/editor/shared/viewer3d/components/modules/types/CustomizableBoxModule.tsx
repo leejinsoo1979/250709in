@@ -140,6 +140,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     posX: number,
     posY: number,
     posZ: number,
+    sectionIndex: number,
   ) => {
     const isHov = hoveredIcon === key;
     const themeColor = getThemeColor();
@@ -176,13 +177,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             if (isEditMode) {
               useUIStore.getState().closeAllPopups();
             } else if (placedFurnitureId) {
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId);
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex);
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}
           onMouseEnter={() => setHoveredIcon(key)}
           onMouseLeave={() => setHoveredIcon(null)}
-          title="섹션 편집"
+          title="섹션 세부설정"
         >
           <SettingsIcon color={themeColor} size={14} />
         </div>
@@ -203,29 +204,29 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const lowerCenterY = -H / 2 + lowerH / 2;
       const upperCenterY = -H / 2 + lowerH + upperH / 2;
 
-      const addPartitionIcons = (section: CustomSection, centerY: number, prefix: string) => {
+      const addPartitionIcons = (section: CustomSection, centerY: number, prefix: string, sIdx: number) => {
         if (section.hasPartition && section.partitionPosition) {
           const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
           const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
           const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-          icons.push(renderSectionIcon(`${prefix}-left`, leftCenterX, centerY, frontZ));
-          icons.push(renderSectionIcon(`${prefix}-right`, rightCenterX, centerY, frontZ));
+          icons.push(renderSectionIcon(`${prefix}-left`, leftCenterX, centerY, frontZ, sIdx));
+          icons.push(renderSectionIcon(`${prefix}-right`, rightCenterX, centerY, frontZ, sIdx));
         } else {
-          icons.push(renderSectionIcon(prefix, 0, centerY, frontZ));
+          icons.push(renderSectionIcon(prefix, 0, centerY, frontZ, sIdx));
         }
       };
 
-      addPartitionIcons(sections[0], lowerCenterY, 'lower');
-      addPartitionIcons(sections[1], upperCenterY, 'upper');
+      addPartitionIcons(sections[0], lowerCenterY, 'lower', 0);
+      addPartitionIcons(sections[1], upperCenterY, 'upper', 1);
     } else {
       if (sections[0]?.hasPartition && sections[0]?.partitionPosition) {
         const partX = -innerW / 2 + mmToUnit(sections[0].partitionPosition);
         const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
         const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-        icons.push(renderSectionIcon('single-left', leftCenterX, 0, frontZ));
-        icons.push(renderSectionIcon('single-right', rightCenterX, 0, frontZ));
+        icons.push(renderSectionIcon('single-left', leftCenterX, 0, frontZ, 0));
+        icons.push(renderSectionIcon('single-right', rightCenterX, 0, frontZ, 0));
       } else {
-        icons.push(renderSectionIcon('single', 0, 0, frontZ));
+        icons.push(renderSectionIcon('single', 0, 0, frontZ, 0));
       }
     }
 

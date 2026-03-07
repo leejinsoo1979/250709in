@@ -70,6 +70,7 @@ interface UIState {
   activePopup: {
     type: 'furniture' | 'furnitureEdit' | 'customizableEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null;
     id: string | null;
+    sectionIndex?: number; // 커스터마이징 가구 톱니 아이콘에서 특정 섹션만 편집
   };
 
   // 강조된 프레임
@@ -189,7 +190,7 @@ interface UIState {
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
   openFurnitureEditPopup: (moduleId: string) => void;
-  openCustomizableEditPopup: (moduleId: string) => void;
+  openCustomizableEditPopup: (moduleId: string, sectionIndex?: number) => void;
   openColumnPopup: (columnId: string) => void;
   openColumnEditModal: (columnId: string) => void;
   openWallPopup: (wallId: string) => void;
@@ -487,9 +488,9 @@ export const useUIStore = create<UIState>()(
       },
       
       // 커스터마이징 가구 편집 팝업 열기
-      openCustomizableEditPopup: (moduleId) => {
+      openCustomizableEditPopup: (moduleId, sectionIndex?) => {
         set({
-          activePopup: { type: 'customizableEdit', id: moduleId },
+          activePopup: { type: 'customizableEdit', id: moduleId, sectionIndex },
           selectedFurnitureId: moduleId,
         });
       },
