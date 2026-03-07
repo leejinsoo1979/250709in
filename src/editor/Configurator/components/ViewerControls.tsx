@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
 import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -64,6 +65,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorInstallationToggle
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
+  const { spaceInfo } = useSpaceConfigStore();
+  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
   const { theme } = useTheme();
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -186,9 +189,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         {showMobileOptions && (
           <div className={styles.mobileOptionsPanel}>
             <div className={styles.mobileOptionsGrid}>
-              <button className={`${styles.mobileOptionItem} ${showAll ? styles.active : ''}`} onClick={onShowAllToggle}>
-                <Layers size={18} /><span>컬럼</span>
-              </button>
+              {!isFreePlacement && (
+                <button className={`${styles.mobileOptionItem} ${showAll ? styles.active : ''}`} onClick={onShowAllToggle}>
+                  <Layers size={18} /><span>컬럼</span>
+                </button>
+              )}
               <button className={`${styles.mobileOptionItem} ${showDimensionsText ? styles.active : ''}`} onClick={onShowDimensionsTextToggle}>
                 <Ruler size={18} /><span>치수</span>
               </button>
@@ -269,10 +274,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                     <span>{t('furniture.title')}</span>
                   </button>
                 )}
-                <button className={styles.displayMenuItem} onClick={onShowAllToggle}>
-                  <Check size={13} strokeWidth={2.5} className={showAll ? styles.checkVisible : styles.checkHidden} />
-                  <span>{t('viewer.column')}</span>
-                </button>
+                {!isFreePlacement && (
+                  <button className={styles.displayMenuItem} onClick={onShowAllToggle}>
+                    <Check size={13} strokeWidth={2.5} className={showAll ? styles.checkVisible : styles.checkHidden} />
+                    <span>{t('viewer.column')}</span>
+                  </button>
+                )}
                 <button className={styles.displayMenuItem} onClick={onShowDimensionsTextToggle}>
                   <Check size={13} strokeWidth={2.5} className={showDimensionsText ? styles.checkVisible : styles.checkHidden} />
                   <span>{t('viewer.dimensions')}</span>
