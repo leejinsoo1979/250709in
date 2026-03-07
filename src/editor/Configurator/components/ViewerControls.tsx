@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
-import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -68,6 +68,20 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileOptions, setShowMobileOptions] = useState(false);
+  const [showDisplayMenu, setShowDisplayMenu] = useState(false);
+  const displayMenuRef = useRef<HTMLDivElement>(null);
+
+  // 표시 옵션 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    if (!showDisplayMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (displayMenuRef.current && !displayMenuRef.current.contains(e.target as Node)) {
+        setShowDisplayMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDisplayMenu]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -240,38 +254,48 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       {showDimensions && (
         <>
           <Divider />
-          <div className={styles.chipGroup}>
-            {viewMode === '2D' && (
-              <button
-                className={`${styles.chip} ${showFurniture ? styles.chipActive : ''}`}
-                onClick={onShowFurnitureToggle}
-              >{showFurniture && <Check size={13} strokeWidth={2.5} />}{t('furniture.title')}</button>
-            )}
+          <div className={styles.displayMenuWrapper} ref={displayMenuRef}>
             <button
-              className={`${styles.chip} ${showAll ? styles.chipActive : ''}`}
-              onClick={onShowAllToggle}
-            >{showAll && <Check size={13} strokeWidth={2.5} />}{t('viewer.column')}</button>
-            <button
-              className={`${styles.chip} ${showDimensionsText ? styles.chipActive : ''}`}
-              onClick={onShowDimensionsTextToggle}
-            >{showDimensionsText && <Check size={13} strokeWidth={2.5} />}{t('viewer.dimensions')}</button>
-            {viewMode === '3D' && (
-              <button
-                className={`${styles.chip} ${showFurnitureEditHandles ? styles.chipActive : ''}`}
-                onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
-              >{showFurnitureEditHandles && <Check size={13} strokeWidth={2.5} />}아이콘</button>
-            )}
-            {viewMode === '2D' && (
-              <>
-                <button
-                  className={`${styles.chip} ${showGuides ? styles.chipActive : ''}`}
-                  onClick={onShowGuidesToggle}
-                >{showGuides && <Check size={13} strokeWidth={2.5} />}{t('viewer.grid')}</button>
-                <button
-                  className={`${styles.chip} ${showAxis ? styles.chipActive : ''}`}
-                  onClick={onShowAxisToggle}
-                >{showAxis && <Check size={13} strokeWidth={2.5} />}{t('viewer.axis')}</button>
-              </>
+              className={`${styles.chip} ${showDisplayMenu ? styles.chipActive : ''}`}
+              onClick={() => setShowDisplayMenu(!showDisplayMenu)}
+            >
+              표시 <ChevronDown size={11} />
+            </button>
+            {showDisplayMenu && (
+              <div className={styles.displayDropdown}>
+                {viewMode === '2D' && (
+                  <button className={styles.displayMenuItem} onClick={onShowFurnitureToggle}>
+                    <Check size={13} strokeWidth={2.5} className={showFurniture ? styles.checkVisible : styles.checkHidden} />
+                    <span>{t('furniture.title')}</span>
+                  </button>
+                )}
+                <button className={styles.displayMenuItem} onClick={onShowAllToggle}>
+                  <Check size={13} strokeWidth={2.5} className={showAll ? styles.checkVisible : styles.checkHidden} />
+                  <span>{t('viewer.column')}</span>
+                </button>
+                <button className={styles.displayMenuItem} onClick={onShowDimensionsTextToggle}>
+                  <Check size={13} strokeWidth={2.5} className={showDimensionsText ? styles.checkVisible : styles.checkHidden} />
+                  <span>{t('viewer.dimensions')}</span>
+                </button>
+                {viewMode === '3D' && (
+                  <button className={styles.displayMenuItem} onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}>
+                    <Check size={13} strokeWidth={2.5} className={showFurnitureEditHandles ? styles.checkVisible : styles.checkHidden} />
+                    <span>아이콘</span>
+                  </button>
+                )}
+                {viewMode === '2D' && (
+                  <>
+                    <button className={styles.displayMenuItem} onClick={onShowGuidesToggle}>
+                      <Check size={13} strokeWidth={2.5} className={showGuides ? styles.checkVisible : styles.checkHidden} />
+                      <span>{t('viewer.grid')}</span>
+                    </button>
+                    <button className={styles.displayMenuItem} onClick={onShowAxisToggle}>
+                      <Check size={13} strokeWidth={2.5} className={showAxis ? styles.checkVisible : styles.checkHidden} />
+                      <span>{t('viewer.axis')}</span>
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </>
