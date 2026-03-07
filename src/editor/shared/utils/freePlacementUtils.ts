@@ -99,6 +99,49 @@ export function clampToSpaceBoundsX(
 }
 
 /**
+ * X 좌표(mm)가 단내림 구간에 속하는지 판별
+ * 단내림 구간이면 zone='dropped'와 줄어든 내경 높이를 반환
+ */
+export function detectDroppedZone(
+  xPositionMM: number,
+  spaceInfo: SpaceInfo
+): { zone: 'normal' | 'dropped'; droppedInternalHeight?: number } {
+  if (!spaceInfo.droppedCeiling?.enabled) {
+    return { zone: 'normal' };
+  }
+
+  const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+  const internalWidth = endX - startX;
+  const droppedWidth = spaceInfo.droppedCeiling.width || 0;
+  const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+
+  let isInDropped = false;
+  if (droppedPosition === 'left') {
+    // 단내림이 왼쪽: startX ~ startX + droppedWidth
+    isInDropped = xPositionMM < startX + droppedWidth;
+  } else {
+    // 단내림이 오른쪽: endX - droppedWidth ~ endX
+    isInDropped = xPositionMM > endX - droppedWidth;
+  }
+
+  if (!isInDropped) {
+    return { zone: 'normal' };
+  }
+
+  // 단내림 구간의 내경 높이 = 전체 높이 - dropHeight - topFrame - floorFinish - base
+  const dropHeight = spaceInfo.droppedCeiling.dropHeight || 0;
+  const topFrameMM = spaceInfo.frameSize?.top || 10;
+  const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  const baseHeightMM = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+  const floatHeightMM = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  const effectiveBaseHeight = spaceInfo.baseConfig?.type === 'stand' ? floatHeightMM : baseHeightMM;
+
+  const droppedInternalHeight = spaceInfo.height - dropHeight - topFrameMM - floorFinishMM - effectiveBaseHeight;
+
+  return { zone: 'dropped', droppedInternalHeight: Math.max(droppedInternalHeight, 0) };
+}
+
+/**
  * Three.js X 좌표를 공간 경계 내로 클램핑
  */
 export function clampToSpaceBoundsThreeX(

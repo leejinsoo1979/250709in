@@ -10,6 +10,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import {
   clampToSpaceBoundsX,
   checkFreeCollision,
+  detectDroppedZone,
   FurnitureBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,8 +53,25 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   // X좌표 클램핑 (공간 경계 내)
   const clampedX = clampToSpaceBoundsX(xPositionMM, dimensions.width, spaceInfo);
 
+  // 단내림 구간 감지: X 좌표 기반으로 zone 결정 + 높이 조정
+  const droppedZone = detectDroppedZone(clampedX, spaceInfo);
+  const effectiveZone = droppedZone.zone;
+  let effectiveHeight = dimensions.height;
+
+  // 키큰장(full)이 단내림 구간에 배치되면 높이를 줄임
+  if (effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
+    if (moduleData.category === 'full') {
+      effectiveHeight = droppedZone.droppedInternalHeight;
+      console.log('📐 [placeFurnitureFree] 단내림 구간 높이 조정:', {
+        원래높이: dimensions.height,
+        단내림높이: effectiveHeight,
+        dropHeight: spaceInfo.droppedCeiling?.dropHeight,
+      });
+    }
+  }
+
   // Y좌표 계산 (카테고리별)
-  const yPositionThree = calculateYPosition(moduleData.category, dimensions.height, spaceInfo);
+  const yPositionThree = calculateYPosition(moduleData.category, effectiveHeight, spaceInfo);
 
   // 충돌 체크
   const newBounds: FurnitureBoundsX = {
@@ -80,9 +98,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     rotation: 0,
     isFreePlacement: true,
     freeWidth: dimensions.width,
-    freeHeight: dimensions.height,
+    freeHeight: effectiveHeight,
     freeDepth: dimensions.depth,
-    zone: 'normal',
+    zone: effectiveZone,
   };
 
   console.log('✅ [placeFurnitureFree] 배치 완료:', newModule);

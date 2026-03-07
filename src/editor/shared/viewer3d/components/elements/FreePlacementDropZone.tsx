@@ -267,6 +267,17 @@ const FreePlacementDropZone: React.FC = () => {
     [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
   );
 
+  // 단내림 구간 감지 → 고스트 높이 조정 (full 카테고리만)
+  const ghostEffectiveHeight = useMemo(() => {
+    if (!activeDimensions) return 0;
+    if (hoverXmm === null || activeCategory !== 'full') return activeDimensions.height;
+    const droppedZone = detectDroppedZone(hoverXmm, spaceInfo);
+    if (droppedZone.zone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
+      return droppedZone.droppedInternalHeight;
+    }
+    return activeDimensions.height;
+  }, [activeDimensions, hoverXmm, activeCategory, spaceInfo]);
+
   // 고스트 Y 위치 계산
   const ghostYThree = useMemo(() => {
     if (!activeDimensions) return 0;
@@ -279,8 +290,8 @@ const FreePlacementDropZone: React.FC = () => {
       const upperTopY = spaceInfo.height - topFrameMm;
       return (upperTopY - activeDimensions.height / 2) * 0.01;
     }
-    return (floorFinishMm + baseHeightMm + floatHeightMm + activeDimensions.height / 2) * 0.01;
-  }, [activeDimensions, activeCategory, spaceInfo]);
+    return (floorFinishMm + baseHeightMm + floatHeightMm + ghostEffectiveHeight / 2) * 0.01;
+  }, [activeDimensions, activeCategory, spaceInfo, ghostEffectiveHeight]);
 
   // 고스트 이동 중 실시간 이격거리 계산 (좌/우 벽 또는 가구와의 거리)
   const ghostDistanceGuides = useMemo(() => {
@@ -703,7 +714,7 @@ const FreePlacementDropZone: React.FC = () => {
             hasDoor={false}
             customDepth={activeDimensions.depth}
             adjustedWidth={activeDimensions.width}
-            internalHeight={activeDimensions.height}
+            internalHeight={ghostEffectiveHeight}
             spaceInfo={spaceInfo}
           />
         </group>
@@ -716,7 +727,7 @@ const FreePlacementDropZone: React.FC = () => {
             <boxGeometry
               args={[
                 activeDimensions.width * 0.01,
-                activeDimensions.height * 0.01,
+                ghostEffectiveHeight * 0.01,
                 activeDimensions.depth * 0.01,
               ]}
             />
@@ -732,7 +743,7 @@ const FreePlacementDropZone: React.FC = () => {
               args={[
                 new THREE.BoxGeometry(
                   activeDimensions.width * 0.01,
-                  activeDimensions.height * 0.01,
+                  ghostEffectiveHeight * 0.01,
                   activeDimensions.depth * 0.01
                 ),
               ]}
@@ -745,7 +756,7 @@ const FreePlacementDropZone: React.FC = () => {
       {/* 고스트 위 너비 표시 */}
       {ghostPosition && activeDimensions && (
         <Html
-          position={[ghostPosition.x, ghostPosition.y + (activeDimensions.height * 0.01) / 2 + 0.15, ghostPosition.z]}
+          position={[ghostPosition.x, ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2 + 0.15, ghostPosition.z]}
           center
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
