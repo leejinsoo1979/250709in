@@ -8,23 +8,38 @@ export type CustomElement =
   | { type: 'pants'; height: number }         // 바지걸이 (설치 높이 mm, 하부섹션 전용)
   | { type: 'open' };                         // 비어있음
 
+// 영역별 상하 서브분할 설정
+export interface AreaSubSplit {
+  enabled: boolean;
+  lowerHeight: number;  // mm (하부 높이, 상부 = 영역높이 - 하부높이)
+  upperElements?: CustomElement[];
+  lowerElements?: CustomElement[];
+}
+
 // 커스터마이징 가구 섹션 설정
 export interface CustomSection {
   id: string;
-  height: number;  // mm (섹션 높이)
-  // 칸막이 (좌/우 분할)
+  height: number; // mm (섹션 높이)
+  // 칸막이 (세로 칸막이 - 내부 얇은 칸막이, leaf 섹션에서만 사용)
   hasPartition?: boolean;
-  partitionPosition?: number;  // mm (왼쪽에서 칸막이까지 거리)
+  partitionPosition?: number; // mm (왼쪽에서 칸막이까지 거리)
   // 내부 요소 (칸막이 없으면 전체, 있으면 좌/우 각각)
   leftElements?: CustomElement[];
   rightElements?: CustomElement[];
-  elements?: CustomElement[];  // 칸막이 없을 때 전체 영역
+  elements?: CustomElement[]; // 칸막이 없을 때 전체 영역
+  // 영역별 상하 서브분할 (각 영역이 독립적으로 상하 분할 가능)
+  areaSubSplits?: {
+    [key: string]: AreaSubSplit; // 'full', 'left', 'right'
+  };
 }
 
 // 커스터마이징 가구 내부 구조 설정
 export interface CustomFurnitureConfig {
   sections: CustomSection[];
-  panelThickness?: number;  // mm (기본값: 18)
+  panelThickness?: number; // mm (기본값: 18)
+  // 상/하 분할
+  splitDirection?: 'topBottom';
+  splitPosition?: number; // mm (아래에서 거리)
 }
 
 // 기둥 관련 슬롯 메타데이터

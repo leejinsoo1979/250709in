@@ -180,27 +180,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 섹션 분할 토글
-  // 2단 분할 시 각 섹션은 독립 박스(상하판 각 panelThickness)로 렌더링됨
-  // 총 높이 = (section0.height + 2*pt) + (section1.height + 2*pt) = furnitureHeight
-  // → section0.height + section1.height = furnitureHeight - 4*pt
+  // 섹션 분할 (상/하 분할만 지원)
   const handleSectionSplit = (split: boolean) => {
-    if (split && config.sections.length === 1) {
+    if (split) {
       const availableHeight = furnitureHeight - 4 * panelThickness;
       const halfH = Math.round(availableHeight / 2);
-      const sec1H = availableHeight - halfH;
       applyConfig({
         ...config,
+        splitDirection: 'topBottom',
+        splitPosition: halfH,
         sections: [
-          { ...config.sections[0], id: 'section-0', height: halfH },
-          { id: 'section-1', height: sec1H, elements: [{ type: 'open' }] },
+          { id: 'section-lower', height: halfH, elements: [{ type: 'open' }] },
+          { id: 'section-upper', height: availableHeight - halfH, elements: [{ type: 'open' }] },
         ],
       });
-      setSectionHeightInputs({ 0: halfH.toString(), 1: sec1H.toString() });
-    } else if (!split && config.sections.length > 1) {
+      setSectionHeightInputs({ 0: halfH.toString(), 1: (availableHeight - halfH).toString() });
+    } else {
+      // 분할 해제 → 단일 섹션
       applyConfig({
         ...config,
-        sections: [{ id: 'section-0', height: innerHeight, elements: config.sections[0].elements || [{ type: 'open' }] }],
+        splitDirection: undefined,
+        splitPosition: undefined,
+        sections: [{ id: 'section-0', height: innerHeight, elements: config.sections[0]?.elements || [{ type: 'open' }] }],
       });
       setSectionHeightInputs({ 0: innerHeight.toString() });
     }
@@ -1207,381 +1208,38 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
               <div className={styles.divider} />
 
-              {/* 섹션 분할 */}
+              {/* 섹션 분할 (상/하만 지원) */}
               <div className={styles.section}>
                 <div className={styles.sectionTitle}>섹션 분할</div>
-                {/* 좌,우 분할 */}
-                <div className={styles.row}>
-                  <span className={styles.label}>좌,우</span>
-                  <div className={styles.toggleGroup}>
-                    <button
-                      className={`${styles.toggleButton} ${!config.sections[0].hasPartition ? styles.active : ''}`}
-                      onClick={() => {
-                        config.sections.forEach((_, i) => handlePartitionToggle(i, false));
-                      }}
-                    >
-                      없음
-                    </button>
-                    <button
-                      className={`${styles.toggleButton} ${config.sections[0].hasPartition ? styles.active : ''}`}
-                      onClick={() => {
-                        config.sections.forEach((_, i) => handlePartitionToggle(i, true));
-                      }}
-                    >
-                      분할
-                    </button>
-                  </div>
-                </div>
-                {/* 상,하 분할 */}
                 <div className={styles.row}>
                   <span className={styles.label}>상,하</span>
                   <div className={styles.toggleGroup}>
                     <button
-                      className={`${styles.toggleButton} ${config.sections.length === 1 ? styles.active : ''}`}
-                      onClick={() => handleSectionSplit(false)}
+                      className={`${styles.toggleButton} ${!config.splitDirection ? styles.active : ''}`}
+                      onClick={() => {
+                        if (config.splitDirection) handleSectionSplit(false);
+                      }}
                     >
                       없음
                     </button>
                     <button
-                      className={`${styles.toggleButton} ${config.sections.length === 2 ? styles.active : ''}`}
+                      className={`${styles.toggleButton} ${config.splitDirection === 'topBottom' ? styles.active : ''}`}
                       onClick={() => handleSectionSplit(true)}
                     >
                       분할
                     </button>
                   </div>
                 </div>
-                {/* 상하 분할 시 높이 입력 */}
-                {config.sections.length === 2 && (
-                  <>
-                    <div className={styles.row} style={{ marginTop: '4px' }}>
-                      <span className={styles.label}>하부 높이</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={`${styles.input} ${styles.inputSmall}`}
-                        value={sectionHeightInputs[0] ?? config.sections[0].height.toString()}
-                        onChange={(e) => handleSectionHeightInputChange(0, e.target.value)}
-                        onBlur={() => handleSectionHeightBlur(0)}
-                        onKeyDown={handleInputKeyDown}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                    <div className={styles.row}>
-                      <span className={styles.label}>상부 높이</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={`${styles.input} ${styles.inputSmall}`}
-                        value={sectionHeightInputs[1] ?? config.sections[1].height.toString()}
-                        onChange={(e) => handleSectionHeightInputChange(1, e.target.value)}
-                        onBlur={() => handleSectionHeightBlur(1)}
-                        onKeyDown={handleInputKeyDown}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                  </>
-                )}
               </div>
 
               <div className={styles.divider} />
 
-              {/* 세로 칸막이 추가 */}
+              {/* 안내 */}
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>세로 칸막이 추가</div>
-                <div className={styles.row}>
-                  <div className={styles.toggleGroup}>
-                    <button
-                      className={`${styles.toggleButton} ${!config.sections[0].hasPartition ? styles.active : ''}`}
-                      onClick={() => {
-                        config.sections.forEach((_, i) => handlePartitionToggle(i, false));
-                      }}
-                    >
-                      없음
-                    </button>
-                    <button
-                      className={`${styles.toggleButton} ${config.sections[0].hasPartition ? styles.active : ''}`}
-                      onClick={() => {
-                        config.sections.forEach((_, i) => handlePartitionToggle(i, true));
-                      }}
-                    >
-                      추가
-                    </button>
-                  </div>
-                </div>
-                {/* 칸막이 위치 입력 */}
-                {config.sections[0].hasPartition && (() => {
-                  const innerW0 = furnitureWidth - 2 * panelThickness;
-                  const pos0 = config.sections[0].partitionPosition || Math.round(innerW0 / 2);
-                  return (
-                    <>
-                      <div className={styles.row}>
-                        <span className={styles.label}>좌</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          className={`${styles.input} ${styles.inputSmall}`}
-                          value={partitionInputs['0-left'] ?? pos0.toString()}
-                          onChange={(e) => {
-                            setPartitionInputs((prev) => ({ ...prev, '0-left': e.target.value }));
-                          }}
-                          onBlur={() => {
-                            const val = parseInt(partitionInputs['0-left'] || '0');
-                            const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
-                            config.sections.forEach((_, i) => handlePartitionPosition(i, clamped));
-                            setPartitionInputs((prev) => ({
-                              ...prev,
-                              '0-left': clamped.toString(),
-                              '0-right': (innerW0 - clamped).toString(),
-                            }));
-                          }}
-                          style={{ width: '70px' }}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                      <div className={styles.row}>
-                        <span className={styles.label}>우</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          className={`${styles.input} ${styles.inputSmall}`}
-                          value={partitionInputs['0-right'] ?? (innerW0 - pos0).toString()}
-                          onChange={(e) => {
-                            setPartitionInputs((prev) => ({ ...prev, '0-right': e.target.value }));
-                          }}
-                          onBlur={() => {
-                            const val = parseInt(partitionInputs['0-right'] || '0');
-                            const clamped = Math.max(100, Math.min(innerW0 - 100, isNaN(val) ? Math.round(innerW0 / 2) : val));
-                            const newPos = innerW0 - clamped;
-                            config.sections.forEach((_, i) => handlePartitionPosition(i, newPos));
-                            setPartitionInputs((prev) => ({
-                              ...prev,
-                              '0-left': newPos.toString(),
-                              '0-right': clamped.toString(),
-                            }));
-                          }}
-                          style={{ width: '70px' }}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </>
-                  );
-                })()}
+                <p className={styles.helpText} style={{ margin: '0', fontSize: '12px', color: '#999' }}>
+                  각 섹션의 내부 구조(칸막이, 선반, 서랍 등)는 3D 뷰에서 해당 섹션의 ⚙️ 아이콘을 클릭하여 설정하세요.
+                </p>
               </div>
-
-              <div className={styles.divider} />
-
-              {/* 섹션별 타입 선택 (연필 메뉴) */}
-              {config.sections.length > 1 ? (
-                /* 2단 분할: 상부→하부 순서로 타입 선택 */
-                [...config.sections].reverse().map((section, _i) => {
-                  const realIdx = config.sections.length - 1 - _i;
-                  const isUpper = realIdx === 1;
-                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
-                  const typeOptions = isUpper
-                    ? (['open', 'shelf', 'rod'] as const)
-                    : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
-
-                  return (
-                    <div key={realIdx} className={styles.section}>
-                      <div className={styles.sectionTitle}>
-                        {isUpper ? '상부 섹션' : '하부 섹션'}
-                        <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
-                          {section.height}mm
-                        </span>
-                      </div>
-                      <div className={styles.elementSelector}>
-                        {typeOptions.map((type) => (
-                          <button
-                            key={type}
-                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-                            onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
-                          >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
-                          </button>
-                        ))}
-                      </div>
-                      {/* 서랍 단수 선택 + 개별 높이 편집 (하부만) */}
-                      {currentType === 'drawer' && !isUpper && (
-                        <div style={{ marginTop: '8px' }}>
-                          <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
-                          <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].filter((count) => {
-                              const std = DRAWER_STANDARD[count];
-                              return std && std.sectionHeight <= section.height + 50;
-                            }).map((count) => (
-                              <button
-                                key={count}
-                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
-                                onClick={() => handleSectionTypeChange(realIdx, 'drawer', count)}
-                              >
-                                {count}단
-                              </button>
-                            ))}
-                          </div>
-                          {/* 개별 서랍 높이 편집 */}
-                          {section.elements?.[0]?.type === 'drawer' && 'heights' in section.elements[0] && (
-                            <div style={{ marginTop: '8px' }}>
-                              <span className={styles.label} style={{ marginBottom: '4px', display: 'block' }}>서랍 개별 높이</span>
-                              <div className={styles.heightList}>
-                                {(section.elements[0] as { type: 'drawer'; heights: number[] }).heights.map((h, hi) => {
-                                  const inputKey = `${realIdx}-full-0-${hi}`;
-                                  const displayVal = heightInputs[inputKey] ?? h.toString();
-                                  return (
-                                    <div key={hi} className={styles.heightItem}>
-                                      <span className={styles.heightIndex}>{hi + 1}단</span>
-                                      <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        className={`${styles.input} ${styles.inputSmall}`}
-                                        value={displayVal}
-                                        onChange={(e) => handleHeightInputChange(realIdx, 'full', hi, e.target.value)}
-                                        onBlur={() => handleHeightInputBlur(realIdx, 'full', hi, section.height)}
-                                        onKeyDown={handleInputKeyDown}
-                                      />
-                                      <span className={styles.unit}>mm</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {/* 선반/옷봉/바지걸이 세부 설정 */}
-                      {currentType !== 'open' && currentType !== 'drawer' && (
-                        <div style={{ marginTop: '8px' }}>
-                          {renderElementEditor(realIdx, 'full', section.elements, section.height)}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                /* 분할 없음: 단일 섹션 타입 선택 */
-                (() => {
-                  const section = config.sections[0];
-                  const hasPartitionNow = section.hasPartition || false;
-
-                  if (hasPartitionNow) {
-                    // 칸막이 있음 → 좌/우 영역 각각 타입 선택
-                    const leftInfo = getSectionTypeInfo({ ...section, elements: section.leftElements });
-                    const rightInfo = getSectionTypeInfo({ ...section, elements: section.rightElements });
-                    return (
-                      <>
-                        <div className={styles.section}>
-                          <div className={styles.sectionTitle}>좌측 영역</div>
-                          <div className={styles.elementSelector}>
-                            {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
-                              <button
-                                key={type}
-                                className={`${styles.elementButton} ${leftInfo.type === type ? styles.active : ''}`}
-                                onClick={() => handleElementChange(0, 'left', type)}
-                              >
-                                {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
-                              </button>
-                            ))}
-                          </div>
-                          {leftInfo.type !== 'open' && (
-                            <div style={{ marginTop: '8px' }}>
-                              {renderElementEditor(0, 'left', section.leftElements, section.height)}
-                            </div>
-                          )}
-                        </div>
-                        <div className={styles.section}>
-                          <div className={styles.sectionTitle}>우측 영역</div>
-                          <div className={styles.elementSelector}>
-                            {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
-                              <button
-                                key={type}
-                                className={`${styles.elementButton} ${rightInfo.type === type ? styles.active : ''}`}
-                                onClick={() => handleElementChange(0, 'right', type)}
-                              >
-                                {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
-                              </button>
-                            ))}
-                          </div>
-                          {rightInfo.type !== 'open' && (
-                            <div style={{ marginTop: '8px' }}>
-                              {renderElementEditor(0, 'right', section.rightElements, section.height)}
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    );
-                  }
-
-                  // 칸막이 없음 → 기존 전체 영역 타입 선택
-                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
-                  return (
-                    <div className={styles.section}>
-                      <div className={styles.sectionTitle}>내부 구조</div>
-                      <div className={styles.elementSelector}>
-                        {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
-                          <button
-                            key={type}
-                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-                            onClick={() => handleSectionTypeChange(0, type, type === 'drawer' ? 2 : undefined)}
-                          >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
-                          </button>
-                        ))}
-                      </div>
-                      {currentType === 'drawer' && (
-                        <div style={{ marginTop: '8px' }}>
-                          <span className={styles.label} style={{ marginBottom: '6px', display: 'block' }}>서랍 단수</span>
-                          <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].filter((count) => {
-                              const std = DRAWER_STANDARD[count];
-                              return std && std.sectionHeight <= section.height + 50;
-                            }).map((count) => (
-                              <button
-                                key={count}
-                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
-                                onClick={() => handleSectionTypeChange(0, 'drawer', count)}
-                              >
-                                {count}단
-                              </button>
-                            ))}
-                          </div>
-                          {/* 개별 서랍 높이 편집 */}
-                          {section.elements?.[0]?.type === 'drawer' && 'heights' in section.elements[0] && (
-                            <div style={{ marginTop: '8px' }}>
-                              <span className={styles.label} style={{ marginBottom: '4px', display: 'block' }}>서랍 개별 높이</span>
-                              <div className={styles.heightList}>
-                                {(section.elements[0] as { type: 'drawer'; heights: number[] }).heights.map((h, hi) => {
-                                  const inputKey = `0-full-0-${hi}`;
-                                  const displayVal = heightInputs[inputKey] ?? h.toString();
-                                  return (
-                                    <div key={hi} className={styles.heightItem}>
-                                      <span className={styles.heightIndex}>{hi + 1}단</span>
-                                      <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        className={`${styles.input} ${styles.inputSmall}`}
-                                        value={displayVal}
-                                        onChange={(e) => handleHeightInputChange(0, 'full', hi, e.target.value)}
-                                        onBlur={() => handleHeightInputBlur(0, 'full', hi, section.height)}
-                                        onKeyDown={handleInputKeyDown}
-                                      />
-                                      <span className={styles.unit}>mm</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {/* 선반/옷봉/바지걸이 세부 설정 */}
-                      {currentType !== 'open' && currentType !== 'drawer' && (
-                        <div style={{ marginTop: '8px' }}>
-                          {renderElementEditor(0, 'full', section.elements, section.height)}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()
-              )}
             </>
           )}
         </div>
