@@ -437,7 +437,7 @@ const FreePlacementDropZone: React.FC = () => {
   // === 배치된 가구 이동 관련 로직 ===
 
   // 이동 중인 가구의 스냅 + 클램핑 계산 (자기 자신 제외)
-  const calcMovedPosition = useCallback((xMm: number, moduleId: string) => {
+  const calcMovedPosition = useCallback((xMm: number, moduleId: string, skipSnap = false) => {
     const movingModule = placedModules.find(m => m.id === moduleId);
     if (!movingModule) return { x: xMm, snapped: false, colliding: false };
 
@@ -450,23 +450,27 @@ const FreePlacementDropZone: React.FC = () => {
     const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== moduleId);
     const bounds = otherModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
 
-    // 스냅 포인트 수집
-    const snapPoints: number[] = [];
-    snapPoints.push(startX + halfWidth);
-    snapPoints.push(endX - halfWidth);
-    for (const b of bounds) {
-      snapPoints.push(b.right + halfWidth);
-      snapPoints.push(b.left - halfWidth);
-    }
-
     let snapped = false;
-    let bestSnap = clampedX;
-    let bestDist = SNAP_DISTANCE_MM + 1;
-    for (const sp of snapPoints) {
-      const dist = Math.abs(clampedX - sp);
-      if (dist < bestDist) { bestDist = dist; bestSnap = sp; }
+
+    // 키보드 이동 시에는 스냅 건너뜀 (정확한 1mm 이동)
+    if (!skipSnap) {
+      // 스냅 포인트 수집
+      const snapPoints: number[] = [];
+      snapPoints.push(startX + halfWidth);
+      snapPoints.push(endX - halfWidth);
+      for (const b of bounds) {
+        snapPoints.push(b.right + halfWidth);
+        snapPoints.push(b.left - halfWidth);
+      }
+
+      let bestSnap = clampedX;
+      let bestDist = SNAP_DISTANCE_MM + 1;
+      for (const sp of snapPoints) {
+        const dist = Math.abs(clampedX - sp);
+        if (dist < bestDist) { bestDist = dist; bestSnap = sp; }
+      }
+      if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
     }
-    if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
 
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
 
@@ -476,7 +480,7 @@ const FreePlacementDropZone: React.FC = () => {
       right: clampedX + halfWidth,
       category: (movingModule as any).category || 'full',
     };
-    const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
+    const colliding = checkFreeCollision(otherModules, newBounds);
 
     return { x: Math.round(clampedX), snapped, colliding };
   }, [placedModules, spaceInfo, spaceBounds]);
@@ -547,7 +551,8 @@ const FreePlacementDropZone: React.FC = () => {
       const currentXmm = mod.position.x * 100;
       const newXmm = currentXmm + direction * KEYBOARD_STEP_MM;
 
-      const result = calcMovedPosition(newXmm, targetId);
+      // 키보드 이동은 스냅 건너뜀 (정확한 1mm 이동)
+      const result = calcMovedPosition(newXmm, targetId, true);
       if (!result.colliding) {
         updatePlacedModule(targetId, {
           position: { x: result.x * 0.01, y: mod.position.y, z: mod.position.z },
