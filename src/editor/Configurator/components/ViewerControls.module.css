@@ -16,8 +16,7 @@
   z-index: 10;
   flex-shrink: 0;
   gap: 6px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
