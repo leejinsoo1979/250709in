@@ -149,21 +149,65 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
-    setHoverXmm(clampedX);
 
+    // 충돌 시 가장 가까운 빈 공간으로 밀어내기
     const newBounds: FurnitureBoundsX = {
       left: clampedX - halfWidth,
       right: clampedX + halfWidth,
       category: (category as 'full' | 'upper' | 'lower') || 'full',
     };
 
-    // 스냅 위치에서는 충돌 판정 안함 (정확히 붙은 상태이므로)
     setIsSnapped(snapped);
-    if (snapped) {
-      setIsColliding(false);
+
+    if (!snapped && checkFreeCollision(placedModules, newBounds)) {
+      // 충돌 발생 → 왼쪽/오른쪽 중 가까운 빈 자리로 밀어냄
+      let pushLeftX: number | null = null;
+      let pushRightX: number | null = null;
+
+      for (const b of bounds) {
+        // 겹치는 가구 찾기
+        if (b.right > clampedX - halfWidth && b.left < clampedX + halfWidth) {
+          const candidateLeft = b.left - halfWidth;   // 가구 왼쪽에 배치
+          const candidateRight = b.right + halfWidth;  // 가구 오른쪽에 배치
+          if (candidateLeft >= startX + halfWidth) {
+            if (pushLeftX === null || candidateLeft > pushLeftX) pushLeftX = candidateLeft;
+          }
+          if (candidateRight <= endX - halfWidth) {
+            if (pushRightX === null || candidateRight < pushRightX) pushRightX = candidateRight;
+          }
+        }
+      }
+
+      // 가장 가까운 방향 선택
+      const distLeft = pushLeftX !== null ? Math.abs(clampedX - pushLeftX) : Infinity;
+      const distRight = pushRightX !== null ? Math.abs(clampedX - pushRightX) : Infinity;
+
+      let pushedX = clampedX;
+      if (distLeft <= distRight && pushLeftX !== null) {
+        pushedX = pushLeftX;
+      } else if (pushRightX !== null) {
+        pushedX = pushRightX;
+      }
+
+      // 밀어낸 위치에서 다시 충돌 체크
+      pushedX = clampToSpaceBoundsX(pushedX, widthMm, spaceInfo);
+      const pushedBounds: FurnitureBoundsX = {
+        left: pushedX - halfWidth,
+        right: pushedX + halfWidth,
+        category: (category as 'full' | 'upper' | 'lower') || 'full',
+      };
+
+      if (!checkFreeCollision(placedModules, pushedBounds)) {
+        clampedX = pushedX;
+        setIsColliding(false);
+      } else {
+        setIsColliding(true);
+      }
     } else {
-      setIsColliding(checkFreeCollision(placedModules, newBounds));
+      setIsColliding(false);
     }
+
+    setHoverXmm(clampedX);
   }, [spaceInfo, placedModules, spaceBounds]);
 
   // 배치 실행 공통 함수
