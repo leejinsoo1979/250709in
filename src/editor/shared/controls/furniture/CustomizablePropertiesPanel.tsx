@@ -131,10 +131,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 섹션 분할 토글
+  // 2단 분할 시 각 섹션은 독립 박스(상하판 각 panelThickness)로 렌더링됨
+  // 총 높이 = (section0.height + 2*pt) + (section1.height + 2*pt) = furnitureHeight
+  // → section0.height + section1.height = furnitureHeight - 4*pt
   const handleSectionSplit = (split: boolean) => {
     if (split && config.sections.length === 1) {
-      // 분할판 두께를 빼고 남은 공간을 2등분
-      const availableHeight = innerHeight - panelThickness;
+      const availableHeight = furnitureHeight - 4 * panelThickness;
       const halfH = Math.round(availableHeight / 2);
       applyConfig({
         ...config,
@@ -151,11 +153,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 섹션 높이 변경
+  // 섹션 높이 변경 (2단 분할 시)
+  // 각 독립 박스가 2*pt를 사용하므로 내부 높이 합 = furnitureHeight - 4*pt
   const handleSectionHeightChange = (idx: number, newHeight: number) => {
     if (config.sections.length !== 2) return;
-    // 분할판 두께를 빼고 남은 공간 내에서 높이 조정
-    const availableHeight = innerHeight - panelThickness;
+    const availableHeight = furnitureHeight - 4 * panelThickness;
     const clamped = Math.max(100, Math.min(availableHeight - 100, newHeight));
     const sections = [...config.sections];
     sections[idx] = { ...sections[idx], height: clamped };
