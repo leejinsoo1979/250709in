@@ -30,6 +30,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [depthError, setDepthError] = useState<string>('');
   // 섹션 높이 입력용 문자열 상태 (직접 바인딩 시 입력 불가 문제 방지)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
+  // 선반/서랍 높이 입력용 문자열 상태 (숫자 입력 시 전체 삭제 가능하도록)
+  const [heightInputs, setHeightInputs] = useState<Record<string, string>>({});
+  // 선반 위치 기준 (위에서/아래에서) - 키: "sIdx-side-hIdx"
+  const [shelfRefDir, setShelfRefDir] = useState<Record<string, 'top' | 'bottom'>>({});
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -37,9 +41,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const cfg = JSON.parse(JSON.stringify(placedModule.customConfig)) as CustomFurnitureConfig;
       setConfig(cfg);
       // 섹션 높이 입력 초기화
-      const heightInputs: Record<number, string> = {};
-      cfg.sections.forEach((s, i) => { heightInputs[i] = s.height.toString(); });
-      setSectionHeightInputs(heightInputs);
+      const sectionHInputs: Record<number, string> = {};
+      cfg.sections.forEach((s, i) => { sectionHInputs[i] = s.height.toString(); });
+      setSectionHeightInputs(sectionHInputs);
+      // 선반/서랍 높이 입력 초기화
+      const hInputs: Record<string, string> = {};
+      cfg.sections.forEach((s, sIdx) => {
+        const initElements = (elements: CustomElement[] | undefined, prefix: string) => {
+          elements?.forEach((el, eIdx) => {
+            if ((el.type === 'shelf' || el.type === 'drawer') && 'heights' in el) {
+              el.heights.forEach((h, hIdx) => {
+                hInputs[`${prefix}-${eIdx}-${hIdx}`] = h.toString();
+              });
+            }
+          });
+        };
+        initElements(s.elements, `${sIdx}-full`);
+        initElements(s.leftElements, `${sIdx}-left`);
+        initElements(s.rightElements, `${sIdx}-right`);
+      });
+      setHeightInputs(hInputs);
+      setShelfRefDir({});
     }
     if (placedModule) {
       const w = placedModule.freeWidth || placedModule.moduleWidth || 600;
@@ -219,9 +241,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
           sections[1] = { ...sections[1], height: upperH };
           setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
         }
-        // 균등 분배 서랍 높이 배열
+        // 균등 분배 서랍 개별 높이 배열 (DrawerRenderer는 각 값을 개별 서랍 높이로 사용)
         const perDrawer = Math.round(sec.height / count);
-        const heights = Array.from({ length: count }, (_, i) => perDrawer * (i + 1));
+        const heights = Array.from({ length: count }, () => perDrawer);
         newElement = { type: 'drawer', heights };
         break;
       }
@@ -242,6 +264,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
     sec.rightElements = undefined;
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
+    // heightInputs 동기화
+    if ('heights' in newElement) {
+      const newHInputs: Record<string, string> = {};
+      newElement.heights.forEach((h, hIdx) => {
+        newHInputs[`${sIdx}-full-0-${hIdx}`] = h.toString();
+      });
+      setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+    }
   };
 
   // 현재 섹션의 주요 타입과 서랍 단수 추출
@@ -318,26 +348,66 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
+    // heightInputs 동기화
+    if ('heights' in newElement) {
+      const newHInputs: Record<string, string> = {};
+      newElement.heights.forEach((h, hIdx) => {
+        newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+      });
+      setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+    }
   };
 
-  // 선반/서랍 높이 변경
-  const handleHeightListChange = (
+  // 선반/서랍 높이 입력 변경 (문자열 상태만 업데이트, 확정은 blur에서)
+  const handleHeightInputChange = (
     sIdx: number,
     side: 'full' | 'left' | 'right',
     heightIdx: number,
-    value: number,
+    value: string,
   ) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      const key = `${sIdx}-${side}-0-${heightIdx}`;
+      setHeightInputs((prev) => ({ ...prev, [key]: value }));
+    }
+  };
+
+  // 선반/서랍 높이 확정 (onBlur / Enter)
+  const handleHeightInputBlur = (
+    sIdx: number,
+    side: 'full' | 'left' | 'right',
+    heightIdx: number,
+    sectionHeight: number,
+  ) => {
+    const key = `${sIdx}-${side}-0-${heightIdx}`;
+    const raw = heightInputs[key] ?? '';
+
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
       side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
-
     const el = elements[0];
-    if (el && (el.type === 'shelf' || el.type === 'drawer')) {
-      const heights = [...el.heights];
-      heights[heightIdx] = Math.max(50, value);
-      elements[0] = { ...el, heights };
+
+    if (!el || (el.type !== 'shelf' && el.type !== 'drawer')) return;
+
+    if (raw === '') {
+      // 빈 값이면 원래 값으로 복원
+      setHeightInputs((prev) => ({ ...prev, [key]: el.heights[heightIdx]?.toString() || '0' }));
+      return;
     }
+
+    let num = parseInt(raw, 10);
+
+    // 선반 "위에서" 기준일 경우 변환
+    const refKey = `${sIdx}-${side}-${heightIdx}`;
+    const refDir = shelfRefDir[refKey] || 'bottom';
+    if (el.type === 'shelf' && refDir === 'top') {
+      num = sectionHeight - num;
+    }
+
+    const clamped = Math.max(50, Math.min(sectionHeight, num));
+    const heights = [...el.heights];
+    heights[heightIdx] = clamped;
+    elements[0] = { ...el, heights };
 
     if (side === 'full') sec.elements = elements;
     else if (side === 'left') sec.leftElements = elements;
@@ -345,6 +415,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
+
+    // 표시값도 갱신 (기준 방향에 따라)
+    const displayVal = el.type === 'shelf' && refDir === 'top' ? sectionHeight - clamped : clamped;
+    setHeightInputs((prev) => ({ ...prev, [key]: displayVal.toString() }));
+  };
+
+  // 선반 위치 기준 토글 (위에서 ↔ 아래에서)
+  const handleShelfRefDirChange = (
+    sIdx: number,
+    side: 'full' | 'left' | 'right',
+    heightIdx: number,
+    dir: 'top' | 'bottom',
+    storedValue: number,
+    sectionHeight: number,
+  ) => {
+    const refKey = `${sIdx}-${side}-${heightIdx}`;
+    const inputKey = `${sIdx}-${side}-0-${heightIdx}`;
+    setShelfRefDir((prev) => ({ ...prev, [refKey]: dir }));
+    // 표시값 변환
+    const displayVal = dir === 'top' ? sectionHeight - storedValue : storedValue;
+    setHeightInputs((prev) => ({ ...prev, [inputKey]: displayVal.toString() }));
   };
 
   // 선반/서랍 추가
@@ -357,7 +448,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const el = elements[0];
     if (el && (el.type === 'shelf' || el.type === 'drawer')) {
       const lastH = el.heights[el.heights.length - 1] || Math.round(sec.height / 3);
-      elements[0] = { ...el, heights: [...el.heights, lastH + 200] };
+      const newH = lastH + 200;
+      const newIdx = el.heights.length;
+      elements[0] = { ...el, heights: [...el.heights, newH] };
+      // heightInputs에 새 항목 추가
+      const key = `${sIdx}-${side}-0-${newIdx}`;
+      setHeightInputs((prev) => ({ ...prev, [key]: newH.toString() }));
     }
 
     if (side === 'full') sec.elements = elements;
@@ -489,25 +585,56 @@ const CustomizablePropertiesPanel: React.FC = () => {
         {(currentType === 'shelf' || currentType === 'drawer') && 'heights' in el && (
           <div>
             <div className={styles.heightList}>
-              {el.heights.map((h, hi) => (
-                <div key={hi} className={styles.heightItem}>
-                  <span className={styles.heightIndex}>{hi + 1}</span>
-                  <input
-                    type="number"
-                    className={`${styles.input} ${styles.inputSmall}`}
-                    value={h}
-                    onChange={(e) => handleHeightListChange(sIdx, side, hi, parseInt(e.target.value) || 0)}
-                    min={50}
-                    max={sectionHeight}
-                  />
-                  <span className={styles.unit}>mm</span>
-                  {el.heights.length > 1 && (
-                    <button className={styles.removeButton} onClick={() => handleRemoveHeight(sIdx, side, hi)}>
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
+              {el.heights.map((h, hi) => {
+                const inputKey = `${sIdx}-${side}-0-${hi}`;
+                const refKey = `${sIdx}-${side}-${hi}`;
+                const refDir = shelfRefDir[refKey] || 'bottom';
+                const displayVal = heightInputs[inputKey] ?? (
+                  currentType === 'shelf' && refDir === 'top'
+                    ? (sectionHeight - h).toString()
+                    : h.toString()
+                );
+
+                return (
+                  <div key={hi} className={styles.heightItem}>
+                    <span className={styles.heightIndex}>{hi + 1}</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className={`${styles.input} ${styles.inputSmall}`}
+                      value={displayVal}
+                      onChange={(e) => handleHeightInputChange(sIdx, side, hi, e.target.value)}
+                      onBlur={() => handleHeightInputBlur(sIdx, side, hi, sectionHeight)}
+                      onKeyDown={handleInputKeyDown}
+                    />
+                    <span className={styles.unit}>mm</span>
+                    {/* 선반: 위에서/아래에서 기준 선택 */}
+                    {currentType === 'shelf' && (
+                      <div className={styles.refDirToggle}>
+                        <button
+                          className={`${styles.refDirButton} ${refDir === 'bottom' ? styles.active : ''}`}
+                          onClick={() => handleShelfRefDirChange(sIdx, side, hi, 'bottom', h, sectionHeight)}
+                          title="아래에서"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          className={`${styles.refDirButton} ${refDir === 'top' ? styles.active : ''}`}
+                          onClick={() => handleShelfRefDirChange(sIdx, side, hi, 'top', h, sectionHeight)}
+                          title="위에서"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    )}
+                    {el.heights.length > 1 && (
+                      <button className={styles.removeButton} onClick={() => handleRemoveHeight(sIdx, side, hi)}>
+                        ×
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <button className={styles.addButton} onClick={() => handleAddHeight(sIdx, side)}>
               + {currentType === 'shelf' ? '선반' : '서랍'} 추가
