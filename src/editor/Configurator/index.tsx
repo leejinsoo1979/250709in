@@ -39,6 +39,7 @@ import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFur
 import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurnitureUpload';
 import CustomizableFurnitureLibrary from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import CustomizablePropertiesPanel from '@/editor/shared/controls/furniture/CustomizablePropertiesPanel';
+import MyCabinetGallery from '@/editor/shared/controls/furniture/MyCabinetGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -126,6 +127,7 @@ const Configurator: React.FC = () => {
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
+  const [myCabinetCategory, setMyCabinetCategory] = useState<'all' | 'full' | 'upper' | 'lower'>('all'); // My캐비닛 카테고리 필터
   const [showCustomUploadModal, setShowCustomUploadModal] = useState(false); // 커스텀 가구 업로드 모달
   const [showBoringExportDialog, setShowBoringExportDialog] = useState(false); // 보링 내보내기 대화상자
 
@@ -2769,6 +2771,43 @@ const Configurator: React.FC = () => {
                 />
               </div>
             )}
+          </div>
+        );
+      case 'myCabinet':
+        return (
+          <div className={styles.sidebarPanel}>
+            <div className={styles.modulePanelContent}>
+              <div className={styles.moduleCategoryTabs}>
+                <button
+                  className={`${styles.moduleCategoryTab} ${myCabinetCategory === 'all' ? styles.active : ''}`}
+                  onClick={() => setMyCabinetCategory('all')}
+                >
+                  전체
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${myCabinetCategory === 'full' ? styles.active : ''}`}
+                  onClick={() => setMyCabinetCategory('full')}
+                >
+                  전체장
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${myCabinetCategory === 'upper' ? styles.active : ''}`}
+                  onClick={() => setMyCabinetCategory('upper')}
+                >
+                  상부장
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${myCabinetCategory === 'lower' ? styles.active : ''}`}
+                  onClick={() => setMyCabinetCategory('lower')}
+                >
+                  하부장
+                </button>
+              </div>
+
+              <div className={styles.moduleSection}>
+                <MyCabinetGallery filter={myCabinetCategory} />
+              </div>
+            </div>
           </div>
         );
       default:

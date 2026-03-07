@@ -4,7 +4,7 @@ import { LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { TbBoxAlignRight, TbBrandAsana, TbUpload } from 'react-icons/tb';
+import { TbBoxAlignRight, TbBrandAsana, TbUpload, TbBookmarks } from 'react-icons/tb';
 import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -13,7 +13,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload';
+export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload' | 'myCabinet';
 
 interface SidebarProps {
   activeTab: SidebarTab | null;
@@ -141,6 +141,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'upload' as SidebarTab,
       icon: <TbUpload size={22} />,
       label: '업로드'
+    },
+    {
+      id: 'myCabinet' as SidebarTab,
+      icon: <TbBookmarks size={22} />,
+      label: 'My캐비닛'
     }
   ];
 
