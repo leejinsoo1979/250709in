@@ -190,6 +190,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         height={moduleData.dimensions.height}
         depth={customDepth || moduleData.dimensions.depth}
         customConfig={customConfig}
+        category={moduleData.category as 'full' | 'upper' | 'lower'}
         color={color}
         isDragging={isDragging}
         isEditMode={isEditMode}
