@@ -124,6 +124,7 @@ interface DoorModuleProps {
   textureUrl?: string; // 텍스처 URL
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
+  internalHeight?: number; // 자유배치 시 실제 가구 높이 (mm) - freeHeight
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -149,7 +150,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   furnitureId, // 가구 ID
   textureUrl, // 텍스처 URL
   panelGrainDirections, // 패널별 결 방향
-  zone // 단내림 영역 정보
+  zone, // 단내림 영역 정보
+  internalHeight // 자유배치 시 실제 가구 높이 (mm)
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -652,8 +654,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   if (isUpperCabinet) {
     // 상부장 도어는 캐비넷보다 아래로 확장, 위쪽 간격
-    const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    
+    const upperCabinetHeight = internalHeight || moduleData?.dimensions?.height || 600;
+
     // 상부장 도어 높이 = 캐비넷 높이 - 위쪽 간격 + 아래 확장
     actualDoorHeight = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
     
@@ -667,7 +669,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치, 아래로 확장
-    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
+    const lowerCabinetHeight = internalHeight || moduleData?.dimensions?.height || 1000;
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 하부장 도어 아래쪽 확장 (mm) - 바닥배치 시만
     const LOWER_CABINET_TOP_EXTENSION = 18; // 하부장 상부 마감재 두께 (도어 상단이 하부장 상단과 일치)
 
@@ -703,8 +705,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 10;
     const baseHeightValue = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
 
-    // 가구 높이 계산 (천장 높이 - 상부프레임 - 바닥재 - 받침대/띄움높이)
-    tallCabinetFurnitureHeight = fullSpaceHeight - topFrameHeightValue - floorHeightValue - baseHeightValue;
+    // 가구 높이 계산 (자유배치: internalHeight 사용, 슬롯배치: 공간에서 계산)
+    tallCabinetFurnitureHeight = internalHeight || (fullSpaceHeight - topFrameHeightValue - floorHeightValue - baseHeightValue);
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
@@ -2833,7 +2835,8 @@ export default React.memo(DoorModule, (prevProps, nextProps) => {
     prevProps.upperDoorBottomGap === nextProps.upperDoorBottomGap &&
     prevProps.lowerDoorTopGap === nextProps.lowerDoorTopGap &&
     prevProps.lowerDoorBottomGap === nextProps.lowerDoorBottomGap &&
-    prevProps.furnitureId === nextProps.furnitureId;
+    prevProps.furnitureId === nextProps.furnitureId &&
+    prevProps.internalHeight === nextProps.internalHeight;
 
   // panelGrainDirections 객체 비교
   const panelGrainDirectionsEqual = JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);

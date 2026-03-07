@@ -3227,6 +3227,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorBottomGap={placedModule.doorBottomGap}
               slotWidths={undefined}
               zone={effectiveZone}
+              internalHeight={furnitureHeightMm}
             />
           </group>
         )}
