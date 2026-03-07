@@ -822,46 +822,9 @@ const FreePlacementDropZone: React.FC = () => {
       {remainingGaps.map((gap, i) => {
         const isWall = gap.gapType !== 'between';
         const lineColor = isWall ? '#ef4444' : '#3b82f6';
-        const guideBottomY = 0;
-        const guideTopY = spaceInfo.height * 0.01;
 
         return (
         <group key={`gap-${i}`}>
-          {/* 벽 갭: 세로 가이드 라인 (바닥~천장) */}
-          {isWall && (
-            <>
-              {/* 왼쪽 세로 가이드 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      gap.startX * 0.01, guideBottomY, 0.02,
-                      gap.startX * 0.01, guideTopY, 0.02,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={lineColor} linewidth={1} transparent opacity={0.4} />
-              </line>
-              {/* 오른쪽 세로 가이드 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      (gap.startX + gap.width) * 0.01, guideBottomY, 0.02,
-                      (gap.startX + gap.width) * 0.01, guideTopY, 0.02,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={lineColor} linewidth={1} transparent opacity={0.4} />
-              </line>
-            </>
-          )}
           {/* 가로 치수선 */}
           <line>
             <bufferGeometry>
@@ -869,7 +832,7 @@ const FreePlacementDropZone: React.FC = () => {
                 attach="attributes-position"
                 array={new Float32Array([
                   gap.startX * 0.01, gap.centerY, 0.02,
-                  (gap.startX + gap.width) * 0.01, gap.centerY, 0.02,
+                  gap.endX * 0.01, gap.centerY, 0.02,
                 ])}
                 count={2}
                 itemSize={3}
@@ -897,8 +860,8 @@ const FreePlacementDropZone: React.FC = () => {
               <bufferAttribute
                 attach="attributes-position"
                 array={new Float32Array([
-                  (gap.startX + gap.width) * 0.01, gap.centerY - 0.08, 0.02,
-                  (gap.startX + gap.width) * 0.01, gap.centerY + 0.08, 0.02,
+                  gap.endX * 0.01, gap.centerY - 0.08, 0.02,
+                  gap.endX * 0.01, gap.centerY + 0.08, 0.02,
                 ])}
                 count={2}
                 itemSize={3}
