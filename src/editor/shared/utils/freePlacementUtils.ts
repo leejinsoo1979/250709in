@@ -7,8 +7,8 @@ import { calculateSpaceIndexing, SpaceCalculator } from './indexing';
  * AABB 충돌 체크, 공간 경계 클램핑 등
  */
 
-// 가구 간 최소 간격 (mm)
-const COLLISION_GAP_MM = 2;
+// 가구 간 최소 간격 (mm) - 0으로 설정하여 완전 밀착 허용
+const COLLISION_GAP_MM = 0;
 
 export interface FurnitureBoundsX {
   left: number;   // 좌측 X (mm)

@@ -575,12 +575,13 @@ const FreePlacementDropZone: React.FC = () => {
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
 
     // 충돌 체크 (자기 자신 제외)
+    // 스냅 성공 시 충돌 무시 (스냅 = 기존 가구/벽 가장자리에 밀착 → 의도된 배치)
     const newBounds: FurnitureBoundsX = {
       left: clampedX - halfWidth,
       right: clampedX + halfWidth,
       category: (movingModule as any).category || 'full',
     };
-    const colliding = checkFreeCollision(otherModules, newBounds);
+    const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
 
     return { x: Math.round(clampedX), snapped, colliding };
   }, [placedModules, spaceInfo, spaceBounds]);
