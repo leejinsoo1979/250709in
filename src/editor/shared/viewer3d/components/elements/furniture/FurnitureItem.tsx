@@ -3375,8 +3375,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
-      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시, 읽기 전용 모드에서는 숨김 */}
-      {!readOnly && showFurnitureEditHandles && showDimensions && viewMode === '3D' && (
+      {/* 3D 모드에서 편집 아이콘 표시 - 커스터마이징 가구는 CustomizableBoxModule 내부에서 섹션별 아이콘 렌더링 */}
+      {!readOnly && showFurnitureEditHandles && showDimensions && viewMode === '3D' && !placedModule.isCustomizable && (
         <Html
           position={[
             adjustedPosition.x,

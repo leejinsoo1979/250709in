@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import * as THREE from 'three';
+import { Html } from '@react-three/drei';
 import { CustomFurnitureConfig, CustomElement, CustomSection } from '@/editor/shared/furniture/types';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
@@ -7,6 +8,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { SettingsIcon } from '@/components/common/Icons';
 
 interface CustomizableBoxModuleProps {
   width: number;   // mm
@@ -126,6 +128,125 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       metalness: 0.8,
     });
   }, []);
+
+  const sections = customConfig.sections;
+  const isSplit = sections.length >= 2;
+
+  // 섹션 옵션 아이콘 상태
+  const showDimensions = useUIStore(state => state.showDimensions);
+  const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
+  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
+
+  const showSectionIcons = showFurnitureEditHandles && showDimensions
+    && viewMode === '3D' && !isDragging && showFurniture;
+
+  // 섹션 아이콘 렌더링 함수
+  const renderSectionIcon = (
+    key: string,
+    posX: number,    // Three.js
+    posY: number,    // Three.js (박스 중심 Y)
+    posZ: number,    // Three.js
+  ) => {
+    const isHov = hoveredIcon === key;
+    const themeColor = getThemeColor();
+    return (
+      <Html
+        key={`icon-${key}`}
+        position={[posX, posY, posZ]}
+        center
+        style={{
+          userSelect: 'none',
+          pointerEvents: 'auto',
+          zIndex: 100,
+          background: 'transparent',
+        }}
+      >
+        <div
+          style={{
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            border: `2px solid ${themeColor}`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.92)',
+            transition: 'all 0.2s ease',
+            opacity: isHov ? 1 : 0.7,
+            transform: isHov ? 'scale(1.15)' : 'scale(1)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isEditMode) {
+              useUIStore.getState().closeAllPopups();
+            } else if (onDoubleClick) {
+              onDoubleClick(e as any);
+            }
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseEnter={() => setHoveredIcon(key)}
+          onMouseLeave={() => setHoveredIcon(null)}
+          title="섹션 편집"
+        >
+          <SettingsIcon color={themeColor} size={14} />
+        </div>
+      </Html>
+    );
+  };
+
+  // 섹션별 아이콘 목록 생성
+  const renderSectionIcons = () => {
+    if (!showSectionIcons) return null;
+
+    const icons: React.ReactNode[] = [];
+    const frontZ = D / 2 + 0.1; // 가구 앞면 바로 앞
+
+    if (isSplit) {
+      // 2단 분할: 각 섹션마다 아이콘
+      const lowerH = mm(sections[0].height + 2 * panelThickness);
+      const upperH = mm(sections[1].height + 2 * panelThickness);
+      const lowerCenterY = -H / 2 + lowerH / 2;
+      const upperCenterY = -H / 2 + lowerH + upperH / 2;
+
+      // 하부 섹션 아이콘
+      const lowerInnerW = W - 2 * t;
+      if (sections[0].hasPartition && sections[0].partitionPosition) {
+        const partX = -lowerInnerW / 2 + mm(sections[0].partitionPosition);
+        const leftCenterX = (-lowerInnerW / 2 + partX - t / 2) / 2;
+        const rightCenterX = (partX + t / 2 + lowerInnerW / 2) / 2;
+        icons.push(renderSectionIcon('lower-left', leftCenterX, lowerCenterY, frontZ));
+        icons.push(renderSectionIcon('lower-right', rightCenterX, lowerCenterY, frontZ));
+      } else {
+        icons.push(renderSectionIcon('lower', 0, lowerCenterY, frontZ));
+      }
+
+      // 상부 섹션 아이콘
+      if (sections[1].hasPartition && sections[1].partitionPosition) {
+        const partX = -lowerInnerW / 2 + mm(sections[1].partitionPosition);
+        const leftCenterX = (-lowerInnerW / 2 + partX - t / 2) / 2;
+        const rightCenterX = (partX + t / 2 + lowerInnerW / 2) / 2;
+        icons.push(renderSectionIcon('upper-left', leftCenterX, upperCenterY, frontZ));
+        icons.push(renderSectionIcon('upper-right', rightCenterX, upperCenterY, frontZ));
+      } else {
+        icons.push(renderSectionIcon('upper', 0, upperCenterY, frontZ));
+      }
+    } else {
+      // 1단(분할 없음): 단일 아이콘 또는 칸막이 좌/우
+      if (sections[0]?.hasPartition && sections[0]?.partitionPosition) {
+        const partX = -innerW / 2 + mm(sections[0].partitionPosition);
+        const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
+        const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
+        icons.push(renderSectionIcon('single-left', leftCenterX, 0, frontZ));
+        icons.push(renderSectionIcon('single-right', rightCenterX, 0, frontZ));
+      } else {
+        icons.push(renderSectionIcon('single', 0, 0, frontZ));
+      }
+    }
+
+    return icons;
+  };
 
   if (!showFurniture) return null;
 
@@ -401,9 +522,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     return meshes;
   };
 
-  const sections = customConfig.sections;
-  const isSplit = sections.length >= 2;
-
   return (
     <group
       onPointerDown={onPointerDown}
@@ -561,6 +679,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           })()}
         </>
       )}
+
+      {/* 섹션별 옵션 아이콘 */}
+      {renderSectionIcons()}
 
       {/* 조절발 (upper가 아닌 경우) */}
       {showFurniture && category !== 'upper' && (
