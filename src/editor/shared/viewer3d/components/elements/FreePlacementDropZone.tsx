@@ -15,6 +15,7 @@ import {
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useUIStore } from '@/store/uiStore';
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
@@ -30,6 +31,7 @@ const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules, addModule, updatePlacedModule } = useFurnitureStore();
   const { theme } = useTheme();
+  const activePopup = useUIStore(state => state.activePopup);
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
   const [isColliding, setIsColliding] = useState(false);
@@ -42,6 +44,13 @@ const FreePlacementDropZone: React.FC = () => {
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+
+  // 더블클릭으로 편집 중인 자유배치 가구 ID
+  const editingFreeModuleId = useMemo(() => {
+    if (activePopup?.type !== 'furnitureEdit' || !activePopup.id) return null;
+    const mod = placedModules.find(m => m.id === activePopup.id && m.isFreePlacement);
+    return mod ? mod.id : null;
+  }, [activePopup, placedModules]);
 
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
@@ -394,6 +403,14 @@ const FreePlacementDropZone: React.FC = () => {
     setIsDraggingPlaced(true);
   }, [selectedFurnitureId]);
 
+  // 편집 중인 가구 드래그 시작 (더블클릭 후 드래그)
+  const handleEditDragPointerDown = useCallback((e: any) => {
+    if (!editingFreeModuleId) return;
+    e.stopPropagation();
+    setMovingModuleId(editingFreeModuleId);
+    setIsDraggingPlaced(true);
+  }, [editingFreeModuleId]);
+
   // 배치된 가구 드래그 중 (1mm 단위로 이동)
   const handleDragPointerMove = useCallback((e: any) => {
     if (!isDraggingPlaced || !movingModuleId) return;
@@ -426,8 +443,8 @@ const FreePlacementDropZone: React.FC = () => {
 
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape') return;
 
-      // 이동할 가구: movingModuleId 또는 선택된 배치 가구
-      const targetId = movingModuleId || useFurnitureStore.getState().selectedPlacedModuleId;
+      // 이동할 가구: movingModuleId 또는 편집 중인 자유배치 가구
+      const targetId = movingModuleId || editingFreeModuleId;
       if (!targetId) return;
       const mod = placedModules.find(m => m.id === targetId && m.isFreePlacement);
       if (!mod) return;
@@ -453,7 +470,7 @@ const FreePlacementDropZone: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isFreePlacement, movingModuleId, placedModules, calcMovedPosition, updatePlacedModule]);
+  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule]);
 
   // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && activeDimensions);
@@ -696,11 +713,12 @@ const FreePlacementDropZone: React.FC = () => {
         </>
       )}
 
-      {/* 배치된 가구 드래그용 투명 평면 (드래그 중에만 표시) */}
-      {isDraggingPlaced && movingModuleId && (
+      {/* 배치된 가구 드래그용 투명 평면 (드래그 중 또는 편집 모드에서 표시) */}
+      {(isDraggingPlaced && movingModuleId) || editingFreeModuleId ? (
         <mesh
           ref={dragPlaneRef}
           position={[planeConfig.planeCenterX, planeConfig.planeCenterY, 0.02]}
+          onPointerDown={!isDraggingPlaced ? handleEditDragPointerDown : undefined}
           onPointerMove={handleDragPointerMove}
           onPointerUp={handleDragPointerUp}
           onPointerLeave={handleDragPointerUp}
@@ -708,25 +726,7 @@ const FreePlacementDropZone: React.FC = () => {
           <planeGeometry args={[planeConfig.planeWidth * 2, planeConfig.planeHeight * 2]} />
           <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
         </mesh>
-      )}
-
-      {/* 배치된 자유배치 가구의 클릭 영역 (이동 시작용) */}
-      {!hasActiveModule && placedModules.filter(m => m.isFreePlacement).map((mod) => {
-        const b = getModuleBoundsX(mod);
-        const widthMm = b.right - b.left;
-        const modData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
-        const heightMm = mod.freeHeight || modData?.dimensions.height || 2400;
-        return (
-          <mesh
-            key={`free-click-${mod.id}`}
-            position={[mod.position.x, mod.position.y, 0.005]}
-            onPointerDown={(e) => handlePlacedPointerDown(e, mod.id)}
-          >
-            <planeGeometry args={[widthMm * 0.01, heightMm * 0.01]} />
-            <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
-          </mesh>
-        );
-      })}
+      ) : null}
 
       {/* 배치 후 남은 공간 사이즈 표시 */}
       {remainingGaps.map((gap, i) => (
