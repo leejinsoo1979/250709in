@@ -879,6 +879,8 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
+                transform
+                sprite
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -913,6 +915,8 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
+                transform
+                sprite
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -944,6 +948,8 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[ghostPosition.x, slotDimY + 0.12, 0.002]}
               center
+              transform
+              sprite
               style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
               <div style={{
@@ -994,6 +1000,8 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
+                transform
+                sprite
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -1030,6 +1038,8 @@ const FreePlacementDropZone: React.FC = () => {
                   guideZPosition,
                 ]}
                 center
+                transform
+                sprite
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
@@ -1084,6 +1094,8 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
+              transform
+              sprite
               style={{ pointerEvents: 'auto' }}
               zIndexRange={[10000, 10001]}
             >
@@ -1127,6 +1139,8 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
+              transform
+              sprite
               style={{ pointerEvents: 'auto', userSelect: 'none' }}
             >
               <div
