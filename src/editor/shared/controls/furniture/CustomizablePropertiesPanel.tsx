@@ -548,34 +548,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
-  // 옷봉 높이 변경
-  const handleRodHeightChange = (sIdx: number, side: 'full' | 'left' | 'right', value: number) => {
+  // 선반 옷봉 토글
+  const handleShelfRodToggle = (sIdx: number, side: 'full' | 'left' | 'right', hasRod: boolean) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
       side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
 
-    if (elements[0]?.type === 'rod') {
-      elements[0] = { type: 'rod', height: Math.max(100, value) };
-    }
-
-    if (side === 'full') sec.elements = elements;
-    else if (side === 'left') sec.leftElements = elements;
-    else sec.rightElements = elements;
-
-    sections[sIdx] = sec;
-    applyConfig({ ...config, sections });
-  };
-
-  // 바지걸이 높이 변경
-  const handlePantsHeightChange = (sIdx: number, side: 'full' | 'left' | 'right', value: number) => {
-    const sections = [...config.sections];
-    const sec = { ...sections[sIdx] };
-    const elements =
-      side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
-
-    if (elements[0]?.type === 'pants') {
-      elements[0] = { type: 'pants', height: Math.max(100, value) };
+    if (elements[0]?.type === 'shelf') {
+      elements[0] = { ...elements[0], hasRod };
     }
 
     if (side === 'full') sec.elements = elements;
@@ -705,36 +686,46 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 옷봉 높이 */}
-        {currentType === 'rod' && el.type === 'rod' && (
-          <div className={styles.row}>
-            <span className={styles.label}>높이</span>
-            <input
-              type="number"
-              className={`${styles.input} ${styles.inputSmall}`}
-              value={el.height}
-              onChange={(e) => handleRodHeightChange(sIdx, side, parseInt(e.target.value) || 0)}
-              min={100}
-              max={sectionHeight}
-            />
-            <span className={styles.unit}>mm</span>
+        {/* 옷봉: 상판 바로 아래에 자동 배치 (높이 입력 불필요) */}
+        {currentType === 'rod' && (
+          <div className={styles.row} style={{ color: '#888', fontSize: '12px' }}>
+            상판 바로 아래에 설치됩니다
           </div>
         )}
 
-        {/* 바지걸이 높이 */}
-        {currentType === 'pants' && el.type === 'pants' && (
-          <div className={styles.row}>
-            <span className={styles.label}>높이</span>
-            <input
-              type="number"
-              className={`${styles.input} ${styles.inputSmall}`}
-              value={el.height}
-              onChange={(e) => handlePantsHeightChange(sIdx, side, parseInt(e.target.value) || 0)}
-              min={100}
-              max={sectionHeight}
-            />
-            <span className={styles.unit}>mm</span>
+        {/* 바지걸이: 상판 바로 아래에 자동 배치 */}
+        {currentType === 'pants' && (
+          <div className={styles.row} style={{ color: '#888', fontSize: '12px' }}>
+            상판 바로 아래에 설치됩니다
           </div>
+        )}
+
+        {/* 선반 + 옷봉 토글 */}
+        {currentType === 'shelf' && el.type === 'shelf' && (
+          <>
+            <div className={styles.row} style={{ marginTop: '6px' }}>
+              <span className={styles.label}>옷봉</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${!el.hasRod ? styles.active : ''}`}
+                  onClick={() => handleShelfRodToggle(sIdx, side, false)}
+                >
+                  없음
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${el.hasRod ? styles.active : ''}`}
+                  onClick={() => handleShelfRodToggle(sIdx, side, true)}
+                >
+                  추가
+                </button>
+              </div>
+            </div>
+            {el.hasRod && (
+              <div className={styles.row} style={{ color: '#888', fontSize: '12px' }}>
+                최상단 선반 바로 아래에 옷봉이 설치됩니다
+              </div>
+            )}
+          </>
         )}
       </div>
     );

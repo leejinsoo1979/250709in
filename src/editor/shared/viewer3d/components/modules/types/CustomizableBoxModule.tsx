@@ -294,11 +294,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         );
       } else if (el.type === 'rod') {
         // ═══ ClothingRod 사용 (브라켓 + 봉 + 필라이트 포함) ═══
-        // 봉 Y 위치: 섹션 중심 기준, 봉 높이(mm)에서 변환
-        // 기존 모듈 방식: 안전선반 아래 기준으로 배치
-        // el.height는 섹션 하단에서 봉까지 거리 (mm)
-        const rodYFromSectionBottom = mmToUnit(el.height);
-        const rodYPosition = sectionCenterY - areaInnerHeight / 2 + rodYFromSectionBottom;
+        // 옷봉은 상판 바로 아래에 자동 배치 (기존 모듈 방식과 동일)
+        // 브라켓 높이 75mm, 봉 중심 = 상판 하단 - 75/2
+        const rodYPosition = sectionCenterY + areaInnerHeight / 2 - mmToUnit(75 / 2);
 
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
@@ -337,11 +335,36 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             />
           </group>
         );
+
+        // ═══ 선반 + 옷봉 조합: hasRod=true면 최상단 선반 바로 아래에 옷봉 자동 배치 ═══
+        if (el.hasRod) {
+          const topShelfHeight = Math.max(...el.heights); // 가장 높은 선반 위치 (mm)
+          // 봉 위치 = 최상단 선반 하단 - 브라켓 높이/2
+          // 선반 하단 = 선반 위치 - 패널 두께/2
+          const rodYFromBottom = mmToUnit(topShelfHeight) - t / 2 - mmToUnit(75 / 2);
+          const rodYPosition = sectionCenterY - areaInnerHeight / 2 + rodYFromBottom;
+
+          nodes.push(
+            <group key={`${key}-rod`} position={[offsetX, 0, 0]}>
+              <ClothingRod
+                innerWidth={areaInnerWidth}
+                yPosition={rodYPosition}
+                renderMode={renderMode as '2d' | '3d'}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                adjustedDepthForShelves={adjustedDepth}
+                depth={sectionDepth}
+                addFrontFillLight={rodYPosition < 0}
+                furnitureId={placedFurnitureId}
+              />
+            </group>
+          );
+        }
       }
       else if (el.type === 'pants') {
         // ═══ 바지걸이 - ClothingRod 재사용 (하부섹션 전용) ═══
-        const pantsYFromSectionBottom = mmToUnit(el.height);
-        const pantsYPosition = sectionCenterY - areaInnerHeight / 2 + pantsYFromSectionBottom;
+        // 상판 바로 아래에 자동 배치 (옷봉과 동일 로직)
+        const pantsYPosition = sectionCenterY + areaInnerHeight / 2 - mmToUnit(75 / 2);
 
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
