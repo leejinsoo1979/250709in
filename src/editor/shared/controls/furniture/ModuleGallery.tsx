@@ -292,6 +292,18 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const handleClick = () => {
     if (!isValid) return;
 
+    // 자유배치 모드: 즉시 선택 (300ms 딜레이 없음, currentDragData 미설정)
+    if (spaceInfo.layoutMode === 'free-placement') {
+      if (selectedFurnitureId === module.id) {
+        setSelectedFurnitureId(null);
+        setFurniturePlacementMode(false);
+        return;
+      }
+      setSelectedFurnitureId(module.id);
+      setFurniturePlacementMode(true);
+      return;
+    }
+
     // 더블클릭이 처리되고 있으면 클릭 무시
     if (isDoubleClickRef.current) {
       isDoubleClickRef.current = false;

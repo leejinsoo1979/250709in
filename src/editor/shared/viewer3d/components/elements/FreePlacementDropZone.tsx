@@ -1,10 +1,9 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useUIStore } from '@/store/uiStore';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { getModuleById } from '@/data/modules';
 import {
@@ -18,23 +17,15 @@ import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurn
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 
-// window 타입 확장
-declare global {
-  interface Window {
-    handleFreeDrop?: (dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => boolean;
-  }
-}
-
 /**
- * 자유배치 모드 드롭존
- * - 드래그앤드롭 + 클릭 배치 모두 지원
- * - 드래그 중 고스트 프리뷰가 마우스를 따라다님
- * - 배치 후 남은 공간 사이즈 표시
+ * 자유배치 모드 - 클릭 배치
+ * 1. 썸네일 클릭 → 고스트 나타남
+ * 2. 마우스 이동 → 고스트 따라다니며 좌우 이격거리 실시간 표시
+ * 3. 클릭 → 즉시 배치
  */
 const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, currentDragData, placedModules, addModule } = useFurnitureStore();
-  const { view2DTheme } = useUIStore();
+  const { selectedFurnitureId, placedModules, addModule } = useFurnitureStore();
   const { theme } = useTheme();
   const { camera } = useThree();
 
@@ -48,35 +39,28 @@ const FreePlacementDropZone: React.FC = () => {
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
   const spaceBounds = useMemo(() => getInternalSpaceBoundsX(spaceInfo), [spaceInfo]);
 
-  // 활성 가구 데이터 (클릭 선택 or 드래그 중)
-  const activeModuleId = currentDragData?.moduleData?.id || selectedFurnitureId;
+  // 활성 가구 데이터 (클릭 선택 기반 - 자유배치는 currentDragData 미사용)
+  const activeModuleId = selectedFurnitureId;
   const activeModuleData = useMemo(() => {
-    if (currentDragData?.moduleData) {
-      return currentDragData.moduleData;
-    }
     if (!selectedFurnitureId) return null;
     return getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
-  }, [currentDragData, selectedFurnitureId, internalSpace, spaceInfo]);
+  }, [selectedFurnitureId, internalSpace, spaceInfo]);
 
   // 활성 가구 치수
   const activeDimensions = useMemo(() => {
-    if (currentDragData?.moduleData?.dimensions) {
-      return currentDragData.moduleData.dimensions;
-    }
     if (!activeModuleData) return null;
     return {
       width: activeModuleData.dimensions.width,
       height: activeModuleData.dimensions.height,
       depth: activeModuleData.dimensions.depth,
     };
-  }, [currentDragData, activeModuleData]);
+  }, [activeModuleData]);
 
   // 활성 카테고리
   const activeCategory = useMemo(() => {
-    if (currentDragData?.moduleData?.category) return currentDragData.moduleData.category;
     if (activeModuleData?.category) return activeModuleData.category;
     return 'full';
-  }, [currentDragData, activeModuleData]);
+  }, [activeModuleData]);
 
   // 평면 크기 및 위치 계산
   const planeConfig = useMemo(() => {
@@ -89,26 +73,6 @@ const FreePlacementDropZone: React.FC = () => {
 
     return { planeWidth, planeHeight, planeCenterX, planeCenterY };
   }, [spaceInfo, internalSpace]);
-
-  // clientX,clientY → mm X좌표 변환 (HTML5 drag 이벤트용)
-  const clientToXmm = useCallback((clientX: number, clientY: number): number | null => {
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return null;
-
-    const rect = canvas.getBoundingClientRect();
-    const normalizedX = ((clientX - rect.left) / rect.width) * 2 - 1;
-    const normalizedY = -((clientY - rect.top) / rect.height) * 2 + 1;
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(normalizedX, normalizedY), camera);
-
-    // Z=0 평면과 교차점
-    const ray = raycaster.ray;
-    const t = -ray.origin.z / ray.direction.z;
-    if (t <= 0) return null;
-    const intersectX = ray.origin.x + ray.direction.x * t;
-    return intersectX * 100; // Three.js → mm
-  }, [camera]);
 
   // 충돌 체크 + hover 상태 업데이트 공통 함수
   const updateHoverState = useCallback((xMm: number, widthMm: number, category: string) => {
@@ -144,158 +108,76 @@ const FreePlacementDropZone: React.FC = () => {
     }
   }, [spaceInfo, placedModules, addModule]);
 
-  // R3F onPointerMove (클릭-앤-플레이스 모드)
+  // R3F onPointerMove - 고스트가 마우스를 따라다님
   const handlePointerMove = useCallback(
     (e: any) => {
-      if (!activeDimensions || currentDragData) return; // 드래그 중이면 R3F 이벤트 무시
+      if (!activeDimensions) return;
       e.stopPropagation();
-
       const xMm = e.point.x * 100;
       updateHoverState(xMm, activeDimensions.width, activeCategory);
     },
-    [activeDimensions, currentDragData, activeCategory, updateHoverState]
+    [activeDimensions, activeCategory, updateHoverState]
   );
 
   const handlePointerLeave = useCallback(() => {
-    if (!currentDragData) {
-      setHoverXmm(null);
-      setIsColliding(false);
-    }
-  }, [currentDragData]);
+    setHoverXmm(null);
+    setIsColliding(false);
+  }, []);
 
-  // R3F onClick (클릭-앤-플레이스 모드)
+  // R3F onClick - 클릭하면 즉시 배치
   const handleClick = useCallback(
     (e: any) => {
-      if (!activeModuleId || !activeModuleData || !activeDimensions || hoverXmm === null || isColliding || currentDragData)
+      if (!activeModuleId || !activeModuleData || !activeDimensions || hoverXmm === null || isColliding)
         return;
       e.stopPropagation();
-      executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData);
-    },
-    [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, currentDragData, executePlacement]
-  );
-
-  // HTML5 드래그 이벤트 핸들러 (canvas에 직접 연결)
-  useEffect(() => {
-    if (!isFreePlacement || !currentDragData) return;
-
-    const dragDims = currentDragData.moduleData?.dimensions;
-    const dragCategory = currentDragData.moduleData?.category || 'full';
-    if (!dragDims) return;
-
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      const xMm = clientToXmm(e.clientX, e.clientY);
-      if (xMm === null) return;
-      updateHoverState(xMm, dragDims.width, dragCategory);
-    };
-
-    const handleDragLeave = () => {
-      setHoverXmm(null);
-      setIsColliding(false);
-    };
-
-    const canvas = document.querySelector('canvas');
-    const canvasContainer = canvas?.parentElement;
-    if (canvasContainer) {
-      canvasContainer.addEventListener('dragover', handleDragOver);
-      canvasContainer.addEventListener('dragleave', handleDragLeave);
-    }
-
-    return () => {
-      if (canvasContainer) {
-        canvasContainer.removeEventListener('dragover', handleDragOver);
-        canvasContainer.removeEventListener('dragleave', handleDragLeave);
-      }
-    };
-  }, [isFreePlacement, currentDragData, clientToXmm, updateHoverState]);
-
-  // window.handleFreeDrop 등록 (Space3DView/ThreeCanvas에서 호출)
-  // store에서 직접 읽어 stale closure 방지
-  useEffect(() => {
-    if (!isFreePlacement) return;
-
-    window.handleFreeDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-      console.log('🎯 [handleFreeDrop] 호출됨!');
-
-      // store에서 최신 상태 직접 읽기
-      const store = useFurnitureStore.getState();
-      const latestDragData = store.currentDragData;
-      const latestPlacedModules = store.placedModules;
-      const latestSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
-
-      // 드래그 데이터 결정: store → dataTransfer fallback
-      let moduleData: any = null;
-      let dims: { width: number; height: number; depth: number } | null = null;
-      let moduleId: string | null = null;
-
-      if (latestDragData?.moduleData) {
-        moduleData = latestDragData.moduleData;
-        dims = moduleData.dimensions;
-        moduleId = moduleData.id;
-      } else {
-        try {
-          const raw = dragEvent.dataTransfer?.getData('application/json');
-          if (!raw) return false;
-          const parsed = JSON.parse(raw);
-          if (parsed.type !== 'furniture' || !parsed.moduleData) return false;
-          moduleData = parsed.moduleData;
-          dims = moduleData.dimensions;
-          moduleId = moduleData.id;
-        } catch {
-          return false;
-        }
-      }
-
-      if (!moduleId || !dims || !moduleData) return false;
-
-      // X 좌표 계산
-      const canvas = document.querySelector('canvas');
-      if (!canvas) return false;
-      const rect = canvas.getBoundingClientRect();
-      const normalizedX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
-      const normalizedY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(new THREE.Vector2(normalizedX, normalizedY), camera);
-      const ray = raycaster.ray;
-      const t = -ray.origin.z / ray.direction.z;
-      if (t <= 0) return false;
-      const xMm = (ray.origin.x + ray.direction.x * t) * 100;
-
-      const clampedX = clampToSpaceBoundsX(xMm, dims.width, latestSpaceInfo);
-
-      // 충돌 체크
-      const newBounds: FurnitureBoundsX = {
-        left: clampedX - dims.width / 2,
-        right: clampedX + dims.width / 2,
-        category: (moduleData.category as 'full' | 'upper' | 'lower') || 'full',
-      };
-      if (checkFreeCollision(latestPlacedModules, newBounds)) return false;
-
-      // 배치 실행
-      const result = placeFurnitureFree({
-        moduleId,
-        xPositionMM: clampedX,
-        spaceInfo: latestSpaceInfo,
-        dimensions: dims,
-        existingModules: latestPlacedModules,
-        moduleData,
-      });
-
-      if (result.success && result.module) {
-        store.addModule(result.module);
-        console.log('✅ [handleFreeDrop] 배치 완료:', result.module.id);
-        // 고스트 초기화
+      const placed = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData);
+      if (placed) {
+        // 배치 성공 후 선택 해제 (고스트 제거)
+        useFurnitureStore.getState().setSelectedFurnitureId(null);
+        useFurnitureStore.getState().setFurniturePlacementMode(false);
         setHoverXmm(null);
         setIsColliding(false);
-        return true;
       }
-      console.warn('❌ [handleFreeDrop] 배치 실패:', result.error);
-      return false;
-    };
+    },
+    [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, executePlacement]
+  );
 
-    return () => { delete window.handleFreeDrop; };
-  }, [isFreePlacement, camera]);
+  // 고스트 이동 중 실시간 이격거리 계산 (좌/우 벽 또는 가구와의 거리)
+  const ghostDistanceGuides = useMemo(() => {
+    if (hoverXmm === null || !activeDimensions) return null;
+
+    const ghostLeft = hoverXmm - activeDimensions.width / 2;
+    const ghostRight = hoverXmm + activeDimensions.width / 2;
+    const { startX, endX } = spaceBounds;
+
+    // 배치된 가구의 X범위
+    const freeModules = placedModules.filter(m => m.isFreePlacement);
+    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+    // 왼쪽 이격: 고스트 왼쪽 가장자리 ~ 가장 가까운 왼쪽 장애물
+    let leftObstacle = startX; // 기본은 왼쪽 벽
+    for (const b of bounds) {
+      if (b.right <= ghostLeft) {
+        leftObstacle = b.right; // 더 가까운 가구가 있으면 갱신
+      }
+    }
+    const leftDistance = Math.round(ghostLeft - leftObstacle);
+
+    // 오른쪽 이격: 고스트 오른쪽 가장자리 ~ 가장 가까운 오른쪽 장애물
+    let rightObstacle = endX; // 기본은 오른쪽 벽
+    for (const b of bounds) {
+      if (b.left >= ghostRight) {
+        rightObstacle = b.left;
+        break; // 정렬되어 있으므로 첫 번째가 가장 가까움
+      }
+    }
+    const rightDistance = Math.round(rightObstacle - ghostRight);
+
+    // Y 위치 (고스트 중앙 높이)
+    const guideY = ghostYThree;
+
+    return { leftObstacle, rightObstacle, leftDistance, rightDistance, ghostLeft, ghostRight, guideY };
+  }, [hoverXmm, activeDimensions, spaceBounds, placedModules, ghostYThree]);
 
   // 고스트 Y 위치 계산
   const ghostYThree = useMemo(() => {
@@ -495,7 +377,158 @@ const FreePlacementDropZone: React.FC = () => {
         </Html>
       )}
 
-      {/* 남은 공간 사이즈 표시 */}
+      {/* 실시간 이격거리 가이드 (고스트 이동 중) */}
+      {ghostDistanceGuides && ghostPosition && activeDimensions && !isColliding && (
+        <>
+          {/* 왼쪽 이격거리 */}
+          {ghostDistanceGuides.leftDistance > 2 && (
+            <group>
+              {/* 가이드 라인 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY, 0.02,
+                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+              </line>
+              {/* 왼쪽 틱 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
+                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+              </line>
+              {/* 오른쪽 틱 (고스트 왼쪽 가장자리) */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
+                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+              </line>
+              {/* 치수 라벨 */}
+              <Html
+                position={[
+                  ((ghostDistanceGuides.leftObstacle + ghostDistanceGuides.ghostLeft) / 2) * 0.01,
+                  ghostDistanceGuides.guideY + 0.15,
+                  0.02,
+                ]}
+                center
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                <div style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {ghostDistanceGuides.leftDistance}mm
+                </div>
+              </Html>
+            </group>
+          )}
+
+          {/* 오른쪽 이격거리 */}
+          {ghostDistanceGuides.rightDistance > 2 && (
+            <group>
+              {/* 가이드 라인 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY, 0.02,
+                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+              </line>
+              {/* 왼쪽 틱 (고스트 오른쪽 가장자리) */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
+                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+              </line>
+              {/* 오른쪽 틱 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, 0.02,
+                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+              </line>
+              {/* 치수 라벨 */}
+              <Html
+                position={[
+                  ((ghostDistanceGuides.ghostRight + ghostDistanceGuides.rightObstacle) / 2) * 0.01,
+                  ghostDistanceGuides.guideY + 0.15,
+                  0.02,
+                ]}
+                center
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                <div style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {ghostDistanceGuides.rightDistance}mm
+                </div>
+              </Html>
+            </group>
+          )}
+        </>
+      )}
+
+      {/* 배치 후 남은 공간 사이즈 표시 */}
       {remainingGaps.map((gap, i) => (
         <group key={`gap-${i}`}>
           {/* 갭 영역 표시선 (바닥 위) */}
