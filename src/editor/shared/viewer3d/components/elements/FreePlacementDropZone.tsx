@@ -561,7 +561,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+                <lineBasicMaterial color={theme.color} linewidth={1} />
               </line>
               {/* 왼쪽 틱 */}
               <line>
@@ -576,7 +576,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+                <lineBasicMaterial color={theme.color} linewidth={1} />
               </line>
               {/* 오른쪽 틱 (고스트 왼쪽 가장자리) */}
               <line>
@@ -591,7 +591,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+                <lineBasicMaterial color={theme.color} linewidth={1} />
               </line>
               {/* 치수 라벨 */}
               <Html
@@ -604,7 +604,7 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: '#f59e0b',
+                  background: theme.color,
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
@@ -634,7 +634,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+                <lineBasicMaterial color={theme.color} linewidth={1} />
               </line>
               {/* 왼쪽 틱 (고스트 오른쪽 가장자리) */}
               <line>
@@ -649,7 +649,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+                <lineBasicMaterial color={theme.color} linewidth={1} />
               </line>
               {/* 오른쪽 틱 */}
               <line>
@@ -664,7 +664,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color="#f59e0b" linewidth={1} />
+                <lineBasicMaterial color={theme.color} linewidth={1} />
               </line>
               {/* 치수 라벨 */}
               <Html
@@ -677,7 +677,7 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: '#f59e0b',
+                  background: theme.color,
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
