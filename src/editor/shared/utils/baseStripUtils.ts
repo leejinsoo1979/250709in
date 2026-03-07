@@ -1,6 +1,7 @@
 /**
- * 자유배치 모드 걸래받이 스트립 그룹핑 유틸리티
- * 하부/키큰장이 있는 구간에만 걸래받이 스트립을 생성하고,
+ * 자유배치 모드 프레임 스트립 그룹핑 유틸리티
+ * - 하부 걸래받이: 하부/키큰장이 있는 구간에만 생성
+ * - 상부 프레임: 상부/키큰장이 있는 구간에만 생성
  * 인접한 가구들은 하나의 연속 스트립으로 병합한다.
  */
 
@@ -68,6 +69,60 @@ export function computeBaseStripGroups(
       groups.push(currentGroup);
       currentGroup = {
         id: `base-strip-${item.module.id}`,
+        leftMM: item.bounds.left,
+        rightMM: item.bounds.right,
+        depthMM: item.depthMM,
+        modules: [item.module],
+      };
+    }
+  }
+  groups.push(currentGroup);
+
+  return groups;
+}
+
+/**
+ * 배치된 가구 목록에서 상부 프레임 스트립 그룹을 계산한다.
+ * - 자유배치 + category === 'upper' 또는 'full' 인 모듈만 대상
+ * - X 범위 기준으로 인접/겹치는 모듈을 하나의 그룹으로 병합
+ */
+export function computeTopStripGroups(
+  placedModules: PlacedModule[],
+): BaseStripGroup[] {
+  const topModules = placedModules.filter((m) => {
+    if (!m.isFreePlacement) return false;
+    const category = getModuleCategory(m);
+    return category === 'upper' || category === 'full';
+  });
+
+  if (topModules.length === 0) return [];
+
+  const boundsWithModule = topModules.map((m) => ({
+    module: m,
+    bounds: getModuleBoundsX(m),
+    depthMM: m.freeDepth || 580,
+  }));
+  boundsWithModule.sort((a, b) => a.bounds.left - b.bounds.left);
+
+  const groups: BaseStripGroup[] = [];
+  let currentGroup: BaseStripGroup = {
+    id: `top-strip-${boundsWithModule[0].module.id}`,
+    leftMM: boundsWithModule[0].bounds.left,
+    rightMM: boundsWithModule[0].bounds.right,
+    depthMM: boundsWithModule[0].depthMM,
+    modules: [boundsWithModule[0].module],
+  };
+
+  for (let i = 1; i < boundsWithModule.length; i++) {
+    const item = boundsWithModule[i];
+    if (item.bounds.left <= currentGroup.rightMM + MERGE_TOLERANCE_MM) {
+      currentGroup.rightMM = Math.max(currentGroup.rightMM, item.bounds.right);
+      currentGroup.depthMM = Math.max(currentGroup.depthMM, item.depthMM);
+      currentGroup.modules.push(item.module);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = {
+        id: `top-strip-${item.module.id}`,
         leftMM: item.bounds.left,
         rightMM: item.bounds.right,
         depthMM: item.depthMM,

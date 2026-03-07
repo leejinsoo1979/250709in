@@ -19,7 +19,7 @@ import {
   calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { computeBaseStripGroups } from '@/editor/shared/utils/baseStripUtils';
+import { computeBaseStripGroups, computeTopStripGroups } from '@/editor/shared/utils/baseStripUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -2507,8 +2507,49 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
-      {/* 상부 프레임 - 측면 뷰에서도 표시 (자유배치 모드에서는 숨김) */}
-      {showFrame && topBottomFrameHeightMm > 0 && !isFreePlacement && (
+      {/* 상부 프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
+      {showFrame && topBottomFrameHeightMm > 0 && (() => {
+        // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
+        if (isFreePlacement) {
+          const topStripGroups = computeTopStripGroups(placedModulesFromStore);
+          if (topStripGroups.length === 0) return null;
+
+          const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
+
+          return (
+            <>
+              {topStripGroups.map((group) => {
+                const widthMM = group.rightMM - group.leftMM;
+                const centerXmm = (group.leftMM + group.rightMM) / 2;
+                return (
+                  <BoxWithEdges
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    key={`free-top-strip-${group.id}`}
+                    name="top-frame"
+                    args={[
+                      mmToThreeUnits(widthMM),
+                      topBottomFrameHeight,
+                      mmToThreeUnits(END_PANEL_THICKNESS)
+                    ]}
+                    position={[
+                      mmToThreeUnits(centerXmm),
+                      topElementsY,
+                      topZPosition
+                    ]}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                  />
+                );
+              })}
+            </>
+          );
+        }
+
+        // 균등분할 모드: 기존 전체 너비 렌더링
+        return (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
@@ -3034,7 +3075,8 @@ const Room: React.FC<RoomProps> = ({
             ));
           })()}
         </>
-      )}
+        );
+      })()}
 
       {/* 왼쪽 서브프레임 - 왼쪽 프레임에서 오른쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
