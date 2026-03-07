@@ -48,12 +48,14 @@
 
 .itemDimension {
   font-size: 11px;
-  color: var(--theme-text-secondary, #999);
+  color: var(--theme-primary, #4a90d9);
+  opacity: 0.7;
 }
 
 .helpText {
   font-size: 11px;
-  color: var(--theme-text-secondary, #999);
+  color: var(--theme-primary, #4a90d9);
+  opacity: 0.6;
   line-height: 1.5;
   margin: 0;
   padding: 0 4px;
