@@ -19,6 +19,7 @@ import { useUIStore } from '@/store/uiStore';
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
+const KEYBOARD_SHIFT_STEP_MM = 10;
 
 /**
  * 자유배치 모드 - 클릭 배치 + 배치된 가구 이동
@@ -44,6 +45,19 @@ const FreePlacementDropZone: React.FC = () => {
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+
+  // 테마 색상 (Three.js용 hex)
+  const themeColorMap: Record<string, string> = {
+    green: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', vivid: '#a25378',
+    red: '#D2042D', pink: '#ec4899', indigo: '#6366f1', teal: '#14b8a6',
+    yellow: '#eab308', gray: '#6b7280', cyan: '#06b6d4', lime: '#84cc16',
+    black: '#1a1a1a', wine: '#845EC2', gold: '#d97706', navy: '#1e3a8a',
+    emerald: '#059669', violet: '#C128D7', mint: '#0CBA80', neon: '#18CF23',
+    rust: '#FF7438', white: '#D65DB1', plum: '#790963', brown: '#5A2B1D',
+    darkgray: '#2C3844', maroon: '#3F0D0D', turquoise: '#003A7A', slate: '#2E3A47',
+    copper: '#AD4F34', forest: '#1B3924', olive: '#4C462C',
+  };
+  const themeColor = themeColorMap[theme.color] || '#3b82f6';
 
   // 이격거리 인라인 편집 상태
   const [editingGapIndex, setEditingGapIndex] = useState<number | null>(null);
@@ -258,6 +272,47 @@ const FreePlacementDropZone: React.FC = () => {
 
     return { leftObstacle, rightObstacle, leftDistance, rightDistance, ghostLeft, ghostRight, guideY };
   }, [hoverXmm, activeDimensions, spaceBounds, placedModules, ghostYThree]);
+
+  // 편집/이동 중인 가구의 실시간 이격거리 계산
+  const editingDistanceGuides = useMemo(() => {
+    const targetId = movingModuleId || editingFreeModuleId;
+    if (!targetId) return null;
+    const mod = placedModules.find(m => m.id === targetId && m.isFreePlacement);
+    if (!mod) return null;
+
+    const widthMm = mod.freeWidth || mod.moduleWidth || 450;
+    const centerXmm = mod.position.x * 100;
+    const modLeft = centerXmm - widthMm / 2;
+    const modRight = centerXmm + widthMm / 2;
+    const { startX, endX } = spaceBounds;
+
+    // 자기 자신 제외한 가구의 X범위
+    const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== targetId);
+    const bounds = otherModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+    // 왼쪽 장애물
+    let leftObstacle = startX;
+    for (const b of bounds) {
+      if (b.right <= modLeft) {
+        leftObstacle = b.right;
+      }
+    }
+    const leftDistance = Math.round(modLeft - leftObstacle);
+
+    // 오른쪽 장애물
+    let rightObstacle = endX;
+    for (const b of bounds) {
+      if (b.left >= modRight) {
+        rightObstacle = b.left;
+        break;
+      }
+    }
+    const rightDistance = Math.round(rightObstacle - modRight);
+
+    const guideY = mod.position.y;
+
+    return { leftObstacle, rightObstacle, leftDistance, rightDistance, modLeft, modRight, guideY };
+  }, [movingModuleId, editingFreeModuleId, placedModules, spaceBounds]);
 
   // 고스트 모듈 데이터 (BoxModule에 전달)
   const ghostModuleData = useMemo(() => {
@@ -546,8 +601,9 @@ const FreePlacementDropZone: React.FC = () => {
       // 화살표 키는 input 포커스와 무관하게 가구 이동 처리
       e.preventDefault();
       const direction = e.key === 'ArrowLeft' ? -1 : 1;
+      const step = e.shiftKey ? KEYBOARD_SHIFT_STEP_MM : KEYBOARD_STEP_MM;
       const currentXmm = mod.position.x * 100;
-      const newXmm = currentXmm + direction * KEYBOARD_STEP_MM;
+      const newXmm = currentXmm + direction * step;
 
       // 키보드 이동은 스냅 건너뜀 (정확한 1mm 이동)
       const result = calcMovedPosition(newXmm, targetId, true);
@@ -671,7 +727,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color={theme.color} linewidth={1} />
+                <lineBasicMaterial color={themeColor} linewidth={1} />
               </line>
               {/* 왼쪽 틱 */}
               <line>
@@ -686,7 +742,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color={theme.color} linewidth={1} />
+                <lineBasicMaterial color={themeColor} linewidth={1} />
               </line>
               {/* 오른쪽 틱 (고스트 왼쪽 가장자리) */}
               <line>
@@ -701,7 +757,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color={theme.color} linewidth={1} />
+                <lineBasicMaterial color={themeColor} linewidth={1} />
               </line>
               {/* 치수 라벨 */}
               <Html
@@ -714,7 +770,7 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: theme.color,
+                  background: themeColor,
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
@@ -744,7 +800,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color={theme.color} linewidth={1} />
+                <lineBasicMaterial color={themeColor} linewidth={1} />
               </line>
               {/* 왼쪽 틱 (고스트 오른쪽 가장자리) */}
               <line>
@@ -759,7 +815,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color={theme.color} linewidth={1} />
+                <lineBasicMaterial color={themeColor} linewidth={1} />
               </line>
               {/* 오른쪽 틱 */}
               <line>
@@ -774,7 +830,7 @@ const FreePlacementDropZone: React.FC = () => {
                     itemSize={3}
                   />
                 </bufferGeometry>
-                <lineBasicMaterial color={theme.color} linewidth={1} />
+                <lineBasicMaterial color={themeColor} linewidth={1} />
               </line>
               {/* 치수 라벨 */}
               <Html
@@ -787,7 +843,7 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: theme.color,
+                  background: themeColor,
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
@@ -796,6 +852,155 @@ const FreePlacementDropZone: React.FC = () => {
                   whiteSpace: 'nowrap',
                 }}>
                   {ghostDistanceGuides.rightDistance}mm
+                </div>
+              </Html>
+            </group>
+          )}
+        </>
+      )}
+
+      {/* 편집/이동 중인 가구의 실시간 이격거리 가이드 */}
+      {editingDistanceGuides && (
+        <>
+          {/* 왼쪽 이격거리 */}
+          {editingDistanceGuides.leftDistance > 2 && (
+            <group>
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY, 0.02,
+                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={themeColor} linewidth={1} />
+              </line>
+              {/* 왼쪽 틱 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
+                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={themeColor} linewidth={1} />
+              </line>
+              {/* 오른쪽 틱 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
+                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={themeColor} linewidth={1} />
+              </line>
+              {/* 치수 라벨 */}
+              <Html
+                position={[
+                  ((editingDistanceGuides.leftObstacle + editingDistanceGuides.modLeft) / 2) * 0.01,
+                  editingDistanceGuides.guideY + 0.15,
+                  0.02,
+                ]}
+                center
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                <div style={{
+                  background: themeColor,
+                  color: 'white',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {editingDistanceGuides.leftDistance}mm
+                </div>
+              </Html>
+            </group>
+          )}
+
+          {/* 오른쪽 이격거리 */}
+          {editingDistanceGuides.rightDistance > 2 && (
+            <group>
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY, 0.02,
+                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={themeColor} linewidth={1} />
+              </line>
+              {/* 왼쪽 틱 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
+                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={themeColor} linewidth={1} />
+              </line>
+              {/* 오른쪽 틱 */}
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    array={new Float32Array([
+                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY - 0.08, 0.02,
+                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY + 0.08, 0.02,
+                    ])}
+                    count={2}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={themeColor} linewidth={1} />
+              </line>
+              {/* 치수 라벨 */}
+              <Html
+                position={[
+                  ((editingDistanceGuides.modRight + editingDistanceGuides.rightObstacle) / 2) * 0.01,
+                  editingDistanceGuides.guideY + 0.15,
+                  0.02,
+                ]}
+                center
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                <div style={{
+                  background: themeColor,
+                  color: 'white',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {editingDistanceGuides.rightDistance}mm
                 </div>
               </Html>
             </group>
@@ -820,8 +1025,7 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 배치 후 남은 공간 사이즈 표시 */}
       {remainingGaps.map((gap, i) => {
-        const isWall = gap.gapType !== 'between';
-        const lineColor = isWall ? '#ef4444' : '#3b82f6';
+        const lineColor = themeColor;
 
         return (
         <group key={`gap-${i}`}>
@@ -881,7 +1085,7 @@ const FreePlacementDropZone: React.FC = () => {
                 background: 'white',
                 padding: '2px 4px',
                 borderRadius: '4px',
-                border: '2px solid #3b82f6',
+                border: `2px solid ${themeColor}`,
                 boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
                 display: 'flex',
                 alignItems: 'center',
@@ -921,7 +1125,7 @@ const FreePlacementDropZone: React.FC = () => {
             >
               <div
                 style={{
-                  background: gap.gapType === 'between' ? '#3b82f6' : '#ef4444',
+                  background: themeColor,
                   color: 'white',
                   padding: '1px 6px',
                   borderRadius: '3px',
