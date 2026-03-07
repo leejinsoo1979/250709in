@@ -87,17 +87,15 @@ const FreePlacementDropZone: React.FC = () => {
 
     // 스냅 포인트 수집: 벽 + 가구 가장자리
     const snapPoints: number[] = [];
-    // 왼쪽 벽에 왼쪽 가장자리 스냅 → 중심 = startX + halfWidth
-    snapPoints.push(startX + halfWidth);
-    // 오른쪽 벽에 오른쪽 가장자리 스냅 → 중심 = endX - halfWidth
-    snapPoints.push(endX - halfWidth);
-    // 기존 가구의 왼쪽/오른쪽 가장자리에 스냅
+    snapPoints.push(startX + halfWidth);   // 왼쪽 벽
+    snapPoints.push(endX - halfWidth);     // 오른쪽 벽
     for (const b of bounds) {
       snapPoints.push(b.right + halfWidth); // 가구 오른쪽에 붙기
       snapPoints.push(b.left - halfWidth);  // 가구 왼쪽에 붙기
     }
 
     // 가장 가까운 스냅 포인트 찾기
+    let snapped = false;
     let bestSnap = clampedX;
     let bestDist = SNAP_DISTANCE_MM + 1;
     for (const sp of snapPoints) {
@@ -109,9 +107,9 @@ const FreePlacementDropZone: React.FC = () => {
     }
     if (bestDist <= SNAP_DISTANCE_MM) {
       clampedX = bestSnap;
+      snapped = true;
     }
 
-    // 경계 재클램핑
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
     setHoverXmm(clampedX);
 
@@ -120,7 +118,13 @@ const FreePlacementDropZone: React.FC = () => {
       right: clampedX + halfWidth,
       category: (category as 'full' | 'upper' | 'lower') || 'full',
     };
-    setIsColliding(checkFreeCollision(placedModules, newBounds));
+
+    // 스냅 위치에서는 충돌 판정 안함 (정확히 붙은 상태이므로)
+    if (snapped) {
+      setIsColliding(false);
+    } else {
+      setIsColliding(checkFreeCollision(placedModules, newBounds));
+    }
   }, [spaceInfo, placedModules, spaceBounds]);
 
   // 배치 실행 공통 함수
@@ -321,24 +325,6 @@ const FreePlacementDropZone: React.FC = () => {
 
     return gaps;
   }, [placedModules, spaceBounds, spaceInfo]);
-
-  // 배치된 자유배치 가구의 가로치수 표시 정보
-  const placedModuleLabels = useMemo(() => {
-    const freeModules = placedModules.filter(m => m.isFreePlacement);
-    return freeModules.map(m => {
-      const b = getModuleBoundsX(m);
-      const widthMm = Math.round(b.right - b.left);
-      const centerXThree = m.position.x; // Three.js 단위
-      // 가구 높이: freeHeight > getModuleById > fallback
-      let heightMm = m.freeHeight || 0;
-      if (!heightMm) {
-        const modData = getModuleById(m.moduleId, internalSpace, spaceInfo);
-        heightMm = modData?.dimensions.height || 2400;
-      }
-      const topYThree = m.position.y + (heightMm * 0.01) / 2;
-      return { id: m.id, widthMm, centerXThree, topYThree };
-    });
-  }, [placedModules, internalSpace, spaceInfo]);
 
   // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && activeDimensions);
@@ -580,28 +566,6 @@ const FreePlacementDropZone: React.FC = () => {
           )}
         </>
       )}
-
-      {/* 배치된 가구 상단 가로치수 표시 */}
-      {placedModuleLabels.map((label) => (
-        <Html
-          key={`placed-width-${label.id}`}
-          position={[label.centerXThree, label.topYThree + 0.15, 0.02]}
-          center
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
-        >
-          <div style={{
-            background: '#6366f1',
-            color: 'white',
-            padding: '1px 6px',
-            borderRadius: '3px',
-            fontSize: '11px',
-            fontWeight: '600',
-            whiteSpace: 'nowrap',
-          }}>
-            {label.widthMm}mm
-          </div>
-        </Html>
-      ))}
 
       {/* 배치 후 남은 공간 사이즈 표시 */}
       {remainingGaps.map((gap, i) => (
