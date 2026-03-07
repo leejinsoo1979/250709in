@@ -1025,6 +1025,13 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 배치 후 남은 공간 사이즈 표시 */}
       {remainingGaps.map((gap, i) => {
+        // 편집 중인 가구의 인접 갭은 editingDistanceGuides에서 이미 표시하므로 스킵
+        if (editingDistanceGuides) {
+          const tolerance = 1; // mm
+          const touchesLeft = Math.abs(gap.endX - editingDistanceGuides.modLeft) < tolerance;
+          const touchesRight = Math.abs(gap.startX - editingDistanceGuides.modRight) < tolerance;
+          if (touchesLeft || touchesRight) return null;
+        }
         const lineColor = themeColor;
 
         return (
