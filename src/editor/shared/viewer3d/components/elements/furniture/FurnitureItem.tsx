@@ -3028,6 +3028,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     return placedModule.panelGrainDirections;
                   })()} // 패널별 개별 결 방향
                   zone={effectiveZone}
+                  isFreePlacement={placedModule.isFreePlacement}
                 />
               );
             })()}
@@ -3228,6 +3229,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotWidths={undefined}
               zone={effectiveZone}
               internalHeight={furnitureHeightMm}
+              isFreePlacement={placedModule.isFreePlacement}
             />
           </group>
         )}

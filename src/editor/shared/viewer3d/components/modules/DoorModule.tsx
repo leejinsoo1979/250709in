@@ -125,6 +125,7 @@ interface DoorModuleProps {
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   internalHeight?: number; // 자유배치 시 실제 가구 높이 (mm) - freeHeight
+  isFreePlacement?: boolean; // 자유배치 모드 여부
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -151,7 +152,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   textureUrl, // 텍스처 URL
   panelGrainDirections, // 패널별 결 방향
   zone, // 단내림 영역 정보
-  internalHeight // 자유배치 시 실제 가구 높이 (mm)
+  internalHeight, // 자유배치 시 실제 가구 높이 (mm)
+  isFreePlacement = false // 자유배치 모드 여부
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -567,37 +569,34 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
     Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50;
 
-  // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
-  // 듀얼 가구인 경우 effectiveColumnWidth * 2 사용
-  let actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
+  // 도어 크기 계산
+  let actualDoorWidth: number;
 
-  console.log('🚪📏 도어 너비 계산:', {
-    originalSlotWidth,
-    moduleWidth,
-    indexingColumnWidth: indexing.columnWidth,
-    effectiveColumnWidth,
-    isDualFurniture,
-    계산된도어너비: isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth,
-    actualDoorWidth,
-    zone: (spaceInfo as any).zone,
-    설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : (isDualFurniture ? '듀얼 도어 (슬롯너비 x 2)' : '싱글 도어')
-  });
+  if (isFreePlacement) {
+    // 자유배치: 슬롯 무시, 전달된 moduleWidth(= freeWidth)를 그대로 사용
+    actualDoorWidth = moduleWidth;
+    console.log('🚪📏 자유배치 도어 너비:', { moduleWidth, actualDoorWidth });
+  } else {
+    // 균등분할: originalSlotWidth가 있으면 무조건 사용 (커버도어)
+    actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
 
-  // 노서라운드 모드에서 도어 크기 처리
-  if (originalSpaceInfo.surroundType === 'no-surround') {
-    // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
-    // originalSlotWidth가 없으면 fallback으로 계산
-    if (!originalSlotWidth) {
-      // 노서라운드에서는 슬롯 너비를 그대로 사용 (엔드패널이 슬롯에 포함됨)
-      // 듀얼 가구면 슬롯 너비 * 2
-      actualDoorWidth = isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth;
-      console.log(`🚪 노서라운드 도어 너비 계산:`, {
-        전체너비: originalSpaceInfo.width,
-        effectiveColumnWidth,
-        isDualFurniture,
-        actualDoorWidth,
-        설명: isDualFurniture ? '노서라운드 듀얼 도어 (슬롯너비 x 2)' : '노서라운드 싱글 도어'
-      });
+    console.log('🚪📏 도어 너비 계산:', {
+      originalSlotWidth,
+      moduleWidth,
+      indexingColumnWidth: indexing.columnWidth,
+      effectiveColumnWidth,
+      isDualFurniture,
+      계산된도어너비: isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth,
+      actualDoorWidth,
+      zone: (spaceInfo as any).zone,
+      설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : (isDualFurniture ? '듀얼 도어 (슬롯너비 x 2)' : '싱글 도어')
+    });
+
+    // 노서라운드 모드에서 도어 크기 처리
+    if (originalSpaceInfo.surroundType === 'no-surround') {
+      if (!originalSlotWidth) {
+        actualDoorWidth = isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth;
+      }
     }
   }
   
@@ -854,7 +853,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   if (isUpperCabinet) {
     // 상부장 도어는 캐비넷보다 아래로 확장
-    const upperCabinetHeight = moduleData?.dimensions?.height || 600;
+    const upperCabinetHeight = internalHeight || moduleData?.dimensions?.height || 600;
 
     // 캐비넷 하단 = -캐비넷높이/2
     // 도어 하단 = 캐비넷 하단 - 확장값 (더 아래로)
@@ -882,7 +881,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 아래쪽 확장
     const LOWER_CABINET_TOP_EXTENSION = 18; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
     const DOOR_POSITION_ADJUSTMENT = 0; // 위치 조정값 (10mm 위로 올림)
-    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
+    const lowerCabinetHeight = internalHeight || moduleData?.dimensions?.height || 1000;
 
     // 하부장 캐비넷은 Y=0에 위치 (cabinetYPosition = 0)
     // 하부장 캐비넷 중심 Y = 0
@@ -2836,7 +2835,8 @@ export default React.memo(DoorModule, (prevProps, nextProps) => {
     prevProps.lowerDoorTopGap === nextProps.lowerDoorTopGap &&
     prevProps.lowerDoorBottomGap === nextProps.lowerDoorBottomGap &&
     prevProps.furnitureId === nextProps.furnitureId &&
-    prevProps.internalHeight === nextProps.internalHeight;
+    prevProps.internalHeight === nextProps.internalHeight &&
+    prevProps.isFreePlacement === nextProps.isFreePlacement;
 
   // panelGrainDirections 객체 비교
   const panelGrainDirectionsEqual = JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);

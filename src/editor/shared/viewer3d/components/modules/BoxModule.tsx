@@ -61,6 +61,7 @@ interface BoxModuleProps {
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
+  isFreePlacement?: boolean; // 자유배치 모드 여부
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -118,6 +119,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   grainDirection, // 텍스처 결 방향
   panelGrainDirections, // 패널별 개별 결 방향
   zone, // 단내림 영역 정보
+  isFreePlacement = false, // 자유배치 모드 여부
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -700,6 +702,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               floatHeight={spaceInfo?.baseConfig?.floatHeight} // 띄움 높이 전달
               zone={zone} // 단내림 영역 정보 전달
               internalHeight={internalHeight} // 자유배치 시 실제 가구 높이 전달
+              isFreePlacement={isFreePlacement} // 자유배치 모드 전달
             />
           );
         }
