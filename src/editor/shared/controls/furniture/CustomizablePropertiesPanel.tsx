@@ -403,7 +403,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return (
       <div key={sIdx} className={styles.section}>
         <div className={styles.sectionTitle}>
-          {config.sections.length > 1 ? (sIdx === 0 ? '상부 섹션' : '하부 섹션') : '내부 구조'}
+          {config.sections.length > 1 ? (sIdx === 0 ? '하부 섹션' : '상부 섹션') : '내부 구조'}
         </div>
 
         {/* 섹션 높이 (2단 분할 시) */}
@@ -558,17 +558,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
           <div className={styles.divider} />
 
-          {/* 섹션별 편집 */}
-          {config.sections.map((section, sIdx) => renderSectionEditor(section, sIdx))}
+          {/* 섹션별 편집 (상부→하부 순서로 표시, 3D 렌더링은 index 0=하부, 1=상부) */}
+          {config.sections.length > 1
+            ? [...config.sections].reverse().map((section, _i) => {
+                const realIdx = config.sections.length - 1 - _i;
+                return renderSectionEditor(section, realIdx);
+              })
+            : config.sections.map((section, sIdx) => renderSectionEditor(section, sIdx))
+          }
         </div>
 
         {/* 하단 버튼 */}
         <div className={styles.footer}>
-          <button className={`${styles.footerButton} ${styles.dangerButton}`} onClick={handleDelete}>
-            삭제
+          <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={handleDelete}>
+            취소
           </button>
-          <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={closeAllPopups}>
-            닫기
+          <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
+            생성
           </button>
         </div>
       </div>
