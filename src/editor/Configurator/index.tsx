@@ -38,6 +38,7 @@ import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/Plac
 import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFurnitureLibrary';
 import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurnitureUpload';
 import CustomizableFurnitureLibrary from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import CustomizablePropertiesPanel from '@/editor/shared/controls/furniture/CustomizablePropertiesPanel';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -4097,6 +4098,7 @@ const Configurator: React.FC = () => {
       {/* 가구 편집 창들 - 기존 기능 유지 */}
       <ModulePropertiesPanel />
       <PlacedModulePropertiesPanel />
+      <CustomizablePropertiesPanel />
 
       {/* 기둥 편집 모달 */}
       <ColumnEditModal

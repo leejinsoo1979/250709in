@@ -15,7 +15,8 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
   const setEditMode = useFurnitureStore(state => state.setEditMode);
   const setEditingModuleId = useFurnitureStore(state => state.setEditingModuleId);
   const removeModule = useFurnitureStore(state => state.removeModule);
-  const { openFurnitureEditPopup } = useUIStore();
+  const { openFurnitureEditPopup, openCustomizableEditPopup } = useUIStore();
+  const placedModules = useFurnitureStore(state => state.placedModules);
   const setSelectedFurnitureId = useUIStore(state => state.setSelectedFurnitureId);
   const viewMode = useUIStore(state => state.viewMode);
   const [dragMode, setDragMode] = useState(false);
@@ -55,8 +56,13 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
       }
       setDragMode(false);
     } else {
-      // 가구 클릭하면 가구 편집 팝업 열기
-      openFurnitureEditPopup(placedModuleId);
+      // 커스터마이징 가구면 전용 편집 팝업, 아니면 기존 편집 팝업
+      const targetModule = placedModules.find(m => m.id === placedModuleId);
+      if (targetModule?.isCustomizable) {
+        openCustomizableEditPopup(placedModuleId);
+      } else {
+        openFurnitureEditPopup(placedModuleId);
+      }
     }
   };
 

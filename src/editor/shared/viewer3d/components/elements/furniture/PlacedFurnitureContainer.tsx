@@ -313,7 +313,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     <group name="FurnitureContainer">
       {filteredModules.map((placedModule, index) => {
         const isDragMode = selectionState.dragMode;
-        const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
+        const isEditMode = (activePopup.type === 'furnitureEdit' || activePopup.type === 'customizableEdit') && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
 
         // 좌측뷰/우측뷰에서는 선택된 가구를 X=0에 렌더링

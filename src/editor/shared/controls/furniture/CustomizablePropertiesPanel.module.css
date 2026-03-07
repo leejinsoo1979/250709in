@@ -1,0 +1,345 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: auto;
+  height: 100vh;
+  background-color: transparent;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1000;
+  padding-top: 60px;
+  padding-right: 25px;
+  pointer-events: none;
+}
+
+.panel {
+  background: var(--theme-surface);
+  border-radius: 12px;
+  box-shadow: var(--popup-shadow);
+  width: 360px;
+  max-height: calc(100vh - 120px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.2s ease-out;
+  pointer-events: auto;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 2px solid var(--theme-border);
+}
+
+.headerTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: var(--theme-surface-hover);
+  color: var(--theme-text);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-background);
+  color: var(--theme-text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 0;
+}
+
+.input:focus {
+  border-color: var(--theme-primary);
+}
+
+.inputSmall {
+  width: 70px;
+  flex: none;
+}
+
+.unit {
+  font-size: 12px;
+  color: var(--theme-text-tertiary);
+}
+
+/* 토글 버튼 그룹 */
+.toggleGroup {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-background);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggleButton:hover {
+  background: var(--theme-surface-hover);
+}
+
+.toggleButton.active {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
+}
+
+/* 요소 타입 선택 */
+.elementSelector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.elementButton {
+  flex: 1;
+  padding: 8px 6px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-background);
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.elementButton:hover {
+  background: var(--theme-surface-hover);
+}
+
+.elementButton.active {
+  background: var(--theme-primary-light, rgba(59, 130, 246, 0.1));
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+/* 높이 리스트 */
+.heightList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.heightItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heightIndex {
+  font-size: 12px;
+  color: var(--theme-text-tertiary);
+  width: 20px;
+  text-align: center;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  color: var(--theme-error, #ef4444);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.removeButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.addButton {
+  padding: 6px 12px;
+  border: 1px dashed var(--theme-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.addButton:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  background: var(--theme-primary-light, rgba(59, 130, 246, 0.05));
+}
+
+/* 섹션 영역 카드 */
+.areaCard {
+  background: var(--theme-background);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.areaTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin-bottom: 8px;
+}
+
+/* 하단 버튼 */
+.footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--theme-border);
+  display: flex;
+  gap: 8px;
+}
+
+.footerButton {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primaryButton {
+  background: var(--theme-primary);
+  color: white;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+}
+
+.dangerButton {
+  background: var(--theme-error, #ef4444);
+  color: white;
+}
+
+.dangerButton:hover {
+  opacity: 0.9;
+}
+
+.secondaryButton {
+  background: var(--theme-surface-variant);
+  color: var(--theme-text);
+}
+
+.secondaryButton:hover {
+  background: var(--theme-surface-hover);
+}
+
+.divider {
+  height: 1px;
+  background: var(--theme-border);
+  margin: 16px 0;
+}
+
+/* 칸막이 위치 슬라이더 */
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.slider {
+  flex: 1;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--theme-border);
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  cursor: pointer;
+}
+
+.sliderValue {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  min-width: 50px;
+  text-align: right;
+}
