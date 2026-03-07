@@ -124,6 +124,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: t('sidebar.module')
     },
     {
+      id: 'custom' as SidebarTab,
+      icon: <HiPencilSquare size={22} />,
+      label: '커스텀'
+    },
+    {
       id: 'material' as SidebarTab,
       icon: <HiOutlineColorSwatch size={22} />,
       label: t('sidebar.material')
@@ -137,11 +142,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'etc' as SidebarTab,
       icon: <TbBrandAsana size={22} />,
       label: t('sidebar.etc')
-    },
-    {
-      id: 'custom' as SidebarTab,
-      icon: <HiPencilSquare size={22} />,
-      label: '커스텀'
     },
     {
       id: 'upload' as SidebarTab,
