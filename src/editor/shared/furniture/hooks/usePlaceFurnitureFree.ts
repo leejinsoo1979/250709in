@@ -110,7 +110,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 /**
  * 카테고리별 Y 좌표 계산 (Three.js 단위 반환)
  */
-function calculateYPosition(
+export function calculateYPosition(
   category: string,
   heightMM: number,
   spaceInfo: SpaceInfo

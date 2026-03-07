@@ -11,9 +11,10 @@ import {
   checkFreeCollision,
   getModuleBoundsX,
   detectDroppedZone,
+  getModuleCategory,
   FurnitureBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
-import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
+import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
@@ -654,6 +655,35 @@ const FreePlacementDropZone: React.FC = () => {
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
   }, [editingFreeModuleId]);
 
+  // 이동 시 zone 변경에 따른 높이/Y 재계산
+  const recalcZoneUpdate = useCallback((mod: typeof placedModules[0], newXmm: number) => {
+    const widthMm = mod.freeWidth || mod.moduleWidth || 450;
+    const category = getModuleCategory(mod);
+    const droppedZone = detectDroppedZone(newXmm, spaceInfo, widthMm);
+
+    // 원래 높이 구하기 (단내림 조정 전 높이)
+    const originalModuleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
+    const originalHeight = originalModuleData?.dimensions.height || mod.freeHeight || 0;
+
+    let effectiveHeight = mod.freeHeight || originalHeight;
+    let newZone = mod.zone || 'normal';
+
+    if (droppedZone.zone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
+      if (category === 'full') {
+        effectiveHeight = droppedZone.droppedInternalHeight;
+      }
+      newZone = 'dropped';
+    } else {
+      // normal zone: 원래 높이 복원
+      effectiveHeight = originalHeight;
+      newZone = 'normal';
+    }
+
+    const newY = calculateYPosition(category, effectiveHeight, spaceInfo);
+
+    return { freeHeight: effectiveHeight, zone: newZone, y: newY };
+  }, [spaceInfo, internalSpace]);
+
   // 배치된 가구 드래그 중 (1mm 단위로 이동)
   const handleDragPointerMove = useCallback((e: any) => {
     if (!isDraggingPlaced || !movingModuleId) return;
@@ -663,12 +693,15 @@ const FreePlacementDropZone: React.FC = () => {
     if (!result.colliding) {
       const mod = placedModules.find(m => m.id === movingModuleId);
       if (mod) {
+        const zoneUpdate = recalcZoneUpdate(mod, result.x);
         updatePlacedModule(movingModuleId, {
-          position: { x: result.x * 0.01, y: mod.position.y, z: mod.position.z },
+          position: { x: result.x * 0.01, y: zoneUpdate.y, z: mod.position.z },
+          freeHeight: zoneUpdate.freeHeight,
+          zone: zoneUpdate.zone as 'normal' | 'dropped',
         });
       }
     }
-  }, [isDraggingPlaced, movingModuleId, calcMovedPosition, placedModules, updatePlacedModule]);
+  }, [isDraggingPlaced, movingModuleId, calcMovedPosition, placedModules, updatePlacedModule, recalcZoneUpdate]);
 
   // 배치된 가구 드래그 종료
   const handleDragPointerUp = useCallback(() => {
@@ -707,15 +740,18 @@ const FreePlacementDropZone: React.FC = () => {
       // 키보드 이동은 스냅 건너뜀 (정확한 1mm 이동)
       const result = calcMovedPosition(newXmm, targetId, true);
       if (!result.colliding) {
+        const zoneUpdate = recalcZoneUpdate(mod, result.x);
         updatePlacedModule(targetId, {
-          position: { x: result.x * 0.01, y: mod.position.y, z: mod.position.z },
+          position: { x: result.x * 0.01, y: zoneUpdate.y, z: mod.position.z },
+          freeHeight: zoneUpdate.freeHeight,
+          zone: zoneUpdate.zone as 'normal' | 'dropped',
         });
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule]);
+  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate]);
 
   // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && activeDimensions);

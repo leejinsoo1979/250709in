@@ -46,7 +46,7 @@ export function getModuleBoundsX(module: PlacedModule): FurnitureBoundsX {
 /**
  * 모듈의 카테고리 추출
  */
-function getModuleCategory(module: PlacedModule): 'full' | 'upper' | 'lower' {
+export function getModuleCategory(module: PlacedModule): 'full' | 'upper' | 'lower' {
   const id = module.moduleId;
   if (id.startsWith('upper-') || id.includes('-upper-')) return 'upper';
   if (id.startsWith('lower-') || id.includes('-lower-')) return 'lower';
