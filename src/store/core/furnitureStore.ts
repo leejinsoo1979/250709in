@@ -134,6 +134,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         });
       }
       
+      // 자유배치 가구는 슬롯 충돌 체크 불필요 (X 좌표 기반 충돌 검사는 배치 시점에 이미 완료됨)
+      if (module.isFreePlacement) {
+        return {
+          placedModules: [...state.placedModules, module]
+        };
+      }
+
       // 듀얼 가구인지 확인
       const isDual = module.moduleId.includes('dual-');
       const occupiedSlots = isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex];
