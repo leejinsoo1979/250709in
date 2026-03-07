@@ -228,6 +228,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
       case 'rod':
         newElement = { type: 'rod', height: Math.round(sec.height * 0.85) };
         break;
+      case 'pants':
+        newElement = { type: 'pants', height: Math.round(sec.height * 0.85) };
+        break;
       default:
         newElement = { type: 'open' };
     }
@@ -298,6 +301,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       case 'rod':
         newElement = { type: 'rod', height: Math.round(sectionHeight * 0.85) };
+        break;
+      case 'pants':
+        newElement = { type: 'pants', height: Math.round(sectionHeight * 0.85) };
         break;
       default:
         newElement = { type: 'open' };
@@ -402,6 +408,25 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // 바지걸이 높이 변경
+  const handlePantsHeightChange = (sIdx: number, side: 'full' | 'left' | 'right', value: number) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const elements =
+      side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+
+    if (elements[0]?.type === 'pants') {
+      elements[0] = { type: 'pants', height: Math.max(100, value) };
+    }
+
+    if (side === 'full') sec.elements = elements;
+    else if (side === 'left') sec.leftElements = elements;
+    else sec.rightElements = elements;
+
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
   // My캐비닛에 저장
   const handleSaveToCabinet = async () => {
     const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
@@ -444,7 +469,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const isUpperSection = config.sections.length > 1 && sIdx === 1;
     const availableTypes = isUpperSection
       ? (['open', 'shelf', 'rod'] as const)
-      : (['open', 'shelf', 'drawer', 'rod'] as const);
+      : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
 
     return (
       <div>
@@ -455,7 +480,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
               onClick={() => handleElementChange(sIdx, side, type)}
             >
-              {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : '옷봉'}
+              {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
             </button>
           ))}
         </div>
@@ -499,6 +524,22 @@ const CustomizablePropertiesPanel: React.FC = () => {
               className={`${styles.input} ${styles.inputSmall}`}
               value={el.height}
               onChange={(e) => handleRodHeightChange(sIdx, side, parseInt(e.target.value) || 0)}
+              min={100}
+              max={sectionHeight}
+            />
+            <span className={styles.unit}>mm</span>
+          </div>
+        )}
+
+        {/* 바지걸이 높이 */}
+        {currentType === 'pants' && el.type === 'pants' && (
+          <div className={styles.row}>
+            <span className={styles.label}>높이</span>
+            <input
+              type="number"
+              className={`${styles.input} ${styles.inputSmall}`}
+              value={el.height}
+              onChange={(e) => handlePantsHeightChange(sIdx, side, parseInt(e.target.value) || 0)}
               min={100}
               max={sectionHeight}
             />
@@ -697,7 +738,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   const { type: currentType, drawerCount } = getSectionTypeInfo(section);
                   const typeOptions = isUpper
                     ? (['open', 'shelf', 'rod'] as const)
-                    : (['open', 'shelf', 'drawer', 'rod'] as const);
+                    : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
 
                   return (
                     <div key={realIdx} className={styles.section}>
@@ -714,7 +755,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
                             onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
                           >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : '옷봉'}
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
                           </button>
                         ))}
                       </div>
@@ -747,13 +788,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     <div className={styles.section}>
                       <div className={styles.sectionTitle}>내부 구조</div>
                       <div className={styles.elementSelector}>
-                        {(['open', 'shelf', 'drawer', 'rod'] as const).map((type) => (
+                        {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
                           <button
                             key={type}
                             className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
                             onClick={() => handleSectionTypeChange(0, type, type === 'drawer' ? 2 : undefined)}
                           >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : '옷봉'}
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
                           </button>
                         ))}
                       </div>

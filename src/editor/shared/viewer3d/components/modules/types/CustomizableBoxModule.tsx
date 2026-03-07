@@ -338,6 +338,27 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           </group>
         );
       }
+      else if (el.type === 'pants') {
+        // ═══ 바지걸이 - ClothingRod 재사용 (하부섹션 전용) ═══
+        const pantsYFromSectionBottom = mmToUnit(el.height);
+        const pantsYPosition = sectionCenterY - areaInnerHeight / 2 + pantsYFromSectionBottom;
+
+        nodes.push(
+          <group key={key} position={[offsetX, 0, 0]}>
+            <ClothingRod
+              innerWidth={areaInnerWidth}
+              yPosition={pantsYPosition}
+              renderMode={renderMode as '2d' | '3d'}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              adjustedDepthForShelves={adjustedDepth}
+              depth={sectionDepth}
+              addFrontFillLight={pantsYPosition < 0}
+              furnitureId={placedFurnitureId}
+            />
+          </group>
+        );
+      }
       // 'open' 타입은 내부 요소 없음
     });
 
