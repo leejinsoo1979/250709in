@@ -378,10 +378,12 @@ const FreePlacementDropZone: React.FC = () => {
     }> = [];
     const { startX, endX } = spaceBounds;
 
-    // Y 위치 계산 - 모든 갭을 바닥 근처에 표시
+    // Y 위치 계산
     const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
-    const bottomYmm = floorFinishMm + baseHeightMm + 30; // 바닥 위 30mm
+    const bottomYmm = floorFinishMm + baseHeightMm + 30; // 가구 사이 갭: 바닥 위 30mm
+    // 벽 갭: 상단 치수선 위치 (CleanCAD2D의 slotDimensionY와 동일)
+    const wallGapY = spaceInfo.height * 0.01 + 120 * 0.01; // spaceHeight + DIM_GAP
 
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left - startX > 0.5) {
@@ -391,7 +393,7 @@ const FreePlacementDropZone: React.FC = () => {
         endX: bounds[0].left,
         width: Math.round(gapWidth),
         centerX: ((startX + bounds[0].left) / 2) * 0.01,
-        centerY: bottomYmm * 0.01,
+        centerY: wallGapY,
         adjacentModuleId: bounds[0].id,
         isWallGap: 'left',
         gapType: 'left-wall',
@@ -427,7 +429,7 @@ const FreePlacementDropZone: React.FC = () => {
         endX,
         width: Math.round(gapWidth),
         centerX: ((lastBound.right + endX) / 2) * 0.01,
-        centerY: bottomYmm * 0.01,
+        centerY: wallGapY,
         adjacentModuleId: lastBound.id,
         isWallGap: 'right',
         gapType: 'right-wall',
