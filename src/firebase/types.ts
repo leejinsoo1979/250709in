@@ -2,7 +2,7 @@ import { User } from 'firebase/auth';
 import { Timestamp } from 'firebase/firestore';
 import { BasicInfo } from '@/store/core/projectStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { PlacedModule } from '@/editor/shared/furniture/types';
+import { PlacedModule, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 
 // Firebase 사용자 타입 (확장 가능)
 export interface AppUser extends User {
@@ -198,6 +198,20 @@ export interface UserProfile {
   isPublicProfile: boolean; // 다른 사용자가 프로필을 볼 수 있는지
   allowTeamInvitations: boolean; // 팀 초대를 받을 수 있는지
 
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// My캐비닛 저장 타입
+export interface SavedCabinet {
+  id: string;
+  userId: string;
+  name: string;
+  category: 'full' | 'upper' | 'lower';
+  width: number;
+  height: number;
+  depth: number;
+  customConfig: CustomFurnitureConfig;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
