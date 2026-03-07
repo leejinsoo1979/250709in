@@ -3029,6 +3029,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   })()} // 패널별 개별 결 방향
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
+                  isCustomizable={placedModule.isCustomizable}
+                  customConfig={placedModule.customConfig}
                 />
               );
             })()}
