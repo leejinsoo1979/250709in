@@ -1789,8 +1789,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeWidthInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
+                        console.log('🔴 [freeWidth onBlur]', { freeWidthInput, val, hasModule: !!currentPlacedModule, moduleId: currentPlacedModule?.id, currentFreeWidth: currentPlacedModule?.freeWidth, currentModuleWidth: currentPlacedModule?.moduleWidth });
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeWidth: val, moduleWidth: val });
+                          // 입력값도 즉시 동기화
+                          setFreeWidthInput(val.toString());
                         }
                       }}
                       onKeyDown={(e) => {
@@ -1814,8 +1817,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeHeightInput, 10);
+                        console.log('🔴 [freeHeight onBlur]', { freeHeightInput, val, hasModule: !!currentPlacedModule });
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
+                          setFreeHeightInput(val.toString());
                         }
                       }}
                       onKeyDown={(e) => {
@@ -1839,8 +1844,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeDepthInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeDepthInput, 10);
+                        console.log('🔴 [freeDepth onBlur]', { freeDepthInput, val, hasModule: !!currentPlacedModule });
                         if (!isNaN(val) && val >= 100 && val <= 800 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeDepth: val });
+                          setFreeDepthInput(val.toString());
                         }
                       }}
                       onKeyDown={(e) => {
