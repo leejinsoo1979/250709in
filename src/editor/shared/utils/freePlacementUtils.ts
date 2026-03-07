@@ -104,24 +104,26 @@ export function clampToSpaceBoundsX(
  */
 export function detectDroppedZone(
   xPositionMM: number,
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  furnitureWidthMM?: number
 ): { zone: 'normal' | 'dropped'; droppedInternalHeight?: number } {
   if (!spaceInfo.droppedCeiling?.enabled) {
     return { zone: 'normal' };
   }
 
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-  const internalWidth = endX - startX;
   const droppedWidth = spaceInfo.droppedCeiling.width || 0;
   const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+  const halfW = (furnitureWidthMM || 0) / 2;
 
+  // 가구의 좌/우 끝이 단내림 구간에 진입하면 dropped로 판별
   let isInDropped = false;
   if (droppedPosition === 'left') {
-    // 단내림이 왼쪽: startX ~ startX + droppedWidth
-    isInDropped = xPositionMM < startX + droppedWidth;
+    // 단내림이 왼쪽: 가구 왼쪽 끝이 단내림 구간에 있으면
+    isInDropped = (xPositionMM - halfW) < startX + droppedWidth;
   } else {
-    // 단내림이 오른쪽: endX - droppedWidth ~ endX
-    isInDropped = xPositionMM > endX - droppedWidth;
+    // 단내림이 오른쪽: 가구 오른쪽 끝이 단내림 구간에 있으면
+    isInDropped = (xPositionMM + halfW) > endX - droppedWidth;
   }
 
   if (!isInDropped) {

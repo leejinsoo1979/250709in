@@ -22,6 +22,26 @@ import { useUIStore } from '@/store/uiStore';
 const KEYBOARD_STEP_MM = 1;
 const KEYBOARD_SHIFT_STEP_MM = 10;
 
+/** bufferAttribute가 변해도 실시간 갱신되는 라인 컴포넌트 */
+const DynamicLine: React.FC<{ points: number[]; color: string }> = ({ points, color }) => {
+  const ref = useRef<THREE.BufferAttribute>(null);
+  const arr = useMemo(() => new Float32Array(points), [points]);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.array = arr;
+      ref.current.needsUpdate = true;
+    }
+  }, [arr]);
+  return (
+    <line>
+      <bufferGeometry>
+        <bufferAttribute ref={ref} attach="attributes-position" array={arr} count={arr.length / 3} itemSize={3} />
+      </bufferGeometry>
+      <lineBasicMaterial color={color} linewidth={1} />
+    </line>
+  );
+};
+
 /**
  * 자유배치 모드 - 클릭 배치 + 배치된 가구 이동
  * 1. 썸네일 클릭 → 고스트 나타남
@@ -269,16 +289,15 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 단내림 구간 감지 → 고스트 높이 조정
   const ghostDroppedZone = useMemo(() => {
-    if (hoverXmm === null || !spaceInfo.droppedCeiling?.enabled) {
+    if (hoverXmm === null || !activeDimensions || !spaceInfo.droppedCeiling?.enabled) {
       return { zone: 'normal' as const, droppedInternalHeight: undefined };
     }
-    return detectDroppedZone(hoverXmm, spaceInfo);
-  }, [hoverXmm, spaceInfo]);
+    return detectDroppedZone(hoverXmm, spaceInfo, activeDimensions.width);
+  }, [hoverXmm, spaceInfo, activeDimensions]);
 
   const ghostEffectiveHeight = useMemo(() => {
     if (!activeDimensions) return 0;
     if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined) {
-      console.log('👻 [ghost] 단내림 높이 적용:', { droppedH: ghostDroppedZone.droppedInternalHeight, origH: activeDimensions.height, category: activeCategory });
       return ghostDroppedZone.droppedInternalHeight;
     }
     return activeDimensions.height;
@@ -976,7 +995,7 @@ const FreePlacementDropZone: React.FC = () => {
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
               }}>
-                {activeDimensions.width}mm (H:{Math.round(ghostEffectiveHeight)} {ghostDroppedZone.zone})
+                {activeDimensions.width}mm
               </div>
             </Html>
           </group>
@@ -985,70 +1004,29 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 드래그 이동 중인 가구의 실시간 이격거리 가이드 (편집 팝업 시에는 remainingGaps 사용) */}
       {editingDistanceGuides && isDraggingPlaced && (
-        <group key={`drag-guide-${editingDistanceGuides.modLeft}-${editingDistanceGuides.modRight}`}>
-          {/* 가구 좌우 수직 연장선 (가이드선과 가구를 시각적으로 연결) */}
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                array={new Float32Array([
-                  editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.modBottom, guideZPosition,
-                  editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.modTop, guideZPosition,
-                ])}
-                count={2}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={themeColor} linewidth={1} />
-          </line>
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                array={new Float32Array([
-                  editingDistanceGuides.modRight * 0.01, editingDistanceGuides.modBottom, guideZPosition,
-                  editingDistanceGuides.modRight * 0.01, editingDistanceGuides.modTop, guideZPosition,
-                ])}
-                count={2}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={themeColor} linewidth={1} />
-          </line>
+        <>
+          {/* 가구 좌우 수직 연장선 */}
+          <DynamicLine points={[
+            editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.modBottom, guideZPosition,
+            editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.modTop, guideZPosition,
+          ]} color={themeColor} />
+          <DynamicLine points={[
+            editingDistanceGuides.modRight * 0.01, editingDistanceGuides.modBottom, guideZPosition,
+            editingDistanceGuides.modRight * 0.01, editingDistanceGuides.modTop, guideZPosition,
+          ]} color={themeColor} />
 
           {/* 왼쪽 이격거리 */}
           {editingDistanceGuides.leftDistance > 2 && (
             <group>
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY, guideZPosition,
-                      editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
+              <DynamicLine points={[
+                editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY, guideZPosition,
+                editingDistanceGuides.modLeft * 0.01, editingDistanceGuides.guideY, guideZPosition,
+              ]} color={themeColor} />
               {/* 왼쪽 틱 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
-                      editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 치수 라벨 */}
+              <DynamicLine points={[
+                editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                editingDistanceGuides.leftObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
               <Html
                 position={[
                   ((editingDistanceGuides.leftObstacle + editingDistanceGuides.modLeft) / 2) * 0.01,
@@ -1059,13 +1037,8 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: themeColor,
-                  color: 'white',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
+                  background: themeColor, color: 'white', padding: '1px 6px',
+                  borderRadius: '3px', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap',
                 }}>
                   {editingDistanceGuides.leftDistance}mm
                 </div>
@@ -1076,51 +1049,20 @@ const FreePlacementDropZone: React.FC = () => {
           {/* 오른쪽 이격거리 */}
           {editingDistanceGuides.rightDistance > 2 && (
             <group>
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY, guideZPosition,
-                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 왼쪽 틱 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
-                      editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 오른쪽 틱 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
-                      editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 치수 라벨 */}
+              <DynamicLine points={[
+                editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY, guideZPosition,
+                editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY, guideZPosition,
+              ]} color={themeColor} />
+              {/* 모듈 쪽 틱 */}
+              <DynamicLine points={[
+                editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                editingDistanceGuides.modRight * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
+              {/* 장애물 쪽 틱 */}
+              <DynamicLine points={[
+                editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY - 0.08, guideZPosition,
+                editingDistanceGuides.rightObstacle * 0.01, editingDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
               <Html
                 position={[
                   ((editingDistanceGuides.modRight + editingDistanceGuides.rightObstacle) / 2) * 0.01,
@@ -1131,20 +1073,15 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: themeColor,
-                  color: 'white',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
+                  background: themeColor, color: 'white', padding: '1px 6px',
+                  borderRadius: '3px', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap',
                 }}>
                   {editingDistanceGuides.rightDistance}mm
                 </div>
               </Html>
             </group>
           )}
-        </group>
+        </>
       )}
 
       {/* 배치된 가구 드래그용 투명 평면 (드래그 중 또는 편집 모드에서 표시) */}

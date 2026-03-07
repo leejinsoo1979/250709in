@@ -53,8 +53,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   // X좌표 클램핑 (공간 경계 내)
   const clampedX = clampToSpaceBoundsX(xPositionMM, dimensions.width, spaceInfo);
 
-  // 단내림 구간 감지: X 좌표 기반으로 zone 결정 + 높이 조정
-  const droppedZone = detectDroppedZone(clampedX, spaceInfo);
+  // 단내림 구간 감지: X 좌표 + 가구 너비 기반으로 zone 결정 + 높이 조정
+  const droppedZone = detectDroppedZone(clampedX, spaceInfo, dimensions.width);
   const effectiveZone = droppedZone.zone;
   let effectiveHeight = dimensions.height;
 
