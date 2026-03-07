@@ -1240,10 +1240,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 [...config.sections].reverse().map((section, _i) => {
                   const realIdx = config.sections.length - 1 - _i;
                   const isUpper = realIdx === 1;
-                  const { type: currentType } = getSectionTypeInfo(section);
+                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
                   const typeOptions = isUpper
                     ? (['open', 'shelf', 'rod'] as const)
-                    : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
+                    : (['open', 'shelf', 'drawer', 'rod'] as const);
 
                   return (
                     <div key={realIdx} className={styles.section}>
@@ -1273,10 +1273,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
                             onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
                           >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
                           </button>
                         ))}
                       </div>
+                      {/* 서랍장: 단수 선택 (하부만) */}
+                      {currentType === 'drawer' && !isUpper && (
+                        <div style={{ marginTop: '8px' }}>
+                          <div className={styles.elementSelector}>
+                            {[1, 2, 3, 4].filter((count) => {
+                              const std = DRAWER_STANDARD[count];
+                              return std && std.sectionHeight <= section.height + 50;
+                            }).map((count) => (
+                              <button
+                                key={count}
+                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
+                                onClick={() => handleSectionTypeChange(realIdx, 'drawer', count)}
+                              >
+                                {count}단
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -1284,21 +1303,40 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 /* 단일 섹션 타입 선택 */
                 (() => {
                   const section = config.sections[0];
-                  const { type: currentType } = getSectionTypeInfo(section);
+                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
                   return (
                     <div className={styles.section}>
                       <div className={styles.sectionTitle}>내부 구조</div>
                       <div className={styles.elementSelector}>
-                        {(['open', 'shelf', 'drawer', 'rod', 'pants'] as const).map((type) => (
+                        {(['open', 'shelf', 'drawer', 'rod'] as const).map((type) => (
                           <button
                             key={type}
                             className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
                             onClick={() => handleSectionTypeChange(0, type, type === 'drawer' ? 2 : undefined)}
                           >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
                           </button>
                         ))}
                       </div>
+                      {/* 서랍장: 단수 선택 */}
+                      {currentType === 'drawer' && (
+                        <div style={{ marginTop: '8px' }}>
+                          <div className={styles.elementSelector}>
+                            {[1, 2, 3, 4].filter((count) => {
+                              const std = DRAWER_STANDARD[count];
+                              return std && std.sectionHeight <= section.height + 50;
+                            }).map((count) => (
+                              <button
+                                key={count}
+                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
+                                onClick={() => handleSectionTypeChange(0, 'drawer', count)}
+                              >
+                                {count}단
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()
