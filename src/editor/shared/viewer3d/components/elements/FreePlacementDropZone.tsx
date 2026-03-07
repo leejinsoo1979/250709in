@@ -45,6 +45,11 @@ const FreePlacementDropZone: React.FC = () => {
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
+  // 이격거리 인라인 편집 상태
+  const [editingGapIndex, setEditingGapIndex] = useState<number | null>(null);
+  const [editingGapValue, setEditingGapValue] = useState<string>('');
+  const gapInputRef = useRef<HTMLInputElement>(null);
+
   // 더블클릭으로 편집 중인 자유배치 가구 ID
   const editingFreeModuleId = useMemo(() => {
     if (activePopup?.type !== 'furnitureEdit' || !activePopup.id) return null;
@@ -296,7 +301,12 @@ const FreePlacementDropZone: React.FC = () => {
       id: m.id,
     })).sort((a, b) => a.left - b.left);
 
-    const gaps: Array<{ startX: number; endX: number; width: number; centerX: number; centerY: number }> = [];
+    const gaps: Array<{
+      startX: number; endX: number; width: number;
+      centerX: number; centerY: number;
+      adjacentModuleId: string | null; // 이격거리 변경 시 이동할 가구
+      isWallGap: 'left' | 'right' | null; // 벽과의 갭인 경우
+    }> = [];
     const { startX, endX } = spaceBounds;
 
     // 바닥 기준 Y 위치 계산
@@ -313,6 +323,8 @@ const FreePlacementDropZone: React.FC = () => {
         width: Math.round(gapWidth),
         centerX: ((startX + bounds[0].left) / 2) * 0.01,
         centerY: labelYmm * 0.01,
+        adjacentModuleId: bounds[0].id,
+        isWallGap: 'left',
       });
     }
 
@@ -327,6 +339,8 @@ const FreePlacementDropZone: React.FC = () => {
           width: Math.round(gapEnd - gapStart),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: labelYmm * 0.01,
+          adjacentModuleId: null, // 가구 사이 갭은 편집 불가
+          isWallGap: null,
         });
       }
     }
@@ -341,11 +355,71 @@ const FreePlacementDropZone: React.FC = () => {
         width: Math.round(gapWidth),
         centerX: ((lastBound.right + endX) / 2) * 0.01,
         centerY: labelYmm * 0.01,
+        adjacentModuleId: lastBound.id,
+        isWallGap: 'right',
       });
     }
 
     return gaps;
   }, [placedModules, spaceBounds, spaceInfo]);
+
+  // 이격거리 편집 시작
+  const handleGapLabelClick = useCallback((index: number, currentWidth: number) => {
+    setEditingGapIndex(index);
+    setEditingGapValue(currentWidth.toString());
+    setTimeout(() => {
+      gapInputRef.current?.focus();
+      gapInputRef.current?.select();
+    }, 100);
+  }, []);
+
+  // 이격거리 편집 확정 - 가구 위치 이동
+  const handleGapEditSubmit = useCallback(() => {
+    if (editingGapIndex === null) return;
+    const gap = remainingGaps[editingGapIndex];
+    if (!gap || !gap.adjacentModuleId || !gap.isWallGap) {
+      setEditingGapIndex(null);
+      setEditingGapValue('');
+      return;
+    }
+
+    const newGapMm = parseFloat(editingGapValue);
+    if (isNaN(newGapMm) || newGapMm < 0) {
+      setEditingGapIndex(null);
+      setEditingGapValue('');
+      return;
+    }
+
+    const targetModule = placedModules.find(m => m.id === gap.adjacentModuleId);
+    if (!targetModule) {
+      setEditingGapIndex(null);
+      setEditingGapValue('');
+      return;
+    }
+
+    const moduleWidthMm = targetModule.freeWidth || 0;
+    const halfWidth = moduleWidthMm / 2;
+
+    let newCenterXmm: number;
+    if (gap.isWallGap === 'left') {
+      newCenterXmm = spaceBounds.startX + newGapMm + halfWidth;
+    } else {
+      newCenterXmm = spaceBounds.endX - newGapMm - halfWidth;
+    }
+
+    const clampedX = clampToSpaceBoundsX(newCenterXmm, moduleWidthMm, spaceInfo);
+    updatePlacedModule(gap.adjacentModuleId, {
+      position: { ...targetModule.position, x: clampedX * 0.01 },
+    });
+
+    setEditingGapIndex(null);
+    setEditingGapValue('');
+  }, [editingGapIndex, editingGapValue, remainingGaps, placedModules, spaceBounds, spaceInfo, updatePlacedModule]);
+
+  const handleGapEditCancel = useCallback(() => {
+    setEditingGapIndex(null);
+    setEditingGapValue('');
+  }, []);
 
   // === 배치된 가구 이동 관련 로직 ===
 
@@ -775,24 +849,78 @@ const FreePlacementDropZone: React.FC = () => {
             </bufferGeometry>
             <lineBasicMaterial color="#3b82f6" linewidth={1} />
           </line>
-          {/* 치수 라벨 */}
-          <Html
-            position={[gap.centerX, gap.centerY + 0.1, 0.02]}
-            center
-            style={{ pointerEvents: 'none', userSelect: 'none' }}
-          >
-            <div style={{
-              background: '#3b82f6',
-              color: 'white',
-              padding: '1px 6px',
-              borderRadius: '3px',
-              fontSize: '11px',
-              fontWeight: '600',
-              whiteSpace: 'nowrap',
-            }}>
-              {gap.width}mm
-            </div>
-          </Html>
+          {/* 치수 라벨 - 벽 갭이면 클릭 편집 가능 */}
+          {editingGapIndex === i && gap.isWallGap ? (
+            <Html
+              position={[gap.centerX, gap.centerY + 0.1, 0.02]}
+              center
+              style={{ pointerEvents: 'auto' }}
+              zIndexRange={[10000, 10001]}
+            >
+              <div style={{
+                background: 'white',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                border: '2px solid #3b82f6',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+              }}>
+                <input
+                  ref={gapInputRef}
+                  type="number"
+                  value={editingGapValue}
+                  onChange={(e) => setEditingGapValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleGapEditSubmit();
+                    else if (e.key === 'Escape') handleGapEditCancel();
+                  }}
+                  onBlur={handleGapEditSubmit}
+                  style={{
+                    width: '60px',
+                    padding: '2px 4px',
+                    border: '1px solid #ccc',
+                    borderRadius: '2px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    outline: 'none',
+                  }}
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span style={{ fontSize: '11px', color: '#666', fontWeight: '600' }}>mm</span>
+              </div>
+            </Html>
+          ) : (
+            <Html
+              position={[gap.centerX, gap.centerY + 0.1, 0.02]}
+              center
+              style={{ pointerEvents: gap.isWallGap ? 'auto' : 'none', userSelect: 'none' }}
+            >
+              <div
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  cursor: gap.isWallGap ? 'pointer' : 'default',
+                }}
+                onClick={(e) => {
+                  if (gap.isWallGap) {
+                    e.stopPropagation();
+                    handleGapLabelClick(i, gap.width);
+                  }
+                }}
+              >
+                {gap.width}mm
+              </div>
+            </Html>
+          )}
         </group>
       ))}
     </>
