@@ -1089,7 +1089,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       };
     } else {
       // 상부장은 상부프레임 하단에 붙어야 함
-      const upperCabinetHeight = actualModuleData?.dimensions.height || 0; // 상부장 높이
+      // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
+      const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight)
+        ? placedModule.freeHeight
+        : (actualModuleData?.dimensions.height || 0); // 상부장 높이
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
       // 상부프레임 높이
@@ -1160,7 +1163,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
         const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
         const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-        const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
+        // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
+        const furnitureHeightForY = (placedModule.isFreePlacement && placedModule.freeHeight)
+          ? placedModule.freeHeight
+          : (actualModuleData?.dimensions.height || 0);
+        const furnitureHeight = furnitureHeightForY * 0.01; // mm to Three.js units
 
         if (isLowerCabinetForY) {
           // 하부장은 띄움 높이만큼 전체가 떠야 함
