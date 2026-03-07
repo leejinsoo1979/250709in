@@ -295,7 +295,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     wallConfig: spaceInfo.wallConfig,
     '좌우치수표시조건': !isStep2
   });
-  const { updateColumn } = useSpaceConfigStore();
+  const { updateColumn, setSpaceInfo } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
 
   // 가구 높이 배열을 추출하여 깊은 비교를 위한 의존성으로 사용
@@ -392,6 +392,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const [editingSide, setEditingSide] = useState<'left' | 'right' | 'width' | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 이격거리 편집 상태
+  const [editingGapSide, setEditingGapSide] = useState<'left' | 'right' | null>(null);
+  const [editingGapValue, setEditingGapValue] = useState<string>('');
+  const gapInputRef = useRef<HTMLInputElement>(null);
 
   // 편집 모드가 활성화되면 입력 필드에 포커스
   useEffect(() => {
@@ -494,6 +499,52 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const handleEditSubmit = () => {
     handleEditComplete();
   };
+
+  // 이격거리 편집 핸들러
+  const handleGapEdit = (side: 'left' | 'right', currentValue: number) => {
+    setEditingGapSide(side);
+    setEditingGapValue(currentValue.toString());
+    setTimeout(() => {
+      gapInputRef.current?.focus();
+      gapInputRef.current?.select();
+    }, 100);
+  };
+
+  const handleGapEditSubmit = () => {
+    if (!editingGapSide) return;
+    const value = parseFloat(editingGapValue);
+    if (isNaN(value) || value < 0) {
+      setEditingGapSide(null);
+      setEditingGapValue('');
+      return;
+    }
+    const clamped = Math.max(0, Math.min(50, value));
+    setSpaceInfo({
+      gapConfig: {
+        ...spaceInfo.gapConfig,
+        left: spaceInfo.gapConfig?.left ?? 1.5,
+        right: spaceInfo.gapConfig?.right ?? 1.5,
+        [editingGapSide]: clamped,
+      }
+    });
+    setEditingGapSide(null);
+    setEditingGapValue('');
+  };
+
+  const handleGapEditCancel = () => {
+    setEditingGapSide(null);
+    setEditingGapValue('');
+  };
+
+  useEffect(() => {
+    if (editingGapSide && gapInputRef.current) {
+      const timer = setTimeout(() => {
+        gapInputRef.current?.focus();
+        gapInputRef.current?.select();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [editingGapSide]);
 
   // mm를 Three.js 단위로 변환 (furnitureDimensions에서 사용하기 위해 먼저 선언)
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -1050,19 +1101,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={1}
             />
             
-            {/* 좌측 치수 텍스트 */}
-            <Text
-                  renderOrder={1000}
-                  depthTest={false}
-              position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-            >
-              {leftText}
-            </Text>
-            
+            {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
+            {hasLeftWall && editingGapSide === 'left' ? (
+              <Html
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[10000, 10001]}
+              >
+                <div style={{ background: 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                  <input
+                    ref={gapInputRef}
+                    type="number"
+                    step="0.5"
+                    value={editingGapValue}
+                    onChange={(e) => setEditingGapValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                    onBlur={handleGapEditSubmit}
+                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none' }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span style={{ marginLeft: '2px', fontSize: '11px', color: '#666' }}>mm</span>
+                </div>
+              </Html>
+            ) : (
+              <Html
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                center
+                style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
+                zIndexRange={[9999, 10000]}
+              >
+                <div
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: dimensionColor,
+                    cursor: hasLeftWall ? 'pointer' : 'default',
+                    userSelect: 'none',
+                    whiteSpace: 'nowrap',
+                    background: hasLeftWall ? 'rgba(255,255,255,0.7)' : 'transparent',
+                    borderRadius: '3px',
+                  }}
+                  onClick={(e) => { if (hasLeftWall) { e.stopPropagation(); handleGapEdit('left', leftValue); } }}
+                >
+                  {leftText}
+                </div>
+              </Html>
+            )}
+
             {/* 연장선 */}
             <Line
               points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(100), 0.001]]}
@@ -1133,19 +1221,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
             
-            {/* 우측 치수 텍스트 */}
-            <Text
-                  renderOrder={1000}
-                  depthTest={false}
-              position={[rightEdge - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-            >
-              {rightText}
-            </Text>
-            
+            {/* 우측 치수 텍스트 - 이격거리 클릭 편집 */}
+            {hasRightWall && editingGapSide === 'right' ? (
+              <Html
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[10000, 10001]}
+              >
+                <div style={{ background: 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                  <input
+                    ref={gapInputRef}
+                    type="number"
+                    step="0.5"
+                    value={editingGapValue}
+                    onChange={(e) => setEditingGapValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                    onBlur={handleGapEditSubmit}
+                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none' }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span style={{ marginLeft: '2px', fontSize: '11px', color: '#666' }}>mm</span>
+                </div>
+              </Html>
+            ) : (
+              <Html
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                center
+                style={{ pointerEvents: hasRightWall ? 'auto' : 'none' }}
+                zIndexRange={[9999, 10000]}
+              >
+                <div
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: dimensionColor,
+                    cursor: hasRightWall ? 'pointer' : 'default',
+                    userSelect: 'none',
+                    whiteSpace: 'nowrap',
+                    background: hasRightWall ? 'rgba(255,255,255,0.7)' : 'transparent',
+                    borderRadius: '3px',
+                  }}
+                  onClick={(e) => { if (hasRightWall) { e.stopPropagation(); handleGapEdit('right', rightValue); } }}
+                >
+                  {rightText}
+                </div>
+              </Html>
+            )}
+
             {/* 연장선 */}
             <Line
               points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(100), 0.001]]}
@@ -1493,20 +1618,55 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   depthTest={false}
                 />
                 
-                {/* 좌측 치수 텍스트 */}
-                {showDimensionsText && (
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
+                {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
+                {showDimensionsText && hasLeftWall && editingGapSide === 'left' ? (
+                  <Html
                     position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
-                    fontSize={baseFontSize}
-                    color={dimensionColor}
-                    anchorX="center"
-                    anchorY="middle"
+                    center
+                    style={{ pointerEvents: 'auto' }}
+                    zIndexRange={[10000, 10001]}
                   >
-                    {leftText}
-                  </Text>
-                )}
+                    <div style={{ background: 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                      <input
+                        ref={gapInputRef}
+                        type="number"
+                        step="0.5"
+                        value={editingGapValue}
+                        onChange={(e) => setEditingGapValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                        onBlur={handleGapEditSubmit}
+                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none' }}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span style={{ marginLeft: '2px', fontSize: '11px', color: '#666' }}>mm</span>
+                    </div>
+                  </Html>
+                ) : showDimensionsText ? (
+                  <Html
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                    center
+                    style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
+                    zIndexRange={[9999, 10000]}
+                  >
+                    <div
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        color: dimensionColor,
+                        cursor: hasLeftWall ? 'pointer' : 'default',
+                        userSelect: 'none',
+                        whiteSpace: 'nowrap',
+                        background: hasLeftWall ? 'rgba(255,255,255,0.7)' : 'transparent',
+                        borderRadius: '3px',
+                      }}
+                      onClick={(e) => { if (hasLeftWall) { e.stopPropagation(); handleGapEdit('left', leftValue); } }}
+                    >
+                      {leftText}
+                    </div>
+                  </Html>
+                ) : null}
                 {/* 연장선 */}
                 <NativeLine name="dimension_line"
                   points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(100), 0.001]]}
