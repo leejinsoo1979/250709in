@@ -788,56 +788,22 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 실시간 이격거리 가이드 (고스트 이동 중) */}
       {ghostDistanceGuides && ghostPosition && activeDimensions && !isColliding && (
-        <group key={`ghost-guide-${ghostDistanceGuides.ghostLeft}-${ghostDistanceGuides.ghostRight}`}>
+        <>
           {/* 왼쪽 이격거리 */}
           {ghostDistanceGuides.leftDistance > 2 && (
             <group>
-              {/* 가이드 라인 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY, guideZPosition,
-                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 왼쪽 틱 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
-                      ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 오른쪽 틱 (고스트 왼쪽 가장자리) */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
-                      ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 치수 라벨 */}
+              <DynamicLine points={[
+                ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY, guideZPosition,
+                ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY, guideZPosition,
+              ]} color={themeColor} />
+              <DynamicLine points={[
+                ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                ghostDistanceGuides.leftObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
+              <DynamicLine points={[
+                ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                ghostDistanceGuides.ghostLeft * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
               <Html
                 position={[
                   ((ghostDistanceGuides.leftObstacle + ghostDistanceGuides.ghostLeft) / 2) * 0.01,
@@ -848,13 +814,8 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: themeColor,
-                  color: 'white',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
+                  background: themeColor, color: 'white', padding: '1px 6px',
+                  borderRadius: '3px', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap',
                 }}>
                   {ghostDistanceGuides.leftDistance}mm
                 </div>
@@ -865,52 +826,18 @@ const FreePlacementDropZone: React.FC = () => {
           {/* 오른쪽 이격거리 */}
           {ghostDistanceGuides.rightDistance > 2 && (
             <group>
-              {/* 가이드 라인 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY, guideZPosition,
-                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 왼쪽 틱 (고스트 오른쪽 가장자리) */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
-                      ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 오른쪽 틱 */}
-              <line>
-                <bufferGeometry>
-                  <bufferAttribute
-                    attach="attributes-position"
-                    array={new Float32Array([
-                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
-                      ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
-                    ])}
-                    count={2}
-                    itemSize={3}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial color={themeColor} linewidth={1} />
-              </line>
-              {/* 치수 라벨 */}
+              <DynamicLine points={[
+                ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY, guideZPosition,
+                ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY, guideZPosition,
+              ]} color={themeColor} />
+              <DynamicLine points={[
+                ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                ghostDistanceGuides.ghostRight * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
+              <DynamicLine points={[
+                ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY - 0.08, guideZPosition,
+                ghostDistanceGuides.rightObstacle * 0.01, ghostDistanceGuides.guideY + 0.08, guideZPosition,
+              ]} color={themeColor} />
               <Html
                 position={[
                   ((ghostDistanceGuides.ghostRight + ghostDistanceGuides.rightObstacle) / 2) * 0.01,
@@ -921,20 +848,15 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
               >
                 <div style={{
-                  background: themeColor,
-                  color: 'white',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
+                  background: themeColor, color: 'white', padding: '1px 6px',
+                  borderRadius: '3px', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap',
                 }}>
                   {ghostDistanceGuides.rightDistance}mm
                 </div>
               </Html>
             </group>
           )}
-        </group>
+        </>
       )}
 
       {/* 고스트 가구 너비 치수 (상단 CAD 스타일) */}
@@ -945,41 +867,11 @@ const FreePlacementDropZone: React.FC = () => {
         const ghostTopY = ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2;
         return (
           <group>
-            {/* 좌측 연장선 (가구 상단 → 치수선) */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostLeftX, ghostTopY, 0.002, ghostLeftX, slotDimY, 0.002])} count={2} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color={themeColor} linewidth={1} />
-            </line>
-            {/* 우측 연장선 */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostRightX, ghostTopY, 0.002, ghostRightX, slotDimY, 0.002])} count={2} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color={themeColor} linewidth={1} />
-            </line>
-            {/* 가로 치수선 */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostLeftX, slotDimY, 0.002, ghostRightX, slotDimY, 0.002])} count={2} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color={themeColor} linewidth={1} />
-            </line>
-            {/* 좌측 틱 */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostLeftX, slotDimY - 0.06, 0.002, ghostLeftX, slotDimY + 0.06, 0.002])} count={2} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color={themeColor} linewidth={1} />
-            </line>
-            {/* 우측 틱 */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostRightX, slotDimY - 0.06, 0.002, ghostRightX, slotDimY + 0.06, 0.002])} count={2} itemSize={3} />
-              </bufferGeometry>
-              <lineBasicMaterial color={themeColor} linewidth={1} />
-            </line>
+            <DynamicLine points={[ghostLeftX, ghostTopY, 0.002, ghostLeftX, slotDimY, 0.002]} color={themeColor} />
+            <DynamicLine points={[ghostRightX, ghostTopY, 0.002, ghostRightX, slotDimY, 0.002]} color={themeColor} />
+            <DynamicLine points={[ghostLeftX, slotDimY, 0.002, ghostRightX, slotDimY, 0.002]} color={themeColor} />
+            <DynamicLine points={[ghostLeftX, slotDimY - 0.06, 0.002, ghostLeftX, slotDimY + 0.06, 0.002]} color={themeColor} />
+            <DynamicLine points={[ghostRightX, slotDimY - 0.06, 0.002, ghostRightX, slotDimY + 0.06, 0.002]} color={themeColor} />
             {/* 너비 라벨 */}
             <Html
               position={[ghostPosition.x, slotDimY + 0.12, 0.002]}
@@ -1104,51 +996,21 @@ const FreePlacementDropZone: React.FC = () => {
         const lineColor = themeColor;
 
         return (
-        <group key={`gap-${i}-${gap.startX}-${gap.endX}`}>
+        <group key={`gap-${i}`}>
           {/* 가로 치수선 */}
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                array={new Float32Array([
-                  gap.startX * 0.01, gap.centerY, guideZPosition,
-                  gap.endX * 0.01, gap.centerY, guideZPosition,
-                ])}
-                count={2}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={lineColor} linewidth={1} />
-          </line>
+          <DynamicLine points={[
+            gap.startX * 0.01, gap.centerY, guideZPosition,
+            gap.endX * 0.01, gap.centerY, guideZPosition,
+          ]} color={lineColor} />
           {/* 양쪽 틱 마크 */}
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                array={new Float32Array([
-                  gap.startX * 0.01, gap.centerY - 0.08, guideZPosition,
-                  gap.startX * 0.01, gap.centerY + 0.08, guideZPosition,
-                ])}
-                count={2}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={lineColor} linewidth={1} />
-          </line>
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                array={new Float32Array([
-                  gap.endX * 0.01, gap.centerY - 0.08, guideZPosition,
-                  gap.endX * 0.01, gap.centerY + 0.08, guideZPosition,
-                ])}
-                count={2}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={lineColor} linewidth={1} />
-          </line>
+          <DynamicLine points={[
+            gap.startX * 0.01, gap.centerY - 0.08, guideZPosition,
+            gap.startX * 0.01, gap.centerY + 0.08, guideZPosition,
+          ]} color={lineColor} />
+          <DynamicLine points={[
+            gap.endX * 0.01, gap.centerY - 0.08, guideZPosition,
+            gap.endX * 0.01, gap.centerY + 0.08, guideZPosition,
+          ]} color={lineColor} />
           {/* 치수 라벨 - 클릭하면 인라인 편집 */}
           {editingGapIndex === i ? (
             <Html
