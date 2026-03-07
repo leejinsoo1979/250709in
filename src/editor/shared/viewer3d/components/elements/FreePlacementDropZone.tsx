@@ -548,6 +548,7 @@ const FreePlacementDropZone: React.FC = () => {
     e.stopPropagation();
     setMovingModuleId(moduleId);
     setIsDraggingPlaced(true);
+    window.dispatchEvent(new CustomEvent('furniture-drag-start'));
   }, [selectedFurnitureId]);
 
   // 편집 중인 가구 드래그 시작 (더블클릭 후 드래그)
@@ -556,6 +557,7 @@ const FreePlacementDropZone: React.FC = () => {
     e.stopPropagation();
     setMovingModuleId(editingFreeModuleId);
     setIsDraggingPlaced(true);
+    window.dispatchEvent(new CustomEvent('furniture-drag-start'));
   }, [editingFreeModuleId]);
 
   // 배치된 가구 드래그 중 (1mm 단위로 이동)
@@ -576,8 +578,11 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 배치된 가구 드래그 종료
   const handleDragPointerUp = useCallback(() => {
+    if (isDraggingPlaced) {
+      window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+    }
     setIsDraggingPlaced(false);
-  }, []);
+  }, [isDraggingPlaced]);
 
   // 키보드 좌우 화살표로 미세 이동
   useEffect(() => {
