@@ -1028,8 +1028,8 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
-      {/* 배치 후 남은 공간 사이즈 표시 */}
-      {remainingGaps.map((gap, i) => {
+      {/* 배치 후 남은 공간 사이즈 표시 (드래그 중에는 editingDistanceGuides가 대신 표시) */}
+      {!isDraggingPlaced && remainingGaps.map((gap, i) => {
         const lineColor = themeColor;
 
         return (
