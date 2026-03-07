@@ -18,6 +18,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
 import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
 import { useTheme } from '@/contexts/ThemeContext';
+import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
 // 엔드패널 두께 상수
 const END_PANEL_THICKNESS = 18; // mm
@@ -642,6 +643,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       console.warn('커스텀 가구 ModuleData 생성 실패:', placedModule.moduleId);
     }
+  } else if (isCustomizableModuleId(placedModule.moduleId)) {
+    // 커스터마이징 가구: placedModule의 freeWidth/freeHeight/freeDepth로 ModuleData 생성
+    const custCategory = getCustomizableCategory(placedModule.moduleId);
+    const custDefaults = CUSTOMIZABLE_DEFAULTS[custCategory];
+    const custWidth = placedModule.freeWidth || custDefaults.width;
+    const custHeight = placedModule.freeHeight || (custCategory === 'full' ? internalSpace.height : custDefaults.height);
+    const custDepth = placedModule.freeDepth || custDefaults.depth;
+    moduleData = {
+      id: placedModule.moduleId,
+      name: custDefaults.label,
+      category: custCategory as 'full' | 'upper' | 'lower',
+      dimensions: { width: custWidth, height: custHeight, depth: custDepth },
+      color: '#D4C5A9',
+      description: custDefaults.label,
+      hasDoor: false,
+      isDynamic: false,
+      type: 'box' as const,
+      defaultDepth: custDepth,
+      modelConfig: {
+        basicThickness: 18,
+        hasOpenFront: true,
+        hasShelf: false,
+        sections: [],
+      },
+    };
   } else {
     // 일반 가구: getModuleById 호출
     moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);

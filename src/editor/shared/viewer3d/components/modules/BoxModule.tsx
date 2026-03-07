@@ -19,6 +19,8 @@ import DualType6 from './types/DualType6';
 import UpperCabinet from './types/UpperCabinet';
 import LowerCabinet from './types/LowerCabinet';
 import CustomFurnitureModule from './types/CustomFurnitureModule';
+import CustomizableBoxModule from './types/CustomizableBoxModule';
+import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -62,6 +64,8 @@ interface BoxModuleProps {
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
+  isCustomizable?: boolean; // 커스터마이징 가구 여부
+  customConfig?: CustomFurnitureConfig; // 커스터마이징 설정
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -120,6 +124,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   panelGrainDirections, // 패널별 개별 결 방향
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
+  isCustomizable = false, // 커스터마이징 가구 여부
+  customConfig, // 커스터마이징 설정
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -175,6 +181,31 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   const showIndirectLight = false;
 
 
+
+  // === 커스터마이징 가구 라우팅 ===
+  if (isCustomizable && customConfig) {
+    return (
+      <CustomizableBoxModule
+        width={adjustedWidth || moduleData.dimensions.width}
+        height={moduleData.dimensions.height}
+        depth={customDepth || moduleData.dimensions.depth}
+        customConfig={customConfig}
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        showFurniture={showFurniture}
+        isHighlighted={isHighlighted}
+        placedFurnitureId={placedFurnitureId}
+        panelGrainDirections={panelGrainDirections}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
+      />
+    );
+  }
 
   // === 0단계: 커스텀 가구 라우팅 ===
   if (moduleData.id.startsWith('custom-')) {
