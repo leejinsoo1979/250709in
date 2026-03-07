@@ -29,8 +29,8 @@
   width: 56px;
   height: 56px;
   border-radius: 6px;
-  background: var(--theme-background-secondary, #f5f5f5);
-  color: var(--theme-text, #333);
+  background: var(--theme-primary-light, rgba(59, 130, 246, 0.1));
+  color: var(--theme-primary, #4a90d9);
   flex-shrink: 0;
 }
 
@@ -43,7 +43,7 @@
 .itemLabel {
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-text, #333);
+  color: var(--theme-primary, #4a90d9);
 }
 
 .itemDimension {
