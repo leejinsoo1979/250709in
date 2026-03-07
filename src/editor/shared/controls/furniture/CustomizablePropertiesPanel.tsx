@@ -386,10 +386,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const el = elements?.[0] || { type: 'open' as const };
     const currentType = el.type;
 
+    // 상부섹션(sIdx===1, 2단분할)에는 서랍 불가
+    const isUpperSection = config.sections.length > 1 && sIdx === 1;
+    const availableTypes = isUpperSection
+      ? (['open', 'shelf', 'rod'] as const)
+      : (['open', 'shelf', 'drawer', 'rod'] as const);
+
     return (
       <div>
         <div className={styles.elementSelector}>
-          {(['open', 'shelf', 'drawer', 'rod'] as const).map((type) => (
+          {availableTypes.map((type) => (
             <button
               key={type}
               className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
