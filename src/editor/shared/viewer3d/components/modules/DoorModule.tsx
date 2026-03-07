@@ -342,6 +342,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 자유배치에서 실제 사용할 높이: props internalHeight > store freeHeight > 기본값
   const effectiveInternalHeight = internalHeight || storeFreeHeight;
 
+  console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
+    furnitureId,
+    isFreePlacement_prop: isFreePlacement,
+    storePlacedModule_exists: !!storePlacedModule,
+    storePlacedModule_isFreePlacement: storePlacedModule?.isFreePlacement,
+    isFree,
+    storeFreeWidth,
+    storeFreeHeight,
+    internalHeight,
+    effectiveInternalHeight,
+    moduleWidth,
+    moduleDataId: moduleData?.id
+  });
+
   const storePanelGrainDirections = storePlacedModule?.panelGrainDirections;
 
   // 스토어에서 가져온 값 우선, 없으면 props 사용
@@ -1311,20 +1325,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let totalWidth: number;
     let leftDoorWidth: number;
     let rightDoorWidth: number;
-    
+
     // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
     const doorGap = 3;
-    
+
     console.log('[DoorDebug] dual-door slot widths', {
       slotWidths,
       moduleWidth,
       effectiveColumnWidth,
       originalSlotWidth,
       zone: (spaceInfo as any).zone,
-      slotIndex
+      slotIndex,
+      isFree,
+      actualDoorWidth
     });
 
-    if (slotWidths && slotWidths.length >= 2) {
+    if (isFree) {
+      // 자유배치: actualDoorWidth(= storeFreeWidth)를 그대로 사용, 좌우 균등 분할
+      totalWidth = actualDoorWidth;
+      leftDoorWidth = actualDoorWidth / 2 - doorGap;
+      rightDoorWidth = actualDoorWidth / 2 - doorGap;
+    } else if (slotWidths && slotWidths.length >= 2) {
       // 개별 슬롯 너비가 제공된 경우
       totalWidth = slotWidths[0] + slotWidths[1];
       leftDoorWidth = slotWidths[0] - doorGap;
