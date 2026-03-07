@@ -133,12 +133,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 섹션 분할 토글
   const handleSectionSplit = (split: boolean) => {
     if (split && config.sections.length === 1) {
-      const halfH = Math.round(innerHeight / 2);
+      // 분할판 두께를 빼고 남은 공간을 2등분
+      const availableHeight = innerHeight - panelThickness;
+      const halfH = Math.round(availableHeight / 2);
       applyConfig({
         ...config,
         sections: [
           { ...config.sections[0], id: 'section-0', height: halfH },
-          { id: 'section-1', height: innerHeight - halfH, elements: [{ type: 'open' }] },
+          { id: 'section-1', height: availableHeight - halfH, elements: [{ type: 'open' }] },
         ],
       });
     } else if (!split && config.sections.length > 1) {
@@ -152,10 +154,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 섹션 높이 변경
   const handleSectionHeightChange = (idx: number, newHeight: number) => {
     if (config.sections.length !== 2) return;
-    const clamped = Math.max(100, Math.min(innerHeight - 100, newHeight));
+    // 분할판 두께를 빼고 남은 공간 내에서 높이 조정
+    const availableHeight = innerHeight - panelThickness;
+    const clamped = Math.max(100, Math.min(availableHeight - 100, newHeight));
     const sections = [...config.sections];
     sections[idx] = { ...sections[idx], height: clamped };
-    sections[1 - idx] = { ...sections[1 - idx], height: innerHeight - clamped };
+    sections[1 - idx] = { ...sections[1 - idx], height: availableHeight - clamped };
     applyConfig({ ...config, sections });
   };
 
