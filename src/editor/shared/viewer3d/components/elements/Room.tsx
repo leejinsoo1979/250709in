@@ -19,6 +19,7 @@ import {
   calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { computeBaseStripGroups } from '@/editor/shared/utils/baseStripUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -3252,14 +3253,56 @@ const Room: React.FC<RoomProps> = ({
 
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {/* 하부 베이스프레임 - 측면 뷰에서도 표시 (자유배치 모드에서는 숨김) */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && !isFreePlacement && (() => {
+      {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
+      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
         console.log('🎯 베이스프레임 높이 확인:', {
           '최종_높이': baseFrameHeightMm,
           baseFrameHeight_ThreeUnits: baseFrameHeight,
           spaceInfo_baseConfig: spaceInfo.baseConfig,
           END_PANEL_THICKNESS
         });
+
+        // 자유배치 모드: 가구별 세그먼트로 걸래받이 렌더링
+        if (isFreePlacement) {
+          const stripGroups = computeBaseStripGroups(placedModulesFromStore);
+          if (stripGroups.length === 0) return null;
+
+          const baseZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
+            mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
+
+          return (
+            <>
+              {stripGroups.map((group, idx) => {
+                const widthMM = group.rightMM - group.leftMM;
+                const centerXmm = (group.leftMM + group.rightMM) / 2;
+                return (
+                  <BoxWithEdges
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    key={`free-base-strip-${group.id}`}
+                    name="base-frame"
+                    args={[
+                      mmToThreeUnits(widthMM),
+                      baseFrameHeight,
+                      mmToThreeUnits(END_PANEL_THICKNESS)
+                    ]}
+                    position={[
+                      mmToThreeUnits(centerXmm),
+                      panelStartY + floatHeight + baseFrameHeight / 2,
+                      baseZPosition
+                    ]}
+                    material={baseFrameMaterial ?? createFrameMaterial('base')}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                  />
+                );
+              })}
+            </>
+          );
+        }
+
+        // 균등분할 모드: 기존 전체 너비 렌더링
         return (
           <>
             {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
