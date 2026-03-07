@@ -904,6 +904,71 @@ const FreePlacementDropZone: React.FC = () => {
         </>
       )}
 
+      {/* 고스트 가구 너비 치수 (상단 CAD 스타일) */}
+      {ghostPosition && activeDimensions && !isColliding && (() => {
+        const slotDimY = spaceInfo.height * 0.01 + 120 * 0.01;
+        const ghostLeftX = ghostPosition.x - (activeDimensions.width * 0.01) / 2;
+        const ghostRightX = ghostPosition.x + (activeDimensions.width * 0.01) / 2;
+        const ghostTopY = ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2;
+        return (
+          <group>
+            {/* 좌측 연장선 (가구 상단 → 치수선) */}
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostLeftX, ghostTopY, 0.002, ghostLeftX, slotDimY, 0.002])} count={2} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color={themeColor} linewidth={1} />
+            </line>
+            {/* 우측 연장선 */}
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostRightX, ghostTopY, 0.002, ghostRightX, slotDimY, 0.002])} count={2} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color={themeColor} linewidth={1} />
+            </line>
+            {/* 가로 치수선 */}
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostLeftX, slotDimY, 0.002, ghostRightX, slotDimY, 0.002])} count={2} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color={themeColor} linewidth={1} />
+            </line>
+            {/* 좌측 틱 */}
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostLeftX, slotDimY - 0.06, 0.002, ghostLeftX, slotDimY + 0.06, 0.002])} count={2} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color={themeColor} linewidth={1} />
+            </line>
+            {/* 우측 틱 */}
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" array={new Float32Array([ghostRightX, slotDimY - 0.06, 0.002, ghostRightX, slotDimY + 0.06, 0.002])} count={2} itemSize={3} />
+              </bufferGeometry>
+              <lineBasicMaterial color={themeColor} linewidth={1} />
+            </line>
+            {/* 너비 라벨 */}
+            <Html
+              position={[ghostPosition.x, slotDimY + 0.12, 0.002]}
+              center
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              <div style={{
+                background: themeColor,
+                color: 'white',
+                padding: '1px 6px',
+                borderRadius: '3px',
+                fontSize: '11px',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+              }}>
+                {activeDimensions.width}mm
+              </div>
+            </Html>
+          </group>
+        );
+      })()}
+
       {/* 드래그 이동 중인 가구의 실시간 이격거리 가이드 (편집 팝업 시에는 remainingGaps 사용) */}
       {editingDistanceGuides && isDraggingPlaced && (
         <>
