@@ -1,5 +1,31 @@
 import { ModuleData } from '@/data/modules';
 
+// 커스터마이징 가구 내부 요소 타입
+export type CustomElement =
+  | { type: 'shelf'; heights: number[] }      // 선반 (각 선반의 바닥에서의 높이 mm)
+  | { type: 'drawer'; heights: number[] }     // 서랍 (각 서랍 높이 mm)
+  | { type: 'rod'; height: number }           // 옷봉 (설치 높이 mm)
+  | { type: 'open' };                         // 비어있음
+
+// 커스터마이징 가구 섹션 설정
+export interface CustomSection {
+  id: string;
+  height: number;  // mm (섹션 높이)
+  // 칸막이 (좌/우 분할)
+  hasPartition?: boolean;
+  partitionPosition?: number;  // mm (왼쪽에서 칸막이까지 거리)
+  // 내부 요소 (칸막이 없으면 전체, 있으면 좌/우 각각)
+  leftElements?: CustomElement[];
+  rightElements?: CustomElement[];
+  elements?: CustomElement[];  // 칸막이 없을 때 전체 영역
+}
+
+// 커스터마이징 가구 내부 구조 설정
+export interface CustomFurnitureConfig {
+  sections: CustomSection[];
+  panelThickness?: number;  // mm (기본값: 18)
+}
+
 // 기둥 관련 슬롯 메타데이터
 export interface ColumnSlotMetadata {
   hasColumn: boolean;
@@ -69,6 +95,10 @@ export interface PlacedModule {
   
   // Column C 듀얼 배치 관련
   subSlotPosition?: 'left' | 'right'; // Column C에서 서브슬롯 위치
+
+  // 커스터마이징 가구 속성
+  isCustomizable?: boolean;  // 커스터마이징 가구 여부
+  customConfig?: CustomFurnitureConfig;  // 커스터마이징 설정 데이터
 
   // 기둥 C 배치 모드
   columnPlacementMode?: 'beside' | 'front'; // 'beside': 기둥 측면 배치 (기본), 'front': 기둥 앞에 배치 (기둥을 가림)
