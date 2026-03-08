@@ -1,5 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
@@ -22,46 +21,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const focusedSectionIndex = activePopup.sectionIndex;
   // areaSide가 있으면 칸막이 좌/우 중 특정 영역만 편집
   const focusedAreaSide = activePopup.areaSide;
-  // 가구 우측 끝의 실시간 screen 좌표 추적
-  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (!placedModule || activePopup.type !== 'customizableEdit') {
-      setPopupPos(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const canvas = document.querySelector('canvas');
-      if (!canvas) return;
-      const r3f = (canvas as any).__r3f;
-      if (!r3f) return;
-      const { camera } = r3f.store.getState();
-      if (!camera) return;
-
-      const halfW = (placedModule.freeWidth || placedModule.moduleWidth || 0) * 0.01 / 2;
-
-      // 가구 우측 중앙
-      const rightCenter = new THREE.Vector3(
-        placedModule.position.x + halfW,
-        placedModule.position.y,
-        placedModule.position.z
-      );
-      rightCenter.project(camera);
-
-      const rect = canvas.getBoundingClientRect();
-      const sx = Math.round((rightCenter.x * 0.5 + 0.5) * rect.width + rect.left);
-      const sy = Math.round((-rightCenter.y * 0.5 + 0.5) * rect.height + rect.top);
-      setPopupPos({ x: sx, y: sy });
-
-      rafRef.current = requestAnimationFrame(updatePosition);
-    };
-
-    rafRef.current = requestAnimationFrame(updatePosition);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [placedModule, activePopup.type]);
-
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
 
@@ -1117,21 +1076,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
-  // 팝업 위치 계산: 가구 우측 중앙에 말풍선처럼 붙여서 표시
-  const panelRef = useRef<HTMLDivElement>(null);
-  const panelWidth = 360;
-  const panelHeight = panelRef.current?.offsetHeight || 400;
-  const panelStyle: React.CSSProperties = popupPos
-    ? {
-        position: 'fixed',
-        left: Math.min(popupPos.x + 6, window.innerWidth - panelWidth - 8),
-        top: Math.max(8, Math.min(popupPos.y - panelHeight / 2, window.innerHeight - panelHeight - 8)),
-      }
-    : {};
-
   return (
-    <div className={styles.overlay} style={popupPos ? { justifyContent: 'flex-start', paddingRight: 0, paddingTop: 0 } : undefined}>
-      <div ref={panelRef} className={styles.panel} style={panelStyle}>
+    <div className={styles.overlay}>
+      <div className={styles.panel}>
         {/* 헤더 */}
         <div className={styles.header}>
           <span className={styles.headerTitle}>

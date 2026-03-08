@@ -6,11 +6,10 @@
   height: 100vh;
   background-color: transparent;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-end;
   z-index: 1000;
-  padding-top: 60px;
-  padding-right: 25px;
+  padding-right: 8px;
   pointer-events: none;
 }
 
@@ -18,12 +17,12 @@
   background: var(--theme-surface);
   border-radius: 12px;
   box-shadow: var(--popup-shadow);
-  width: 360px;
-  max-height: calc(100vh - 120px);
+  width: 340px;
+  max-height: calc(100vh - 80px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.2s ease-out;
+  animation: slideIn 0.15s ease-out;
   pointer-events: auto;
 }
 
