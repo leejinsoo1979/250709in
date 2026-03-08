@@ -784,6 +784,30 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // 서랍 배치 방향(위/아래) 변경
+  const handleDrawerAlignChange = (
+    sIdx: number,
+    side: 'full' | 'left' | 'right',
+    align: 'top' | 'bottom',
+  ) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const getElements = () => {
+      if (side === 'full') return sec.elements ? [...sec.elements] : [];
+      if (side === 'left') return sec.leftElements ? [...sec.leftElements] : [];
+      return sec.rightElements ? [...sec.rightElements] : [];
+    };
+    const els = getElements();
+    if (els.length > 0 && els[0].type === 'drawer') {
+      els[0] = { ...els[0], drawerAlign: align };
+    }
+    if (side === 'full') sec.elements = els;
+    else if (side === 'left') sec.leftElements = els;
+    else sec.rightElements = els;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
   // 선반/서랍 높이 입력 변경 (문자열 상태만 업데이트, 확정은 blur에서)
   const handleHeightInputChange = (
     sIdx: number,
@@ -1313,29 +1337,71 @@ const CustomizablePropertiesPanel: React.FC = () => {
           );
         })()}
 
-        {/* 서랍 덮개 선반 들여쓰기 옵셋 */}
+        {/* 서랍 배치 방향 (위/아래) + 덮개 옵셋 */}
         {currentType === 'drawer' && 'heights' in el && (() => {
+          const currentAlign = ('drawerAlign' in el && el.drawerAlign) || 'bottom';
           const coverInset = ('coverInset' in el && el.coverInset) ? el.coverInset : 60;
+          // 서랍이 영역을 꽉 채우는지 판단 (fullFill이면 배치방향/덮개 무의미)
+          const gap = 23.6;
+          const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gap * (el.heights.length + 1);
+          const isFullFill = totalH >= sectionHeight;
           return (
-            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>덮개 옵셋</span>
-              <input
-                type="number"
-                className={`${styles.input} ${styles.inputSmall}`}
-                style={{ width: '60px' }}
-                value={coverInset}
-                min={0}
-                max={150}
-                step={5}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 0 && v <= 150) {
-                    handleCoverInsetChange(sIdx, side, v);
-                  }
-                }}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
+            <>
+              {/* 배치 방향: fullFill이 아닐 때만 표시 */}
+              {!isFullFill && (
+                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>배치</span>
+                  <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
+                    <button
+                      style={{
+                        flex: 1, padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
+                        border: `1px solid ${currentAlign === 'bottom' ? '#4A90D9' : '#555'}`,
+                        background: currentAlign === 'bottom' ? '#4A90D9' : 'transparent',
+                        color: currentAlign === 'bottom' ? '#fff' : '#aaa',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => handleDrawerAlignChange(sIdx, side, 'bottom')}
+                    >
+                      아래
+                    </button>
+                    <button
+                      style={{
+                        flex: 1, padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
+                        border: `1px solid ${currentAlign === 'top' ? '#4A90D9' : '#555'}`,
+                        background: currentAlign === 'top' ? '#4A90D9' : 'transparent',
+                        color: currentAlign === 'top' ? '#fff' : '#aaa',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => handleDrawerAlignChange(sIdx, side, 'top')}
+                    >
+                      위
+                    </button>
+                  </div>
+                </div>
+              )}
+              {/* 덮개 옵셋 */}
+              {!isFullFill && (
+                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>덮개 옵셋</span>
+                  <input
+                    type="number"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    style={{ width: '60px' }}
+                    value={coverInset}
+                    min={0}
+                    max={150}
+                    step={5}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v) && v >= 0 && v <= 150) {
+                        handleCoverInsetChange(sIdx, side, v);
+                      }
+                    }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              )}
+            </>
           );
         })()}
 

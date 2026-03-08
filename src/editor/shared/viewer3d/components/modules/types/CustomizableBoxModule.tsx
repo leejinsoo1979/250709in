@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
@@ -13,6 +13,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { SettingsIcon, EditIcon } from '@/components/common/Icons';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 interface CustomizableBoxModuleProps {
   width: number;   // mm
@@ -140,6 +141,68 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       metalness: 0.1,
     });
   }, [furnitureColor]);
+
+  // 텍스처 URL 추출
+  const textureUrl = ('interiorTexture' in materialConfig) ? (materialConfig as any).interiorTexture : undefined;
+
+  // 텍스처 적용 (useBaseFurniture와 동일한 패턴)
+  useEffect(() => {
+    if (isDragging) {
+      if (material) {
+        material.map = null;
+        material.needsUpdate = true;
+      }
+      return;
+    }
+
+    if (textureUrl && material) {
+      if (isCabinetTexture1(textureUrl)) {
+        applyCabinetTexture1Settings(material);
+        material.needsUpdate = true;
+      }
+
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(
+        textureUrl,
+        (texture) => {
+          if (isDragging) {
+            texture.dispose();
+            return;
+          }
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.repeat.set(1, 1);
+          material.map = texture;
+
+          if (isOakTexture(textureUrl)) {
+            applyOakTextureSettings(material, false);
+          } else if (!isCabinetTexture1(textureUrl)) {
+            material.color.setHex(0xffffff);
+            material.toneMapped = true;
+            material.roughness = 0.6;
+          }
+
+          material.needsUpdate = true;
+          requestAnimationFrame(() => {
+            material.needsUpdate = true;
+          });
+        },
+        undefined,
+        (error) => {
+          console.warn('CustomizableBoxModule 텍스처 로드 실패:', error);
+        }
+      );
+    } else if (material) {
+      if (material.map) {
+        material.map.dispose();
+        material.map = null;
+      }
+      material.color.set(furnitureColor);
+      material.toneMapped = true;
+      material.roughness = 0.6;
+      material.needsUpdate = true;
+    }
+  }, [textureUrl, material, furnitureColor, isDragging, isEditMode]);
 
   const sections = customConfig.sections;
   const isSplit = sections.length >= 2;
@@ -691,12 +754,19 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         let drawerYOffset: number;
         let drawerInnerH: number;
 
+        const align = ('drawerAlign' in el && el.drawerAlign) || 'bottom';
+
         if (isFullFill) {
           // 영역 전체를 채움: 기존처럼 중앙 배치
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
+        } else if (align === 'top') {
+          // 위에서 배치: 상단 기준으로 서랍 배치
+          const drawerTopY = sectionCenterY + areaInnerHeight / 2;
+          drawerInnerH = totalDrawerInnerH - t;
+          drawerYOffset = drawerTopY - drawerInnerH / 2;
         } else {
-          // 영역보다 작음: 하단부터 배치, 날개벽은 위에서 패널두께만큼 줄임
+          // 아래서 배치(기본): 하단부터 배치, 날개벽은 위에서 패널두께만큼 줄임
           const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
           drawerInnerH = totalDrawerInnerH - t;
           drawerYOffset = drawerBottomY + drawerInnerH / 2;
@@ -720,17 +790,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
             />
-            {/* 서랍이 영역보다 작을 때: 덮개 선반 - 영역 상단에서 패널두께 아래 */}
+            {/* 서랍이 영역보다 작을 때: 덮개 선반 */}
             {!isFullFill && (() => {
               const coverInsetMm = ('coverInset' in el && el.coverInset) ? el.coverInset : 60;
               const coverFrontInset = mmToUnit(coverInsetMm);
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
               const coverZ = (coverBackInset - coverFrontInset) / 2;
+              // 위 배치: 덮개가 서랍 하부 / 아래 배치: 덮개가 서랍 상부
+              const coverY = align === 'top'
+                ? drawerYOffset - drawerInnerH / 2 - t / 2
+                : drawerYOffset + drawerInnerH / 2 + t / 2;
               return (
                 <BoxWithEdges
                   args={[areaInnerWidth, t, coverDepth]}
-                  position={[0, drawerYOffset + drawerInnerH / 2 + t / 2, coverZ]}
+                  position={[0, coverY, coverZ]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
