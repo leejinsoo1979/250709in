@@ -834,9 +834,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     if (el.type === 'drawer') {
       // 서랍: 개별 높이 변경 시 나머지 서랍에 잔여 높이 재분배
+      // 서랍 스택은 상판까지 포함 (내경 + 상판두께)
       const gapPerDrawer = 23.6; // DrawerRenderer의 gapHeight와 동일
       const totalGap = gapPerDrawer * (el.heights.length + 1);
-      const usableHeight = sectionHeight - totalGap;
+      const usableHeight = (sectionHeight + panelThickness) - totalGap;
       const minDrawerH = 80;
       const clamped = Math.max(minDrawerH, Math.min(usableHeight - minDrawerH * (el.heights.length - 1), num));
 
@@ -928,13 +929,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
         });
         setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
       } else {
-        // 서랍: 기존 방식 (마지막 높이 + 200)
-        const lastH = el.heights[el.heights.length - 1] || Math.round(sec.height / 3);
-        const newH = lastH + 200;
+        // 서랍: 마지막 서랍과 동일 높이로 추가 (heights는 개별 서랍 높이)
+        const lastH = el.heights[el.heights.length - 1] || 200;
         const newIdx = el.heights.length;
-        elements[0] = { ...el, heights: [...el.heights, newH] };
+        elements[0] = { ...el, heights: [...el.heights, lastH] };
         const key = `${sIdx}-${side}-0-${newIdx}`;
-        setHeightInputs((prev) => ({ ...prev, [key]: newH.toString() }));
+        setHeightInputs((prev) => ({ ...prev, [key]: lastH.toString() }));
       }
     }
 
