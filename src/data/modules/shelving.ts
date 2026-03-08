@@ -90,7 +90,7 @@ const FURNITURE_SPECS = {
   
   // 타입별 높이 스펙
   TYPE1_DRAWER_HEIGHT: 600,  // 타입1 서랍장 높이
-  TYPE2_BOTTOM_HEIGHT: 1025, // 타입2 하단 옷장 높이
+  TYPE2_BOTTOM_HEIGHT: 1000, // 타입2 하단 옷장 높이
   TYPE4_DRAWER_HEIGHT: 1000, // 타입4 서랍장 높이
   
   // 서랍 상세 스펙
