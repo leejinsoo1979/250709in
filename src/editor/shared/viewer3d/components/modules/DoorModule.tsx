@@ -593,13 +593,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
-  // 듀얼 가구인지 먼저 확인 - 3단 감지:
-  // 1. moduleData ID 기반 (dual- 접두사 + isDynamic)
-  // 2. placedModule.isDualSlot (배치 시 결정된 값 — 커스터마이징 가구 포함)
-  // 3. 슬롯 기반 너비 비교 (자유배치 모드에서는 사용 불가)
-  const isDualFurniture = (moduleData?.isDynamic && moduleData?.id?.includes('dual')) ? true :
-    (storePlacedModule?.isDualSlot === true) ? true :
-    (!isFree && Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50);
+  // 듀얼 가구인지 확인 — 순수 너비 기반 판단
+  // 가구 너비가 컬럼 너비의 1.5배 초과이면 듀얼 (자유배치/슬롯배치 공통)
+  // 자유배치에서도 effectiveColumnWidth(= indexing.columnWidth)가 계산되므로 동일 기준 적용
+  const effectiveFurnitureWidth = isFree
+    ? (storeFreeWidth || moduleWidth)
+    : moduleWidth;
+  const isDualFurniture = effectiveFurnitureWidth > effectiveColumnWidth * 1.5;
 
   // 도어 크기 계산
   let actualDoorWidth: number;
