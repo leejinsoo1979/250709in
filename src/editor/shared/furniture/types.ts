@@ -128,6 +128,9 @@ export interface PlacedModule {
   // 하부장 상부패널 오프셋 (2섹션 가구용)
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm) - 0: 상부섹션 바닥판과 같은 위치, 양수: 앞쪽으로 줄어듦
 
+  // 백패널 두께 설정 (기본값: 9mm)
+  backPanelThickness?: number; // 백패널 두께 (mm) - 3, 5, 9 중 선택
+
   // 텍스처 결 방향 설정 (패널별 개별 제어)
   panelGrainDirections?: {
     [panelName: string]: 'horizontal' | 'vertical'; // 패널 이름별 결 방향
