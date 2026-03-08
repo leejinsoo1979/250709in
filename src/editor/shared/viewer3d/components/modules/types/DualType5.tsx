@@ -1065,14 +1065,13 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
             if (drawerCount > 0 && leftSections.length > drawerCount) {
               // 하부와 상부가 모두 존재하는 경우
+              // BaseFurnitureShell(2drawer-hanging)과 동일: 높이 = sectionHeight 그대로
               if (isLastLowerSection) {
-                // 하부 마지막 칸막이: 높이 +18mm (바닥판 두께만큼 연장)
-                adjustedHeight = sectionHeight + basicThickness;
-                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness / 2;
+                adjustedHeight = sectionHeight;
+                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
               } else if (isUpperSection) {
-                // 상부 모든 칸막이: 높이 -18mm (천장에 맞춤), Y 위치 조정
-                adjustedHeight = sectionHeight - basicThickness;
-                adjustedCenterY = currentYPosition + (sectionHeight - basicThickness) / 2 - basicThickness + basicThickness;
+                adjustedHeight = sectionHeight;
+                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
               }
             }
 
@@ -1132,14 +1131,15 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
               if (drawerCount > 0 && leftSections.length > drawerCount) {
                 // 하부와 상부가 모두 존재하는 경우
+                // BaseFurnitureShell(2drawer-hanging)과 동일: 측판 높이 = sectionHeight 그대로
                 if (isLastLowerSection) {
-                  // 하부 마지막 측판: 높이 +18mm (바닥판 두께만큼 연장)
-                  adjustedHeight = sectionHeight + basicThickness;
-                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness / 2;
+                  // 하부 마지막 측판: sectionHeight 그대로 (2단서랍장과 동일)
+                  adjustedHeight = sectionHeight;
+                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
                 } else if (isUpperSection) {
-                  // 상부 모든 측판: 높이 -18mm (천장에 맞춤), Y 위치 조정
-                  adjustedHeight = sectionHeight - basicThickness;
-                  adjustedCenterY = currentYPosition + (sectionHeight - basicThickness) / 2 - basicThickness + basicThickness;
+                  // 상부 모든 측판: sectionHeight 그대로
+                  adjustedHeight = sectionHeight;
+                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
                 }
               }
 
