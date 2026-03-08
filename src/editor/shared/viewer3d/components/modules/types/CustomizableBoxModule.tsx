@@ -189,8 +189,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             if (isEditMode) {
               useUIStore.getState().closeAllPopups();
             } else if (placedFurnitureId) {
-              const nativeEvent = e as unknown as MouseEvent;
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, nativeEvent.clientX, nativeEvent.clientY);
+              const el = e.currentTarget as HTMLElement;
+              const rect = el.getBoundingClientRect();
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, Math.round(rect.right + 8), Math.round(rect.top));
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}

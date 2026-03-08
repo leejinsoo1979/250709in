@@ -1080,12 +1080,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
-  // 팝업 위치 계산: 클릭 위치 기준으로 가구 바로 우측에 표시
+  // 팝업 위치 계산: 가구 우측 끝 기준으로 바로 옆에 표시
+  const panelWidth = 360;
   const panelStyle: React.CSSProperties = screenX !== undefined && screenY !== undefined
     ? {
         position: 'fixed',
-        left: Math.min(screenX + 16, window.innerWidth - 380),
-        top: Math.max(Math.min(screenY - 60, window.innerHeight - 500), 10),
+        left: Math.min(screenX + 12, window.innerWidth - panelWidth - 16),
+        top: Math.max(10, Math.min(screenY - 100, window.innerHeight - 500)),
       }
     : {};
 
