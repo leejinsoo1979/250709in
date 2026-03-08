@@ -635,11 +635,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
         } else {
-          // 영역보다 작음: 날개벽은 영역 상단에서 패널두께(18mm)만큼 줄여서 하단부터 채움
-          const wingH = areaInnerHeight - t; // 날개벽 높이 = 영역높이 - 상단 패널두께
+          // 영역보다 작음: 하단부터 배치
           const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
-          drawerInnerH = wingH;
-          drawerYOffset = drawerBottomY + wingH / 2;
+          drawerInnerH = totalDrawerInnerH;
+          drawerYOffset = drawerBottomY + drawerInnerH / 2;
         }
 
         nodes.push(
@@ -660,17 +659,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
             />
-            {/* 서랍이 영역보다 작을 때: 덮개 선반 - 앞에서 들여서 날개벽 위에 올라감 */}
+            {/* 서랍이 영역보다 작을 때: 덮개 선반 - 영역 상단에서 패널두께 아래 */}
             {!isFullFill && (() => {
               const coverInsetMm = ('coverInset' in el && el.coverInset) ? el.coverInset : 60;
               const coverFrontInset = mmToUnit(coverInsetMm);
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
               const coverZ = (coverBackInset - coverFrontInset) / 2;
+              const coverY = sectionCenterY + areaInnerHeight / 2 - t - t / 2; // 영역 상단에서 18mm 아래
               return (
                 <BoxWithEdges
                   args={[areaInnerWidth, t, coverDepth]}
-                  position={[0, drawerYOffset + drawerInnerH / 2 + t / 2, coverZ]}
+                  position={[0, coverY, coverZ]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
