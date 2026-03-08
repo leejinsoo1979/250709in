@@ -263,9 +263,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         };
       });
 
-      // 렌더링
-      let currentYPosition = -height/2 + basicThickness;
-      
+      // 렌더링 — 측판이 -height/2에서 시작하므로 내부 요소도 맞춤
+      let currentYPosition = -height/2;
+
       return allSections.map((section, index) => {
         const sectionHeight = section.calculatedHeight;
         const sectionCenterY = currentYPosition + sectionHeight / 2;
