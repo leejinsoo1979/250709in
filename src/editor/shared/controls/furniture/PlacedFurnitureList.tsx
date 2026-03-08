@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
@@ -67,7 +67,8 @@ const PlacedFurnitureList: React.FC = () => {
             targetModuleId = `${baseType}-${placedModule.customWidth}`;
           }
           
-          const moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
+          const moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo)
+            || buildModuleDataFromPlacedModule(placedModule);
           if (!moduleData) {
             console.error('❌ [PlacedFurnitureList] 모듈을 찾을 수 없음:', placedModule.moduleId);
             return null;
