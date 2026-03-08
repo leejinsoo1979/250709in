@@ -1137,7 +1137,8 @@ const FreePlacementDropZone: React.FC = () => {
             <Html
               position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
               center
-              style={{ pointerEvents: 'auto', userSelect: 'none' }}
+              style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999 }}
+              zIndexRange={[9999, 10000]}
             >
               <div
                 style={{
