@@ -666,11 +666,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
               const coverZ = (coverBackInset - coverFrontInset) / 2;
-              const coverY = sectionCenterY + areaInnerHeight / 2 - t - t / 2; // 영역 상단에서 18mm 아래
               return (
                 <BoxWithEdges
                   args={[areaInnerWidth, t, coverDepth]}
-                  position={[0, coverY, coverZ]}
+                  position={[0, drawerYOffset + drawerInnerH / 2 + t / 2, coverZ]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
