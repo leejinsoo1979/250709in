@@ -18,7 +18,7 @@
   border-radius: 12px;
   box-shadow: var(--popup-shadow);
   width: 340px;
-  max-height: calc(100vh - 80px);
+  max-height: calc(100vh - 24px);
   overflow: hidden;
   display: flex;
   flex-direction: column;

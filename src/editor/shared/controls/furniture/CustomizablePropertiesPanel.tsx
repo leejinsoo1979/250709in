@@ -104,8 +104,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sx = activePopup.screenX;
     const sy = activePopup.screenY;
     if (sx != null && sy != null) {
-      const panelH = 500;
-      const top = Math.max(8, Math.min(sy - panelH / 2, window.innerHeight - panelH - 8));
+      // 상단 여백 최소 8px, 하단도 8px 확보
+      const top = Math.max(8, Math.min(sy, window.innerHeight * 0.15));
       const left = Math.min(sx + 12, window.innerWidth - 350);
       return { top, left, right: 'auto', transform: 'none' };
     }
