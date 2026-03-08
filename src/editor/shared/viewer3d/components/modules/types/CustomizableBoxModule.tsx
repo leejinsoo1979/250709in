@@ -145,6 +145,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     return [...elems, ...leftElems, ...rightElems].some(el => el.type === 'drawer');
   };
 
+  // 현재 편집 중인 영역인지 확인
+  const isEditingArea = (sectionIndex: number, areaSide?: 'left' | 'right') => {
+    return activePopup.type === 'customizableEdit'
+      && activePopup.id === placedFurnitureId
+      && activePopup.sectionIndex === sectionIndex
+      && activePopup.areaSide === areaSide;
+  };
+
   // 섹션 아이콘 렌더링 함수
   const renderSectionIcon = (
     key: string,
@@ -154,6 +162,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     sectionIndex: number,
     areaSide?: 'left' | 'right',
   ) => {
+    // 해당 영역이 편집 중이면 아이콘 숨김
+    if (isEditingArea(sectionIndex, areaSide)) return null;
+
     const isHov = hoveredIcon === key;
     const themeColor = getThemeColor();
     return (
@@ -369,6 +380,62 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     }
 
     return icons;
+  };
+
+  // 편집 중인 영역 하이라이트 테두리 렌더링
+  const renderEditingHighlight = () => {
+    if (activePopup.type !== 'customizableEdit') return null;
+    if (activePopup.id !== placedFurnitureId) return null;
+    if (activePopup.sectionIndex === undefined) return null;
+
+    const sIdx = activePopup.sectionIndex;
+    const aSide = activePopup.areaSide;
+    const section = sections[sIdx];
+    if (!section) return null;
+
+    const themeColor = getThemeColor();
+
+    // Y 위치 계산
+    let centerY = 0;
+    let areaH: number;
+    if (isSplit) {
+      const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
+      const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
+      centerY = sIdx === 0 ? -H / 2 + lowerH / 2 : -H / 2 + lowerH + upperH / 2;
+      areaH = sIdx === 0 ? lowerH - t : upperH - t;
+    } else {
+      areaH = H - 2 * t;
+    }
+
+    // X 위치 및 너비 계산
+    let centerX = 0;
+    let areaW = innerW;
+    if (section.hasPartition && section.partitionPosition && aSide) {
+      const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
+      if (aSide === 'left') {
+        centerX = (-innerW / 2 + partX - t / 2) / 2;
+        areaW = partX - t / 2 - (-innerW / 2);
+      } else {
+        centerX = (partX + t / 2 + innerW / 2) / 2;
+        areaW = innerW / 2 - (partX + t / 2);
+      }
+    }
+
+    const frontZ = D / 2 + 0.001;
+    const margin = 0.002; // 약간의 여유
+
+    return (
+      <group position={[centerX, centerY, frontZ]}>
+        <mesh>
+          <planeGeometry args={[areaW + margin, areaH + margin]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0} side={2} />
+        </mesh>
+        <lineSegments>
+          <edgesGeometry args={[new THREE.PlaneGeometry(areaW + margin, areaH + margin)]} />
+          <lineBasicMaterial color={themeColor} linewidth={2} />
+        </lineSegments>
+      </group>
+    );
   };
 
   if (!showFurniture) return null;
@@ -906,8 +973,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {/* 섹션별 옵션 아이콘 */}
       {renderSectionIcons()}
 
-      {/* 섹션 내경 치수 가이드 (톱니 아이콘 클릭 시) */}
-      {renderSectionDimensionGuides()}
+      {/* 편집 중인 영역 하이라이트 테두리 */}
+      {renderEditingHighlight()}
+
+      {/* 섹션 내경 치수 가이드 - 제거됨 */}
 
       {/* 조절발 (upper가 아닌 경우) */}
       {showFurniture && category !== 'upper' && (
