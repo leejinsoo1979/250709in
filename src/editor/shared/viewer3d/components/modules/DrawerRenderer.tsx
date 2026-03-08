@@ -567,11 +567,12 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`;
           const mat = getPanelMaterial(panelName);
-          // 위배치 맨 아래 서랍: 마이다 24mm 하단 확장 (하부덮개 가림)
+          // 위배치 맨 아래 서랍: 마이다 하단 24mm + 상단 18mm 확장 (하부덮개 가림)
           const isBottomDrawer = drawerIndex === 0;
-          const maidaExtension = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(24) : 0;
-          const maidaHeight = drawerHeight + maidaExtension;
-          const maidaY = centerY - maidaExtension / 2; // 하단으로 확장이므로 중심 아래로
+          const maidaBottomExt = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(24) : 0;
+          const maidaTopExt = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(18) : 0;
+          const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt;
+          const maidaY = centerY + (maidaTopExt - maidaBottomExt) / 2; // 상하 확장 반영
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-handle-${mat.uuid}`}
