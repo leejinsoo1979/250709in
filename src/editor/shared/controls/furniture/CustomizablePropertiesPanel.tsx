@@ -104,8 +104,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sx = activePopup.screenX;
     const sy = activePopup.screenY;
     if (sx != null && sy != null) {
-      const top = Math.max(8, Math.min(sy, window.innerHeight * 0.15));
-      // sx는 이미 패널 left 위치 (좌측 영역이면 아이콘 왼쪽, 우측이면 아이콘 오른쪽)
+      // 아이콘 Y 기준으로 배치, 화면 밖 나가지 않게 clamp
+      const maxH = window.innerHeight;
+      const panelH = Math.min(600, maxH - 16);
+      const top = Math.max(8, Math.min(sy, maxH - panelH - 8));
       const left = Math.max(8, Math.min(sx, window.innerWidth - 350));
       return { top, left, right: 'auto', transform: 'none' };
     }
