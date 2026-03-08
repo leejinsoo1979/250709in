@@ -3911,6 +3911,7 @@ const Configurator: React.FC = () => {
                 setViewMode(mode);
                 if (mode === '2D') {
                   setRenderMode('wireframe');
+                  setShowAll(false);
                 } else if (mode === '3D') {
                   setRenderMode('solid');
                 }
@@ -3928,9 +3929,10 @@ const Configurator: React.FC = () => {
               viewMode={viewMode as ViewMode}
               onViewModeChange={(mode) => {
                 setViewMode(mode);
-                // 2D 모드 선택 시 와이어프레임으로 자동 설정
+                // 2D 모드 선택 시 와이어프레임으로 자동 설정 + 컬럼 끄기
                 if (mode === '2D') {
                   setRenderMode('wireframe');
+                  setShowAll(false);
                 } else if (mode === '3D') {
                   // 3D 모드 선택 시 솔리드로 자동 설정
                   setRenderMode('solid');
