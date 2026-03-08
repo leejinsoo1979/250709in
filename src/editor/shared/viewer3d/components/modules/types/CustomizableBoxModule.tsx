@@ -102,17 +102,18 @@ const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
 
     let targetOrigIdx: number;
     let newHeight: number;
+    const halfT = panelThickness / 2;
 
     if (gapIdx === 0) {
-      // 바닥 → 첫 선반: 첫 선반의 높이 = newGap
+      // 바닥 → 첫선반 하단: 내경 = 선반중심 - halfT → 선반중심 = newGap + halfT
       targetOrigIdx = idxMap[0].i;
-      newHeight = newGap;
+      newHeight = newGap + halfT;
     } else if (gapIdx >= sorted.length) {
-      // 마지막 선반 → 상판: 마지막 선반 높이 = sectionHeight - panelThickness - newGap
+      // 마지막선반 윗면 → 상판: 내경 = sectionH - 선반중심 - halfT → 선반중심 = sectionH - newGap - halfT
       targetOrigIdx = idxMap[sorted.length - 1].i;
-      newHeight = sectionHeight - panelThickness - newGap;
+      newHeight = sectionHeight - newGap - halfT;
     } else {
-      // 선반 사이: 위쪽 선반을 이동. 위쪽 선반 높이 = 아래쪽 선반 높이 + panelThickness + newGap
+      // 선반 사이: 내경 = 위선반중심 - 아래선반중심 - panelThickness
       targetOrigIdx = idxMap[gapIdx].i;
       newHeight = sorted[gapIdx - 1] + panelThickness + newGap;
     }
@@ -1543,20 +1544,25 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const gaps: { fromY: number; toY: number; gapMm: number; shelfIdx: number }[] = [];
           const sectionHmm = section.height;
 
-          // 바닥 → 첫 선반 (shelfIdx=0: 첫 선반을 움직임)
+          // heights는 선반 중심 위치(mm). 내경 = 선반 아래면/윗면 기준
+          const halfT = panelThickness / 2;
+
+          // 바닥 → 첫 선반 하단 (shelfIdx=0: 첫 선반을 움직임)
           if (sortedHeights.length > 0) {
-            gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: sortedHeights[0], shelfIdx: sortedIndices[0] });
+            const innerGap = sortedHeights[0] - halfT; // 바닥 ~ 첫선반 아래면
+            gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: innerGap, shelfIdx: sortedIndices[0] });
           }
-          // 선반 사이 (shelfIdx: 아래쪽 선반)
+          // 선반 사이: 아래선반 윗면 ~ 위선반 아래면
           for (let i = 0; i < sortedHeights.length - 1; i++) {
-            const gap = sortedHeights[i + 1] - sortedHeights[i] - panelThickness;
-            gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: gap, shelfIdx: sortedIndices[i] });
+            const innerGap = sortedHeights[i + 1] - sortedHeights[i] - panelThickness;
+            gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: innerGap, shelfIdx: sortedIndices[i] });
           }
-          // 마지막 선반 → 상판
+          // 마지막 선반 윗면 → 상판 하단
           if (sortedHeights.length > 0) {
             const lastIdx = sortedHeights.length - 1;
             const lastH = sortedHeights[lastIdx];
-            gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness, shelfIdx: sortedIndices[lastIdx] });
+            const innerGap = sectionHmm - lastH - halfT; // 선반 윗면 ~ 상판 하단
+            gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: innerGap, shelfIdx: sortedIndices[lastIdx] });
           }
 
           // side 결정 (칸막이 없으면 full, 있으면 첫 발견 side)
