@@ -81,9 +81,10 @@ export const getMyCabinets = async (): Promise<{ cabinets: SavedCabinet[]; error
     });
 
     return { cabinets, error: null };
-  } catch (error) {
+  } catch (error: any) {
     console.error('My캐비닛 목록 가져오기 에러:', error);
-    return { cabinets: [], error: 'My캐비닛 목록을 가져오는 중 오류가 발생했습니다.' };
+    console.error('My캐비닛 목록 에러 상세:', error?.message, error?.code);
+    return { cabinets: [], error: `My캐비닛 목록 오류: ${error?.message || '알 수 없는 에러'}` };
   }
 };
 
