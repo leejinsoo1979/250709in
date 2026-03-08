@@ -321,6 +321,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     rotation: 0,
     slotIndex: slotIndex,
     isDualSlot: isDualFurniture,
+    hasDoor: moduleData.hasDoor ?? false,
     customHeight: undefined,
     customDepth: customDepth,
     customWidth: customWidth,

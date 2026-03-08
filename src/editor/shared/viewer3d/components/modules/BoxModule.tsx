@@ -192,32 +192,59 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // === 커스터마이징 가구 라우팅 (커스텀 설정이 있으면 항상 CustomizableBoxModule 사용) ===
   if (customConfig) {
     return (
-      <CustomizableBoxModule
-        width={adjustedWidth || moduleData.dimensions.width}
-        height={moduleData.dimensions.height}
-        depth={customDepth || moduleData.dimensions.depth}
-        customConfig={customConfig}
-        category={moduleData.category as 'full' | 'upper' | 'lower'}
-        color={color}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        showFurniture={showFurniture}
-        isHighlighted={isHighlighted}
-        placedFurnitureId={placedFurnitureId}
-        panelGrainDirections={panelGrainDirections}
-        lowerSectionDepth={lowerSectionDepth}
-        upperSectionDepth={upperSectionDepth}
-        lowerSectionDepthDirection={lowerSectionDepthDirection}
-        upperSectionDepthDirection={upperSectionDepthDirection}
-        backPanelThickness={backPanelThicknessProp}
-        isEditable={_isCustomizable}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerOver={onPointerOver}
-        onPointerOut={onPointerOut}
-        onDoubleClick={onDoubleClick}
-      />
+      <>
+        <CustomizableBoxModule
+          width={adjustedWidth || moduleData.dimensions.width}
+          height={moduleData.dimensions.height}
+          depth={customDepth || moduleData.dimensions.depth}
+          customConfig={customConfig}
+          category={moduleData.category as 'full' | 'upper' | 'lower'}
+          color={color}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          showFurniture={showFurniture}
+          isHighlighted={isHighlighted}
+          placedFurnitureId={placedFurnitureId}
+          panelGrainDirections={panelGrainDirections}
+          lowerSectionDepth={lowerSectionDepth}
+          upperSectionDepth={upperSectionDepth}
+          lowerSectionDepthDirection={lowerSectionDepthDirection}
+          upperSectionDepthDirection={upperSectionDepthDirection}
+          backPanelThickness={backPanelThicknessProp}
+          isEditable={_isCustomizable}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerOver={onPointerOver}
+          onPointerOut={onPointerOut}
+          onDoubleClick={onDoubleClick}
+        />
+        {/* 커스터마이징 가구에도 도어 렌더링 (hasDoor가 true인 경우) */}
+        {hasDoor && spaceInfo && (
+          <DoorModule
+            moduleWidth={adjustedWidth || moduleData.dimensions.width}
+            moduleDepth={baseFurniture.actualDepthMm}
+            hingePosition={hingePosition}
+            spaceInfo={spaceInfo}
+            color={baseFurniture.doorColor}
+            doorXOffset={doorXOffset}
+            originalSlotWidth={originalSlotWidth}
+            slotCenterX={slotCenterX}
+            slotWidths={slotWidths}
+            slotIndex={slotIndex}
+            moduleData={moduleData}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            textureUrl={baseFurniture.textureUrl}
+            panelGrainDirections={baseFurniture.panelGrainDirections}
+            furnitureId={placedFurnitureId}
+            floatHeight={spaceInfo?.baseConfig?.floatHeight}
+            zone={zone}
+            internalHeight={internalHeight}
+            isFreePlacement={isFreePlacement}
+          />
+        )}
+      </>
     );
   }
 
