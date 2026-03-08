@@ -85,6 +85,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const backPanelWidthExtMm = 10; // 백패널 너비 확장 (좌우 5mm씩)
   const backPanelHeightExtMm = 26; // 백패널 높이 확장 (상하 13mm씩)
   const backPanelDepthOffsetMm = 17; // 백패널 뒤쪽에서의 오프셋
+  const drawerTopInsetMm = 85; // 서랍 섹션 상판 앞쪽 들여쓰기
+  const drawerTopInset = mmToUnit(drawerTopInsetMm);
 
   // Three.js 단위 치수
   const W = mmToUnit(width);
@@ -133,6 +135,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
   const showSectionIcons = showFurnitureEditHandles && showDimensions
     && viewMode === '3D' && !isDragging && showFurniture;
+
+  // 섹션에 서랍이 포함되어 있는지 확인
+  const sectionHasDrawer = (section: CustomSection): boolean => {
+    const elems = section.elements || [];
+    const leftElems = section.leftElements || [];
+    const rightElems = section.rightElements || [];
+    return [...elems, ...leftElems, ...rightElems].some(el => el.type === 'drawer');
+  };
 
   // 섹션 아이콘 렌더링 함수
   const renderSectionIcon = (
@@ -590,11 +600,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     );
 
     // ═══ 2. 상판/하판 - 측판 사이에 끼워넣기 ═══
+    // 서랍 섹션 상판은 앞에서 85mm 들여쓰기
+    const hasDrawer = sectionHasDrawer(section);
+    const topDepthReduction = hasDrawer ? drawerTopInset : 0;
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-top`}
-        args={[bInnerW - widthReduction, t, boxD - backReduction]}
-        position={[0, centerY + boxH / 2 - t / 2, backReduction / 2]}
+        args={[bInnerW - widthReduction, t, boxD - backReduction - topDepthReduction]}
+        position={[0, centerY + boxH / 2 - t / 2, backReduction / 2 - topDepthReduction / 2]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -702,17 +715,23 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           />
 
           {/* ═══ 상판 ═══ */}
-          <BoxWithEdges
-            args={[innerW - widthReduction, t, D - backReduction]}
-            position={[0, H / 2 - t / 2, backReduction / 2]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isHighlighted={isHighlighted}
-            panelName="상판"
-            panelGrainDirections={panelGrainDirections}
-            furnitureId={placedFurnitureId}
-          />
+          {(() => {
+            const singleHasDrawer = sectionHasDrawer(sections[0]);
+            const singleTopInset = singleHasDrawer ? drawerTopInset : 0;
+            return (
+              <BoxWithEdges
+                args={[innerW - widthReduction, t, D - backReduction - singleTopInset]}
+                position={[0, H / 2 - t / 2, backReduction / 2 - singleTopInset / 2]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isHighlighted={isHighlighted}
+                panelName="상판"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+              />
+            );
+          })()}
 
           {/* ═══ 하판(바닥판) ═══ */}
           <BoxWithEdges
