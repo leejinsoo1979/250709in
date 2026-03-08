@@ -104,9 +104,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sx = activePopup.screenX;
     const sy = activePopup.screenY;
     if (sx != null && sy != null) {
-      // 상단 여백 최소 8px, 하단도 8px 확보
       const top = Math.max(8, Math.min(sy, window.innerHeight * 0.15));
-      const left = Math.min(sx + 12, window.innerWidth - 350);
+      // sx는 이미 패널 left 위치 (좌측 영역이면 아이콘 왼쪽, 우측이면 아이콘 오른쪽)
+      const left = Math.max(8, Math.min(sx, window.innerWidth - 350));
       return { top, left, right: 'auto', transform: 'none' };
     }
     return {};

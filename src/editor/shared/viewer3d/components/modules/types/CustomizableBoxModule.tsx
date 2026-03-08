@@ -202,7 +202,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             } else if (placedFurnitureId) {
               const el = e.currentTarget as HTMLElement;
               const rect = el.getBoundingClientRect();
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, Math.round(rect.right + 8), Math.round(rect.top));
+              // 좌측 영역이면 아이콘 왼쪽에, 아니면 오른쪽에 팝업 배치
+              const sx = areaSide === 'left'
+                ? Math.round(rect.left - 340 - 8)
+                : Math.round(rect.right + 8);
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, sx, Math.round(rect.top));
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}
