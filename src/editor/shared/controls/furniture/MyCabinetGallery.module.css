@@ -41,41 +41,90 @@
   margin-top: 1px;
 }
 
-/* ── 편집 모드 오버레이 ── */
-.editOverlay {
+/* ── 체크박스 (편집 모드 좌측 상단) ── */
+.checkbox {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 2px;
-  padding: 3px;
-  background: linear-gradient(rgba(0, 0, 0, 0.4), transparent);
-  border-radius: 3px 3px 0 0;
+  top: 6px;
+  left: 6px;
+  z-index: 10;
+  cursor: pointer;
 }
 
-.overlayBtn {
-  background: rgba(0, 0, 0, 0.45);
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  padding: 3px;
-  border-radius: 4px;
-  line-height: 1;
+.checkboxInner {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
 }
 
-.overlayBtn:hover {
-  background: rgba(0, 0, 0, 0.65);
+.checkboxInner:hover {
+  border-color: var(--theme-primary, #4a90d9);
+  background: rgba(0, 0, 0, 0.45);
 }
 
-.overlayBtnDanger {
+.checkboxChecked {
+  background: var(--theme-primary, #4a90d9) !important;
+  border-color: var(--theme-primary, #4a90d9) !important;
+}
+
+/* ── 하단 액션 바 ── */
+.actionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: var(--theme-surface, #1e1e1e);
+  border: 1px solid var(--theme-border, #333);
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.actionBarCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text, #eee);
+  white-space: nowrap;
+}
+
+.actionBarButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.actionBtn {
+  padding: 7px 16px;
+  border: 1px solid var(--theme-border, #555);
+  border-radius: 6px;
+  background: var(--theme-background-secondary, #2a2a2a);
+  color: var(--theme-text, #eee);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.actionBtn:hover {
+  background: var(--theme-primary, #4a90d9);
+  border-color: var(--theme-primary, #4a90d9);
+  color: #fff;
+}
+
+.actionBtnDanger {
   color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+.actionBtnDanger:hover {
+  background: #ff4444;
+  border-color: #ff4444;
+  color: #fff;
 }
 
 /* ── 인라인 이름 편집 ── */
