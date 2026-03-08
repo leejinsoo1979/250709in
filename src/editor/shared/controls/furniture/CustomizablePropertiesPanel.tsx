@@ -574,6 +574,22 @@ const CustomizablePropertiesPanel: React.FC = () => {
     } else {
       sec.rightElements = [newElement];
     }
+
+    // 칸막이가 있을 때: 양쪽 영역 중 서랍이 있으면 칸막이 앞 오프셋 자동 적용
+    if (sec.hasPartition) {
+      const leftEl = (sec.leftElements || [])[0];
+      const rightEl = (sec.rightElements || [])[0];
+      const hasDrawer = leftEl?.type === 'drawer' || rightEl?.type === 'drawer';
+      if (hasDrawer) {
+        // 서랍 coverInset 중 최대값 사용 (기본 60mm)
+        const leftInset = leftEl?.type === 'drawer' ? (leftEl.coverInset ?? 60) : 0;
+        const rightInset = rightEl?.type === 'drawer' ? (rightEl.coverInset ?? 60) : 0;
+        sec.partitionFrontInset = Math.max(leftInset, rightInset);
+      } else {
+        sec.partitionFrontInset = 0;
+      }
+    }
+
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
     // heightInputs 동기화
@@ -606,6 +622,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (side === 'full') sec.elements = els;
     else if (side === 'left') sec.leftElements = els;
     else sec.rightElements = els;
+
+    // 칸막이 앞 오프셋도 동기화
+    if (sec.hasPartition) {
+      const leftEl = (sec.leftElements || [])[0];
+      const rightEl = (sec.rightElements || [])[0];
+      const leftInset = leftEl?.type === 'drawer' ? (leftEl.coverInset ?? 60) : 0;
+      const rightInset = rightEl?.type === 'drawer' ? (rightEl.coverInset ?? 60) : 0;
+      sec.partitionFrontInset = Math.max(leftInset, rightInset);
+    }
+
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
   };
