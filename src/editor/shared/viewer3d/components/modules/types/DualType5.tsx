@@ -263,8 +263,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         };
       });
 
-      // 렌더링 — 측판이 -height/2에서 시작하므로 내부 요소도 맞춤
-      let currentYPosition = -height/2;
+      // 렌더링 — 하판 위에서 시작
+      let currentYPosition = -height/2 + basicThickness;
 
       return allSections.map((section, index) => {
         const sectionHeight = section.calculatedHeight;
@@ -375,7 +375,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           separatorPanel = (
             <BoxWithEdges
               args={[leftWidth, basicThickness, panelDepth]}
-              position={[0, sectionCenterY + sectionHeight/2 - basicThickness/2, panelZPosition]}
+              position={[0, sectionCenterY + sectionHeight/2 - basicThickness * 1.5, panelZPosition]}
               material={material}
               renderMode={renderMode}
               isDragging={isDragging}
