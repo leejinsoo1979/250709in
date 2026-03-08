@@ -15,7 +15,8 @@ export const calculatePanelDetails = (
   spaceHeight?: number, // 공간 높이 (mm) - 도어 높이 계산용
   doorTopGap?: number, // 천장에서 도어 상단까지 이격거리 (mm)
   doorBottomGap?: number, // 바닥에서 도어 하단까지 이격거리 (mm)
-  baseHeight?: number // 받침대 높이 (mm) - 브라켓 보링 Y오프셋 계산용
+  baseHeight?: number, // 받침대 높이 (mm) - 브라켓 보링 Y오프셋 계산용
+  backPanelThicknessMm?: number // 백패널 두께 (mm, 기본값: 9)
 ) => {
   const panels = {
     upper: [],     // 상부장 패널
@@ -28,7 +29,7 @@ export const calculatePanelDetails = (
   
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-  const backPanelThickness = 9; // 백패널 두께
+  const backPanelThickness = backPanelThicknessMm ?? 9; // 백패널 두께
   const drawerHandleThickness = 15; // 서랍 손잡이판(마이다) 두께
   const drawerSideThickness = 15; // 서랍 측면 두께 (DRAWER_SIDE_THICKNESS) 
   const drawerBottomThickness = 5; // 서랍 바닥판 두께

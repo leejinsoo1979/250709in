@@ -3,17 +3,18 @@ import { ModuleData } from '@/data/modules';
 
 // 패널 정보 계산 함수 - PlacedModulePropertiesPanel과 동일한 로직
 export const calculatePanelDetails = (
-  moduleData: ModuleData, 
-  customWidth: number, 
-  customDepth: number, 
-  hasDoor: boolean = false
+  moduleData: ModuleData,
+  customWidth: number,
+  customDepth: number,
+  hasDoor: boolean = false,
+  backPanelThicknessMm?: number // 백패널 두께 (mm, 기본값: 9)
 ): Panel[] => {
   const panels: Panel[] = [];
   let panelId = 1;
   
   // 실제 3D 렌더링과 동일한 두께 값들
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-  const backPanelThickness = 9;
+  const backPanelThickness = backPanelThicknessMm ?? 9;
   const drawerHandleThickness = 15;
   const drawerSideThickness = 15;
   const drawerBottomThickness = 5;
