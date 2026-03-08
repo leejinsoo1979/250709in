@@ -909,7 +909,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const drawerCenter = currentY + mmToThreeUnits(drawerHeight) / 2;
 
           const drawer = renderDrawer(
-            innerWidth - mmToThreeUnits(24), // 서랍 폭 = 내경 - 24mm (좌우 각각 12mm 간격)
+            innerWidth - mmToThreeUnits(48), // 서랍 폭 = 내경 - 48mm (측판 안쪽면에서 좌우 각 24mm 간격)
             mmToThreeUnits(drawerHeight),
             depth - basicThickness,
             [0, drawerCenter, basicThickness/2],
@@ -1097,7 +1097,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const relativeYPosition = (-innerHeight / 2) + (i + 0.5) * drawerHeight;
 
           return renderDrawer(
-            innerWidth - mmToThreeUnits(24), // 서랍 폭 = 내경 - 24mm (좌우 각각 12mm 간격)
+            innerWidth - mmToThreeUnits(48), // 서랍 폭 = 내경 - 48mm (측판 안쪽면에서 좌우 각 24mm 간격)
             drawerHeight,
             depth - basicThickness,
             [0, relativeYPosition, basicThickness/2],
