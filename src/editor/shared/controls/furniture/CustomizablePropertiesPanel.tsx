@@ -1100,7 +1100,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
-  // 선반 옷봉 토글
+  // 선반 옷봉 토글 (다보선반에는 옷봉 불가 - 고정선반 전용)
   const handleShelfRodToggle = (sIdx: number, side: 'full' | 'left' | 'right', hasRod: boolean) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
@@ -1108,6 +1108,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
       side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
 
     if (elements[0]?.type === 'shelf') {
+      // 다보선반이면 옷봉 추가 차단
+      if (hasRod && elements[0].shelfMethod === 'dowel') return;
       elements[0] = { ...elements[0], hasRod };
     }
 
@@ -1127,7 +1129,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
       side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
 
     if (elements[0]?.type === 'shelf') {
-      elements[0] = { ...elements[0], shelfMethod: method, shelfFrontInset: method === 'dowel' ? (elements[0].shelfFrontInset ?? 30) : 0 };
+      // 다보선반 전환 시 옷봉 강제 제거 (옷봉은 고정선반 전용)
+      const hasRod = method === 'dowel' ? false : elements[0].hasRod;
+      elements[0] = { ...elements[0], shelfMethod: method, shelfFrontInset: method === 'dowel' ? (elements[0].shelfFrontInset ?? 30) : 0, hasRod };
     }
 
     if (side === 'full') sec.elements = elements;
@@ -1149,7 +1153,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const elemKey = subPart === 'upper' ? 'upperElements' : 'lowerElements';
     const elements = [...(sub[elemKey] || [])];
     if (elements[0]?.type === 'shelf') {
-      elements[0] = { ...elements[0], shelfMethod: method, shelfFrontInset: method === 'dowel' ? (elements[0].shelfFrontInset ?? 30) : 0 };
+      // 다보선반 전환 시 옷봉 강제 제거 (옷봉은 고정선반 전용)
+      const hasRod = method === 'dowel' ? false : elements[0].hasRod;
+      elements[0] = { ...elements[0], shelfMethod: method, shelfFrontInset: method === 'dowel' ? (elements[0].shelfFrontInset ?? 30) : 0, hasRod };
     }
     subSplits[areaKey] = { ...sub, [elemKey]: elements };
     sec.areaSubSplits = subSplits;
@@ -1651,8 +1657,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 선반 + 옷봉 토글 */}
-        {currentType === 'shelf' && el.type === 'shelf' && (
+        {/* 선반 + 옷봉 토글 (고정선반 전용 - 다보선반에는 옷봉 불가) */}
+        {currentType === 'shelf' && el.type === 'shelf' && el.shelfMethod !== 'dowel' && (
           <>
             <div className={styles.row} style={{ marginTop: '6px' }}>
               <span className={styles.label}>옷봉</span>
