@@ -578,6 +578,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
+  const [backPanelThicknessValue, setBackPanelThicknessValue] = useState<number>(9); // 백패널 두께 (기본값: 9mm)
   const [columnPlacementMode, setColumnPlacementMode] = useState<'beside' | 'front'>('beside'); // 기둥 C 배치 모드
 
   // 자유배치 모드 치수 상태
@@ -617,6 +618,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalHasDoor, setOriginalHasDoor] = useState<boolean>(false);
   const [originalDoorSplit, setOriginalDoorSplit] = useState<boolean>(false);
   const [originalHasGapBackPanel, setOriginalHasGapBackPanel] = useState<boolean>(false);
+  const [originalBackPanelThickness, setOriginalBackPanelThickness] = useState<number>(9);
   const [originalColumnPlacementMode, setOriginalColumnPlacementMode] = useState<'beside' | 'front'>('beside');
   const [originalUpperDoorTopGap, setOriginalUpperDoorTopGap] = useState<number>(5);
   const [originalUpperDoorBottomGap, setOriginalUpperDoorBottomGap] = useState<number>(0);
@@ -818,16 +820,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const hasDoorVal = currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false;
       const doorSplitVal = currentPlacedModule.doorSplit ?? false;
       const hasGapVal = currentPlacedModule.hasGapBackPanel ?? false;
+      const backPanelThicknessVal = currentPlacedModule.backPanelThickness ?? 9;
       setHingePosition(hingePos);
       setHingeType(hingeTypeVal);
       setHasDoor(hasDoorVal);
       setDoorSplit(doorSplitVal);
       setHasGapBackPanel(hasGapVal);
+      setBackPanelThicknessValue(backPanelThicknessVal);
       setOriginalHingePosition(hingePos); // 원래 값 저장
       setOriginalHingeType(hingeTypeVal); // 원래 값 저장
       setOriginalHasDoor(hasDoorVal); // 원래 값 저장
       setOriginalDoorSplit(doorSplitVal); // 원래 값 저장
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
+      setOriginalBackPanelThickness(backPanelThicknessVal); // 원래 값 저장
 
       // 기둥 C 배치 모드 초기화
       const placementModeVal = currentPlacedModule.columnPlacementMode || 'beside';
@@ -1028,6 +1033,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         hasDoor: originalHasDoor,
         doorSplit: originalDoorSplit,
         hasGapBackPanel: originalHasGapBackPanel,
+        backPanelThickness: originalBackPanelThickness,
         doorTopGap: originalDoorTopGap,
         doorBottomGap: originalDoorBottomGap,
         upperDoorTopGap: originalUpperDoorTopGap,
@@ -1386,6 +1392,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     setHasGapBackPanel(gapBackPanelEnabled);
     if (activePopup.id) {
       updatePlacedModule(activePopup.id, { hasGapBackPanel: gapBackPanelEnabled });
+    }
+  };
+
+  const handleBackPanelThicknessChange = (thickness: number) => {
+    setBackPanelThicknessValue(thickness);
+    if (activePopup.id) {
+      updatePlacedModule(activePopup.id, { backPanelThickness: thickness });
     }
   };
 
@@ -2328,6 +2341,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
           */}
+
+          {/* 백패널 두께 설정 */}
+          <div className={styles.propertySection}>
+            <h5 className={styles.sectionTitle}>{t('furniture.backPanelThickness') || '백패널 두께'}</h5>
+            <div className={styles.doorTabSelector}>
+              {[3, 5, 9].map((thickness) => (
+                <button
+                  key={thickness}
+                  className={`${styles.doorTab} ${backPanelThicknessValue === thickness ? styles.activeDoorTab : ''}`}
+                  onClick={() => handleBackPanelThicknessChange(thickness)}
+                >
+                  {thickness}mm
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
           {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
