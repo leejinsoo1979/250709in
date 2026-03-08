@@ -568,6 +568,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperSectionDepth, setUpperSectionDepth] = useState<number | undefined>(undefined); // 상부 섹션 깊이
   const [lowerDepthInput, setLowerDepthInput] = useState<string>(''); // 하부 섹션 깊이 입력 필드
   const [upperDepthInput, setUpperDepthInput] = useState<string>(''); // 상부 섹션 깊이 입력 필드
+  const [lowerDepthDirection, setLowerDepthDirection] = useState<'front' | 'back'>('front'); // 하부 깊이 줄이는 방향
+  const [upperDepthDirection, setUpperDepthDirection] = useState<'front' | 'back'>('front'); // 상부 깊이 줄이는 방향
   const [lowerTopOffset, setLowerTopOffset] = useState<number>(0); // 하부 섹션 상판 옵셋 (mm)
   const [lowerTopOffsetInput, setLowerTopOffsetInput] = useState<string>('0'); // 하부 섹션 상판 옵셋 입력
   const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
@@ -612,6 +614,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalCustomWidth, setOriginalCustomWidth] = useState<number>(600);
   const [originalLowerSectionDepth, setOriginalLowerSectionDepth] = useState<number | undefined>(undefined);
   const [originalUpperSectionDepth, setOriginalUpperSectionDepth] = useState<number | undefined>(undefined);
+  const [originalLowerDepthDirection, setOriginalLowerDepthDirection] = useState<'front' | 'back'>('front');
+  const [originalUpperDepthDirection, setOriginalUpperDepthDirection] = useState<'front' | 'back'>('front');
   const [originalLowerTopOffset, setOriginalLowerTopOffset] = useState<number>(0);
   const [originalHingePosition, setOriginalHingePosition] = useState<'left' | 'right'>('right');
   const [originalHingeType, setOriginalHingeType] = useState<'A' | 'B'>('A');
@@ -940,6 +944,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setUpperSectionDepth(upperDepth);
         setLowerDepthInput(lowerDepth.toString());
         setUpperDepthInput(upperDepth.toString());
+        setLowerDepthDirection(currentPlacedModule.lowerSectionDepthDirection || 'front');
+        setUpperDepthDirection(currentPlacedModule.upperSectionDepthDirection || 'front');
+        setOriginalLowerDepthDirection(currentPlacedModule.lowerSectionDepthDirection || 'front');
+        setOriginalUpperDepthDirection(currentPlacedModule.upperSectionDepthDirection || 'front');
 
         if (currentPlacedModule.lowerSectionTopOffset === undefined) {
           updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: moduleDefaultLowerTopOffset });
@@ -1048,6 +1056,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         customWidth: originalCustomWidth,
         lowerSectionDepth: originalLowerSectionDepth,
         upperSectionDepth: originalUpperSectionDepth,
+        lowerSectionDepthDirection: originalLowerDepthDirection,
+        upperSectionDepthDirection: originalUpperDepthDirection,
         hingePosition: originalHingePosition,
         hasDoor: originalHasDoor,
         doorSplit: originalDoorSplit,
@@ -2014,6 +2024,40 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
+                  <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                    <button
+                      style={{
+                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                        background: lowerDepthDirection === 'front' ? '#4A90D9' : '#fff',
+                        color: lowerDepthDirection === 'front' ? '#fff' : '#666',
+                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                      onClick={() => {
+                        setLowerDepthDirection('front');
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' });
+                        }
+                      }}
+                    >
+                      앞에서
+                    </button>
+                    <button
+                      style={{
+                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                        background: lowerDepthDirection === 'back' ? '#4A90D9' : '#fff',
+                        color: lowerDepthDirection === 'back' ? '#fff' : '#666',
+                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                      onClick={() => {
+                        setLowerDepthDirection('back');
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' });
+                        }
+                      }}
+                    >
+                      뒤에서
+                    </button>
+                  </div>
                 </div>
 
                 {/* 상부 섹션 */}
@@ -2037,6 +2081,40 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }}
                     />
                     <span className={styles.unit}>mm</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                    <button
+                      style={{
+                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                        background: upperDepthDirection === 'front' ? '#4A90D9' : '#fff',
+                        color: upperDepthDirection === 'front' ? '#fff' : '#666',
+                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                      onClick={() => {
+                        setUpperDepthDirection('front');
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { upperSectionDepthDirection: 'front' });
+                        }
+                      }}
+                    >
+                      앞에서
+                    </button>
+                    <button
+                      style={{
+                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                        background: upperDepthDirection === 'back' ? '#4A90D9' : '#fff',
+                        color: upperDepthDirection === 'back' ? '#fff' : '#666',
+                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                      onClick={() => {
+                        setUpperDepthDirection('back');
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { upperSectionDepthDirection: 'back' });
+                        }
+                      }}
+                    >
+                      뒤에서
+                    </button>
                   </div>
                 </div>
               </div>
