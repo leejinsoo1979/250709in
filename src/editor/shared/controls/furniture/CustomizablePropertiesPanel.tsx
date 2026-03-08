@@ -11,7 +11,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
  * activePopup.type === 'customizableEdit' 일 때 렌더링
  */
 const CustomizablePropertiesPanel: React.FC = () => {
-  const { activePopup, closeAllPopups, openCustomizableEditPopup } = useUIStore();
+  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
   const { saveCabinet } = useMyCabinetStore();
 
@@ -98,6 +98,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
     },
     [moduleId, updatePlacedModule],
   );
+
+  // 팝업 닫힐 때 하이라이트 해제
+  useEffect(() => {
+    return () => setHighlightedSection(null);
+  }, [setHighlightedSection]);
 
   // screenX/screenY가 있으면 가구 우측에 붙여서 표시 (hooks는 조건부 return 전에 호출)
   const panelStyle = useMemo<React.CSSProperties>(() => {
@@ -1256,7 +1261,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     : (['open', 'shelf', 'drawer', 'rod'] as const);
 
                   return (
-                    <div key={realIdx} className={styles.section}>
+                    <div
+                      key={realIdx}
+                      className={styles.section}
+                      onMouseEnter={() => moduleId && setHighlightedSection(`${moduleId}-${realIdx}`)}
+                      onMouseLeave={() => setHighlightedSection(null)}
+                    >
                       <div className={styles.sectionTitle}>
                         {isUpper ? '상부 섹션' : '하부 섹션'}
                       </div>

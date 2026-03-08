@@ -408,13 +408,28 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   };
 
   // 편집 중인 영역 하이라이트 테두리 렌더링
-  const renderEditingHighlight = () => {
-    if (activePopup.type !== 'customizableEdit') return null;
-    if (activePopup.id !== placedFurnitureId) return null;
-    if (activePopup.sectionIndex === undefined) return null;
+  const highlightedSection = useUIStore(state => state.highlightedSection);
 
-    const sIdx = activePopup.sectionIndex;
-    const aSide = activePopup.areaSide;
+  const renderEditingHighlight = () => {
+    let sIdx: number | undefined;
+    let aSide: 'left' | 'right' | undefined;
+
+    // 1) 톱니 아이콘 팝업 (sectionIndex가 있을 때)
+    if (activePopup.type === 'customizableEdit' && activePopup.id === placedFurnitureId && activePopup.sectionIndex !== undefined) {
+      sIdx = activePopup.sectionIndex;
+      aSide = activePopup.areaSide;
+    }
+    // 2) 메인 팝업에서 highlightedSection (예: "furnitureId-0")
+    else if (highlightedSection && placedFurnitureId) {
+      const parts = highlightedSection.split('-');
+      const furId = parts.slice(0, -1).join('-');
+      const secIdx = parseInt(parts[parts.length - 1], 10);
+      if (furId === placedFurnitureId && !isNaN(secIdx)) {
+        sIdx = secIdx;
+      }
+    }
+
+    if (sIdx === undefined) return null;
     const section = sections[sIdx];
     if (!section) return null;
 
