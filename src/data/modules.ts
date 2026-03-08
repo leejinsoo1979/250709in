@@ -7,5 +7,6 @@ export {
   getModulesByCategory,
   getModuleById,
   validateModuleForInternalSpace,
-  getValidModulesForInternalSpace
+  getValidModulesForInternalSpace,
+  buildModuleDataFromPlacedModule
 } from './modules/index'; 
