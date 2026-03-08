@@ -1,9 +1,11 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SavedCabinet } from '@/firebase/types';
 import { CustomFurnitureConfig, CustomSection, CustomElement } from '@/editor/shared/furniture/types';
 import { createCustomizableModuleId } from './CustomizableFurnitureLibrary';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import moduleStyles from './ModuleGallery.module.css';
 import styles from './CustomizableFurnitureLibrary.module.css';
 
@@ -127,7 +129,8 @@ const CabinetSvgThumbnail: React.FC<{
 
 const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', editMode = false }) => {
   const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, updateCabinet, uploadThumbnail, setPendingPlacement, setEditingCabinetId } = useMyCabinetStore();
-  const { setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
+  const { setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData } = useFurnitureStore();
+  const { spaceInfo } = useSpaceConfigStore();
 
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
@@ -155,7 +158,30 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', edi
     const moduleId = createCustomizableModuleId(cabinet.category, cabinet.width);
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [editingNameId, editMode, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
+
+    // 슬롯 배치용 currentDragData 설정 (표준 모듈과 동일하게)
+    const indexing = calculateSpaceIndexing(spaceInfo);
+    const colW = indexing.columnWidth;
+    const isDual = cabinet.width > colW * 1.5;
+    const slotWidth = isDual ? colW * 2 : colW;
+
+    setCurrentDragData({
+      type: 'furniture',
+      zone: 'normal',
+      moduleData: {
+        id: moduleId,
+        name: cabinet.name || 'My캐비넷',
+        dimensions: {
+          width: slotWidth,
+          height: cabinet.height,
+          depth: cabinet.depth,
+        },
+        type: 'default',
+        color: '#C8B69E',
+        hasDoor: false,
+      }
+    });
+  }, [editingNameId, editMode, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData, spaceInfo]);
 
   const handleEdit = useCallback((e: React.MouseEvent, cabinet: SavedCabinet) => {
     e.stopPropagation();
