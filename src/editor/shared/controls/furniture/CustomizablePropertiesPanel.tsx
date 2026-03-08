@@ -151,6 +151,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return {};
   }, [activePopup.screenX, activePopup.screenY, activePopup.sectionIndex]);
 
+  // 3D 캔버스에서 현재 가구 섬네일 캡처
+  const captureCurrentThumbnail = useCallback((): string | null => {
+    try {
+      const canvas = findThreeCanvas();
+      if (!canvas) return null;
+      return captureCanvasThumbnail(canvas, { width: 300, height: 400, quality: 0.85 });
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // 캡처한 dataURL을 File로 변환하여 업로드
+  const uploadCapturedThumbnail = useCallback(async (cabinetId: string, dataUrl: string) => {
+    try {
+      const blob = dataURLToBlob(dataUrl);
+      const file = new File([blob], `cabinet-${cabinetId}.png`, { type: 'image/png' });
+      await uploadThumbnail(cabinetId, file);
+    } catch (err) {
+      console.warn('섬네일 자동 업로드 실패:', err);
+    }
+  }, [uploadThumbnail]);
+
   // 렌더링 조건 체크 (모든 hooks 호출 이후)
   if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {
     return null;
@@ -1051,28 +1073,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
   };
-
-  // 3D 캔버스에서 현재 가구 섬네일 캡처
-  const captureCurrentThumbnail = useCallback((): string | null => {
-    try {
-      const canvas = findThreeCanvas();
-      if (!canvas) return null;
-      return captureCanvasThumbnail(canvas, { width: 300, height: 400, quality: 0.85 });
-    } catch {
-      return null;
-    }
-  }, []);
-
-  // 캡처한 dataURL을 File로 변환하여 업로드
-  const uploadCapturedThumbnail = useCallback(async (cabinetId: string, dataUrl: string) => {
-    try {
-      const blob = dataURLToBlob(dataUrl);
-      const file = new File([blob], `cabinet-${cabinetId}.png`, { type: 'image/png' });
-      await uploadThumbnail(cabinetId, file);
-    } catch (err) {
-      console.warn('섬네일 자동 업로드 실패:', err);
-    }
-  }, [uploadThumbnail]);
 
   // My캐비닛에 저장 (신규 또는 기존 업데이트)
   const handleSaveToCabinet = async () => {
