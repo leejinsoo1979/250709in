@@ -70,9 +70,6 @@ const FreePlacementDropZone: React.FC = () => {
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
-  // My캐비넷 배치 시에는 슬롯 모드에서도 자유배치 활성화
-  const isMyCabinetPending = !!(pendingPlacement && selectedFurnitureId);
-  const isActive = isFreePlacement || isMyCabinetPending;
 
   // 테마 색상 (Three.js용 hex)
   const themeColorMap: Record<string, string> = {
@@ -758,7 +755,7 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 키보드 좌우 화살표로 미세 이동
   useEffect(() => {
-    if (!isActive) return;
+    if (!isFreePlacement) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape') return;
@@ -796,11 +793,11 @@ const FreePlacementDropZone: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate]);
+  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate]);
 
-  // 렌더링 조건: 자유배치 또는 My캐비넷 배치가 아니면 null
+  // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && activeDimensions);
-  if (!isActive) return null;
+  if (!isFreePlacement) return null;
 
   return (
     <>
