@@ -127,6 +127,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
       : createDefaultCustomConfig(effectiveHeight - 36); // 상하판 두께 제외
   }
 
+  // 서랍장(2단/4단) 하부섹션 상판 85mm 들여쓰기 기본값
+  const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer')) ? 85 : undefined;
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId,
@@ -141,6 +144,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     zone: effectiveZone,
     hasBase: moduleData.category !== 'upper',
     hasTopFrame: moduleData.category !== 'lower',
+    lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {
       isCustomizable: true,
       customConfig,
