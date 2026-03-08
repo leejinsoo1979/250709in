@@ -99,25 +99,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
     [moduleId, updatePlacedModule],
   );
 
-  // 렌더링 조건 체크 (모든 hooks 호출 이후)
-  if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {
-    return null;
-  }
-
-  // screenX/screenY가 있으면 가구 우측에 붙여서 표시
+  // screenX/screenY가 있으면 가구 우측에 붙여서 표시 (hooks는 조건부 return 전에 호출)
   const panelStyle = useMemo<React.CSSProperties>(() => {
     const sx = activePopup.screenX;
     const sy = activePopup.screenY;
     if (sx != null && sy != null) {
-      // 패널 높이 약 500px 기준으로 중앙 정렬, 화면 밖 나가지 않게 clamp
       const panelH = 500;
       const top = Math.max(8, Math.min(sy - panelH / 2, window.innerHeight - panelH - 8));
       const left = Math.min(sx + 12, window.innerWidth - 350);
       return { top, left, right: 'auto', transform: 'none' };
     }
-    // fallback: CSS 기본값 사용 (우측 중앙)
     return {};
   }, [activePopup.screenX, activePopup.screenY]);
+
+  // 렌더링 조건 체크 (모든 hooks 호출 이후)
+  if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {
+    return null;
+  }
 
   const furnitureWidth = placedModule.freeWidth || placedModule.moduleWidth || 600;
   const furnitureHeight = placedModule.freeHeight || 2000;
