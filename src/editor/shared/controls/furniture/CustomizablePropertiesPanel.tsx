@@ -192,6 +192,48 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 섹션 높이 ArrowUp/ArrowDown 키 핸들러 (1mm 단위, Shift 10mm)
+  const handleSectionHeightKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+      return;
+    }
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    if (config.sections.length !== 2) return;
+
+    const step = e.shiftKey ? 10 : 1;
+    const delta = e.key === 'ArrowUp' ? step : -step;
+    const availableHeight = furnitureHeight - 4 * panelThickness;
+    const current = config.sections[idx].height;
+    const clamped = Math.max(100, Math.min(availableHeight - 100, current + delta));
+    if (clamped === current) return;
+
+    const otherH = availableHeight - clamped;
+    const sections = [...config.sections];
+    sections[idx] = { ...sections[idx], height: clamped };
+    sections[1 - idx] = { ...sections[1 - idx], height: otherH };
+
+    // 서랍 높이 재계산
+    for (let sIdx = 0; sIdx < 2; sIdx++) {
+      const sec = sections[sIdx];
+      const el = sec.elements?.[0];
+      if (el?.type === 'drawer' && 'heights' in el) {
+        const newH = sections[sIdx].height;
+        const gapTotal = 23.6 * (el.heights.length + 1);
+        const usable = Math.max(newH - gapTotal, el.heights.length * 80);
+        const perDrawer = Math.round(usable / el.heights.length);
+        sections[sIdx] = {
+          ...sec,
+          elements: [{ type: 'drawer', heights: Array.from({ length: el.heights.length }, () => perDrawer) }],
+        };
+      }
+    }
+
+    applyConfig({ ...config, sections });
+    setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+  };
+
   // 섹션 분할 (상/하 분할만 지원)
   const handleSectionSplit = (split: boolean) => {
     if (split) {
@@ -983,7 +1025,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               value={sectionHeightInputs[sIdx] ?? section.height.toString()}
               onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
               onBlur={() => handleSectionHeightBlur(sIdx)}
-              onKeyDown={handleInputKeyDown}
+              onKeyDown={(e) => handleSectionHeightKeyDown(e, sIdx)}
             />
             <span className={styles.unit}>mm</span>
           </div>
@@ -1220,7 +1262,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           value={sectionHeightInputs[realIdx] ?? section.height.toString()}
                           onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
                           onBlur={() => handleSectionHeightBlur(realIdx)}
-                          onKeyDown={handleInputKeyDown}
+                          onKeyDown={(e) => handleSectionHeightKeyDown(e, realIdx)}
                         />
                         <span className={styles.unit}>mm</span>
                       </div>
