@@ -103,15 +103,21 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const panelStyle = useMemo<React.CSSProperties>(() => {
     const sx = activePopup.screenX;
     const sy = activePopup.screenY;
-    if (sx != null && sy != null) {
+    const isMainPopup = activePopup.sectionIndex === undefined;
+    if (sx != null) {
       const vh = window.innerHeight;
-      const top = Math.max(8, Math.min(sy, vh - 200));
       const left = Math.max(8, Math.min(sx, window.innerWidth - 350));
+      if (isMainPopup) {
+        // 메인 팝업: 가구 우측, 화면 세로 중앙
+        return { top: '50%', left, right: 'auto', transform: 'translateY(-50%)', maxHeight: vh - 24 };
+      }
+      // 섹션 팝업: 아이콘 Y 기준
+      const top = Math.max(8, Math.min(sy ?? vh / 2, vh - 200));
       const maxHeight = vh - top - 8;
       return { top, left, right: 'auto', transform: 'none', maxHeight };
     }
     return {};
-  }, [activePopup.screenX, activePopup.screenY]);
+  }, [activePopup.screenX, activePopup.screenY, activePopup.sectionIndex]);
 
   // 렌더링 조건 체크 (모든 hooks 호출 이후)
   if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {
