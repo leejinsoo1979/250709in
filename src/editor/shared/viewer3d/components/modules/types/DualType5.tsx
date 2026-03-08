@@ -238,13 +238,30 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       // 나머지 공간 계산
       const remainingHeight = availableHeight - totalFixedHeight;
       
-      // 모든 섹션의 높이 계산
-      const allSections = leftSections.map(section => ({
-        ...section,
-        calculatedHeight: (section.heightType === 'absolute') 
-          ? calculateSectionHeight(section, availableHeight)
-          : calculateSectionHeight(section, remainingHeight)
-      }));
+      // 모든 섹션의 높이 계산 (SectionsRenderer와 동일한 로직)
+      const allSections = leftSections.map((section, index) => {
+        let calcHeight: number;
+
+        if (section.heightType === 'absolute') {
+          if (index === 0) {
+            // 첫 번째 섹션: 지정된 높이 사용
+            calcHeight = calculateSectionHeight(section, availableHeight);
+          } else {
+            // 상부 섹션: 전체 높이에서 하부 섹션들을 뺀 나머지
+            const lowerSectionsHeight = leftSections
+              .slice(0, index)
+              .reduce((sum, s) => sum + calculateSectionHeight(s, availableHeight), 0);
+            calcHeight = availableHeight - lowerSectionsHeight;
+          }
+        } else {
+          calcHeight = calculateSectionHeight(section, remainingHeight);
+        }
+
+        return {
+          ...section,
+          calculatedHeight: calcHeight
+        };
+      });
 
       // 렌더링
       let currentYPosition = -height/2 + basicThickness;
@@ -312,15 +329,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             if (section.count && section.count > 0) {
               // 서랍 섹션은 항상 하부장
               const sectionName = '(하)';
-              // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 구분판만)
-              const drawerFrameHeight = sectionHeight - basicThickness;
-              // Y 위치: 9mm 아래로
-              const drawerYOffset = sectionCenterY - basicThickness / 2;
+              // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 상판 - 바닥판) — SectionsRenderer와 동일
+              const drawerInnerHeight = sectionHeight - basicThickness * 2;
+              // 2단 vs 4단 서랍장 구분 (섹션 높이 700mm 미만이면 2단)
+              const is2TierDrawer = sectionHeight < mmToThreeUnits(700);
+              // Y 위치: 2단은 바닥에 붙도록 18mm 아래로 — SectionsRenderer와 동일
+              const drawerYOffset = is2TierDrawer
+                ? sectionCenterY - basicThickness
+                : sectionCenterY;
               sectionContent = (
                 <DrawerRenderer
                   drawerCount={section.count}
                   innerWidth={leftWidth}
-                  innerHeight={drawerFrameHeight}
+                  innerHeight={drawerInnerHeight}
                   depth={leftDepth}
                   basicThickness={basicThickness}
                   yOffset={drawerYOffset}
