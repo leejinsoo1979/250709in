@@ -906,6 +906,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
     setHeightInputs((prev) => ({ ...prev, [inputKey]: displayVal.toString() }));
   };
 
+  // 서랍 추가 가능 여부 판정 (공간이 부족하면 false)
+  const canAddDrawer = (sIdx: number, side: 'full' | 'left' | 'right'): boolean => {
+    const sec = config.sections[sIdx];
+    if (!sec) return false;
+    const elements =
+      side === 'full' ? (sec.elements || []) : side === 'left' ? (sec.leftElements || []) : (sec.rightElements || []);
+    const el = elements[0];
+    if (!el || el.type !== 'drawer') return true; // 서랍이 아니면 제한 없음
+
+    const gap = 23.6;
+    const minDrawerH = 80;
+    const effectiveHeight = sec.height + panelThickness; // 상판 포함
+    const newCount = el.heights.length + 1;
+    const totalGap = gap * (newCount + 1);
+    const usable = effectiveHeight - totalGap;
+    return usable >= minDrawerH * newCount; // 모든 서랍이 최소 높이 이상인지
+  };
+
   // 선반/서랍 추가
   const handleAddHeight = (sIdx: number, side: 'full' | 'left' | 'right') => {
     const sections = [...config.sections];
@@ -929,12 +947,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
         });
         setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
       } else {
-        // 서랍: 마지막 서랍과 동일 높이로 추가 (heights는 개별 서랍 높이)
-        const lastH = el.heights[el.heights.length - 1] || 200;
-        const newIdx = el.heights.length;
-        elements[0] = { ...el, heights: [...el.heights, lastH] };
-        const key = `${sIdx}-${side}-0-${newIdx}`;
-        setHeightInputs((prev) => ({ ...prev, [key]: lastH.toString() }));
+        // 서랍: 공간 부족 시 추가 차단
+        if (!canAddDrawer(sIdx, side)) return;
+
+        // 새 서랍 높이를 균등 재분배로 계산
+        const gap = 23.6;
+        const newCount = el.heights.length + 1;
+        const effectiveHeight = sec.height + panelThickness;
+        const totalGap = gap * (newCount + 1);
+        const perDrawer = Math.max(80, Math.round((effectiveHeight - totalGap) / newCount));
+        const newHeights = Array(newCount).fill(perDrawer);
+
+        elements[0] = { ...el, heights: newHeights };
+        // heightInputs 전체 갱신
+        const newHInputs: Record<string, string> = {};
+        newHeights.forEach((h: number, hIdx: number) => {
+          newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+        });
+        setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
       }
     }
 
@@ -1366,7 +1396,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 );
               })}
             </div>
-            <button className={styles.addButton} onClick={() => handleAddHeight(sIdx, side)}>
+            <button
+              className={styles.addButton}
+              onClick={() => handleAddHeight(sIdx, side)}
+              disabled={currentType === 'drawer' && !canAddDrawer(sIdx, side)}
+              style={currentType === 'drawer' && !canAddDrawer(sIdx, side) ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+            >
               + {currentType === 'shelf' ? '선반' : '서랍'} 추가
             </button>
           </div>
