@@ -253,7 +253,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 기존 모듈 기준 서랍 단수별 표준 사양 (shelving.ts FURNITURE_SPECS 참조)
   const DRAWER_STANDARD: Record<number, { sectionHeight: number; heights: number[] }> = {
-    1: { sectionHeight: 400, heights: [255] },
+    1: { sectionHeight: 321, heights: [255] },
     2: { sectionHeight: 600, heights: [255, 255] },
     3: { sectionHeight: 800, heights: [255, 255, 176] },
     4: { sectionHeight: 1000, heights: [255, 255, 176, 176] },
