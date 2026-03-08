@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import * as THREE from 'three';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
@@ -21,9 +22,43 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const focusedSectionIndex = activePopup.sectionIndex;
   // areaSide가 있으면 칸막이 좌/우 중 특정 영역만 편집
   const focusedAreaSide = activePopup.areaSide;
-  // 클릭 위치 기반 팝업 위치
-  const screenX = activePopup.screenX;
-  const screenY = activePopup.screenY;
+  // 가구 우측 끝의 실시간 screen 좌표 추적
+  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!placedModule || activePopup.type !== 'customizableEdit') {
+      setPopupPos(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const r3f = (canvas as any).__r3f;
+      if (!r3f) return;
+      const { camera } = r3f.store.getState();
+      if (!camera) return;
+
+      const halfW = (placedModule.freeWidth || placedModule.moduleWidth || 0) * 0.01 / 2;
+      const rightEdge = new THREE.Vector3(
+        placedModule.position.x + halfW,
+        placedModule.position.y,
+        placedModule.position.z
+      );
+      rightEdge.project(camera);
+
+      const rect = canvas.getBoundingClientRect();
+      const sx = Math.round((rightEdge.x * 0.5 + 0.5) * rect.width + rect.left);
+      const sy = Math.round((-rightEdge.y * 0.5 + 0.5) * rect.height + rect.top);
+      setPopupPos({ x: sx, y: sy });
+
+      rafRef.current = requestAnimationFrame(updatePosition);
+    };
+
+    rafRef.current = requestAnimationFrame(updatePosition);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [placedModule, activePopup.type]);
 
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
@@ -1080,18 +1115,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
-  // 팝업 위치 계산: 가구 우측 끝 기준으로 바로 옆에 표시
+  // 팝업 위치 계산: 가구 우측 끝 기준으로 바로 옆에 실시간 추적
   const panelWidth = 360;
-  const panelStyle: React.CSSProperties = screenX !== undefined && screenY !== undefined
+  const panelStyle: React.CSSProperties = popupPos
     ? {
         position: 'fixed',
-        left: Math.min(screenX + 12, window.innerWidth - panelWidth - 16),
-        top: Math.max(10, Math.min(screenY - 100, window.innerHeight - 500)),
+        left: Math.min(popupPos.x + 12, window.innerWidth - panelWidth - 16),
+        top: Math.max(10, Math.min(popupPos.y - 200, window.innerHeight - 500)),
       }
     : {};
 
   return (
-    <div className={styles.overlay} style={screenX !== undefined ? { justifyContent: 'flex-start', paddingRight: 0, paddingTop: 0 } : undefined}>
+    <div className={styles.overlay} style={popupPos ? { justifyContent: 'flex-start', paddingRight: 0, paddingTop: 0 } : undefined}>
       <div className={styles.panel} style={panelStyle}>
         {/* 헤더 */}
         <div className={styles.header}>
