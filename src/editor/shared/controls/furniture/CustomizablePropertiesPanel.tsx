@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
-import { captureFrontViewThumbnail, dataURLToBlob } from '@/editor/shared/utils/thumbnailCapture';
+import { generateCabinetThumbnail } from '@/editor/shared/utils/cabinetThumbnailGenerator';
 import styles from './CustomizablePropertiesPanel.module.css';
 
 /**
@@ -14,7 +14,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
 const CustomizablePropertiesPanel: React.FC = () => {
   const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
-  const { saveCabinet, updateCabinet, uploadThumbnail, editingCabinetId, setEditingCabinetId } = useMyCabinetStore();
+  const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId } = useMyCabinetStore();
 
   const moduleId = activePopup.id;
   const placedModule = placedModules.find((m) => m.id === moduleId);
@@ -151,25 +151,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return {};
   }, [activePopup.screenX, activePopup.screenY, activePopup.sectionIndex]);
 
-  // 3D 정면 뷰로 전환하여 가구 섬네일 캡처
-  const captureCurrentThumbnail = useCallback(async (): Promise<string | null> => {
-    try {
-      return await captureFrontViewThumbnail();
-    } catch {
-      return null;
-    }
-  }, []);
-
-  // 캡처한 dataURL을 File로 변환하여 업로드
-  const uploadCapturedThumbnail = useCallback(async (cabinetId: string, dataUrl: string) => {
-    try {
-      const blob = dataURLToBlob(dataUrl);
-      const file = new File([blob], `cabinet-${cabinetId}.png`, { type: 'image/png' });
-      await uploadThumbnail(cabinetId, file);
-    } catch (err) {
-      console.warn('섬네일 자동 업로드 실패:', err);
-    }
-  }, [uploadThumbnail]);
 
   // 렌더링 조건 체크 (모든 hooks 호출 이후)
   if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {
@@ -1133,8 +1114,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleSaveToCabinet = async () => {
     const category = getCustomizableCategory(placedModule.moduleId);
 
-    // 저장 전 3D 정면 뷰 섬네일 캡처
-    const thumbnailDataUrl = await captureCurrentThumbnail();
+    // Canvas2D로 섬네일 즉시 생성 (항상 성공, config 기반)
+    const thumbnailDataUrl = generateCabinetThumbnail(config, furnitureWidth, furnitureHeight, { width: 300, height: 400 });
 
     if (editingCabinetId) {
       // 수정 모드: 덮어쓰기 or 새로 생성 선택
@@ -1143,21 +1124,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
       );
 
       if (choice) {
-        // 덮어쓰기
+        // 덮어쓰기: thumbnail dataURL도 함께 저장
         const { error } = await updateCabinet(editingCabinetId, {
           category,
           width: furnitureWidth,
           height: furnitureHeight,
           depth: furnitureDepth,
           customConfig: config,
+          thumbnail: thumbnailDataUrl || undefined,
         });
 
         if (error) {
           alert(error);
         } else {
-          if (thumbnailDataUrl) {
-            await uploadCapturedThumbnail(editingCabinetId, thumbnailDataUrl);
-          }
           alert('My캐비닛이 수정되었습니다.');
           setEditingCabinetId(null);
         }
@@ -1178,8 +1157,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
         if (error) {
           alert(error);
         } else {
+          // 저장 직후 thumbnail 업데이트
           if (id && thumbnailDataUrl) {
-            await uploadCapturedThumbnail(id, thumbnailDataUrl);
+            await updateCabinet(id, { thumbnail: thumbnailDataUrl });
           }
           alert('새 My캐비닛으로 저장되었습니다.');
           setEditingCabinetId(null);
@@ -1202,8 +1182,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (error) {
         alert(error);
       } else {
+        // 저장 직후 thumbnail 업데이트
         if (id && thumbnailDataUrl) {
-          await uploadCapturedThumbnail(id, thumbnailDataUrl);
+          await updateCabinet(id, { thumbnail: thumbnailDataUrl });
         }
         alert('My캐비닛에 저장되었습니다.');
       }
