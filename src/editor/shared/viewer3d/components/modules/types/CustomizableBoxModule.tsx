@@ -702,6 +702,20 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
             />
+            {/* 서랍이 영역보다 작을 때: 서랍 상단에 고정선반(덮개) 추가 */}
+            {totalDrawerH < areaInnerHeight - t * 0.5 && (
+              <BoxWithEdges
+                args={[areaInnerWidth, t, sectionDepth - mmToUnit(backReductionMm)]}
+                position={[0, drawerBottomY + totalDrawerH + t / 2, mmToUnit(backReductionMm) / 2]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isHighlighted={isHighlighted}
+                panelName={`${sectionLabel}서랍덮개선반`}
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+              />
+            )}
           </group>
         );
       } else if (el.type === 'rod') {

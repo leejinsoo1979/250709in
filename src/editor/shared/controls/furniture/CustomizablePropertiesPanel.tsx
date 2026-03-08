@@ -519,11 +519,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
-  // 요소 타입 변경
+  // 영역 높이 기반 최대 서랍 수 계산
+  const getMaxDrawerCount = (areaHeight: number): number => {
+    // DRAWER_STANDARD 기준: 각 단수별 필요 내경(sectionHeight - 36mm)
+    // 4단: 1000-36=964, 3단: 800-36=764, 2단: 600-36=564, 1단: 321-36=285
+    for (let count = 4; count >= 1; count--) {
+      const standard = DRAWER_STANDARD[count];
+      const requiredInner = standard.sectionHeight - 2 * panelThickness;
+      if (areaHeight >= requiredInner) return count;
+    }
+    return 1;
+  };
+
+  // 요소 타입 변경 (drawerCount 파라미터 추가)
   const handleElementChange = (
     sIdx: number,
     side: 'full' | 'left' | 'right',
     elementType: CustomElement['type'],
+    drawerCount?: number,
   ) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
@@ -535,9 +548,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
         newElement = { type: 'shelf', heights: [Math.round(sectionHeight / 2)] };
         break;
       case 'drawer': {
-        const gapTotal = 23.6 * 2; // 1단 서랍 기본: 상하 gap
-        const usable = Math.max(sectionHeight - gapTotal, 80);
-        newElement = { type: 'drawer', heights: [Math.round(usable)] };
+        // 서랍 단수: 명시적 지정 또는 영역 높이 기반 최대값
+        const maxCount = getMaxDrawerCount(sectionHeight);
+        const count = drawerCount || maxCount;
+        const standard = DRAWER_STANDARD[count] || DRAWER_STANDARD[1];
+        newElement = { type: 'drawer', heights: [...standard.heights] };
         break;
       }
       case 'rod':
@@ -841,6 +856,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* 서랍 단수 선택 */}
+        {currentType === 'drawer' && 'heights' in el && (() => {
+          const maxCount = getMaxDrawerCount(sectionHeight);
+          const currentCount = el.heights.length;
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div className={styles.elementSelector}>
+                {Array.from({ length: maxCount }, (_, i) => i + 1).map((count) => (
+                  <button
+                    key={count}
+                    className={`${styles.elementButton} ${currentCount === count ? styles.active : ''}`}
+                    onClick={() => handleElementChange(sIdx, side, 'drawer', count)}
+                  >
+                    {count}단
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 선반/서랍 높이 목록 */}
         {(currentType === 'shelf' || currentType === 'drawer') && 'heights' in el && (
