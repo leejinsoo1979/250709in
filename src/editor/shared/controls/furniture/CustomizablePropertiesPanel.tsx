@@ -4,6 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
+import { findThreeCanvas, captureCanvasThumbnail, dataURLToBlob } from '@/editor/shared/utils/thumbnailCapture';
 import styles from './CustomizablePropertiesPanel.module.css';
 
 /**
@@ -13,7 +14,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
 const CustomizablePropertiesPanel: React.FC = () => {
   const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
-  const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId } = useMyCabinetStore();
+  const { saveCabinet, updateCabinet, uploadThumbnail, editingCabinetId, setEditingCabinetId } = useMyCabinetStore();
 
   const moduleId = activePopup.id;
   const placedModule = placedModules.find((m) => m.id === moduleId);
@@ -1051,9 +1052,34 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // 3D 캔버스에서 현재 가구 섬네일 캡처
+  const captureCurrentThumbnail = useCallback((): string | null => {
+    try {
+      const canvas = findThreeCanvas();
+      if (!canvas) return null;
+      return captureCanvasThumbnail(canvas, { width: 300, height: 400, quality: 0.85 });
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // 캡처한 dataURL을 File로 변환하여 업로드
+  const uploadCapturedThumbnail = useCallback(async (cabinetId: string, dataUrl: string) => {
+    try {
+      const blob = dataURLToBlob(dataUrl);
+      const file = new File([blob], `cabinet-${cabinetId}.png`, { type: 'image/png' });
+      await uploadThumbnail(cabinetId, file);
+    } catch (err) {
+      console.warn('섬네일 자동 업로드 실패:', err);
+    }
+  }, [uploadThumbnail]);
+
   // My캐비닛에 저장 (신규 또는 기존 업데이트)
   const handleSaveToCabinet = async () => {
     const category = getCustomizableCategory(placedModule.moduleId);
+
+    // 저장 전 3D 캔버스 섬네일 캡처
+    const thumbnailDataUrl = captureCurrentThumbnail();
 
     if (editingCabinetId) {
       // 기존 My캐비닛 업데이트
@@ -1068,6 +1094,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (error) {
         alert(error);
       } else {
+        // 섬네일 자동 업로드
+        if (thumbnailDataUrl) {
+          await uploadCapturedThumbnail(editingCabinetId, thumbnailDataUrl);
+        }
         alert('My캐비닛이 수정되었습니다.');
         setEditingCabinetId(null);
       }
@@ -1076,7 +1106,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
       if (!name) return;
 
-      const { error } = await saveCabinet({
+      const { id, error } = await saveCabinet({
         name,
         category,
         width: furnitureWidth,
@@ -1088,6 +1118,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (error) {
         alert(error);
       } else {
+        // 섬네일 자동 업로드
+        if (id && thumbnailDataUrl) {
+          await uploadCapturedThumbnail(id, thumbnailDataUrl);
+        }
         alert('My캐비닛에 저장되었습니다.');
       }
     }
