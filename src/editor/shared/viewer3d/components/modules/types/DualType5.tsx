@@ -269,9 +269,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       return allSections.map((section, index) => {
         const sectionHeight = section.calculatedHeight;
         const sectionCenterY = currentYPosition + sectionHeight / 2;
-        
+
         let sectionContent = null;
-        
+
         switch (section.type) {
           case 'shelf':
             if (section.count && section.count > 0) {
@@ -500,11 +500,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
                   if (allSections.length === 2) {
                     if (index === 0) {
-                      // 하부섹션 (drawer): 섹션 높이만 표시 (바닥판 제외)
+                      // 하부섹션 (drawer): 바닥판 상단 ~ 섹션 상단 (=구분판 시작점)
                       lineBottomY = -height/2 + basicThickness;
                       lineTopY = sectionCenterY + sectionHeight/2;
                     } else {
-                      // 상부섹션 (hanging): 상판~구분판 사이
+                      // 상부섹션 (hanging): 섹션 하단 ~ 상판 하단
                       lineBottomY = sectionCenterY - sectionHeight/2;
                       lineTopY = height/2 - basicThickness;
                     }
