@@ -2695,12 +2695,14 @@ const Configurator: React.FC = () => {
                 />
               </div>
 
-              {/* 커스텀 캐비닛 */}
-              <div style={{ flex: '0 0 auto', padding: '8px 12px', borderTop: '1px solid var(--theme-border)' }}>
-                <CustomizableFurnitureLibrary
-                  filter={moduleCategory === 'tall' ? 'full' : moduleCategory as 'upper' | 'lower'}
-                />
-              </div>
+              {/* 커스텀 캐비닛 (편집 패널이 열려있으면 숨김) */}
+              {activePopup.type !== 'customizableEdit' && (
+                <div style={{ flex: '0 0 auto', padding: '8px 12px', borderTop: '1px solid var(--theme-border)' }}>
+                  <CustomizableFurnitureLibrary
+                    filter={moduleCategory === 'tall' ? 'full' : moduleCategory as 'upper' | 'lower'}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
