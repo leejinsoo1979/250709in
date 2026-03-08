@@ -23,6 +23,7 @@ export interface CustomSection {
   // 칸막이 (세로 칸막이 - 내부 얇은 칸막이, leaf 섹션에서만 사용)
   hasPartition?: boolean;
   partitionPosition?: number; // mm (왼쪽에서 칸막이까지 거리)
+  partitionFrontInset?: number; // mm (칸막이 앞 오프셋, 기본 0)
   // 내부 요소 (칸막이 없으면 전체, 있으면 좌/우 각각)
   leftElements?: CustomElement[];
   rightElements?: CustomElement[];

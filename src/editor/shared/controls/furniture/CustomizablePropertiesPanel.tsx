@@ -1281,6 +1281,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
               />
               <span className={styles.unit}>mm</span>
             </div>
+            <div className={styles.row}>
+              <span className={styles.label}>앞 오프셋</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${styles.inputSmall}`}
+                value={section.partitionFrontInset ?? 0}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '' || /^\d+$/.test(v)) {
+                    const sections = [...config.sections];
+                    const sec = { ...sections[sIdx] };
+                    sec.partitionFrontInset = v === '' ? 0 : Math.min(furnitureDepth - 100, parseInt(v, 10));
+                    sections[sIdx] = sec;
+                    applyConfig({ ...config, sections });
+                  }
+                }}
+                style={{ width: '70px' }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
           </>
         )}
 

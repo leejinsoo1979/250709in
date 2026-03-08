@@ -841,13 +841,16 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     if (section.hasPartition && section.partitionPosition) {
       const partPos = mmToUnit(section.partitionPosition);
       const partitionX = -bInnerW / 2 + partPos;
+      const frontInset = mmToUnit(section.partitionFrontInset ?? 0);
+      const partD = innerD - frontInset; // 칸막이 깊이 (앞 오프셋만큼 줄어듦)
+      const partZ = backReduction / 2 - frontInset / 2; // Z 위치 (앞 오프셋만큼 뒤로)
 
       // 칸막이 수직 패널
       meshes.push(
         <BoxWithEdges
           key={`partition-${sIdx}`}
-          args={[t, bInnerH, innerD]}
-          position={[partitionX, centerY, backReduction / 2]}
+          args={[t, bInnerH, partD]}
+          position={[partitionX, centerY, partZ]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
