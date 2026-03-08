@@ -1149,7 +1149,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
               >
-                <div style={{ background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   <input
                     ref={gapInputRef}
                     type="number"
@@ -1158,11 +1158,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     onChange={(e) => setEditingGapValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                     onBlur={handleGapEditSubmit}
-                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: view2DTheme === 'dark' ? '#1f2937' : '#fff', color: view2DTheme === 'dark' ? '#fff' : '#000' }}
+                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <span style={{ marginLeft: '2px', fontSize: '11px', color: view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                  <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
                 </div>
               </Html>
             ) : (
@@ -1181,7 +1181,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     cursor: hasLeftWall ? 'pointer' : 'default',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
-                    background: hasLeftWall ? (view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                    background: hasLeftWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                     borderRadius: '3px',
                   }}
                   onClick={(e) => { if (hasLeftWall) { e.stopPropagation(); handleGapEdit('left', leftValue); } }}
@@ -1269,7 +1269,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
               >
-                <div style={{ background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   <input
                     ref={gapInputRef}
                     type="number"
@@ -1278,11 +1278,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     onChange={(e) => setEditingGapValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                     onBlur={handleGapEditSubmit}
-                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: view2DTheme === 'dark' ? '#1f2937' : '#fff', color: view2DTheme === 'dark' ? '#fff' : '#000' }}
+                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <span style={{ marginLeft: '2px', fontSize: '11px', color: view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                  <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
                 </div>
               </Html>
             ) : (
@@ -1301,7 +1301,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     cursor: hasRightWall ? 'pointer' : 'default',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
-                    background: hasRightWall ? (view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                    background: hasRightWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                     borderRadius: '3px',
                   }}
                   onClick={(e) => { if (hasRightWall) { e.stopPropagation(); handleGapEdit('right', rightValue); } }}
@@ -1666,7 +1666,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     style={{ pointerEvents: 'auto' }}
                     zIndexRange={[10000, 10001]}
                   >
-                    <div style={{ background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                    <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                       <input
                         ref={gapInputRef}
                         type="number"
@@ -1675,11 +1675,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         onChange={(e) => setEditingGapValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                         onBlur={handleGapEditSubmit}
-                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: view2DTheme === 'dark' ? '#1f2937' : '#fff', color: view2DTheme === 'dark' ? '#fff' : '#000' }}
+                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <span style={{ marginLeft: '2px', fontSize: '11px', color: view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                      <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
                     </div>
                   </Html>
                 ) : showDimensionsText ? (
@@ -1698,7 +1698,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         cursor: hasLeftWall ? 'pointer' : 'default',
                         userSelect: 'none',
                         whiteSpace: 'nowrap',
-                        background: hasLeftWall ? (view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                        background: hasLeftWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                         borderRadius: '3px',
                       }}
                       onClick={(e) => { if (hasLeftWall) { e.stopPropagation(); handleGapEdit('left', leftValue); } }}
@@ -1870,7 +1870,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     style={{ pointerEvents: 'auto' }}
                     zIndexRange={[10000, 10001]}
                   >
-                    <div style={{ background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                    <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                       <input
                         ref={gapInputRef}
                         type="number"
@@ -1879,11 +1879,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         onChange={(e) => setEditingGapValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                         onBlur={handleGapEditSubmit}
-                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: view2DTheme === 'dark' ? '#1f2937' : '#fff', color: view2DTheme === 'dark' ? '#fff' : '#000' }}
+                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <span style={{ marginLeft: '2px', fontSize: '11px', color: view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                      <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
                     </div>
                   </Html>
                 ) : (
@@ -1902,7 +1902,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         cursor: hasRightWall ? 'pointer' : 'default',
                         userSelect: 'none',
                         whiteSpace: 'nowrap',
-                        background: hasRightWall ? (view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                        background: hasRightWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                         borderRadius: '3px',
                       }}
                       onClick={(e) => { if (hasRightWall) { e.stopPropagation(); handleGapEdit('right', rightValue); } }}
