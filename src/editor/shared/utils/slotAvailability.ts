@@ -4,6 +4,7 @@ import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/ind
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, ColumnSlotInfo } from './columnSlotProcessor';
+import { isCustomizableModuleId, getCustomizableCategory } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
 /**
  * 특정 슬롯이 사용 가능한지 확인하는 함수
@@ -199,9 +200,10 @@ export const isSlotAvailable = (
   {
     // 기둥이 없는 슬롯에서는 기존 로직 사용
     
-    // 배치하려는 모듈의 카테고리 확인
+    // 배치하려는 모듈의 카테고리 확인 (커스텀 가구는 moduleId에서 추출)
     const newModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
-    const newCategory = newModuleData?.category;
+    const newCategory = newModuleData?.category
+      || (isCustomizableModuleId(moduleId) ? getCustomizableCategory(moduleId) : undefined);
     const isNewUpper = newCategory === 'upper';
     const isNewLower = newCategory === 'lower';
     
@@ -229,10 +231,12 @@ export const isSlotAvailable = (
       }
 
       const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
-      if (!moduleData) continue;
+      // 커스텀 가구는 getModuleById가 null → placedModule 속성에서 카테고리 추출
+      const existingCategory = moduleData?.category
+        || (isCustomizableModuleId(placedModule.moduleId) ? getCustomizableCategory(placedModule.moduleId) : undefined);
+      if (!moduleData && !existingCategory) continue; // 카테고리도 못 구하면 스킵
 
       // 기존 가구의 카테고리 확인
-      const existingCategory = moduleData.category;
       const isExistingUpper = existingCategory === 'upper';
       const isExistingLower = existingCategory === 'lower';
 
@@ -245,7 +249,7 @@ export const isSlotAvailable = (
         });
         continue;
       }
-      
+
       // 같은 카테고리끼리는 공존 불가능 (상부장-상부장, 하부장-하부장)
       if ((isNewUpper && isExistingUpper) || (isNewLower && isExistingLower)) {
         console.log('❌ 같은 카테고리 충돌 (isSlotAvailable):', {
@@ -254,10 +258,12 @@ export const isSlotAvailable = (
         });
         // 충돌 체크는 아래에서 계속 진행
       }
-      
+
       // 기존 가구의 듀얼/싱글 여부 판별 - isDualSlot 속성을 우선 사용
-      const isModuleDual = placedModule.isDualSlot !== undefined ? placedModule.isDualSlot : 
-                          Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+      // 커스텀 가구는 moduleData가 없으므로 placedModule.moduleWidth로 판별
+      const isModuleDual = placedModule.isDualSlot !== undefined ? placedModule.isDualSlot :
+                          moduleData ? Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50
+                          : (placedModule.moduleWidth ? Math.abs(placedModule.moduleWidth - (indexing.columnWidth * 2)) < 50 : false);
       
       // 기존 모듈의 슬롯 위치 찾기 - slotIndex 속성을 우선 사용
       const storedSlot = placedModule.slotIndex;
