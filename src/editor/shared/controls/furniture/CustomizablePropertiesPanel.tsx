@@ -514,13 +514,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
         newElement = { type: 'shelf', heights: [Math.round(subHeight / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
-        const gapTotal = 23.6 * 2;
-        const usable = Math.max(subHeight - gapTotal, 80);
-        newElement = { type: 'drawer', heights: [Math.round(usable)] };
+        const maxCount = getMaxDrawerCount(subHeight);
+        const standard = DRAWER_STANDARD[maxCount] || DRAWER_STANDARD[1];
+        newElement = { type: 'drawer', heights: [...standard.heights] };
         break;
       }
       case 'rod':
-        newElement = { type: 'rod', height: Math.round(subHeight * 0.85) };
+        newElement = subHeight >= 1100
+          ? { type: 'rod', height: Math.round(subHeight * 0.85), withShelf: true, shelfGap: 280 }
+          : { type: 'rod', height: Math.round(subHeight * 0.85), withShelf: false };
         break;
       case 'pants':
         newElement = { type: 'pants', height: Math.round(subHeight * 0.85) };
