@@ -364,7 +364,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   const customDepth = placedModule.customDepth || moduleData.dimensions.depth;
   const hasDoor = placedModule.doorConfig?.enabled || false;
   
-  const panels = calculatePanelDetails(moduleData as ModuleData, customWidth, customDepth, hasDoor, t, undefined, undefined, undefined, undefined, undefined, undefined, undefined, placedModule?.backPanelThickness);
+  const panels = calculatePanelDetails(moduleData as ModuleData, customWidth, customDepth, hasDoor, t, undefined, undefined, undefined, undefined, undefined, undefined, undefined, placedModule?.backPanelThickness, placedModule?.customConfig);
   const totalPanels = panels.filter(p => !p.name?.startsWith('===')).length;
 
   return (
