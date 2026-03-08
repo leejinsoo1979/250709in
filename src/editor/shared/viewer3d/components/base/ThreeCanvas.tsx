@@ -961,8 +961,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 canvasLog('✅ Scene ref 저장 완료 (GLB 내보내기용)');
               }
 
-              // DXF 내보내기를 위한 전역 scene 참조 저장
+              // DXF 내보내기/섬네일 캡처를 위한 전역 scene/renderer 참조 저장
               sceneHolder.setScene(scene);
+              sceneHolder.setRenderer(gl);
 
               // Canvas 요소에 드래그 이벤트 리스너 추가
               const canvas = gl.domElement;
