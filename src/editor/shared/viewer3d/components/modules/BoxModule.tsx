@@ -209,6 +209,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperSectionDepth={upperSectionDepth}
         lowerSectionDepthDirection={lowerSectionDepthDirection}
         upperSectionDepthDirection={upperSectionDepthDirection}
+        backPanelThickness={backPanelThicknessProp}
         isEditable={_isCustomizable}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

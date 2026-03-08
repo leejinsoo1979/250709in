@@ -31,6 +31,7 @@ interface CustomizableBoxModuleProps {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
+  backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -71,6 +72,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
+  backPanelThickness: backPanelThicknessProp,
   isEditable = true,
   onPointerDown,
   onPointerMove,
@@ -90,9 +92,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
   const panelThickness = customConfig.panelThickness || 18; // mm
   const t = mmToUnit(panelThickness); // Three.js 단위
-  const backPanelThicknessMm = 9; // 백패널 9mm
+  const backPanelThicknessMm = backPanelThicknessProp || 9; // 백패널 두께 (3/5/9mm)
   const backPanelT = mmToUnit(backPanelThicknessMm);
-  const backReductionMm = 26; // 상/하판 깊이 줄임 (백패널 영역)
+  const backReductionMm = backPanelThicknessMm + 17; // 상/하판/선반 깊이 줄임 (백패널 + 오프셋)
   const backReduction = mmToUnit(backReductionMm);
   const widthReductionMm = 1; // 좌우 0.5mm씩 줄임
   const widthReduction = mmToUnit(widthReductionMm);
