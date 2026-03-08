@@ -137,10 +137,12 @@ const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     e.preventDefault();
     e.stopPropagation();
+    const current = parseInt(localVal, 10) || value;
     const delta = e.key === 'ArrowUp' ? 1 : -1;
-    const newGap = Math.max(10, value + delta);
+    const newGap = Math.max(10, current + delta);
+    setLocalVal(newGap.toString());
     applyGapChange(newGap);
-  }, [value, applyGapChange]);
+  }, [localVal, value, applyGapChange]);
 
   const handleBlur = useCallback(() => {
     const parsed = parseInt(localVal, 10);
