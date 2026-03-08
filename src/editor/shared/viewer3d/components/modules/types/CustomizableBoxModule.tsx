@@ -1277,8 +1277,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {!isDragging && viewMode === '2D' && view2DDirection === 'front' && (() => {
         const zPos = D / 2 + 1.0;
         // 가구 내부 좌측에 표시 (측판 바로 안쪽)
-        const xPos = -innerW / 2 + 0.3;
-        const lineX = -innerW / 2 + 0.15;
+        const xPos = -innerW / 2 + 0.6;
+        const lineX = -innerW / 2 + 0.45;
 
         // 섹션별 내경 치수 렌더링 헬퍼
         const renderSectionDims = (
