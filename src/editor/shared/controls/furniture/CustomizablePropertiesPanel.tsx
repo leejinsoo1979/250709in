@@ -1178,7 +1178,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
           alert(error);
         } else {
           alert('My캐비닛이 수정되었습니다.');
+          restoreEditBackup();
           setEditingCabinetId(null);
+          closeAllPopups();
         }
       } else {
         // 새로 생성
@@ -1202,7 +1204,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
             await updateCabinet(id, { thumbnail: thumbnailDataUrl });
           }
           alert('새 My캐비닛으로 저장되었습니다.');
+          restoreEditBackup();
           setEditingCabinetId(null);
+          closeAllPopups();
         }
       }
     } else {
