@@ -2818,7 +2818,122 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthWrite={false}
               transparent={true}
             />
-            
+
+            {/* 연장선 끝 세리프 (가로 틱 마크) */}
+            {[leftX, rightX].map((x, ti) => (
+              <React.Fragment key={`tick-${ti}`}>
+                {/* 상단 (spaceHeight) 세리프 */}
+                <NativeLine name="dimension_line"
+                  points={[[x - mmToThreeUnits(8), spaceHeight, 0.001], [x + mmToThreeUnits(8), spaceHeight, 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={1000000}
+                  depthTest={false}
+                />
+                {/* 하단 (columnDimensionY) 세리프 */}
+                <NativeLine name="dimension_line"
+                  points={[[x - mmToThreeUnits(8), columnDimensionY, 0.001], [x + mmToThreeUnits(8), columnDimensionY, 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={1000000}
+                  depthTest={false}
+                />
+              </React.Fragment>
+            ))}
+
+            {/* 커스터마이징 가구 칸막이별 너비 치수 */}
+            {module.customConfig && (() => {
+              const pt = module.customConfig.panelThickness || 18;
+              const innerW = actualWidth - pt * 2; // 내경 너비
+              const subDimY = dimY - mmToThreeUnits(40); // 메인 치수 아래
+              const partitionLines: React.ReactNode[] = [];
+
+              module.customConfig.sections.forEach((sec: any, sIdx: number) => {
+                if (!sec.hasPartition || !sec.partitionPosition) return;
+                const pp = sec.partitionPosition; // mm from left inner edge
+                const leftAreaW = pp; // 좌측 영역 너비
+                const rightAreaW = innerW - pp - pt; // 우측 영역 너비 (칸막이 두께 제외)
+
+                // 좌측 영역
+                const areaLeftX = leftX + mmToThreeUnits(pt); // 좌측 패널 뒤
+                const partX = areaLeftX + mmToThreeUnits(pp);
+                const areaRightX = rightX - mmToThreeUnits(pt); // 우측 패널 앞
+
+                // 좌측 영역 치수
+                partitionLines.push(
+                  <React.Fragment key={`part-${sIdx}-left`}>
+                    <NativeLine name="dimension_line"
+                      points={[[areaLeftX, subDimY, 0.002], [partX, subDimY, 0.002]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([areaLeftX, subDimY, 0.002], [areaLeftX + 0.015, subDimY, 0.002], 0.008)}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([partX, subDimY, 0.002], [partX - 0.015, subDimY, 0.002], 0.008)}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                    />
+                    <Text
+                      position={[(areaLeftX + partX) / 2, subDimY + mmToThreeUnits(25), 0.01]}
+                      fontSize={baseFontSize * 0.85}
+                      color={dimensionColor} anchorX="center" anchorY="middle"
+                      renderOrder={1000000} depthTest={false}
+                    >
+                      {Math.round(leftAreaW)}
+                    </Text>
+                    {/* 좌측 연장선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[areaLeftX, dimY, 0.001], [areaLeftX, subDimY - mmToThreeUnits(10), 0.001]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[partX, dimY, 0.001], [partX, subDimY - mmToThreeUnits(10), 0.001]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
+                    />
+                  </React.Fragment>
+                );
+
+                // 우측 영역 치수
+                const rightStart = partX + mmToThreeUnits(pt); // 칸막이 두께 뒤
+                partitionLines.push(
+                  <React.Fragment key={`part-${sIdx}-right`}>
+                    <NativeLine name="dimension_line"
+                      points={[[rightStart, subDimY, 0.002], [areaRightX, subDimY, 0.002]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([rightStart, subDimY, 0.002], [rightStart + 0.015, subDimY, 0.002], 0.008)}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([areaRightX, subDimY, 0.002], [areaRightX - 0.015, subDimY, 0.002], 0.008)}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                    />
+                    <Text
+                      position={[(rightStart + areaRightX) / 2, subDimY + mmToThreeUnits(25), 0.01]}
+                      fontSize={baseFontSize * 0.85}
+                      color={dimensionColor} anchorX="center" anchorY="middle"
+                      renderOrder={1000000} depthTest={false}
+                    >
+                      {Math.round(rightAreaW)}
+                    </Text>
+                    {/* 우측 연장선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[rightStart, dimY, 0.001], [rightStart, subDimY - mmToThreeUnits(10), 0.001]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[areaRightX, dimY, 0.001], [areaRightX, subDimY - mmToThreeUnits(10), 0.001]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
+                    />
+                  </React.Fragment>
+                );
+              });
+
+              return partitionLines.length > 0 ? <>{partitionLines}</> : null;
+            })()}
+
           </group>
         );
       })}
