@@ -1,19 +1,19 @@
 .overlay {
   position: fixed;
   top: 0;
-  right: 0;
-  width: auto;
+  left: 0;
+  width: 100vw;
   height: 100vh;
   background-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
   z-index: 1000;
-  padding-right: 8px;
   pointer-events: none;
 }
 
 .panel {
+  position: fixed;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
   background: var(--theme-surface);
   border-radius: 12px;
   box-shadow: var(--popup-shadow);
