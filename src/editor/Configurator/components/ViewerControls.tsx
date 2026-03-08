@@ -357,12 +357,13 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       <div className={styles.spacer} />
 
       {/* ─── Right: View direction ─── */}
-      <div className={styles.segmentedControl} style={{ marginRight: '240px' }}>
+      <div className={styles.segmentedControl} style={{ marginRight: '80px' }}>
         {viewDirections.map((direction) => (
           <button
             key={direction.id}
             data-view-direction={direction.id}
             className={`${styles.segmentButton} ${view2DDirection === direction.id ? styles.segmentActive : ''}`}
+            style={{ padding: '0 16px', height: '30px', fontSize: '12px' }}
             onClick={() => handleViewDirectionChange(direction.id)}
           >{direction.label}</button>
         ))}
