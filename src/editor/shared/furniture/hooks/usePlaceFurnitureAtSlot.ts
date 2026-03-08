@@ -255,6 +255,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   // 새 가구 모듈 생성
   const baseType = moduleId.replace(/-[\d.]+$/, '');
+  // 서랍 모듈은 하부 섹션 상판 85mm 들여쓰기 기본값 적용
+  const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer')) ? 85 : undefined;
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId: moduleId,
@@ -273,6 +275,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     adjustedWidth: adjustedWidth,
     lowerSectionDepth: undefined,
     upperSectionDepth: undefined,
+    lowerSectionTopOffset: defaultLowerTopOffset,
     customSections: undefined,
     isLocked: false,
     zone: targetSlot.zone
