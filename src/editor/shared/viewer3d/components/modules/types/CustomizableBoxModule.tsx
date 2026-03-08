@@ -628,38 +628,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
         const drawerCenterY = drawerBottomY + totalDrawerH / 2;
 
-        // 서랍 내부 너비 (좌우 날개벽 측판 제외)
-        const drawerInnerW = areaInnerWidth - 2 * t;
-
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
-            {/* 좌측 날개벽 (측판) */}
-            <BoxWithEdges
-              args={[t, totalDrawerH, sectionDepth - mmToUnit(backReductionMm)]}
-              position={[-areaInnerWidth / 2 + t / 2, drawerCenterY, mmToUnit(backReductionMm) / 2]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isHighlighted={isHighlighted}
-              panelName={`${sectionLabel}서랍좌측판`}
-              panelGrainDirections={panelGrainDirections}
-              furnitureId={placedFurnitureId}
-            />
-            {/* 우측 날개벽 (측판) */}
-            <BoxWithEdges
-              args={[t, totalDrawerH, sectionDepth - mmToUnit(backReductionMm)]}
-              position={[areaInnerWidth / 2 - t / 2, drawerCenterY, mmToUnit(backReductionMm) / 2]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isHighlighted={isHighlighted}
-              panelName={`${sectionLabel}서랍우측판`}
-              panelGrainDirections={panelGrainDirections}
-              furnitureId={placedFurnitureId}
-            />
             <DrawerRenderer
               drawerCount={drawerCount}
-              innerWidth={drawerInnerW}
+              innerWidth={areaInnerWidth}
               innerHeight={totalDrawerH - 2 * t}
               depth={sectionDepth}
               basicThickness={t}
