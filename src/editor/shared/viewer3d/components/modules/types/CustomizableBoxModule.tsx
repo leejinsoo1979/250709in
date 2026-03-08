@@ -461,36 +461,56 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
     }
 
-    const frontZ = D / 2 + 0.002;
-    const bw = 0.008; // 테두리 두께 (8mm)
+    const areaD = D - 2 * t; // 영역 깊이 (측판 제외)
+    const pad = 0.003; // 박스가 영역보다 약간 크게
+
+    // 엣지 라인 꼭짓점 (12개 엣지)
+    const hw = areaW / 2 + pad;
+    const hh = areaH / 2 + pad;
+    const hd = areaD / 2 + pad;
+    const edgeVertices = new Float32Array([
+      // 앞면 4 엣지
+      -hw, -hh, hd,  hw, -hh, hd,
+      hw, -hh, hd,   hw, hh, hd,
+      hw, hh, hd,    -hw, hh, hd,
+      -hw, hh, hd,   -hw, -hh, hd,
+      // 뒷면 4 엣지
+      -hw, -hh, -hd, hw, -hh, -hd,
+      hw, -hh, -hd,  hw, hh, -hd,
+      hw, hh, -hd,   -hw, hh, -hd,
+      -hw, hh, -hd,  -hw, -hh, -hd,
+      // 연결 4 엣지
+      -hw, -hh, hd,  -hw, -hh, -hd,
+      hw, -hh, hd,   hw, -hh, -hd,
+      hw, hh, hd,    hw, hh, -hd,
+      -hw, hh, hd,   -hw, hh, -hd,
+    ]);
 
     return (
-      <group position={[centerX, centerY, frontZ]}>
-        {/* 반투명 배경 */}
+      <group position={[centerX, centerY, 0]}>
+        {/* 반투명 3D 박스 */}
         <mesh>
-          <planeGeometry args={[areaW, areaH]} />
-          <meshBasicMaterial color={themeColor} transparent opacity={0.18} side={2} depthTest={false} />
+          <boxGeometry args={[areaW + pad * 2, areaH + pad * 2, areaD + pad * 2]} />
+          <meshBasicMaterial
+            color={themeColor}
+            transparent
+            opacity={0.12}
+            side={THREE.DoubleSide}
+            depthTest={false}
+          />
         </mesh>
-        {/* 상 */}
-        <mesh position={[0, areaH / 2, 0]}>
-          <planeGeometry args={[areaW + bw * 2, bw]} />
-          <meshBasicMaterial color={themeColor} depthTest={false} />
-        </mesh>
-        {/* 하 */}
-        <mesh position={[0, -areaH / 2, 0]}>
-          <planeGeometry args={[areaW + bw * 2, bw]} />
-          <meshBasicMaterial color={themeColor} depthTest={false} />
-        </mesh>
-        {/* 좌 */}
-        <mesh position={[-areaW / 2, 0, 0]}>
-          <planeGeometry args={[bw, areaH]} />
-          <meshBasicMaterial color={themeColor} depthTest={false} />
-        </mesh>
-        {/* 우 */}
-        <mesh position={[areaW / 2, 0, 0]}>
-          <planeGeometry args={[bw, areaH]} />
-          <meshBasicMaterial color={themeColor} depthTest={false} />
-        </mesh>
+        {/* 엣지 윤곽선 */}
+        <lineSegments renderOrder={999}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              array={edgeVertices}
+              count={edgeVertices.length / 3}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial color={themeColor} depthTest={false} transparent opacity={0.9} />
+        </lineSegments>
       </group>
     );
   };
