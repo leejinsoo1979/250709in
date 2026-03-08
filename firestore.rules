@@ -279,5 +279,13 @@ service cloud.firestore {
       allow read, list: if isAdmin();
       allow create, update, delete: if isAdmin();
     }
+
+    // My캐비닛 - 로그인 사용자 본인 데이터만 읽기/쓰기
+    match /myCabinets/{cabinetId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
   }
 }
