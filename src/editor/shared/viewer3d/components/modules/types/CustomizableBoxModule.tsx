@@ -175,6 +175,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     posZ: number,
     sectionIndex: number,
     areaSide?: 'left' | 'right',
+    subPart?: 'upper' | 'lower',
   ) => {
     // 해당 영역이 편집 중이면 아이콘 숨김
     if (isEditingArea(sectionIndex, areaSide)) return null;
@@ -238,7 +239,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 const rightScreenX = Math.round((rightEdge.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left);
                 sx = rightScreenX + 12;
               }
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, sx, Math.round(iconRect.top));
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, subPart, sx, Math.round(iconRect.top));
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}

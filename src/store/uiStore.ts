@@ -72,6 +72,7 @@ interface UIState {
     id: string | null;
     sectionIndex?: number; // 커스터마이징 가구 톱니 아이콘에서 특정 섹션만 편집
     areaSide?: 'left' | 'right'; // 칸막이 좌/우 영역 중 특정 영역만 편집
+    subPart?: 'upper' | 'lower'; // 상하 서브분할 영역 중 특정 영역만 편집
     screenX?: number; // 팝업 위치 힌트 (화면 X 좌표)
     screenY?: number; // 팝업 위치 힌트 (화면 Y 좌표)
   };
@@ -193,7 +194,7 @@ interface UIState {
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
   openFurnitureEditPopup: (moduleId: string) => void;
-  openCustomizableEditPopup: (moduleId: string, sectionIndex?: number, areaSide?: 'left' | 'right', screenX?: number, screenY?: number) => void;
+  openCustomizableEditPopup: (moduleId: string, sectionIndex?: number, areaSide?: 'left' | 'right', subPart?: 'upper' | 'lower', screenX?: number, screenY?: number) => void;
   openColumnPopup: (columnId: string) => void;
   openColumnEditModal: (columnId: string) => void;
   openWallPopup: (wallId: string) => void;
@@ -491,9 +492,9 @@ export const useUIStore = create<UIState>()(
       },
       
       // 커스터마이징 가구 편집 팝업 열기
-      openCustomizableEditPopup: (moduleId, sectionIndex?, areaSide?, screenX?, screenY?) => {
+      openCustomizableEditPopup: (moduleId, sectionIndex?, areaSide?, subPart?, screenX?, screenY?) => {
         set({
-          activePopup: { type: 'customizableEdit', id: moduleId, sectionIndex, areaSide, screenX, screenY },
+          activePopup: { type: 'customizableEdit', id: moduleId, sectionIndex, areaSide, subPart, screenX, screenY },
           selectedFurnitureId: moduleId,
         });
       },

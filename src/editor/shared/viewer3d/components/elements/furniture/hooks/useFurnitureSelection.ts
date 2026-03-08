@@ -72,7 +72,7 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
         const rect = gl.domElement.getBoundingClientRect();
         const sx = Math.round((rightEdge.x * 0.5 + 0.5) * rect.width + rect.left);
         const sy = Math.round((-rightEdge.y * 0.5 + 0.5) * rect.height + rect.top);
-        openCustomizableEditPopup(placedModuleId, undefined, undefined, sx, sy);
+        openCustomizableEditPopup(placedModuleId, undefined, undefined, undefined, sx, sy);
       } else {
         openFurnitureEditPopup(placedModuleId);
       }
