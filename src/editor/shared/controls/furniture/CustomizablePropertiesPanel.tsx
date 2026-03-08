@@ -1663,27 +1663,81 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
 
     return (
-      <div key={sIdx} className={styles.section}>
-        <div className={styles.sectionTitle}>
-          {config.sections.length > 1 ? (sIdx === 0 ? '하부 섹션' : '상부 섹션') : '내부 구조'}
-        </div>
-
-        {/* 섹션 높이 (2단 분할 시) */}
-        {config.sections.length > 1 && (
+      <div key={sIdx}>
+        {/* 치수 */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>
+            {config.sections.length > 1 ? (sIdx === 0 ? '하부 섹션' : '상부 섹션') : '섹션'} 치수
+          </div>
+          {/* 너비 */}
           <div className={styles.row}>
-            <span className={styles.label}>높이</span>
+            <span className={styles.label}>너비</span>
             <input
               type="text"
               inputMode="numeric"
-              className={`${styles.input} ${styles.inputSmall}`}
-              value={sectionHeightInputs[sIdx] ?? section.height.toString()}
-              onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
-              onBlur={() => handleSectionHeightBlur(sIdx)}
-              onKeyDown={(e) => handleSectionHeightKeyDown(e, sIdx)}
+              className={`${styles.input} ${widthError ? styles.inputError : ''}`}
+              value={widthInput}
+              placeholder={`${MIN_WIDTH}-${MAX_WIDTH}`}
+              onChange={(e) => handleWidthInputChange(e.target.value)}
+              onBlur={handleWidthInputBlur}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              style={{ width: '70px' }}
             />
             <span className={styles.unit}>mm</span>
           </div>
-        )}
+          {widthError && <div className={styles.errorMessage}>{widthError}</div>}
+          {/* 높이 */}
+          <div className={styles.row}>
+            <span className={styles.label}>높이</span>
+            {config.sections.length > 1 ? (
+              <>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={sectionHeightInputs[sIdx] ?? section.height.toString()}
+                  onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
+                  onBlur={() => handleSectionHeightBlur(sIdx)}
+                  onKeyDown={(e) => handleSectionHeightKeyDown(e, sIdx)}
+                  style={{ width: '70px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </>
+            ) : (
+              <>
+                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
+                  {section.height}
+                </span>
+                <span className={styles.unit}>mm</span>
+              </>
+            )}
+          </div>
+          {config.sections.length > 1 && (
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+              {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height}mm
+            </div>
+          )}
+          {/* 깊이 */}
+          <div className={styles.row}>
+            <span className={styles.label}>깊이</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              className={`${styles.input} ${depthError ? styles.inputError : ''}`}
+              value={depthInput}
+              placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+              onChange={(e) => handleDepthInputChange(e.target.value)}
+              onBlur={handleDepthInputBlur}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              style={{ width: '70px' }}
+            />
+            <span className={styles.unit}>mm</span>
+          </div>
+          {depthError && <div className={styles.errorMessage}>{depthError}</div>}
+        </div>
+
+        <div className={styles.section}>
+        <div className={styles.sectionTitle}>내부 구조</div>
 
         {/* 칸막이 토글 */}
         <div className={styles.row}>
@@ -1802,6 +1856,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             {renderElementEditor(sIdx, 'full', section.elements, section.height)}
           </div>
         )}
+      </div>
       </div>
     );
   };
