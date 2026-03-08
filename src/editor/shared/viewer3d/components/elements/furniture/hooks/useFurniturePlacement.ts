@@ -69,6 +69,11 @@ export const useFurniturePlacement = () => {
 
     if (!result.success) {
       console.error('❌ 가구 배치 실패:', result.error);
+      // 실패해도 placement 상태 초기화 (+ 아이콘 잔존 방지)
+      setSelectedFurnitureId(null);
+      setFurniturePlacementMode(false);
+      clearDragData();
+      setPendingPlacement(null);
       return;
     }
 
