@@ -1281,10 +1281,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       {currentType === 'drawer' && !isUpper && (
                         <div style={{ marginTop: '8px' }}>
                           <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].filter((count) => {
-                              const std = DRAWER_STANDARD[count];
-                              return std && std.sectionHeight <= section.height + 50;
-                            }).map((count) => (
+                            {[1, 2, 3, 4].map((count) => (
                               <button
                                 key={count}
                                 className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
@@ -1322,10 +1319,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       {currentType === 'drawer' && (
                         <div style={{ marginTop: '8px' }}>
                           <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].filter((count) => {
-                              const std = DRAWER_STANDARD[count];
-                              return std && std.sectionHeight <= section.height + 50;
-                            }).map((count) => (
+                            {[1, 2, 3, 4].map((count) => (
                               <button
                                 key={count}
                                 className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
