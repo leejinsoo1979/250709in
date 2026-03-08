@@ -1273,69 +1273,105 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {/* 편집 중인 영역 하이라이트 테두리 */}
       {renderEditingHighlight()}
 
-      {/* 섹션 내경 치수 */}
+      {/* 섹션 내경 치수 (높이 + 칸막이 좌우 너비) */}
       {!isDragging && viewMode === '2D' && view2DDirection === 'front' && (() => {
         const zPos = D / 2 + 1.0;
-        const xPos = -innerW / 2 * 0.3 - 0.5;
-        const lineX = -innerW / 2 * 0.3;
+        // 가구 내부 좌측에 표시 (측판 바로 안쪽)
+        const xPos = -innerW / 2 + 0.3;
+        const lineX = -innerW / 2 + 0.15;
+
+        // 섹션별 내경 치수 렌더링 헬퍼
+        const renderSectionDims = (
+          section: CustomSection,
+          sIdx: number,
+          sectionCenterY: number,
+          sectionInnerH: number,
+          sectionBoxW: number,
+        ) => {
+          const topY = sectionCenterY + sectionInnerH / 2;
+          const botY = sectionCenterY - sectionInnerH / 2;
+          const bInnerW = sectionBoxW - 2 * t;
+          const nodes: React.ReactNode[] = [];
+
+          // 높이 치수
+          nodes.push(
+            <DimensionText
+              key={`dim-h-${sIdx}`}
+              value={section.height}
+              position={[xPos, sectionCenterY, zPos]}
+              rotation={[0, 0, Math.PI / 2]}
+            />,
+            <Line
+              key={`dim-hline-${sIdx}`}
+              points={[[lineX, topY, zPos], [lineX, botY, zPos]]}
+              color="#888888"
+              lineWidth={1}
+            />
+          );
+
+          // 칸막이가 있으면 좌/우 내경 너비 표시
+          if (section.hasPartition && section.partitionPosition) {
+            const leftWidthMm = section.partitionPosition - panelThickness / 2;
+            const rightWidthMm = innerWidthMm - section.partitionPosition - panelThickness / 2;
+            const partX = -bInnerW / 2 + mmToUnit(section.partitionPosition);
+
+            // 좌측 내경 너비 (섹션 상단 안쪽에 수평 표시)
+            const dimYPos = topY - 0.25;
+            const leftCenterX = (-bInnerW / 2 + partX - t / 2) / 2;
+            const leftLeft = -bInnerW / 2;
+            const leftRight = partX - t / 2;
+
+            nodes.push(
+              <DimensionText
+                key={`dim-wl-${sIdx}`}
+                value={Math.round(leftWidthMm)}
+                position={[leftCenterX, dimYPos, zPos]}
+              />,
+              <Line
+                key={`dim-wl-line-${sIdx}`}
+                points={[[leftLeft, dimYPos, zPos], [leftRight, dimYPos, zPos]]}
+                color="#888888"
+                lineWidth={1}
+              />
+            );
+
+            // 우측 내경 너비
+            const rightLeft = partX + t / 2;
+            const rightRight = bInnerW / 2;
+            const rightCenterX = (rightLeft + rightRight) / 2;
+
+            nodes.push(
+              <DimensionText
+                key={`dim-wr-${sIdx}`}
+                value={Math.round(rightWidthMm)}
+                position={[rightCenterX, dimYPos, zPos]}
+              />,
+              <Line
+                key={`dim-wr-line-${sIdx}`}
+                points={[[rightLeft, dimYPos, zPos], [rightRight, dimYPos, zPos]]}
+                color="#888888"
+                lineWidth={1}
+              />
+            );
+          }
+
+          return nodes;
+        };
 
         if (isSplit) {
           const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
           const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
           const lowerCenterY = -H / 2 + lowerH / 2;
           const upperCenterY = -H / 2 + lowerH + upperH / 2;
-          const lowerInnerH = lowerH - 2 * t;
-          const upperInnerH = upperH - 2 * t;
-          const lowerTop = lowerCenterY + lowerInnerH / 2;
-          const lowerBot = lowerCenterY - lowerInnerH / 2;
-          const upperTop = upperCenterY + upperInnerH / 2;
-          const upperBot = upperCenterY - upperInnerH / 2;
 
           return (
             <>
-              {/* 하부 내경 높이 */}
-              <DimensionText
-                value={sections[0].height}
-                position={[xPos, lowerCenterY, zPos]}
-                rotation={[0, 0, Math.PI / 2]}
-              />
-              <Line
-                points={[[lineX, lowerTop, zPos], [lineX, lowerBot, zPos]]}
-                color="#888888"
-                lineWidth={1}
-              />
-              {/* 상부 내경 높이 */}
-              <DimensionText
-                value={sections[1].height}
-                position={[xPos, upperCenterY, zPos]}
-                rotation={[0, 0, Math.PI / 2]}
-              />
-              <Line
-                points={[[lineX, upperTop, zPos], [lineX, upperBot, zPos]]}
-                color="#888888"
-                lineWidth={1}
-              />
+              {renderSectionDims(sections[0], 0, lowerCenterY, lowerH - 2 * t, W)}
+              {renderSectionDims(sections[1], 1, upperCenterY, upperH - 2 * t, W)}
             </>
           );
         } else {
-          const singleInnerH = H - 2 * t;
-          const topY = singleInnerH / 2;
-          const botY = -singleInnerH / 2;
-
-          return (
-            <>
-              <DimensionText
-                value={sections[0].height}
-                position={[xPos, 0, zPos]}
-                rotation={[0, 0, Math.PI / 2]}
-              />
-              <Line
-                points={[[lineX, topY, zPos], [lineX, botY, zPos]]}
-                color="#888888"
-                lineWidth={1}
-              />
-            </>
-          );
+          return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, W)}</>;
         }
       })()}
 
