@@ -268,7 +268,22 @@ export function buildModuleDataFromPlacedModule(
     freeWidth?: number;
     freeHeight?: number;
     freeDepth?: number;
-    customConfig?: { sections: Array<{ height: number }>; panelThickness?: number };
+    customConfig?: {
+      sections: Array<{
+        height: number;
+        elements?: Array<{ type: string; heights?: number[]; height?: number }>;
+        leftElements?: Array<{ type: string; heights?: number[]; height?: number }>;
+        rightElements?: Array<{ type: string; heights?: number[]; height?: number }>;
+        hasPartition?: boolean;
+        areaSubSplits?: Record<string, {
+          enabled: boolean;
+          lowerHeight: number;
+          upperElements?: Array<{ type: string; heights?: number[]; height?: number }>;
+          lowerElements?: Array<{ type: string; heights?: number[]; height?: number }>;
+        }>;
+      }>;
+      panelThickness?: number;
+    };
     isCustomizable?: boolean;
   }
 ): ModuleData | null {
@@ -283,12 +298,96 @@ export function buildModuleDataFromPlacedModule(
   const depth = placedModule.freeDepth || 600;
   const thickness = placedModule.customConfig?.panelThickness || 18;
 
+  // 섹션 내부 elements를 분석하여 SectionConfig type과 count 결정
+  const analyzeSectionElements = (
+    elements?: Array<{ type: string; heights?: number[]; height?: number }>
+  ): { type: 'shelf' | 'hanging' | 'drawer' | 'open'; count: number; drawerHeights?: number[]; shelfPositions?: number[] } => {
+    if (!elements || elements.length === 0) {
+      return { type: 'open', count: 0 };
+    }
+
+    // 요소 타입별 집계
+    let shelfCount = 0;
+    let drawerCount = 0;
+    let hasRod = false;
+    let hasPants = false;
+    let isOpen = false;
+    const drawerHeights: number[] = [];
+    const shelfHeights: number[] = [];
+
+    for (const el of elements) {
+      switch (el.type) {
+        case 'shelf':
+          shelfCount += el.heights?.length || 0;
+          if (el.heights) shelfHeights.push(...el.heights);
+          if ((el as any).hasRod) hasRod = true;
+          break;
+        case 'drawer':
+          drawerCount += el.heights?.length || 0;
+          if (el.heights) drawerHeights.push(...el.heights);
+          break;
+        case 'rod':
+          hasRod = true;
+          break;
+        case 'pants':
+          hasPants = true;
+          break;
+        case 'open':
+          isOpen = true;
+          break;
+      }
+    }
+
+    // 우선순위: drawer > shelf > hanging(rod/pants) > open
+    if (drawerCount > 0) {
+      return { type: 'drawer', count: drawerCount, drawerHeights };
+    }
+    if (shelfCount > 0) {
+      return { type: 'shelf', count: shelfCount, shelfPositions: shelfHeights };
+    }
+    if (hasRod || hasPants) {
+      return { type: 'hanging', count: 1 };
+    }
+    return { type: 'open', count: 0 };
+  };
+
   // customConfig.sections → SectionConfig[] 변환
-  const sections: SectionConfig[] = placedModule.customConfig?.sections?.map((sec) => ({
-    type: 'shelf' as const,
-    height: sec.height,
-    heightType: 'absolute' as const,
-  })) || [{
+  const sections: SectionConfig[] = placedModule.customConfig?.sections?.map((sec) => {
+    // 섹션의 모든 elements를 수집
+    const allElements: Array<{ type: string; heights?: number[]; height?: number }> = [];
+    if (sec.elements) allElements.push(...sec.elements);
+    if (sec.hasPartition) {
+      if (sec.leftElements) allElements.push(...sec.leftElements);
+      if (sec.rightElements) allElements.push(...sec.rightElements);
+    }
+    // areaSubSplits의 elements도 수집
+    if (sec.areaSubSplits) {
+      for (const split of Object.values(sec.areaSubSplits)) {
+        if (split.enabled) {
+          if (split.upperElements) allElements.push(...split.upperElements);
+          if (split.lowerElements) allElements.push(...split.lowerElements);
+        }
+      }
+    }
+
+    const analysis = analyzeSectionElements(allElements.length > 0 ? allElements : sec.elements);
+
+    const sectionConfig: SectionConfig = {
+      type: analysis.type,
+      height: sec.height,
+      heightType: 'absolute' as const,
+      count: analysis.count || undefined,
+    };
+
+    if (analysis.drawerHeights && analysis.drawerHeights.length > 0) {
+      sectionConfig.drawerHeights = analysis.drawerHeights;
+    }
+    if (analysis.shelfPositions && analysis.shelfPositions.length > 0) {
+      sectionConfig.shelfPositions = analysis.shelfPositions;
+    }
+
+    return sectionConfig;
+  }) || [{
     type: 'shelf' as const,
     height: 100,
     heightType: 'percentage' as const,
