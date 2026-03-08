@@ -295,10 +295,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
   const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles } = useUIStore();
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
+  const activePopup = useUIStore(state => state.activePopup);
   const { updatePlacedModule } = useFurnitureStore();
   const { getCustomFurnitureById } = useCustomFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
-  const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
+  // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
+  const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
+  const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id && !isCustomEditing;
   const { theme: appTheme } = useTheme();
 
   // 테마 색상 매핑
