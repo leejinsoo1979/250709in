@@ -51,7 +51,7 @@ interface CustomizableFurnitureLibraryProps {
 const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> = ({
   filter = 'full',
 }) => {
-  const { spaceInfo } = useSpaceConfigStore();
+  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
   // 공간 높이로 전체장 높이 결정
@@ -61,10 +61,13 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     const defaults = CUSTOMIZABLE_DEFAULTS[category];
     const moduleId = createCustomizableModuleId(category, defaults.width);
 
-    // Click & Place 모드 활성화
+    // 자유배치 모드로 전환 후 Click & Place 활성화
+    if (spaceInfo.layoutMode !== 'free-placement') {
+      setSpaceInfo({ layoutMode: 'free-placement' });
+    }
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [internalSpace, setSelectedFurnitureId, setFurniturePlacementMode]);
+  }, [spaceInfo.layoutMode, setSpaceInfo, internalSpace, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   const category = filter;
   const defaults = CUSTOMIZABLE_DEFAULTS[category];

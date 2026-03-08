@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SavedCabinet } from '@/firebase/types';
 import { createCustomizableModuleId } from './CustomizableFurnitureLibrary';
 import { MdOutlineAutoAwesomeMosaic } from 'react-icons/md';
@@ -19,6 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) => {
   const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, setPendingPlacement } = useMyCabinetStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
+  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
 
   useEffect(() => {
     fetchCabinets();
@@ -38,11 +40,16 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
       category: cabinet.category,
     });
 
+    // 자유배치 모드로 전환 후 Click & Place 활성화
+    if (spaceInfo.layoutMode !== 'free-placement') {
+      setSpaceInfo({ layoutMode: 'free-placement' });
+    }
+
     // 해당 카테고리의 커스터마이징 가구 모듈 ID 생성
     const moduleId = createCustomizableModuleId(cabinet.category, cabinet.width);
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
+  }, [spaceInfo.layoutMode, setSpaceInfo, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   const handleDelete = useCallback(async (e: React.MouseEvent, cabinetId: string) => {
     e.stopPropagation();
