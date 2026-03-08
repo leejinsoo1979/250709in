@@ -5,6 +5,7 @@ import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
 import { generateCabinetThumbnail } from '@/editor/shared/utils/cabinetThumbnailGenerator';
+import { captureFurnitureThumbnail } from '@/editor/shared/utils/furnitureThumbnailCapture';
 import styles from './CustomizablePropertiesPanel.module.css';
 
 /**
@@ -1114,8 +1115,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleSaveToCabinet = async () => {
     const category = getCustomizableCategory(placedModule.moduleId);
 
-    // Canvas2D로 섬네일 즉시 생성 (항상 성공, config 기반)
-    const thumbnailDataUrl = generateCabinetThumbnail(config, furnitureWidth, furnitureHeight, { width: 300, height: 400 });
+    // 1차: 3D scene에서 해당 가구만 offscreen 렌더링
+    // 2차 폴백: Canvas2D 다이어그램
+    const thumbnailDataUrl =
+      captureFurnitureThumbnail(placedModule.id, { width: 300, height: 400 })
+      || generateCabinetThumbnail(config, furnitureWidth, furnitureHeight, { width: 300, height: 400 });
 
     if (editingCabinetId) {
       // 수정 모드: 덮어쓰기 or 새로 생성 선택
