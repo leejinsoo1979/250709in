@@ -150,6 +150,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       return;
     }
 
+    // 자유배치 가구는 FreePlacementDropZone에서 별도 처리
+    const targetModule = placedModules.find(m => m.id === placedModuleId);
+    if (targetModule?.isFreePlacement) {
+      return;
+    }
+
     // 더블클릭으로 활성화된 가구만 드래그 가능
     const selectedFurnitureId = useUIStore.getState().selectedFurnitureId;
     if (selectedFurnitureId !== placedModuleId) {

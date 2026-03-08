@@ -240,9 +240,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set((state) => {
       const beforeCount = state.placedModules.length;
       
-      // 슬롯 변경이 있을 경우 중복 체크
-      if (updates.slotIndex !== undefined || updates.zone !== undefined) {
-        const targetModule = state.placedModules.find(m => m.id === id);
+      // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
+      const checkTarget = state.placedModules.find(m => m.id === id);
+      if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
+        const targetModule = checkTarget;
         if (targetModule) {
           const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
           const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
