@@ -756,9 +756,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
         } else if (align === 'top') {
-          // 위에서 배치: 상단 기준으로 서랍 배치
+          // 위에서 배치: 상단 기준, 날개벽이 하단덮개까지 감싸도록 높이에 덮개(t) 포함
           const drawerTopY = sectionCenterY + areaInnerHeight / 2;
-          drawerInnerH = totalDrawerInnerH - t;
+          drawerInnerH = totalDrawerInnerH; // 덮개 포함 (날개벽이 덮개를 받침)
           drawerYOffset = drawerTopY - drawerInnerH / 2;
         } else {
           // 아래서 배치(기본): 하단부터 배치, 날개벽은 위에서 패널두께만큼 줄임
@@ -792,9 +792,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
               const coverZ = (coverBackInset - coverFrontInset) / 2;
-              // 위 배치: 덮개가 서랍 하부 / 아래 배치: 덮개가 서랍 상부
+              // 위 배치: 덮개가 날개벽 하단 안쪽 / 아래 배치: 덮개가 서랍 상부
               const coverY = align === 'top'
-                ? drawerYOffset - drawerInnerH / 2 - t / 2
+                ? drawerYOffset - drawerInnerH / 2 + t / 2  // 날개벽 안쪽 하단 (가려짐)
                 : drawerYOffset + drawerInnerH / 2 + t / 2;
               return (
                 <BoxWithEdges
