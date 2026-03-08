@@ -1256,6 +1256,7 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.showFurniture === nextProps.showFurniture &&
     prevProps.lowerSectionDepthMm === nextProps.lowerSectionDepthMm &&
     prevProps.upperSectionDepthMm === nextProps.upperSectionDepthMm &&
+    prevProps.backPanelThickness === nextProps.backPanelThickness &&
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
   console.log('🏠 BaseFurnitureShell React.memo 비교:', {
