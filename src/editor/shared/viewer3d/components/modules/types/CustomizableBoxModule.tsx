@@ -1274,9 +1274,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {renderEditingHighlight()}
 
       {/* 섹션 내경 치수 */}
-      {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (() => {
-        const zPos = viewMode === '3D' ? D / 2 + 0.1 : D / 2 + 1.0;
-        const xPos = viewMode === '3D' ? -innerW / 2 * 0.3 - 0.8 : -innerW / 2 * 0.3 - 0.5;
+      {!isDragging && viewMode === '2D' && view2DDirection === 'front' && (() => {
+        const zPos = D / 2 + 1.0;
+        const xPos = -innerW / 2 * 0.3 - 0.5;
         const lineX = -innerW / 2 * 0.3;
 
         if (isSplit) {
