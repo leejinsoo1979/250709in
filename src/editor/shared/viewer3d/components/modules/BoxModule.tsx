@@ -62,6 +62,7 @@ interface BoxModuleProps {
   lowerSectionTopOffset?: number; // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
+  backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
   isCustomizable?: boolean; // 커스터마이징 가구 여부
@@ -122,6 +123,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   lowerSectionTopOffset, // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection, // 텍스처 결 방향
   panelGrainDirections, // 패널별 개별 결 방향
+  backPanelThickness: backPanelThicknessProp, // 백패널 두께 (mm)
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
   isCustomizable = false, // 커스터마이징 가구 여부
@@ -150,7 +152,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     adjustedWidth,
     isHighlighted,
     grainDirection,
-    panelGrainDirections
+    panelGrainDirections,
+    backPanelThicknessMm: backPanelThicknessProp
   });
 
   // 디버그: showFurniture 값 확인
@@ -264,6 +267,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
           doorSplit={doorSplit} // 도어 분할 여부
           lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+          backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
             // 이벤트 핸들러들 전달
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -317,6 +321,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap} // 하부 도어 상단 갭
         lowerDoorBottomGap={lowerDoorBottomGap} // 하부 도어 하단 갭
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -368,6 +373,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         panelGrainDirections={panelGrainDirections}
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
@@ -420,6 +426,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         zone={zone}
       />
       </>
@@ -465,6 +472,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         zone={zone}
       />
       </>
@@ -505,6 +513,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         zone={zone}
       />
       </>
@@ -537,6 +546,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         showFurniture={showFurniture} // 가구 본체 표시 여부
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -585,6 +595,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -627,6 +638,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         renderMode={renderMode} // 렌더 모드 전달
         zone={zone} // 단내림 영역 정보
       />
@@ -662,6 +674,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
+        backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         renderMode={renderMode} // 렌더 모드 전달
         zone={zone} // 단내림 영역 정보
       />

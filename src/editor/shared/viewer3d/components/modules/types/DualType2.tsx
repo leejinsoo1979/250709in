@@ -49,6 +49,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionTopOffset,
   panelGrainDirections: propsPanelGrainDirections,
+  backPanelThickness: backPanelThicknessProp,
   zone // 단내림 영역 정보
 }) => {
   // 공통 로직 사용
@@ -60,7 +61,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjustedWidth, // adjustedWidth 전달
-    panelGrainDirections: propsPanelGrainDirections
+    panelGrainDirections: propsPanelGrainDirections,
+    backPanelThicknessMm: backPanelThicknessProp
   });
 
   const {

@@ -49,6 +49,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   grainDirection,
   panelGrainDirections,
+  backPanelThickness: backPanelThicknessProp,
   lowerSectionTopOffset,
   zone
 }) => {
@@ -61,7 +62,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     adjustedWidth,
     grainDirection,
-    panelGrainDirections
+    panelGrainDirections,
+    backPanelThicknessMm: backPanelThicknessProp
   });
 
   const {

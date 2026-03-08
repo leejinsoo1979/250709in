@@ -34,6 +34,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   placedFurnitureId,
   textureUrl,
   panelGrainDirections,
+  backPanelThickness: backPanelThicknessProp,
   doorTopGap = 5,
   doorBottomGap = 25,
   doorSplit,
@@ -55,7 +56,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
-    panelGrainDirections
+    panelGrainDirections,
+    backPanelThicknessMm: backPanelThicknessProp
   });
 
   const {

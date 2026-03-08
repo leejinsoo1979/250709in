@@ -38,6 +38,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   placedFurnitureId,
   panelGrainDirections,
+  backPanelThickness,
   renderMode: renderModeProp,
   zone // 단내림 영역 정보
 }) => {
@@ -58,7 +59,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth
+    adjustedWidth,
+    backPanelThicknessMm: backPanelThickness
   });
 
   // 띄워서 배치 여부 확인 (간접조명용)

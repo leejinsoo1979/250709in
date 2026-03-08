@@ -6,8 +6,8 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 import { useTheme } from '@/contexts/ThemeContext';
 
-// 백패널 두께 상수
-const BACK_PANEL_THICKNESS = 9;
+// 백패널 두께 기본값 상수
+const DEFAULT_BACK_PANEL_THICKNESS = 9;
 
 // 단위 변환 함수
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
@@ -26,6 +26,7 @@ interface BaseFurnitureOptions {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
+  backPanelThicknessMm?: number; // 백패널 두께 (mm, 기본값: 9)
 }
 
 // 가구 기본 설정 반환 타입
@@ -85,7 +86,8 @@ export const useBaseFurniture = (
     lowerSectionDepth,
     upperSectionDepth,
     grainDirection = 'vertical', // 기본값: 세로 결 (하위 호환성)
-    panelGrainDirections // 패널별 개별 결 방향
+    panelGrainDirections, // 패널별 개별 결 방향
+    backPanelThicknessMm = DEFAULT_BACK_PANEL_THICKNESS // 백패널 두께 (기본값: 9mm)
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -106,8 +108,8 @@ export const useBaseFurniture = (
   // 기본 판재 두께 변환 (mm -> Three.js 단위)
   const basicThickness = mmToThreeUnits(modelConfig.basicThickness || 18);
   
-  // 백패널 두께 변환 (9mm -> Three.js 단위)
-  const backPanelThickness = mmToThreeUnits(BACK_PANEL_THICKNESS);
+  // 백패널 두께 변환 (mm -> Three.js 단위)
+  const backPanelThickness = mmToThreeUnits(backPanelThicknessMm);
   
   // 가구 치수 변환 (mm -> Three.js 단위)
   // 듀얼 가구의 경우 slotWidths 합산, adjustedWidth가 있으면 사용, 없으면 원래 폭 사용

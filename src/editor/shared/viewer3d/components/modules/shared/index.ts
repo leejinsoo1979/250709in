@@ -50,6 +50,7 @@ export interface FurnitureTypeProps {
   lowerDoorBottomGap?: number; // 하부 섹션 도어 하단 갭 (분할 모드, 기본값: 45)
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
+  backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
   textureUrl?: string; // 텍스처 URL
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   // 이벤트 핸들러 추가

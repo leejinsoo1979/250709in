@@ -45,6 +45,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   lowerSectionTopOffset,
   panelGrainDirections: propsPanelGrainDirections,
+  backPanelThickness,
   zone // 단내림 영역 정보
 }) => {
   console.log('🔍🔍🔍 [DualType1] Props 확인 - 렌더링됨!');
@@ -64,7 +65,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjustedWidth, // adjustedWidth 전달
     customSections, // 사용자 정의 섹션 설정
-    panelGrainDirections: propsPanelGrainDirections
+    panelGrainDirections: propsPanelGrainDirections,
+    backPanelThicknessMm: backPanelThickness
   });
 
   const {

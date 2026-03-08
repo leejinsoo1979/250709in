@@ -42,6 +42,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   visibleSectionIndex = null,
   textureUrl,
   panelGrainDirections, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  backPanelThickness: backPanelThicknessProp,
   doorTopGap = 5,
   doorBottomGap = 25,
   doorSplit,
@@ -65,7 +66,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     adjustedWidth, // adjustedWidth 전달
     customSections, // 사용자 정의 섹션 설정
     lowerSectionDepth,
-    upperSectionDepth
+    upperSectionDepth,
+    backPanelThicknessMm: backPanelThicknessProp
   });
 
   const {

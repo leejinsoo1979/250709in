@@ -3057,6 +3057,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
                   lowerSectionTopOffset={placedModule.lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 각 가구별 저장된 값 사용
+                  backPanelThickness={placedModule.backPanelThickness} // 백패널 두께 (mm)
                   doorSplit={placedModule.doorSplit}
                   upperDoorTopGap={placedModule.upperDoorTopGap}
                   upperDoorBottomGap={placedModule.upperDoorBottomGap}

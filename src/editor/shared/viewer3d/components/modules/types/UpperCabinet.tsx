@@ -35,12 +35,13 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   placedFurnitureId,
   panelGrainDirections,
+  backPanelThickness,
   renderMode: renderModeProp,
   zone // 단내림 영역 정보
 }) => {
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
-  
+
   // 공통 가구 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -48,7 +49,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth
+    adjustedWidth,
+    backPanelThicknessMm: backPanelThickness
   });
 
   // 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 관리

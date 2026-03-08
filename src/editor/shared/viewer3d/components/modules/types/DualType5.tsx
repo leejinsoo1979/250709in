@@ -41,6 +41,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
   textureUrl,
   panelGrainDirections,
+  backPanelThickness: backPanelThicknessProp,
   lowerSectionTopOffset,
   zone // 단내림 영역 정보
 }) => {
@@ -52,7 +53,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjustedWidth // adjustedWidth 전달
+    adjustedWidth, // adjustedWidth 전달
+    backPanelThicknessMm: backPanelThicknessProp
   });
 
   const {
