@@ -910,7 +910,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
           const drawer = renderDrawer(
             innerWidth - mmToThreeUnits(24), // 서랍 폭 = 내경 - 24mm (좌우 각각 12mm 간격)
-            mmToThreeUnits(drawerHeight) - basicThickness/2,
+            mmToThreeUnits(drawerHeight),
             depth - basicThickness,
             [0, drawerCenter, basicThickness/2],
             `custom-drawer-${i}`,
@@ -1098,7 +1098,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
           return renderDrawer(
             innerWidth - mmToThreeUnits(24), // 서랍 폭 = 내경 - 24mm (좌우 각각 12mm 간격)
-            drawerHeight - basicThickness/2,
+            drawerHeight,
             depth - basicThickness,
             [0, relativeYPosition, basicThickness/2],
             `drawer-${i}`,
