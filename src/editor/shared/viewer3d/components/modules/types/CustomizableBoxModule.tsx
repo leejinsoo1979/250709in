@@ -462,42 +462,56 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     }
 
     const areaD = D - 2 * t; // 영역 깊이 (측판 제외)
-    const pad = 0.003; // 박스가 영역보다 약간 크게
+    const pad = 0.003;
+    const bw = areaW + pad * 2;
+    const bh = areaH + pad * 2;
+    const bd = areaD + pad * 2;
+    const hw = bw / 2;
+    const hh = bh / 2;
+    const hd = bd / 2;
 
     // 엣지 라인 꼭짓점 (12개 엣지)
-    const hw = areaW / 2 + pad;
-    const hh = areaH / 2 + pad;
-    const hd = areaD / 2 + pad;
     const edgeVertices = new Float32Array([
-      // 앞면 4 엣지
-      -hw, -hh, hd,  hw, -hh, hd,
-      hw, -hh, hd,   hw, hh, hd,
-      hw, hh, hd,    -hw, hh, hd,
-      -hw, hh, hd,   -hw, -hh, hd,
-      // 뒷면 4 엣지
-      -hw, -hh, -hd, hw, -hh, -hd,
-      hw, -hh, -hd,  hw, hh, -hd,
-      hw, hh, -hd,   -hw, hh, -hd,
-      -hw, hh, -hd,  -hw, -hh, -hd,
-      // 연결 4 엣지
-      -hw, -hh, hd,  -hw, -hh, -hd,
-      hw, -hh, hd,   hw, -hh, -hd,
-      hw, hh, hd,    hw, hh, -hd,
-      -hw, hh, hd,   -hw, hh, -hd,
+      -hw,-hh,hd, hw,-hh,hd,  hw,-hh,hd, hw,hh,hd,
+      hw,hh,hd, -hw,hh,hd,  -hw,hh,hd, -hw,-hh,hd,
+      -hw,-hh,-hd, hw,-hh,-hd,  hw,-hh,-hd, hw,hh,-hd,
+      hw,hh,-hd, -hw,hh,-hd,  -hw,hh,-hd, -hw,-hh,-hd,
+      -hw,-hh,hd, -hw,-hh,-hd,  hw,-hh,hd, hw,-hh,-hd,
+      hw,hh,hd, hw,hh,-hd,  -hw,hh,hd, -hw,hh,-hd,
     ]);
 
     return (
       <group position={[centerX, centerY, 0]}>
-        {/* 반투명 3D 박스 */}
-        <mesh>
-          <boxGeometry args={[areaW + pad * 2, areaH + pad * 2, areaD + pad * 2]} />
-          <meshBasicMaterial
-            color={themeColor}
-            transparent
-            opacity={0.12}
-            side={THREE.DoubleSide}
-            depthTest={false}
-          />
+        {/* 6면 반투명 패널 (삼각형 분할선 없이 깔끔) */}
+        {/* 앞 */}
+        <mesh position={[0, 0, hd]} renderOrder={998}>
+          <planeGeometry args={[bw, bh]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.1} depthTest={false} side={THREE.DoubleSide} />
+        </mesh>
+        {/* 뒤 */}
+        <mesh position={[0, 0, -hd]} renderOrder={998}>
+          <planeGeometry args={[bw, bh]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.06} depthTest={false} side={THREE.DoubleSide} />
+        </mesh>
+        {/* 상 */}
+        <mesh position={[0, hh, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={998}>
+          <planeGeometry args={[bw, bd]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.08} depthTest={false} side={THREE.DoubleSide} />
+        </mesh>
+        {/* 하 */}
+        <mesh position={[0, -hh, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={998}>
+          <planeGeometry args={[bw, bd]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.08} depthTest={false} side={THREE.DoubleSide} />
+        </mesh>
+        {/* 좌 */}
+        <mesh position={[-hw, 0, 0]} rotation={[0, Math.PI / 2, 0]} renderOrder={998}>
+          <planeGeometry args={[bd, bh]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.08} depthTest={false} side={THREE.DoubleSide} />
+        </mesh>
+        {/* 우 */}
+        <mesh position={[hw, 0, 0]} rotation={[0, Math.PI / 2, 0]} renderOrder={998}>
+          <planeGeometry args={[bd, bh]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.08} depthTest={false} side={THREE.DoubleSide} />
         </mesh>
         {/* 엣지 윤곽선 */}
         <lineSegments renderOrder={999}>
@@ -509,7 +523,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial color={themeColor} depthTest={false} transparent opacity={0.9} />
+          <lineBasicMaterial color={themeColor} depthTest={false} />
         </lineSegments>
       </group>
     );
