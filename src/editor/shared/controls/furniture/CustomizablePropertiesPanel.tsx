@@ -822,8 +822,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (!el || (el.type !== 'shelf' && el.type !== 'drawer')) return;
 
     if (raw === '') {
-      // 빈 값이면 원래 값으로 복원
-      setHeightInputs((prev) => ({ ...prev, [key]: el.heights[heightIdx]?.toString() || '0' }));
+      // 빈 값이면 원래 값으로 복원 (위배치 맨 아래 서랍은 마이다 높이)
+      const isTopBottom = el.type === 'drawer' && heightIdx === 0 && 'drawerAlign' in el && el.drawerAlign === 'top';
+      const restoreVal = (el.heights[heightIdx] || 0) + (isTopBottom ? 42 : 0);
+      setHeightInputs((prev) => ({ ...prev, [key]: restoreVal.toString() }));
       return;
     }
 
@@ -838,6 +840,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     if (el.type === 'drawer') {
       // 서랍: 개별 높이 변경 시 나머지 서랍에 잔여 높이 재분배
+      // 위배치 맨 아래 서랍: 마이다 높이 입력 → 본체 높이로 변환 (-42mm)
+      const isTopAlignBottom = heightIdx === 0 && 'drawerAlign' in el && el.drawerAlign === 'top';
+      if (isTopAlignBottom) num = num - 42;
       // 서랍 스택은 상판까지 포함 (내경 + 상판두께)
       const gapPerDrawer = 23.6; // DrawerRenderer의 gapHeight와 동일
       const totalGap = gapPerDrawer * (el.heights.length + 1);
@@ -867,10 +872,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
       sections[sIdx] = sec;
       applyConfig({ ...config, sections });
 
-      // heightInputs 전체 갱신
+      // heightInputs 전체 갱신 (위배치 맨 아래 서랍은 마이다 높이로 표시)
+      const isTopAlign = 'drawerAlign' in el && el.drawerAlign === 'top';
       const newHInputs: Record<string, string> = {};
       heights.forEach((h, hIdx) => {
-        newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+        const mOffset = (isTopAlign && hIdx === 0) ? 42 : 0;
+        newHInputs[`${sIdx}-${side}-0-${hIdx}`] = (h + mOffset).toString();
       });
       setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
       return;
@@ -1398,10 +1405,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 const inputKey = `${sIdx}-${side}-0-${hi}`;
                 const refKey = `${sIdx}-${side}-${hi}`;
                 const refDir = shelfRefDir[refKey] || 'bottom';
+                // 위배치 맨 아래 서랍: 마이다 높이 표시 (본체 + 상18 + 하24 = +42mm)
+                const isTopAlignBottomDrawer = currentType === 'drawer' && hi === 0
+                  && 'drawerAlign' in el && el.drawerAlign === 'top';
+                const maidaOffset = isTopAlignBottomDrawer ? 42 : 0;
                 const displayVal = heightInputs[inputKey] ?? (
                   currentType === 'shelf' && refDir === 'top'
                     ? (sectionHeight - h).toString()
-                    : h.toString()
+                    : (h + maidaOffset).toString()
                 );
 
                 return (
