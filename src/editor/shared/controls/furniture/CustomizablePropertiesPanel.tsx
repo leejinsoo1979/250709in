@@ -21,6 +21,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const focusedSectionIndex = activePopup.sectionIndex;
   // areaSide가 있으면 칸막이 좌/우 중 특정 영역만 편집
   const focusedAreaSide = activePopup.areaSide;
+  // subPart가 있으면 상하 서브분할 중 특정 영역만 편집
+  const focusedSubPart = activePopup.subPart;
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
   // 취소 시 복원할 원본 스냅샷
@@ -1222,18 +1224,88 @@ const CustomizablePropertiesPanel: React.FC = () => {
     // areaSide가 지정되면 해당 영역의 요소 편집 + 상하 서브분할 표시
     if (areaSide) {
       const elements = areaSide === 'left' ? section.leftElements : section.rightElements;
-      const areaLabel = areaSide === 'left' ? '좌측' : '우측';
       const subSplit = section.areaSubSplits?.[areaSide];
       const isSubSplit = subSplit?.enabled || false;
       const subSplitKey = `${sIdx}-${areaSide}`;
 
+      // subPart가 지정되면 해당 서브영역의 요소 편집기만 표시
+      if (focusedSubPart && isSubSplit && subSplit) {
+        const subElements = focusedSubPart === 'upper' ? subSplit.upperElements : subSplit.lowerElements;
+        const subHeight = focusedSubPart === 'lower' ? subSplit.lowerHeight : section.height - subSplit.lowerHeight;
+        return (
+          <div key={`${sIdx}-${areaSide}-${focusedSubPart}`}>
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                {focusedSubPart === 'upper' ? '상부' : '하부'} 내부 구조
+              </div>
+              <div className={styles.areaCard}>
+                {renderSubSplitElementEditor(sIdx, areaSide, focusedSubPart, subElements, subHeight)}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div key={`${sIdx}-${areaSide}`}>
-          {/* 내부 요소 편집 (칸막이 영역에서는 섹션분할 없이 요소 편집만) */}
           <div className={styles.section}>
-            <div className={styles.areaCard}>
-              {renderElementEditor(sIdx, areaSide, elements, section.height)}
+            {/* 상하분할 토글 */}
+            <div className={styles.row}>
+              <span className={styles.label}>상하분할</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${!isSubSplit ? styles.active : ''}`}
+                  onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, false)}
+                >
+                  없음
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${isSubSplit ? styles.active : ''}`}
+                  onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, true)}
+                >
+                  추가
+                </button>
+              </div>
             </div>
+
+            {isSubSplit && subSplit ? (
+              <>
+                {/* 서브분할 하부 높이 입력 */}
+                <div className={styles.row}>
+                  <span className={styles.label}>하부 높이</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    value={subSplitHeightInputs[subSplitKey] ?? subSplit.lowerHeight.toString()}
+                    onChange={(e) => {
+                      setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKey]: e.target.value }));
+                    }}
+                    onBlur={() => {
+                      const val = parseInt(subSplitHeightInputs[subSplitKey] || '0');
+                      const minV = 100;
+                      const maxV = section.height - 100;
+                      const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(section.height / 2) : val));
+                      handleAreaSubSplitHeight(sIdx, areaSide, clamped);
+                      setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKey]: clamped.toString() }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    }}
+                    style={{ width: '70px' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
+                  상부: {section.height - subSplit.lowerHeight}mm / 하부: {subSplit.lowerHeight}mm
+                </div>
+              </>
+            ) : (
+              /* 서브분할 안 됨: 기존 요소 편집기 */
+              <div className={styles.areaCard}>
+                {renderElementEditor(sIdx, areaSide, elements, section.height)}
+              </div>
+            )}
           </div>
         </div>
       );
