@@ -16,7 +16,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   lower: '하부장',
 };
 
-// ── SVG 기반 미니 섬네일 (크게 리디자인) ──
+// ── SVG 기반 섬네일 ──
 const CabinetThumbnail: React.FC<{
   config: CustomFurnitureConfig;
   width: number;
@@ -28,7 +28,6 @@ const CabinetThumbnail: React.FC<{
   config, width: furW, height: furH, svgWidth = 120, svgHeight = 90,
 }) => {
   const pad = 6;
-  // 가구 실제 비율 유지
   const maxInnerW = svgWidth - pad * 2;
   const maxInnerH = svgHeight - pad * 2;
   const aspectRatio = furW / furH;
@@ -146,16 +145,12 @@ const CabinetThumbnail: React.FC<{
   return (
     <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}
       style={{ borderRadius: 6 }}>
-      {/* 배경 */}
       <rect width={svgWidth} height={svgHeight} fill="#F7F3EE" rx={6} />
-
-      {/* 외곽 프레임 (그림자 효과) */}
       <rect x={offsetX + 1} y={offsetY + 1} width={innerW} height={innerH}
         fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={panelT} rx={1.5} />
       <rect x={offsetX} y={offsetY} width={innerW} height={innerH}
         fill="#EDE4D6" stroke="#8B7355" strokeWidth={panelT} rx={1.5} />
 
-      {/* 섹션 렌더링 */}
       {sections.map((section, i) => {
         let aboveH = 0;
         for (let j = 0; j < i; j++) aboveH += sections[j].height;
@@ -184,6 +179,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
   const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, updateCabinet, setPendingPlacement, setEditingCabinetId } = useMyCabinetStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
+  const [editMode, setEditMode] = useState(false);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
 
@@ -197,6 +193,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
 
   const handleItemClick = useCallback((cabinet: SavedCabinet) => {
     if (editingNameId) return;
+    if (editMode) return; // 편집 모드에서는 배치 안 함
 
     setPendingPlacement({
       customConfig: cabinet.customConfig,
@@ -209,7 +206,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
     const moduleId = createCustomizableModuleId(cabinet.category, cabinet.width);
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [editingNameId, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
+  }, [editingNameId, editMode, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   const handleEdit = useCallback((e: React.MouseEvent, cabinet: SavedCabinet) => {
     e.stopPropagation();
@@ -224,6 +221,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
     const moduleId = createCustomizableModuleId(cabinet.category, cabinet.width);
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
+    setEditMode(false); // 편집모드 해제
   }, [setEditingCabinetId, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   const handleStartRename = useCallback((e: React.MouseEvent, cabinet: SavedCabinet) => {
@@ -280,23 +278,27 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
           key={cabinet.id}
           onClick={() => handleItemClick(cabinet)}
           style={{
-            border: '1px solid var(--theme-border, #e0e0e0)',
+            border: editMode ? '1px solid var(--theme-primary, #4a90d9)' : '1px solid var(--theme-border, #e0e0e0)',
             borderRadius: '10px',
-            cursor: 'pointer',
+            cursor: editMode ? 'default' : 'pointer',
             transition: 'all 0.2s',
             background: 'var(--theme-surface, #fff)',
             overflow: 'hidden',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'var(--theme-primary, #4a90d9)';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+            if (!editMode) {
+              e.currentTarget.style.borderColor = 'var(--theme-primary, #4a90d9)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+            }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--theme-border, #e0e0e0)';
-            e.currentTarget.style.boxShadow = 'none';
+            if (!editMode) {
+              e.currentTarget.style.borderColor = 'var(--theme-border, #e0e0e0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }
           }}
         >
-          {/* 섬네일 영역 */}
+          {/* 섬네일 */}
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -313,7 +315,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
             />
           </div>
 
-          {/* 하단 정보 + 버튼 */}
+          {/* 하단 정보 */}
           <div style={{
             padding: '4px 10px 8px',
             display: 'flex',
@@ -365,43 +367,89 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
               </div>
             </div>
 
-            {/* 액션 버튼 */}
-            <div style={{ display: 'flex', gap: '1px', flexShrink: 0 }}>
-              <button
-                onClick={(e) => handleStartRename(e, cabinet)}
-                title="이름 변경"
-                style={actionBtnStyle}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                </svg>
-              </button>
-              <button
-                onClick={(e) => handleEdit(e, cabinet)}
-                title="내부구조 수정"
-                style={actionBtnStyle}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                </svg>
-              </button>
-              <button
-                onClick={(e) => handleDelete(e, cabinet.id)}
-                title="삭제"
-                style={actionBtnStyle}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-              </button>
-            </div>
+            {/* 편집모드일 때만 액션 버튼 표시 */}
+            {editMode && (
+              <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+                <button
+                  onClick={(e) => handleStartRename(e, cabinet)}
+                  title="이름 변경"
+                  style={actionBtnStyle}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => handleEdit(e, cabinet)}
+                  title="내부구조 수정"
+                  style={actionBtnStyle}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => handleDelete(e, cabinet.id)}
+                  title="삭제"
+                  style={{ ...actionBtnStyle, color: 'var(--theme-error, #ef4444)' }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}
-      <p className={styles.helpText} style={{ textAlign: 'center', marginTop: '4px' }}>
-        클릭하여 배치
-      </p>
+
+      {/* 하단 안내 텍스트 */}
+      {!editMode && (
+        <p className={styles.helpText} style={{ textAlign: 'center', marginTop: '4px' }}>
+          클릭하여 배치
+        </p>
+      )}
+
+      {/* 하단 편집 모드 토글 버튼 */}
+      <button
+        onClick={() => {
+          setEditMode(!editMode);
+          if (editMode) {
+            // 편집 모드 해제 시 이름편집 취소
+            setEditingNameId(null);
+            setEditNameValue('');
+          }
+        }}
+        style={{
+          marginTop: '4px',
+          padding: '8px 12px',
+          border: editMode ? '1px solid var(--theme-primary, #4a90d9)' : '1px solid var(--theme-border, #e0e0e0)',
+          borderRadius: '8px',
+          background: editMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-surface, #fff)',
+          color: editMode ? '#fff' : 'var(--theme-text-secondary, #666)',
+          fontSize: '12px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {editMode ? (
+            <><polyline points="20 6 9 17 4 12"/></>
+          ) : (
+            <>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </>
+          )}
+        </svg>
+        {editMode ? '편집 완료' : '설정 · 삭제'}
+      </button>
     </div>
   );
 };
@@ -411,7 +459,7 @@ const actionBtnStyle: React.CSSProperties = {
   border: 'none',
   color: 'var(--theme-text-tertiary)',
   cursor: 'pointer',
-  padding: '3px',
+  padding: '4px',
   borderRadius: '4px',
   lineHeight: 1,
   display: 'flex',
