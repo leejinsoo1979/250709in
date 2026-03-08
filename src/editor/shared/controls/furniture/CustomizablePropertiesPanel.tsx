@@ -252,6 +252,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 기존 모듈 기준 서랍 단수별 표준 사양 (shelving.ts FURNITURE_SPECS 참조)
+  // sectionHeight는 외경(패널 포함) 기준
   const DRAWER_STANDARD: Record<number, { sectionHeight: number; heights: number[] }> = {
     1: { sectionHeight: 321, heights: [255] },
     2: { sectionHeight: 600, heights: [255, 255] },
@@ -273,9 +274,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const count = drawerCount || 2;
         const standard = DRAWER_STANDARD[count] || DRAWER_STANDARD[2];
         // 서랍 단수에 따라 하부 섹션 높이 자동 조절 (2단 분할 시)
+        // sectionHeight는 외경(패널 포함)이므로 내경(sec.height)으로 변환: 외경 - 2 * panelThickness
         if (config.sections.length === 2 && sIdx === 0) {
           const availableHeight = furnitureHeight - 4 * panelThickness;
-          const lowerH = Math.min(standard.sectionHeight, availableHeight - 100);
+          const lowerInner = standard.sectionHeight - 2 * panelThickness;
+          const lowerH = Math.min(lowerInner, availableHeight - 100);
           const upperH = availableHeight - lowerH;
           sec.height = lowerH;
           sections[1] = { ...sections[1], height: upperH };
