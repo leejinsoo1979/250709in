@@ -80,13 +80,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     furnitureId = `${baseId}-${dualWidth}`;
   }
 
-  // 모듈 데이터 조회
-  const moduleData = params.moduleData || getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
-
-  if (!moduleData) {
-    return { success: false, error: `가구 데이터를 찾을 수 없습니다: ${moduleId}` };
-  }
-
   // zone별 columnWidth 결정
   let columnWidth: number;
   if (hasDroppedCeiling && zone && indexing.zones) {
@@ -95,6 +88,34 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       : indexing.zones.normal.columnWidth;
   } else {
     columnWidth = indexing.columnWidth;
+  }
+
+  // 모듈 데이터 조회 (커스터마이징 가구는 getModuleById로 찾을 수 없으므로 pendingPlacement에서 합성)
+  const isCustomizableModule = isCustomizableModuleId(moduleId);
+  let moduleData = params.moduleData || getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
+
+  if (!moduleData && isCustomizableModule && params.pendingPlacement) {
+    const pp = params.pendingPlacement;
+    const isMyCabinetDual = pp.width > columnWidth * 1.5;
+    const slotWidth = isMyCabinetDual ? columnWidth * 2 : columnWidth;
+    moduleData = {
+      id: moduleId,
+      name: 'My캐비넷',
+      category: pp.category,
+      dimensions: {
+        width: slotWidth,
+        height: pp.height,
+        depth: pp.depth,
+      },
+      color: '#C8B69E',
+      hasDoor: false,
+      isDynamic: false,
+      modelConfig: { basicThickness: 18 },
+    } as ModuleData;
+  }
+
+  if (!moduleData) {
+    return { success: false, error: `가구 데이터를 찾을 수 없습니다: ${moduleId}` };
   }
 
   const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
