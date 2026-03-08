@@ -27,6 +27,7 @@ interface CustomizableBoxModuleProps {
   placedFurnitureId?: string;
   category?: 'full' | 'upper' | 'lower';
   panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' };
+  isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
   onPointerUp?: (e: any) => void;
