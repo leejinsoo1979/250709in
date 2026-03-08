@@ -500,13 +500,13 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
                   if (allSections.length === 2) {
                     if (index === 0) {
-                      // 하부섹션 (drawer): 618
-                      lineBottomY = -height/2;
-                      lineTopY = sectionCenterY + sectionHeight/2 + basicThickness;
+                      // 하부섹션 (drawer): 섹션 높이만 표시 (바닥판 제외)
+                      lineBottomY = -height/2 + basicThickness;
+                      lineTopY = sectionCenterY + sectionHeight/2;
                     } else {
-                      // 상부섹션 (hanging): 1707
-                      lineBottomY = sectionCenterY - sectionHeight/2 - basicThickness;
-                      lineTopY = height/2;
+                      // 상부섹션 (hanging): 상판~구분판 사이
+                      lineBottomY = sectionCenterY - sectionHeight/2;
+                      lineTopY = height/2 - basicThickness;
                     }
                     console.log('DualType5 조건 통과! lineBottomY:', lineBottomY, 'lineTopY:', lineTopY);
                   } else {
