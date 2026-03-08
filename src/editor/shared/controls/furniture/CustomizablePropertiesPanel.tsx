@@ -138,10 +138,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
         // 메인 팝업: 가구 우측, 화면 세로 중앙
         return { top: '50%', left, right: 'auto', transform: 'translateY(-50%)', maxHeight: vh - 24 };
       }
-      // 섹션 팝업: 아이콘 Y 기준
-      const top = Math.max(8, Math.min(sy ?? vh / 2, vh - 200));
-      const maxHeight = vh - top - 8;
-      return { top, left, right: 'auto', transform: 'none', maxHeight };
+      // 섹션 팝업: 아이콘 Y 기준, 화면 하단에 가까우면 위로 확장
+      const popupMinHeight = 600;
+      const rawY = sy ?? vh / 2;
+      const spaceBelow = vh - rawY - 8;
+      if (spaceBelow >= popupMinHeight) {
+        // 아래 공간 충분: 클릭 위치에서 아래로
+        return { top: rawY, left, right: 'auto', transform: 'none', maxHeight: spaceBelow };
+      }
+      // 아래 공간 부족: bottom 기준으로 위로 확장
+      return { bottom: 8, left, right: 'auto', transform: 'none', maxHeight: vh - 16 };
     }
     return {};
   }, [activePopup.screenX, activePopup.screenY, activePopup.sectionIndex]);
