@@ -2822,21 +2822,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 연장선 끝 세리프 (가로 틱 마크) */}
             {[leftX, rightX].map((x, ti) => (
               <React.Fragment key={`tick-${ti}`}>
-                {/* 상단 (spaceHeight) 세리프 */}
                 <NativeLine name="dimension_line"
-                  points={[[x - mmToThreeUnits(8), spaceHeight, 0.001], [x + mmToThreeUnits(8), spaceHeight, 0.001]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={1000000}
-                  depthTest={false}
-                />
-                {/* 하단 (columnDimensionY) 세리프 */}
-                <NativeLine name="dimension_line"
-                  points={[[x - mmToThreeUnits(8), columnDimensionY, 0.001], [x + mmToThreeUnits(8), columnDimensionY, 0.001]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={1000000}
-                  depthTest={false}
+                  points={[[x - mmToThreeUnits(5), dimY, 0.001], [x + mmToThreeUnits(5), dimY, 0.001]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
                 />
               </React.Fragment>
             ))}
@@ -2844,20 +2832,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 커스터마이징 가구 칸막이별 너비 치수 */}
             {module.customConfig && (() => {
               const pt = module.customConfig.panelThickness || 18;
-              const innerW = actualWidth - pt * 2; // 내경 너비
-              const subDimY = dimY - mmToThreeUnits(40); // 메인 치수 아래
+              const innerW = actualWidth - pt * 2;
+              // 가구 치수선(dimY) 바로 아래에 서브 치수선 배치
+              const subDimY = dimY - mmToThreeUnits(50);
               const partitionLines: React.ReactNode[] = [];
 
               module.customConfig.sections.forEach((sec: any, sIdx: number) => {
                 if (!sec.hasPartition || !sec.partitionPosition) return;
-                const pp = sec.partitionPosition; // mm from left inner edge
-                const leftAreaW = pp; // 좌측 영역 너비
-                const rightAreaW = innerW - pp - pt; // 우측 영역 너비 (칸막이 두께 제외)
+                const pp = sec.partitionPosition;
+                const leftAreaW = pp;
+                const rightAreaW = innerW - pp - pt;
 
-                // 좌측 영역
-                const areaLeftX = leftX + mmToThreeUnits(pt); // 좌측 패널 뒤
+                const areaLeftX = leftX + mmToThreeUnits(pt);
                 const partX = areaLeftX + mmToThreeUnits(pp);
-                const areaRightX = rightX - mmToThreeUnits(pt); // 우측 패널 앞
+                const areaRightX = rightX - mmToThreeUnits(pt);
+                const rightStart = partX + mmToThreeUnits(pt);
 
                 // 좌측 영역 치수
                 partitionLines.push(
@@ -2882,20 +2871,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     >
                       {Math.round(leftAreaW)}
                     </Text>
-                    {/* 좌측 연장선 */}
-                    <NativeLine name="dimension_line"
-                      points={[[areaLeftX, dimY, 0.001], [areaLeftX, subDimY - mmToThreeUnits(10), 0.001]]}
-                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[partX, dimY, 0.001], [partX, subDimY - mmToThreeUnits(10), 0.001]]}
-                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
-                    />
                   </React.Fragment>
                 );
 
                 // 우측 영역 치수
-                const rightStart = partX + mmToThreeUnits(pt); // 칸막이 두께 뒤
                 partitionLines.push(
                   <React.Fragment key={`part-${sIdx}-right`}>
                     <NativeLine name="dimension_line"
@@ -2918,17 +2897,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     >
                       {Math.round(rightAreaW)}
                     </Text>
-                    {/* 우측 연장선 */}
-                    <NativeLine name="dimension_line"
-                      points={[[rightStart, dimY, 0.001], [rightStart, subDimY - mmToThreeUnits(10), 0.001]]}
-                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[areaRightX, dimY, 0.001], [areaRightX, subDimY - mmToThreeUnits(10), 0.001]]}
-                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
-                    />
                   </React.Fragment>
                 );
+
+                // 칸막이 위치 연장선 (메인 치수선에서 서브 치수선까지)
+                [areaLeftX, partX, rightStart, areaRightX].forEach((x, xi) => {
+                  partitionLines.push(
+                    <NativeLine key={`part-ext-${sIdx}-${xi}`} name="dimension_line"
+                      points={[[x, dimY, 0.001], [x, subDimY - mmToThreeUnits(5), 0.001]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false}
+                    />
+                  );
+                });
               });
 
               return partitionLines.length > 0 ? <>{partitionLines}</> : null;
