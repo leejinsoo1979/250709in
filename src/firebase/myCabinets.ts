@@ -3,6 +3,7 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
+  updateDoc,
   doc,
   query,
   where,
@@ -85,6 +86,42 @@ export const getMyCabinets = async (): Promise<{ cabinets: SavedCabinet[]; error
     console.error('My캐비닛 목록 가져오기 에러:', error);
     console.error('My캐비닛 목록 에러 상세:', error?.message, error?.code);
     return { cabinets: [], error: `My캐비닛 목록 오류: ${error?.message || '알 수 없는 에러'}` };
+  }
+};
+
+// My캐비닛 수정
+export const updateMyCabinet = async (
+  cabinetId: string,
+  data: {
+    name?: string;
+    category?: 'full' | 'upper' | 'lower';
+    width?: number;
+    height?: number;
+    depth?: number;
+    customConfig?: CustomFurnitureConfig;
+  }
+): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { error: '로그인이 필요합니다.' };
+    }
+
+    const updateData: Record<string, any> = { updatedAt: serverTimestamp() };
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.width !== undefined) updateData.width = data.width;
+    if (data.height !== undefined) updateData.height = data.height;
+    if (data.depth !== undefined) updateData.depth = data.depth;
+    if (data.customConfig !== undefined) {
+      updateData.customConfig = JSON.parse(JSON.stringify(data.customConfig));
+    }
+
+    await updateDoc(doc(db, MY_CABINETS_COLLECTION, cabinetId), updateData);
+    return { error: null };
+  } catch (error: any) {
+    console.error('My캐비닛 수정 에러:', error);
+    return { error: `My캐비닛 수정 중 오류: ${error?.message || '알 수 없는 에러'}` };
   }
 };
 

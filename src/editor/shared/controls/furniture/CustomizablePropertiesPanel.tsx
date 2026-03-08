@@ -13,7 +13,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
 const CustomizablePropertiesPanel: React.FC = () => {
   const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
-  const { saveCabinet } = useMyCabinetStore();
+  const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId } = useMyCabinetStore();
 
   const moduleId = activePopup.id;
   const placedModule = placedModules.find((m) => m.id === moduleId);
@@ -975,25 +975,45 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
-  // My캐비닛에 저장
+  // My캐비닛에 저장 (신규 또는 기존 업데이트)
   const handleSaveToCabinet = async () => {
-    const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
-    if (!name) return;
-
     const category = getCustomizableCategory(placedModule.moduleId);
-    const { error } = await saveCabinet({
-      name,
-      category,
-      width: furnitureWidth,
-      height: furnitureHeight,
-      depth: furnitureDepth,
-      customConfig: config,
-    });
 
-    if (error) {
-      alert(error);
+    if (editingCabinetId) {
+      // 기존 My캐비닛 업데이트
+      const { error } = await updateCabinet(editingCabinetId, {
+        category,
+        width: furnitureWidth,
+        height: furnitureHeight,
+        depth: furnitureDepth,
+        customConfig: config,
+      });
+
+      if (error) {
+        alert(error);
+      } else {
+        alert('My캐비닛이 수정되었습니다.');
+        setEditingCabinetId(null);
+      }
     } else {
-      alert('My캐비닛에 저장되었습니다.');
+      // 신규 저장
+      const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
+      if (!name) return;
+
+      const { error } = await saveCabinet({
+        name,
+        category,
+        width: furnitureWidth,
+        height: furnitureHeight,
+        depth: furnitureDepth,
+        customConfig: config,
+      });
+
+      if (error) {
+        alert(error);
+      } else {
+        alert('My캐비닛에 저장되었습니다.');
+      }
     }
   };
 
@@ -1007,12 +1027,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
         freeDepth: originalSnapshot.freeDepth,
       });
     }
+    setEditingCabinetId(null);
     closeAllPopups();
   };
 
   // 가구 삭제
   const handleDelete = () => {
     removeModule(moduleId);
+    setEditingCabinetId(null);
     closeAllPopups();
   };
 
@@ -2290,7 +2312,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           <>
             <div style={{ padding: '0 20px 8px', flexShrink: 0 }}>
               <button className={styles.saveButton} onClick={handleSaveToCabinet}>
-                My캐비닛에 저장
+                {editingCabinetId ? 'My캐비닛 수정 저장' : 'My캐비닛에 저장'}
               </button>
             </div>
             <div className={styles.footer} style={{ flexDirection: 'column', gap: '6px' }}>

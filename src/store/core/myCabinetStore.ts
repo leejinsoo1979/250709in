@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { SavedCabinet } from '@/firebase/types';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
-import { saveMyCabinet, getMyCabinets, deleteMyCabinet } from '@/firebase/myCabinets';
+import { saveMyCabinet, getMyCabinets, deleteMyCabinet, updateMyCabinet } from '@/firebase/myCabinets';
 
 export interface PendingPlacement {
   customConfig: CustomFurnitureConfig;
@@ -15,6 +15,7 @@ interface MyCabinetState {
   savedCabinets: SavedCabinet[];
   isLoading: boolean;
   pendingPlacement: PendingPlacement | null;
+  editingCabinetId: string | null; // 현재 수정 중인 My캐비닛 ID
 
   fetchCabinets: () => Promise<void>;
   saveCabinet: (data: {
@@ -25,14 +26,24 @@ interface MyCabinetState {
     depth: number;
     customConfig: CustomFurnitureConfig;
   }) => Promise<{ id: string | null; error: string | null }>;
+  updateCabinet: (id: string, data: {
+    name?: string;
+    category?: 'full' | 'upper' | 'lower';
+    width?: number;
+    height?: number;
+    depth?: number;
+    customConfig?: CustomFurnitureConfig;
+  }) => Promise<{ error: string | null }>;
   deleteCabinet: (id: string) => Promise<void>;
   setPendingPlacement: (placement: PendingPlacement | null) => void;
+  setEditingCabinetId: (id: string | null) => void;
 }
 
 export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
   savedCabinets: [],
   isLoading: false,
   pendingPlacement: null,
+  editingCabinetId: null,
 
   fetchCabinets: async () => {
     set({ isLoading: true });
@@ -52,6 +63,15 @@ export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
     return result;
   },
 
+  updateCabinet: async (id, data) => {
+    const result = await updateMyCabinet(id, data);
+    if (!result.error) {
+      // 수정 후 목록 갱신
+      await get().fetchCabinets();
+    }
+    return result;
+  },
+
   deleteCabinet: async (id: string) => {
     const { error } = await deleteMyCabinet(id);
     if (error) {
@@ -66,5 +86,9 @@ export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
 
   setPendingPlacement: (placement) => {
     set({ pendingPlacement: placement });
+  },
+
+  setEditingCabinetId: (id) => {
+    set({ editingCabinetId: id });
   },
 }));
