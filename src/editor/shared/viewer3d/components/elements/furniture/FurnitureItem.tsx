@@ -650,7 +650,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 커스터마이징 가구: placedModule의 freeWidth/freeHeight/freeDepth로 ModuleData 생성
     const custCategory = getCustomizableCategory(placedModule.moduleId);
     const custDefaults = CUSTOMIZABLE_DEFAULTS[custCategory];
-    const custWidth = placedModule.freeWidth || custDefaults.width;
+    const custWidth = placedModule.customWidth || placedModule.adjustedWidth || placedModule.freeWidth || custDefaults.width;
     const custHeight = placedModule.freeHeight || (custCategory === 'full' ? internalSpace.height : custDefaults.height);
     const custDepth = placedModule.freeDepth || custDefaults.depth;
     moduleData = {

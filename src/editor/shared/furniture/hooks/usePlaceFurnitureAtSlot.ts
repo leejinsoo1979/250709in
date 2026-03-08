@@ -4,11 +4,13 @@
  */
 
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { PlacedModule } from '@/store/core/furnitureStore';
+import { PlacedModule, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface PlaceFurnitureParams {
@@ -17,6 +19,7 @@ export interface PlaceFurnitureParams {
   zone?: 'normal' | 'dropped'; // 단내림 구역
   spaceInfo: SpaceInfo;       // 공간 정보
   moduleData?: ModuleData;    // 미리 조회한 모듈 데이터 (없으면 내부에서 조회)
+  pendingPlacement?: PendingPlacement | null; // My캐비넷 배치 데이터
 }
 
 export interface PlaceFurnitureResult {
@@ -167,10 +170,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   if (isUpperCabinet) {
     const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
-    const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
-    const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
+    const internalHeight = spaceInfo.height - topFrameHeightMm - floorFinishHeightMm;
     const upperCabinetHeight = moduleData.dimensions.height;
-    yPosition = (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - upperCabinetHeight / 2) * 0.01;
+    yPosition = (floorFinishHeightMm + internalHeight - upperCabinetHeight / 2) * 0.01;
   } else if (isLowerCabinet || isTallCabinet) {
     const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' &&
                             spaceInfo.baseConfig?.placementType === 'float';
@@ -253,6 +255,35 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     }
   }
 
+  // 커스터마이징 가구 처리 (My캐비넷 or 일반 커스텀 가구)
+  let customConfig: CustomFurnitureConfig | undefined;
+  let isCustomizable: boolean | undefined;
+  let moduleWidth: number | undefined;
+
+  if (isCustomizableModuleId(moduleId)) {
+    const pp = params.pendingPlacement;
+    const isMyCabinet = !!(pp?.customConfig);
+
+    if (isMyCabinet) {
+      // My캐비넷: 저장된 customConfig를 복사하여 사용
+      customConfig = JSON.parse(JSON.stringify(pp.customConfig));
+      isCustomizable = false; // My캐비넷은 편집 불가 상태로 배치
+    } else {
+      // 일반 커스텀 가구: 기본 customConfig 생성
+      const topFrameMm = spaceInfo.frameSize?.top || 10;
+      const bottomFrameMm = 0;
+      const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+      const availableHeight = spaceInfo.height - topFrameMm - bottomFrameMm - floorFinishMm - baseHeightMm;
+      const panelThickness = 18;
+      customConfig = createDefaultCustomConfig(availableHeight - panelThickness * 2);
+      isCustomizable = true;
+    }
+
+    // 슬롯 너비를 moduleWidth로 저장
+    moduleWidth = customWidth || adjustedWidth || columnWidth;
+  }
+
   // 새 가구 모듈 생성
   const baseType = moduleId.replace(/-[\d.]+$/, '');
   // 서랍 모듈은 하부 섹션 상판 85mm 들여쓰기 기본값 적용
@@ -276,10 +307,16 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     lowerSectionDepth: undefined,
     upperSectionDepth: undefined,
     lowerSectionTopOffset: defaultLowerTopOffset,
-    customSections: undefined,
-    isLocked: false,
-    zone: targetSlot.zone
+    zone: targetSlot.zone,
+    ...(customConfig !== undefined && { customConfig }),
+    ...(isCustomizable !== undefined && { isCustomizable }),
+    ...(moduleWidth !== undefined && { moduleWidth }),
   };
+
+  // My캐비넷 배치 데이터 초기화
+  if (params.pendingPlacement) {
+    useMyCabinetStore.getState().setPendingPlacement(null);
+  }
 
   console.log('✅ [placeFurnitureAtSlot] 가구 배치 완료:', {
     slotIndex,
@@ -287,7 +324,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     position: newModule.position,
     isDual: isDualFurniture,
     customWidth: newModule.customWidth,
-    adjustedWidth: newModule.adjustedWidth
+    adjustedWidth: newModule.adjustedWidth,
+    isCustomizable: newModule.isCustomizable,
+    hasCustomConfig: !!newModule.customConfig,
   });
 
   return { success: true, module: newModule };

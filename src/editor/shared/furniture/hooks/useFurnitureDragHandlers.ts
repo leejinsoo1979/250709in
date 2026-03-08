@@ -10,6 +10,7 @@ import { isSlotAvailable } from '../../utils/slotAvailability';
 import { useAlert } from '@/hooks/useAlert';
 import { placeFurnitureAtSlot, getDefaultFurnitureDepth } from './usePlaceFurnitureAtSlot';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
+import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { v4 as uuidv4 } from 'uuid';
 
 export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
@@ -18,6 +19,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { calculateDropPosition, findAvailableSlot } = useDropPositioning(spaceInfo);
   const { showAlert, AlertComponent } = useAlert();
+  const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   // Three.js 컨텍스트 접근 (그림자 업데이트용)
   const { gl, invalidate } = useThree();
@@ -173,7 +175,8 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           moduleId: currentDragData.moduleData.id,
           slotIndex: targetSlotIndex,
           zone: dropPosition.zone,
-          spaceInfo
+          spaceInfo,
+          pendingPlacement
         });
 
         if (!result.success) {

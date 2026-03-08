@@ -3,6 +3,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { ModuleData } from '@/data/modules';
 import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
+import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
 
 // 커스텀 가구 ID인지 확인하는 함수
@@ -18,6 +19,7 @@ export const useFurniturePlacement = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
   const { getCustomFurnitureById } = useCustomFurnitureStore();
+  const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
     console.log('🎯🎯🎯 [useFurniturePlacement] placeFurniture 호출됨!!!!', { slotIndex, zone, selectedFurnitureId });
@@ -60,7 +62,8 @@ export const useFurniturePlacement = () => {
       slotIndex,
       zone,
       spaceInfo,
-      moduleData
+      moduleData,
+      pendingPlacement
     });
 
     if (!result.success) {
@@ -77,7 +80,7 @@ export const useFurniturePlacement = () => {
     setFurniturePlacementMode(false);
 
     console.log('✅ 가구 배치 완료 - placement mode 종료');
-  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode, getCustomFurnitureById]);
+  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode, getCustomFurnitureById, pendingPlacement]);
 
   return {
     placeFurniture,
