@@ -61,6 +61,7 @@ interface ShelfGapInputProps {
   panelThickness: number;
   placedFurnitureId?: string;
   customConfig: CustomFurnitureConfig;
+  onFocusChange?: (focused: boolean) => void;
 }
 
 const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
@@ -69,11 +70,9 @@ const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
   gapIdx,
   side,
   sectionHeight,
-  heights,
-  sortedHeights,
   panelThickness,
   placedFurnitureId,
-  customConfig,
+  onFocusChange,
 }) => {
   const [localVal, setLocalVal] = useState(value.toString());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -150,7 +149,13 @@ const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
     } else {
       setLocalVal(value.toString());
     }
-  }, [localVal, value, applyGapChange]);
+    onFocusChange?.(false);
+  }, [localVal, value, applyGapChange, onFocusChange]);
+
+  const handleFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+    onFocusChange?.(true);
+  }, [onFocusChange]);
 
   return (
     <input
@@ -160,7 +165,7 @@ const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
       onChange={(e) => setLocalVal(e.target.value)}
       onKeyDown={handleKeyDown}
       onBlur={handleBlur}
-      onFocus={(e) => e.target.select()}
+      onFocus={handleFocus}
       style={{
         width: '40px',
         height: '18px',
@@ -346,9 +351,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const showDimensions = useUIStore(state => state.showDimensions);
   const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
+  const [isEditingGap, setIsEditingGap] = useState(false);
 
   const showSectionIcons = isEditable && showFurnitureEditHandles && showDimensions
-    && viewMode === '3D' && !isDragging && showFurniture;
+    && viewMode === '3D' && !isDragging && showFurniture && !isEditingGap;
 
   // 서랍이 상판에 밀착하는지 (fullFill 또는 drawerAlign=top) - 상판 85mm 들여쓰기 판단용
   const sectionDrawerTouchesTop = (section: CustomSection, sectionInnerH: number): boolean => {
@@ -1579,6 +1585,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                   panelThickness={panelThickness}
                   placedFurnitureId={placedFurnitureId}
                   customConfig={customConfig}
+                  onFocusChange={setIsEditingGap}
                 />
               </Html>
             );
