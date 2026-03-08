@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSpaceConfigStore, FURNITURE_LIMITS } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { getModuleById, ModuleData } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
@@ -702,20 +702,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (!currentPlacedModule || currentPlacedModule.slotIndex === undefined) return false;
     
     const internalSpace = calculateInternalSpace(spaceInfo);
-    const currentModuleData = getModuleById(currentPlacedModule.moduleId, internalSpace, spaceInfo);
+    const currentModuleData = getModuleById(currentPlacedModule.moduleId, internalSpace, spaceInfo)
+      || buildModuleDataFromPlacedModule(currentPlacedModule);
     if (!currentModuleData) return false;
-    
+
     const isCurrentUpper = currentModuleData.category === 'upper' || currentPlacedModule.moduleId.includes('upper-cabinet');
     const isCurrentLower = currentModuleData.category === 'lower' || currentPlacedModule.moduleId.includes('lower-cabinet');
-    
+
     if (!isCurrentUpper && !isCurrentLower) return false;
-    
+
     // 같은 슬롯의 다른 가구들 확인
     return placedModules.some(module => {
       if (module.id === currentPlacedModule.id) return false; // 자기 자신 제외
       if (module.slotIndex !== currentPlacedModule.slotIndex) return false; // 다른 슬롯 제외
-      
-      const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+
+      const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo)
+        || buildModuleDataFromPlacedModule(module);
       if (!moduleData) return false;
       
       const isUpper = moduleData.category === 'upper' || module.moduleId.includes('upper-cabinet');
@@ -757,7 +759,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           const baseType = currentPlacedModule.moduleId.replace(/-[\d.]+$/, '');
           targetModuleId = `${baseType}-${currentPlacedModule.customWidth}`;
         }
-        return getModuleById(targetModuleId, calculateInternalSpace(spaceInfo), spaceInfo);
+        return getModuleById(targetModuleId, calculateInternalSpace(spaceInfo), spaceInfo)
+          || buildModuleDataFromPlacedModule(currentPlacedModule);
       })()
     : null;
 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFurnitureStore } from '@/store';
 import { useUIStore } from '@/store/uiStore';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
@@ -52,8 +52,9 @@ export const useFurnitureKeyboard = ({
         // 자유배치 가구는 FreePlacementDropZone의 키보드 핸들러에서 처리
         if (editingModule.isFreePlacement) return;
 
-        // 편집 중인 가구의 데이터 가져오기
-        const moduleData = getModuleById(editingModule.moduleId, internalSpace, spaceInfo);
+        // 편집 중인 가구의 데이터 가져오기 (커스텀 가구는 PlacedModule에서 빌드)
+        const moduleData = getModuleById(editingModule.moduleId, internalSpace, spaceInfo)
+          || buildModuleDataFromPlacedModule(editingModule);
         if (!moduleData) return;
         
         // 단내림 모드일 때는 zone별 position 배열 사용
@@ -408,8 +409,9 @@ export const useFurnitureKeyboard = ({
           const selectedModule = placedModules.find(m => m.id === selectedPlacedModuleId);
           if (!selectedModule) return;
           
-          // 선택된 가구의 데이터 가져오기
-          const moduleData = getModuleById(selectedModule.moduleId, internalSpace, spaceInfo);
+          // 선택된 가구의 데이터 가져오기 (커스텀 가구는 PlacedModule에서 빌드)
+          const moduleData = getModuleById(selectedModule.moduleId, internalSpace, spaceInfo)
+            || buildModuleDataFromPlacedModule(selectedModule);
           if (!moduleData) return;
           
           // 듀얼/싱글 가구 판별 - moduleId로 직접 확인 (width는 변경될 수 있음)

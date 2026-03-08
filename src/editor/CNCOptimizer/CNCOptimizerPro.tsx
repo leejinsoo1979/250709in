@@ -11,7 +11,7 @@ import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFurnitureBoring, calculateShelfBoringPositions, calculateSectionBoringPositions } from '@/domain/boring';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 
@@ -85,7 +85,9 @@ function PageInner(){
 
     placedModules.forEach((placedModule, moduleIndex) => {
       // customSections가 있으면 사용, 없으면 원본 moduleData에서 가져옴
-      let moduleData = placedModule.moduleData || getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+      let moduleData = (placedModule as any).moduleData
+        || getModuleById(placedModule.moduleId, internalSpace, spaceInfo)
+        || buildModuleDataFromPlacedModule(placedModule);
       if (!moduleData?.modelConfig?.sections) return;
 
       // customSections 적용

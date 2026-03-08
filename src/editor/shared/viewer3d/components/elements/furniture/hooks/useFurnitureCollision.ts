@@ -1,5 +1,5 @@
 import { useFurnitureStore } from '@/store';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
@@ -23,7 +23,8 @@ export const useFurnitureCollision = ({ spaceInfo }: UseFurnitureCollisionProps)
     placedModules.forEach(placedModule => {
       if (placedModule.id === excludeModuleId) return; // 자기 자신은 제외
       
-      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo)
+        || buildModuleDataFromPlacedModule(placedModule);
       if (!moduleData) return;
       
       // 기존 가구의 듀얼/싱글 여부 판별

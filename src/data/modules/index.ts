@@ -1,5 +1,6 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { generateShelvingModules } from './shelving';
+import type { SectionConfig } from './shelving';
 
 // ModuleData를 shelving에서 import
 import type { ModuleData } from './shelving';
@@ -249,8 +250,64 @@ export const getValidModulesForInternalSpace = (
 ) => {
   const dynamicModules = generateDynamicModules(internalSpace);
   const staticModules = STATIC_MODULES;
-  
-  return [...dynamicModules, ...staticModules].filter(module => 
+
+  return [...dynamicModules, ...staticModules].filter(module =>
     validateModuleForInternalSpace(module, internalSpace).isValid
   );
-}; 
+};
+
+/**
+ * PlacedModule에서 커스텀 가구용 ModuleData를 생성하는 유틸리티
+ * getModuleById가 null을 반환하는 커스텀 가구(customizable-*)에 대해
+ * PlacedModule의 속성으로부터 ModuleData 호환 객체를 빌드
+ */
+export function buildModuleDataFromPlacedModule(
+  placedModule: {
+    moduleId: string;
+    moduleWidth?: number;
+    freeWidth?: number;
+    freeHeight?: number;
+    freeDepth?: number;
+    customConfig?: { sections: Array<{ height: number }>; panelThickness?: number };
+    isCustomizable?: boolean;
+  }
+): ModuleData | null {
+  if (!placedModule.moduleId.startsWith('customizable-')) return null;
+
+  // moduleId 에서 카테고리 추출: customizable-full-1000 → 'full'
+  const parts = placedModule.moduleId.split('-');
+  const category = (parts[1] || 'full') as 'full' | 'upper' | 'lower';
+
+  const width = placedModule.freeWidth || placedModule.moduleWidth || 600;
+  const height = placedModule.freeHeight || 2400;
+  const depth = placedModule.freeDepth || 600;
+  const thickness = placedModule.customConfig?.panelThickness || 18;
+
+  // customConfig.sections → SectionConfig[] 변환
+  const sections: SectionConfig[] = placedModule.customConfig?.sections?.map((sec) => ({
+    type: 'shelf' as const,
+    height: sec.height,
+    heightType: 'absolute' as const,
+  })) || [{
+    type: 'shelf' as const,
+    height: 100,
+    heightType: 'percentage' as const,
+  }];
+
+  return {
+    id: placedModule.moduleId,
+    name: `커스텀 ${category === 'full' ? '전체장' : category === 'upper' ? '상부장' : '하부장'}`,
+    category,
+    dimensions: { width, height, depth },
+    color: '#C8B69E',
+    type: 'box',
+    isDynamic: false,
+    modelConfig: {
+      basicThickness: thickness,
+      hasOpenFront: true,
+      hasShelf: true,
+      shelfCount: sections.length,
+      sections,
+    },
+  };
+}

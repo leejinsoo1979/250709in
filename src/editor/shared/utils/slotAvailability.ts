@@ -1,5 +1,5 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';

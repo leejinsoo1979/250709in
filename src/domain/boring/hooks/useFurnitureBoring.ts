@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import {
   convertMultipleFurnitureToBoring,
@@ -102,8 +102,9 @@ export function useFurnitureBoring(
         return;
       }
 
-      // ModuleData 가져오기
-      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+      // ModuleData 가져오기 (커스텀 가구는 PlacedModule에서 빌드)
+      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo)
+        || buildModuleDataFromPlacedModule(placedModule);
       if (!moduleData) {
         console.warn(`Module not found: ${placedModule.moduleId}`);
         return;
@@ -166,7 +167,8 @@ export function getFurnitureBoringById(
   }
 
   const internalSpace = calculateInternalSpace(spaceInfo);
-  const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+  const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo)
+    || buildModuleDataFromPlacedModule(placedModule);
   if (!moduleData) {
     return [];
   }

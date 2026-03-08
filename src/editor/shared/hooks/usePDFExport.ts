@@ -5,7 +5,7 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getModuleById, ModuleData } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule, ModuleData } from '@/data/modules';
 import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
@@ -784,7 +784,8 @@ export function usePDFExport() {
             // 도어/서랍 정보 추출
             const doorItems: DoorDrawingItem[] = [];
             for (const placedModule of placedModules) {
-              const moduleData = getModuleById(placedModule.moduleId, spaceInfo);
+              const moduleData = getModuleById(placedModule.moduleId, undefined, spaceInfo)
+                || buildModuleDataFromPlacedModule(placedModule);
               const doorInfo = extractDoorInfo(placedModule, moduleData, spaceInfo);
               if (doorInfo) {
                 doorItems.push(doorInfo);

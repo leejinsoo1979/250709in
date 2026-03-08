@@ -3,7 +3,7 @@ import { Group, Rect, Text, Image, Circle, Line } from 'react-konva';
 import Konva from 'konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { PlacedModule } from '@/store/core/furnitureStore';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 
 interface FurnitureItem2DProps {
   item: PlacedModule;
@@ -36,8 +36,8 @@ const FurnitureItem2D: React.FC<FurnitureItem2DProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [rotation, setRotation] = useState(item.rotation || 0);
 
-  // Get module data
-  const moduleData = getModuleById(item.moduleId);
+  // Get module data (커스텀 가구는 PlacedModule에서 빌드)
+  const moduleData = getModuleById(item.moduleId) || buildModuleDataFromPlacedModule(item);
   
   // Convert dimensions to pixels
   const xPx = mmToPixels(item.position.x);

@@ -1,7 +1,7 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
 import { calculateSpaceIndexing, ColumnIndexer } from './indexing';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 
 // 기둥 포함 슬롯 정보 타입
 export interface ColumnSlotInfo {
@@ -1644,8 +1644,9 @@ export const autoSplitDualFurnitureByColumns = (
   const furnitureToSplit: any[] = [];
   
   placedModules.forEach(placedModule => {
-    // 모듈 데이터 가져오기
-    const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+    // 모듈 데이터 가져오기 (커스텀 가구는 PlacedModule에서 빌드)
+    const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo)
+      || buildModuleDataFromPlacedModule(placedModule);
     if (!moduleData) return;
     
     // 듀얼 가구인지 확인

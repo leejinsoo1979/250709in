@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculatePanelDetails as calculatePanelDetailsShared } from '@/editor/shared/utils/calculatePanelDetails';
 import { Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
@@ -68,7 +68,10 @@ export function useLivePanelData() {
         
         // Find module data with dynamic sizing
         // 배치된 가구의 moduleData가 있으면 그것을 사용 (높이 변경 등 반영), 없으면 원본 가져오기
-        let moduleData = placedModule.moduleData || getModuleById(moduleId, internalSpace, spaceInfo);
+        // 커스텀 가구(customizable-*)는 PlacedModule 속성에서 ModuleData를 빌드
+        let moduleData = (placedModule as any).moduleData
+          || getModuleById(moduleId, internalSpace, spaceInfo)
+          || buildModuleDataFromPlacedModule(placedModule);
         if (!moduleData) {
           console.warn(`Module ${moduleIndex}: No module data found for ${moduleId}`);
           return;
@@ -423,7 +426,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       if (!moduleId) return;
 
       // 배치된 가구의 moduleData가 있으면 그것을 사용 (높이 변경 등 반영), 없으면 원본 가져오기
-      let moduleData = placedModule.moduleData || getModuleById(moduleId, internalSpace, spaceInfo);
+      let moduleData = (placedModule as any).moduleData
+        || getModuleById(moduleId, internalSpace, spaceInfo)
+        || buildModuleDataFromPlacedModule(placedModule);
       if (!moduleData) return;
 
       // customSections가 있으면 modelConfig.sections를 대체 (섹션 높이 변경, 안전선반 제거 등 반영)
