@@ -1309,6 +1309,54 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             />
           );
 
+          // 선반 사이 간격 표시
+          const allElements = section.hasPartition
+            ? [...(section.leftElements || []), ...(section.rightElements || [])]
+            : (section.elements || []);
+          const shelfEl = allElements.find(e => e.type === 'shelf' && 'heights' in e);
+          if (shelfEl && 'heights' in shelfEl) {
+            const sortedHeights = [...shelfEl.heights].sort((a, b) => a - b);
+            // 간격 계산: 바닥→첫 선반, 선반→선반, 마지막 선반→상판
+            const gaps: { fromY: number; toY: number; gapMm: number }[] = [];
+            const sectionHmm = section.height;
+            // 바닥 → 첫 선반
+            if (sortedHeights.length > 0) {
+              gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: sortedHeights[0] });
+            }
+            // 선반 사이
+            for (let i = 0; i < sortedHeights.length - 1; i++) {
+              const gap = sortedHeights[i + 1] - sortedHeights[i] - panelThickness;
+              gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: gap });
+            }
+            // 마지막 선반 → 상판
+            if (sortedHeights.length > 0) {
+              const lastH = sortedHeights[sortedHeights.length - 1];
+              gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness });
+            }
+
+            const shelfDimX = bInnerW / 2 - 0.3;
+            const shelfLineX = bInnerW / 2 - 0.15;
+            gaps.forEach((g, gi) => {
+              const fromYLocal = botY + mmToUnit(g.fromY) + (gi > 0 ? t / 2 : 0);
+              const toYLocal = botY + mmToUnit(g.toY) - (gi < gaps.length - 1 ? t / 2 : 0);
+              const centerY = (fromYLocal + toYLocal) / 2;
+              nodes.push(
+                <DimensionText
+                  key={`dim-sg-${sIdx}-${gi}`}
+                  value={Math.round(g.gapMm)}
+                  position={[shelfDimX, centerY, zPos]}
+                  rotation={[0, 0, Math.PI / 2]}
+                />,
+                <Line
+                  key={`dim-sg-line-${sIdx}-${gi}`}
+                  points={[[shelfLineX, fromYLocal, zPos], [shelfLineX, toYLocal, zPos]]}
+                  color="#888888"
+                  lineWidth={1}
+                />
+              );
+            });
+          }
+
           // 칸막이가 있으면 좌/우 내경 너비 표시
           if (section.hasPartition && section.partitionPosition) {
             const leftWidthMm = section.partitionPosition - panelThickness / 2;

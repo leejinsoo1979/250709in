@@ -269,6 +269,54 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 선반/서랍 높이 ArrowUp/ArrowDown 키 핸들러 (10mm 단위)
+  const handleShelfHeightKeyDown = (
+    e: React.KeyboardEvent,
+    sIdx: number,
+    side: 'full' | 'left' | 'right',
+    heightIdx: number,
+    sectionHeight: number,
+  ) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+      return;
+    }
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+
+    const step = 10; // 1cm = 10mm
+    const delta = e.key === 'ArrowUp' ? step : -step;
+
+    const sections = [...config!.sections];
+    const sec = { ...sections[sIdx] };
+    const elements =
+      side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+    const el = elements[0];
+    if (!el || (el.type !== 'shelf' && el.type !== 'drawer')) return;
+
+    const heights = [...el.heights];
+    const refKey = `${sIdx}-${side}-${heightIdx}`;
+    const refDir = shelfRefDir[refKey] || 'bottom';
+
+    // 실제 저장값(아래에서 기준) 기준으로 delta 적용
+    let newVal = heights[heightIdx] + (refDir === 'top' ? -delta : delta);
+    newVal = Math.max(50, Math.min(sectionHeight, newVal));
+    heights[heightIdx] = newVal;
+
+    elements[0] = { ...el, heights };
+    if (side === 'full') sec.elements = elements;
+    else if (side === 'left') sec.leftElements = elements;
+    else sec.rightElements = elements;
+
+    sections[sIdx] = sec;
+    applyConfig({ ...config!, sections });
+
+    // 표시값 갱신
+    const displayVal = el.type === 'shelf' && refDir === 'top' ? sectionHeight - newVal : newVal;
+    const inputKey = `${sIdx}-${side}-0-${heightIdx}`;
+    setHeightInputs((prev) => ({ ...prev, [inputKey]: displayVal.toString() }));
+  };
+
   // 섹션 높이 ArrowUp/ArrowDown 키 핸들러 (1mm 단위, Shift 10mm)
   const handleSectionHeightKeyDown = (e: React.KeyboardEvent, idx: number) => {
     if (e.key === 'Enter') {
@@ -1467,7 +1515,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       value={displayVal}
                       onChange={(e) => handleHeightInputChange(sIdx, side, hi, e.target.value)}
                       onBlur={() => handleHeightInputBlur(sIdx, side, hi, sectionHeight)}
-                      onKeyDown={handleInputKeyDown}
+                      onKeyDown={(e) => handleShelfHeightKeyDown(e, sIdx, side, hi, sectionHeight)}
                     />
                     <span className={styles.unit}>mm</span>
                     {/* 선반: 위에서/아래에서 기준 선택 */}
