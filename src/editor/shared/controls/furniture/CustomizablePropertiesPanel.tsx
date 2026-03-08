@@ -1401,23 +1401,95 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const subAreaW = areaSide === 'left'
           ? (section.partitionPosition || Math.round(innerW / 2)) - panelThickness / 2
           : innerW - (section.partitionPosition || Math.round(innerW / 2)) - panelThickness / 2;
+        const otherSubHeight = focusedSubPart === 'lower' ? section.height - subSplit.lowerHeight : subSplit.lowerHeight;
         return (
           <div key={`${sIdx}-${areaSide}-${focusedSubPart}`}>
-            {/* 서브영역 치수 (읽기 전용) */}
             <div className={styles.section}>
               <div className={styles.sectionTitle}>치수</div>
+              {/* 너비 (칸막이 위치 조절) */}
               <div className={styles.row}>
                 <span className={styles.label}>너비</span>
-                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
-                  {Math.round(subAreaW)}
-                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={partitionInputs[`${sIdx}-${areaSide}`] ?? Math.round(subAreaW).toString()}
+                  onChange={(e) => {
+                    setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-${areaSide}`]: e.target.value }));
+                  }}
+                  onBlur={() => {
+                    const val = parseInt(partitionInputs[`${sIdx}-${areaSide}`] || '0');
+                    const minV = 100;
+                    const maxV = innerW - 100 - panelThickness / 2;
+                    const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
+                    const newPos = areaSide === 'left'
+                      ? clamped + panelThickness / 2
+                      : innerW - clamped - panelThickness / 2;
+                    const clampedPos = Math.max(100, Math.min(innerW - 100, Math.round(newPos)));
+                    handlePartitionPosition(sIdx, clampedPos);
+                    const leftW = clampedPos - panelThickness / 2;
+                    const rightW = innerW - clampedPos - panelThickness / 2;
+                    setPartitionInputs((prev) => ({
+                      ...prev,
+                      [`${sIdx}-left`]: Math.round(leftW).toString(),
+                      [`${sIdx}-right`]: Math.round(rightW).toString(),
+                    }));
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  style={{ width: '70px' }}
+                />
                 <span className={styles.unit}>mm</span>
               </div>
+              {/* 높이 (서브분할 높이 조절 가능) */}
               <div className={styles.row}>
                 <span className={styles.label}>높이</span>
-                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
-                  {Math.round(subHeight)}
-                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={subSplitHeightInputs[`${subSplitKey}-${focusedSubPart}`] ?? Math.round(subHeight).toString()}
+                  onChange={(e) => {
+                    if (e.target.value === '' || /^\d+$/.test(e.target.value)) {
+                      setSubSplitHeightInputs((prev) => ({ ...prev, [`${subSplitKey}-${focusedSubPart}`]: e.target.value }));
+                    }
+                  }}
+                  onBlur={() => {
+                    const raw = subSplitHeightInputs[`${subSplitKey}-${focusedSubPart}`];
+                    if (!raw || raw === '') {
+                      setSubSplitHeightInputs((prev) => ({ ...prev, [`${subSplitKey}-${focusedSubPart}`]: Math.round(subHeight).toString() }));
+                      return;
+                    }
+                    const val = parseInt(raw);
+                    const minV = 100;
+                    const maxV = section.height - 100;
+                    const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(subHeight) : val));
+                    // 입력한 값이 해당 subPart 높이 → lowerHeight 역산
+                    const newLowerH = focusedSubPart === 'lower' ? clamped : section.height - clamped;
+                    handleAreaSubSplitHeight(sIdx, areaSide, newLowerH);
+                    setSubSplitHeightInputs((prev) => ({ ...prev, [`${subSplitKey}-${focusedSubPart}`]: clamped.toString() }));
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  style={{ width: '70px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+                {focusedSubPart === 'lower' ? '상부' : '하부'}: {Math.round(otherSubHeight)}mm
+              </div>
+              {/* 깊이 */}
+              <div className={styles.row}>
+                <span className={styles.label}>깊이</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={depthInput}
+                  placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                  onChange={(e) => handleDepthInputChange(e.target.value)}
+                  onBlur={handleDepthInputBlur}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  style={{ width: '70px' }}
+                />
                 <span className={styles.unit}>mm</span>
               </div>
             </div>
@@ -1443,6 +1515,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           {/* 영역 치수 */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>치수</div>
+            {/* 너비 (칸막이 위치 조절) */}
             <div className={styles.row}>
               <span className={styles.label}>너비</span>
               <input
@@ -1458,13 +1531,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   const minV = 100;
                   const maxV = innerW - 100 - panelThickness / 2;
                   const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
-                  // 너비 → 칸막이 위치 역산
                   const newPos = areaSide === 'left'
                     ? clamped + panelThickness / 2
                     : innerW - clamped - panelThickness / 2;
                   const clampedPos = Math.max(100, Math.min(innerW - 100, Math.round(newPos)));
                   handlePartitionPosition(sIdx, clampedPos);
-                  // 좌/우 동기화
                   const leftW = clampedPos - panelThickness / 2;
                   const rightW = innerW - clampedPos - panelThickness / 2;
                   setPartitionInputs((prev) => ({
@@ -1478,6 +1549,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               />
               <span className={styles.unit}>mm</span>
             </div>
+            {/* 높이 (2단분할: 상/하 중 어디서 줄일지 선택 가능, 단일: 전체 높이) */}
             <div className={styles.row}>
               <span className={styles.label}>높이</span>
               {config.sections.length > 1 ? (
@@ -1502,6 +1574,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   <span className={styles.unit}>mm</span>
                 </>
               )}
+            </div>
+            {/* 2단 분할 시 반대 섹션 높이 표시 */}
+            {config.sections.length > 1 && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+                {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height}mm
+              </div>
+            )}
+            {/* 깊이 */}
+            <div className={styles.row}>
+              <span className={styles.label}>깊이</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${styles.inputSmall}`}
+                value={depthInput}
+                placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                onChange={(e) => handleDepthInputChange(e.target.value)}
+                onBlur={handleDepthInputBlur}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                style={{ width: '70px' }}
+              />
+              <span className={styles.unit}>mm</span>
             </div>
           </div>
 
