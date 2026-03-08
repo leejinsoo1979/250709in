@@ -558,7 +558,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       }
       case 'rod':
-        newElement = { type: 'rod', height: Math.round(sectionHeight * 0.85), withShelf: true, shelfGap: 280 };
+        newElement = sectionHeight >= 1100
+          ? { type: 'rod', height: Math.round(sectionHeight * 0.85), withShelf: true, shelfGap: 280 }
+          : { type: 'rod', height: Math.round(sectionHeight * 0.85), withShelf: false };
         break;
       case 'pants':
         newElement = { type: 'pants', height: Math.round(sectionHeight * 0.85) };
@@ -1013,54 +1015,58 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 옷봉: 고정선반+옷봉 / 옷봉만 선택 */}
+        {/* 옷봉: 고정선반+옷봉 / 옷봉만 선택 (섹션 높이 1100 이상만 선반+옷봉 가능) */}
         {currentType === 'rod' && el.type === 'rod' && (() => {
           const withShelf = el.withShelf ?? false;
           const shelfGap = el.shelfGap ?? 280;
+          const sectionH = config.sections[sIdx].height;
+          const canHaveShelf = sectionH >= 1100;
           return (
             <div style={{ marginTop: '8px' }}>
-              <div className={styles.row}>
-                <span className={styles.label}>옵션</span>
-                <div className={styles.toggleGroup}>
-                  <button
-                    className={`${styles.toggleButton} ${withShelf ? styles.active : ''}`}
-                    onClick={() => {
-                      const sections = [...config.sections];
-                      const sec = { ...sections[sIdx] };
-                      const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
-                      if (elArr[0]?.type === 'rod') {
-                        elArr[0] = { ...elArr[0], withShelf: true, shelfGap: elArr[0].shelfGap ?? 280 };
-                      }
-                      if (side === 'full') sec.elements = elArr;
-                      else if (side === 'left') sec.leftElements = elArr;
-                      else sec.rightElements = elArr;
-                      sections[sIdx] = sec;
-                      applyConfig({ ...config, sections });
-                    }}
-                  >
-                    선반+옷봉
-                  </button>
-                  <button
-                    className={`${styles.toggleButton} ${!withShelf ? styles.active : ''}`}
-                    onClick={() => {
-                      const sections = [...config.sections];
-                      const sec = { ...sections[sIdx] };
-                      const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
-                      if (elArr[0]?.type === 'rod') {
-                        elArr[0] = { ...elArr[0], withShelf: false };
-                      }
-                      if (side === 'full') sec.elements = elArr;
-                      else if (side === 'left') sec.leftElements = elArr;
-                      else sec.rightElements = elArr;
-                      sections[sIdx] = sec;
-                      applyConfig({ ...config, sections });
-                    }}
-                  >
-                    옷봉만
-                  </button>
+              {canHaveShelf && (
+                <div className={styles.row}>
+                  <span className={styles.label}>옵션</span>
+                  <div className={styles.toggleGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${withShelf ? styles.active : ''}`}
+                      onClick={() => {
+                        const sections = [...config.sections];
+                        const sec = { ...sections[sIdx] };
+                        const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+                        if (elArr[0]?.type === 'rod') {
+                          elArr[0] = { ...elArr[0], withShelf: true, shelfGap: elArr[0].shelfGap ?? 280 };
+                        }
+                        if (side === 'full') sec.elements = elArr;
+                        else if (side === 'left') sec.leftElements = elArr;
+                        else sec.rightElements = elArr;
+                        sections[sIdx] = sec;
+                        applyConfig({ ...config, sections });
+                      }}
+                    >
+                      선반+옷봉
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${!withShelf ? styles.active : ''}`}
+                      onClick={() => {
+                        const sections = [...config.sections];
+                        const sec = { ...sections[sIdx] };
+                        const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+                        if (elArr[0]?.type === 'rod') {
+                          elArr[0] = { ...elArr[0], withShelf: false };
+                        }
+                        if (side === 'full') sec.elements = elArr;
+                        else if (side === 'left') sec.leftElements = elArr;
+                        else sec.rightElements = elArr;
+                        sections[sIdx] = sec;
+                        applyConfig({ ...config, sections });
+                      }}
+                    >
+                      옷봉만
+                    </button>
+                  </div>
                 </div>
-              </div>
-              {withShelf && (
+              )}
+              {canHaveShelf && withShelf && (
                 <div className={styles.row} style={{ marginTop: '6px' }}>
                   <span className={styles.label}>간격</span>
                   <input
@@ -1090,7 +1096,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 </div>
               )}
               <div className={styles.row} style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
-                {withShelf ? '고정선반 아래에 옷봉이 설치됩니다' : '상판 바로 아래에 옷봉이 설치됩니다'}
+                {canHaveShelf && withShelf ? '고정선반 아래에 옷봉이 설치됩니다' : '상판 바로 아래에 옷봉이 설치됩니다'}
               </div>
             </div>
           );
