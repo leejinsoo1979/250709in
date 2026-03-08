@@ -1385,7 +1385,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 취소
               </button>
               <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
-                생성
+                확인
               </button>
             </div>
           </>
