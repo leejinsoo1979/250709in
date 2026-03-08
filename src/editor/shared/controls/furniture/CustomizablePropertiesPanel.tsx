@@ -914,98 +914,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
       return (
         <div key={`${sIdx}-${areaSide}`}>
-          {/* 상,하 분할 토글 */}
+          {/* 내부 요소 편집 (칸막이 영역에서는 섹션분할 없이 요소 편집만) */}
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>섹션 분할</div>
-            <div className={styles.row}>
-              <span className={styles.label}>상,하</span>
-              <div className={styles.toggleGroup}>
-                <button
-                  className={`${styles.toggleButton} ${!isSubSplit ? styles.active : ''}`}
-                  onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, false)}
-                >
-                  없음
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${isSubSplit ? styles.active : ''}`}
-                  onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, true)}
-                >
-                  분할
-                </button>
-              </div>
+            <div className={styles.areaCard}>
+              {renderElementEditor(sIdx, areaSide, elements, section.height)}
             </div>
-            {/* 상하 분할 시 높이 입력 */}
-            {isSubSplit && subSplit && (
-              <>
-                <div className={styles.row} style={{ marginTop: '4px' }}>
-                  <span className={styles.label}>하부 높이</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className={`${styles.input} ${styles.inputSmall}`}
-                    value={subSplitHeightInputs[subSplitKey] ?? subSplit.lowerHeight.toString()}
-                    onChange={(e) => {
-                      setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKey]: e.target.value }));
-                    }}
-                    onBlur={() => {
-                      const val = parseInt(subSplitHeightInputs[subSplitKey] || '0');
-                      const minH = 100;
-                      const maxH = section.height - 100;
-                      const clamped = Math.max(minH, Math.min(maxH, isNaN(val) ? Math.round(section.height / 2) : val));
-                      handleAreaSubSplitHeight(sIdx, areaSide, clamped);
-                      setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKey]: clamped.toString() }));
-                    }}
-                    onKeyDown={handleInputKeyDown}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-                <div className={styles.row}>
-                  <span className={styles.label}>상부 높이</span>
-                  <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
-                    {section.height - subSplit.lowerHeight}
-                  </span>
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </>
-            )}
           </div>
-
-          <div className={styles.divider} />
-
-          {/* 내부 요소 편집 */}
-          {isSubSplit && subSplit ? (
-            <>
-              <div className={styles.section}>
-                <div className={styles.sectionTitle}>
-                  상부
-                  <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
-                    {section.height - subSplit.lowerHeight}mm
-                  </span>
-                </div>
-                <div className={styles.areaCard}>
-                  {renderSubSplitElementEditor(sIdx, areaSide, 'upper', subSplit.upperElements, section.height - subSplit.lowerHeight)}
-                </div>
-              </div>
-              <div className={styles.section}>
-                <div className={styles.sectionTitle}>
-                  하부
-                  <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
-                    {subSplit.lowerHeight}mm
-                  </span>
-                </div>
-                <div className={styles.areaCard}>
-                  {renderSubSplitElementEditor(sIdx, areaSide, 'lower', subSplit.lowerElements, subSplit.lowerHeight)}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>{areaLabel} 영역</div>
-              <div className={styles.areaCard}>
-                {renderElementEditor(sIdx, areaSide, elements, section.height)}
-              </div>
-            </div>
-          )}
         </div>
       );
     }
