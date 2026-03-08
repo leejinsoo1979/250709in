@@ -89,6 +89,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', edi
     setCurrentDragData({
       type: 'furniture',
       zone: 'normal',
+      isDualSlot: isDual,
       moduleData: {
         id: moduleId,
         name: cabinet.name || 'My캐비넷',

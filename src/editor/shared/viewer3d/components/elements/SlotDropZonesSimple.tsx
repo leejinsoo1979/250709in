@@ -732,8 +732,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 원본 ID에서 타입 부분만 추출 (소수점 포함한 너비 정보 제거)
       const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
 
-      // 듀얼 가구 여부 판단 - 원본 모듈 ID로 판단
-      const isDual = dragData.moduleData.id.startsWith('dual-');
+      // 듀얼 가구 여부 판단 - ID prefix, isDualSlot 플래그, 또는 너비 기반
+      const isDual = dragData.moduleData.id.startsWith('dual-')
+        || dragData.isDualSlot === true
+        || (dragData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
 
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
@@ -1601,7 +1603,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 변수 정의 추가
         const moduleData = dragData.moduleData;
         const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const isDual = moduleData.id.includes('dual');
+        const isDual = moduleData.id.includes('dual')
+          || dragData.isDualSlot === true
+          || (moduleData.dimensions.width > indexing.columnWidth * 1.5);
         const defaultDepth = moduleData.defaultDepth || 600;
         const slotIndex = colliderUserData?.slotIndex;
         const customWidth = moduleData.customWidth || moduleData.dimensions.width;
@@ -1683,8 +1687,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     const zoneSlotIndex = slotIndex;
 
-    // 듀얼/싱글 가구 판별 - 원본 모듈 ID로 판단
-    const isDual = dragData.moduleData.id.startsWith('dual-');
+    // 듀얼/싱글 가구 판별 - ID prefix, isDualSlot 플래그, 또는 너비 기반
+    const isDual = dragData.moduleData.id.startsWith('dual-')
+      || dragData.isDualSlot === true
+      || (dragData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
 
     // 메인 구간 슬롯 점유 상태 디버깅
     const mapToGlobalSlotIndex = (index: number): number => index;
@@ -2287,8 +2293,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const activeModuleData = currentDragData;
 
       if (activeModuleData) {
-        // isDualFurniture 함수는 너비를 기대하지만, 더 정확한 방법은 moduleId 확인
-        const isDual = activeModuleData.moduleData.id.startsWith('dual-');
+        // 듀얼 여부: dual- prefix, isDualSlot 플래그, 또는 너비가 칸 너비의 1.5배 초과
+        const isDual = activeModuleData.moduleData.id.startsWith('dual-')
+          || activeModuleData.isDualSlot === true
+          || (activeModuleData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
 
         // 단내림 구간일 경우 영역별 가구 확인
         const isAvailable = (() => {
@@ -2928,11 +2936,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
         }
 
-        // 현재 드래그 중인 가구가 듀얼인지 확인 (너비 기반)
+        // 현재 드래그 중인 가구가 듀얼인지 확인
         let isDual = false;
         if (activeModuleData) {
-          // 듀얼 여부는 ID로 판단 (dual- prefix)
-          isDual = activeModuleData.moduleData.id.startsWith('dual-');
+          // 듀얼 여부: dual- prefix, isDualSlot 플래그, 또는 너비가 칸 너비의 1.5배 초과
+          isDual = activeModuleData.moduleData.id.startsWith('dual-')
+            || activeModuleData.isDualSlot === true
+            || (activeModuleData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
 
           console.log('🔍 [Ghost] activeModuleData 있음, 듀얼 체크:', {
             moduleId: activeModuleData.moduleData.id,
