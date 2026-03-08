@@ -73,6 +73,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const { theme } = useTheme();
   const viewMode = useUIStore(state => state.viewMode);
   const view2DDirection = useUIStore(state => state.view2DDirection);
+  const activePopup = useUIStore(state => state.activePopup);
 
   const panelThickness = customConfig.panelThickness || 18; // mm
   const t = mmToUnit(panelThickness); // Three.js 단위
@@ -199,6 +200,130 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           <SettingsIcon color={themeColor} size={14} />
         </div>
       </Html>
+    );
+  };
+
+  // 섹션 내경 치수 가이드 렌더링 (톱니 아이콘 클릭 시)
+  const renderSectionDimensionGuides = () => {
+    if (activePopup.type !== 'customizableEdit') return null;
+    if (activePopup.id !== placedFurnitureId) return null;
+    if (activePopup.sectionIndex === undefined) return null;
+
+    const sIdx = activePopup.sectionIndex;
+    const section = sections[sIdx];
+    if (!section) return null;
+
+    const themeColor = getThemeColor();
+    const frontZ = D / 2 + 0.02;
+
+    // 섹션 내경 (mm)
+    const sectionInnerHeightMm = section.height;
+    const sectionInnerWidthMm = width - 2 * panelThickness;
+
+    // 섹션 중심 Y 계산
+    let sectionCenterY = 0;
+    let sectionInnerH = mmToUnit(sectionInnerHeightMm);
+    if (isSplit) {
+      const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
+      const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
+      if (sIdx === 0) {
+        sectionCenterY = -H / 2 + lowerH / 2;
+      } else {
+        sectionCenterY = -H / 2 + lowerH + upperH / 2;
+      }
+    }
+
+    // 가이드 라인 좌표 (Three.js 단위)
+    const left = -innerW / 2;
+    const right = innerW / 2;
+    const top = sectionCenterY + sectionInnerH / 2;
+    const bottom = sectionCenterY - sectionInnerH / 2;
+
+    const lineColor = themeColor;
+    const lineOpacity = 0.6;
+    const dashSize = 0.04;
+    const gapSize = 0.03;
+
+    // 점선 재질
+    const dashedLineMat = new THREE.LineDashedMaterial({
+      color: lineColor,
+      dashSize,
+      gapSize,
+      transparent: true,
+      opacity: lineOpacity,
+      depthTest: false,
+    });
+
+    // 수평 가이드 라인 (상/하 내경 경계)
+    const hTopGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(left, top, frontZ),
+      new THREE.Vector3(right, top, frontZ),
+    ]);
+    const hBottomGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(left, bottom, frontZ),
+      new THREE.Vector3(right, bottom, frontZ),
+    ]);
+
+    // 수직 가이드 라인 (좌/우 내경 경계)
+    const vLeftGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(left, top, frontZ),
+      new THREE.Vector3(left, bottom, frontZ),
+    ]);
+    const vRightGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(right, top, frontZ),
+      new THREE.Vector3(right, bottom, frontZ),
+    ]);
+
+    return (
+      <group key="section-dim-guides">
+        {/* 점선 가이드 */}
+        <lineSegments geometry={hTopGeo} material={dashedLineMat} computeLineDistances />
+        <lineSegments geometry={hBottomGeo} material={dashedLineMat} computeLineDistances />
+        <lineSegments geometry={vLeftGeo} material={dashedLineMat} computeLineDistances />
+        <lineSegments geometry={vRightGeo} material={dashedLineMat} computeLineDistances />
+
+        {/* 너비 치수 (상단) */}
+        <Html
+          position={[0, top + 0.15, frontZ]}
+          center
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          <div style={{
+            background: 'rgba(0,0,0,0.75)',
+            color: '#fff',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            border: `1px solid ${themeColor}`,
+          }}>
+            내경 {sectionInnerWidthMm}mm
+          </div>
+        </Html>
+
+        {/* 높이 치수 (좌측) */}
+        <Html
+          position={[left - 0.15, sectionCenterY, frontZ]}
+          center
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          <div style={{
+            background: 'rgba(0,0,0,0.75)',
+            color: '#fff',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            border: `1px solid ${themeColor}`,
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+          }}>
+            내경 {sectionInnerHeightMm}mm
+          </div>
+        </Html>
+      </group>
     );
   };
 
@@ -777,6 +902,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
       {/* 섹션별 옵션 아이콘 */}
       {renderSectionIcons()}
+
+      {/* 섹션 내경 치수 가이드 (톱니 아이콘 클릭 시) */}
+      {renderSectionDimensionGuides()}
 
       {/* 조절발 (upper가 아닌 경우) */}
       {showFurniture && category !== 'upper' && (
