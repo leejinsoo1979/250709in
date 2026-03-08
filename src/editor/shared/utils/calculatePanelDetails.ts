@@ -1,6 +1,7 @@
 import { ModuleData } from '@/data/modules';
 import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/calculators/hingeCalculator';
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
+import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -16,7 +17,8 @@ export const calculatePanelDetails = (
   doorTopGap?: number, // 천장에서 도어 상단까지 이격거리 (mm)
   doorBottomGap?: number, // 바닥에서 도어 하단까지 이격거리 (mm)
   baseHeight?: number, // 받침대 높이 (mm) - 브라켓 보링 Y오프셋 계산용
-  backPanelThicknessMm?: number // 백패널 두께 (mm, 기본값: 9)
+  backPanelThicknessMm?: number, // 백패널 두께 (mm, 기본값: 9)
+  customConfig?: CustomFurnitureConfig // 커스텀 가구 내부 구조
 ) => {
   const panels = {
     upper: [],     // 상부장 패널
@@ -674,6 +676,162 @@ export const calculatePanelDetails = (
       });
     }
 
+  }
+
+  // === 커스텀 가구 내부 패널 (칸막이, 선반, 서랍) ===
+  if (customConfig && customConfig.sections) {
+    const basicThicknessCC = customConfig.panelThickness || basicThickness;
+    const drawerHandleThicknessCC = 15;
+    const drawerSideThicknessCC = 15;
+    const drawerBottomThicknessCC = 5;
+    const targetPanel = panels.upper.length > 0 ? panels.upper : panels.lower;
+
+    customConfig.sections.forEach((section, secIdx) => {
+      const sectionPrefix = customConfig.sections.length > 1 ? `섹션${secIdx + 1} ` : '';
+      const sectionInnerWidth = customWidth - (basicThicknessCC * 2);
+
+      // 칸막이 (세로 칸막이) → 별도 패널
+      if (section.hasPartition && section.partitionPosition) {
+        targetPanel.push({
+          name: `${sectionPrefix}칸막이`,
+          width: customDepth - 26, // 백패널 여유
+          height: section.height,
+          thickness: basicThicknessCC,
+          material: 'PB'
+        });
+      }
+
+      // 요소 기반 패널 생성 헬퍼
+      const processElements = (
+        elements: Array<{ type: string; heights?: number[]; height?: number; hasRod?: boolean; withShelf?: boolean }> | undefined,
+        areaPrefix: string,
+        areaWidth: number
+      ) => {
+        if (!elements) return;
+        const horizontalW = areaWidth - 1; // 좌우 0.5mm 갭
+
+        for (const el of elements) {
+          switch (el.type) {
+            case 'shelf': {
+              const shelfCount = el.heights?.length || 0;
+              for (let i = 0; i < shelfCount; i++) {
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}선반 ${i + 1}`,
+                  width: horizontalW,
+                  depth: customDepth - 8 - basicThicknessCC,
+                  thickness: basicThicknessCC,
+                  material: 'PB'
+                });
+              }
+              break;
+            }
+            case 'drawer': {
+              const drawerCount = el.heights?.length || 0;
+              for (let i = 0; i < drawerCount; i++) {
+                const dh = el.heights?.[i] || 200;
+                const drawerWidth = areaWidth - 24;
+                const drawerFrontBackWidth = drawerWidth - 106;
+                const drawerBodyHeight = dh - 30;
+                const drawerBodyDepth = customDepth - 47 - drawerHandleThicknessCC;
+
+                // 마이다 (손잡이판)
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1}(마이다)`,
+                  width: areaWidth,
+                  height: dh,
+                  thickness: drawerHandleThicknessCC,
+                  material: 'PB'
+                });
+                // 서랍 앞판
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 앞판`,
+                  width: drawerFrontBackWidth,
+                  height: drawerBodyHeight,
+                  thickness: drawerSideThicknessCC,
+                  material: 'PB'
+                });
+                // 서랍 뒷판
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 뒷판`,
+                  width: drawerFrontBackWidth,
+                  height: drawerBodyHeight,
+                  thickness: drawerSideThicknessCC,
+                  material: 'PB'
+                });
+                // 서랍 좌측판
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 좌측판`,
+                  width: drawerBodyDepth,
+                  height: drawerBodyHeight,
+                  thickness: drawerSideThicknessCC,
+                  material: 'PB'
+                });
+                // 서랍 우측판
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 우측판`,
+                  width: drawerBodyDepth,
+                  height: drawerBodyHeight,
+                  thickness: drawerSideThicknessCC,
+                  material: 'PB'
+                });
+                // 서랍 바닥판
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 바닥`,
+                  width: drawerWidth - 96,
+                  depth: drawerBodyDepth - 20,
+                  thickness: drawerBottomThicknessCC,
+                  material: 'MDF'
+                });
+              }
+              break;
+            }
+            case 'rod': {
+              // 옷봉 + 고정선반
+              if ((el as any).withShelf) {
+                targetPanel.push({
+                  name: `${sectionPrefix}${areaPrefix}옷봉 선반`,
+                  width: horizontalW,
+                  depth: customDepth - 8 - basicThicknessCC,
+                  thickness: basicThicknessCC,
+                  material: 'PB'
+                });
+              }
+              break;
+            }
+            // open, pants: 패널 없음
+          }
+        }
+      };
+
+      // 칸막이 여부에 따라 요소 처리
+      if (section.hasPartition) {
+        const partPos = section.partitionPosition || sectionInnerWidth / 2;
+        const leftWidth = partPos;
+        const rightWidth = sectionInnerWidth - partPos - basicThicknessCC;
+        processElements(section.leftElements, `${sectionPrefix}좌 `, leftWidth);
+        processElements(section.rightElements, `${sectionPrefix}우 `, rightWidth);
+      } else {
+        processElements(section.elements, '', sectionInnerWidth);
+      }
+
+      // areaSubSplits 처리
+      if (section.areaSubSplits) {
+        for (const [areaKey, split] of Object.entries(section.areaSubSplits)) {
+          if (!split.enabled) continue;
+          // 수평 분할판
+          targetPanel.push({
+            name: `${sectionPrefix}${areaKey === 'full' ? '' : areaKey + ' '}분할판`,
+            width: sectionInnerWidth - 1,
+            depth: customDepth - 26,
+            thickness: basicThicknessCC,
+            material: 'PB'
+          });
+          // 상/하 영역 요소
+          processElements(split.upperElements, `${areaKey === 'full' ? '' : areaKey + ' '}상부 `, sectionInnerWidth);
+          processElements(split.lowerElements, `${areaKey === 'full' ? '' : areaKey + ' '}하부 `, sectionInnerWidth);
+        }
+      }
+    });
   }
 
   // 플랫 배열로 변환하여 반환

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
 import { generateCabinetThumbnail } from '@/editor/shared/utils/cabinetThumbnailGenerator';
@@ -14,8 +15,19 @@ import styles from './CustomizablePropertiesPanel.module.css';
  */
 const CustomizablePropertiesPanel: React.FC = () => {
   const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection } = useUIStore();
-  const { placedModules, updatePlacedModule, removeModule } = useFurnitureStore();
-  const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId } = useMyCabinetStore();
+  const { placedModules, updatePlacedModule, removeModule, setPlacedModules } = useFurnitureStore();
+  const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId, editBackup, setEditBackup } = useMyCabinetStore();
+  const { setSpaceInfo } = useSpaceConfigStore();
+
+  // 수정 모드 종료 시 기존 배치 상태 복원
+  const restoreEditBackup = useCallback(() => {
+    if (editBackup) {
+      // 편집 중인 임시 모듈 제거 후 백업 복원
+      setPlacedModules(editBackup.modules);
+      setSpaceInfo({ layoutMode: editBackup.layoutMode });
+      setEditBackup(null);
+    }
+  }, [editBackup, setPlacedModules, setSpaceInfo, setEditBackup]);
 
   const moduleId = activePopup.id;
   const placedModule = placedModules.find((m) => m.id === moduleId);
@@ -1221,7 +1233,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 취소: 원본 스냅샷으로 복원 후 닫기
   const handleCancel = () => {
-    if (originalSnapshot && moduleId) {
+    if (editingCabinetId && editBackup) {
+      // 수정 모드: 임시 모듈 제거 + 기존 배치 복원
+      restoreEditBackup();
+    } else if (originalSnapshot && moduleId) {
       updatePlacedModule(moduleId, {
         customConfig: originalSnapshot.customConfig,
         freeWidth: originalSnapshot.freeWidth,
@@ -1235,7 +1250,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 가구 삭제
   const handleDelete = () => {
-    removeModule(moduleId);
+    if (editingCabinetId && editBackup) {
+      // 수정 모드: 기존 배치 복원
+      restoreEditBackup();
+    } else {
+      removeModule(moduleId);
+    }
     setEditingCabinetId(null);
     closeAllPopups();
   };

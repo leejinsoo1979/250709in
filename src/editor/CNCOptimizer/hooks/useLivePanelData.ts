@@ -105,7 +105,7 @@ export function useLivePanelData() {
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
         const moduleBackPanelThickness = (placedModule as any).backPanelThickness ?? 9;
-        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight, moduleBackPanelThickness);
+        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight, moduleBackPanelThickness, placedModule.customConfig);
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
         console.log(`Module ${moduleIndex}: Total panel count:`, allPanelsList.length);
@@ -455,7 +455,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
       const moduleBackPanelThickness2 = (placedModule as any).backPanelThickness ?? 9;
-      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight2, moduleBackPanelThickness2);
+      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight2, moduleBackPanelThickness2, placedModule.customConfig);
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링

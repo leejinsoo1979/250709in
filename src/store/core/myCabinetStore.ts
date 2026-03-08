@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { SavedCabinet } from '@/firebase/types';
-import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
+import { CustomFurnitureConfig, PlacedModule } from '@/editor/shared/furniture/types';
 import { saveMyCabinet, getMyCabinets, deleteMyCabinet, updateMyCabinet, uploadCabinetThumbnail } from '@/firebase/myCabinets';
 
 export interface PendingPlacement {
@@ -11,11 +11,17 @@ export interface PendingPlacement {
   category: 'full' | 'upper' | 'lower';
 }
 
+export interface EditBackupState {
+  modules: PlacedModule[];
+  layoutMode: 'equal-division' | 'free-placement';
+}
+
 interface MyCabinetState {
   savedCabinets: SavedCabinet[];
   isLoading: boolean;
   pendingPlacement: PendingPlacement | null;
   editingCabinetId: string | null; // 현재 수정 중인 My캐비닛 ID
+  editBackup: EditBackupState | null; // 수정 전 배치 상태 백업
 
   fetchCabinets: () => Promise<void>;
   saveCabinet: (data: {
@@ -39,6 +45,7 @@ interface MyCabinetState {
   deleteCabinet: (id: string) => Promise<void>;
   setPendingPlacement: (placement: PendingPlacement | null) => void;
   setEditingCabinetId: (id: string | null) => void;
+  setEditBackup: (backup: EditBackupState | null) => void;
 }
 
 export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
@@ -46,6 +53,7 @@ export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
   isLoading: false,
   pendingPlacement: null,
   editingCabinetId: null,
+  editBackup: null,
 
   fetchCabinets: async () => {
     set({ isLoading: true });
@@ -99,5 +107,9 @@ export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
 
   setEditingCabinetId: (id) => {
     set({ editingCabinetId: id });
+  },
+
+  setEditBackup: (backup) => {
+    set({ editBackup: backup });
   },
 }));

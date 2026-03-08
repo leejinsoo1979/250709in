@@ -47,8 +47,8 @@ const CabinetCanvasThumbnail: React.FC<{
 CabinetCanvasThumbnail.displayName = 'CabinetCanvasThumbnail';
 
 const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', editMode = false }) => {
-  const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, setPendingPlacement, setEditingCabinetId } = useMyCabinetStore();
-  const { setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData } = useFurnitureStore();
+  const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, setPendingPlacement, setEditingCabinetId, setEditBackup } = useMyCabinetStore();
+  const { setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData, placedModules, clearAllModules } = useFurnitureStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -118,7 +118,16 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', edi
     const cabinet = savedCabinets.find(c => c.id === cabinetId);
     if (!cabinet) return;
 
-    // 자유배치 모드가 아니면 자동 전환
+    // 기존 배치 상태 백업 (수정 완료/취소 시 복원용)
+    setEditBackup({
+      modules: [...placedModules],
+      layoutMode: spaceInfo.layoutMode || 'equal-division',
+    });
+
+    // 기존 가구 모두 제거 → 빈 공간에서 시작
+    clearAllModules();
+
+    // 자유배치 모드로 전환
     if (spaceInfo.layoutMode !== 'free-placement') {
       setSpaceInfo({ layoutMode: 'free-placement' });
     }
@@ -135,7 +144,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', edi
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
     setSelectedIds(new Set());
-  }, [selectedIds, savedCabinets, spaceInfo.layoutMode, setSpaceInfo, setEditingCabinetId, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
+  }, [selectedIds, savedCabinets, spaceInfo.layoutMode, setSpaceInfo, setEditingCabinetId, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode, placedModules, clearAllModules, setEditBackup]);
 
   // ── 액션: 삭제 (다중 선택 가능) ──
   const handleDeleteSelected = useCallback(async () => {
