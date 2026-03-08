@@ -148,6 +148,17 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     return [...elems, ...leftElems, ...rightElems].some(el => el.type === 'drawer');
   };
 
+  // 서랍이 영역 전체를 채우는지 (4단 등) - 상판 오프셋 판단용
+  const sectionDrawerIsFullFill = (section: CustomSection, sectionInnerH: number): boolean => {
+    const gapHeight = 23.6;
+    const allElems = [...(section.elements || []), ...(section.leftElements || []), ...(section.rightElements || [])];
+    return allElems.some(el => {
+      if (el.type !== 'drawer') return false;
+      const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gapHeight * (el.heights.length + 1);
+      return mmToUnit(totalH) >= mmToUnit(sectionInnerH) - t;
+    });
+  };
+
   // 현재 편집 중인 영역인지 확인
   const isEditingArea = (sectionIndex: number, areaSide?: 'left' | 'right') => {
     return activePopup.type === 'customizableEdit'
@@ -946,9 +957,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     );
 
     // ═══ 2. 상판/하판 - 측판 사이에 끼워넣기 ═══
-    // 서랍 섹션 상판은 앞에서 85mm 들여쓰기
-    const hasDrawer = sectionHasDrawer(section);
-    const topDepthReduction = hasDrawer ? drawerTopInset : 0;
+    // 서랍이 영역 전체를 채울 때만(4단 등) 상판 85mm 들여쓰기 (상판이 서랍 덮개 역할)
+    const drawerFullFill = sectionDrawerIsFullFill(section, section.height);
+    const topDepthReduction = drawerFullFill ? drawerTopInset : 0;
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-top`}

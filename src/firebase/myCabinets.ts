@@ -32,6 +32,9 @@ export const saveMyCabinet = async (data: {
       return { id: null, error: '로그인이 필요합니다.' };
     }
 
+    // Firestore는 undefined 값을 거부하므로 JSON 직렬화로 제거
+    const cleanConfig = JSON.parse(JSON.stringify(data.customConfig));
+
     const cabinetData: Omit<SavedCabinet, 'id'> = {
       userId: user.uid,
       name: data.name,
@@ -39,16 +42,17 @@ export const saveMyCabinet = async (data: {
       width: data.width,
       height: data.height,
       depth: data.depth,
-      customConfig: data.customConfig,
+      customConfig: cleanConfig,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
 
     const docRef = await addDoc(collection(db, MY_CABINETS_COLLECTION), cabinetData);
     return { id: docRef.id, error: null };
-  } catch (error) {
+  } catch (error: any) {
     console.error('My캐비닛 저장 에러:', error);
-    return { id: null, error: 'My캐비닛 저장 중 오류가 발생했습니다.' };
+    console.error('My캐비닛 저장 에러 상세:', error?.message, error?.code);
+    return { id: null, error: `My캐비닛 저장 중 오류: ${error?.message || '알 수 없는 에러'}` };
   }
 };
 
