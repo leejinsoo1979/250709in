@@ -782,6 +782,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const els = getElements();
     if (els.length > 0 && els[0].type === 'drawer') {
       els[0] = { ...els[0], drawerAlign: align };
+      // heightInputs 클리어 → 다음 렌더에서 마이다/본체 높이로 재계산
+      const newHInputs: Record<string, string> = {};
+      els[0].heights.forEach((h: number, hIdx: number) => {
+        const mOffset = (align === 'top' && hIdx === 0) ? 42 : 0;
+        newHInputs[`${sIdx}-${side}-0-${hIdx}`] = (h + mOffset).toString();
+      });
+      setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
     }
     if (side === 'full') sec.elements = els;
     else if (side === 'left') sec.leftElements = els;
@@ -1332,7 +1339,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         {/* 서랍 배치 방향 (위/아래) + 덮개 옵셋 */}
         {currentType === 'drawer' && 'heights' in el && (() => {
           const currentAlign = ('drawerAlign' in el && el.drawerAlign) || 'bottom';
-          const coverInset = ('coverInset' in el && el.coverInset) ? el.coverInset : 60;
+          const defaultCoverInset = currentAlign === 'top' ? 85 : 60;
+          const coverInset = ('coverInset' in el && el.coverInset !== undefined) ? el.coverInset : defaultCoverInset;
           // 서랍이 영역을 꽉 채우는지 판단 (fullFill이면 배치방향/덮개 무의미)
           const gap = 23.6;
           const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gap * (el.heights.length + 1);
