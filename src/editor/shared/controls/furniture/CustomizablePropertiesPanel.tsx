@@ -21,6 +21,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const focusedSectionIndex = activePopup.sectionIndex;
   // areaSide가 있으면 칸막이 좌/우 중 특정 영역만 편집
   const focusedAreaSide = activePopup.areaSide;
+  // 클릭 위치 기반 팝업 위치
+  const screenX = activePopup.screenX;
+  const screenY = activePopup.screenY;
 
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
@@ -1077,9 +1080,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
+  // 팝업 위치 계산: 클릭 위치 기준으로 가구 바로 우측에 표시
+  const panelStyle: React.CSSProperties = screenX !== undefined && screenY !== undefined
+    ? {
+        position: 'fixed',
+        left: Math.min(screenX + 16, window.innerWidth - 380),
+        top: Math.max(Math.min(screenY - 60, window.innerHeight - 500), 10),
+      }
+    : {};
+
   return (
-    <div className={styles.overlay}>
-      <div className={styles.panel}>
+    <div className={styles.overlay} style={screenX !== undefined ? { justifyContent: 'flex-start', paddingRight: 0, paddingTop: 0 } : undefined}>
+      <div className={styles.panel} style={panelStyle}>
         {/* 헤더 */}
         <div className={styles.header}>
           <span className={styles.headerTitle}>

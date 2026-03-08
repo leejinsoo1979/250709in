@@ -59,7 +59,7 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
       // 커스터마이징 가구면 전용 편집 팝업, 아니면 기존 편집 팝업
       const targetModule = placedModules.find(m => m.id === placedModuleId);
       if (targetModule?.isCustomizable) {
-        openCustomizableEditPopup(placedModuleId);
+        openCustomizableEditPopup(placedModuleId, undefined, undefined, e.nativeEvent.clientX, e.nativeEvent.clientY);
       } else {
         openFurnitureEditPopup(placedModuleId);
       }
