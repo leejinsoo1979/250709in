@@ -250,7 +250,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleSectionSplit = (split: boolean) => {
     if (split) {
       const availableHeight = furnitureHeight - 4 * panelThickness;
-      const lowerH = Math.min(1000, availableHeight - 200); // 하부 기본 1000mm (상부 최소 200mm 확보)
+      const lowerOuterDefault = 1000; // 외경 기준 하부 1000mm
+      const lowerH = Math.min(lowerOuterDefault - 2 * panelThickness, availableHeight - 200); // 내경 = 외경 - 상하판 두께
       const upperH = availableHeight - lowerH;
       applyConfig({
         ...config,
