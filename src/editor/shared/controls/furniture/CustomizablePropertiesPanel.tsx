@@ -556,7 +556,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       }
       case 'rod':
-        newElement = { type: 'rod', height: Math.round(sectionHeight * 0.85) };
+        newElement = { type: 'rod', height: Math.round(sectionHeight * 0.85), withShelf: true, shelfGap: 280 };
         break;
       case 'pants':
         newElement = { type: 'pants', height: Math.round(sectionHeight * 0.85) };
@@ -939,12 +939,88 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 옷봉: 상판 바로 아래에 자동 배치 (높이 입력 불필요) */}
-        {currentType === 'rod' && (
-          <div className={styles.row} style={{ color: '#888', fontSize: '12px' }}>
-            상판 바로 아래에 설치됩니다
-          </div>
-        )}
+        {/* 옷봉: 고정선반+옷봉 / 옷봉만 선택 */}
+        {currentType === 'rod' && el.type === 'rod' && (() => {
+          const withShelf = el.withShelf ?? false;
+          const shelfGap = el.shelfGap ?? 280;
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div className={styles.row}>
+                <span className={styles.label}>옵션</span>
+                <div className={styles.toggleGroup}>
+                  <button
+                    className={`${styles.toggleButton} ${withShelf ? styles.active : ''}`}
+                    onClick={() => {
+                      const sections = [...config.sections];
+                      const sec = { ...sections[sIdx] };
+                      const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+                      if (elArr[0]?.type === 'rod') {
+                        elArr[0] = { ...elArr[0], withShelf: true, shelfGap: elArr[0].shelfGap ?? 280 };
+                      }
+                      if (side === 'full') sec.elements = elArr;
+                      else if (side === 'left') sec.leftElements = elArr;
+                      else sec.rightElements = elArr;
+                      sections[sIdx] = sec;
+                      applyConfig({ ...config, sections });
+                    }}
+                  >
+                    선반+옷봉
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${!withShelf ? styles.active : ''}`}
+                    onClick={() => {
+                      const sections = [...config.sections];
+                      const sec = { ...sections[sIdx] };
+                      const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+                      if (elArr[0]?.type === 'rod') {
+                        elArr[0] = { ...elArr[0], withShelf: false };
+                      }
+                      if (side === 'full') sec.elements = elArr;
+                      else if (side === 'left') sec.leftElements = elArr;
+                      else sec.rightElements = elArr;
+                      sections[sIdx] = sec;
+                      applyConfig({ ...config, sections });
+                    }}
+                  >
+                    옷봉만
+                  </button>
+                </div>
+              </div>
+              {withShelf && (
+                <div className={styles.row} style={{ marginTop: '6px' }}>
+                  <span className={styles.label}>간격</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    value={shelfGap}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === '' || /^\d+$/.test(v)) {
+                        const sections = [...config.sections];
+                        const sec = { ...sections[sIdx] };
+                        const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+                        if (elArr[0]?.type === 'rod') {
+                          elArr[0] = { ...elArr[0], shelfGap: v === '' ? 0 : Math.min(350, parseInt(v, 10)) };
+                        }
+                        if (side === 'full') sec.elements = elArr;
+                        else if (side === 'left') sec.leftElements = elArr;
+                        else sec.rightElements = elArr;
+                        sections[sIdx] = sec;
+                        applyConfig({ ...config, sections });
+                      }
+                    }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                  <span style={{ fontSize: '11px', color: '#888' }}>상판~선반</span>
+                </div>
+              )}
+              <div className={styles.row} style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
+                {withShelf ? '고정선반 아래에 옷봉이 설치됩니다' : '상판 바로 아래에 옷봉이 설치됩니다'}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 바지걸이: 상판 바로 아래에 자동 배치 */}
         {currentType === 'pants' && (

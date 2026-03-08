@@ -705,7 +705,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 isHighlighted={isHighlighted}
                 sectionName={sectionLabel}
                 panelGrainDirections={panelGrainDirections}
-                shelfFrontInsetMm={0}
               />
             </group>
           );
@@ -765,7 +764,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               isHighlighted={isHighlighted}
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
-              shelfFrontInsetMm={30}
             />
           </group>
         );
