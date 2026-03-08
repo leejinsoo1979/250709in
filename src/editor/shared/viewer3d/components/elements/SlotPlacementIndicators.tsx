@@ -6,7 +6,9 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { useUIStore } from '@/store/uiStore';
+import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
+import type { ModuleData } from '@/data/modules/shelving';
 
 interface SlotPlacementIndicatorsProps {
   onSlotClick: (slotIndex: number, zone?: 'normal' | 'dropped') => void;
@@ -21,17 +23,38 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
   const { view2DTheme } = useUIStore();
+  const { pendingPlacement } = useMyCabinetStore();
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
   console.log('🔵🔵🔵 SlotPlacementIndicators 렌더링:', { selectedFurnitureId, placedModulesCount: placedModules.length });
 
-  // 선택된 가구 정보 가져오기
+  // 선택된 가구 정보 가져오기 (My캐비넷 모듈은 pendingPlacement로 합성)
   const selectedModuleData = useMemo(() => {
     if (!selectedFurnitureId) return null;
     const internalSpace = calculateInternalSpace(spaceInfo);
-    return getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
-  }, [selectedFurnitureId, spaceInfo]);
+    const standardModule = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+    if (standardModule) return standardModule;
+
+    // My캐비넷 모듈: pendingPlacement에서 합성 ModuleData 생성
+    if (pendingPlacement) {
+      return {
+        id: selectedFurnitureId,
+        name: 'My캐비넷',
+        category: pendingPlacement.category,
+        dimensions: {
+          width: pendingPlacement.width,
+          height: pendingPlacement.height,
+          depth: pendingPlacement.depth,
+        },
+        color: '#C8B69E',
+        hasDoor: false,
+        isDynamic: false,
+        modelConfig: { basicThickness: 18 },
+      } as ModuleData;
+    }
+    return null;
+  }, [selectedFurnitureId, spaceInfo, pendingPlacement]);
 
   // 듀얼 가구 여부 확인
   const isDualFurniture = useMemo(() => {
