@@ -140,7 +140,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       }
       // 섹션 팝업: 클릭 Y에서 위로 올려 배치, 화면 안에 clamp
       const estimatedHeight = 700;
-      const idealTop = rawY - estimatedHeight * 0.4;
+      const idealTop = (sy ?? 0) - estimatedHeight * 0.4;
       const top = Math.max(8, Math.min(idealTop, vh - estimatedHeight));
       const maxHeight = vh - top - 8;
       return { top, left, right: 'auto', transform: 'none', maxHeight };
