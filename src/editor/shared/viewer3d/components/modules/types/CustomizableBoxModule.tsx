@@ -1517,8 +1517,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       })()}
 
-      {/* 선반 사이 간격 치수 — 입력 가능 (3D/2D 공통) */}
-      {!isDragging && (() => {
+      {/* 선반 사이 간격 치수 — 편집 팝업 열려있을 때만 표시 */}
+      {!isDragging && activePopup.id === placedFurnitureId && (() => {
         const zPos = D / 2 + 0.01;
 
         const renderShelfGaps = (
