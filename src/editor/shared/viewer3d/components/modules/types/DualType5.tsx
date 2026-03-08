@@ -1316,7 +1316,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           const upperBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
 
           // 상부 섹션 바닥판 위치 (하부 마지막 측판 조정과 동일하게 +9mm)
-          const floorPanelY = -height/2 + basicThickness + lowerHeight + basicThickness/2;
+          const floorPanelY = -height/2 + lowerHeight + basicThickness/2;
 
           // 보강대 치수
           const reinforcementHeight = mmToThreeUnits(60);
