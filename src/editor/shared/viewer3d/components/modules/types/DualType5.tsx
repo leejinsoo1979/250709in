@@ -1305,14 +1305,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             );
           }
 
-          // 하부 백패널 위치 계산 (하단 5mm 확장, 위에서 13mm 축소)
-          const lowerBackPanelHeight = lowerHeight - mmToThreeUnits(8); // +5mm - 13mm = -8mm
-          const lowerBackPanelY = -height/2 + basicThickness + lowerHeight/2 - mmToThreeUnits(9); // -2.5mm - 6.5mm = -9mm
+          // 하부 백패널: 측판과 동일 높이 (하판 위 ~ 구분판 아래)
+          const lowerBackPanelHeight = lowerHeight;
+          const lowerBackPanelY = -height/2 + lowerHeight / 2; // 측판과 동일 기준
           const lowerBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
 
-          // 상부 백패널 위치 계산: 높이 -18mm (천장에 맞춘 후) - 위에서 36mm 축소 + 하단 5mm 확장
-          const upperBackPanelHeight = (upperHeight - basicThickness) - mmToThreeUnits(26); // -18mm - 36mm + 5mm(하단) + 5mm(기존상단) = -26mm
-          const upperBackPanelY = -height/2 + basicThickness + lowerHeight + basicThickness + (upperHeight - basicThickness)/2 - mmToThreeUnits(18); // 위에서 36mm 줄이므로 중심 18mm 아래로
+          // 상부 백패널: 측판과 동일 높이 (구분판 위 ~ 상판 아래)
+          const upperBackPanelHeight = upperHeight;
+          const upperBackPanelY = -height/2 + lowerHeight + upperHeight / 2; // 측판과 동일 기준
           const upperBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
 
           // 상부 섹션 바닥판 위치 (하부 마지막 측판 조정과 동일하게 +9mm)
