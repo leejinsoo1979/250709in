@@ -1537,6 +1537,32 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 )}
                 <span className={styles.unit}>mm</span>
               </div>
+              {/* 깊이 줄이는 방향 (2섹션일 때만) */}
+              {config.sections.length > 1 && (
+                <div className={styles.row}>
+                  <span className={styles.label}>방향</span>
+                  <div className={styles.toggleGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${(sIdx === 0 ? (placedModule.lowerSectionDepthDirection ?? 'front') : (placedModule.upperSectionDepthDirection ?? 'front')) === 'front' ? styles.active : ''}`}
+                      onClick={() => {
+                        const key = sIdx === 0 ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                        updatePlacedModule(moduleId, { [key]: 'front' });
+                      }}
+                    >
+                      앞에서
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${(sIdx === 0 ? (placedModule.lowerSectionDepthDirection ?? 'front') : (placedModule.upperSectionDepthDirection ?? 'front')) === 'back' ? styles.active : ''}`}
+                      onClick={() => {
+                        const key = sIdx === 0 ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                        updatePlacedModule(moduleId, { [key]: 'back' });
+                      }}
+                    >
+                      뒤에서
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className={styles.section}>
               <div className={styles.sectionTitle}>
@@ -1661,6 +1687,32 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 </>
               )}
             </div>
+            {/* 깊이 줄이는 방향 (2섹션일 때만) */}
+            {config.sections.length > 1 && (
+              <div className={styles.row}>
+                <span className={styles.label}>방향</span>
+                <div className={styles.toggleGroup}>
+                  <button
+                    className={`${styles.toggleButton} ${(sIdx === 0 ? (placedModule.lowerSectionDepthDirection ?? 'front') : (placedModule.upperSectionDepthDirection ?? 'front')) === 'front' ? styles.active : ''}`}
+                    onClick={() => {
+                      const key = sIdx === 0 ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                      updatePlacedModule(moduleId, { [key]: 'front' });
+                    }}
+                  >
+                    앞에서
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${(sIdx === 0 ? (placedModule.lowerSectionDepthDirection ?? 'front') : (placedModule.upperSectionDepthDirection ?? 'front')) === 'back' ? styles.active : ''}`}
+                    onClick={() => {
+                      const key = sIdx === 0 ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                      updatePlacedModule(moduleId, { [key]: 'back' });
+                    }}
+                  >
+                    뒤에서
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={styles.section}>
@@ -1814,6 +1866,32 @@ const CustomizablePropertiesPanel: React.FC = () => {
           {config.sections.length > 1 && (
             <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
               {sIdx === 0 ? '상부' : '하부'} 깊이: {sIdx === 0 ? (placedModule.upperSectionDepth ?? furnitureDepth) : (placedModule.lowerSectionDepth ?? furnitureDepth)}mm
+            </div>
+          )}
+          {/* 깊이 줄이는 방향 (2섹션일 때만) */}
+          {config.sections.length > 1 && (
+            <div className={styles.row}>
+              <span className={styles.label}>방향</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${(sIdx === 0 ? (placedModule.lowerSectionDepthDirection ?? 'front') : (placedModule.upperSectionDepthDirection ?? 'front')) === 'front' ? styles.active : ''}`}
+                  onClick={() => {
+                    const key = sIdx === 0 ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                    updatePlacedModule(moduleId, { [key]: 'front' });
+                  }}
+                >
+                  앞에서
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${(sIdx === 0 ? (placedModule.lowerSectionDepthDirection ?? 'front') : (placedModule.upperSectionDepthDirection ?? 'front')) === 'back' ? styles.active : ''}`}
+                  onClick={() => {
+                    const key = sIdx === 0 ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                    updatePlacedModule(moduleId, { [key]: 'back' });
+                  }}
+                >
+                  뒤에서
+                </button>
+              </div>
             </div>
           )}
         </div>

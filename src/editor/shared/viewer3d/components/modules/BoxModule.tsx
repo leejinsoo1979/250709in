@@ -54,6 +54,8 @@ interface BoxModuleProps {
   doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 25)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+  lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
+  upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
   doorSplit?: boolean; // 도어 분할 여부
   upperDoorTopGap?: number; // 상부 섹션 도어 상단 갭
   upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭
@@ -115,6 +117,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   doorBottomGap = 25, // 가구 하단에서 아래로의 갭 (mm)
   lowerSectionDepth, // 하부 섹션 깊이 (mm)
   upperSectionDepth, // 상부 섹션 깊이 (mm)
+  lowerSectionDepthDirection, // 하부 깊이 줄이는 방향
+  upperSectionDepthDirection, // 상부 깊이 줄이는 방향
   doorSplit,
   upperDoorTopGap,
   upperDoorBottomGap,
@@ -201,6 +205,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         isHighlighted={isHighlighted}
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        lowerSectionDepthDirection={lowerSectionDepthDirection}
+        upperSectionDepthDirection={upperSectionDepthDirection}
+        isEditable={_isCustomizable}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

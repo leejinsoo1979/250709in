@@ -125,6 +125,8 @@ export interface PlacedModule {
   // 섹션별 깊이 설정 (2섹션 가구용)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+  lowerSectionDepthDirection?: 'front' | 'back'; // 하부 섹션 깊이 줄이는 방향 (front: 앞에서, back: 뒤에서, 기본: front)
+  upperSectionDepthDirection?: 'front' | 'back'; // 상부 섹션 깊이 줄이는 방향 (front: 앞에서, back: 뒤에서, 기본: front)
 
   // 하부장 상부패널 오프셋 (2섹션 가구용)
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm) - 0: 상부섹션 바닥판과 같은 위치, 양수: 앞쪽으로 줄어듦

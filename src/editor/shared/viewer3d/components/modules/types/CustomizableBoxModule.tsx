@@ -27,6 +27,10 @@ interface CustomizableBoxModuleProps {
   placedFurnitureId?: string;
   category?: 'full' | 'upper' | 'lower';
   panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' };
+  lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
+  upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+  lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
+  upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -63,6 +67,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   isHighlighted = false,
   placedFurnitureId,
   panelGrainDirections,
+  lowerSectionDepth,
+  upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
+  isEditable = true,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -138,7 +147,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
 
-  const showSectionIcons = showFurnitureEditHandles && showDimensions
+  const showSectionIcons = isEditable && showFurnitureEditHandles && showDimensions
     && viewMode === '3D' && !isDragging && showFurniture;
 
   // 섹션에 서랍이 포함되어 있는지 확인
@@ -952,6 +961,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
   /**
    * 독립 박스 렌더링 (기존 BaseFurnitureShell 체결 구조)
+   * depthOffset: Z축 오프셋 (깊이가 줄어든 섹션의 앞/뒤 정렬용)
    */
   const renderBox = (
     section: CustomSection,
@@ -960,6 +970,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     boxH: number,
     boxD: number,
     centerY: number,
+    depthOffset: number = 0,
   ) => {
     const meshes: React.ReactNode[] = [];
     const bInnerW = boxW - 2 * t;
@@ -1056,6 +1067,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(...renderSectionContent(section, sIdx, boxW, boxH, boxD, centerY));
     }
 
+    // depthOffset이 있으면 group으로 감싸서 Z 이동
+    if (depthOffset !== 0) {
+      return [
+        <group key={`box-group-${sIdx}`} position={[0, 0, depthOffset]}>
+          {meshes}
+        </group>
+      ];
+    }
     return meshes;
   };
 
@@ -1078,10 +1097,25 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             const lowerCenterY = -H / 2 + lowerH / 2;
             const upperCenterY = -H / 2 + lowerH + upperH / 2;
 
+            // 섹션별 깊이 적용
+            const lowerD = lowerSectionDepth ? mmToUnit(lowerSectionDepth) : D;
+            const upperD = upperSectionDepth ? mmToUnit(upperSectionDepth) : D;
+
+            // 깊이 차이에 따른 Z 오프셋 계산
+            // front: 뒤쪽 정렬 (앞에서 줄임) → Z를 뒤로 이동 (음수)
+            // back: 앞쪽 정렬 (뒤에서 줄임) → Z를 앞으로 이동 (양수)
+            const lowerDepthDiff = D - lowerD;
+            const lowerDepthZ = lowerDepthDiff === 0 ? 0
+              : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
+
+            const upperDepthDiff = D - upperD;
+            const upperDepthZ = upperDepthDiff === 0 ? 0
+              : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
+
             return (
               <>
-                {renderBox(sections[0], 0, W, lowerH, D, lowerCenterY)}
-                {renderBox(sections[1], 1, W, upperH, D, upperCenterY)}
+                {renderBox(sections[0], 0, W, lowerH, lowerD, lowerCenterY, lowerDepthZ)}
+                {renderBox(sections[1], 1, W, upperH, upperD, upperCenterY, upperDepthZ)}
               </>
             );
           })()}
