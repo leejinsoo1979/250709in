@@ -215,20 +215,15 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const showSectionIcons = isEditable && showFurnitureEditHandles && showDimensions
     && viewMode === '3D' && !isDragging && showFurniture;
 
-  // 섹션에 서랍이 포함되어 있는지 확인
-  const sectionHasDrawer = (section: CustomSection): boolean => {
-    const elems = section.elements || [];
-    const leftElems = section.leftElements || [];
-    const rightElems = section.rightElements || [];
-    return [...elems, ...leftElems, ...rightElems].some(el => el.type === 'drawer');
-  };
-
-  // 서랍이 영역 전체를 채우는지 (4단 등) - 상판 오프셋 판단용
-  const sectionDrawerIsFullFill = (section: CustomSection, sectionInnerH: number): boolean => {
-    const gapHeight = 23.6;
+  // 서랍이 상판에 밀착하는지 (fullFill 또는 drawerAlign=top) - 상판 85mm 들여쓰기 판단용
+  const sectionDrawerTouchesTop = (section: CustomSection, sectionInnerH: number): boolean => {
     const allElems = [...(section.elements || []), ...(section.leftElements || []), ...(section.rightElements || [])];
     return allElems.some(el => {
       if (el.type !== 'drawer') return false;
+      // drawerAlign이 top이면 상판에 밀착
+      if ('drawerAlign' in el && el.drawerAlign === 'top') return true;
+      // fullFill이면 상판에 밀착
+      const gapHeight = 23.6;
       const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gapHeight * (el.heights.length + 1);
       return mmToUnit(totalH) >= mmToUnit(sectionInnerH) - t;
     });
@@ -1085,9 +1080,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     );
 
     // ═══ 2. 상판/하판 - 측판 사이에 끼워넣기 ═══
-    // 서랍이 영역 전체를 채울 때만(4단 등) 상판 85mm 들여쓰기 (상판이 서랍 덮개 역할)
-    const drawerFullFill = sectionDrawerIsFullFill(section, section.height);
-    const topDepthReduction = drawerFullFill ? drawerTopInset : 0;
+    // 서랍이 상판에 밀착(fullFill 또는 drawerAlign=top)하면 상판 85mm 들여쓰기
+    const drawerTouchesTop = sectionDrawerTouchesTop(section, section.height);
+    const topDepthReduction = drawerTouchesTop ? drawerTopInset : 0;
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-top`}
@@ -1225,8 +1220,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
           {/* ═══ 상판 ═══ */}
           {(() => {
-            const singleHasDrawer = sectionHasDrawer(sections[0]);
-            const singleTopInset = singleHasDrawer ? drawerTopInset : 0;
+            const singleTopTouches = sectionDrawerTouchesTop(sections[0], sections[0].height);
+            const singleTopInset = singleTopTouches ? drawerTopInset : 0;
             return (
               <BoxWithEdges
                 args={[innerW - widthReduction, t, D - backReduction - singleTopInset]}
