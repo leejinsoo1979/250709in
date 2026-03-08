@@ -284,7 +284,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     e.preventDefault();
 
-    const step = 10; // 1cm = 10mm
+    const step = 1; // 1mm 단위
     const delta = e.key === 'ArrowUp' ? step : -step;
 
     const sections = [...config!.sections];
