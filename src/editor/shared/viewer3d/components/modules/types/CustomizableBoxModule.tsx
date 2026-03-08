@@ -756,10 +756,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
         } else if (align === 'top') {
-          // 위에서 배치: 상단갭은 상판에 흡수, 마이다는 아래로 24mm 확장 (하부덮개 가림)
+          // 위에서 배치: 상단갭은 상판에 흡수 (bottom과 동일 원리)
           const drawerTopY = sectionCenterY + areaInnerHeight / 2;
-          const maidaExtensionMm = 24; // 마이다 하단 확장 (하부덮개 완전 가림)
-          drawerInnerH = totalDrawerInnerH - t + mmToUnit(maidaExtensionMm);
+          drawerInnerH = totalDrawerInnerH - t;
           drawerYOffset = drawerTopY - drawerInnerH / 2;
         } else {
           // 아래서 배치(기본): 하단부터 배치, 날개벽은 위에서 패널두께만큼 줄임
@@ -785,6 +784,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               furnitureId={placedFurnitureId}
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
+              drawerAlign={align}
             />
             {/* 서랍이 영역보다 작을 때: 덮개 선반 */}
             {!isFullFill && (() => {

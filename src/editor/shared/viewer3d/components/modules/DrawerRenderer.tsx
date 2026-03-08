@@ -217,6 +217,7 @@ interface DrawerRendererProps {
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
   furnitureId?: string; // 가구 ID
   sectionName?: string; // 섹션 이름 (예: "(상)", "(하)")
+  drawerAlign?: 'top' | 'bottom'; // 서랍 배치 방향 (top: 위배치 - 맨 아래 마이다 24mm 확장)
 }
 
 /**
@@ -247,6 +248,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   textureUrl,
   panelGrainDirections,
   furnitureId,
+  drawerAlign = 'bottom',
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -561,15 +563,20 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 손잡이 판 (앞쪽, 20mm 두께) === */}
+        {/* === 손잡이 판 (앞쪽, 15mm 두께) - 위배치 맨 아래 서랍은 24mm 하단 확장 === */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`;
           const mat = getPanelMaterial(panelName);
+          // 위배치 맨 아래 서랍: 마이다 24mm 하단 확장 (하부덮개 가림)
+          const isBottomDrawer = drawerIndex === 0;
+          const maidaExtension = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(24) : 0;
+          const maidaHeight = drawerHeight + maidaExtension;
+          const maidaY = centerY - maidaExtension / 2; // 하단으로 확장이므로 중심 아래로
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-handle-${mat.uuid}`}
-              args={[drawerWidth, drawerHeight, HANDLE_PLATE_THICKNESS]}
-              position={[centerX, centerY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
+              args={[drawerWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
+              position={[centerX, maidaY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
