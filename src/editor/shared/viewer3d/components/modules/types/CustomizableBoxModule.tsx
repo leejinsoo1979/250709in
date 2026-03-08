@@ -462,14 +462,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     }
 
     const frontZ = D / 2 + 0.002;
-    const bw = 0.003; // 테두리 두께 (3mm)
+    const bw = 0.008; // 테두리 두께 (8mm)
 
     return (
       <group position={[centerX, centerY, frontZ]}>
         {/* 반투명 배경 */}
         <mesh>
           <planeGeometry args={[areaW, areaH]} />
-          <meshBasicMaterial color={themeColor} transparent opacity={0.08} side={2} depthTest={false} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.18} side={2} depthTest={false} />
         </mesh>
         {/* 상 */}
         <mesh position={[0, areaH / 2, 0]}>
