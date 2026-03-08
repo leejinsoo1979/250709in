@@ -1309,54 +1309,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             />
           );
 
-          // 선반 사이 간격 표시
-          const allElements = section.hasPartition
-            ? [...(section.leftElements || []), ...(section.rightElements || [])]
-            : (section.elements || []);
-          const shelfEl = allElements.find(e => e.type === 'shelf' && 'heights' in e);
-          if (shelfEl && 'heights' in shelfEl) {
-            const sortedHeights = [...shelfEl.heights].sort((a, b) => a - b);
-            // 간격 계산: 바닥→첫 선반, 선반→선반, 마지막 선반→상판
-            const gaps: { fromY: number; toY: number; gapMm: number }[] = [];
-            const sectionHmm = section.height;
-            // 바닥 → 첫 선반
-            if (sortedHeights.length > 0) {
-              gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: sortedHeights[0] });
-            }
-            // 선반 사이
-            for (let i = 0; i < sortedHeights.length - 1; i++) {
-              const gap = sortedHeights[i + 1] - sortedHeights[i] - panelThickness;
-              gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: gap });
-            }
-            // 마지막 선반 → 상판
-            if (sortedHeights.length > 0) {
-              const lastH = sortedHeights[sortedHeights.length - 1];
-              gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness });
-            }
-
-            const shelfDimX = bInnerW / 2 - 0.3;
-            const shelfLineX = bInnerW / 2 - 0.15;
-            gaps.forEach((g, gi) => {
-              const fromYLocal = botY + mmToUnit(g.fromY) + (gi > 0 ? t / 2 : 0);
-              const toYLocal = botY + mmToUnit(g.toY) - (gi < gaps.length - 1 ? t / 2 : 0);
-              const centerY = (fromYLocal + toYLocal) / 2;
-              nodes.push(
-                <DimensionText
-                  key={`dim-sg-${sIdx}-${gi}`}
-                  value={Math.round(g.gapMm)}
-                  position={[shelfDimX, centerY, zPos]}
-                  rotation={[0, 0, Math.PI / 2]}
-                />,
-                <Line
-                  key={`dim-sg-line-${sIdx}-${gi}`}
-                  points={[[shelfLineX, fromYLocal, zPos], [shelfLineX, toYLocal, zPos]]}
-                  color="#888888"
-                  lineWidth={1}
-                />
-              );
-            });
-          }
-
           // 칸막이가 있으면 좌/우 내경 너비 표시
           if (section.hasPartition && section.partitionPosition) {
             const leftWidthMm = section.partitionPosition - panelThickness / 2;
@@ -1420,6 +1372,80 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           );
         } else {
           return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, W)}</>;
+        }
+      })()}
+
+      {/* 선반 사이 간격 치수 (3D/2D 공통) */}
+      {!isDragging && (() => {
+        const zPos = D / 2 + 1.0;
+
+        const renderShelfGaps = (
+          section: CustomSection,
+          sIdx: number,
+          sectionCenterY: number,
+          sectionInnerH: number,
+          sectionBoxW: number,
+        ) => {
+          const botY = sectionCenterY - sectionInnerH / 2;
+          const bInnerW = sectionBoxW - 2 * t;
+          const allElements = section.hasPartition
+            ? [...(section.leftElements || []), ...(section.rightElements || [])]
+            : (section.elements || []);
+          const shelfEl = allElements.find(e => e.type === 'shelf' && 'heights' in e);
+          if (!shelfEl || !('heights' in shelfEl)) return null;
+
+          const sortedHeights = [...shelfEl.heights].sort((a, b) => a - b);
+          const gaps: { fromY: number; toY: number; gapMm: number }[] = [];
+          const sectionHmm = section.height;
+
+          if (sortedHeights.length > 0) {
+            gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: sortedHeights[0] });
+          }
+          for (let i = 0; i < sortedHeights.length - 1; i++) {
+            const gap = sortedHeights[i + 1] - sortedHeights[i] - panelThickness;
+            gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: gap });
+          }
+          if (sortedHeights.length > 0) {
+            const lastH = sortedHeights[sortedHeights.length - 1];
+            gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness });
+          }
+
+          const shelfDimX = bInnerW / 2 - 0.3;
+          const shelfLineX = bInnerW / 2 - 0.15;
+          return gaps.map((g, gi) => {
+            const fromYLocal = botY + mmToUnit(g.fromY) + (gi > 0 ? t / 2 : 0);
+            const toYLocal = botY + mmToUnit(g.toY) - (gi < gaps.length - 1 ? t / 2 : 0);
+            const centerY = (fromYLocal + toYLocal) / 2;
+            return (
+              <group key={`sg-${sIdx}-${gi}`}>
+                <DimensionText
+                  value={Math.round(g.gapMm)}
+                  position={[shelfDimX, centerY, zPos]}
+                  rotation={[0, 0, Math.PI / 2]}
+                />
+                <Line
+                  points={[[shelfLineX, fromYLocal, zPos], [shelfLineX, toYLocal, zPos]]}
+                  color="#888888"
+                  lineWidth={1}
+                />
+              </group>
+            );
+          });
+        };
+
+        if (isSplit) {
+          const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
+          const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
+          const lowerCenterY = -H / 2 + lowerH / 2;
+          const upperCenterY = -H / 2 + lowerH + upperH / 2;
+          return (
+            <>
+              {renderShelfGaps(sections[0], 0, lowerCenterY, lowerH - 2 * t, W)}
+              {renderShelfGaps(sections[1], 1, upperCenterY, upperH - 2 * t, W)}
+            </>
+          );
+        } else {
+          return <>{renderShelfGaps(sections[0], 0, 0, H - 2 * t, W)}</>;
         }
       })()}
 
