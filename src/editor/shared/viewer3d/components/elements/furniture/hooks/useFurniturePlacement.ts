@@ -17,9 +17,10 @@ const isCustomFurnitureId = (moduleId: string): boolean => {
  */
 export const useFurniturePlacement = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
+  const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode, clearDragData } = useFurnitureStore();
   const { getCustomFurnitureById } = useCustomFurnitureStore();
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
+  const setPendingPlacement = useMyCabinetStore(state => state.setPendingPlacement);
 
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
     console.log('🎯🎯🎯 [useFurniturePlacement] placeFurniture 호출됨!!!!', { slotIndex, zone, selectedFurnitureId });
@@ -78,9 +79,11 @@ export const useFurniturePlacement = () => {
     // 배치 완료 후 선택 해제 및 placement mode 종료
     setSelectedFurnitureId(null);
     setFurniturePlacementMode(false);
+    clearDragData();
+    setPendingPlacement(null);
 
     console.log('✅ 가구 배치 완료 - placement mode 종료');
-  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode, getCustomFurnitureById, pendingPlacement]);
+  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode, clearDragData, setPendingPlacement, getCustomFurnitureById, pendingPlacement]);
 
   return {
     placeFurniture,
