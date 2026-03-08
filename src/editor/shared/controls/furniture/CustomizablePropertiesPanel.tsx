@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
-import { findThreeCanvas, captureCanvasThumbnail, dataURLToBlob } from '@/editor/shared/utils/thumbnailCapture';
+import { captureFrontViewThumbnail, dataURLToBlob } from '@/editor/shared/utils/thumbnailCapture';
 import styles from './CustomizablePropertiesPanel.module.css';
 
 /**
@@ -151,12 +151,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return {};
   }, [activePopup.screenX, activePopup.screenY, activePopup.sectionIndex]);
 
-  // 3D 캔버스에서 현재 가구 섬네일 캡처
-  const captureCurrentThumbnail = useCallback((): string | null => {
+  // 3D 정면 뷰로 전환하여 가구 섬네일 캡처
+  const captureCurrentThumbnail = useCallback(async (): Promise<string | null> => {
     try {
-      const canvas = findThreeCanvas();
-      if (!canvas) return null;
-      return captureCanvasThumbnail(canvas, { width: 300, height: 400, quality: 0.85 });
+      return await captureFrontViewThumbnail();
     } catch {
       return null;
     }
@@ -1111,8 +1109,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleSaveToCabinet = async () => {
     const category = getCustomizableCategory(placedModule.moduleId);
 
-    // 저장 전 3D 캔버스 섬네일 캡처
-    const thumbnailDataUrl = captureCurrentThumbnail();
+    // 저장 전 3D 정면 뷰 섬네일 캡처
+    const thumbnailDataUrl = await captureCurrentThumbnail();
 
     if (editingCabinetId) {
       // 수정 모드: 덮어쓰기 or 새로 생성 선택
