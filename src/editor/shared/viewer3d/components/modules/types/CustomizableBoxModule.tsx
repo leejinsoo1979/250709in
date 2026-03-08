@@ -1315,8 +1315,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             const rightWidthMm = innerWidthMm - section.partitionPosition - panelThickness / 2;
             const partX = -bInnerW / 2 + mmToUnit(section.partitionPosition);
 
-            // 좌측 내경 너비 (섹션 상단 안쪽에 수평 표시)
-            const dimYPos = topY - 0.25;
+            // 좌측 내경 너비 (섹션 중앙 상단 부근에 수평 표시)
+            const dimYPos = sectionCenterY + sectionInnerH * 0.25;
             const leftCenterX = (-bInnerW / 2 + partX - t / 2) / 2;
             const leftLeft = -bInnerW / 2;
             const leftRight = partX - t / 2;
