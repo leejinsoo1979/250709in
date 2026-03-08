@@ -391,28 +391,65 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const upperCenterY = -H / 2 + lowerH + upperH / 2;
 
       const addPartitionIcons = (section: CustomSection, centerY: number, prefix: string, sIdx: number) => {
+        // 영역별 아이콘 추가 (서브분할 고려)
+        const addAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number) => {
+          const subSplit = section.areaSubSplits?.[areaKey];
+          if (subSplit?.enabled) {
+            const areaInnerH = mmToUnit(section.height);
+            const lowerH = mmToUnit(subSplit.lowerHeight);
+            const upperH = areaInnerH - lowerH;
+            const lowerCY = centerY - areaInnerH / 2 + lowerH / 2;
+            const upperCY = centerY + areaInnerH / 2 - upperH / 2;
+            const side = areaKey === 'full' ? undefined : areaKey;
+            icons.push(renderSectionIcon(`${prefix}-${areaKey}-lower`, cx, lowerCY, frontZ, sIdx, side, 'lower'));
+            icons.push(renderSectionIcon(`${prefix}-${areaKey}-upper`, cx, upperCY, frontZ, sIdx, side, 'upper'));
+          } else {
+            const side = areaKey === 'full' ? undefined : areaKey;
+            icons.push(renderSectionIcon(`${prefix}-${areaKey}`, cx, centerY, frontZ, sIdx, side));
+          }
+        };
+
         if (section.hasPartition && section.partitionPosition) {
           const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
           const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
           const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-          icons.push(renderSectionIcon(`${prefix}-left`, leftCenterX, centerY, frontZ, sIdx, 'left'));
-          icons.push(renderSectionIcon(`${prefix}-right`, rightCenterX, centerY, frontZ, sIdx, 'right'));
+          addAreaIcon('left', leftCenterX);
+          addAreaIcon('right', rightCenterX);
         } else {
-          icons.push(renderSectionIcon(prefix, 0, centerY, frontZ, sIdx));
+          addAreaIcon('full', 0);
         }
       };
 
       addPartitionIcons(sections[0], lowerCenterY, 'lower', 0);
       addPartitionIcons(sections[1], upperCenterY, 'upper', 1);
     } else {
-      if (sections[0]?.hasPartition && sections[0]?.partitionPosition) {
-        const partX = -innerW / 2 + mmToUnit(sections[0].partitionPosition);
+      // 단일 섹션에서도 서브분할 고려
+      const section = sections[0];
+      const addSingleAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number) => {
+        const subSplit = section?.areaSubSplits?.[areaKey];
+        if (subSplit?.enabled) {
+          const areaInnerH = mmToUnit(section.height);
+          const lH = mmToUnit(subSplit.lowerHeight);
+          const uH = areaInnerH - lH;
+          const lowerCY = -areaInnerH / 2 + lH / 2;
+          const upperCY = areaInnerH / 2 - uH / 2;
+          const side = areaKey === 'full' ? undefined : areaKey;
+          icons.push(renderSectionIcon(`single-${areaKey}-lower`, cx, lowerCY, frontZ, 0, side, 'lower'));
+          icons.push(renderSectionIcon(`single-${areaKey}-upper`, cx, upperCY, frontZ, 0, side, 'upper'));
+        } else {
+          const side = areaKey === 'full' ? undefined : areaKey;
+          icons.push(renderSectionIcon(`single-${areaKey}`, cx, 0, frontZ, 0, side));
+        }
+      };
+
+      if (section?.hasPartition && section?.partitionPosition) {
+        const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
         const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
         const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-        icons.push(renderSectionIcon('single-left', leftCenterX, 0, frontZ, 0, 'left'));
-        icons.push(renderSectionIcon('single-right', rightCenterX, 0, frontZ, 0, 'right'));
+        addSingleAreaIcon('left', leftCenterX);
+        addSingleAreaIcon('right', rightCenterX);
       } else {
-        icons.push(renderSectionIcon('single', 0, 0, frontZ, 0));
+        addSingleAreaIcon('full', 0);
       }
     }
 
