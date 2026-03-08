@@ -794,18 +794,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
               const coverZ = (coverBackInset - coverFrontInset) / 2;
-              // 위 배치: 날개벽 사이에 끼워짐 / 아래 배치: 덮개가 서랍 상부
+              // 위 배치: 15mm 두께, 날개벽 사이에 끼워짐 / 아래 배치: 18mm, 전체 내경
+              const coverThickness = align === 'top' ? mmToUnit(15) : t;
               const coverY = align === 'top'
-                ? drawerYOffset - drawerInnerH / 2 - t / 2  // 날개벽 하단에 맞춤
-                : drawerYOffset + drawerInnerH / 2 + t / 2;
-              // 위 배치: 날개벽 안쪽 간격 (서랍속장 수직패널 사이), 아래 배치: 전체 내경
+                ? drawerYOffset - drawerInnerH / 2 - coverThickness / 2  // 날개벽 하단에 맞춤
+                : drawerYOffset + drawerInnerH / 2 + coverThickness / 2;
               const wingInsetMm = 27 + 18 + 0.5; // horizontalPanelWidth + drawerFrameThickness + offset
               const coverWidth = align === 'top'
                 ? areaInnerWidth - mmToUnit(wingInsetMm * 2)
                 : areaInnerWidth;
               return (
                 <BoxWithEdges
-                  args={[coverWidth, t, coverDepth]}
+                  args={[coverWidth, coverThickness, coverDepth]}
                   position={[0, coverY, coverZ]}
                   material={material}
                   renderMode={renderMode}
