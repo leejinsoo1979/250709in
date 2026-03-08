@@ -659,9 +659,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
             />
-            {/* 서랍이 영역보다 작을 때: 덮개 선반 - 앞에서 85mm 들여서 날개벽 위에 올라감 */}
+            {/* 서랍이 영역보다 작을 때: 덮개 선반 - 앞에서 들여서 날개벽 위에 올라감 */}
             {!isFullFill && (() => {
-              const coverFrontInset = mmToUnit(85);
+              const coverInsetMm = ('coverInset' in el && el.coverInset) ? el.coverInset : 60;
+              const coverFrontInset = mmToUnit(coverInsetMm);
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
               const coverZ = (coverBackInset - coverFrontInset) / 2;

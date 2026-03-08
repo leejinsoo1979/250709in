@@ -3,7 +3,7 @@ import { ModuleData } from '@/data/modules';
 // 커스터마이징 가구 내부 요소 타입
 export type CustomElement =
   | { type: 'shelf'; heights: number[]; hasRod?: boolean }  // 선반 (각 선반의 바닥에서의 높이 mm, hasRod: 옷봉 추가)
-  | { type: 'drawer'; heights: number[] }     // 서랍 (각 서랍 높이 mm)
+  | { type: 'drawer'; heights: number[]; coverInset?: number }  // 서랍 (각 서랍 높이 mm, coverInset: 덮개선반 앞 들여쓰기 mm, 기본 60)
   | { type: 'rod'; height: number; withShelf?: boolean; shelfGap?: number }  // 옷봉 (withShelf: 고정선반+옷봉, shelfGap: 상판~선반 간격 mm)
   | { type: 'pants'; height: number }         // 바지걸이 (설치 높이 mm, 하부섹션 전용)
   | { type: 'open' };                         // 비어있음

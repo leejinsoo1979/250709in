@@ -903,6 +903,32 @@ const CustomizablePropertiesPanel: React.FC = () => {
           );
         })()}
 
+        {/* 서랍 덮개 선반 들여쓰기 옵셋 */}
+        {currentType === 'drawer' && 'heights' in el && (() => {
+          const coverInset = ('coverInset' in el && el.coverInset) ? el.coverInset : 60;
+          return (
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>덮개 옵셋</span>
+              <input
+                type="number"
+                className={`${styles.input} ${styles.inputSmall}`}
+                style={{ width: '60px' }}
+                value={coverInset}
+                min={0}
+                max={150}
+                step={5}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= 0 && v <= 150) {
+                    handleCoverInsetChange(sIdx, side, v);
+                  }
+                }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          );
+        })()}
+
         {/* 선반/서랍 높이 목록 */}
         {(currentType === 'shelf' || currentType === 'drawer') && 'heights' in el && (
           <div>
