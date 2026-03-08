@@ -102,7 +102,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
       setSectionDepthInputs({ 0: lD.toString(), 1: uD.toString() });
       // 원본 스냅샷 저장 (취소 시 복원용)
       setOriginalSnapshot({
-        customConfig: JSON.parse(JSON.stringify(placedModule.customConfig)),
+        customConfig: placedModule.customConfig
+          ? JSON.parse(JSON.stringify(placedModule.customConfig))
+          : null as unknown as CustomFurnitureConfig,
         freeWidth: w,
         moduleWidth: w,
         freeDepth: d,
