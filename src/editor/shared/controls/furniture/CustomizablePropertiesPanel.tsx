@@ -1077,7 +1077,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
-  // My캐비닛에 저장 (신규 또는 기존 업데이트)
+  // My캐비닛에 저장 (수정 모드: 덮어쓰기/새로생성 선택, 일반: 신규 저장)
   const handleSaveToCabinet = async () => {
     const category = getCustomizableCategory(placedModule.moduleId);
 
@@ -1085,24 +1085,53 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const thumbnailDataUrl = captureCurrentThumbnail();
 
     if (editingCabinetId) {
-      // 기존 My캐비닛 업데이트
-      const { error } = await updateCabinet(editingCabinetId, {
-        category,
-        width: furnitureWidth,
-        height: furnitureHeight,
-        depth: furnitureDepth,
-        customConfig: config,
-      });
+      // 수정 모드: 덮어쓰기 or 새로 생성 선택
+      const choice = window.confirm(
+        '기존 My캐비닛을 덮어쓰시겠습니까?\n\n[확인] → 기존 캐비닛 덮어쓰기\n[취소] → 새 캐비닛으로 저장'
+      );
 
-      if (error) {
-        alert(error);
-      } else {
-        // 섬네일 자동 업로드
-        if (thumbnailDataUrl) {
-          await uploadCapturedThumbnail(editingCabinetId, thumbnailDataUrl);
+      if (choice) {
+        // 덮어쓰기
+        const { error } = await updateCabinet(editingCabinetId, {
+          category,
+          width: furnitureWidth,
+          height: furnitureHeight,
+          depth: furnitureDepth,
+          customConfig: config,
+        });
+
+        if (error) {
+          alert(error);
+        } else {
+          if (thumbnailDataUrl) {
+            await uploadCapturedThumbnail(editingCabinetId, thumbnailDataUrl);
+          }
+          alert('My캐비닛이 수정되었습니다.');
+          setEditingCabinetId(null);
         }
-        alert('My캐비닛이 수정되었습니다.');
-        setEditingCabinetId(null);
+      } else {
+        // 새로 생성
+        const name = window.prompt('새 My캐비닛 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
+        if (!name) return;
+
+        const { id, error } = await saveCabinet({
+          name,
+          category,
+          width: furnitureWidth,
+          height: furnitureHeight,
+          depth: furnitureDepth,
+          customConfig: config,
+        });
+
+        if (error) {
+          alert(error);
+        } else {
+          if (id && thumbnailDataUrl) {
+            await uploadCapturedThumbnail(id, thumbnailDataUrl);
+          }
+          alert('새 My캐비닛으로 저장되었습니다.');
+          setEditingCabinetId(null);
+        }
       }
     } else {
       // 신규 저장
@@ -1121,7 +1150,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (error) {
         alert(error);
       } else {
-        // 섬네일 자동 업로드
         if (id && thumbnailDataUrl) {
           await uploadCapturedThumbnail(id, thumbnailDataUrl);
         }
