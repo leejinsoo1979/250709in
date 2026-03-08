@@ -1627,15 +1627,36 @@ const CustomizablePropertiesPanel: React.FC = () => {
         {/* 헤더 */}
         <div className={styles.header}>
           <span className={styles.headerTitle}>
-            {focusedSectionIndex !== undefined
-              ? focusedAreaSide
-                ? config.sections.length === 1
-                  ? `섹션 (${focusedAreaSide === 'left' ? '좌측영역' : '우측영역'})`
-                  : `${focusedSectionIndex === 0 ? '하부섹션' : '상부섹션'} (${focusedAreaSide === 'left' ? '좌측영역' : '우측영역'})`
-                : config.sections.length === 1
-                  ? '섹션 설정'
-                  : `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
-              : '커스터마이징 가구 편집'}
+            {(() => {
+              if (focusedSectionIndex === undefined) return '커스터마이징 가구 편집';
+              const sec = config.sections[focusedSectionIndex];
+              if (!sec) return '섹션 설정';
+
+              // 영역 높이 계산
+              let areaH = sec.height;
+              if (focusedSubPart && focusedAreaSide) {
+                const subSplit = sec.areaSubSplits?.[focusedAreaSide];
+                if (subSplit?.enabled) {
+                  areaH = focusedSubPart === 'lower' ? subSplit.lowerHeight : sec.height - subSplit.lowerHeight;
+                }
+              }
+
+              // 영역 너비 계산
+              const innerW = furnitureWidth - 2 * panelThickness;
+              let areaW = innerW;
+              if (focusedAreaSide && sec.hasPartition && sec.partitionPosition) {
+                areaW = focusedAreaSide === 'left'
+                  ? sec.partitionPosition - panelThickness / 2
+                  : innerW - sec.partitionPosition - panelThickness / 2;
+              }
+
+              // 라벨 조합
+              const sectionLabel = config.sections.length === 1 ? '섹션' : (focusedSectionIndex === 0 ? '하부섹션' : '상부섹션');
+              const sideLabel = focusedAreaSide ? ` ${focusedAreaSide === 'left' ? '좌측' : '우측'}` : '';
+              const subPartLabel = focusedSubPart ? (focusedSubPart === 'upper' ? ' 상부' : ' 하부') : '';
+
+              return `${sectionLabel}${sideLabel}${subPartLabel} (${Math.round(areaW)}×${Math.round(areaH)})`;
+            })()}
           </span>
           <button className={styles.closeButton} onClick={handleCancel}>
             ×
