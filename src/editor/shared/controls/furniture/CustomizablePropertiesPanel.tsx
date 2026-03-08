@@ -631,13 +631,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     const el = elements[0];
     if (el && (el.type === 'shelf' || el.type === 'drawer')) {
-      const lastH = el.heights[el.heights.length - 1] || Math.round(sec.height / 3);
-      const newH = lastH + 200;
-      const newIdx = el.heights.length;
-      elements[0] = { ...el, heights: [...el.heights, newH] };
-      // heightInputs에 새 항목 추가
-      const key = `${sIdx}-${side}-0-${newIdx}`;
-      setHeightInputs((prev) => ({ ...prev, [key]: newH.toString() }));
+      if (el.type === 'shelf') {
+        // 선반: 균등 간격으로 재분배
+        const newCount = el.heights.length + 1;
+        const newHeights = Array.from({ length: newCount }, (_, i) =>
+          Math.round(sec.height * (i + 1) / (newCount + 1))
+        );
+        elements[0] = { ...el, heights: newHeights };
+        // heightInputs 전체 갱신
+        const newHInputs: Record<string, string> = {};
+        newHeights.forEach((h, hIdx) => {
+          newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+        });
+        setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+      } else {
+        // 서랍: 기존 방식 (마지막 높이 + 200)
+        const lastH = el.heights[el.heights.length - 1] || Math.round(sec.height / 3);
+        const newH = lastH + 200;
+        const newIdx = el.heights.length;
+        elements[0] = { ...el, heights: [...el.heights, newH] };
+        const key = `${sIdx}-${side}-0-${newIdx}`;
+        setHeightInputs((prev) => ({ ...prev, [key]: newH.toString() }));
+      }
     }
 
     if (side === 'full') sec.elements = elements;
@@ -657,8 +672,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     const el = elements[0];
     if (el && (el.type === 'shelf' || el.type === 'drawer') && el.heights.length > 1) {
-      const heights = el.heights.filter((_, i) => i !== heightIdx);
-      elements[0] = { ...el, heights };
+      if (el.type === 'shelf') {
+        // 선반: 제거 후 균등 간격으로 재분배
+        const newCount = el.heights.length - 1;
+        const newHeights = Array.from({ length: newCount }, (_, i) =>
+          Math.round(sec.height * (i + 1) / (newCount + 1))
+        );
+        elements[0] = { ...el, heights: newHeights };
+        // heightInputs 전체 갱신
+        const newHInputs: Record<string, string> = {};
+        newHeights.forEach((h, hIdx) => {
+          newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+        });
+        setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+      } else {
+        const heights = el.heights.filter((_, i) => i !== heightIdx);
+        elements[0] = { ...el, heights };
+      }
     }
 
     if (side === 'full') sec.elements = elements;
