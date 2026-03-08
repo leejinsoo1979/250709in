@@ -618,9 +618,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const drawerCount = el.heights.length;
         const gapHeight = 23.6; // 서랍 간 공백 (mm) - 기존 모듈과 동일
 
-        // 서랍 총 높이 계산 (mm) - DrawerRenderer에 전달할 innerHeight
+        // DrawerRenderer 내부: 바닥gap + (서랍+gap)*n = sum(heights) + (n+1)*gap
         const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)
-          + gapHeight * (drawerCount - 1);
+          + gapHeight * (drawerCount + 1);
         const totalDrawerInnerH = mmToUnit(totalDrawerHeightMm);
 
         // 서랍이 영역 전체를 채우는지 판단
@@ -659,43 +659,93 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
             />
-            {/* 서랍이 영역보다 작을 때: 서랍 상단에 고정선반(덮개) 추가 */}
-            {!isFullFill && (
-              <BoxWithEdges
-                args={[areaInnerWidth, t, sectionDepth - mmToUnit(backReductionMm)]}
-                position={[0, drawerYOffset + drawerInnerH / 2 + t / 2, mmToUnit(backReductionMm) / 2]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isHighlighted={isHighlighted}
-                panelName={`${sectionLabel}서랍덮개선반`}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-              />
-            )}
+            {/* 서랍이 영역보다 작을 때: 덮개 선반 - 앞에서 85mm 들여서 날개벽 위에 올라감 */}
+            {!isFullFill && (() => {
+              const coverFrontInset = mmToUnit(85);
+              const coverBackInset = mmToUnit(backReductionMm);
+              const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
+              const coverZ = (coverBackInset - coverFrontInset) / 2;
+              return (
+                <BoxWithEdges
+                  args={[areaInnerWidth, t, coverDepth]}
+                  position={[0, drawerYOffset + drawerInnerH / 2 + t / 2, coverZ]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isHighlighted={isHighlighted}
+                  panelName={`${sectionLabel}서랍덮개선반`}
+                  panelGrainDirections={panelGrainDirections}
+                  furnitureId={placedFurnitureId}
+                />
+              );
+            })()}
           </group>
         );
       } else if (el.type === 'rod') {
-        // ═══ ClothingRod 사용 (브라켓 + 봉 + 필라이트 포함) ═══
-        // 옷봉은 상판 바로 아래에 자동 배치 (기존 모듈 방식과 동일)
-        // 브라켓 높이 75mm, 봉 중심 = 상판 하단 - 75/2
-        const rodYPosition = sectionCenterY + areaInnerHeight / 2 - mmToUnit(75 / 2);
-
-        nodes.push(
-          <group key={key} position={[offsetX, 0, 0]}>
-            <ClothingRod
-              innerWidth={areaInnerWidth}
-              yPosition={rodYPosition}
-              renderMode={renderMode as '2d' | '3d'}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              adjustedDepthForShelves={adjustedDepth}
-              depth={sectionDepth}
-              addFrontFillLight={rodYPosition < 0}
-              furnitureId={placedFurnitureId}
-            />
-          </group>
-        );
+        // ═══ 옷봉 (고정선반+옷봉 / 옷봉만) ═══
+        if (el.withShelf) {
+          // 고정선반+옷봉: 상판에서 shelfGap만큼 아래에 고정선반, 그 아래 옷봉
+          const gap = el.shelfGap ?? 280;
+          const sectionHmm = Math.round(areaInnerHeight / 0.01); // Three.js → mm
+          const shelfFromBottom = sectionHmm - gap; // 섹션 하단에서의 선반 위치
+          // 고정선반 렌더링
+          nodes.push(
+            <group key={`${key}-shelf`} position={[offsetX, 0, 0]}>
+              <ShelfRenderer
+                shelfCount={1}
+                innerWidth={areaInnerWidth}
+                innerHeight={areaInnerHeight}
+                depth={sectionDepth}
+                basicThickness={t}
+                material={material}
+                yOffset={sectionCenterY}
+                shelfPositions={[shelfFromBottom]}
+                renderMode={renderMode}
+                furnitureId={placedFurnitureId}
+                isHighlighted={isHighlighted}
+                sectionName={sectionLabel}
+                panelGrainDirections={panelGrainDirections}
+                shelfFrontInsetMm={0}
+              />
+            </group>
+          );
+          // 옷봉: 고정선반 하단 바로 아래
+          const rodYFromBottom = mmToUnit(shelfFromBottom) - t / 2 - mmToUnit(75 / 2);
+          const rodYPosition = sectionCenterY - areaInnerHeight / 2 + rodYFromBottom;
+          nodes.push(
+            <group key={key} position={[offsetX, 0, 0]}>
+              <ClothingRod
+                innerWidth={areaInnerWidth}
+                yPosition={rodYPosition}
+                renderMode={renderMode as '2d' | '3d'}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                adjustedDepthForShelves={adjustedDepth}
+                depth={sectionDepth}
+                addFrontFillLight={rodYPosition < 0}
+                furnitureId={placedFurnitureId}
+              />
+            </group>
+          );
+        } else {
+          // 옷봉만: 상판 바로 아래
+          const rodYPosition = sectionCenterY + areaInnerHeight / 2 - mmToUnit(75 / 2);
+          nodes.push(
+            <group key={key} position={[offsetX, 0, 0]}>
+              <ClothingRod
+                innerWidth={areaInnerWidth}
+                yPosition={rodYPosition}
+                renderMode={renderMode as '2d' | '3d'}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                adjustedDepthForShelves={adjustedDepth}
+                depth={sectionDepth}
+                addFrontFillLight={rodYPosition < 0}
+                furnitureId={placedFurnitureId}
+              />
+            </group>
+          );
+        }
       } else if (el.type === 'shelf') {
         // ═══ ShelfRenderer 사용 (다보 방식 - 앞에서 30mm 들여쓰기) ═══
         // el.heights는 섹션 하단에서 각 선반 위치 (mm)
