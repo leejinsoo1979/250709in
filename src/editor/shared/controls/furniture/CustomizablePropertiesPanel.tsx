@@ -41,16 +41,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (!camera) return;
 
       const halfW = (placedModule.freeWidth || placedModule.moduleWidth || 0) * 0.01 / 2;
-      const rightEdge = new THREE.Vector3(
+      const halfH = (placedModule.freeHeight || 0) * 0.01 / 2;
+
+      // 가구 우측 상단 모서리
+      const topRight = new THREE.Vector3(
         placedModule.position.x + halfW,
-        placedModule.position.y,
+        placedModule.position.y + halfH,
         placedModule.position.z
       );
-      rightEdge.project(camera);
+      topRight.project(camera);
 
       const rect = canvas.getBoundingClientRect();
-      const sx = Math.round((rightEdge.x * 0.5 + 0.5) * rect.width + rect.left);
-      const sy = Math.round((-rightEdge.y * 0.5 + 0.5) * rect.height + rect.top);
+      const sx = Math.round((topRight.x * 0.5 + 0.5) * rect.width + rect.left);
+      const sy = Math.round((-topRight.y * 0.5 + 0.5) * rect.height + rect.top);
       setPopupPos({ x: sx, y: sy });
 
       rafRef.current = requestAnimationFrame(updatePosition);
@@ -1115,13 +1118,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
-  // 팝업 위치 계산: 가구 우측 끝 기준으로 바로 옆에 실시간 추적
+  // 팝업 위치 계산: 가구 우측 상단 모서리에 말풍선처럼 붙어서 표시
   const panelWidth = 360;
   const panelStyle: React.CSSProperties = popupPos
     ? {
         position: 'fixed',
-        left: Math.min(popupPos.x + 12, window.innerWidth - panelWidth - 16),
-        top: Math.max(10, Math.min(popupPos.y - 200, window.innerHeight - 500)),
+        left: Math.min(popupPos.x + 6, window.innerWidth - panelWidth - 8),
+        top: Math.max(8, popupPos.y),
       }
     : {};
 
