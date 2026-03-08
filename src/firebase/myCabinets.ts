@@ -11,7 +11,8 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './config';
 import { getCurrentUserAsync } from './auth';
 import { SavedCabinet } from './types';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
@@ -89,6 +90,44 @@ export const getMyCabinets = async (): Promise<{ cabinets: SavedCabinet[]; error
   }
 };
 
+// My캐비닛 섬네일 업로드
+export const uploadCabinetThumbnail = async (
+  cabinetId: string,
+  file: File
+): Promise<{ url: string | null; error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { url: null, error: '로그인이 필요합니다.' };
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return { url: null, error: 'JPEG, PNG, GIF, WebP만 지원됩니다.' };
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      return { url: null, error: '파일 크기는 2MB 이하여야 합니다.' };
+    }
+
+    const timestamp = Date.now();
+    const ext = file.name.split('.').pop() || 'png';
+    const storageRef = ref(storage, `cabinet-thumbnails/${user.uid}/${cabinetId}_${timestamp}.${ext}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    // Firestore에 thumbnail URL 저장
+    await updateDoc(doc(db, MY_CABINETS_COLLECTION, cabinetId), {
+      thumbnail: url,
+      updatedAt: serverTimestamp(),
+    });
+
+    return { url, error: null };
+  } catch (error: any) {
+    console.error('섬네일 업로드 에러:', error);
+    return { url: null, error: `섬네일 업로드 오류: ${error?.message || '알 수 없는 에러'}` };
+  }
+};
+
 // My캐비닛 수정
 export const updateMyCabinet = async (
   cabinetId: string,
@@ -99,6 +138,7 @@ export const updateMyCabinet = async (
     height?: number;
     depth?: number;
     customConfig?: CustomFurnitureConfig;
+    thumbnail?: string;
   }
 ): Promise<{ error: string | null }> => {
   try {
@@ -116,6 +156,7 @@ export const updateMyCabinet = async (
     if (data.customConfig !== undefined) {
       updateData.customConfig = JSON.parse(JSON.stringify(data.customConfig));
     }
+    if (data.thumbnail !== undefined) updateData.thumbnail = data.thumbnail;
 
     await updateDoc(doc(db, MY_CABINETS_COLLECTION, cabinetId), updateData);
     return { error: null };

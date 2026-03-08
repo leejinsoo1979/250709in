@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { SavedCabinet } from '@/firebase/types';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
-import { saveMyCabinet, getMyCabinets, deleteMyCabinet, updateMyCabinet } from '@/firebase/myCabinets';
+import { saveMyCabinet, getMyCabinets, deleteMyCabinet, updateMyCabinet, uploadCabinetThumbnail } from '@/firebase/myCabinets';
 
 export interface PendingPlacement {
   customConfig: CustomFurnitureConfig;
@@ -33,7 +33,9 @@ interface MyCabinetState {
     height?: number;
     depth?: number;
     customConfig?: CustomFurnitureConfig;
+    thumbnail?: string;
   }) => Promise<{ error: string | null }>;
+  uploadThumbnail: (cabinetId: string, file: File) => Promise<{ url: string | null; error: string | null }>;
   deleteCabinet: (id: string) => Promise<void>;
   setPendingPlacement: (placement: PendingPlacement | null) => void;
   setEditingCabinetId: (id: string | null) => void;
@@ -66,7 +68,14 @@ export const useMyCabinetStore = create<MyCabinetState>((set, get) => ({
   updateCabinet: async (id, data) => {
     const result = await updateMyCabinet(id, data);
     if (!result.error) {
-      // 수정 후 목록 갱신
+      await get().fetchCabinets();
+    }
+    return result;
+  },
+
+  uploadThumbnail: async (cabinetId, file) => {
+    const result = await uploadCabinetThumbnail(cabinetId, file);
+    if (!result.error) {
       await get().fetchCabinets();
     }
     return result;

@@ -212,6 +212,7 @@ export interface SavedCabinet {
   height: number;
   depth: number;
   customConfig: CustomFurnitureConfig;
+  thumbnail?: string; // 사용자 업로드 섬네일 URL
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
