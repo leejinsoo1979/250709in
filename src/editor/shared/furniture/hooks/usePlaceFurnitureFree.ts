@@ -120,6 +120,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   // My캐비닛에서 pendingPlacement의 customConfig 사용, 없으면 기본 생성
   const pp = params.pendingPlacement;
+  const isMyCabinetPlacement = !!(pp?.customConfig); // My캐비닛에서 배치한 경우
   let customConfig: CustomFurnitureConfig | undefined;
   if (isCustomizable) {
     customConfig = pp?.customConfig
@@ -146,7 +147,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     hasTopFrame: moduleData.category !== 'lower',
     lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {
-      isCustomizable: true,
+      // My캐비넷 배치: 구조 고정(편집 불가), 기존 모듈처럼 동작
+      // 커스텀 라이브러리 배치: 내부 구조 편집 가능
+      isCustomizable: !isMyCabinetPlacement,
       customConfig,
     }),
   };

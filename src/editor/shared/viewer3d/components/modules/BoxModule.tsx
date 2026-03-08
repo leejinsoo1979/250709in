@@ -126,7 +126,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   backPanelThickness: backPanelThicknessProp, // 백패널 두께 (mm)
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
-  isCustomizable = false, // 커스터마이징 가구 여부
+  isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
   customConfig, // 커스터마이징 설정
   // 이벤트 핸들러들
   onPointerDown,
@@ -185,8 +185,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
 
 
-  // === 커스터마이징 가구 라우팅 ===
-  if (isCustomizable && customConfig) {
+  // === 커스터마이징 가구 라우팅 (커스텀 설정이 있으면 항상 CustomizableBoxModule 사용) ===
+  if (customConfig) {
     return (
       <CustomizableBoxModule
         width={adjustedWidth || moduleData.dimensions.width}
