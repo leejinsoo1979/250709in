@@ -1373,7 +1373,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         {/* My캐비닛 저장 + 하단 버튼 (연필 메뉴에서만 표시) */}
         {focusedSectionIndex === undefined && (
           <>
-            <div style={{ padding: '0 20px 8px' }}>
+            <div style={{ padding: '0 20px 8px', flexShrink: 0 }}>
               <button className={styles.saveButton} onClick={handleSaveToCabinet}>
                 My캐비닛에 저장
               </button>
