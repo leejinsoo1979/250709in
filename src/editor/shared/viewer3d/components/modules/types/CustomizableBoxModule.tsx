@@ -635,10 +635,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
         } else {
-          // 영역보다 작음: 하단부터 배치
+          // 영역보다 작음: 날개벽은 영역 상단에서 패널두께(18mm)만큼 줄여서 하단부터 채움
+          const wingH = areaInnerHeight - t; // 날개벽 높이 = 영역높이 - 상단 패널두께
           const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
-          drawerInnerH = totalDrawerInnerH;
-          drawerYOffset = drawerBottomY + drawerInnerH / 2;
+          drawerInnerH = wingH;
+          drawerYOffset = drawerBottomY + wingH / 2;
         }
 
         nodes.push(
