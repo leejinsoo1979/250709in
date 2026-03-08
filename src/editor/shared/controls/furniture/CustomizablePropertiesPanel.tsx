@@ -279,19 +279,25 @@ const CustomizablePropertiesPanel: React.FC = () => {
     sections[idx] = { ...sections[idx], height: clamped };
     sections[1 - idx] = { ...sections[1 - idx], height: otherH };
 
-    // 서랍 높이 재계산
+    // 서랍 높이: 섹션 높이가 줄어서 서랍이 넘칠 때만 축소 (기존 높이 유지 원칙)
     for (let sIdx = 0; sIdx < 2; sIdx++) {
       const sec = sections[sIdx];
       const el = sec.elements?.[0];
       if (el?.type === 'drawer' && 'heights' in el) {
         const newH = sections[sIdx].height;
         const gapTotal = 23.6 * (el.heights.length + 1);
-        const usable = Math.max(newH - gapTotal, el.heights.length * 80);
-        const perDrawer = Math.round(usable / el.heights.length);
-        sections[sIdx] = {
-          ...sec,
-          elements: [{ type: 'drawer', heights: Array.from({ length: el.heights.length }, () => perDrawer) }],
-        };
+        const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
+        const maxAllowed = newH - gapTotal;
+        if (totalDrawerH > maxAllowed) {
+          // 축소 필요: 비례 축소
+          const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
+          const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
+          sections[sIdx] = {
+            ...sec,
+            elements: [{ ...el, heights: newHeights }],
+          };
+        }
+        // 섹션이 커졌을 때는 서랍 높이를 유지 (덮개선반이 남은 공간 채움)
       }
     }
 
@@ -352,19 +358,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
     sections[idx] = { ...sections[idx], height: clamped };
     sections[1 - idx] = { ...sections[1 - idx], height: otherH };
 
-    // 서랍이 설정된 섹션의 높이가 변경되면 서랍 높이 재계산
+    // 서랍 높이: 섹션 높이가 줄어서 서랍이 넘칠 때만 축소 (기존 높이 유지 원칙)
     for (let sIdx = 0; sIdx < 2; sIdx++) {
       const sec = sections[sIdx];
       const el = sec.elements?.[0];
       if (el?.type === 'drawer' && 'heights' in el) {
         const newH = sIdx === idx ? clamped : otherH;
         const gapTotal = 23.6 * (el.heights.length + 1);
-        const usable = Math.max(newH - gapTotal, el.heights.length * 80);
-        const perDrawer = Math.round(usable / el.heights.length);
-        sections[sIdx] = {
-          ...sec,
-          elements: [{ type: 'drawer', heights: Array.from({ length: el.heights.length }, () => perDrawer) }],
-        };
+        const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
+        const maxAllowed = newH - gapTotal;
+        if (totalDrawerH > maxAllowed) {
+          const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
+          const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
+          sections[sIdx] = {
+            ...sec,
+            elements: [{ ...el, heights: newHeights }],
+          };
+        }
       }
     }
 
