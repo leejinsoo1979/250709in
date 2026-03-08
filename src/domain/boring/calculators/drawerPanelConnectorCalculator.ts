@@ -25,7 +25,7 @@ export const DRAWER_CONNECTOR_DIAMETER = 3;
 export const DRAWER_CONNECTOR_DEPTH = 15; // 측판 두께 기본값
 
 /** 서랍 가장자리에서 보링까지의 거리 (mm) */
-export const DRAWER_CONNECTOR_EDGE_OFFSET = 20;
+export const DRAWER_CONNECTOR_EDGE_OFFSET = 30;
 
 // ============================================
 // 타입
