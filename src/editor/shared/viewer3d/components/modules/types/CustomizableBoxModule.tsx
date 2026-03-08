@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
@@ -12,6 +12,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SettingsIcon, EditIcon } from '@/components/common/Icons';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 import DimensionText from '../components/DimensionText';
@@ -46,6 +47,138 @@ interface CustomizableBoxModuleProps {
 
 // mm → Three.js units
 const mmToUnit = (val: number) => val * 0.01;
+
+// ── 선반 간격 입력 컴포넌트 ──
+interface ShelfGapInputProps {
+  value: number;
+  sIdx: number;
+  gapIdx: number;
+  shelfIdx: number;
+  side: 'full' | 'left' | 'right';
+  sectionHeight: number;
+  heights: number[];
+  sortedHeights: number[];
+  panelThickness: number;
+  placedFurnitureId?: string;
+  customConfig: CustomFurnitureConfig;
+}
+
+const ShelfGapInput: React.FC<ShelfGapInputProps> = React.memo(({
+  value,
+  sIdx,
+  gapIdx,
+  side,
+  sectionHeight,
+  heights,
+  sortedHeights,
+  panelThickness,
+  placedFurnitureId,
+  customConfig,
+}) => {
+  const [localVal, setLocalVal] = useState(value.toString());
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (document.activeElement !== inputRef.current) {
+      setLocalVal(value.toString());
+    }
+  }, [value]);
+
+  const applyGapChange = useCallback((newGap: number) => {
+    if (!placedFurnitureId) return;
+    const store = useFurnitureStore.getState();
+    const mod = store.placedModules.find(m => m.id === placedFurnitureId);
+    if (!mod?.customConfig) return;
+
+    const sections = [...mod.customConfig.sections];
+    const sec = { ...sections[sIdx] };
+    const elemKey = side === 'full' ? 'elements' : side === 'left' ? 'leftElements' : 'rightElements';
+    const elements = [...(sec[elemKey] || [])];
+    const el = elements[0];
+    if (!el || el.type !== 'shelf' || !('heights' in el)) return;
+
+    const hArr = [...el.heights];
+    const sorted = [...hArr].sort((a, b) => a - b);
+    const idxMap = [...hArr].map((h, i) => ({ h, i })).sort((a, b) => a.h - b.h);
+
+    let targetOrigIdx: number;
+    let newHeight: number;
+
+    if (gapIdx === 0) {
+      // 바닥 → 첫 선반: 첫 선반의 높이 = newGap
+      targetOrigIdx = idxMap[0].i;
+      newHeight = newGap;
+    } else if (gapIdx >= sorted.length) {
+      // 마지막 선반 → 상판: 마지막 선반 높이 = sectionHeight - panelThickness - newGap
+      targetOrigIdx = idxMap[sorted.length - 1].i;
+      newHeight = sectionHeight - panelThickness - newGap;
+    } else {
+      // 선반 사이: 위쪽 선반을 이동. 위쪽 선반 높이 = 아래쪽 선반 높이 + panelThickness + newGap
+      targetOrigIdx = idxMap[gapIdx].i;
+      newHeight = sorted[gapIdx - 1] + panelThickness + newGap;
+    }
+
+    newHeight = Math.max(50, Math.min(sectionHeight, Math.round(newHeight)));
+    hArr[targetOrigIdx] = newHeight;
+
+    elements[0] = { ...el, heights: hArr };
+    (sec as any)[elemKey] = elements;
+    sections[sIdx] = sec;
+
+    store.updatePlacedModule(placedFurnitureId, {
+      customConfig: { ...mod.customConfig, sections },
+    });
+  }, [placedFurnitureId, sIdx, gapIdx, side, sectionHeight, panelThickness]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+      return;
+    }
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    e.stopPropagation();
+    const delta = e.key === 'ArrowUp' ? 1 : -1;
+    const newGap = Math.max(10, value + delta);
+    applyGapChange(newGap);
+  }, [value, applyGapChange]);
+
+  const handleBlur = useCallback(() => {
+    const parsed = parseInt(localVal, 10);
+    if (!isNaN(parsed) && parsed !== value) {
+      applyGapChange(Math.max(10, parsed));
+    } else {
+      setLocalVal(value.toString());
+    }
+  }, [localVal, value, applyGapChange]);
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={localVal}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
+      onFocus={(e) => e.target.select()}
+      style={{
+        width: '40px',
+        height: '18px',
+        fontSize: '11px',
+        textAlign: 'center',
+        border: '1px solid #999',
+        borderRadius: '2px',
+        background: 'rgba(255,255,255,0.9)',
+        color: '#333',
+        outline: 'none',
+        padding: '0 2px',
+        cursor: 'text',
+      }}
+    />
+  );
+});
+
+ShelfGapInput.displayName = 'ShelfGapInput';
 
 /**
  * 커스터마이징 가구 3D 렌더링 컴포넌트
@@ -1375,9 +1508,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       })()}
 
-      {/* 선반 사이 간격 치수 (3D/2D 공통) */}
+      {/* 선반 사이 간격 치수 — 입력 가능 (3D/2D 공통) */}
       {!isDragging && (() => {
-        const zPos = D / 2 + 1.0;
+        const zPos = D / 2 + 0.01;
 
         const renderShelfGaps = (
           section: CustomSection,
@@ -1393,32 +1526,61 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           if (!shelfEl || !('heights' in shelfEl)) return null;
 
           const sortedHeights = [...shelfEl.heights].sort((a, b) => a - b);
-          const gaps: { fromY: number; toY: number; gapMm: number }[] = [];
+          // 정렬된 높이의 원본 인덱스 매핑
+          const sortedIndices = [...shelfEl.heights]
+            .map((h, i) => ({ h, i }))
+            .sort((a, b) => a.h - b.h)
+            .map(x => x.i);
+
+          const gaps: { fromY: number; toY: number; gapMm: number; shelfIdx: number }[] = [];
           const sectionHmm = section.height;
 
+          // 바닥 → 첫 선반 (shelfIdx=0: 첫 선반을 움직임)
           if (sortedHeights.length > 0) {
-            gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: sortedHeights[0] });
+            gaps.push({ fromY: 0, toY: sortedHeights[0], gapMm: sortedHeights[0], shelfIdx: sortedIndices[0] });
           }
+          // 선반 사이 (shelfIdx: 아래쪽 선반)
           for (let i = 0; i < sortedHeights.length - 1; i++) {
             const gap = sortedHeights[i + 1] - sortedHeights[i] - panelThickness;
-            gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: gap });
+            gaps.push({ fromY: sortedHeights[i], toY: sortedHeights[i + 1], gapMm: gap, shelfIdx: sortedIndices[i] });
           }
+          // 마지막 선반 → 상판
           if (sortedHeights.length > 0) {
-            const lastH = sortedHeights[sortedHeights.length - 1];
-            gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness });
+            const lastIdx = sortedHeights.length - 1;
+            const lastH = sortedHeights[lastIdx];
+            gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness, shelfIdx: sortedIndices[lastIdx] });
           }
+
+          // side 결정 (칸막이 없으면 full, 있으면 첫 발견 side)
+          const side: 'full' | 'left' | 'right' = !section.hasPartition ? 'full'
+            : (section.leftElements || []).some(e => e.type === 'shelf') ? 'left' : 'right';
 
           return gaps.map((g, gi) => {
             const fromYLocal = botY + mmToUnit(g.fromY) + (gi > 0 ? t / 2 : 0);
             const toYLocal = botY + mmToUnit(g.toY) - (gi < gaps.length - 1 ? t / 2 : 0);
             const centerY = (fromYLocal + toYLocal) / 2;
+            const gapVal = Math.round(g.gapMm);
             return (
-              <group key={`sg-${sIdx}-${gi}`}>
-                <DimensionText
-                  value={Math.round(g.gapMm)}
-                  position={[0, centerY, zPos]}
+              <Html
+                key={`sg-${sIdx}-${gi}`}
+                position={[0, centerY, zPos]}
+                center
+                style={{ pointerEvents: 'auto' }}
+              >
+                <ShelfGapInput
+                  value={gapVal}
+                  sIdx={sIdx}
+                  gapIdx={gi}
+                  shelfIdx={g.shelfIdx}
+                  side={side}
+                  sectionHeight={sectionHmm}
+                  heights={shelfEl.heights}
+                  sortedHeights={sortedHeights}
+                  panelThickness={panelThickness}
+                  placedFurnitureId={placedFurnitureId}
+                  customConfig={customConfig}
                 />
-              </group>
+              </Html>
             );
           });
         };
