@@ -1141,7 +1141,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
           <span className={styles.headerTitle}>
             {focusedSectionIndex !== undefined
               ? focusedAreaSide
-                ? `${focusedAreaSide === 'left' ? '좌측' : '우측'} 영역 설정`
+                ? config.sections.length === 1
+                  ? `섹션 (${focusedAreaSide === 'left' ? '좌측영역' : '우측영역'})`
+                  : `${focusedSectionIndex === 0 ? '하부섹션' : '상부섹션'} (${focusedAreaSide === 'left' ? '좌측영역' : '우측영역'})`
                 : config.sections.length === 1
                   ? '섹션 설정'
                   : `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`

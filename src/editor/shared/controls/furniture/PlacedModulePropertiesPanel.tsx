@@ -978,8 +978,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
-    return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth);
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth]);
+    return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, undefined, undefined, undefined, undefined, undefined, undefined, backPanelThicknessValue);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue]);
 
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {
