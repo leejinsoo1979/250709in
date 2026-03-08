@@ -726,8 +726,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   }, [currentPlacedModule, placedModules, spaceInfo]);
 
   // 모듈 데이터 가져오기 (조건부 렌더링 전에 미리 계산)
-  const moduleData = currentPlacedModule 
+  const moduleData = currentPlacedModule
     ? (() => {
+        // My캐비넷 모듈 (customConfig 있지만 isCustomizable false): 합성 ModuleData 생성
+        if (currentPlacedModule.customConfig && !currentPlacedModule.isCustomizable) {
+          const w = currentPlacedModule.freeWidth || currentPlacedModule.moduleWidth || 600;
+          const h = currentPlacedModule.freeHeight || 2000;
+          const d = currentPlacedModule.freeDepth || 580;
+          const cat = currentPlacedModule.moduleId.includes('upper') ? 'upper'
+            : currentPlacedModule.moduleId.includes('lower') ? 'lower' : 'full';
+          return {
+            id: currentPlacedModule.moduleId,
+            name: 'My캐비넷',
+            category: cat as 'full' | 'upper' | 'lower',
+            dimensions: { width: w, height: h, depth: d },
+            color: '#C8B69E',
+            hasDoor: false,
+            isDynamic: false,
+            modelConfig: { basicThickness: 18 },
+          } as ModuleData;
+        }
+
         // customWidth가 있으면 해당 너비로 모듈 ID 생성 (소수점 포함)
         let targetModuleId = currentPlacedModule.moduleId;
         if (currentPlacedModule.customWidth) {
