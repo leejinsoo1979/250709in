@@ -23,6 +23,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const focusedAreaSide = activePopup.areaSide;
   // 편집용 로컬 상태 (customConfig 복사본)
   const [config, setConfig] = useState<CustomFurnitureConfig | null>(null);
+  // 취소 시 복원할 원본 스냅샷
+  const [originalSnapshot, setOriginalSnapshot] = useState<{
+    customConfig: CustomFurnitureConfig;
+    freeWidth: number;
+    moduleWidth: number;
+    freeDepth: number;
+  } | null>(null);
 
   // 너비/깊이 입력용 문자열 상태 (기존 가구 패턴과 동일)
   const [widthInput, setWidthInput] = useState<string>('');
@@ -85,6 +92,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
       setDepthInput(d.toString());
       setWidthError('');
       setDepthError('');
+      // 원본 스냅샷 저장 (취소 시 복원용)
+      setOriginalSnapshot({
+        customConfig: JSON.parse(JSON.stringify(placedModule.customConfig)),
+        freeWidth: w,
+        moduleWidth: w,
+        freeDepth: d,
+      });
     }
   }, [placedModule?.id]);
 
@@ -871,6 +885,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 취소: 원본 스냅샷으로 복원 후 닫기
+  const handleCancel = () => {
+    if (originalSnapshot && moduleId) {
+      updatePlacedModule(moduleId, {
+        customConfig: originalSnapshot.customConfig,
+        freeWidth: originalSnapshot.freeWidth,
+        moduleWidth: originalSnapshot.moduleWidth,
+        freeDepth: originalSnapshot.freeDepth,
+      });
+    }
+    closeAllPopups();
+  };
+
   // 가구 삭제
   const handleDelete = () => {
     removeModule(moduleId);
@@ -1372,7 +1399,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   : `${focusedSectionIndex === 0 ? '하부' : '상부'} 섹션 설정`
               : '커스터마이징 가구 편집'}
           </span>
-          <button className={styles.closeButton} onClick={closeAllPopups}>
+          <button className={styles.closeButton} onClick={handleCancel}>
             ×
           </button>
         </div>
@@ -1607,12 +1634,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 My캐비닛에 저장
               </button>
             </div>
-            <div className={styles.footer}>
-              <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={handleDelete}>
-                취소
-              </button>
-              <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
-                확인
+            <div className={styles.footer} style={{ flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={handleCancel}>
+                  취소
+                </button>
+                <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
+                  확인
+                </button>
+              </div>
+              <button
+                onClick={handleDelete}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--theme-text-tertiary)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  padding: '4px 0',
+                  textDecoration: 'underline',
+                  alignSelf: 'center',
+                }}
+              >
+                가구 삭제
               </button>
             </div>
           </>
