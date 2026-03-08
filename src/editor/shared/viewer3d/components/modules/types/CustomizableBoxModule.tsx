@@ -586,16 +586,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const hh = areaH / 2 + pad;
     const hd = areaD / 2 + pad;
 
-    // 12개 엣지 윤곽선
-    const edgeVertices = new Float32Array([
-      -hw,-hh,hd, hw,-hh,hd,  hw,-hh,hd, hw,hh,hd,
-      hw,hh,hd, -hw,hh,hd,  -hw,hh,hd, -hw,-hh,hd,
-      -hw,-hh,-hd, hw,-hh,-hd,  hw,-hh,-hd, hw,hh,-hd,
-      hw,hh,-hd, -hw,hh,-hd,  -hw,hh,-hd, -hw,-hh,-hd,
-      -hw,-hh,hd, -hw,-hh,-hd,  hw,-hh,hd, hw,-hh,-hd,
-      hw,hh,hd, hw,hh,-hd,  -hw,hh,hd, -hw,hh,-hd,
-    ]);
-
     return (
       <group position={[centerX, centerY, 0]}>
         {/* 앞면만 반투명 */}
@@ -603,18 +593,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           <planeGeometry args={[hw * 2, hh * 2]} />
           <meshBasicMaterial color={themeColor} transparent opacity={0.15} depthTest={false} side={THREE.DoubleSide} />
         </mesh>
-        {/* 엣지 윤곽선 */}
-        <lineSegments renderOrder={999}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              array={edgeVertices}
-              count={edgeVertices.length / 3}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color={themeColor} depthTest={false} />
-        </lineSegments>
       </group>
     );
   };
