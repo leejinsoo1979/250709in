@@ -230,6 +230,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }
   }, [panelGrainDirections, textureUrl, moduleData?.id]);
 
+  // 백패널 두께 기반 상/하판/선반 깊이 줄임량 (백패널 + 17mm 오프셋)
+  const backReductionForPanels = backPanelThickness + mmToThreeUnits(17);
+
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
 
@@ -499,7 +502,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 상부 섹션 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`upper-floor-${getPanelMaterial('(상)바닥').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - mmToThreeUnits(26)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - backReductionForPanels]}
                         position={[0, middlePanelY, upperZOffset + mmToThreeUnits(13)]}
                         material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
@@ -514,7 +517,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 하부 섹션 상판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦), 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
                         position={[0, lowerTopPanelY - mmToThreeUnits(0.05), lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
@@ -595,7 +598,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 하부 섹션 상판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦), 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`lower-top-dual-2drawer-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
                         position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
@@ -610,7 +613,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 상부 섹션 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`upper-floor-dual-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - mmToThreeUnits(26)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - backReductionForPanels]}
                         position={[0, upperFloorY, upperZOffset + mmToThreeUnits(13)]}
                         material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
@@ -677,7 +680,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 하부 섹션 상판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦), 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`lower-top-2drawer-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
                         position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
@@ -692,7 +695,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 상부 섹션 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`upper-floor-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - mmToThreeUnits(26)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - backReductionForPanels]}
                         position={[0, upperFloorY, upperZOffset + mmToThreeUnits(13)]}
                         material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
@@ -738,7 +741,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 return (
                   <BoxWithEdges
                     key={`divider-${index}-${panelMat.uuid}`}
-                    args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - mmToThreeUnits(26)]}
+                    args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - backReductionForPanels]}
                     position={[0, dividerY, mmToThreeUnits(13)]}
                     material={panelMat}
                     renderMode={renderMode}
@@ -760,7 +763,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {(() => {
           const panelName = isMultiSectionFurniture() ? '(상)상판' : '상판';
           const topPanelMat = getPanelMaterial(panelName);
-          const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
+          const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
           const widthReduction = mmToThreeUnits(1); // 좌우 각 0.5mm씩 총 1mm 줄임
           return (
             <BoxWithEdges
@@ -843,7 +846,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {(() => {
           const panelName = isMultiSectionFurniture() ? '(하)바닥' : '바닥판';
           const bottomPanelMat = getPanelMaterial(panelName);
-          const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
+          const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
           const widthReduction = mmToThreeUnits(1); // 좌우 각 0.5mm씩 총 1mm 줄임
           return (
             <BoxWithEdges
