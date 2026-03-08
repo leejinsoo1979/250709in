@@ -38,12 +38,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     // My캐비넷 모듈: pendingPlacement에서 합성 ModuleData 생성
     if (pendingPlacement) {
+      const idx = calculateSpaceIndexing(spaceInfo);
+      const colW = idx.columnWidth;
+      // 원래 너비가 칸 너비의 1.5배 이상이면 듀얼 → 2칸 너비로 설정
+      const isMyCabinetDual = pendingPlacement.width > colW * 1.5;
+      const slotWidth = isMyCabinetDual ? colW * 2 : colW;
+
       return {
         id: selectedFurnitureId,
         name: 'My캐비넷',
         category: pendingPlacement.category,
         dimensions: {
-          width: pendingPlacement.width,
+          width: slotWidth,
           height: pendingPlacement.height,
           depth: pendingPlacement.depth,
         },
