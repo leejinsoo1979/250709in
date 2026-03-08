@@ -421,19 +421,36 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
     }
 
-    const frontZ = D / 2 + 0.001;
-    const margin = 0.002; // 약간의 여유
+    const frontZ = D / 2 + 0.002;
+    const bw = 0.003; // 테두리 두께 (3mm)
 
     return (
       <group position={[centerX, centerY, frontZ]}>
+        {/* 반투명 배경 */}
         <mesh>
-          <planeGeometry args={[areaW + margin, areaH + margin]} />
-          <meshBasicMaterial color={themeColor} transparent opacity={0} side={2} />
+          <planeGeometry args={[areaW, areaH]} />
+          <meshBasicMaterial color={themeColor} transparent opacity={0.08} side={2} depthTest={false} />
         </mesh>
-        <lineSegments>
-          <edgesGeometry args={[new THREE.PlaneGeometry(areaW + margin, areaH + margin)]} />
-          <lineBasicMaterial color={themeColor} linewidth={2} />
-        </lineSegments>
+        {/* 상 */}
+        <mesh position={[0, areaH / 2, 0]}>
+          <planeGeometry args={[areaW + bw * 2, bw]} />
+          <meshBasicMaterial color={themeColor} depthTest={false} />
+        </mesh>
+        {/* 하 */}
+        <mesh position={[0, -areaH / 2, 0]}>
+          <planeGeometry args={[areaW + bw * 2, bw]} />
+          <meshBasicMaterial color={themeColor} depthTest={false} />
+        </mesh>
+        {/* 좌 */}
+        <mesh position={[-areaW / 2, 0, 0]}>
+          <planeGeometry args={[bw, areaH]} />
+          <meshBasicMaterial color={themeColor} depthTest={false} />
+        </mesh>
+        {/* 우 */}
+        <mesh position={[areaW / 2, 0, 0]}>
+          <planeGeometry args={[bw, areaH]} />
+          <meshBasicMaterial color={themeColor} depthTest={false} />
+        </mesh>
       </group>
     );
   };
