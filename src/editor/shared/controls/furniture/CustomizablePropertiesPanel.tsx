@@ -585,6 +585,80 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return 1;
   };
 
+  // 서랍 균등 채움 계산: 섹션을 서랍으로 꽉 채우되, 마이다 간격 23.6mm 유지, 마이다 최대 높이 320mm
+  const calculateEvenFillDrawers = (sectionHeight: number): { count: number; heights: number[] } => {
+    const gap = 23.6; // 마이다 간격 (DrawerRenderer gapHeight와 동일)
+    const maxDrawerH = 320; // 마이다 최대 높이
+    const minDrawerH = 80; // 서랍 최소 높이
+
+    // 최소 서랍 수: 각 서랍이 maxDrawerH 이하가 되려면
+    // sectionHeight - gap*(n+1) <= maxDrawerH * n
+    // n >= (sectionHeight - gap) / (maxDrawerH + gap)
+    const minCount = Math.max(1, Math.ceil((sectionHeight - gap) / (maxDrawerH + gap)));
+
+    // 최대 서랍 수: 각 서랍이 minDrawerH 이상이 되려면
+    const maxCount = Math.max(1, Math.floor((sectionHeight - gap) / (minDrawerH + gap)));
+
+    const count = Math.min(minCount, maxCount);
+    if (count < 1) return { count: 1, heights: [Math.max(minDrawerH, sectionHeight - gap * 2)] };
+
+    const totalGap = gap * (count + 1);
+    const perDrawer = Math.round((sectionHeight - totalGap) / count);
+    const clampedHeight = Math.max(minDrawerH, Math.min(maxDrawerH, perDrawer));
+
+    return { count, heights: Array(count).fill(clampedHeight) };
+  };
+
+  // 서랍 균등 채움 핸들러 (focused section 편집용)
+  const handleEvenFillDrawers = (sIdx: number, side: 'full' | 'left' | 'right') => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const sectionHeight = sec.height;
+    const { heights } = calculateEvenFillDrawers(sectionHeight);
+
+    const newElement: CustomElement = { type: 'drawer', heights };
+
+    if (side === 'full') {
+      sec.elements = [newElement];
+    } else if (side === 'left') {
+      sec.leftElements = [newElement];
+    } else {
+      sec.rightElements = [newElement];
+    }
+
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+
+    // heightInputs 동기화
+    const newHInputs: Record<string, string> = {};
+    heights.forEach((h, hIdx) => {
+      newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+    });
+    setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+  };
+
+  // 서랍 균등 채움 핸들러 (섹션 타입 선택 영역용)
+  const handleEvenFillDrawersForSection = (sIdx: number) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const sectionHeight = sec.height;
+    const { heights } = calculateEvenFillDrawers(sectionHeight);
+
+    sec.elements = [{ type: 'drawer', heights }];
+    sec.hasPartition = false;
+    sec.partitionPosition = undefined;
+    sec.leftElements = undefined;
+    sec.rightElements = undefined;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+
+    const newHInputs: Record<string, string> = {};
+    heights.forEach((h, hIdx) => {
+      newHInputs[`${sIdx}-full-0-${hIdx}`] = h.toString();
+    });
+    setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+  };
+
   // 요소 타입 변경 (drawerCount 파라미터 추가)
   const handleElementChange = (
     sIdx: number,
@@ -1131,6 +1205,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   </button>
                 ))}
               </div>
+              <button
+                style={{
+                  marginTop: '6px', width: '100%', padding: '6px 10px',
+                  border: '1px solid #4A90D9', borderRadius: '6px',
+                  background: '#4A90D9', color: '#fff',
+                  fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                onClick={() => handleEvenFillDrawers(sIdx, side)}
+              >
+                균등 채움
+              </button>
             </div>
           );
         })()}
@@ -2234,6 +2319,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               </button>
                             ))}
                           </div>
+                          <button
+                            style={{
+                              marginTop: '6px', width: '100%', padding: '6px 10px',
+                              border: '1px solid #4A90D9', borderRadius: '6px',
+                              background: '#4A90D9', color: '#fff',
+                              fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => handleEvenFillDrawersForSection(realIdx)}
+                          >
+                            균등 채움
+                          </button>
                         </div>
                       )}
                     </div>
@@ -2272,6 +2368,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               </button>
                             ))}
                           </div>
+                          <button
+                            style={{
+                              marginTop: '6px', width: '100%', padding: '6px 10px',
+                              border: '1px solid #4A90D9', borderRadius: '6px',
+                              background: '#4A90D9', color: '#fff',
+                              fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => handleEvenFillDrawersForSection(0)}
+                          >
+                            균등 채움
+                          </button>
                         </div>
                       )}
                     </div>
