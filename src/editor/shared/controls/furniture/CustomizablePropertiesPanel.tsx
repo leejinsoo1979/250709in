@@ -250,17 +250,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleSectionSplit = (split: boolean) => {
     if (split) {
       const availableHeight = furnitureHeight - 4 * panelThickness;
-      const halfH = Math.round(availableHeight / 2);
+      const lowerH = Math.min(1000, availableHeight - 200); // 하부 기본 1000mm (상부 최소 200mm 확보)
+      const upperH = availableHeight - lowerH;
       applyConfig({
         ...config,
         splitDirection: 'topBottom',
-        splitPosition: halfH,
+        splitPosition: lowerH,
         sections: [
-          { id: 'section-lower', height: halfH, elements: [{ type: 'open' }] },
-          { id: 'section-upper', height: availableHeight - halfH, elements: [{ type: 'open' }] },
+          { id: 'section-lower', height: lowerH, elements: [{ type: 'open' }] },
+          { id: 'section-upper', height: upperH, elements: [{ type: 'open' }] },
         ],
       });
-      setSectionHeightInputs({ 0: halfH.toString(), 1: (availableHeight - halfH).toString() });
+      setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
     } else {
       // 분할 해제 → 단일 섹션
       applyConfig({
@@ -582,6 +583,30 @@ const CustomizablePropertiesPanel: React.FC = () => {
       });
       setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
     }
+  };
+
+  // 서랍 덮개 선반 앞 들여쓰기(coverInset) 변경
+  const handleCoverInsetChange = (
+    sIdx: number,
+    side: 'full' | 'left' | 'right',
+    value: number,
+  ) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const getElements = () => {
+      if (side === 'full') return sec.elements ? [...sec.elements] : [];
+      if (side === 'left') return sec.leftElements ? [...sec.leftElements] : [];
+      return sec.rightElements ? [...sec.rightElements] : [];
+    };
+    const els = getElements();
+    if (els.length > 0 && els[0].type === 'drawer') {
+      els[0] = { ...els[0], coverInset: value };
+    }
+    if (side === 'full') sec.elements = els;
+    else if (side === 'left') sec.leftElements = els;
+    else sec.rightElements = els;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
   };
 
   // 선반/서랍 높이 입력 변경 (문자열 상태만 업데이트, 확정은 blur에서)
