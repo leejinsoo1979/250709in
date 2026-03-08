@@ -1384,10 +1384,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           sIdx: number,
           sectionCenterY: number,
           sectionInnerH: number,
-          sectionBoxW: number,
         ) => {
           const botY = sectionCenterY - sectionInnerH / 2;
-          const bInnerW = sectionBoxW - 2 * t;
           const allElements = section.hasPartition
             ? [...(section.leftElements || []), ...(section.rightElements || [])]
             : (section.elements || []);
@@ -1410,8 +1408,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             gaps.push({ fromY: lastH, toY: sectionHmm, gapMm: sectionHmm - lastH - panelThickness });
           }
 
-          const shelfDimX = bInnerW / 2 - 0.3;
-          const shelfLineX = bInnerW / 2 - 0.15;
           return gaps.map((g, gi) => {
             const fromYLocal = botY + mmToUnit(g.fromY) + (gi > 0 ? t / 2 : 0);
             const toYLocal = botY + mmToUnit(g.toY) - (gi < gaps.length - 1 ? t / 2 : 0);
@@ -1420,13 +1416,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               <group key={`sg-${sIdx}-${gi}`}>
                 <DimensionText
                   value={Math.round(g.gapMm)}
-                  position={[shelfDimX, centerY, zPos]}
-                  rotation={[0, 0, Math.PI / 2]}
-                />
-                <Line
-                  points={[[shelfLineX, fromYLocal, zPos], [shelfLineX, toYLocal, zPos]]}
-                  color="#888888"
-                  lineWidth={1}
+                  position={[0, centerY, zPos]}
                 />
               </group>
             );
@@ -1440,12 +1430,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const upperCenterY = -H / 2 + lowerH + upperH / 2;
           return (
             <>
-              {renderShelfGaps(sections[0], 0, lowerCenterY, lowerH - 2 * t, W)}
-              {renderShelfGaps(sections[1], 1, upperCenterY, upperH - 2 * t, W)}
+              {renderShelfGaps(sections[0], 0, lowerCenterY, lowerH - 2 * t)}
+              {renderShelfGaps(sections[1], 1, upperCenterY, upperH - 2 * t)}
             </>
           );
         } else {
-          return <>{renderShelfGaps(sections[0], 0, 0, H - 2 * t, W)}</>;
+          return <>{renderShelfGaps(sections[0], 0, 0, H - 2 * t)}</>;
         }
       })()}
 

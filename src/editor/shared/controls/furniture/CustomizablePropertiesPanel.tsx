@@ -269,7 +269,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 선반/서랍 높이 ArrowUp/ArrowDown 키 핸들러 (10mm 단위)
+  // 선반/서랍 높이 ArrowUp/ArrowDown 키 핸들러 (1mm 단위)
   const handleShelfHeightKeyDown = (
     e: React.KeyboardEvent,
     sIdx: number,
