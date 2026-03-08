@@ -375,7 +375,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           separatorPanel = (
             <BoxWithEdges
               args={[leftWidth, basicThickness, panelDepth]}
-              position={[0, sectionCenterY + sectionHeight/2 - basicThickness * 2.5, panelZPosition]}
+              position={[0, sectionCenterY + sectionHeight/2 - basicThickness/2, panelZPosition]}
               material={material}
               renderMode={renderMode}
               isDragging={isDragging}
