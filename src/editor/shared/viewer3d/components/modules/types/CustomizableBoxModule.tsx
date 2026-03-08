@@ -529,7 +529,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           </group>
         );
       } else if (el.type === 'shelf') {
-        // ═══ ShelfRenderer 사용 (패널 + 치수 표시 포함) ═══
+        // ═══ ShelfRenderer 사용 (다보 방식 - 앞에서 30mm 들여쓰기) ═══
         // el.heights는 섹션 하단에서 각 선반 위치 (mm)
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
@@ -547,6 +547,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               isHighlighted={isHighlighted}
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
+              shelfFrontInsetMm={30}
             />
           </group>
         );
