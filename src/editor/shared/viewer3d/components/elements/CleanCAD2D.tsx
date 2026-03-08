@@ -630,15 +630,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       );
 
       if (!moduleData) {
-        // 커스터마이징 가구 등 getModuleById로 못 찾는 경우 freeWidth/freeHeight로 fallback
-        if (module.isFreePlacement && module.freeWidth) {
-          const fbW = module.freeWidth;
-          const fbH = module.freeHeight || 2000;
-          const fbD = module.freeDepth || 580;
+        // 커스터마이징 가구 등 getModuleById로 못 찾는 경우 fallback
+        const isCustomizable = module.moduleId.startsWith('customizable-');
+        const isFreePlaced = module.isFreePlacement && module.freeWidth;
+
+        if (isFreePlaced || isCustomizable) {
+          const fbW = isFreePlaced
+            ? module.freeWidth!
+            : (module.customWidth || module.adjustedWidth || module.moduleWidth || 450);
+          const fbH = isFreePlaced
+            ? (module.freeHeight || 2000)
+            : (module.customHeight || 2000);
+          const fbD = isFreePlaced
+            ? (module.freeDepth || 580)
+            : (module.customDepth || 580);
           const mX = module.position.x;
           const hasStepDownFb = spaceInfo.droppedCeiling?.enabled || false;
           const stepDownPositionFb = spaceInfo.droppedCeiling?.position || 'right';
-          // 카테고리 추출
           const fbCategory = module.moduleId.includes('-upper-') ? 'upper'
             : module.moduleId.includes('-lower-') ? 'lower' : 'full';
           return {
