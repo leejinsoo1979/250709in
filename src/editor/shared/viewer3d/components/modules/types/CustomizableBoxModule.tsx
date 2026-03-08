@@ -618,25 +618,38 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const drawerCount = el.heights.length;
         const gapHeight = 23.6; // 서랍 간 공백 (mm) - 기존 모듈과 동일
 
-        // 서랍 총 높이 계산 (mm)
+        // 서랍 총 높이 계산 (mm) - DrawerRenderer에 전달할 innerHeight
         const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)
-          + gapHeight * (drawerCount - 1)
-          + 18 * 2; // 상하판 두께
-        const totalDrawerH = mmToUnit(totalDrawerHeightMm);
+          + gapHeight * (drawerCount - 1);
+        const totalDrawerInnerH = mmToUnit(totalDrawerHeightMm);
 
-        // 서랍 영역: 영역 하단에서 위로 배치
-        const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
-        const drawerCenterY = drawerBottomY + totalDrawerH / 2;
+        // 서랍이 영역 전체를 채우는지 판단
+        const isFullFill = totalDrawerInnerH >= areaInnerHeight - t;
+
+        // 서랍 yOffset과 innerHeight 결정
+        let drawerYOffset: number;
+        let drawerInnerH: number;
+
+        if (isFullFill) {
+          // 영역 전체를 채움: 기존처럼 중앙 배치
+          drawerYOffset = sectionCenterY;
+          drawerInnerH = areaInnerHeight;
+        } else {
+          // 영역보다 작음: 하단부터 배치
+          const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
+          drawerInnerH = totalDrawerInnerH;
+          drawerYOffset = drawerBottomY + drawerInnerH / 2;
+        }
 
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
             <DrawerRenderer
               drawerCount={drawerCount}
               innerWidth={areaInnerWidth}
-              innerHeight={totalDrawerH - 2 * t}
+              innerHeight={drawerInnerH}
               depth={sectionDepth}
               basicThickness={t}
-              yOffset={drawerCenterY}
+              yOffset={drawerYOffset}
               drawerHeights={el.heights}
               gapHeight={gapHeight}
               material={material}
@@ -647,10 +660,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               panelGrainDirections={panelGrainDirections}
             />
             {/* 서랍이 영역보다 작을 때: 서랍 상단에 고정선반(덮개) 추가 */}
-            {totalDrawerH < areaInnerHeight - t * 0.5 && (
+            {!isFullFill && (
               <BoxWithEdges
                 args={[areaInnerWidth, t, sectionDepth - mmToUnit(backReductionMm)]}
-                position={[0, drawerBottomY + totalDrawerH + t / 2, mmToUnit(backReductionMm) / 2]}
+                position={[0, drawerYOffset + drawerInnerH / 2 + t / 2, mmToUnit(backReductionMm) / 2]}
                 material={material}
                 renderMode={renderMode}
                 isDragging={isDragging}
@@ -796,8 +809,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         />
       );
 
-      // 좌측 영역
-      const leftWidthMm = section.partitionPosition - panelThickness;
+      // 좌측 영역 (칸막이 중심에서 좌측면까지 = partitionPosition - panelThickness/2)
+      const leftWidthMm = section.partitionPosition - panelThickness / 2;
       const leftInnerW = mmToUnit(leftWidthMm);
       const leftCenterX = -bInnerW / 2 + leftInnerW / 2;
       meshes.push(
@@ -808,8 +821,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         )
       );
 
-      // 우측 영역
-      const rightWidthMm = innerWidthMm - section.partitionPosition - panelThickness;
+      // 우측 영역 (칸막이 중심에서 우측면까지 = innerWidthMm - partitionPosition - panelThickness/2)
+      const rightWidthMm = innerWidthMm - section.partitionPosition - panelThickness / 2;
       const rightInnerW = mmToUnit(rightWidthMm);
       const rightCenterX = partitionX + t / 2 + rightInnerW / 2;
       meshes.push(
