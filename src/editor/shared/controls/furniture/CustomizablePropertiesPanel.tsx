@@ -352,7 +352,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
-        newElement = { type: 'shelf', heights: [Math.round(sec.height / 2)] };
+        newElement = { type: 'shelf', heights: [Math.round(sec.height / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
         const count = drawerCount || 2;
@@ -511,7 +511,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
-        newElement = { type: 'shelf', heights: [Math.round(subHeight / 2)] };
+        newElement = { type: 'shelf', heights: [Math.round(subHeight / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
         const gapTotal = 23.6 * 2;
@@ -563,7 +563,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
-        newElement = { type: 'shelf', heights: [Math.round(sectionHeight / 2)] };
+        newElement = { type: 'shelf', heights: [Math.round(sectionHeight / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
         // 서랍 단수: 명시적 지정 또는 영역 높이 기반 최대값
@@ -865,6 +865,82 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // 선반 방식 변경 (고정/다보)
+  const handleShelfMethodChange = (sIdx: number, side: 'full' | 'left' | 'right', method: 'fixed' | 'dowel') => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const elements =
+      side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+
+    if (elements[0]?.type === 'shelf') {
+      elements[0] = { ...elements[0], shelfMethod: method, shelfFrontInset: method === 'dowel' ? (elements[0].shelfFrontInset ?? 30) : 0 };
+    }
+
+    if (side === 'full') sec.elements = elements;
+    else if (side === 'left') sec.leftElements = elements;
+    else sec.rightElements = elements;
+
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 서브분할 선반 방식 변경
+  const handleSubSplitShelfMethodChange = (sIdx: number, areaKey: string, subPart: 'upper' | 'lower', method: 'fixed' | 'dowel') => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const subSplits = { ...(sec.areaSubSplits || {}) };
+    const sub = subSplits[areaKey];
+    if (!sub) return;
+
+    const elemKey = subPart === 'upper' ? 'upperElements' : 'lowerElements';
+    const elements = [...(sub[elemKey] || [])];
+    if (elements[0]?.type === 'shelf') {
+      elements[0] = { ...elements[0], shelfMethod: method, shelfFrontInset: method === 'dowel' ? (elements[0].shelfFrontInset ?? 30) : 0 };
+    }
+    subSplits[areaKey] = { ...sub, [elemKey]: elements };
+    sec.areaSubSplits = subSplits;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 서브분할 선반 앞 들여쓰기 변경
+  const handleSubSplitShelfFrontInsetChange = (sIdx: number, areaKey: string, subPart: 'upper' | 'lower', inset: number) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const subSplits = { ...(sec.areaSubSplits || {}) };
+    const sub = subSplits[areaKey];
+    if (!sub) return;
+
+    const elemKey = subPart === 'upper' ? 'upperElements' : 'lowerElements';
+    const elements = [...(sub[elemKey] || [])];
+    if (elements[0]?.type === 'shelf') {
+      elements[0] = { ...elements[0], shelfFrontInset: inset };
+    }
+    subSplits[areaKey] = { ...sub, [elemKey]: elements };
+    sec.areaSubSplits = subSplits;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 선반 앞 들여쓰기 변경
+  const handleShelfFrontInsetChange = (sIdx: number, side: 'full' | 'left' | 'right', inset: number) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const elements =
+      side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+
+    if (elements[0]?.type === 'shelf') {
+      elements[0] = { ...elements[0], shelfFrontInset: inset };
+    }
+
+    if (side === 'full') sec.elements = elements;
+    else if (side === 'left') sec.leftElements = elements;
+    else sec.rightElements = elements;
+
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
   // My캐비닛에 저장
   const handleSaveToCabinet = async () => {
     const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
@@ -935,6 +1011,50 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* 선반 방식 선택 (고정/다보) */}
+        {currentType === 'shelf' && el.type === 'shelf' && (
+          <div style={{ marginTop: '8px' }}>
+            <div className={styles.row}>
+              <span className={styles.label}>방식</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${(el.shelfMethod || 'dowel') === 'fixed' ? styles.active : ''}`}
+                  onClick={() => handleShelfMethodChange(sIdx, side, 'fixed')}
+                >
+                  고정선반
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${(el.shelfMethod || 'dowel') === 'dowel' ? styles.active : ''}`}
+                  onClick={() => handleShelfMethodChange(sIdx, side, 'dowel')}
+                >
+                  다보선반
+                </button>
+              </div>
+            </div>
+            {(el.shelfMethod || 'dowel') === 'dowel' && (
+              <div className={styles.row} style={{ marginTop: '4px' }}>
+                <span className={styles.label}>앞 옵셋</span>
+                <input
+                  type="number"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  style={{ width: '60px' }}
+                  value={el.shelfFrontInset ?? 30}
+                  min={0}
+                  max={100}
+                  step={5}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v) && v >= 0 && v <= 100) {
+                      handleShelfFrontInsetChange(sIdx, side, v);
+                    }
+                  }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 서랍 단수 선택 */}
         {currentType === 'drawer' && 'heights' in el && (() => {
@@ -1198,6 +1318,50 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* 선반 방식 선택 (고정/다보) - 서브분할 */}
+        {currentType === 'shelf' && el.type === 'shelf' && (
+          <div style={{ marginTop: '8px' }}>
+            <div className={styles.row}>
+              <span className={styles.label}>방식</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${(el.shelfMethod || 'dowel') === 'fixed' ? styles.active : ''}`}
+                  onClick={() => handleSubSplitShelfMethodChange(sIdx, areaKey, subPart, 'fixed')}
+                >
+                  고정선반
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${(el.shelfMethod || 'dowel') === 'dowel' ? styles.active : ''}`}
+                  onClick={() => handleSubSplitShelfMethodChange(sIdx, areaKey, subPart, 'dowel')}
+                >
+                  다보선반
+                </button>
+              </div>
+            </div>
+            {(el.shelfMethod || 'dowel') === 'dowel' && (
+              <div className={styles.row} style={{ marginTop: '4px' }}>
+                <span className={styles.label}>앞 옵셋</span>
+                <input
+                  type="number"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  style={{ width: '60px' }}
+                  value={el.shelfFrontInset ?? 30}
+                  min={0}
+                  max={100}
+                  step={5}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v) && v >= 0 && v <= 100) {
+                      handleSubSplitShelfFrontInsetChange(sIdx, areaKey, subPart, v);
+                    }
+                  }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 옷봉 자동 배치 안내 */}
         {currentType === 'rod' && (
