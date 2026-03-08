@@ -583,8 +583,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
         {/* === 서랍 레일 (좌/우) === */}
         {(() => {
-          // 탑뷰에서는 레일 숨김
-          if (viewMode === '2D' && view2DDirection === 'top') {
+          // 2D에서는 레일 숨김
+          if (viewMode === '2D') {
             return null;
           }
 
