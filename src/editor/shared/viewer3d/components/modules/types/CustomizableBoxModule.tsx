@@ -613,15 +613,52 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const drawerCount = el.heights.length;
         const gapHeight = 23.6; // 서랍 간 공백 (mm) - 기존 모듈과 동일
 
+        // 서랍 총 높이 계산 (mm)
+        const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)
+          + gapHeight * (drawerCount - 1)
+          + 18 * 2; // 상하판 두께
+        const totalDrawerH = mmToUnit(totalDrawerHeightMm);
+
+        // 서랍 영역: 영역 하단에서 위로 배치
+        const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
+        const drawerCenterY = drawerBottomY + totalDrawerH / 2;
+
+        // 서랍 내부 너비 (좌우 날개벽 측판 제외)
+        const drawerInnerW = areaInnerWidth - 2 * t;
+
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
+            {/* 좌측 날개벽 (측판) */}
+            <BoxWithEdges
+              args={[t, totalDrawerH, sectionDepth - mmToUnit(backReductionMm)]}
+              position={[-areaInnerWidth / 2 + t / 2, drawerCenterY, mmToUnit(backReductionMm) / 2]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+              isHighlighted={isHighlighted}
+              panelName={`${sectionLabel}서랍좌측판`}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
+            {/* 우측 날개벽 (측판) */}
+            <BoxWithEdges
+              args={[t, totalDrawerH, sectionDepth - mmToUnit(backReductionMm)]}
+              position={[areaInnerWidth / 2 - t / 2, drawerCenterY, mmToUnit(backReductionMm) / 2]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+              isHighlighted={isHighlighted}
+              panelName={`${sectionLabel}서랍우측판`}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
             <DrawerRenderer
               drawerCount={drawerCount}
-              innerWidth={areaInnerWidth}
-              innerHeight={areaInnerHeight}
+              innerWidth={drawerInnerW}
+              innerHeight={totalDrawerH - 2 * t}
               depth={sectionDepth}
               basicThickness={t}
-              yOffset={sectionCenterY}
+              yOffset={drawerCenterY}
               drawerHeights={el.heights}
               gapHeight={gapHeight}
               material={material}
