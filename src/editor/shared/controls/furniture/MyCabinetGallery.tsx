@@ -8,6 +8,7 @@ import styles from './CustomizableFurnitureLibrary.module.css';
 
 interface MyCabinetGalleryProps {
   filter?: 'full' | 'upper' | 'lower' | 'all';
+  editMode?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -175,11 +176,10 @@ const CabinetThumbnail: React.FC<{
   );
 };
 
-const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) => {
+const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', editMode = false }) => {
   const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, updateCabinet, setPendingPlacement, setEditingCabinetId } = useMyCabinetStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
-  const [editMode, setEditMode] = useState(false);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
 
@@ -221,7 +221,6 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
     const moduleId = createCustomizableModuleId(cabinet.category, cabinet.width);
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-    setEditMode(false); // 편집모드 해제
   }, [setEditingCabinetId, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   const handleStartRename = useCallback((e: React.MouseEvent, cabinet: SavedCabinet) => {
@@ -410,46 +409,6 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all' }) =
           클릭하여 배치
         </p>
       )}
-
-      {/* 하단 편집 모드 토글 버튼 */}
-      <button
-        onClick={() => {
-          setEditMode(!editMode);
-          if (editMode) {
-            // 편집 모드 해제 시 이름편집 취소
-            setEditingNameId(null);
-            setEditNameValue('');
-          }
-        }}
-        style={{
-          marginTop: '4px',
-          padding: '8px 12px',
-          border: editMode ? '1px solid var(--theme-primary, #4a90d9)' : '1px solid var(--theme-border, #e0e0e0)',
-          borderRadius: '8px',
-          background: editMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-surface, #fff)',
-          color: editMode ? '#fff' : 'var(--theme-text-secondary, #666)',
-          fontSize: '12px',
-          fontWeight: 500,
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '6px',
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          {editMode ? (
-            <><polyline points="20 6 9 17 4 12"/></>
-          ) : (
-            <>
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </>
-          )}
-        </svg>
-        {editMode ? '편집 완료' : '설정 · 삭제'}
-      </button>
     </div>
   );
 };

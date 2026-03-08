@@ -128,6 +128,7 @@ const Configurator: React.FC = () => {
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'all' | 'full' | 'upper' | 'lower'>('all'); // My캐비닛 카테고리 필터
+  const [myCabinetEditMode, setMyCabinetEditMode] = useState(false); // My캐비닛 편집 모드
   const [showCustomUploadModal, setShowCustomUploadModal] = useState(false); // 커스텀 가구 업로드 모달
   const [showBoringExportDialog, setShowBoringExportDialog] = useState(false); // 보링 내보내기 대화상자
 
@@ -2805,8 +2806,43 @@ const Configurator: React.FC = () => {
               </div>
 
               <div className={styles.moduleSection}>
-                <MyCabinetGallery filter={myCabinetCategory} />
+                <MyCabinetGallery filter={myCabinetCategory} editMode={myCabinetEditMode} />
               </div>
+
+              {/* 하단 고정 편집 모드 토글 */}
+              <button
+                onClick={() => setMyCabinetEditMode(!myCabinetEditMode)}
+                style={{
+                  flexShrink: 0,
+                  margin: '8px 0 0',
+                  padding: '10px 12px',
+                  border: myCabinetEditMode ? '1px solid var(--theme-primary, #4a90d9)' : '1px solid var(--theme-border, #e0e0e0)',
+                  borderRadius: '8px',
+                  background: myCabinetEditMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-surface, #fff)',
+                  color: myCabinetEditMode ? '#fff' : 'var(--theme-text-secondary, #666)',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  width: '100%',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {myCabinetEditMode ? (
+                    <polyline points="20 6 9 17 4 12"/>
+                  ) : (
+                    <>
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </>
+                  )}
+                </svg>
+                {myCabinetEditMode ? '편집 완료' : '설정 · 삭제'}
+              </button>
             </div>
           </div>
         );
