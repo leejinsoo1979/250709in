@@ -797,7 +797,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               // 위 배치: 15mm 두께, 날개벽 사이에 끼워짐 / 아래 배치: 18mm, 전체 내경
               const coverThickness = align === 'top' ? mmToUnit(15) : t;
               const coverY = align === 'top'
-                ? drawerYOffset - drawerInnerH / 2 - coverThickness / 2  // 날개벽 하단에 맞춤
+                ? drawerYOffset - drawerInnerH / 2 - coverThickness / 2 + mmToUnit(15)  // 날개벽 안쪽으로 15mm 올림
                 : drawerYOffset + drawerInnerH / 2 + coverThickness / 2;
               const wingInsetMm = 27 + 18 + 0.5; // horizontalPanelWidth + drawerFrameThickness + offset
               const coverWidth = align === 'top'
