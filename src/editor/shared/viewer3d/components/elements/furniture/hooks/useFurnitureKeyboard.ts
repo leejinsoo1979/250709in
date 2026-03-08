@@ -78,14 +78,17 @@ export const useFurnitureKeyboard = ({
           columnWidth = indexing.columnWidth;
         }
 
-        // 듀얼/싱글 가구 판별 - moduleId로 직접 확인 (width는 변경될 수 있음)
-        const isDualFurniture = editingModule.moduleId.includes('dual-');
+        // 듀얼/싱글 가구 판별 - isDualSlot 속성 우선, moduleId 폴백
+        const isDualFurniture = editingModule.isDualSlot !== undefined
+          ? editingModule.isDualSlot
+          : editingModule.moduleId.includes('dual-');
 
         console.log('🔍 [useFurnitureKeyboard] 가구 타입 판별:', {
           moduleZone,
           columnWidth,
           furnitureWidth: moduleData.dimensions.width,
           isDualFurniture,
+          isDualSlot: editingModule.isDualSlot,
           hasZones: !!indexing.zones
         });
 
@@ -253,7 +256,7 @@ export const useFurnitureKeyboard = ({
                 adjustedWidth: adjustedWidth,
                 customWidth: customWidth,
                 zone: editingModule.zone, // 현재 zone 유지
-                isDualSlot: editingModule.moduleId.includes('dual-') ? true : (editingModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
+                isDualSlot: isDualFurniture // 원본 듀얼 상태 유지
               });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -380,7 +383,7 @@ export const useFurnitureKeyboard = ({
                 adjustedWidth: adjustedWidth,
                 customWidth: customWidth,
                 zone: editingModule.zone, // 현재 zone 유지
-                isDualSlot: editingModule.moduleId.includes('dual-') ? true : (editingModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
+                isDualSlot: isDualFurniture // 원본 듀얼 상태 유지
               });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -414,8 +417,10 @@ export const useFurnitureKeyboard = ({
             || buildModuleDataFromPlacedModule(selectedModule);
           if (!moduleData) return;
           
-          // 듀얼/싱글 가구 판별 - moduleId로 직접 확인 (width는 변경될 수 있음)
-          const isDualFurniture = selectedModule.moduleId.includes('dual-');
+          // 듀얼/싱글 가구 판별 - isDualSlot 속성 우선, moduleId 폴백
+          const isDualFurniture = selectedModule.isDualSlot !== undefined
+            ? selectedModule.isDualSlot
+            : selectedModule.moduleId.includes('dual-');
           
           let currentSlotIndex = -1;
           
@@ -536,7 +541,7 @@ export const useFurnitureKeyboard = ({
                   customDepth: customDepth,
                   adjustedWidth: adjustedWidth,
                   customWidth: customWidth,
-                  isDualSlot: selectedModule.moduleId.includes('dual-') ? true : (selectedModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
+                  isDualSlot: isDualFurniture // 원본 듀얼 상태 유지
                 });
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -634,7 +639,7 @@ export const useFurnitureKeyboard = ({
                   customDepth: customDepth,
                   adjustedWidth: adjustedWidth,
                   customWidth: customWidth,
-                  isDualSlot: selectedModule.moduleId.includes('dual-') ? true : (selectedModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
+                  isDualSlot: isDualFurniture // 원본 듀얼 상태 유지
                 });
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
