@@ -41,19 +41,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (!camera) return;
 
       const halfW = (placedModule.freeWidth || placedModule.moduleWidth || 0) * 0.01 / 2;
-      const halfH = (placedModule.freeHeight || 0) * 0.01 / 2;
 
-      // 가구 우측 상단 모서리
-      const topRight = new THREE.Vector3(
+      // 가구 우측 중앙
+      const rightCenter = new THREE.Vector3(
         placedModule.position.x + halfW,
-        placedModule.position.y + halfH,
+        placedModule.position.y,
         placedModule.position.z
       );
-      topRight.project(camera);
+      rightCenter.project(camera);
 
       const rect = canvas.getBoundingClientRect();
-      const sx = Math.round((topRight.x * 0.5 + 0.5) * rect.width + rect.left);
-      const sy = Math.round((-topRight.y * 0.5 + 0.5) * rect.height + rect.top);
+      const sx = Math.round((rightCenter.x * 0.5 + 0.5) * rect.width + rect.left);
+      const sy = Math.round((-rightCenter.y * 0.5 + 0.5) * rect.height + rect.top);
       setPopupPos({ x: sx, y: sy });
 
       rafRef.current = requestAnimationFrame(updatePosition);
@@ -1118,19 +1117,21 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
-  // 팝업 위치 계산: 가구 우측 상단 모서리에 말풍선처럼 붙어서 표시
+  // 팝업 위치 계산: 가구 우측 중앙에 말풍선처럼 붙여서 표시
+  const panelRef = useRef<HTMLDivElement>(null);
   const panelWidth = 360;
+  const panelHeight = panelRef.current?.offsetHeight || 400;
   const panelStyle: React.CSSProperties = popupPos
     ? {
         position: 'fixed',
         left: Math.min(popupPos.x + 6, window.innerWidth - panelWidth - 8),
-        top: Math.max(8, popupPos.y),
+        top: Math.max(8, Math.min(popupPos.y - panelHeight / 2, window.innerHeight - panelHeight - 8)),
       }
     : {};
 
   return (
     <div className={styles.overlay} style={popupPos ? { justifyContent: 'flex-start', paddingRight: 0, paddingTop: 0 } : undefined}>
-      <div className={styles.panel} style={panelStyle}>
+      <div ref={panelRef} className={styles.panel} style={panelStyle}>
         {/* 헤더 */}
         <div className={styles.header}>
           <span className={styles.headerTitle}>
