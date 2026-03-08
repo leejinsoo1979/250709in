@@ -1398,8 +1398,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (focusedSubPart && isSubSplit && subSplit) {
         const subElements = focusedSubPart === 'upper' ? subSplit.upperElements : subSplit.lowerElements;
         const subHeight = focusedSubPart === 'lower' ? subSplit.lowerHeight : section.height - subSplit.lowerHeight;
+        const subAreaW = areaSide === 'left'
+          ? (section.partitionPosition || Math.round(innerW / 2)) - panelThickness / 2
+          : innerW - (section.partitionPosition || Math.round(innerW / 2)) - panelThickness / 2;
         return (
           <div key={`${sIdx}-${areaSide}-${focusedSubPart}`}>
+            {/* 서브영역 치수 (읽기 전용) */}
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>치수</div>
+              <div className={styles.row}>
+                <span className={styles.label}>너비</span>
+                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
+                  {Math.round(subAreaW)}
+                </span>
+                <span className={styles.unit}>mm</span>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.label}>높이</span>
+                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
+                  {Math.round(subHeight)}
+                </span>
+                <span className={styles.unit}>mm</span>
+              </div>
+            </div>
             <div className={styles.section}>
               <div className={styles.sectionTitle}>
                 {focusedSubPart === 'upper' ? '상부' : '하부'} 내부 구조
@@ -1412,8 +1433,78 @@ const CustomizablePropertiesPanel: React.FC = () => {
         );
       }
 
+      // 영역 너비/높이 계산
+      const areaW = areaSide === 'left'
+        ? (section.partitionPosition || Math.round(innerW / 2)) - panelThickness / 2
+        : innerW - (section.partitionPosition || Math.round(innerW / 2)) - panelThickness / 2;
+
       return (
         <div key={`${sIdx}-${areaSide}`}>
+          {/* 영역 치수 */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>치수</div>
+            <div className={styles.row}>
+              <span className={styles.label}>너비</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className={`${styles.input} ${styles.inputSmall}`}
+                value={partitionInputs[`${sIdx}-${areaSide}`] ?? Math.round(areaW).toString()}
+                onChange={(e) => {
+                  setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-${areaSide}`]: e.target.value }));
+                }}
+                onBlur={() => {
+                  const val = parseInt(partitionInputs[`${sIdx}-${areaSide}`] || '0');
+                  const minV = 100;
+                  const maxV = innerW - 100 - panelThickness / 2;
+                  const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
+                  // 너비 → 칸막이 위치 역산
+                  const newPos = areaSide === 'left'
+                    ? clamped + panelThickness / 2
+                    : innerW - clamped - panelThickness / 2;
+                  const clampedPos = Math.max(100, Math.min(innerW - 100, Math.round(newPos)));
+                  handlePartitionPosition(sIdx, clampedPos);
+                  // 좌/우 동기화
+                  const leftW = clampedPos - panelThickness / 2;
+                  const rightW = innerW - clampedPos - panelThickness / 2;
+                  setPartitionInputs((prev) => ({
+                    ...prev,
+                    [`${sIdx}-left`]: Math.round(leftW).toString(),
+                    [`${sIdx}-right`]: Math.round(rightW).toString(),
+                  }));
+                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                style={{ width: '70px' }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+            <div className={styles.row}>
+              <span className={styles.label}>높이</span>
+              {config.sections.length > 1 ? (
+                <>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    value={sectionHeightInputs[sIdx] ?? section.height.toString()}
+                    onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
+                    onBlur={() => handleSectionHeightBlur(sIdx)}
+                    onKeyDown={(e) => handleSectionHeightKeyDown(e, sIdx)}
+                    style={{ width: '70px' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </>
+              ) : (
+                <>
+                  <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
+                    {section.height}
+                  </span>
+                  <span className={styles.unit}>mm</span>
+                </>
+              )}
+            </div>
+          </div>
+
           <div className={styles.section}>
             {/* 상하분할 토글 */}
             <div className={styles.row}>
