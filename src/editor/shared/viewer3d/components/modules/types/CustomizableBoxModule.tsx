@@ -14,6 +14,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { SettingsIcon, EditIcon } from '@/components/common/Icons';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import DimensionText from '../components/DimensionText';
+import { Line } from '@react-three/drei';
 
 interface CustomizableBoxModuleProps {
   width: number;   // mm
@@ -1271,7 +1273,71 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {/* 편집 중인 영역 하이라이트 테두리 */}
       {renderEditingHighlight()}
 
-      {/* 섹션 내경 치수 가이드 - 제거됨 */}
+      {/* 섹션 내경 치수 */}
+      {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (() => {
+        const zPos = viewMode === '3D' ? D / 2 + 0.1 : D / 2 + 1.0;
+        const xPos = viewMode === '3D' ? -innerW / 2 * 0.3 - 0.8 : -innerW / 2 * 0.3 - 0.5;
+        const lineX = -innerW / 2 * 0.3;
+
+        if (isSplit) {
+          const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
+          const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
+          const lowerCenterY = -H / 2 + lowerH / 2;
+          const upperCenterY = -H / 2 + lowerH + upperH / 2;
+          const lowerInnerH = lowerH - 2 * t;
+          const upperInnerH = upperH - 2 * t;
+          const lowerTop = lowerCenterY + lowerInnerH / 2;
+          const lowerBot = lowerCenterY - lowerInnerH / 2;
+          const upperTop = upperCenterY + upperInnerH / 2;
+          const upperBot = upperCenterY - upperInnerH / 2;
+
+          return (
+            <>
+              {/* 하부 내경 높이 */}
+              <DimensionText
+                value={sections[0].height}
+                position={[xPos, lowerCenterY, zPos]}
+                rotation={[0, 0, Math.PI / 2]}
+              />
+              <Line
+                points={[[lineX, lowerTop, zPos], [lineX, lowerBot, zPos]]}
+                color="#888888"
+                lineWidth={1}
+              />
+              {/* 상부 내경 높이 */}
+              <DimensionText
+                value={sections[1].height}
+                position={[xPos, upperCenterY, zPos]}
+                rotation={[0, 0, Math.PI / 2]}
+              />
+              <Line
+                points={[[lineX, upperTop, zPos], [lineX, upperBot, zPos]]}
+                color="#888888"
+                lineWidth={1}
+              />
+            </>
+          );
+        } else {
+          const singleInnerH = H - 2 * t;
+          const topY = singleInnerH / 2;
+          const botY = -singleInnerH / 2;
+
+          return (
+            <>
+              <DimensionText
+                value={sections[0].height}
+                position={[xPos, 0, zPos]}
+                rotation={[0, 0, Math.PI / 2]}
+              />
+              <Line
+                points={[[lineX, topY, zPos], [lineX, botY, zPos]]}
+                color="#888888"
+                lineWidth={1}
+              />
+            </>
+          );
+        }
+      })()}
 
       {/* 조절발 (upper가 아닌 경우) */}
       {showFurniture && category !== 'upper' && (
