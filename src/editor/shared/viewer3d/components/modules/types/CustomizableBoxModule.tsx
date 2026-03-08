@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 import { CustomFurnitureConfig, CustomElement, CustomSection } from '@/editor/shared/furniture/types';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
@@ -74,6 +75,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const viewMode = useUIStore(state => state.viewMode);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const activePopup = useUIStore(state => state.activePopup);
+  const { camera, gl } = useThree();
+  const groupRef = useRef<THREE.Group>(null);
 
   const panelThickness = customConfig.panelThickness || 18; // mm
   const t = mmToUnit(panelThickness); // Three.js 단위
@@ -199,14 +202,32 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             e.stopPropagation();
             if (isEditMode) {
               useUIStore.getState().closeAllPopups();
-            } else if (placedFurnitureId) {
+            } else if (placedFurnitureId && groupRef.current) {
+              // 가구 좌측/우측 끝의 screen 좌표 계산
+              const canvasRect = gl.domElement.getBoundingClientRect();
+              const worldPos = new THREE.Vector3();
+              groupRef.current.getWorldPosition(worldPos);
+
               const el = e.currentTarget as HTMLElement;
-              const rect = el.getBoundingClientRect();
-              // 좌측 영역이면 아이콘 왼쪽에, 아니면 오른쪽에 팝업 배치
-              const sx = areaSide === 'left'
-                ? Math.round(rect.left - 340 - 8)
-                : Math.round(rect.right + 8);
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, sx, Math.round(rect.top));
+              const iconRect = el.getBoundingClientRect();
+
+              let sx: number;
+              if (areaSide === 'left') {
+                // 가구 좌측 끝 screen X
+                const leftEdge = worldPos.clone();
+                leftEdge.x -= W / 2;
+                leftEdge.project(camera);
+                const leftScreenX = Math.round((leftEdge.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left);
+                sx = leftScreenX - 340 - 12;
+              } else {
+                // 가구 우측 끝 screen X
+                const rightEdge = worldPos.clone();
+                rightEdge.x += W / 2;
+                rightEdge.project(camera);
+                const rightScreenX = Math.round((rightEdge.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left);
+                sx = rightScreenX + 12;
+              }
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, sectionIndex, areaSide, sx, Math.round(iconRect.top));
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}
@@ -879,6 +900,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
   return (
     <group
+      ref={groupRef}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
