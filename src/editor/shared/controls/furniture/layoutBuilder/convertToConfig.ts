@@ -1,12 +1,15 @@
 /**
  * LayoutNode 트리 → CustomFurnitureConfig 변환
  *
+ * 핵심: section.height = 내경(inner height), 패널 두께 제외
+ *       horizontalSplit.position = 좌측 박스 내경 너비
+ *
  * 변환 매핑:
- * - V-split(루트) → sections[] (height = ratio × totalHeight)
- * - H-split(루트) → sections[0] + horizontalSplit
- * - V-split → H-split(child) → sections[i] + sections[i].horizontalSplit
- * - H-split → V-split(child) → sections[0] + horizontalSplit + areaSubSplits
- * - leaf(루트) → sections[0] (단일 섹션)
+ * - leaf(루트) → sections[0] (단일 섹션, height = 전체 내경)
+ * - V-split(루트) → sections[] (상하 분할)
+ * - H-split(루트) → sections[0] + horizontalSplit (좌우 분할)
+ * - V-split → H-split(child) → sections[i].horizontalSplit
+ * - H-split → V-split(child) → areaSubSplits
  */
 
 import { LayoutNode } from './types';
@@ -16,8 +19,8 @@ const PANEL_THICKNESS = 18;
 const DEFAULT_ELEMENT: CustomElement[] = [{ type: 'open' }];
 
 interface Dimensions {
-  width: number;   // mm
-  height: number;  // mm
+  width: number;   // mm (가구 외경 전체 너비)
+  height: number;  // mm (가구 외경 전체 높이)
   depth: number;   // mm
 }
 
@@ -27,23 +30,33 @@ export function convertToConfig(
 ): CustomFurnitureConfig {
   const { width, height } = dimensions;
 
+  // 가구 전체 내경 (상/하판 두께 제외)
+  const totalInnerHeight = height - 2 * PANEL_THICKNESS;
+  // 가구 전체 내경 너비 (좌/우측판 두께 제외)
+  const totalInnerWidth = width - 2 * PANEL_THICKNESS;
+
   // Case 1: 단일 leaf → 1개 섹션
   if (layout.direction === 'leaf') {
     return {
-      sections: [createSection('section-0', height)],
+      sections: [createSection('section-0', totalInnerHeight)],
       panelThickness: PANEL_THICKNESS,
     };
   }
 
   // Case 2: 루트가 vertical(상하 분할) → sections 배열
   if (layout.direction === 'vertical') {
-    const sections = layout.children!.map((child, idx) => {
-      const sectionHeight = Math.round(child.ratio * height);
-      const section = createSection(`section-${idx}`, sectionHeight);
+    const children = layout.children!;
+    // 상하 분할 시 중간 패널 고려: 총 내경 = 전체높이 - 외판2개 - 중간패널(N-1)개
+    const numDividers = children.length - 1;
+    const usableHeight = totalInnerHeight - numDividers * PANEL_THICKNESS;
 
-      // child가 horizontal → 해당 섹션에 horizontalSplit 추가
+    const sections = children.map((child, idx) => {
+      const sectionInnerHeight = Math.round(child.ratio * usableHeight);
+      const section = createSection(`section-${idx}`, sectionInnerHeight);
+
+      // child가 horizontal → 해당 섹션에 horizontalSplit
       if (child.direction === 'horizontal' && child.children) {
-        section.horizontalSplit = buildHorizontalSplit(child, width);
+        section.horizontalSplit = buildHorizontalSplit(child, totalInnerWidth);
       }
 
       return section;
@@ -57,11 +70,11 @@ export function convertToConfig(
 
   // Case 3: 루트가 horizontal(좌우 분할) → 1개 섹션 + horizontalSplit
   if (layout.direction === 'horizontal' && layout.children) {
-    const section = createSection('section-0', height);
-    section.horizontalSplit = buildHorizontalSplit(layout, width);
+    const section = createSection('section-0', totalInnerHeight);
+    section.horizontalSplit = buildHorizontalSplit(layout, totalInnerWidth);
 
     // children 중 vertical이 있으면 → areaSubSplits
-    const areas = buildAreaSubSplits(layout, height);
+    const areas = buildAreaSubSplits(layout, totalInnerHeight);
     if (areas) {
       section.areaSubSplits = areas;
     }
@@ -74,34 +87,38 @@ export function convertToConfig(
 
   // fallback
   return {
-    sections: [createSection('section-0', height)],
+    sections: [createSection('section-0', totalInnerHeight)],
     panelThickness: PANEL_THICKNESS,
   };
 }
 
-function createSection(id: string, height: number): CustomSection {
+function createSection(id: string, innerHeight: number): CustomSection {
   return {
     id,
-    height,
-    elements: [...DEFAULT_ELEMENT],
+    height: innerHeight,
+    elements: [{ type: 'open' }],
   };
 }
 
 /**
  * horizontal 노드에서 horizontalSplit 생성
- * children[0] = left, children[1] = right (2분할)
- * children[0] = left, children[1] = center, children[2] = right (3분할)
+ * parentInnerWidth: 부모 섹션의 내경 너비 (좌우측판 제외)
+ * position = 좌측 박스 내경 너비 (mm)
  */
 function buildHorizontalSplit(
   hNode: LayoutNode,
-  parentWidth: number,
+  parentInnerWidth: number,
 ) {
   const children = hNode.children!;
-  const leftWidth = Math.round(children[0].ratio * parentWidth) - PANEL_THICKNESS;
+  // 좌우 분할 시 중간 칸막이 패널 고려
+  const numDividers = children.length - 1;
+  const usableWidth = parentInnerWidth - numDividers * PANEL_THICKNESS;
+
+  const leftInnerWidth = Math.round(children[0].ratio * usableWidth);
 
   if (children.length === 2) {
     return {
-      position: leftWidth,
+      position: leftInnerWidth,
       leftElements: [...DEFAULT_ELEMENT],
       rightElements: [...DEFAULT_ELEMENT],
     };
@@ -109,10 +126,10 @@ function buildHorizontalSplit(
 
   // 3분할
   if (children.length >= 3) {
-    const centerWidth = Math.round(children[1].ratio * parentWidth) - PANEL_THICKNESS;
+    const centerInnerWidth = Math.round(children[1].ratio * usableWidth);
     return {
-      position: leftWidth,
-      secondPosition: centerWidth,
+      position: leftInnerWidth,
+      secondPosition: centerInnerWidth,
       leftElements: [...DEFAULT_ELEMENT],
       centerElements: [...DEFAULT_ELEMENT],
       rightElements: [...DEFAULT_ELEMENT],
@@ -120,20 +137,18 @@ function buildHorizontalSplit(
   }
 
   return {
-    position: leftWidth,
+    position: leftInnerWidth,
     leftElements: [...DEFAULT_ELEMENT],
     rightElements: [...DEFAULT_ELEMENT],
   };
 }
 
 /**
- * H-split의 children 중 vertical이 있으면 areaSubSplits 생성
- * left child가 vertical → areaSubSplits.left
- * right child가 vertical → areaSubSplits.right
+ * H-split children 중 vertical이 있으면 areaSubSplits 생성
  */
 function buildAreaSubSplits(
   hNode: LayoutNode,
-  parentHeight: number,
+  parentInnerHeight: number,
 ): Record<string, any> | null {
   const children = hNode.children!;
   const areas: Record<string, any> = {};
@@ -147,9 +162,10 @@ function buildAreaSubSplits(
     const areaName = areaNames[idx];
     if (child.direction === 'vertical' && child.children) {
       hasSubSplits = true;
-      // 아래→위 순서 (children은 위→아래이므로 마지막이 하부)
+      // children[마지막] = 하부, lowerHeight = 하부 내경
       const lastChild = child.children[child.children.length - 1];
-      const lowerHeight = Math.round(lastChild.ratio * parentHeight);
+      const usableHeight = parentInnerHeight - PANEL_THICKNESS; // 중간 패널 1개
+      const lowerHeight = Math.round(lastChild.ratio * usableHeight);
       areas[areaName] = {
         enabled: true,
         lowerHeight,

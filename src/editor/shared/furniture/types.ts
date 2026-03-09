@@ -54,6 +54,10 @@ export interface CustomSection {
   // 섹션 개별 너비/정렬 (undefined = 전체 가구 너비 사용)
   width?: number;  // mm (섹션 개별 너비, 최소 100, 최대 furnitureWidth)
   align?: 'left' | 'center' | 'right';  // 정렬 (기본: 'center')
+  // 마감 패널 (기본: true = 렌더링)
+  showTopPanel?: boolean;    // 상판 마감 (기본: true)
+  showBottomPanel?: boolean; // 하판 마감 (기본: true)
+  showBackPanel?: boolean;   // 뒷벽 마감 (기본: true)
 }
 
 // 커스터마이징 가구 내부 구조 설정

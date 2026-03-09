@@ -2802,6 +2802,74 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 마감 설정 */}
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>마감</div>
+        <div className={styles.row}>
+          <span className={styles.label}>상판</span>
+          <div className={styles.toggleGroup}>
+            <button
+              className={`${styles.toggleButton} ${section.showTopPanel !== false ? styles.active : ''}`}
+              onClick={() => {
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], showTopPanel: true };
+                applyConfig({ ...config, sections });
+              }}
+            >있음</button>
+            <button
+              className={`${styles.toggleButton} ${section.showTopPanel === false ? styles.active : ''}`}
+              onClick={() => {
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], showTopPanel: false };
+                applyConfig({ ...config, sections });
+              }}
+            >없음</button>
+          </div>
+        </div>
+        <div className={styles.row}>
+          <span className={styles.label}>하판</span>
+          <div className={styles.toggleGroup}>
+            <button
+              className={`${styles.toggleButton} ${section.showBottomPanel !== false ? styles.active : ''}`}
+              onClick={() => {
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], showBottomPanel: true };
+                applyConfig({ ...config, sections });
+              }}
+            >있음</button>
+            <button
+              className={`${styles.toggleButton} ${section.showBottomPanel === false ? styles.active : ''}`}
+              onClick={() => {
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], showBottomPanel: false };
+                applyConfig({ ...config, sections });
+              }}
+            >없음</button>
+          </div>
+        </div>
+        <div className={styles.row}>
+          <span className={styles.label}>뒷벽</span>
+          <div className={styles.toggleGroup}>
+            <button
+              className={`${styles.toggleButton} ${section.showBackPanel !== false ? styles.active : ''}`}
+              onClick={() => {
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], showBackPanel: true };
+                applyConfig({ ...config, sections });
+              }}
+            >있음</button>
+            <button
+              className={`${styles.toggleButton} ${section.showBackPanel === false ? styles.active : ''}`}
+              onClick={() => {
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], showBackPanel: false };
+                applyConfig({ ...config, sections });
+              }}
+            >없음</button>
+          </div>
+        </div>
+      </div>
       </div>
     );
   };
