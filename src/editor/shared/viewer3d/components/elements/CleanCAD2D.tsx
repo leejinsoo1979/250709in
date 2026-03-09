@@ -833,10 +833,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const dimLevels = hasDroppedCeiling ? 4 : 3;
   // 1단계: 전체 너비 (3600) - 가장 위
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
-  // 2단계 (단내림 시): 메인구간 + 단내림구간 치수
-  const zoneDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
-  // 3단계 (단내림 시 3, 아니면 2): 내부 너비 (3594) - 중간
-  const columnDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
+  // 2단계 (단내림 시): 내부 너비 합산 (3597) - 전체 폭 바로 아래
+  const columnDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
+  // 3단계 (단내림 시 3, 아니면 2): 메인구간 + 단내림구간 치수 - 개별 슬롯 바로 위
+  const zoneDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 4단계 (단내림 시 4, 아니면 3): 개별 슬롯 너비 - 가장 아래
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
   const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
