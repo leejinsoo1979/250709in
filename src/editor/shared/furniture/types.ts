@@ -41,6 +41,7 @@ export interface CustomFurnitureConfig {
   // 상/하 분할
   splitDirection?: 'topBottom';
   splitPosition?: number; // mm (아래에서 거리)
+  sectionGap?: number; // mm (상부/하부 섹션 사이 빈 공간, 기본값: 0)
 }
 
 // 기둥 관련 슬롯 메타데이터
