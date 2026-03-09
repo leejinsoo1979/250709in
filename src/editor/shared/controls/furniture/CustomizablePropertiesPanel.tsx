@@ -904,12 +904,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const subSplits = { ...(sec.areaSubSplits || {}) };
     if (enabled) {
       const halfH = Math.round(sec.height / 2);
-      // 기존 요소를 하부로 이동
-      const existingElements = areaKey === 'full'
-        ? sec.elements || [{ type: 'open' as const }]
-        : areaKey === 'left'
-          ? sec.leftElements || [{ type: 'open' as const }]
-          : sec.rightElements || [{ type: 'open' as const }];
+      // 기존 요소를 하부로 이동 (horizontalSplit/칸막이 모두 대응)
+      const existingElements = getElementsBySide(sec, areaKey) || [{ type: 'open' as const }];
       subSplits[areaKey] = {
         enabled: true,
         lowerHeight: halfH,
@@ -920,13 +916,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       // 서브분할 해제: 하부 요소를 원래 영역으로 복원
       const sub = subSplits[areaKey];
       const restoredElements = sub?.lowerElements || [{ type: 'open' as const }];
-      if (areaKey === 'full') {
-        sec.elements = restoredElements;
-      } else if (areaKey === 'left') {
-        sec.leftElements = restoredElements;
-      } else {
-        sec.rightElements = restoredElements;
-      }
+      setElementsBySide(sec, areaKey, restoredElements);
       delete subSplits[areaKey];
     }
     sec.areaSubSplits = Object.keys(subSplits).length > 0 ? subSplits : undefined;
