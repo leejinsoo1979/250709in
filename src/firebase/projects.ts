@@ -655,18 +655,22 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
     const projectRefsToDelete = [];
     let projectData = null;
     
-    // 1. 팀 스코프 경로 확인
+    // 1. 팀 스코프 경로 확인 (400 에러 방지를 위해 try-catch)
     if (FLAGS.teamScope) {
-      const teamId = await getActiveTeamId();
-      if (teamId) {
-        const teamProjectRef = doc(db, `teams/${teamId}/projects`, projectId);
-        const teamDocSnap = await getDocFromServer(teamProjectRef);
-        
-        if (teamDocSnap.exists()) {
-          projectRefsToDelete.push(teamProjectRef);
-          projectData = teamDocSnap.data();
-          console.log('팀 스코프에서 프로젝트 찾음:', `teams/${teamId}/projects/${projectId}`);
+      try {
+        const teamId = await getActiveTeamId();
+        if (teamId) {
+          const teamProjectRef = doc(db, `teams/${teamId}/projects`, projectId);
+          const teamDocSnap = await getDocFromServer(teamProjectRef);
+
+          if (teamDocSnap.exists()) {
+            projectRefsToDelete.push(teamProjectRef);
+            projectData = teamDocSnap.data();
+            console.log('팀 스코프에서 프로젝트 찾음:', `teams/${teamId}/projects/${projectId}`);
+          }
         }
+      } catch (teamError) {
+        console.log('팀 스코프 경로 확인 실패 (무시하고 legacy로 진행):', teamError);
       }
     }
     
@@ -761,20 +765,24 @@ export const updateDesignFile = async (
       foundPath = 'legacy';
     }
     
-    // 2. Legacy에서 못 찾았으면 team-scoped path 시도
+    // 2. Legacy에서 못 찾았으면 team-scoped path 시도 (400 에러 방지를 위해 try-catch)
     if (!designDocRef) {
-      const teamId = await getActiveTeamId();
-      if (FLAGS.teamScope && teamId) {
-        const teamDesignRef = doc(db, `teams/${teamId}/designs`, designFileId);
-        const teamSnap = await getDocFromServer(teamDesignRef);
-        
-        if (teamSnap.exists()) {
-          designDocRef = teamDesignRef;
-          docSnap = teamSnap;
-          designData = teamSnap.data();
-          projectId = designData.projectId;
-          foundPath = 'team-scoped';
+      try {
+        const teamId = await getActiveTeamId();
+        if (FLAGS.teamScope && teamId) {
+          const teamDesignRef = doc(db, `teams/${teamId}/designs`, designFileId);
+          const teamSnap = await getDocFromServer(teamDesignRef);
+
+          if (teamSnap.exists()) {
+            designDocRef = teamDesignRef;
+            docSnap = teamSnap;
+            designData = teamSnap.data();
+            projectId = designData.projectId;
+            foundPath = 'team-scoped';
+          }
         }
+      } catch (teamError) {
+        console.log('팀 스코프 디자인 경로 확인 실패 (무시하고 진행):', teamError);
       }
     }
     
