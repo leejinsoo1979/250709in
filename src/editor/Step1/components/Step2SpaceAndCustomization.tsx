@@ -6,7 +6,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { createProject } from '@/services/projectDataService';
 import { getCurrentUserAsync } from '@/firebase/auth';
-import { createDesignFile } from '@/firebase/projects';
+import { createDesignFile, updateDesignFile } from '@/firebase/projects';
 import { generateDefaultThumbnail, dataURLToBlob } from '@/editor/shared/utils/thumbnailCapture';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
@@ -27,9 +27,12 @@ interface Step2SpaceAndCustomizationProps {
   onClose: () => void;
   projectId?: string;
   projectTitle?: string;
+  mode?: 'create' | 'configure';
+  designFileId?: string;
+  onComplete?: () => void;
 }
 
-const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({ onPrevious, onClose, projectId: propsProjectId, projectTitle: propsProjectTitle }) => {
+const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({ onPrevious, onClose, projectId: propsProjectId, projectTitle: propsProjectTitle, mode = 'create', designFileId: propsDesignFileId, onComplete }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
@@ -270,6 +273,31 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
     }
   };
 
+  // configure 모드: 기존 디자인 파일의 공간 설정 완료
+  const handleConfigureComplete = async () => {
+    if (!canProceed || !propsDesignFileId) return;
+
+    setSaving(true);
+    try {
+      const { error } = await updateDesignFile(propsDesignFileId, {
+        spaceConfig: spaceInfo,
+        isSpaceConfigured: true,
+      });
+
+      if (error) {
+        alert(`공간 설정 저장 실패: ${error}`);
+      } else {
+        console.log('✅ 공간 설정 완료:', propsDesignFileId);
+        onComplete?.();
+      }
+    } catch (error) {
+      console.error('공간 설정 저장 오류:', error);
+      alert('공간 설정 저장 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className={styles.container} data-theme="light" style={{ colorScheme: 'light' }}>
       {/* 로딩 화면 */}
@@ -293,7 +321,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
           </button>
           <div>
             <h1>
-              STEP. 2 공간 설정
+              {mode === 'configure' ? '공간 설정' : 'STEP. 2 공간 설정'}
               {projectTitle && (
                 <span style={{ marginLeft: '20px', fontSize: '0.8em', color: '#666' }}>
                   프로젝트: {projectTitle} / 디자인: {basicInfo.title || '새 디자인'} / {basicInfo.location || '위치 미정'}
@@ -858,18 +886,20 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
         </div>
 
         <div className={styles.footer}>
-          <button 
-            className={styles.previousButton}
-            onClick={onPrevious}
-          >
-            이전
-          </button>
-          <button 
+          {mode !== 'configure' && (
+            <button
+              className={styles.previousButton}
+              onClick={onPrevious}
+            >
+              이전
+            </button>
+          )}
+          <button
             className={`${styles.confirmButton} ${!canProceed ? styles.disabled : ''}`}
-            onClick={handleStartDesign}
+            onClick={mode === 'configure' ? handleConfigureComplete : handleStartDesign}
             disabled={!canProceed || saving}
           >
-            시작하기
+            {mode === 'configure' ? '공간 설정 완료' : '시작하기'}
           </button>
         </div>
       </div>
