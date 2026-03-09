@@ -4408,54 +4408,11 @@ const SimpleDashboard: React.FC = () => {
                                           className={`${styles.treeItem} ${styles.childItem}`}
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            console.log('디자인 파일 클릭됨:', child, '폴더 ID:', folder.id, '프로젝트 ID:', selectedProjectId);
-
-                                            // 1. 해당 프로젝트로 이동 (이미 있다면 스킵)
-                                            if (selectedProjectId !== child.projectId && child.projectId) {
-                                              handleProjectSelect(child.projectId);
-                                            }
-
-                                            // 2. 해당 폴더로 이동
-                                            setCurrentFolderId(folder.id);
-                                            const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
-                                              activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-                                                '전체 프로젝트';
-                                            setBreadcrumbPath([rootPath, selectedProject.title, folder.name]);
-
-                                            // 3. 잠시 대기 후 디자인 카드로 스크롤
-                                            setTimeout(() => {
-                                              // 디자인 카드 찾기
-                                              const designCards = document.querySelectorAll(`.${styles.designCard}`);
-                                              console.log('모든 디자인 카드:', designCards.length);
-
-                                              // child.name으로 카드 찾기
-                                              const targetCard = Array.from(designCards).find(card => {
-                                                const cardElement = card as HTMLElement;
-                                                const cardTitle = cardElement.querySelector(`.${styles.cardTitle}`)?.textContent;
-                                                console.log('카드 제목 확인:', cardTitle, '찾는 디자인:', child.name);
-                                                return cardTitle === child.name;
-                                              });
-
-                                              if (targetCard) {
-                                                console.log('디자인 카드 찾음:', targetCard);
-
-                                                // 카드로 스크롤
-                                                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                                                // 오버레이 강제 표시
-                                                (targetCard as HTMLElement).classList.add(styles.forceHover);
-
-                                                // 3초 후 오버레이 제거
-                                                setTimeout(() => {
-                                                  (targetCard as HTMLElement).classList.remove(styles.forceHover);
-                                                }, 3000);
-                                              } else {
-                                                console.log('디자인 카드를 찾을 수 없음:', child.name);
-                                              }
-                                            }, 300);
+                                            const pid = child.projectId || project.id;
+                                            console.log('📄 폴더 내 디자인 파일 트리 클릭:', child.name, child.id, 'project:', pid);
+                                            // 에디터로 이동
+                                            navigate(`/configurator?projectId=${pid}&designFileId=${child.id}`);
                                           }}
-                                          style={{ cursor: 'pointer', userSelect: 'none' }}
-                                          onMouseDown={(e) => e.preventDefault()}
                                         >
                                           <div className={styles.treeItemIcon}>
                                             <AiOutlineFileMarkdown size={14} />
@@ -4486,25 +4443,9 @@ const SimpleDashboard: React.FC = () => {
                                   className={styles.treeItem}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    console.log('디자인 파일 클릭됨:', designFile.name);
-
-                                    // 현재 위치에서 디자인 카드로 스크롤
-                                    setTimeout(() => {
-                                      const designCards = document.querySelectorAll(`.${styles.designCard}`);
-                                      const targetCard = Array.from(designCards).find(card => {
-                                        const cardElement = card as HTMLElement;
-                                        const cardTitle = cardElement.querySelector(`.${styles.cardTitle}`)?.textContent;
-                                        return cardTitle === designFile.name;
-                                      });
-
-                                      if (targetCard) {
-                                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        (targetCard as HTMLElement).classList.add(styles.forceHover);
-                                        setTimeout(() => {
-                                          (targetCard as HTMLElement).classList.remove(styles.forceHover);
-                                        }, 3000);
-                                      }
-                                    }, 100);
+                                    console.log('📄 디자인 파일 트리 클릭:', designFile.name, designFile.id, 'project:', project.id);
+                                    // 에디터로 이동
+                                    navigate(`/configurator?projectId=${project.id}&designFileId=${designFile.id}`);
                                   }}
                                 >
                                   <div className={styles.treeItemIcon}>
