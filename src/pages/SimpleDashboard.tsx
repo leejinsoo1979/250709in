@@ -3301,7 +3301,7 @@ const SimpleDashboard: React.FC = () => {
             <h1 className={styles.mobileTitle}>전체 프로젝트</h1>
             <button className={styles.mobileCreateBtn} onClick={handleCreateProject}>
               <PlusIcon size={18} />
-              Create Project
+              프로젝트 생성
             </button>
           </div>
 
@@ -3560,7 +3560,7 @@ const SimpleDashboard: React.FC = () => {
         <div className={styles.createProjectSection}>
           <button className={styles.createProjectBtn} onClick={handleCreateProject}>
             <PlusIcon size={16} />
-            Create Project
+            프로젝트 생성
           </button>
         </div>
 
