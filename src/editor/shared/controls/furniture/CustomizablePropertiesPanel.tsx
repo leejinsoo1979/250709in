@@ -2240,23 +2240,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
           <div className={styles.sectionTitle}>
             {config.sections.length > 1 ? (sIdx === 0 ? '하부 섹션' : '상부 섹션') : '섹션'} 치수
           </div>
-          {/* 너비 */}
-          <div className={styles.row}>
-            <span className={styles.label}>너비</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              className={`${styles.input} ${widthError ? styles.inputError : ''}`}
-              value={widthInput}
-              placeholder={`${MIN_WIDTH}-${MAX_WIDTH}`}
-              onChange={(e) => handleWidthInputChange(e.target.value)}
-              onBlur={handleWidthInputBlur}
-              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-              style={{ width: '70px' }}
-            />
-            <span className={styles.unit}>mm</span>
-          </div>
-          {widthError && <div className={styles.errorMessage}>{widthError}</div>}
           {/* 높이 */}
           <div className={styles.row}>
             <span className={styles.label}>높이</span>

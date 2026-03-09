@@ -1599,16 +1599,24 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       })()}
 
-      {/* 조절발 (upper가 아닌 경우) — 하부(최하단) 섹션 너비/정렬 기준 */}
+      {/* 조절발 (upper가 아닌 경우) — 하부(최하단) 섹션 너비/깊이/정렬 기준 */}
       {showFurniture && category !== 'upper' && (() => {
         const lowerSection = sections[0];
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : W;
         const footAlignOffset = calculateAlignOffset(footWidth, W, lowerSection?.align || 'center');
+        // 하부 섹션 깊이 따라가기
+        let footDepth = D;
+        let footDepthZ = 0;
+        if (lowerSectionDepth) {
+          footDepth = mmToUnit(lowerSectionDepth);
+          const diff = D - footDepth;
+          footDepthZ = diff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? diff / 2 : -diff / 2;
+        }
         return (
-          <group position={[footAlignOffset, 0, 0]}>
+          <group position={[footAlignOffset, 0, footDepthZ]}>
             <AdjustableFootsRenderer
               width={footWidth}
-              depth={D}
+              depth={footDepth}
               yOffset={-H / 2}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
