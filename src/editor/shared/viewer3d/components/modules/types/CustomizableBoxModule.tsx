@@ -1790,9 +1790,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <>
           {/* 분할 모드: 각 섹션을 독립 박스로 렌더링 (2분할 또는 3분할) */}
           {(() => {
-            // 독립 박스 모델: 각 섹션은 자체 상/하판 보유
-            // 모든 섹션: inner + 2*PT (상판 + 하판)
-            // 경계부에서 인접 섹션의 상/하판이 1*PT만큼 겹침 (물리적으로 1장의 구분판)
+            // 독립 박스 모델: 각 섹션은 완전한 독립 박스 (자체 상/하/좌/우판 보유)
+            // 네모난 상자 위에 네모난 상자가 올라가는 구조 (겹침 없음)
+            // N개 섹션 → 2*N개 수평 패널 (각 박스가 자체 상/하판 보유)
             const sectionBoxHeights = sections.map(s => {
               const hasBottom = s.showBottomPanel !== false;
               const hasTop = s.showTopPanel !== false;
@@ -1802,10 +1802,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             const sectionCenterYs: number[] = [];
             let currentBottom = -H / 2;
             for (let i = 0; i < sections.length; i++) {
-              // 경계부 겹침: i>0인 섹션은 아래 섹션의 상판과 자신의 하판이 겹침
-              if (i > 0 && sections[i].showBottomPanel !== false && sections[i - 1].showTopPanel !== false) {
-                currentBottom -= t;
-              }
               sectionCenterYs.push(currentBottom + sectionBoxHeights[i] / 2);
               currentBottom += sectionBoxHeights[i];
             }

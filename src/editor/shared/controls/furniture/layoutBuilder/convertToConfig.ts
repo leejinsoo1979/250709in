@@ -1,12 +1,11 @@
 /**
  * LayoutNode 트리 → CustomFurnitureConfig 변환
  *
- * 렌더러 모델: 각 섹션은 독립 박스 (모든 섹션이 자체 상/하판 보유)
+ * 렌더러 모델: 각 섹션은 완전한 독립 박스 (네모난 상자 위에 네모난 상자)
  *   → section.height = 내경(inner height), 패널 두께 제외
- *   → N개 섹션: 물리적으로 N+1개 패널 (경계부에서 상하판이 겹침)
- *   → sum(section.height) = furnitureHeight - (N+1)*panelThickness
+ *   → N개 섹션: 2*N개 수평 패널 (각 박스가 자체 상/하판 보유, 겹침 없음)
+ *   → sum(section.height) = furnitureHeight - 2*N*panelThickness
  *   → 모든 섹션: showBottomPanel=true, showTopPanel=true (독립 박스)
- *   → 렌더러가 경계부에서 1*PT만큼 겹쳐서 배치
  *
  * 수평 분할(horizontalSplit): 서브박스도 독립 박스
  *   → position = 좌측 박스 내경 너비 (mm)
@@ -56,9 +55,9 @@ export function convertToConfig(
   if (layout.direction === 'vertical') {
     const children = layout.children!;
     const N = children.length;
-    // 독립 박스 모델: 물리적으로 N+1개 패널 (경계부 공유)
-    // → 각 섹션은 자체 상/하판 보유 (렌더러가 경계부에서 겹쳐 배치)
-    const availableHeight = height - (N + 1) * PANEL_THICKNESS;
+    // 독립 박스 모델: 각 섹션이 자체 상/하판 보유 (겹침 없음)
+    // N개 섹션 → 2*N개 수평 패널
+    const availableHeight = height - 2 * N * PANEL_THICKNESS;
 
     // 캔버스 순서 → 3D 순서 변환:
     // 캔버스: children[0]=위, children[last]=아래 (Y축 아래로 증가)

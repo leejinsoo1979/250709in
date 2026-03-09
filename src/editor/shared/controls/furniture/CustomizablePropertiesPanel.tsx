@@ -422,8 +422,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sections = [...config.sections];
 
     if (sectionCount === 3) {
-      // 3분할: 이 섹션만 변경
-      const totalInner = furnitureHeight - 4 * panelThickness;
+      // 3분할: 독립 박스 모델 → 6개 패널
+      const totalInner = furnitureHeight - 6 * panelThickness;
       const othersH = sections.reduce((sum, s, i) => i === idx ? sum : sum + s.height, 0);
       const maxH = totalInner - othersH;
       const clamped = Math.max(100, Math.min(maxH, current + delta));
@@ -432,8 +432,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
       applyConfig({ ...config, sections });
       setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
     } else {
-      // 2분할: 상대 섹션 연동 (공유 패널: 3개 패널 = 하판+구분판+상판)
-      const totalInner = furnitureHeight - 3 * panelThickness;
+      // 2분할: 독립 박스 모델 → 4개 패널
+      const totalInner = furnitureHeight - 4 * panelThickness;
       const clamped = Math.max(100, Math.min(totalInner - 100, current + delta));
       if (clamped === current) return;
       const otherH = totalInner - clamped;
@@ -465,9 +465,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 섹션 분할 (없음 / 2분할 / 3분할)
   const handleSectionSplit = (mode: 'none' | '2split' | '3split') => {
     if (mode === '2split') {
-      // 공유 패널 모델: 2섹션 → 3개 패널(하판 + 구분판 + 상판)
-      // 렌더러가 경계부에서 인접 섹션의 상/하판을 겹쳐 배치
-      const availableHeight = furnitureHeight - 3 * panelThickness;
+      // 독립 박스 모델: 2섹션 → 4개 패널(하부 하판 + 하부 상판 + 상부 하판 + 상부 상판)
+      // 각 섹션이 완전한 독립 박스 (겹침 없음)
+      const availableHeight = furnitureHeight - 4 * panelThickness;
       const lowerOuterDefault = 1000;
       const lowerH = Math.min(lowerOuterDefault - 2 * panelThickness, availableHeight - 200);
       const upperH = availableHeight - lowerH;
@@ -483,8 +483,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
       });
       setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
     } else if (mode === '3split') {
-      // 공유 패널 모델: 3섹션 → 4개 패널(하판 + 구분판×2 + 상판)
-      const availableHeight = furnitureHeight - 4 * panelThickness;
+      // 독립 박스 모델: 3섹션 → 6개 패널(각 박스 상/하판 × 3)
+      const availableHeight = furnitureHeight - 6 * panelThickness;
       const lowerH = Math.round(availableHeight * 0.4);
       const middleH = Math.round(availableHeight * 0.2);
       const upperH = availableHeight - lowerH - middleH;
@@ -540,8 +540,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sections = [...config.sections];
 
     if (sectionCount === 3) {
-      // 3분할: 이 섹션만 변경, 나머지 유지 (초과분은 클램프)
-      const totalInner = furnitureHeight - 4 * panelThickness;
+      // 3분할: 독립 박스 모델 → 6개 패널
+      const totalInner = furnitureHeight - 6 * panelThickness;
       const othersH = sections.reduce((sum, s, i) => i === idx ? sum : sum + s.height, 0);
       const maxH = totalInner - othersH;
       const clamped = Math.max(100, Math.min(maxH, num));
@@ -549,8 +549,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
       applyConfig({ ...config, sections });
       setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
     } else {
-      // 2분할: 상대 섹션 연동 (공유 패널: 3개 패널)
-      const totalInner = furnitureHeight - 3 * panelThickness;
+      // 2분할: 독립 박스 모델 → 4개 패널
+      const totalInner = furnitureHeight - 4 * panelThickness;
       const clamped = Math.max(100, Math.min(totalInner - 100, num));
       const otherH = totalInner - clamped;
       sections[idx] = { ...sections[idx], height: clamped };
@@ -603,8 +603,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         // 서랍 단수에 따라 하부 섹션 높이 자동 조절 (2단 분할 시)
         // sectionHeight는 외경(패널 포함)이므로 내경(sec.height)으로 변환: 외경 - 2 * panelThickness
         if (config.sections.length === 2 && sIdx === 0) {
-          // 공유 패널: 2섹션 → 3개 패널
-          const availableHeight = furnitureHeight - 3 * panelThickness;
+          // 독립 박스 모델: 2섹션 → 4개 패널
+          const availableHeight = furnitureHeight - 4 * panelThickness;
           const lowerInner = standard.sectionHeight - 2 * panelThickness;
           const lowerH = Math.min(lowerInner, availableHeight - 100);
           const upperH = availableHeight - lowerH;
