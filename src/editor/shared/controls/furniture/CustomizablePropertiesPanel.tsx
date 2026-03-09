@@ -2407,7 +2407,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               </>
             )}
           </div>
-          {config.sections.length > 1 && (
+          {config.sections.length === 2 && (
             <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
               {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height}mm
             </div>
