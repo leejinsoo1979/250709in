@@ -79,6 +79,9 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 
   const handleConfirm = useCallback(() => {
     const config = convertToConfig(layout, dimensions);
+    console.log('🏗️ [LayoutBuilder] layout tree:', JSON.stringify(layout, null, 2));
+    console.log('🏗️ [LayoutBuilder] dimensions:', dimensions);
+    console.log('🏗️ [LayoutBuilder] converted config:', JSON.stringify(config, null, 2));
     onConfirm(config);
   }, [layout, dimensions, onConfirm]);
 

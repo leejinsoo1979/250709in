@@ -1,8 +1,13 @@
 /**
  * LayoutNode 트리 → CustomFurnitureConfig 변환
  *
- * 핵심: section.height = 내경(inner height), 패널 두께 제외
- *       horizontalSplit.position = 좌측 박스 내경 너비
+ * 렌더러 모델: 각 섹션은 독립 박스 (자체 상하판 보유)
+ *   → section.height = 내경(inner height), 패널 두께 제외
+ *   → N개 섹션: sum(section.height) = furnitureHeight - 2*N*panelThickness
+ *
+ * 수평 분할(horizontalSplit): 서브박스도 독립 박스
+ *   → position = 좌측 박스 내경 너비 (mm)
+ *   → 2분할: left+right 내경 합 = sectionInnerW - 2*panelThickness
  *
  * 변환 매핑:
  * - leaf(루트) → sections[0] (단일 섹션, height = 전체 내경)
@@ -30,9 +35,9 @@ export function convertToConfig(
 ): CustomFurnitureConfig {
   const { width, height } = dimensions;
 
-  // 가구 전체 내경 (상/하판 두께 제외)
+  // 가구 전체 내경 (단일 박스: 상/하판 2개 차감)
   const totalInnerHeight = height - 2 * PANEL_THICKNESS;
-  // 가구 전체 내경 너비 (좌/우측판 두께 제외)
+  // 가구 전체 내경 너비 (좌/우측판 2개 차감)
   const totalInnerWidth = width - 2 * PANEL_THICKNESS;
 
   // Case 1: 단일 leaf → 1개 섹션
@@ -46,16 +51,17 @@ export function convertToConfig(
   // Case 2: 루트가 vertical(상하 분할) → sections 배열
   if (layout.direction === 'vertical') {
     const children = layout.children!;
-    // 상하 분할 시 중간 패널 고려: 총 내경 = 전체높이 - 외판2개 - 중간패널(N-1)개
-    const numDividers = children.length - 1;
-    const usableHeight = totalInnerHeight - numDividers * PANEL_THICKNESS;
+    // 독립 박스 모델: N개 섹션 × 2개 패널(상하판) = 2N개 패널
+    // availableHeight = furnitureHeight - 2*N*panelThickness
+    const availableHeight = height - 2 * children.length * PANEL_THICKNESS;
 
     const sections = children.map((child, idx) => {
-      const sectionInnerHeight = Math.round(child.ratio * usableHeight);
+      const sectionInnerHeight = Math.round(child.ratio * availableHeight);
       const section = createSection(`section-${idx}`, sectionInnerHeight);
 
       // child가 horizontal → 해당 섹션에 horizontalSplit
       if (child.direction === 'horizontal' && child.children) {
+        // 이 섹션 박스의 내경 너비 = 가구 전체 내경 너비 (측판은 가구 레벨)
         section.horizontalSplit = buildHorizontalSplit(child, totalInnerWidth);
       }
 
@@ -102,17 +108,22 @@ function createSection(id: string, innerHeight: number): CustomSection {
 
 /**
  * horizontal 노드에서 horizontalSplit 생성
- * parentInnerWidth: 부모 섹션의 내경 너비 (좌우측판 제외)
- * position = 좌측 박스 내경 너비 (mm)
+ *
+ * 독립 박스 모델: 서브박스도 자체 좌/우 측판 보유
+ * - 2분할: left+right 외경 합 = 부모 박스 너비 → 내경 합 = parentInnerW - 2*PT
+ * - 3분할: left+center+right 내경 합 = parentInnerW - 4*PT
+ *
+ * parentInnerWidth: 부모 섹션 박스의 내경 너비 (좌우측판 제외)
+ * position = 좌측 서브박스 내경 너비 (mm)
  */
 function buildHorizontalSplit(
   hNode: LayoutNode,
   parentInnerWidth: number,
 ) {
   const children = hNode.children!;
-  // 좌우 분할 시 중간 칸막이 패널 고려
+  // 독립 박스 모델: 각 divider는 2개 패널(좌박스 우측판 + 우박스 좌측판)
   const numDividers = children.length - 1;
-  const usableWidth = parentInnerWidth - numDividers * PANEL_THICKNESS;
+  const usableWidth = parentInnerWidth - 2 * numDividers * PANEL_THICKNESS;
 
   const leftInnerWidth = Math.round(children[0].ratio * usableWidth);
 
@@ -145,6 +156,10 @@ function buildHorizontalSplit(
 
 /**
  * H-split children 중 vertical이 있으면 areaSubSplits 생성
+ *
+ * areaSubSplit = 서브박스 내에서 상하 2분할 (독립 박스 모델)
+ * 2개 서브섹션 × 2패널 = 4패널 → usableHeight = sectionInnerH - 4*PT
+ * 하지만 areaSubSplit.lowerHeight는 하부 서브섹션의 내경 높이
  */
 function buildAreaSubSplits(
   hNode: LayoutNode,
@@ -162,9 +177,11 @@ function buildAreaSubSplits(
     const areaName = areaNames[idx];
     if (child.direction === 'vertical' && child.children) {
       hasSubSplits = true;
-      // children[마지막] = 하부, lowerHeight = 하부 내경
+      // 독립 박스 모델: 2개 서브섹션 → 4개 패널 차감
+      const numSubSections = child.children.length;
+      const usableHeight = parentInnerHeight - 2 * numSubSections * PANEL_THICKNESS;
+      // children[마지막] = 하부
       const lastChild = child.children[child.children.length - 1];
-      const usableHeight = parentInnerHeight - PANEL_THICKNESS; // 중간 패널 1개
       const lowerHeight = Math.round(lastChild.ratio * usableHeight);
       areas[areaName] = {
         enabled: true,
