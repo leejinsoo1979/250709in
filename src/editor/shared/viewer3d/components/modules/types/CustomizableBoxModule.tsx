@@ -496,13 +496,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     let sectionCenterY = 0;
     let sectionInnerH = mmToUnit(sectionInnerHeightMm);
     if (isSplit) {
-      const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
-      const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
-      if (sIdx === 0) {
-        sectionCenterY = -H / 2 + lowerH / 2;
-      } else {
-        sectionCenterY = -H / 2 + lowerH + upperH / 2;
+      // 패널 소유 모델에 따라 박스 높이 계산
+      const splitBoxHeights = sections.map(s => {
+        const hb = s.showBottomPanel !== false;
+        const ht = s.showTopPanel !== false;
+        const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
+        return mmToUnit(s.height + pc * panelThickness);
+      });
+      let currentBot = -H / 2;
+      for (let i = 0; i < sIdx; i++) {
+        currentBot += splitBoxHeights[i];
       }
+      sectionCenterY = currentBot + splitBoxHeights[sIdx] / 2;
     }
 
     // 가이드 라인 좌표 (Three.js 단위)
@@ -607,8 +612,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const frontZ = D / 2 + 0.1;
 
     if (isSplit) {
-      // 각 섹션의 박스 높이(패널 포함)와 중심 Y 계산
-      const sectionBoxHeights = sections.map(s => mmToUnit(s.height + 2 * panelThickness));
+      // 각 섹션의 박스 높이(패널 소유 모델)와 중심 Y 계산
+      const sectionBoxHeights = sections.map(s => {
+        const hb = s.showBottomPanel !== false;
+        const ht = s.showTopPanel !== false;
+        const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
+        return mmToUnit(s.height + pc * panelThickness);
+      });
       const sectionCenterYs: number[] = [];
       let currentBottom = -H / 2;
       for (let i = 0; i < sections.length; i++) {
@@ -803,7 +813,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     let centerY = 0;
     let areaH: number;
     if (isSplit) {
-      const sectionBoxHeights = sections.map(s => mmToUnit(s.height + 2 * panelThickness));
+      const sectionBoxHeights = sections.map(s => {
+        const hb = s.showBottomPanel !== false;
+        const ht = s.showTopPanel !== false;
+        const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
+        return mmToUnit(s.height + pc * panelThickness);
+      });
       let currentBottom = -H / 2;
       for (let i = 0; i < sIdx; i++) {
         currentBottom += sectionBoxHeights[i];
@@ -1200,7 +1215,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   ) => {
     const meshes: React.ReactNode[] = [];
     const bInnerW = boxW - 2 * t;
-    const bInnerH = boxH - 2 * t;
+    // 패널 소유에 따른 내경 높이 계산
+    const contentHasBottom = section.showBottomPanel !== false;
+    const contentHasTop = section.showTopPanel !== false;
+    const bInnerH = boxH - (contentHasBottom ? t : 0) - (contentHasTop ? t : 0);
+    // 비대칭 패널 시 내경 중심 Y 보정 (바닥판 없으면 내경이 아래로 확장)
+    const contentCenterY = centerY + ((contentHasBottom ? t : 0) - (contentHasTop ? t : 0)) / 2;
     const innerD = boxD - backReduction;
     const sectionLabel = isSplit
       ? (sections.length === 3 ? (sIdx === 0 ? '(하)' : sIdx === 1 ? '(중)' : '(상)') : (sIdx === 0 ? '(하)' : '(상)'))
@@ -1227,7 +1247,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <BoxWithEdges
           key={`partition-${sIdx}`}
           args={[t, bInnerH, adjustedPartD > 0 ? adjustedPartD : partD]}
-          position={[partitionX, centerY, partZ]}
+          position={[partitionX, contentCenterY, partZ]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1245,7 +1265,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'left', section.leftElements,
-          leftInnerW, bInnerH, centerY, leftCenterX, leftBoxD,
+          leftInnerW, bInnerH, contentCenterY, leftCenterX, leftBoxD,
           `${sectionLabel}좌`, `s${sIdx}-left`, sIdx
         )
       );
@@ -1257,7 +1277,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'right', section.rightElements,
-          rightInnerW, bInnerH, centerY, rightCenterX, rightBoxD,
+          rightInnerW, bInnerH, contentCenterY, rightCenterX, rightBoxD,
           `${sectionLabel}우`, `s${sIdx}-right`, sIdx
         )
       );
@@ -1266,7 +1286,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'full', section.elements,
-          bInnerW, bInnerH, centerY, 0, boxD,
+          bInnerW, bInnerH, contentCenterY, 0, boxD,
           sectionLabel, `s${sIdx}`, sIdx
         )
       );
@@ -1295,7 +1315,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
     const meshes: React.ReactNode[] = [];
     const bInnerW = boxW - 2 * t;
-    const bInnerH = boxH - 2 * t;
+    // 패널 소유에 따른 내경 높이: boxH에서 실제 존재하는 패널 두께만 차감
+    const hasBottom = section.showBottomPanel !== false;
+    const hasTop = section.showTopPanel !== false;
+    const bInnerH = boxH - (hasBottom ? t : 0) - (hasTop ? t : 0);
+    // 비대칭 패널 시 내경 중심 Y 보정
+    const boxContentCenterY = centerY + ((hasBottom ? t : 0) - (hasTop ? t : 0)) / 2;
     const prefix = `box-${sIdx}`;
     const sectionLabel = sIdx === 0 ? '하부' : '상부';
 
@@ -1388,7 +1413,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-back-left`}
           args={[leftBackW, leftBackH, backPanelT]}
-          position={[-bInnerW / 2 + leftInnerW / 2, centerY, -leftD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm) + leftZOffset]}
+          position={[-bInnerW / 2 + leftInnerW / 2, boxContentCenterY, -leftD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm) + leftZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted} isBackPanel
           panelName={`${sectionLabel}좌백패널`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1398,7 +1423,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-back-right`}
           args={[rightBackW, leftBackH, backPanelT]}
-          position={[partitionX + t / 2 + rightInnerW / 2, centerY, -rightD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm) + rightZOffset]}
+          position={[partitionX + t / 2 + rightInnerW / 2, boxContentCenterY, -rightD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm) + rightZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted} isBackPanel
           panelName={`${sectionLabel}우백패널`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1484,7 +1509,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       <BoxWithEdges
         key={`${prefix}-back`}
         args={[backPanelW, backPanelH, backPanelT]}
-        position={[0, centerY, backPanelZ]}
+        position={[0, boxContentCenterY, backPanelZ]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1562,7 +1587,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const rightCenterX = boxW / 2 - rightOuterW / 2;
 
     const sectionLabel = sections.length > 1 ? (sIdx === 0 ? '하부' : '상부') : '';
-    const bInnerH = boxH - 2 * t;
+    // 패널 소유에 따른 내경 높이 계산
+    const hsHasBottom = section.showBottomPanel !== false;
+    const hsHasTop = section.showTopPanel !== false;
+    const bInnerH = boxH - (hsHasBottom ? t : 0) - (hsHasTop ? t : 0);
+    // 비대칭 패널 시 내경 중심 Y 보정
+    const hsCenterY = centerY + ((hsHasBottom ? t : 0) - (hsHasTop ? t : 0)) / 2;
 
     // ─── 서브 박스별 개별 깊이 계산 ───
     const getSubBoxDepth = (side: 'left' | 'center' | 'right') => {
@@ -1668,7 +1698,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <BoxWithEdges
           key={`${prefix}-back`}
           args={[bpW, bpH, backPanelT]}
-          position={[subCenterX, centerY, bpZ]}
+          position={[subCenterX, hsCenterY, bpZ]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1690,7 +1720,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           subMeshes.push(
             ...renderAreaWithSubSplit(
               section, areaKey, elements,
-              subInnerW, bInnerH, centerY, subCenterX, subBoxD,
+              subInnerW, bInnerH, hsCenterY, subCenterX, subBoxD,
               label, `s${sIdx}-hsplit-${side}`, sIdx
             )
           );
@@ -1698,7 +1728,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           // 서브분할 없음: 기존 방식
           subMeshes.push(
             ...renderSectionElements(
-              elements!, subInnerW, bInnerH, centerY, subCenterX, subBoxD,
+              elements!, subInnerW, bInnerH, hsCenterY, subCenterX, subBoxD,
               label, `s${sIdx}-hsplit-${side}`
             )
           );
@@ -1760,7 +1790,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <>
           {/* 분할 모드: 각 섹션을 독립 박스로 렌더링 (2분할 또는 3분할) */}
           {(() => {
-            const sectionBoxHeights = sections.map(s => mmToUnit(s.height + 2 * panelThickness));
+            // 패널 소유 모델: showBottomPanel/showTopPanel에 따라 박스 높이 결정
+            // section[0]: bottom+top → 2*PT, section[1+]: no bottom+top → 1*PT
+            const sectionBoxHeights = sections.map(s => {
+              const hasBottom = s.showBottomPanel !== false;
+              const hasTop = s.showTopPanel !== false;
+              const panelCount = (hasBottom ? 1 : 0) + (hasTop ? 1 : 0);
+              return mmToUnit(s.height + panelCount * panelThickness);
+            });
             const sectionCenterYs: number[] = [];
             let currentBottom = -H / 2;
             for (let i = 0; i < sections.length; i++) {
@@ -1920,15 +1957,29 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         };
 
         if (isSplit) {
-          const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
-          const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
-          const lowerCenterY = -H / 2 + lowerH / 2;
-          const upperCenterY = -H / 2 + lowerH + upperH / 2;
+          // 패널 소유 모델에 따라 박스 높이 & 내경 계산
+          const sectionHeights = sections.map(s => {
+            const hb = s.showBottomPanel !== false;
+            const ht = s.showTopPanel !== false;
+            const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
+            return mmToUnit(s.height + pc * panelThickness);
+          });
+          let dimCurrentBottom = -H / 2;
+          const dimCenters: number[] = [];
+          for (let i = 0; i < sections.length; i++) {
+            dimCenters.push(dimCurrentBottom + sectionHeights[i] / 2);
+            dimCurrentBottom += sectionHeights[i];
+          }
 
           return (
             <>
-              {renderSectionDims(sections[0], 0, lowerCenterY, lowerH - 2 * t, W)}
-              {renderSectionDims(sections[1], 1, upperCenterY, upperH - 2 * t, W)}
+              {sections.map((sec, si) => {
+                const hb = sec.showBottomPanel !== false;
+                const ht = sec.showTopPanel !== false;
+                const innerH = sectionHeights[si] - (hb ? t : 0) - (ht ? t : 0);
+                const contentCenter = dimCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
+                return renderSectionDims(sec, si, contentCenter, innerH, W);
+              })}
             </>
           );
         } else {
@@ -2020,14 +2071,28 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         };
 
         if (isSplit) {
-          const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
-          const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
-          const lowerCenterY = -H / 2 + lowerH / 2;
-          const upperCenterY = -H / 2 + lowerH + upperH / 2;
+          // 패널 소유 모델에 따라 박스 높이 계산
+          const gapBoxHeights = sections.map(s => {
+            const hb = s.showBottomPanel !== false;
+            const ht = s.showTopPanel !== false;
+            const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
+            return mmToUnit(s.height + pc * panelThickness);
+          });
+          let gapBottom = -H / 2;
+          const gapCenters: number[] = [];
+          for (let i = 0; i < sections.length; i++) {
+            gapCenters.push(gapBottom + gapBoxHeights[i] / 2);
+            gapBottom += gapBoxHeights[i];
+          }
           return (
             <>
-              {renderShelfGaps(sections[0], 0, lowerCenterY, lowerH - 2 * t)}
-              {renderShelfGaps(sections[1], 1, upperCenterY, upperH - 2 * t)}
+              {sections.map((sec, si) => {
+                const hb = sec.showBottomPanel !== false;
+                const ht = sec.showTopPanel !== false;
+                const innerH = gapBoxHeights[si] - (hb ? t : 0) - (ht ? t : 0);
+                const contentCenter = gapCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
+                return renderShelfGaps(sec, si, contentCenter, innerH);
+              })}
             </>
           );
         } else {
