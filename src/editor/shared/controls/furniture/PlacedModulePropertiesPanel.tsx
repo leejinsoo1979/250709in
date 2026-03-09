@@ -1132,16 +1132,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const handleDepthInputBlur = () => {
     const value = depthInputValue;
+    console.log('🔴 [PlacedModulePanel] handleDepthInputBlur 호출:', { value, customDepth, spaceDepth: spaceInfo.depth, moduleId: activePopup.id });
     if (value === '') {
       // 빈 값인 경우 기존 값으로 되돌림
       setDepthInputValue(customDepth.toString());
       return;
     }
-    
+
     const numValue = parseInt(value);
     const minDepth = FURNITURE_LIMITS.DEPTH.MIN;
     const maxDepth = Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX);
-    
+
+    console.log('🔴 [PlacedModulePanel] 깊이 범위 검증:', { numValue, minDepth, maxDepth });
+
     // 범위 검증
     if (numValue < minDepth) {
       setDepthError(t('furniture.minValue', { value: minDepth }));
@@ -1149,6 +1152,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDepthError(t('furniture.maxValue', { value: maxDepth }));
     } else {
       setDepthError('');
+      console.log('🔴 [PlacedModulePanel] customDepth 업데이트 시작:', { numValue });
       handleCustomDepthChange(numValue);
     }
   };
