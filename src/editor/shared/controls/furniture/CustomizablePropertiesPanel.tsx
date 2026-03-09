@@ -3,7 +3,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit, SectionHorizontalSplit } from '@/editor/shared/furniture/types';
+import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
 import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
 import { generateCabinetThumbnail } from '@/editor/shared/utils/cabinetThumbnailGenerator';
 import { captureFurnitureThumbnail } from '@/editor/shared/utils/furnitureThumbnailCapture';
