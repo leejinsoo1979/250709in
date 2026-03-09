@@ -2664,6 +2664,21 @@ const SimpleDashboard: React.FC = () => {
                 }
               }
             }
+          } else {
+            // 메인 탭에서 삭제 → 휴지통으로 이동
+            const project = allProjects.find(p => p.id === moreMenu.itemId)
+              || firebaseProjects.find(p => p.id === moreMenu.itemId);
+            if (project) {
+              await moveToTrash(project);
+            } else {
+              // 프로젝트 목록에서 못 찾으면 직접 삭제
+              const { error } = await deleteProject(moreMenu.itemId);
+              if (error) {
+                alert('프로젝트 삭제 실패: ' + error);
+              } else {
+                await loadFirebaseProjects();
+              }
+            }
           }
         } catch (error) {
           console.error('프로젝트 삭제 중 오류:', error);
