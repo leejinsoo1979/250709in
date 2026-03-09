@@ -4363,15 +4363,6 @@ const SimpleDashboard: React.FC = () => {
                                     {folder.children && folder.children.length > 0 && (
                                       <span className={styles.treeItemCount}>{folder.children.length}</span>
                                     )}
-                                    <div
-                                      className={`${styles.dropdownArrow} ${styles.folderDropdown} ${folder.expanded ? styles.expanded : ''}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleFolderExpansion(folder.id);
-                                      }}
-                                    >
-                                      ▼
-                                    </div>
                                     <div className={styles.treeItemActions}>
                                       <button
                                         className={styles.treeItemActionBtn}
@@ -4385,85 +4376,9 @@ const SimpleDashboard: React.FC = () => {
                                     </div>
                                   </div>
 
-                                  {/* 폴더 내부 파일들 */}
-                                  {folder.expanded && folder.children && folder.children.length > 0 ? (
-                                    <div className={styles.folderChildren}>
-                                      {(() => {
-                                        // sortBy 상태에 따라 폴더 내 파일 정렬
-                                        const sortedChildren = [...folder.children].sort((a, b) => {
-                                          if (sortBy === 'date') {
-                                            // 최신순 정렬 (폴더 children에는 updatedAt이 없을 수 있으므로 name으로 대체)
-                                            // children은 파일명만 있는 경우가 많으므로 이름순으로 정렬
-                                            return a.name.localeCompare(b.name, 'ko');
-                                          } else {
-                                            // 이름순 정렬
-                                            return a.name.localeCompare(b.name, 'ko');
-                                          }
-                                        });
-                                        return sortedChildren;
-                                      })().map(child => (
-                                        <div
-                                          key={child.id}
-                                          className={`${styles.treeItem} ${styles.childItem}`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const pid = child.projectId || project.id;
-                                            console.log('📄 폴더 내 디자인 파일 트리 클릭:', child.name, child.id, 'project:', pid);
-                                            // 에디터로 이동
-                                            navigate(`/configurator?projectId=${pid}&designFileId=${child.id}`);
-                                          }}
-                                        >
-                                          <div className={styles.treeItemIcon}>
-                                            <AiOutlineFileMarkdown size={14} />
-                                          </div>
-                                          <span>{child.name}</span>
-                                          <div className={styles.treeItemActions}>
-                                            <button
-                                              className={styles.treeItemActionBtn}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleMoreMenuOpen(e, child.id, child.name, child.type === 'file' ? 'design' : child.type);
-                                              }}
-                                            >
-                                              ⋯
-                                            </button>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : null}
                                 </div>
                               ))}
 
-                              {/* 디자인 파일 목록 */}
-                              {designFiles.map(designFile => (
-                                <div
-                                  key={designFile.id}
-                                  className={styles.treeItem}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    console.log('📄 디자인 파일 트리 클릭:', designFile.name, designFile.id, 'project:', project.id);
-                                    // 에디터로 이동
-                                    navigate(`/configurator?projectId=${project.id}&designFileId=${designFile.id}`);
-                                  }}
-                                >
-                                  <div className={styles.treeItemIcon}>
-                                    <AiOutlineFileMarkdown size={14} />
-                                  </div>
-                                  <span>{designFile.name}</span>
-                                  <div className={styles.treeItemActions}>
-                                    <button
-                                      className={styles.treeItemActionBtn}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleMoreMenuOpen(e, designFile.id, designFile.name, 'design');
-                                      }}
-                                    >
-                                      ⋯
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
                             </div>
                           )}
                         </div>
