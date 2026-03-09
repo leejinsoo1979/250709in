@@ -16,6 +16,13 @@ export interface AreaSubSplit {
   lowerElements?: CustomElement[];
 }
 
+// 좌우 섹션분할 (독립 박스) 설정
+export interface SectionHorizontalSplit {
+  position: number; // mm (내경 기준, 좌측 박스 내경 너비)
+  leftElements?: CustomElement[];  // undefined = 삭제됨 (빈 프레임)
+  rightElements?: CustomElement[]; // undefined = 삭제됨 (빈 프레임)
+}
+
 // 커스터마이징 가구 섹션 설정
 export interface CustomSection {
   id: string;
@@ -32,6 +39,8 @@ export interface CustomSection {
   areaSubSplits?: {
     [key: string]: AreaSubSplit; // 'full', 'left', 'right'
   };
+  // 좌우 섹션분할 (독립 박스 - 칸막이와 다름)
+  horizontalSplit?: SectionHorizontalSplit;
   // 섹션 개별 너비/정렬 (undefined = 전체 가구 너비 사용)
   width?: number;  // mm (섹션 개별 너비, 최소 100, 최대 furnitureWidth)
   align?: 'left' | 'center' | 'right';  // 정렬 (기본: 'center')

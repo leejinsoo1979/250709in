@@ -631,7 +631,22 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           }
         };
 
-        if (section.hasPartition && section.partitionPosition) {
+        if (section.horizontalSplit) {
+          // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (외경 W 기준)
+          const hs = section.horizontalSplit;
+          const totalInnerWMm = (width - 2 * panelThickness);
+          const leftOuterWMm = hs.position + 2 * panelThickness;
+          const rightInnerWMm = totalInnerWMm - hs.position - 2 * panelThickness;
+          const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
+          const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
+          const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
+          if (hs.leftElements) {
+            icons.push(renderSectionIcon(`${prefix}-hsplit-left`, leftCX + xOffset, centerY, frontZ, sIdx, 'left'));
+          }
+          if (hs.rightElements) {
+            icons.push(renderSectionIcon(`${prefix}-hsplit-right`, rightCX + xOffset, centerY, frontZ, sIdx, 'right'));
+          }
+        } else if (section.hasPartition && section.partitionPosition) {
           const partX = -secInnerW / 2 + mmToUnit(section.partitionPosition);
           const leftCenterX = (-secInnerW / 2 + partX - t / 2) / 2;
           const rightCenterX = (partX + t / 2 + secInnerW / 2) / 2;
@@ -680,7 +695,22 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       };
 
-      if (section?.hasPartition && section?.partitionPosition) {
+      if (section?.horizontalSplit) {
+        // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (외경 W 기준)
+        const hs = section.horizontalSplit;
+        const totalInnerWMm = (width - 2 * panelThickness);
+        const leftOuterWMm = hs.position + 2 * panelThickness;
+        const rightInnerWMm = totalInnerWMm - hs.position - 2 * panelThickness;
+        const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
+        const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
+        const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
+        if (hs.leftElements) {
+          icons.push(renderSectionIcon('single-hsplit-left', leftCX + singleAlignOffset, 0, frontZ, 0, 'left'));
+        }
+        if (hs.rightElements) {
+          icons.push(renderSectionIcon('single-hsplit-right', rightCX + singleAlignOffset, 0, frontZ, 0, 'right'));
+        }
+      } else if (section?.hasPartition && section?.partitionPosition) {
         const partX = -singleInnerW / 2 + mmToUnit(section.partitionPosition);
         const leftCenterX = (-singleInnerW / 2 + partX - t / 2) / 2;
         const rightCenterX = (partX + t / 2 + singleInnerW / 2) / 2;
@@ -1202,6 +1232,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     centerY: number,
     depthOffset: number = 0,
   ) => {
+    // ═══ 좌우 섹션분할 감지 → 두 개의 독립 박스 렌더링 ═══
+    if (section.horizontalSplit) {
+      return renderHorizontalSplitBoxes(section, sIdx, boxW, boxH, boxD, centerY, depthOffset);
+    }
+
     const meshes: React.ReactNode[] = [];
     const bInnerW = boxW - 2 * t;
     const bInnerH = boxH - 2 * t;
@@ -1308,6 +1343,157 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     return meshes;
   };
 
+  /**
+   * 좌우 섹션분할: 두 개의 독립 박스를 렌더링
+   */
+  const renderHorizontalSplitBoxes = (
+    section: CustomSection,
+    sIdx: number,
+    boxW: number,
+    boxH: number,
+    boxD: number,
+    centerY: number,
+    depthOffset: number = 0,
+  ) => {
+    const meshes: React.ReactNode[] = [];
+    const hs = section.horizontalSplit!;
+    const totalInnerW = boxW - 2 * t; // 전체 내경 (원본 측판 제외)
+    const totalInnerWMm = totalInnerW / 0.01; // Three.js → mm
+
+    // 좌측 박스: 내경 = position, 외경 = position + 2t
+    const leftInnerWMm = hs.position;
+    const leftOuterWMm = leftInnerWMm + 2 * panelThickness;
+    const leftOuterW = mmToUnit(leftOuterWMm);
+    const leftInnerW = mmToUnit(leftInnerWMm);
+
+    // 우측 박스: 내경 = totalInnerW(mm) - position - 2*panelThickness, 외경 = 내경 + 2t
+    const rightInnerWMm = totalInnerWMm - leftInnerWMm - 2 * panelThickness;
+    const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
+    const rightOuterW = mmToUnit(rightOuterWMm);
+    const rightInnerW = mmToUnit(rightInnerWMm);
+
+    // 중심 X 계산 (전체 외경 boxW 기준 — 좌측+우측 외경 합 = boxW)
+    const leftCenterX = -boxW / 2 + leftOuterW / 2;
+    const rightCenterX = boxW / 2 - rightOuterW / 2;
+
+    const sectionLabel = sections.length > 1 ? (sIdx === 0 ? '하부' : '상부') : '';
+    const bInnerH = boxH - 2 * t;
+
+    // ─── 서브 박스 렌더링 ───
+    const renderSubBox = (
+      side: 'left' | 'right',
+      subInnerW: number,
+      subCenterX: number,
+      elements: CustomElement[] | undefined,
+      label: string,
+    ) => {
+      const prefix = `box-${sIdx}-hsplit-${side}`;
+      const hasContent = !!elements;
+
+      // 측판 (좌/우)
+      meshes.push(
+        <BoxWithEdges
+          key={`${prefix}-left-panel`}
+          args={[t, boxH, boxD]}
+          position={[subCenterX - subInnerW / 2 - t / 2, centerY, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isHighlighted}
+          panelName={`${label}좌측판`}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+        />
+      );
+      meshes.push(
+        <BoxWithEdges
+          key={`${prefix}-right-panel`}
+          args={[t, boxH, boxD]}
+          position={[subCenterX + subInnerW / 2 + t / 2, centerY, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isHighlighted}
+          panelName={`${label}우측판`}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+        />
+      );
+
+      // 상판/하판
+      meshes.push(
+        <BoxWithEdges
+          key={`${prefix}-top`}
+          args={[subInnerW - widthReduction, t, boxD - backReduction]}
+          position={[subCenterX, centerY + boxH / 2 - t / 2, backReduction / 2]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isHighlighted}
+          panelName={`${label}상판`}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+        />
+      );
+      meshes.push(
+        <BoxWithEdges
+          key={`${prefix}-bottom`}
+          args={[subInnerW - widthReduction, t, boxD - backReduction]}
+          position={[subCenterX, centerY - boxH / 2 + t / 2, backReduction / 2]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isHighlighted}
+          panelName={`${label}바닥판`}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+        />
+      );
+
+      // 백패널
+      const bpH = bInnerH + mmToUnit(backPanelHeightExtMm);
+      const bpW = subInnerW + mmToUnit(backPanelWidthExtMm);
+      const bpZ = -boxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
+      meshes.push(
+        <BoxWithEdges
+          key={`${prefix}-back`}
+          args={[bpW, bpH, backPanelT]}
+          position={[subCenterX, centerY, bpZ]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isHighlighted}
+          isBackPanel
+          panelName={`${label}백패널`}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+        />
+      );
+
+      // 내부 요소 (elements가 있을 때만)
+      if (hasContent && (!isDragging || isEditMode)) {
+        meshes.push(
+          ...renderSectionElements(
+            elements!, subInnerW, bInnerH, centerY, subCenterX, boxD,
+            label, `s${sIdx}-hsplit-${side}`
+          )
+        );
+      }
+    };
+
+    renderSubBox('left', leftInnerW, leftCenterX, hs.leftElements, `${sectionLabel}좌`);
+    renderSubBox('right', rightInnerW, rightCenterX, hs.rightElements, `${sectionLabel}우`);
+
+    if (depthOffset !== 0) {
+      return [
+        <group key={`box-group-hsplit-${sIdx}`} position={[0, 0, depthOffset]}>
+          {meshes}
+        </group>
+      ];
+    }
+    return meshes;
+  };
+
   // 섹션별 너비에 따른 X축 정렬 오프셋 계산
   const calculateAlignOffset = (sectionW: number, totalW: number, align: 'left' | 'center' | 'right') => {
     if (sectionW >= totalW) return 0;
@@ -1375,6 +1561,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               </>
             );
           })()}
+        </>
+      ) : sections[0]?.horizontalSplit ? (
+        <>
+          {/* 1단 + 좌우 섹션분할: renderBox가 독립 박스 2개로 렌더링 */}
+          {renderBox(sections[0], 0, W, H, D, 0)}
         </>
       ) : (
         <>
