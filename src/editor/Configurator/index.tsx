@@ -129,7 +129,7 @@ const Configurator: React.FC = () => {
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
-  const [myCabinetCategory, setMyCabinetCategory] = useState<'all' | 'full' | 'upper' | 'lower'>('all'); // My캐비닛 카테고리 필터
+  const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
   const [myCabinetEditMode, setMyCabinetEditMode] = useState(false); // My캐비닛 편집 모드
   const [showCustomUploadModal, setShowCustomUploadModal] = useState(false); // 커스텀 가구 업로드 모달
   const [showBoringExportDialog, setShowBoringExportDialog] = useState(false); // 보링 내보내기 대화상자
@@ -2791,12 +2791,6 @@ const Configurator: React.FC = () => {
             <div className={styles.modulePanelContent}>
               <div className={styles.moduleCategoryTabs}>
                 <button
-                  className={`${styles.moduleCategoryTab} ${myCabinetCategory === 'all' ? styles.active : ''}`}
-                  onClick={() => setMyCabinetCategory('all')}
-                >
-                  전체
-                </button>
-                <button
                   className={`${styles.moduleCategoryTab} ${myCabinetCategory === 'full' ? styles.active : ''}`}
                   onClick={() => setMyCabinetCategory('full')}
                 >
@@ -2824,7 +2818,7 @@ const Configurator: React.FC = () => {
               {activePopup.type !== 'customizableEdit' && (
                 <div style={{ flex: '0 0 auto', padding: '8px 12px', borderTop: '1px solid var(--theme-border)' }}>
                   <CustomizableFurnitureLibrary
-                    filter={myCabinetCategory === 'all' ? 'full' : myCabinetCategory as 'full' | 'upper' | 'lower'}
+                    filter={myCabinetCategory}
                   />
                 </div>
               )}

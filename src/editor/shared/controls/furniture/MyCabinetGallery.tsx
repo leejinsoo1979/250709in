@@ -12,7 +12,7 @@ import myStyles from './MyCabinetGallery.module.css';
 import libStyles from './CustomizableFurnitureLibrary.module.css';
 
 interface MyCabinetGalleryProps {
-  filter?: 'full' | 'upper' | 'lower' | 'all';
+  filter?: 'full' | 'upper' | 'lower';
   editMode?: boolean;
 }
 
@@ -46,7 +46,7 @@ const CabinetCanvasThumbnail: React.FC<{
 
 CabinetCanvasThumbnail.displayName = 'CabinetCanvasThumbnail';
 
-const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', editMode = false }) => {
+const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'full', editMode = false }) => {
   const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, setPendingPlacement, setEditingCabinetId, setEditBackup } = useMyCabinetStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData, placedModules, clearAllModules } = useFurnitureStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
@@ -63,9 +63,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'all', edi
     if (!editMode) setSelectedIds(new Set());
   }, [editMode]);
 
-  const filteredCabinets = filter === 'all'
-    ? savedCabinets
-    : savedCabinets.filter((c) => c.category === filter);
+  const filteredCabinets = savedCabinets.filter((c) => c.category === filter);
 
   // ── 일반 모드: 클릭 → 배치 ──
   const handleItemClick = useCallback((cabinet: SavedCabinet) => {
