@@ -868,7 +868,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
    */
   const renderAreaWithSubSplit = (
     section: CustomSection,
-    areaKey: 'full' | 'left' | 'right',
+    areaKey: 'full' | 'left' | 'center' | 'right',
     elements: CustomElement[] | undefined,
     areaInnerWidth: number,
     areaInnerHeight: number,
@@ -1683,7 +1683,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
       // 내부 요소 (서브분할 areaSubSplits 지원)
       if ((!isDragging || isEditMode)) {
-        const areaKey = side as 'left' | 'right';
+        const areaKey = side as 'left' | 'center' | 'right';
         const subSplit = section.areaSubSplits?.[areaKey];
         if (subSplit?.enabled) {
           // 서브분할 있음: 구분판 + 상/하부 요소 렌더링

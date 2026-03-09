@@ -2566,6 +2566,22 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
                   상부: {section.height - subSplit.lowerHeight}mm / 하부: {subSplit.lowerHeight}mm
                 </div>
+
+                {/* 상부 내부 구조 */}
+                <div style={{ marginTop: '12px' }}>
+                  <div className={styles.sectionTitle}>상부 내부 구조</div>
+                  <div className={styles.areaCard}>
+                    {renderSubSplitElementEditor(sIdx, areaSide, 'upper', subSplit.upperElements, section.height - subSplit.lowerHeight)}
+                  </div>
+                </div>
+
+                {/* 하부 내부 구조 */}
+                <div style={{ marginTop: '12px' }}>
+                  <div className={styles.sectionTitle}>하부 내부 구조</div>
+                  <div className={styles.areaCard}>
+                    {renderSubSplitElementEditor(sIdx, areaSide, 'lower', subSplit.lowerElements, subSplit.lowerHeight)}
+                  </div>
+                </div>
               </>
             ) : (
               /* 서브분할 안 됨: 기존 요소 편집기 */

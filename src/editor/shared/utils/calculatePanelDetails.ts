@@ -20,7 +20,7 @@ export const calculatePanelDetails = (
   backPanelThicknessMm?: number, // 백패널 두께 (mm, 기본값: 9)
   customConfig?: CustomFurnitureConfig // 커스텀 가구 내부 구조
 ) => {
-  const panels = {
+  const panels: { upper: any[]; lower: any[]; door: any[] } = {
     upper: [],     // 상부장 패널
     lower: [],     // 하부장 패널
     door: []       // 도어 패널
@@ -38,7 +38,7 @@ export const calculatePanelDetails = (
   
   const height = moduleData.dimensions.height;
   const innerWidth = customWidth - (basicThickness * 2);
-  const innerHeight = height - (basicThickness * 2);
+  const _innerHeight = height - (basicThickness * 2);
   
   // 섹션 정보 가져오기
   // 듀얼 타입5,6 특별 처리 (leftSections/rightSections 구조)
@@ -51,7 +51,7 @@ export const calculatePanelDetails = (
   }
   
   // availableHeight는 mm 단위로 사용 (내경이 아닌 전체 높이 기준)
-  const availableHeightMm = height;
+  const _availableHeightMm = height;
   
   
   // 전체 가구의 기본 구조는 일단 저장하지만 표시하지 않음
@@ -80,7 +80,7 @@ export const calculatePanelDetails = (
 
     // 중간 칸막이 두께 고려 (섹션 개수 - 1개의 칸막이)
     const dividerCount = sections.length > 1 ? (sections.length - 1) : 0;
-    const dividerThickness = dividerCount * basicThickness;
+    const _dividerThickness = dividerCount * basicThickness;
 
     // 나머지 높이 계산 (전체 - 고정높이)
     const remainingHeight = height - totalFixedHeight;
@@ -885,7 +885,7 @@ export const calculatePanelDetails = (
   }
 
   // 플랫 배열로 변환하여 반환
-  const result = [];
+  const result: any[] = [];
 
   // 상부장 패널 (상부 섹션)
   if (panels.upper.length > 0) {
