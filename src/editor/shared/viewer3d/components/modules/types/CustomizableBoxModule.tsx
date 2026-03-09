@@ -467,6 +467,70 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     );
   };
 
+  // 미드웨이(사이 간격) 아이콘 — 메인 편집 패널 열기 (sectionIndex 없이)
+  const renderMidwayIcon = (
+    key: string,
+    posX: number,
+    posY: number,
+    posZ: number,
+  ) => {
+    const isHov = hoveredIcon === key;
+    const themeColor = getThemeColor();
+    return (
+      <Html
+        key={`icon-${key}`}
+        position={[posX, posY, posZ]}
+        center
+        style={{
+          userSelect: 'none',
+          pointerEvents: 'auto',
+          zIndex: 100,
+          background: 'transparent',
+        }}
+      >
+        <div
+          style={{
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            border: `2px solid ${themeColor}`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.92)',
+            transition: 'all 0.2s ease',
+            opacity: isHov ? 1 : 0.7,
+            transform: isHov ? 'scale(1.15)' : 'scale(1)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (placedFurnitureId) {
+              // 메인 편집 패널 열기 (sectionIndex 없이 → 전체 설정 표시)
+              const canvasRect = gl.domElement.getBoundingClientRect();
+              const worldPos = new THREE.Vector3();
+              groupRef.current?.getWorldPosition(worldPos);
+              const rightEdge = worldPos.clone();
+              rightEdge.x += W / 2;
+              rightEdge.project(camera);
+              const rightScreenX = Math.round((rightEdge.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left);
+              const el = e.currentTarget as HTMLElement;
+              const iconRect = el.getBoundingClientRect();
+              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, undefined, undefined, undefined, rightScreenX + 12, Math.round(iconRect.top));
+            }
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseEnter={() => setHoveredIcon(key)}
+          onMouseLeave={() => setHoveredIcon(null)}
+          title="사이 간격 설정"
+        >
+          <SettingsIcon color={themeColor} size={14} />
+        </div>
+      </Html>
+    );
+  };
+
   // 섹션 내경 치수 가이드 렌더링 (톱니 아이콘 클릭 시)
   const renderSectionDimensionGuides = () => {
     if (activePopup.type !== 'customizableEdit') return null;
@@ -601,8 +665,15 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     if (isSplit) {
       const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
       const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
+      const gapUnit = mmToUnit(customConfig.sectionGap ?? 0);
       const lowerCenterY = -H / 2 + lowerH / 2;
-      const upperCenterY = -H / 2 + lowerH + upperH / 2;
+      const upperCenterY = -H / 2 + lowerH + gapUnit + upperH / 2;
+
+      // 미드웨이(사이 간격) 아이콘 — 클릭 시 메인 편집 패널 열기 (sectionIndex 없이)
+      if (customConfig.sectionGap !== undefined && customConfig.sectionGap > 0) {
+        const midwayCenterY = -H / 2 + lowerH + gapUnit / 2;
+        icons.push(renderMidwayIcon('midway', 0, midwayCenterY, frontZ));
+      }
 
       const addPartitionIcons = (section: CustomSection, centerY: number, prefix: string, sIdx: number) => {
         // 영역별 아이콘 추가 (서브분할 고려)
