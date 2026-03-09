@@ -55,7 +55,13 @@ export function convertToConfig(
     // availableHeight = furnitureHeight - 2*N*panelThickness
     const availableHeight = height - 2 * children.length * PANEL_THICKNESS;
 
-    const sections = children.map((child, idx) => {
+    // 캔버스 순서 → 3D 순서 변환:
+    // 캔버스: children[0]=위, children[last]=아래 (Y축 아래로 증가)
+    // 3D렌더러: sections[0]=하부, sections[last]=상부 (Y축 위로 증가)
+    // → reverse해서 캔버스 아래→sections[0](하부), 캔버스 위→sections[last](상부)
+    const reversed = [...children].reverse();
+
+    const sections = reversed.map((child, idx) => {
       const sectionInnerHeight = Math.round(child.ratio * availableHeight);
       const section = createSection(`section-${idx}`, sectionInnerHeight);
 
