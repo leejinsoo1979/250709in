@@ -457,7 +457,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 사이 간격 확정 (onBlur / Enter) — 양쪽 섹션 높이를 비례 축소/확대
+  // 사이 간격 확정 (onBlur / Enter) — gap만 변경, 섹션 높이 유지
   const handleSectionGapBlur = () => {
     if (config.sections.length !== 2) return;
     const raw = sectionGapInput;
@@ -471,27 +471,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
       setSectionGapInput(newGap.toString());
       return;
     }
-    // 총 내부 높이 (상판+하판 ×2 = 4패널)
-    const totalInner = furnitureHeight - 4 * panelThickness;
     // gap 최대: 총 내부 높이 - 양쪽 섹션 최소 100mm씩
-    const maxGap = totalInner - 200;
+    const totalInner = furnitureHeight - 4 * panelThickness;
+    const maxGap = Math.max(0, totalInner - 200);
     const clampedGap = Math.min(newGap, maxGap);
-    const newAvailable = totalInner - clampedGap;
-    const oldAvailable = totalInner - oldGap;
-    // 양쪽 섹션 비례 축소/확대
-    const ratio = newAvailable / oldAvailable;
-    const sections = [...config.sections];
-    const lowerH = Math.max(100, Math.round(sections[0].height * ratio));
-    const upperH = Math.max(100, newAvailable - lowerH);
-    sections[0] = { ...sections[0], height: lowerH };
-    sections[1] = { ...sections[1], height: upperH };
 
-    applyConfig({ ...config, sections, sectionGap: clampedGap });
+    applyConfig({ ...config, sectionGap: clampedGap });
     setSectionGapInput(clampedGap.toString());
-    setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
   };
 
-  // 사이 간격 ArrowUp/ArrowDown 키 핸들러
+  // 사이 간격 ArrowUp/ArrowDown 키 핸들러 — gap만 변경, 섹션 높이 유지
   const handleSectionGapKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       (e.target as HTMLInputElement).blur();
@@ -505,22 +494,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const delta = e.key === 'ArrowUp' ? step : -step;
     const oldGap = config.sectionGap ?? 0;
     const totalInner = furnitureHeight - 4 * panelThickness;
-    const maxGap = totalInner - 200;
+    const maxGap = Math.max(0, totalInner - 200);
     const newGap = Math.max(0, Math.min(maxGap, oldGap + delta));
     if (newGap === oldGap) return;
 
-    const newAvailable = totalInner - newGap;
-    const oldAvailable = totalInner - oldGap;
-    const ratio = newAvailable / oldAvailable;
-    const sections = [...config.sections];
-    const lowerH = Math.max(100, Math.round(sections[0].height * ratio));
-    const upperH = Math.max(100, newAvailable - lowerH);
-    sections[0] = { ...sections[0], height: lowerH };
-    sections[1] = { ...sections[1], height: upperH };
-
-    applyConfig({ ...config, sections, sectionGap: newGap });
+    applyConfig({ ...config, sectionGap: newGap });
     setSectionGapInput(newGap.toString());
-    setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
   };
 
   // 기존 모듈 기준 서랍 단수별 표준 사양 (shelving.ts FURNITURE_SPECS 참조)
