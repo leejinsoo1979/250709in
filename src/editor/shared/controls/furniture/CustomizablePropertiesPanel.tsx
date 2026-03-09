@@ -291,11 +291,31 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
+  // hSplit 영역 요소 getter/setter 유틸리티
+  const getElementsBySide = (sec: CustomSection, side: 'full' | 'left' | 'center' | 'right'): CustomElement[] | undefined => {
+    if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      return side === 'left' ? sec.horizontalSplit.leftElements
+        : side === 'center' ? sec.horizontalSplit.centerElements
+        : sec.horizontalSplit.rightElements;
+    }
+    return side === 'full' ? sec.elements : side === 'left' ? sec.leftElements : sec.rightElements;
+  };
+  const setElementsBySide = (sec: CustomSection, side: 'full' | 'left' | 'center' | 'right', elements: CustomElement[]): void => {
+    if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: elements };
+      return;
+    }
+    if (side === 'full') sec.elements = elements;
+    else if (side === 'left') sec.leftElements = elements;
+    else sec.rightElements = elements;
+  };
+
   // 선반/서랍 높이 ArrowUp/ArrowDown 키 핸들러 (1mm 단위)
   const handleShelfHeightKeyDown = (
     e: React.KeyboardEvent,
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     heightIdx: number,
     sectionHeight: number,
   ) => {
@@ -311,8 +331,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     const sections = [...config!.sections];
     const sec = { ...sections[sIdx] };
-    const elements =
-      side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+    const elements = [...(getElementsBySide(sec, side) || [])];
     const el = elements[0];
     if (!el || (el.type !== 'shelf' && el.type !== 'drawer')) return;
 
@@ -326,9 +345,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     heights[heightIdx] = newVal;
 
     elements[0] = { ...el, heights };
-    if (side === 'full') sec.elements = elements;
-    else if (side === 'left') sec.leftElements = elements;
-    else sec.rightElements = elements;
+    setElementsBySide(sec, side, elements);
 
     sections[sIdx] = sec;
     applyConfig({ ...config!, sections });
@@ -771,7 +788,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 영역별 상하 서브분할 토글
-  const handleAreaSubSplitToggle = (sIdx: number, areaKey: 'full' | 'left' | 'right', enabled: boolean) => {
+  const handleAreaSubSplitToggle = (sIdx: number, areaKey: 'full' | 'left' | 'center' | 'right', enabled: boolean) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const subSplits = { ...(sec.areaSubSplits || {}) };
@@ -905,7 +922,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 서랍 균등 채움 핸들러 (focused section 편집용)
   // 현재 서랍 단수를 유지하면서 균등 분배
-  const handleEvenFillDrawers = (sIdx: number, side: 'full' | 'left' | 'right') => {
+  const handleEvenFillDrawers = (sIdx: number, side: 'full' | 'left' | 'center' | 'right') => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const sectionHeight = sec.height;
@@ -969,7 +986,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 요소 타입 변경 (drawerCount 파라미터 추가)
   const handleElementChange = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     elementType: CustomElement['type'],
     drawerCount?: number,
   ) => {
@@ -1004,6 +1021,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     if (side === 'full') {
       sec.elements = [newElement];
+    } else if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: [newElement] };
     } else if (side === 'left') {
       sec.leftElements = [newElement];
     } else {
@@ -1037,7 +1057,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 서랍 덮개 선반 앞 들여쓰기(coverInset) 변경
   const handleCoverInsetChange = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     value: number,
   ) => {
     const sections = [...config.sections];
@@ -1070,7 +1090,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 서랍 배치 방향(위/아래) 변경
   const handleDrawerAlignChange = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     align: 'top' | 'bottom',
   ) => {
     const sections = [...config.sections];
@@ -1101,7 +1121,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 선반/서랍 높이 입력 변경 (문자열 상태만 업데이트, 확정은 blur에서)
   const handleHeightInputChange = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     heightIdx: number,
     value: string,
   ) => {
@@ -1114,7 +1134,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 선반/서랍 높이 확정 (onBlur / Enter)
   const handleHeightInputBlur = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     heightIdx: number,
     sectionHeight: number,
   ) => {
@@ -1211,7 +1231,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 선반 위치 기준 토글 (위에서 ↔ 아래에서)
   const handleShelfRefDirChange = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     heightIdx: number,
     dir: 'top' | 'bottom',
     storedValue: number,
@@ -1226,7 +1246,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 서랍 추가 가능 여부 판정 (공간이 부족하면 false)
-  const canAddDrawer = (sIdx: number, side: 'full' | 'left' | 'right'): boolean => {
+  const canAddDrawer = (sIdx: number, side: 'full' | 'left' | 'center' | 'right'): boolean => {
     const sec = config.sections[sIdx];
     if (!sec) return false;
     const elements =
@@ -1244,7 +1264,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반/서랍 추가
-  const handleAddHeight = (sIdx: number, side: 'full' | 'left' | 'right') => {
+  const handleAddHeight = (sIdx: number, side: 'full' | 'left' | 'center' | 'right') => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
@@ -1296,7 +1316,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반/서랍 제거
-  const handleRemoveHeight = (sIdx: number, side: 'full' | 'left' | 'right', heightIdx: number) => {
+  const handleRemoveHeight = (sIdx: number, side: 'full' | 'left' | 'center' | 'right', heightIdx: number) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
@@ -1332,7 +1352,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반 옷봉 토글 (다보선반에는 옷봉 불가 - 고정선반 전용)
-  const handleShelfRodToggle = (sIdx: number, side: 'full' | 'left' | 'right', hasRod: boolean) => {
+  const handleShelfRodToggle = (sIdx: number, side: 'full' | 'left' | 'center' | 'right', hasRod: boolean) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
@@ -1353,7 +1373,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반 방식 변경 (고정/다보)
-  const handleShelfMethodChange = (sIdx: number, side: 'full' | 'left' | 'right', method: 'fixed' | 'dowel') => {
+  const handleShelfMethodChange = (sIdx: number, side: 'full' | 'left' | 'center' | 'right', method: 'fixed' | 'dowel') => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
@@ -1414,7 +1434,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반 앞 들여쓰기 변경
-  const handleShelfFrontInsetChange = (sIdx: number, side: 'full' | 'left' | 'right', inset: number) => {
+  const handleShelfFrontInsetChange = (sIdx: number, side: 'full' | 'left' | 'center' | 'right', inset: number) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const elements =
@@ -1552,7 +1572,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 요소 편집 UI 렌더링
   const renderElementEditor = (
     sIdx: number,
-    side: 'full' | 'left' | 'right',
+    side: 'full' | 'left' | 'center' | 'right',
     elements: CustomElement[] | undefined,
     sectionHeight: number,
   ) => {
@@ -2011,13 +2031,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 섹션 편집 UI 렌더링
-  const renderSectionEditor = (section: CustomSection, sIdx: number, areaSide?: 'left' | 'right') => {
+  const renderSectionEditor = (section: CustomSection, sIdx: number, areaSide?: 'left' | 'center' | 'right') => {
     const innerW = furnitureWidth - 2 * panelThickness;
     const hasPartition = section.hasPartition || false;
 
     // areaSide가 지정되면 해당 영역의 요소 편집 + 상하 서브분할 표시
     if (areaSide) {
-      const elements = areaSide === 'left' ? section.leftElements : section.rightElements;
+      const elements = areaSide === 'center'
+        ? section.horizontalSplit?.centerElements
+        : areaSide === 'left' ? section.leftElements : section.rightElements;
       const subSplit = section.areaSubSplits?.[areaSide];
       const isSubSplit = subSplit?.enabled || false;
       const subSplitKey = `${sIdx}-${areaSide}`;

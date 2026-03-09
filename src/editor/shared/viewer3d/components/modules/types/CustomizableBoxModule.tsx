@@ -374,7 +374,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   };
 
   // 현재 편집 중인 영역인지 확인
-  const isEditingArea = (sectionIndex: number, areaSide?: 'left' | 'right') => {
+  const isEditingArea = (sectionIndex: number, areaSide?: 'left' | 'center' | 'right') => {
     return activePopup.type === 'customizableEdit'
       && activePopup.id === placedFurnitureId
       && activePopup.sectionIndex === sectionIndex
@@ -388,7 +388,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     posY: number,
     posZ: number,
     sectionIndex: number,
-    areaSide?: 'left' | 'right',
+    areaSide?: 'left' | 'center' | 'right',
     subPart?: 'upper' | 'lower',
   ) => {
     // 해당 영역이 편집 중이면 아이콘 숨김
@@ -445,6 +445,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 leftEdge.project(camera);
                 const leftScreenX = Math.round((leftEdge.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left);
                 sx = leftScreenX - 340 - 12;
+              } else if (areaSide === 'center') {
+                // 중앙: 아이콘 위치 기준으로 팝업 오른쪽에 표시
+                sx = Math.round(iconRect.right) + 12;
               } else {
                 // 가구 우측 끝 screen X
                 const rightEdge = worldPos.clone();
@@ -636,12 +639,20 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const hs = section.horizontalSplit;
           const totalInnerWMm = (width - 2 * panelThickness);
           const leftOuterWMm = hs.position + 2 * panelThickness;
-          const rightInnerWMm = totalInnerWMm - hs.position - 2 * panelThickness;
+          const is3Split = hs.secondPosition != null;
+          const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
+          const centerOuterWMm = is3Split ? centerInnerWMm + 2 * panelThickness : 0;
+          const extraPanels = is3Split ? 4 : 2;
+          const rightInnerWMm = totalInnerWMm - hs.position - centerInnerWMm - extraPanels * panelThickness;
           const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
           const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
+          const centerCX = is3Split ? -W / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
           const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
           if (hs.leftElements) {
             icons.push(renderSectionIcon(`${prefix}-hsplit-left`, leftCX + xOffset, centerY, frontZ, sIdx, 'left'));
+          }
+          if (is3Split && hs.centerElements) {
+            icons.push(renderSectionIcon(`${prefix}-hsplit-center`, centerCX + xOffset, centerY, frontZ, sIdx, 'center'));
           }
           if (hs.rightElements) {
             icons.push(renderSectionIcon(`${prefix}-hsplit-right`, rightCX + xOffset, centerY, frontZ, sIdx, 'right'));
@@ -700,12 +711,20 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const hs = section.horizontalSplit;
         const totalInnerWMm = (width - 2 * panelThickness);
         const leftOuterWMm = hs.position + 2 * panelThickness;
-        const rightInnerWMm = totalInnerWMm - hs.position - 2 * panelThickness;
+        const is3Split = hs.secondPosition != null;
+        const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
+        const centerOuterWMm = is3Split ? centerInnerWMm + 2 * panelThickness : 0;
+        const extraPanels = is3Split ? 4 : 2;
+        const rightInnerWMm = totalInnerWMm - hs.position - centerInnerWMm - extraPanels * panelThickness;
         const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
         const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
+        const centerCX = is3Split ? -W / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
         const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
         if (hs.leftElements) {
           icons.push(renderSectionIcon('single-hsplit-left', leftCX + singleAlignOffset, 0, frontZ, 0, 'left'));
+        }
+        if (is3Split && hs.centerElements) {
+          icons.push(renderSectionIcon('single-hsplit-center', centerCX + singleAlignOffset, 0, frontZ, 0, 'center'));
         }
         if (hs.rightElements) {
           icons.push(renderSectionIcon('single-hsplit-right', rightCX + singleAlignOffset, 0, frontZ, 0, 'right'));
@@ -729,7 +748,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
   const renderEditingHighlight = () => {
     let sIdx: number | undefined;
-    let aSide: 'left' | 'right' | undefined;
+    let aSide: 'left' | 'center' | 'right' | undefined;
 
     // 1) 톱니 아이콘 팝업 (sectionIndex가 있을 때)
     if (activePopup.type === 'customizableEdit' && activePopup.id === placedFurnitureId && activePopup.sectionIndex !== undefined) {
@@ -1344,7 +1363,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   };
 
   /**
-   * 좌우 섹션분할: 두 개의 독립 박스를 렌더링
+   * 좌우 섹션분할: 2분할 또는 3분할 독립 박스 렌더링
    */
   const renderHorizontalSplitBoxes = (
     section: CustomSection,
@@ -1357,23 +1376,37 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   ) => {
     const meshes: React.ReactNode[] = [];
     const hs = section.horizontalSplit!;
-    const totalInnerW = boxW - 2 * t; // 전체 내경 (원본 측판 제외)
-    const totalInnerWMm = totalInnerW / 0.01; // Three.js → mm
+    const totalInnerWMm = (boxW - 2 * t) / 0.01; // 전체 내경 (mm)
+    const is3Split = hs.secondPosition != null;
 
-    // 좌측 박스: 내경 = position, 외경 = position + 2t
+    // 좌측 박스
     const leftInnerWMm = hs.position;
     const leftOuterWMm = leftInnerWMm + 2 * panelThickness;
     const leftOuterW = mmToUnit(leftOuterWMm);
     const leftInnerW = mmToUnit(leftInnerWMm);
 
-    // 우측 박스: 내경 = totalInnerW(mm) - position - 2*panelThickness, 외경 = 내경 + 2t
-    const rightInnerWMm = totalInnerWMm - leftInnerWMm - 2 * panelThickness;
+    // 중앙 박스 (3분할 시)
+    let centerInnerWMm = 0;
+    let centerOuterW = 0;
+    let centerInnerW = 0;
+    if (is3Split) {
+      centerInnerWMm = hs.secondPosition!;
+      const centerOuterWMm = centerInnerWMm + 2 * panelThickness;
+      centerOuterW = mmToUnit(centerOuterWMm);
+      centerInnerW = mmToUnit(centerInnerWMm);
+    }
+
+    // 우측 박스
+    const rightInnerWMm = is3Split
+      ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
+      : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
     const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
     const rightOuterW = mmToUnit(rightOuterWMm);
     const rightInnerW = mmToUnit(rightInnerWMm);
 
-    // 중심 X 계산 (전체 외경 boxW 기준 — 좌측+우측 외경 합 = boxW)
+    // 중심 X 계산
     const leftCenterX = -boxW / 2 + leftOuterW / 2;
+    const centerCenterX = is3Split ? -boxW / 2 + leftOuterW + centerOuterW / 2 : 0;
     const rightCenterX = boxW / 2 - rightOuterW / 2;
 
     const sectionLabel = sections.length > 1 ? (sIdx === 0 ? '하부' : '상부') : '';
@@ -1381,7 +1414,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
     // ─── 서브 박스 렌더링 ───
     const renderSubBox = (
-      side: 'left' | 'right',
+      side: string,
       subInnerW: number,
       subCenterX: number,
       elements: CustomElement[] | undefined,
@@ -1482,6 +1515,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     };
 
     renderSubBox('left', leftInnerW, leftCenterX, hs.leftElements, `${sectionLabel}좌`);
+    if (is3Split) {
+      renderSubBox('center', centerInnerW, centerCenterX, hs.centerElements, `${sectionLabel}중`);
+    }
     renderSubBox('right', rightInnerW, rightCenterX, hs.rightElements, `${sectionLabel}우`);
 
     if (depthOffset !== 0) {
