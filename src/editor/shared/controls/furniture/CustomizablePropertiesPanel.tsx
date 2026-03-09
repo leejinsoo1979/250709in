@@ -292,6 +292,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
         updates.lowerRightSectionDepth = clamped;
       }
     }
+    // 좌우분할(horizontalSplit)이 있는 섹션: 서브 박스 깊이도 동기화
+    const sec = config.sections[sIdx];
+    if (sec?.horizontalSplit) {
+      const newSections = [...config.sections];
+      const newSec = { ...newSections[sIdx] };
+      const hs = { ...newSec.horizontalSplit! };
+      hs.leftDepth = clamped;
+      hs.rightDepth = clamped;
+      if (hs.centerDepth != null) hs.centerDepth = clamped;
+      newSec.horizontalSplit = hs;
+      newSections[sIdx] = newSec;
+      applyConfig({ ...config, sections: newSections });
+    }
     updatePlacedModule(moduleId, updates);
     setSectionDepthInputs((prev) => ({ ...prev, [sIdx]: clamped.toString() }));
   };
@@ -2368,7 +2381,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
               </div>
             )}
             {/* 깊이 */}
-            {areaSide && areaSide !== 'center' && section.hasPartition ? (
+            {areaSide && areaSide !== 'center' && section.horizontalSplit ? (
+              /* 좌우분할 서브 박스 독립 깊이 */
+              <div className={styles.row}>
+                <span className={styles.label}>깊이</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={hSplitDepthInputs[`${sIdx}-${areaSide}`] ?? (section.horizontalSplit?.[`${areaSide}Depth` as 'leftDepth' | 'rightDepth']?.toString() || (sIdx === 0 ? (placedModule.lowerSectionDepth ?? furnitureDepth) : (placedModule.upperSectionDepth ?? furnitureDepth)).toString())}
+                  placeholder="전체"
+                  onChange={(e) => setHSplitDepthInputs(prev => ({ ...prev, [`${sIdx}-${areaSide}`]: e.target.value }))}
+                  onBlur={(e) => {
+                    handleHSplitDepthChange(sIdx, areaSide, e.target.value);
+                    setHSplitDepthInputs(prev => { const next = { ...prev }; delete next[`${sIdx}-${areaSide}`]; return next; });
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  style={{ width: '70px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+            ) : areaSide && areaSide !== 'center' && section.hasPartition ? (
               /* 칸막이 좌/우 독립 깊이 */
               <div className={styles.row}>
                 <span className={styles.label}>깊이</span>
@@ -2424,8 +2457,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 )}
               </div>
             )}
-            {/* 깊이 줄이는 방향 (2섹션일 때만, 칸막이 독립깊이 제외) */}
-            {config.sections.length > 1 && !(areaSide && areaSide !== 'center' && section.hasPartition) && (
+            {/* 좌우분할 서브 박스 깊이 방향 */}
+            {areaSide && areaSide !== 'center' && section.horizontalSplit && section.horizontalSplit[`${areaSide}Depth` as 'leftDepth' | 'rightDepth'] && (
+              <div className={styles.row}>
+                <span className={styles.label}>방향</span>
+                <div className={styles.toggleGroup}>
+                  <button
+                    className={`${styles.toggleButton} ${(section.horizontalSplit[`${areaSide}DepthDirection` as 'leftDepthDirection' | 'rightDepthDirection'] ?? 'front') === 'front' ? styles.active : ''}`}
+                    onClick={() => handleHSplitDepthDirectionChange(sIdx, areaSide, 'front')}
+                  >앞에서</button>
+                  <button
+                    className={`${styles.toggleButton} ${(section.horizontalSplit[`${areaSide}DepthDirection` as 'leftDepthDirection' | 'rightDepthDirection'] ?? 'front') === 'back' ? styles.active : ''}`}
+                    onClick={() => handleHSplitDepthDirectionChange(sIdx, areaSide, 'back')}
+                  >뒤에서</button>
+                </div>
+              </div>
+            )}
+            {/* 깊이 줄이는 방향 (2섹션일 때만, 독립깊이 제외) */}
+            {config.sections.length > 1 && !(areaSide && areaSide !== 'center' && (section.hasPartition || section.horizontalSplit)) && (
               <div className={styles.row}>
                 <span className={styles.label}>방향</span>
                 <div className={styles.toggleGroup}>
