@@ -1947,6 +1947,76 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
+          {/* 자유배치 하부프레임 토글 (상부장 제외) */}
+          {currentPlacedModule?.isFreePlacement &&
+           moduleData &&
+           moduleData.category !== 'upper' && (
+            <div className={styles.propertySection}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={currentPlacedModule.hasBottomFrame !== false}
+                  onChange={() => {
+                    const newValue = currentPlacedModule.hasBottomFrame === false;
+                    updatePlacedModule(currentPlacedModule.id, { hasBottomFrame: newValue });
+                  }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
+                />
+                <span style={{ fontSize: '13px', color: '#333' }}>하부프레임</span>
+              </label>
+            </div>
+          )}
+
+          {/* 노서라운드 좌우 이격거리 (자유배치 + 노서라운드 모드) */}
+          {currentPlacedModule?.isFreePlacement &&
+           spaceInfo.surroundType === 'no-surround' && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>좌우 이격거리</h5>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>좌측</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={currentPlacedModule.freeLeftGap ?? 0}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) {
+                          updatePlacedModule(currentPlacedModule.id, { freeLeftGap: v === '' ? 0 : parseInt(v, 10) });
+                        }
+                      }}
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="0"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>우측</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={currentPlacedModule.freeRightGap ?? 0}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) {
+                          updatePlacedModule(currentPlacedModule.id, { freeRightGap: v === '' ? 0 : parseInt(v, 10) });
+                        }
+                      }}
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="0"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 기둥 C 배치 모드 선택 (기둥 C인 경우만 표시) */}
           {isColumnC && (
             <div className={styles.propertySection}>
