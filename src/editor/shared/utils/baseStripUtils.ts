@@ -14,6 +14,7 @@ export interface BaseStripGroup {
   leftMM: number;    // 좌측 X 경계 (mm, 공간 중심좌표계)
   rightMM: number;   // 우측 X 경계 (mm)
   depthMM: number;   // 그룹 내 최대 깊이 (mm)
+  depthZOffsetMM: number; // 깊이 방향 Z오프셋 (mm, 하부섹션 깊이 축소 시)
   modules: PlacedModule[];
 }
 
@@ -21,9 +22,56 @@ export interface BaseStripGroup {
 const MERGE_TOLERANCE_MM = 1;
 
 /**
+ * 하부 섹션 깊이 축소에 따른 Z 오프셋 (mm)
+ * 양수 = 뒤로, 음수 = 앞으로
+ */
+function getLowerDepthZOffsetMM(module: PlacedModule): number {
+  const fullDepth = module.freeDepth || 580;
+  const lowerDepth = module.lowerSectionDepth;
+  if (!lowerDepth || lowerDepth >= fullDepth) return 0;
+  const diff = fullDepth - lowerDepth;
+  const dir = module.lowerSectionDepthDirection || 'front';
+  // front: 앞에서 줄어듦 → 걸래받이도 뒤로 이동 (양수 Z offset)
+  // back: 뒤에서 줄어듦 → 걸래받이도 앞으로 이동 (음수 Z offset은 불필요, 앞면 유지)
+  return dir === 'front' ? diff : 0;
+}
+
+/**
+ * 걸래받이용 X 범위 계산 — 하부 섹션의 개별 너비/정렬을 반영
+ */
+function getBaseFrameBoundsX(module: PlacedModule): { left: number; right: number; category: 'full' | 'upper' | 'lower' } {
+  const fullBounds = getModuleBoundsX(module);
+  const sections = module.customConfig?.sections;
+  if (!sections || sections.length === 0) return fullBounds;
+
+  const lowerSection = sections[0];
+  if (!lowerSection.width) return fullBounds;
+
+  const furnitureWidth = module.freeWidth || module.moduleWidth || 450;
+  const sectionWidth = Math.min(lowerSection.width, furnitureWidth);
+  if (sectionWidth >= furnitureWidth) return fullBounds;
+
+  const centerXmm = module.position.x * 100;
+  const halfFW = furnitureWidth / 2;
+  const halfSW = sectionWidth / 2;
+  const align = lowerSection.align || 'center';
+
+  let offsetMM = 0;
+  if (align === 'left') offsetMM = -(halfFW - halfSW);
+  else if (align === 'right') offsetMM = halfFW - halfSW;
+
+  return {
+    left: centerXmm + offsetMM - halfSW,
+    right: centerXmm + offsetMM + halfSW,
+    category: fullBounds.category,
+  };
+}
+
+/**
  * 배치된 가구 목록에서 걸래받이 스트립 그룹을 계산한다.
  * - 자유배치 + hasBase !== false + category !== 'upper' 인 모듈만 대상
  * - X 범위 기준으로 인접/겹치는 모듈을 하나의 그룹으로 병합
+ * - 하부 섹션의 개별 너비/정렬을 반영
  */
 export function computeBaseStripGroups(
   placedModules: PlacedModule[],
@@ -40,11 +88,12 @@ export function computeBaseStripGroups(
 
   if (baseModules.length === 0) return [];
 
-  // 2. X 범위 계산 및 left 기준 정렬
+  // 2. X 범위 계산 및 left 기준 정렬 — 하부 섹션 너비/정렬 반영
   const boundsWithModule = baseModules.map((m) => ({
     module: m,
-    bounds: getModuleBoundsX(m),
-    depthMM: m.freeDepth || 580,
+    bounds: getBaseFrameBoundsX(m),
+    depthMM: m.lowerSectionDepth || m.freeDepth || 580,
+    depthZOffsetMM: getLowerDepthZOffsetMM(m),
   }));
   boundsWithModule.sort((a, b) => a.bounds.left - b.bounds.left);
 
@@ -55,6 +104,7 @@ export function computeBaseStripGroups(
     leftMM: boundsWithModule[0].bounds.left,
     rightMM: boundsWithModule[0].bounds.right,
     depthMM: boundsWithModule[0].depthMM,
+    depthZOffsetMM: boundsWithModule[0].depthZOffsetMM,
     modules: [boundsWithModule[0].module],
   };
 
@@ -64,6 +114,7 @@ export function computeBaseStripGroups(
     if (item.bounds.left <= currentGroup.rightMM + MERGE_TOLERANCE_MM) {
       currentGroup.rightMM = Math.max(currentGroup.rightMM, item.bounds.right);
       currentGroup.depthMM = Math.max(currentGroup.depthMM, item.depthMM);
+      currentGroup.depthZOffsetMM = Math.max(currentGroup.depthZOffsetMM, item.depthZOffsetMM);
       currentGroup.modules.push(item.module);
     } else {
       groups.push(currentGroup);
@@ -72,6 +123,7 @@ export function computeBaseStripGroups(
         leftMM: item.bounds.left,
         rightMM: item.bounds.right,
         depthMM: item.depthMM,
+        depthZOffsetMM: item.depthZOffsetMM,
         modules: [item.module],
       };
     }
@@ -111,6 +163,7 @@ export function computeTopStripGroups(
     leftMM: boundsWithModule[0].bounds.left,
     rightMM: boundsWithModule[0].bounds.right,
     depthMM: boundsWithModule[0].depthMM,
+    depthZOffsetMM: 0,
     modules: [boundsWithModule[0].module],
   };
 
@@ -127,6 +180,7 @@ export function computeTopStripGroups(
         leftMM: item.bounds.left,
         rightMM: item.bounds.right,
         depthMM: item.depthMM,
+        depthZOffsetMM: 0,
         modules: [item.module],
       };
     }

@@ -3309,7 +3309,7 @@ const Room: React.FC<RoomProps> = ({
           const stripGroups = computeBaseStripGroups(placedModulesFromStore);
           if (stripGroups.length === 0) return null;
 
-          const baseZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+          const baseZBase = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
             mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
 
@@ -3318,6 +3318,8 @@ const Room: React.FC<RoomProps> = ({
               {stripGroups.map((group, idx) => {
                 const widthMM = group.rightMM - group.leftMM;
                 const centerXmm = (group.leftMM + group.rightMM) / 2;
+                // 하부 섹션 깊이 축소 시 Z 오프셋 적용 (front 방향 축소 → 뒤로 이동)
+                const baseZPosition = baseZBase - mmToThreeUnits(group.depthZOffsetMM || 0);
                 return (
                   <BoxWithEdges
                     hideEdges={hideEdges}
