@@ -1,9 +1,10 @@
 /**
  * 2D 레이아웃 캔버스
  *
- * LayoutNode 트리를 2D 사각형으로 시각화.
- * 각 leaf: 클릭 → 선택, 치수 표시
- * 경계: 드래그 핸들 → 비율 조정
+ * LayoutNode 트리를 실제 가구 비율의 2D 사각형으로 시각화.
+ * - 각 leaf 클릭 → 선택 + 인라인 분할 버튼
+ * - 경계 드래그 → 비율 조정
+ * - 각 셀에 실제 치수(mm) 표시
  */
 
 import React, { useRef, useCallback, useMemo, useState } from 'react';
@@ -33,9 +34,10 @@ interface LayoutCanvasProps {
   onSplit: (nodeId: string, direction: 'horizontal' | 'vertical') => void;
 }
 
-const CANVAS_WIDTH = 500;
-const CANVAS_PADDING = 20;
-const HANDLE_WIDTH = 8;
+// 캔버스 최대 영역 내에서 비율 유지하면서 가능한 크게 그림
+const MAX_CANVAS_WIDTH = 580;
+const MAX_CANVAS_HEIGHT = 420;
+const HANDLE_HIT_AREA = 12;
 
 const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
   layout,
@@ -58,18 +60,23 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
     totalSize: number;
   } | null>(null);
 
-  // 캔버스 비율 계산
-  const canvasHeight = useMemo(
-    () => Math.round(CANVAS_WIDTH * (totalHeightMM / totalWidthMM)),
-    [totalWidthMM, totalHeightMM],
-  );
+  // 비율 유지하면서 최대 크기 계산
+  const { canvasWidth, canvasHeight } = useMemo(() => {
+    const aspect = totalWidthMM / totalHeightMM;
+    let w = MAX_CANVAS_WIDTH;
+    let h = w / aspect;
+    if (h > MAX_CANVAS_HEIGHT) {
+      h = MAX_CANVAS_HEIGHT;
+      w = h * aspect;
+    }
+    return { canvasWidth: Math.round(w), canvasHeight: Math.round(h) };
+  }, [totalWidthMM, totalHeightMM]);
 
   const canvasRect = useMemo(
-    () => ({ x: 0, y: 0, width: CANVAS_WIDTH, height: canvasHeight }),
-    [canvasHeight],
+    () => ({ x: 0, y: 0, width: canvasWidth, height: canvasHeight }),
+    [canvasWidth, canvasHeight],
   );
 
-  // leaf 사각형 + 핸들 계산
   const leafRects = useMemo(
     () => computeRects(layout, canvasRect, totalWidthMM, totalHeightMM),
     [layout, canvasRect, totalWidthMM, totalHeightMM, computeRects],
@@ -80,37 +87,37 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
     [layout, canvasRect, computeHandles],
   );
 
-  // 핸들의 childIndex 계산 (부모의 children에서 해당 child의 인덱스)
+  // 핸들의 childIndex (부모 children에서 몇 번째인지)
   const getChildIndex = useCallback((handle: ResizeHandle): number => {
-    const findNodeById = (node: LayoutNode, id: string): LayoutNode | null => {
+    const find = (node: LayoutNode, id: string): LayoutNode | null => {
       if (node.id === id) return node;
-      if (node.children) {
-        for (const c of node.children) {
-          const found = findNodeById(c, id);
-          if (found) return found;
-        }
+      if (node.children) for (const c of node.children) {
+        const f = find(c, id);
+        if (f) return f;
       }
       return null;
     };
-
-    const parent = findNodeById(layout, handle.parentId);
+    const parent = find(layout, handle.parentId);
     if (!parent?.children) return 0;
     return parent.children.findIndex(c => c.id === handle.nodeId);
   }, [layout]);
 
-  // 드래그 시작
-  const handleMouseDown = useCallback((
-    e: React.MouseEvent,
-    handle: ResizeHandle,
-  ) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, handle: ResizeHandle) => {
     e.preventDefault();
     e.stopPropagation();
-
     const childIndex = getChildIndex(handle);
-    const totalSize = handle.direction === 'horizontal'
-      ? canvasRect.width
-      : canvasRect.height;
-
+    // 부모 노드의 해당 방향 전체 사이즈 (px)
+    const find = (node: LayoutNode, id: string): LayoutNode | null => {
+      if (node.id === id) return node;
+      if (node.children) for (const c of node.children) {
+        const f = find(c, id);
+        if (f) return f;
+      }
+      return null;
+    };
+    // 부모가 루트면 캔버스 전체, 아니면 부모의 실제 영역을 구해야 하지만
+    // 간단하게 핸들 방향의 캔버스 전체 사이즈 사용 (비율 기반이므로)
+    const totalSize = handle.direction === 'horizontal' ? canvasWidth : canvasHeight;
     setDragState({
       parentId: handle.parentId,
       childIndex,
@@ -118,124 +125,124 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
       startPos: handle.direction === 'horizontal' ? e.clientX : e.clientY,
       totalSize,
     });
-  }, [getChildIndex, canvasRect]);
+  }, [getChildIndex, canvasWidth, canvasHeight]);
 
-  // 드래그 이동
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragState) return;
-
     const currentPos = dragState.direction === 'horizontal' ? e.clientX : e.clientY;
     const pixelDelta = currentPos - dragState.startPos;
     const ratioDelta = pixelDelta / dragState.totalSize;
-
-    if (Math.abs(ratioDelta) > 0.005) {
+    if (Math.abs(ratioDelta) > 0.003) {
       onResize(dragState.parentId, dragState.childIndex, ratioDelta);
       setDragState(prev => prev ? { ...prev, startPos: currentPos } : null);
     }
   }, [dragState, onResize]);
 
-  // 드래그 종료
   const handleMouseUp = useCallback(() => {
     setDragState(null);
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      className={styles.canvas}
-      style={{
-        width: CANVAS_WIDTH + CANVAS_PADDING * 2,
-        height: canvasHeight + CANVAS_PADDING * 2,
-        padding: CANVAS_PADDING,
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      <div
-        className={styles.canvasInner}
-        style={{ width: CANVAS_WIDTH, height: canvasHeight, position: 'relative' }}
-      >
-        {/* Leaf 셀 렌더링 */}
-        {leafRects.map((rect) => {
-          const isSelected = selectedNodeId === rect.nodeId;
-          const splitAllowed = canSplit(rect.nodeId);
+  // 셀이 작으면 치수 표기를 간결하게
+  const renderCellContent = (rect: LeafRect, isSelected: boolean, splitAllowed: boolean) => {
+    const isSmall = rect.width < 80 || rect.height < 60;
+    const isTiny = rect.width < 50 || rect.height < 40;
 
-          return (
-            <div
-              key={rect.nodeId}
-              className={`${styles.cell} ${isSelected ? styles.cellSelected : ''}`}
-              style={{
-                left: rect.x,
-                top: rect.y,
-                width: rect.width,
-                height: rect.height,
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectNode(rect.nodeId);
-              }}
+    return (
+      <div className={styles.cellContent}>
+        {!isTiny && (
+          <span className={styles.cellDimension}>
+            {rect.widthMM} × {rect.heightMM}
+          </span>
+        )}
+        {isTiny && (
+          <span className={styles.cellDimensionSub}>
+            {rect.widthMM}×{rect.heightMM}
+          </span>
+        )}
+        {isSelected && splitAllowed && !isSmall && (
+          <div className={styles.cellActions}>
+            <button
+              className={styles.cellActionBtn}
+              onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'horizontal'); }}
+              title="좌우 분할"
             >
-              <div className={styles.cellContent}>
-                <span className={styles.cellDimension}>
-                  {rect.widthMM} × {rect.heightMM}
-                </span>
-                {isSelected && splitAllowed && (
-                  <div className={styles.splitButtons}>
-                    <button
-                      className={styles.splitBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSplit(rect.nodeId, 'horizontal');
-                      }}
-                      title="좌우 분할"
-                    >
-                      ↔
-                    </button>
-                    <button
-                      className={styles.splitBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSplit(rect.nodeId, 'vertical');
-                      }}
-                      title="상하 분할"
-                    >
-                      ↕
-                    </button>
-                  </div>
-                )}
+              ┃
+            </button>
+            <button
+              className={styles.cellActionBtn}
+              onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'vertical'); }}
+              title="상하 분할"
+            >
+              ━
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className={styles.canvasWrapper}>
+      <div
+        ref={containerRef}
+        className={styles.canvas}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        <div
+          className={styles.canvasInner}
+          style={{ width: canvasWidth, height: canvasHeight }}
+        >
+          {/* Leaf 셀 */}
+          {leafRects.map((rect) => {
+            const isSelected = selectedNodeId === rect.nodeId;
+            const splitAllowed = canSplit(rect.nodeId);
+
+            return (
+              <div
+                key={rect.nodeId}
+                className={`${styles.cell} ${isSelected ? styles.cellSelected : ''}`}
+                style={{
+                  left: rect.x,
+                  top: rect.y,
+                  width: rect.width,
+                  height: rect.height,
+                }}
+                onClick={(e) => { e.stopPropagation(); onSelectNode(rect.nodeId); }}
+              >
+                {renderCellContent(rect, isSelected, splitAllowed)}
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {/* 리사이즈 핸들 렌더링 */}
-        {handles.map((handle, idx) => {
-          const isHorizontal = handle.direction === 'horizontal';
-
-          return (
-            <div
-              key={`handle-${idx}`}
-              className={`${styles.handle} ${isHorizontal ? styles.handleH : styles.handleV}`}
-              style={
-                isHorizontal
-                  ? {
-                      left: handle.x - HANDLE_WIDTH / 2,
-                      top: handle.y,
-                      width: HANDLE_WIDTH,
-                      height: handle.length,
-                    }
-                  : {
-                      left: handle.x,
-                      top: handle.y - HANDLE_WIDTH / 2,
-                      width: handle.length,
-                      height: HANDLE_WIDTH,
-                    }
-              }
-              onMouseDown={(e) => handleMouseDown(e, handle)}
-            />
-          );
-        })}
+          {/* 리사이즈 핸들 */}
+          {handles.map((handle, idx) => {
+            const isH = handle.direction === 'horizontal';
+            return (
+              <div
+                key={`h-${idx}`}
+                className={`${styles.handle} ${isH ? styles.handleH : styles.handleV}`}
+                style={
+                  isH
+                    ? {
+                        left: handle.x - HANDLE_HIT_AREA / 2,
+                        top: handle.y,
+                        width: HANDLE_HIT_AREA,
+                        height: handle.length,
+                      }
+                    : {
+                        left: handle.x,
+                        top: handle.y - HANDLE_HIT_AREA / 2,
+                        width: handle.length,
+                        height: HANDLE_HIT_AREA,
+                      }
+                }
+                onMouseDown={(e) => handleMouseDown(e, handle)}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

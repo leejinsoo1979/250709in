@@ -1,7 +1,7 @@
 /**
- * 레이아웃 빌더 툴바
+ * 레이아웃 빌더 액션 바
  *
- * 선택된 노드에 대한 액션 버튼: 분할(가로/세로), 병합, 리셋
+ * 섹션 수 표시 + 분할/병합/초기화 버튼
  */
 
 import React from 'react';
@@ -30,42 +30,45 @@ const LayoutToolbar: React.FC<LayoutToolbarProps> = ({
   const mergeAllowed = selectedNodeId ? canMergeFn(selectedNodeId) : false;
 
   return (
-    <div className={styles.toolbar}>
-      <div className={styles.toolbarLeft}>
-        <span className={styles.toolbarInfo}>
+    <div className={styles.actionBar}>
+      <div className={styles.actionBarLeft}>
+        <span className={styles.sectionBadge}>
           섹션 {leafCount}개
         </span>
+        {!selectedNodeId && (
+          <span className={styles.selectionHint}>
+            영역을 클릭하여 선택하세요
+          </span>
+        )}
       </div>
-      <div className={styles.toolbarRight}>
+      <div className={styles.actionBarRight}>
         <button
-          className={styles.toolbarBtn}
+          className={styles.actionBtn}
           disabled={!splitAllowed}
           onClick={() => selectedNodeId && onSplit(selectedNodeId, 'horizontal')}
-          title="선택 영역을 좌우로 분할"
         >
-          ↔ 좌우 분할
+          <span className={styles.actionBtnIcon}>┃</span>
+          좌우 분할
         </button>
         <button
-          className={styles.toolbarBtn}
+          className={styles.actionBtn}
           disabled={!splitAllowed}
           onClick={() => selectedNodeId && onSplit(selectedNodeId, 'vertical')}
-          title="선택 영역을 상하로 분할"
         >
-          ↕ 상하 분할
+          <span className={styles.actionBtnIcon}>━</span>
+          상하 분할
         </button>
         <button
-          className={`${styles.toolbarBtn} ${styles.toolbarBtnDanger}`}
+          className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
           disabled={!mergeAllowed}
           onClick={() => selectedNodeId && onMerge(selectedNodeId)}
-          title="선택 영역을 부모와 병합"
         >
           병합
         </button>
         <button
-          className={styles.toolbarBtn}
+          className={`${styles.actionBtn} ${styles.resetBtn}`}
           onClick={onReset}
           disabled={leafCount <= 1}
-          title="모든 분할 초기화"
         >
           초기화
         </button>
