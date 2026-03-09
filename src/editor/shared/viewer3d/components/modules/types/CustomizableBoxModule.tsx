@@ -1599,6 +1599,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             return (
               <>
                 {sections.map((section, sIdx) => {
+                  // 비활성 섹션은 렌더링 스킵 (높이 공간은 유지)
+                  if (section.enabled === false) return null;
                   const boxH = sectionBoxHeights[sIdx];
                   const centerY = sectionCenterYs[sIdx];
                   // 섹션별 깊이: 하부(idx=0)와 상부(마지막)만 개별 깊이 지원
@@ -1635,13 +1637,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       ) : sections[0]?.horizontalSplit ? (
         <>
           {/* 1단 + 좌우 섹션분할: renderBox가 독립 박스 2개로 렌더링 */}
-          {renderBox(sections[0], 0, W, H, D, 0)}
+          {sections[0].enabled !== false && renderBox(sections[0], 0, W, H, D, 0)}
         </>
       ) : (
         <>
           {/* 1단(분할 없음): 섹션별 너비/정렬 지원 */}
           {(() => {
             const section = sections[0];
+            if (section?.enabled === false) return null;
             const singleW = section?.width ? mmToUnit(section.width) : W;
             const singleAlignOff = calculateAlignOffset(singleW, W, section?.align || 'center');
             const needsGroup = singleW !== W;

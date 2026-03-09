@@ -36,6 +36,7 @@ export interface SectionHorizontalSplit {
 export interface CustomSection {
   id: string;
   height: number; // mm (섹션 높이)
+  enabled?: boolean; // 섹션 활성화 여부 (기본: true, false면 박스 프레임 없이 빈 공간)
   // 칸막이 (세로 칸막이 - 내부 얇은 칸막이, leaf 섹션에서만 사용)
   hasPartition?: boolean;
   partitionPosition?: number; // mm (왼쪽에서 칸막이까지 거리)

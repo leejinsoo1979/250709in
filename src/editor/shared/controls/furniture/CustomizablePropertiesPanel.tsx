@@ -464,6 +464,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 섹션 활성/비움 토글
+  const handleSectionEnabledToggle = (sIdx: number, enabled: boolean) => {
+    const sections = [...config.sections];
+    sections[sIdx] = { ...sections[sIdx], enabled };
+    applyConfig({ ...config, sections });
+  };
+
   // 섹션 높이 입력 변경 (문자열 state만 업데이트, 확정은 blur에서)
   const handleSectionHeightInputChange = (idx: number, value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
@@ -2867,76 +2874,34 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   const sectionLabel = config.sections.length === 3
                     ? (realIdx === 2 ? '상부 섹션' : realIdx === 1 ? '중간 섹션' : '하부 섹션')
                     : (realIdx === 1 ? '상부 섹션' : '하부 섹션');
-                  const isLower = realIdx === 0;
                   const hasHSplit = !!section.horizontalSplit;
                   const innerW = furnitureWidth - 2 * panelThickness;
 
                   // 좌우분할 영역 렌더링 헬퍼 (독립 박스 방식)
                   const renderHSplitAreaControls = (side: 'left' | 'center' | 'right', elements: CustomElement[] | undefined, label: string) => {
-                    const el = elements?.[0] || { type: 'open' as const };
-                    const areaType = el.type;
-                    const areaDrawerCount = areaType === 'drawer' && 'heights' in el ? el.heights.length : 0;
                     const isDeleted = !elements;
-                    const areaTypeOptions = isLower
-                      ? (['open', 'shelf', 'drawer', 'rod'] as const)
-                      : (['open', 'shelf', 'rod'] as const);
 
                     return (
                       <div key={side} style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
-                          {isDeleted ? (
+                          <div className={styles.toggleGroup}>
                             <button
-                              style={{
-                                padding: '2px 8px', fontSize: '10px', border: '1px solid #4A90D9',
-                                borderRadius: '4px', background: '#4A90D9', color: '#fff', cursor: 'pointer',
-                              }}
-                              onClick={() => handleHSplitTypeChange(realIdx, side, 'open')}
-                            >
-                              추가
-                            </button>
-                          ) : (
+                              className={`${styles.toggleButton} ${!isDeleted ? styles.active : ''}`}
+                              onClick={() => { if (isDeleted) handleHSplitTypeChange(realIdx, side, 'open'); }}
+                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                            >활성</button>
                             <button
-                              style={{
-                                padding: '2px 8px', fontSize: '10px', border: '1px solid #e74c3c',
-                                borderRadius: '4px', background: '#fff', color: '#e74c3c', cursor: 'pointer',
-                              }}
-                              onClick={() => handleHSplitDelete(realIdx, side)}
-                            >
-                              삭제
-                            </button>
-                          )}
+                              className={`${styles.toggleButton} ${isDeleted ? styles.active : ''}`}
+                              onClick={() => { if (!isDeleted) handleHSplitDelete(realIdx, side); }}
+                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                            >비움</button>
+                          </div>
                         </div>
                         {!isDeleted && (
                           <>
-                            <div className={styles.elementSelector}>
-                              {areaTypeOptions.map((type) => (
-                                <button
-                                  key={type}
-                                  className={`${styles.elementButton} ${areaType === type ? styles.active : ''}`}
-                                  onClick={() => handleHSplitTypeChange(realIdx, side, type, type === 'drawer' ? 2 : undefined)}
-                                >
-                                  {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
-                                </button>
-                              ))}
-                            </div>
-                            {areaType === 'drawer' && isLower && (
-                              <div style={{ marginTop: '4px' }}>
-                                <div className={styles.elementSelector}>
-                                  {[1, 2, 3, 4].map((count) => (
-                                    <button
-                                      key={count}
-                                      className={`${styles.elementButton} ${areaDrawerCount === count ? styles.active : ''}`}
-                                      onClick={() => handleHSplitTypeChange(realIdx, side, 'drawer', count)}
-                                    >
-                                      {count}단
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                             {/* 서브 박스 개별 깊이 */}
-                            <div style={{ marginTop: '6px', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '6px' }}>
+                            <div style={{ marginTop: '4px' }}>
                               <div className={styles.row}>
                                 <span className={styles.label} style={{ fontSize: '10px' }}>깊이</span>
                                 <input
@@ -2983,9 +2948,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       onMouseEnter={() => moduleId && setHighlightedSection(`${moduleId}-${realIdx}`)}
                       onMouseLeave={() => setHighlightedSection(null)}
                     >
-                      <div className={styles.sectionTitle}>
-                        {sectionLabel}
+                      <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>{sectionLabel}</span>
+                        <div className={styles.toggleGroup}>
+                          <button
+                            className={`${styles.toggleButton} ${section.enabled !== false ? styles.active : ''}`}
+                            onClick={() => handleSectionEnabledToggle(realIdx, true)}
+                            style={{ fontSize: '10px', padding: '2px 8px' }}
+                          >활성</button>
+                          <button
+                            className={`${styles.toggleButton} ${section.enabled === false ? styles.active : ''}`}
+                            onClick={() => handleSectionEnabledToggle(realIdx, false)}
+                            style={{ fontSize: '10px', padding: '2px 8px' }}
+                          >비움</button>
+                        </div>
                       </div>
+                      {section.enabled !== false && (
+                      <>
                       <div className={styles.row}>
                         <span className={styles.label}>높이</span>
                         <input
@@ -3117,66 +3096,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               </>
                             );
                           })()}
-                          {/* 영역 타입 + 삭제 */}
+                          {/* 영역 활성/비움 */}
                           {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌측')}
                           {section.horizontalSplit.secondPosition != null &&
                             renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중앙')}
                           {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우측')}
                         </>
-                      ) : (
-                        <>
-                      {/* 타입 선택 */}
-                      <div className={styles.row} style={{ marginTop: '8px' }}>
-                        <span className={styles.label}>타입</span>
-                      </div>
-                      <div className={styles.elementSelector}>
-                        {(isLower
-                          ? (['open', 'shelf', 'drawer', 'rod'] as const)
-                          : (['open', 'shelf', 'rod'] as const)
-                        ).map((type) => {
-                          const { type: currentType } = getSectionTypeInfo(section);
-                          return (
-                            <button
-                              key={type}
-                              className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-                              onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
-                            >
-                              {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {/* 서랍장: 단수 선택 (하부만) */}
-                      {(() => {
-                        const { type: currentType, drawerCount } = getSectionTypeInfo(section);
-                        return currentType === 'drawer' && isLower ? (
-                          <div style={{ marginTop: '8px' }}>
-                            <div className={styles.elementSelector}>
-                              {[1, 2, 3, 4].map((count) => (
-                                <button
-                                  key={count}
-                                  className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
-                                  onClick={() => handleSectionTypeChange(realIdx, 'drawer', count)}
-                                >
-                                  {count}단
-                                </button>
-                              ))}
-                            </div>
-                            <button
-                              style={{
-                                marginTop: '6px', width: '100%', padding: '6px 10px',
-                                border: '1px solid #4A90D9', borderRadius: '6px',
-                                background: '#4A90D9', color: '#fff',
-                                fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
-                              }}
-                              onClick={() => handleEvenFillDrawersForSection(realIdx)}
-                            >
-                              균등 채움
-                            </button>
-                          </div>
-                        ) : null;
-                      })()}
-                        </>
+                      ) : null}
+                      </>
                       )}
                     </div>
                   );
@@ -3185,72 +3112,33 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 /* 단일 섹션 타입 선택 */
                 (() => {
                   const section = config.sections[0];
-                  const { type: currentType, drawerCount } = getSectionTypeInfo(section);
                   const hasHSplit = !!section.horizontalSplit;
                   const innerW = furnitureWidth - 2 * panelThickness;
 
                   // 좌우분할 영역 렌더링 헬퍼 (독립 박스 방식, 단일 섹션용)
                   const renderHSplitAreaControls = (side: 'left' | 'center' | 'right', elements: CustomElement[] | undefined, label: string) => {
-                    const el = elements?.[0] || { type: 'open' as const };
-                    const areaType = el.type;
-                    const areaDrawerCount = areaType === 'drawer' && 'heights' in el ? el.heights.length : 0;
                     const isDeleted = !elements;
                     return (
                       <div key={side} style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
-                          {isDeleted ? (
+                          <div className={styles.toggleGroup}>
                             <button
-                              style={{
-                                padding: '2px 8px', fontSize: '10px', border: '1px solid #4A90D9',
-                                borderRadius: '4px', background: '#4A90D9', color: '#fff', cursor: 'pointer',
-                              }}
-                              onClick={() => handleHSplitTypeChange(0, side, 'open')}
-                            >
-                              추가
-                            </button>
-                          ) : (
+                              className={`${styles.toggleButton} ${!isDeleted ? styles.active : ''}`}
+                              onClick={() => { if (isDeleted) handleHSplitTypeChange(0, side, 'open'); }}
+                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                            >활성</button>
                             <button
-                              style={{
-                                padding: '2px 8px', fontSize: '10px', border: '1px solid #e74c3c',
-                                borderRadius: '4px', background: '#fff', color: '#e74c3c', cursor: 'pointer',
-                              }}
-                              onClick={() => handleHSplitDelete(0, side)}
-                            >
-                              삭제
-                            </button>
-                          )}
+                              className={`${styles.toggleButton} ${isDeleted ? styles.active : ''}`}
+                              onClick={() => { if (!isDeleted) handleHSplitDelete(0, side); }}
+                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                            >비움</button>
+                          </div>
                         </div>
                         {!isDeleted && (
                           <>
-                            <div className={styles.elementSelector}>
-                              {(['open', 'shelf', 'drawer', 'rod'] as const).map((type) => (
-                                <button
-                                  key={type}
-                                  className={`${styles.elementButton} ${areaType === type ? styles.active : ''}`}
-                                  onClick={() => handleHSplitTypeChange(0, side, type, type === 'drawer' ? 2 : undefined)}
-                                >
-                                  {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
-                                </button>
-                              ))}
-                            </div>
-                            {areaType === 'drawer' && (
-                              <div style={{ marginTop: '4px' }}>
-                                <div className={styles.elementSelector}>
-                                  {[1, 2, 3, 4].map((count) => (
-                                    <button
-                                      key={count}
-                                      className={`${styles.elementButton} ${areaDrawerCount === count ? styles.active : ''}`}
-                                      onClick={() => handleHSplitTypeChange(0, side, 'drawer', count)}
-                                    >
-                                      {count}단
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                             {/* 서브 박스 개별 깊이 */}
-                            <div style={{ marginTop: '6px', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '6px' }}>
+                            <div style={{ marginTop: '4px' }}>
                               <div className={styles.row}>
                                 <span className={styles.label} style={{ fontSize: '10px' }}>깊이</span>
                                 <input
@@ -3415,48 +3303,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중앙')}
                           {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우측')}
                         </>
-                      ) : (
-                        <>
-                      <div className={styles.elementSelector}>
-                        {(['open', 'shelf', 'drawer', 'rod'] as const).map((type) => (
-                          <button
-                            key={type}
-                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-                            onClick={() => handleSectionTypeChange(0, type, type === 'drawer' ? 2 : undefined)}
-                          >
-                            {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
-                          </button>
-                        ))}
-                      </div>
-                      {/* 서랍장: 단수 선택 */}
-                      {currentType === 'drawer' && (
-                        <div style={{ marginTop: '8px' }}>
-                          <div className={styles.elementSelector}>
-                            {[1, 2, 3, 4].map((count) => (
-                              <button
-                                key={count}
-                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
-                                onClick={() => handleSectionTypeChange(0, 'drawer', count)}
-                              >
-                                {count}단
-                              </button>
-                            ))}
-                          </div>
-                          <button
-                            style={{
-                              marginTop: '6px', width: '100%', padding: '6px 10px',
-                              border: '1px solid #4A90D9', borderRadius: '6px',
-                              background: '#4A90D9', color: '#fff',
-                              fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                            onClick={() => handleEvenFillDrawersForSection(0)}
-                          >
-                            균등 채움
-                          </button>
-                        </div>
-                      )}
-                        </>
-                      )}
+                      ) : null}
                     </div>
                   );
                 })()
