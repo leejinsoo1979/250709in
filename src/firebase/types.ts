@@ -25,6 +25,7 @@ export interface DesignFile {
   };
   
   thumbnail?: string;
+  isSpaceConfigured?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -71,6 +72,7 @@ export interface CreateDesignFileData {
     placedModules: PlacedModule[];
   };
   thumbnail?: string;  // 썸네일 필드 추가
+  isSpaceConfigured?: boolean;
 }
 
 // 프로젝트 목록에서 사용하는 간단한 타입
