@@ -1189,11 +1189,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const partD = innerD - frontInset; // 칸막이 깊이 (앞 오프셋만큼 줄어듦)
       const partZ = backReduction / 2 - frontInset / 2; // Z 위치 (앞 오프셋만큼 뒤로)
 
-      // 하부 섹션(sIdx===0)에서 좌/우 독립 깊이 계산
-      const isLowerSection = sIdx === 0 && isSplit;
-      const leftBoxD = isLowerSection && lowerLeftSectionDepth
+      // 칸막이 좌/우 독립 깊이 계산 (1단/2단 모두 지원)
+      const leftBoxD = lowerLeftSectionDepth
         ? mmToUnit(lowerLeftSectionDepth) : boxD;
-      const rightBoxD = isLowerSection && lowerRightSectionDepth
+      const rightBoxD = lowerRightSectionDepth
         ? mmToUnit(lowerRightSectionDepth) : boxD;
       // 칸막이 깊이 = 짧은 쪽에 맞춤
       const minAreaD = Math.min(leftBoxD, rightBoxD);
@@ -1276,9 +1275,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const prefix = `box-${sIdx}`;
     const sectionLabel = sIdx === 0 ? '하부' : '상부';
 
-    // 하부 섹션 칸막이 좌/우 독립 깊이 여부
-    const isLowerWithPartition = sIdx === 0 && isSplit && section.hasPartition && section.partitionPosition;
-    const hasIndependentDepth = isLowerWithPartition && (lowerLeftSectionDepth || lowerRightSectionDepth);
+    // 칸막이 좌/우 독립 깊이 여부 (1단/2단 모두 지원)
+    const hasPartitionInSection = section.hasPartition && section.partitionPosition;
+    const hasIndependentDepth = hasPartitionInSection && (lowerLeftSectionDepth || lowerRightSectionDepth);
     const leftD = hasIndependentDepth && lowerLeftSectionDepth ? mmToUnit(lowerLeftSectionDepth) : boxD;
     const rightD = hasIndependentDepth && lowerRightSectionDepth ? mmToUnit(lowerRightSectionDepth) : boxD;
     const leftZOffset = (boxD - leftD) / 2;

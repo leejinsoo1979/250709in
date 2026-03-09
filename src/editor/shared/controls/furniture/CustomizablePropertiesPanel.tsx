@@ -2343,8 +2343,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
               </div>
             )}
             {/* 깊이 */}
-            {sIdx === 0 && areaSide && areaSide !== 'center' && section.hasPartition ? (
-              /* 하부 칸막이 좌/우 독립 깊이 */
+            {areaSide && areaSide !== 'center' && section.hasPartition ? (
+              /* 칸막이 좌/우 독립 깊이 */
               <div className={styles.row}>
                 <span className={styles.label}>깊이</span>
                 <input
@@ -2400,7 +2400,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               </div>
             )}
             {/* 깊이 줄이는 방향 (2섹션일 때만, 칸막이 독립깊이 제외) */}
-            {config.sections.length > 1 && !(sIdx === 0 && areaSide && areaSide !== 'center' && section.hasPartition) && (
+            {config.sections.length > 1 && !(areaSide && areaSide !== 'center' && section.hasPartition) && (
               <div className={styles.row}>
                 <span className={styles.label}>방향</span>
                 <div className={styles.toggleGroup}>
