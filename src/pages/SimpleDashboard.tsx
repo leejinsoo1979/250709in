@@ -3499,21 +3499,12 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 프로젝트/디자인 생성 버튼 */}
+        {/* 프로젝트 생성 버튼 */}
         <div className={styles.createButtonsSection}>
           <button className={styles.createBtn} onClick={handleCreateProject}>
             <PlusIcon size={14} />
             프로젝트 생성
           </button>
-          {selectedProjectId && (
-            <button
-              className={styles.createBtn}
-              onClick={() => handleCreateDesign(selectedProjectId, selectedProject?.title)}
-            >
-              <PlusIcon size={14} />
-              디자인 생성
-            </button>
-          )}
         </div>
 
         {/* 네비게이션 메뉴 */}
@@ -4241,6 +4232,19 @@ const SimpleDashboard: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* 디자인 생성 버튼 */}
+              {selectedProjectId && (
+                <div className={styles.treeCreateDesignBtn}>
+                  <button onClick={() => {
+                    const project = firebaseProjects.find(p => p.id === selectedProjectId);
+                    handleCreateDesign(selectedProjectId, project?.title);
+                  }}>
+                    <PlusIcon size={14} />
+                    디자인 생성
+                  </button>
+                </div>
+              )}
 
               <div className={styles.treeContent}>
                 {firebaseProjects.length > 0 ? (
