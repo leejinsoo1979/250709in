@@ -1,0 +1,219 @@
+/* 레이아웃 빌더 팝업 스타일 */
+
+.popupContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-height: 400px;
+}
+
+.helpText {
+  font-size: 13px;
+  color: var(--color-text-secondary, #666);
+  text-align: center;
+  margin: 0;
+}
+
+/* 캔버스 */
+.canvas {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-surface, #fafafa);
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #e0e0e0);
+  user-select: none;
+}
+
+.canvasInner {
+  position: relative;
+  background: #fff;
+  border: 2px solid #333;
+}
+
+/* 셀 (leaf 섹션) */
+.cell {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid #999;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell:hover {
+  background-color: rgba(66, 133, 244, 0.06);
+  border-color: #666;
+}
+
+.cellSelected {
+  background-color: rgba(66, 133, 244, 0.12) !important;
+  border-color: #4285f4 !important;
+  border-width: 2px;
+  z-index: 1;
+}
+
+.cellContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.cellDimension {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.splitButtons {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.splitBtn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.splitBtn:hover {
+  background: #4285f4;
+  color: #fff;
+  border-color: #4285f4;
+}
+
+/* 리사이즈 핸들 */
+.handle {
+  position: absolute;
+  z-index: 10;
+  background: transparent;
+  transition: background-color 0.15s;
+}
+
+.handle:hover {
+  background: rgba(66, 133, 244, 0.3);
+}
+
+.handle:active {
+  background: rgba(66, 133, 244, 0.5);
+}
+
+.handleH {
+  cursor: col-resize;
+}
+
+.handleV {
+  cursor: row-resize;
+}
+
+/* 툴바 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+}
+
+.toolbarInfo {
+  font-size: 13px;
+  color: var(--color-text-secondary, #666);
+  font-weight: 500;
+}
+
+.toolbarRight {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbarBtn {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--color-text-primary, #333);
+}
+
+.toolbarBtn:hover:not(:disabled) {
+  background: var(--color-secondary, #f0f0f0);
+  border-color: #999;
+}
+
+.toolbarBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbarBtnDanger {
+  color: #d32f2f;
+  border-color: #ffcdd2;
+}
+
+.toolbarBtnDanger:hover:not(:disabled) {
+  background: #ffebee;
+  border-color: #d32f2f;
+}
+
+/* 푸터 버튼 */
+.footerButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.cancelBtn {
+  padding: 8px 20px;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--color-text-primary, #333);
+  transition: all 0.15s;
+}
+
+.cancelBtn:hover {
+  background: var(--color-secondary, #f0f0f0);
+}
+
+.confirmBtn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  background: #4285f4;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.confirmBtn:hover {
+  background: #3367d6;
+}
