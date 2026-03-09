@@ -247,7 +247,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 깊이 확정 (onBlur / Enter)
   const handleDepthInputBlur = () => {
-    console.log('🔴 [CustomizablePanel] handleDepthInputBlur 호출:', { depthInput, furnitureDepth, moduleId });
     if (depthInput === '') {
       setDepthInput(furnitureDepth.toString());
       return;
@@ -261,7 +260,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
       setDepthInput(furnitureDepth.toString());
     } else {
       setDepthError('');
-      console.log('🔴 [CustomizablePanel] freeDepth 업데이트:', { moduleId, freeDepth: num });
       updatePlacedModule(moduleId, { freeDepth: num });
     }
   };
