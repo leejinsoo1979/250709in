@@ -1080,9 +1080,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   };
 
   const handleCustomDepthChange = (newDepth: number) => {
+    const oldDepth = customDepth;
     setCustomDepth(newDepth);
     if (activePopup.id) {
-      updatePlacedModule(activePopup.id, { customDepth: newDepth });
+      const updates: Record<string, any> = { customDepth: newDepth };
+      // 2섹션 가구: 섹션 깊이가 이전 전체 깊이와 같으면(기본값 그대로) 같이 변경
+      if (currentPlacedModule) {
+        const lowerD = currentPlacedModule.lowerSectionDepth;
+        const upperD = currentPlacedModule.upperSectionDepth;
+        if (lowerD !== undefined && lowerD === oldDepth) {
+          updates.lowerSectionDepth = newDepth;
+          setLowerSectionDepth(newDepth);
+          setLowerDepthInput(newDepth.toString());
+        }
+        if (upperD !== undefined && upperD === oldDepth) {
+          updates.upperSectionDepth = newDepth;
+          setUpperSectionDepth(newDepth);
+          setUpperDepthInput(newDepth.toString());
+        }
+        // horizontalSplit 서브박스 깊이도 동기화
+        if (currentPlacedModule.customConfig) {
+          const newSections = currentPlacedModule.customConfig.sections.map((sec: any) => {
+            if (!sec.horizontalSplit) return sec;
+            const hs = { ...sec.horizontalSplit };
+            if (hs.leftDepth === oldDepth) hs.leftDepth = newDepth;
+            if (hs.rightDepth === oldDepth) hs.rightDepth = newDepth;
+            if (hs.centerDepth === oldDepth) hs.centerDepth = newDepth;
+            return { ...sec, horizontalSplit: hs };
+          });
+          updates.customConfig = { ...currentPlacedModule.customConfig, sections: newSections };
+        }
+      }
+      updatePlacedModule(activePopup.id, updates);
     }
   };
 
