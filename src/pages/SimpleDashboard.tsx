@@ -2038,8 +2038,8 @@ const SimpleDashboard: React.FC = () => {
   const displayedItems = useMemo(() => {
     let items = getDisplayedItems();
 
-    // 전체 프로젝트 메뉴에서는 디자인 타입 제외 (프로젝트만 표시)
-    if ((activeMenu === 'all' || activeMenu === 'in-progress') && !selectedProjectId) {
+    // 전체/진행중/완료 프로젝트 메뉴에서는 디자인 타입 제외 (프로젝트만 표시)
+    if ((activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') && !selectedProjectId) {
       items = items.filter(item => item.type === 'project' || item.type === 'new-design');
       console.log('🚫 전체 프로젝트 - 디자인 제외 필터링:', {
         filteredCount: items.length,
@@ -4438,13 +4438,12 @@ const SimpleDashboard: React.FC = () => {
               <ProfileTab initialSection={urlSection || 'profile'} />
             )}
 
-            {/* 기존 프로젝트 그리드 (all, trash, bookmarks, shared-by-me, shared-with-me 메뉴일 때 표시) */}
+            {/* 기존 프로젝트 그리드 (all, in-progress, completed, trash, bookmarks, shared 메뉴일 때 표시) */}
             {console.log('🔍 activeMenu 체크:', {
               activeMenu,
-              isAllTrashBookmarks: (activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me',
-              shouldShowGrid: ((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me')
+              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me'
             })}
-            {((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') ? (
+            {((activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') ? (
               <>
                 {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
                   <div className={styles.listTableHeader}>
