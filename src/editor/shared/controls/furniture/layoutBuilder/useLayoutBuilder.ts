@@ -2,7 +2,7 @@
  * 레이아웃 빌더 상태 관리 훅
  *
  * 분할(split), 병합(merge), 비율조정(resize) 로직 제공.
- * 최대 2단계 분할 제한.
+ * 최대 3단계 분할 제한.
  */
 
 import { useState, useCallback, useMemo } from 'react';

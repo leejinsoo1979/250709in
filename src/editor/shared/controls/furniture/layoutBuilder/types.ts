@@ -3,7 +3,7 @@
  *
  * LayoutNode 트리 구조로 2D 섹션 레이아웃을 표현.
  * 확인 시 convertToConfig()로 CustomFurnitureConfig로 변환.
- * 최대 2단계 분할 (루트 → 1차 children → leaf만 허용)
+ * 최대 3단계 분할 (루트 → 1차 children → leaf만 허용)
  */
 
 export interface LayoutNode {
@@ -46,7 +46,7 @@ export type SplitDirection = 'horizontal' | 'vertical';
 export const MIN_SECTION_SIZE = 100;
 
 // 최대 분할 깊이
-export const MAX_SPLIT_DEPTH = 2;
+export const MAX_SPLIT_DEPTH = 3;
 
 // 초기 레이아웃: 단일 leaf (분할 없음)
 export function createInitialLayout(): LayoutNode {

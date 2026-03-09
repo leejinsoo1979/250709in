@@ -15,6 +15,7 @@
  * - H-split(루트) → sections[0] + horizontalSplit (좌우 분할)
  * - V-split → H-split(child) → sections[i].horizontalSplit
  * - H-split → V-split(child) → areaSubSplits
+ * - V-split → H-split → V-split(grandchild) → sections[i].horizontalSplit + areaSubSplits
  */
 
 import { LayoutNode } from './types';
@@ -69,6 +70,12 @@ export function convertToConfig(
       if (child.direction === 'horizontal' && child.children) {
         // 이 섹션 박스의 내경 너비 = 가구 전체 내경 너비 (측판은 가구 레벨)
         section.horizontalSplit = buildHorizontalSplit(child, totalInnerWidth);
+
+        // H의 children 중 vertical이 있으면 → areaSubSplits (3단계 분할)
+        const areas = buildAreaSubSplits(child, sectionInnerHeight);
+        if (areas) {
+          section.areaSubSplits = areas;
+        }
       }
 
       return section;

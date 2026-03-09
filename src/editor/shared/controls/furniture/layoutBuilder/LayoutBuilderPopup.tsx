@@ -112,7 +112,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
           <div className={styles.guide}>
             <span className={styles.guideIcon}>💡</span>
             <p className={styles.guideText}>
-              영역을 클릭하여 선택 후 분할하세요. 경계선을 드래그하면 크기를 조정할 수 있습니다. 최대 2단계 분할 가능.
+              영역을 클릭하여 선택 후 분할하세요. 경계선을 드래그하면 크기를 조정할 수 있습니다. 최대 3단계 분할 가능.
             </p>
           </div>
 
