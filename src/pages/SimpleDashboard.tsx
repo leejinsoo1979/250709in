@@ -2083,6 +2083,27 @@ const SimpleDashboard: React.FC = () => {
     return firebaseProjects.filter(p => !p.status || p.status === 'in_progress');
   }, [firebaseProjects, activeMenu]);
 
+  // 파일트리 기본 펼침: treeProjects가 로드되면 모든 프로젝트를 자동 확장
+  useEffect(() => {
+    if (treeProjects.length > 0) {
+      setExpandedProjects(prev => {
+        const newSet = new Set(prev);
+        let changed = false;
+        treeProjects.forEach(p => {
+          if (!newSet.has(p.id)) {
+            newSet.add(p.id);
+            changed = true;
+            // 확장 시 디자인 파일 로드
+            if (!projectDesignFiles[p.id] && !designFilesLoading[p.id]) {
+              loadDesignFilesForProject(p.id);
+            }
+          }
+        });
+        return changed ? newSet : prev;
+      });
+    }
+  }, [treeProjects]);
+
   // 정렬 적용
   const sortedItems = [...displayedItems].sort((a, b) => {
     // '디자인 생성' 카드는 항상 맨 앞에 고정
@@ -3776,7 +3797,7 @@ const SimpleDashboard: React.FC = () => {
         </header>
 
         {/* 서브헤더 - 프로젝트 관련 메뉴에서만 표시 */}
-        {((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && (
+        {((activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && (
           <div className={styles.subHeader}>
             <div className={styles.subHeaderContent}>
               {/* 메뉴별 타이틀 표시 (좌측) */}
@@ -3789,6 +3810,9 @@ const SimpleDashboard: React.FC = () => {
                     <PlusIcon size={14} />
                     디자인 생성
                   </button>
+                )}
+                {activeMenu === 'completed' && (
+                  <h1 className={styles.subHeaderTitle}>완료된 프로젝트</h1>
                 )}
                 {activeMenu === 'trash' && (
                   <h1 className={styles.subHeaderTitle}>휴지통</h1>
