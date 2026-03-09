@@ -1889,7 +1889,7 @@ const SimpleDashboard: React.FC = () => {
         '프로젝트 루트 레벨 조건': {
           '선택된 프로젝트 있음': !!selectedProjectId,
           '현재 폴더 없음': currentFolderId === null,
-          '프로젝트 메뉴': activeMenu === 'project'
+          '프로젝트 메뉴': activeMenu === 'in-progress' || activeMenu === 'completed'
         }
       });
       const items = [];
@@ -2073,6 +2073,15 @@ const SimpleDashboard: React.FC = () => {
   }, [selectedProjectId, allProjects, activeMenu, currentFolderId, folders, projectDesignFiles, searchTerm, bookmarkedDesignItems, bookmarkedFolderItems]);
 
   console.log('💡 displayedItems 최종 결과:', displayedItems);
+
+  // 파일트리 사이드바에 표시할 프로젝트 (메뉴별 필터링)
+  const treeProjects = useMemo(() => {
+    if (activeMenu === 'completed') {
+      return firebaseProjects.filter(p => p.status === 'completed');
+    }
+    // in-progress 또는 all (기본)
+    return firebaseProjects.filter(p => !p.status || p.status === 'in_progress');
+  }, [firebaseProjects, activeMenu]);
 
   // 정렬 적용
   const sortedItems = [...displayedItems].sort((a, b) => {
@@ -4221,8 +4230,8 @@ const SimpleDashboard: React.FC = () => {
         )}
 
         <div className={styles.content}>
-          {/* 프로젝트 트리 - 전체/진행중/완료 프로젝트 메뉴일 때 표시 (내가 만든 프로젝트만) */}
-          {(activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') && firebaseProjects.length > 0 && (
+          {/* 프로젝트 트리 - 진행중/완료 프로젝트 메뉴일 때 표시 (메뉴별 필터링) */}
+          {(activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') && treeProjects.length > 0 && (
             <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
               <div className={styles.treeHeader}>
                 <button
@@ -4236,7 +4245,7 @@ const SimpleDashboard: React.FC = () => {
                 </button>
                 <div className={styles.projectSelectorContainer}>
                   <SimpleProjectDropdown
-                    projects={firebaseProjects}
+                    projects={treeProjects}
                     currentProject={selectedProject}
                     onProjectSelect={(project) => {
                       console.log('🎯 SimpleDashboard - 프로젝트 선택됨:', project.id, project.title);
@@ -4249,8 +4258,8 @@ const SimpleDashboard: React.FC = () => {
               <div className={styles.treeContent}>
                 {firebaseProjects.length > 0 ? (
                   <div>
-                    {/* 선택된 프로젝트만 표시 (선택되지 않았으면 모든 프로젝트 표시) */}
-                    {firebaseProjects
+                    {/* 선택된 프로젝트만 표시 (선택되지 않았으면 메뉴별 필터링된 프로젝트 표시) */}
+                    {treeProjects
                       .filter(project => !selectedProjectId || project.id === selectedProjectId)
                       .map(project => {
                       const isExpanded = expandedProjects.has(project.id);
