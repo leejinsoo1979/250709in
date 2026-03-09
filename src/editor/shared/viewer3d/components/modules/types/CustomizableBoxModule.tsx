@@ -2002,7 +2002,75 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const lowerSection = sections[0];
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : W;
         const footAlignOffset = calculateAlignOffset(footWidth, W, lowerSection?.align || 'center');
-        // 하부 섹션 깊이 따라가기
+
+        // 좌우분할(horizontalSplit) + 좌/우 개별 깊이가 다른 경우 → 발판 분리
+        const hs = lowerSection?.horizontalSplit;
+        if (hs && (hs.leftDepth || hs.rightDepth)) {
+          const totalInnerWMm = (footWidth - 2 * t) / 0.01;
+          const leftInnerWMm = hs.position;
+          const leftOuterW = mmToUnit(leftInnerWMm + 2 * panelThickness);
+          const is3Split = hs.secondPosition != null;
+          const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
+          const centerOuterW = is3Split ? mmToUnit(centerInnerWMm + 2 * panelThickness) : 0;
+          const rightInnerWMm = is3Split
+            ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
+            : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
+          const rightOuterW = mmToUnit(rightInnerWMm + 2 * panelThickness);
+
+          const leftCX = -footWidth / 2 + leftOuterW / 2;
+          const rightCX = footWidth / 2 - rightOuterW / 2;
+
+          const getFootDepth = (side: 'left' | 'center' | 'right') => {
+            const d = side === 'left' ? hs.leftDepth : side === 'center' ? hs.centerDepth : hs.rightDepth;
+            const dir = side === 'left' ? hs.leftDepthDirection : side === 'center' ? hs.centerDepthDirection : hs.rightDepthDirection;
+            if (!d) {
+              const baseD = lowerSectionDepth ? mmToUnit(lowerSectionDepth) : D;
+              const baseDiff = D - baseD;
+              const baseZ = baseDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? baseDiff / 2 : -baseDiff / 2;
+              return { fd: baseD, fz: baseZ };
+            }
+            const fd = mmToUnit(d);
+            const diff = D - fd;
+            const fz = diff === 0 ? 0 : (dir || 'front') === 'back' ? diff / 2 : -diff / 2;
+            return { fd, fz };
+          };
+
+          const { fd: leftFD, fz: leftFZ } = getFootDepth('left');
+          const { fd: rightFD, fz: rightFZ } = getFootDepth('right');
+
+          const footProps = {
+            yOffset: -H / 2,
+            renderMode,
+            isHighlighted,
+            isFloating: spaceInfo.baseConfig?.placementType === 'float',
+            baseHeight: spaceInfo.baseConfig?.height || 65,
+            baseDepth: spaceInfo.baseConfig?.depth || 0,
+            viewMode,
+            view2DDirection,
+          } as const;
+
+          return (
+            <group position={[footAlignOffset, 0, 0]}>
+              <group position={[leftCX, 0, leftFZ]}>
+                <AdjustableFootsRenderer width={leftOuterW} depth={leftFD} {...footProps} />
+              </group>
+              {is3Split && (() => {
+                const centerCX = -footWidth / 2 + leftOuterW + centerOuterW / 2;
+                const { fd: centerFD, fz: centerFZ } = getFootDepth('center');
+                return (
+                  <group position={[centerCX, 0, centerFZ]}>
+                    <AdjustableFootsRenderer width={centerOuterW} depth={centerFD} {...footProps} />
+                  </group>
+                );
+              })()}
+              <group position={[rightCX, 0, rightFZ]}>
+                <AdjustableFootsRenderer width={rightOuterW} depth={rightFD} {...footProps} />
+              </group>
+            </group>
+          );
+        }
+
+        // 기본: 단일 발판
         let footDepth = D;
         let footDepthZ = 0;
         if (lowerSectionDepth) {
