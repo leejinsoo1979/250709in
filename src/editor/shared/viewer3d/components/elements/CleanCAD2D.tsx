@@ -2558,6 +2558,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               )}
               
               {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+              {topFrameHeight > 0 && (
               <group>
                 <NativeLine name="dimension_line"
                   points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topFrameLineTopY, 0.002]]}
@@ -2566,6 +2567,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   renderOrder={100000}
                   depthTest={false}
                 />
+                {/* 화살표: 공간이 충분할 때만 표시 (30mm 이상) */}
+                {topFrameHeight >= 30 && (
+                <>
                 <NativeLine name="dimension_line"
                   points={createArrowHead([rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, cabinetAreaTopY + 0.03, 0.002])}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
@@ -2580,10 +2584,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   renderOrder={100000}
                   depthTest={false}
                 />
+                </>
+                )}
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), topFrameHeight < 50
+                    ? topFrameLineTopY + mmToThreeUnits(30)
+                    : mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                   anchorX="center"
@@ -2593,6 +2601,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {topFrameHeight}
                 </Text>
               </group>
+              )}
 
               {/* 4. 상부 프레임 이상으로 올라온 가구 높이 */}
               {hasExtraFurnitureHeight && (
