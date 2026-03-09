@@ -1732,11 +1732,20 @@ const Configurator: React.FC = () => {
 
     if (projectId) {
       if (skipLoad || isNewDesign) {
-        // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
-        console.log('✅ skipLoad=true 또는 design=new - Step 1-3에서 설정한 데이터 유지');
-        console.log('🔍 현재 spaceInfo:', spaceInfo);
-        console.log('🔍 현재 basicInfo:', basicInfo);
-        console.log('🔍 현재 designFileId:', designFileId);
+        // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 또는 CNC에서 복귀 - 이미 스토어에 데이터가 설정되어 있음
+        console.log('✅ skipLoad=true 또는 design=new - 기존 스토어 데이터 유지');
+
+        // skipLoad 파라미터를 URL에서 제거 (새로고침 시 정상 로드되도록)
+        if (skipLoad) {
+          const currentParams = new URLSearchParams(window.location.search);
+          currentParams.delete('skipLoad');
+          const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+          window.history.replaceState({}, '', newUrl);
+        }
+
+        // ID 동기화
+        if (projectId) setCurrentProjectId(projectId);
+        if (designFileId) setCurrentDesignFileId(designFileId);
 
         // 로딩 완료 처리
         setTimeout(() => {

@@ -1729,7 +1729,10 @@ function PageInner(){
         onConfirm={() => {
           console.log('Exit confirmed! Navigating to configurator...');
           // 현재 URL의 search params를 유지하면서 configurator로 이동
-          navigate(`/configurator${location.search}`);
+          // skipLoad=true로 기존 스토어 데이터(배치 가구 등) 유지
+          const params = new URLSearchParams(location.search);
+          params.set('skipLoad', 'true');
+          navigate(`/configurator?${params.toString()}`);
         }}
         onCancel={() => setShowExitConfirm(false)}
       />
