@@ -218,7 +218,9 @@ input:focus, textarea:focus, select:focus {
 [data-theme="light"] [class*="toggleButton"][class*="active"],
 [data-theme="light"] [class*="tabButton"][class*="active"],
 [data-theme="light"] [class*="toggleButton_"][class*="active"],
-[data-theme="light"] [class*="tabButton_"][class*="active"] {
+[data-theme="light"] [class*="tabButton_"][class*="active"],
+[data-theme="light"] [class*="CategoryTab"][class*="active"],
+[data-theme="light"] [class*="activeTab"] {
   background: var(--theme-primary) !important;
   color: #ffffff !important;
   border-color: var(--theme-primary) !important;
@@ -231,7 +233,9 @@ input:focus, textarea:focus, select:focus {
 [data-theme="light"] [class*="toggleButton"][class*="active"]:hover,
 [data-theme="light"] [class*="tabButton"][class*="active"]:hover,
 [data-theme="light"] [class*="toggleButton_"][class*="active"]:hover,
-[data-theme="light"] [class*="tabButton_"][class*="active"]:hover {
+[data-theme="light"] [class*="tabButton_"][class*="active"]:hover,
+[data-theme="light"] [class*="CategoryTab"][class*="active"]:hover,
+[data-theme="light"] [class*="activeTab"]:hover {
   background: var(--theme-primary-hover) !important;
   color: #ffffff !important;
 }
@@ -240,7 +244,9 @@ input:focus, textarea:focus, select:focus {
 [data-theme="light"] [class*="toggleButton"][class*="active"] *,
 [data-theme="light"] [class*="tabButton"][class*="active"] *,
 [data-theme="light"] [class*="toggleButton_"][class*="active"] *,
-[data-theme="light"] [class*="tabButton_"][class*="active"] * {
+[data-theme="light"] [class*="tabButton_"][class*="active"] *,
+[data-theme="light"] [class*="CategoryTab"][class*="active"] *,
+[data-theme="light"] [class*="activeTab"] * {
   color: #ffffff !important;
 }
 
@@ -248,7 +254,9 @@ input:focus, textarea:focus, select:focus {
 body[data-theme="light"] div[class*="toggleButton"][class*="active"],
 body[data-theme="light"] button[class*="toggleButton"][class*="active"],
 body[data-theme="light"] div[class*="tabButton"][class*="active"],
-body[data-theme="light"] button[class*="tabButton"][class*="active"] {
+body[data-theme="light"] button[class*="tabButton"][class*="active"],
+body[data-theme="light"] button[class*="CategoryTab"][class*="active"],
+body[data-theme="light"] button[class*="activeTab"] {
   background-color: var(--theme-primary) !important;
   color: #ffffff !important;
   border-color: var(--theme-primary) !important;
