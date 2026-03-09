@@ -2704,14 +2704,7 @@ const Configurator: React.FC = () => {
                 />
               </div>
 
-              {/* 커스텀 캐비닛 (편집 패널이 열려있으면 숨김) */}
-              {activePopup.type !== 'customizableEdit' && (
-                <div style={{ flex: '0 0 auto', padding: '8px 12px', borderTop: '1px solid var(--theme-border)' }}>
-                  <CustomizableFurnitureLibrary
-                    filter={moduleCategory === 'tall' ? 'full' : moduleCategory as 'upper' | 'lower'}
-                  />
-                </div>
-              )}
+              {/* 커스텀 캐비닛 만들기는 My캐비넷 탭으로 이동 */}
             </div>
           </div>
         );
@@ -2819,6 +2812,15 @@ const Configurator: React.FC = () => {
               <div className={styles.moduleSection}>
                 <MyCabinetGallery filter={myCabinetCategory} editMode={myCabinetEditMode} />
               </div>
+
+              {/* 커스텀 캐비넷 만들기 버튼 */}
+              {activePopup.type !== 'customizableEdit' && (
+                <div style={{ flex: '0 0 auto', padding: '8px 12px', borderTop: '1px solid var(--theme-border)' }}>
+                  <CustomizableFurnitureLibrary
+                    filter={myCabinetCategory === 'all' ? 'full' : myCabinetCategory as 'full' | 'upper' | 'lower'}
+                  />
+                </div>
+              )}
 
               {/* 하단 고정 편집 모드 토글 */}
               <button
