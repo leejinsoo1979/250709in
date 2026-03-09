@@ -1278,6 +1278,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     // 칸막이 좌/우 독립 깊이 여부 (1단/2단 모두 지원)
     const hasPartitionInSection = section.hasPartition && section.partitionPosition;
     const hasIndependentDepth = hasPartitionInSection && (lowerLeftSectionDepth || lowerRightSectionDepth);
+    if (hasPartitionInSection) {
+      console.log(`🔍 renderBox[${sIdx}] hasPartition=true, lowerLeft=${lowerLeftSectionDepth}, lowerRight=${lowerRightSectionDepth}, hasIndepDepth=${hasIndependentDepth}, boxD=${boxD}`);
+    }
     const leftD = hasIndependentDepth && lowerLeftSectionDepth ? mmToUnit(lowerLeftSectionDepth) : boxD;
     const rightD = hasIndependentDepth && lowerRightSectionDepth ? mmToUnit(lowerRightSectionDepth) : boxD;
     const leftZOffset = (boxD - leftD) / 2;

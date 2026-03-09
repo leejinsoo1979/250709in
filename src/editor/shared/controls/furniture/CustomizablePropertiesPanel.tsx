@@ -284,7 +284,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const num = parseInt(raw, 10);
     const clamped = Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, num));
     const updateKey = sIdx === 0 ? 'lowerSectionDepth' : 'upperSectionDepth';
-    updatePlacedModule(moduleId, { [updateKey]: clamped });
+    const updates: Record<string, any> = { [updateKey]: clamped };
+    // 칸막이가 있는 섹션: 좌/우 독립 깊이도 동기화
+    if (config.sections[sIdx]?.hasPartition) {
+      if (sIdx === 0) {
+        updates.lowerLeftSectionDepth = clamped;
+        updates.lowerRightSectionDepth = clamped;
+      }
+    }
+    updatePlacedModule(moduleId, updates);
     setSectionDepthInputs((prev) => ({ ...prev, [sIdx]: clamped.toString() }));
   };
 
@@ -841,12 +849,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
         [`${sIdx}-left`]: halfW.toString(),
         [`${sIdx}-right`]: (innerW - halfW).toString(),
       }));
+      // 좌/우 독립 깊이 초기화 (현재 섹션 깊이로)
+      const currentSectionDepth = sIdx === 0
+        ? (placedModule.lowerSectionDepth ?? furnitureDepth)
+        : (placedModule.upperSectionDepth ?? furnitureDepth);
+      if (sIdx === 0) {
+        updatePlacedModule(moduleId, {
+          lowerLeftSectionDepth: currentSectionDepth,
+          lowerRightSectionDepth: currentSectionDepth,
+        });
+      }
     } else {
       sec.hasPartition = false;
       sec.partitionPosition = undefined;
       sec.elements = sec.leftElements || [{ type: 'open' }];
       sec.leftElements = undefined;
       sec.rightElements = undefined;
+      // 독립 깊이 제거
+      if (sIdx === 0) {
+        updatePlacedModule(moduleId, {
+          lowerLeftSectionDepth: undefined,
+          lowerRightSectionDepth: undefined,
+        });
+      }
     }
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
