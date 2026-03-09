@@ -652,15 +652,27 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
           const centerCX = is3Split ? -W / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
           const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
-          if (hs.leftElements) {
-            icons.push(renderSectionIcon(`${prefix}-hsplit-left`, leftCX + xOffset, centerY, frontZ, sIdx, 'left'));
+          // 서브분할 고려 아이콘 렌더링 헬퍼
+          const addHSplitAreaIcon = (areaKey: 'left' | 'center' | 'right', cx: number, elements: CustomElement[] | undefined) => {
+            if (!elements) return;
+            const subSplit = section.areaSubSplits?.[areaKey];
+            if (subSplit?.enabled) {
+              const areaInnerH = mmToUnit(section.height);
+              const lowerH = mmToUnit(subSplit.lowerHeight);
+              const upperH = areaInnerH - lowerH;
+              const lowerCY = centerY - areaInnerH / 2 + lowerH / 2;
+              const upperCY = centerY + areaInnerH / 2 - upperH / 2;
+              icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}-lower`, cx + xOffset, lowerCY, frontZ, sIdx, areaKey, 'lower'));
+              icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}-upper`, cx + xOffset, upperCY, frontZ, sIdx, areaKey, 'upper'));
+            } else {
+              icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}`, cx + xOffset, centerY, frontZ, sIdx, areaKey));
+            }
+          };
+          addHSplitAreaIcon('left', leftCX, hs.leftElements);
+          if (is3Split) {
+            addHSplitAreaIcon('center', centerCX, hs.centerElements);
           }
-          if (is3Split && hs.centerElements) {
-            icons.push(renderSectionIcon(`${prefix}-hsplit-center`, centerCX + xOffset, centerY, frontZ, sIdx, 'center'));
-          }
-          if (hs.rightElements) {
-            icons.push(renderSectionIcon(`${prefix}-hsplit-right`, rightCX + xOffset, centerY, frontZ, sIdx, 'right'));
-          }
+          addHSplitAreaIcon('right', rightCX, hs.rightElements);
         } else if (section.hasPartition && section.partitionPosition) {
           const partX = -secInnerW / 2 + mmToUnit(section.partitionPosition);
           const leftCenterX = (-secInnerW / 2 + partX - t / 2) / 2;
@@ -724,15 +736,27 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
         const centerCX = is3Split ? -W / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
         const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
-        if (hs.leftElements) {
-          icons.push(renderSectionIcon('single-hsplit-left', leftCX + singleAlignOffset, 0, frontZ, 0, 'left'));
+        // 서브분할 고려 아이콘 렌더링 헬퍼
+        const addSingleHSplitIcon = (areaKey: 'left' | 'center' | 'right', cx: number, elements: CustomElement[] | undefined) => {
+          if (!elements) return;
+          const subSplit = section.areaSubSplits?.[areaKey];
+          if (subSplit?.enabled) {
+            const areaInnerH = mmToUnit(section.height);
+            const lowerH = mmToUnit(subSplit.lowerHeight);
+            const upperH = areaInnerH - lowerH;
+            const lowerCY = -areaInnerH / 2 + lowerH / 2;
+            const upperCY = areaInnerH / 2 - upperH / 2;
+            icons.push(renderSectionIcon(`single-hsplit-${areaKey}-lower`, cx + singleAlignOffset, lowerCY, frontZ, 0, areaKey, 'lower'));
+            icons.push(renderSectionIcon(`single-hsplit-${areaKey}-upper`, cx + singleAlignOffset, upperCY, frontZ, 0, areaKey, 'upper'));
+          } else {
+            icons.push(renderSectionIcon(`single-hsplit-${areaKey}`, cx + singleAlignOffset, 0, frontZ, 0, areaKey));
+          }
+        };
+        addSingleHSplitIcon('left', leftCX, hs.leftElements);
+        if (is3Split) {
+          addSingleHSplitIcon('center', centerCX, hs.centerElements);
         }
-        if (is3Split && hs.centerElements) {
-          icons.push(renderSectionIcon('single-hsplit-center', centerCX + singleAlignOffset, 0, frontZ, 0, 'center'));
-        }
-        if (hs.rightElements) {
-          icons.push(renderSectionIcon('single-hsplit-right', rightCX + singleAlignOffset, 0, frontZ, 0, 'right'));
-        }
+        addSingleHSplitIcon('right', rightCX, hs.rightElements);
       } else if (section?.hasPartition && section?.partitionPosition) {
         const partX = -singleInnerW / 2 + mmToUnit(section.partitionPosition);
         const leftCenterX = (-singleInnerW / 2 + partX - t / 2) / 2;
@@ -1657,14 +1681,28 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
       }
 
-      // 내부 요소 (elements가 있을 때만)
-      if (hasContent && (!isDragging || isEditMode)) {
-        subMeshes.push(
-          ...renderSectionElements(
-            elements!, subInnerW, bInnerH, centerY, subCenterX, subBoxD,
-            label, `s${sIdx}-hsplit-${side}`
-          )
-        );
+      // 내부 요소 (서브분할 areaSubSplits 지원)
+      if ((!isDragging || isEditMode)) {
+        const areaKey = side as 'left' | 'right';
+        const subSplit = section.areaSubSplits?.[areaKey];
+        if (subSplit?.enabled) {
+          // 서브분할 있음: 구분판 + 상/하부 요소 렌더링
+          subMeshes.push(
+            ...renderAreaWithSubSplit(
+              section, areaKey, elements,
+              subInnerW, bInnerH, centerY, subCenterX, subBoxD,
+              label, `s${sIdx}-hsplit-${side}`, sIdx
+            )
+          );
+        } else if (hasContent) {
+          // 서브분할 없음: 기존 방식
+          subMeshes.push(
+            ...renderSectionElements(
+              elements!, subInnerW, bInnerH, centerY, subCenterX, subBoxD,
+              label, `s${sIdx}-hsplit-${side}`
+            )
+          );
+        }
       }
 
       // 깊이 오프셋이 있으면 group으로 감싸기
