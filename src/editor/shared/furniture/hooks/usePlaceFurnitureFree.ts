@@ -172,7 +172,14 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     useFurnitureStore.getState().setPendingCustomConfig(null);
   }
 
-  console.log('✅ [placeFurnitureFree] 배치 완료:', newModule);
+  console.log('✅ [placeFurnitureFree] 배치 완료:', {
+    id: newModule.id,
+    moduleId: newModule.moduleId,
+    isCustomizable: newModule.isCustomizable,
+    hasCustomConfig: !!newModule.customConfig,
+    customConfigSections: newModule.customConfig?.sections?.length,
+    pendingLayoutConfigUsed: !!pendingLayoutConfig,
+  });
   return { success: true, module: newModule };
 }
 
