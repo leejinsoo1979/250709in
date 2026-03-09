@@ -3540,7 +3540,7 @@ const SimpleDashboard: React.FC = () => {
             <div className={styles.navItemIcon}>
               <MdOutlinePending size={20} />
             </div>
-            <span>진행중</span>
+            <span>진행중 프로젝트</span>
             <span className={styles.navItemCount}>
               {firebaseProjects.filter(p => !p.status || p.status === 'in_progress').length}
             </span>
@@ -3559,7 +3559,7 @@ const SimpleDashboard: React.FC = () => {
             <div className={styles.navItemIcon}>
               <MdCheckCircleOutline size={20} />
             </div>
-            <span>완료</span>
+            <span>완료된 프로젝트</span>
             <span className={styles.navItemCount}>
               {firebaseProjects.filter(p => p.status === 'completed').length}
             </span>
