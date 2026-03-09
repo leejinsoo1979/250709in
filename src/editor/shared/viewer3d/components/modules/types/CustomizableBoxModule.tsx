@@ -1295,8 +1295,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           {(() => {
             const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
             const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
+            const gapUnit = mmToUnit(customConfig.sectionGap ?? 0);
             const lowerCenterY = -H / 2 + lowerH / 2;
-            const upperCenterY = -H / 2 + lowerH + upperH / 2;
+            const upperCenterY = -H / 2 + lowerH + gapUnit + upperH / 2;
 
             // 섹션별 깊이 적용
             const lowerD = lowerSectionDepth ? mmToUnit(lowerSectionDepth) : D;
