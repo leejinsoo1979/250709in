@@ -63,6 +63,7 @@ import {
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 import { BoringExportDialog } from '@/editor/shared/controls/boring';
 import { useFurnitureBoring } from '@/domain/boring';
+import Step2SpaceAndCustomization from '@/editor/Step1/components/Step2SpaceAndCustomization';
 
 import styles from './style.module.css';
 import responsiveStyles from './responsive.module.css';
@@ -85,6 +86,7 @@ const Configurator: React.FC = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
+  const [showSpaceConfigPopup, setShowSpaceConfigPopup] = useState(false);
 
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
   // readonly 모드에서는 URL에서 직접 projectId 읽기
@@ -1964,6 +1966,11 @@ const Configurator: React.FC = () => {
                 }
               } else {
                 console.error('❌ 디자인파일에 name 필드가 없습니다!');
+              }
+              // 공간 설정 미완료 감지 → 팝업 표시
+              if ((designFile as any).isSpaceConfigured === false && mode !== 'readonly') {
+                console.log('⚠️ 공간 설정 미완료 디자인 감지 → 공간 설정 팝업 표시');
+                setShowSpaceConfigPopup(true);
               }
             } else {
               console.error('디자인파일 로드 실패:', error);
@@ -4202,6 +4209,43 @@ const Configurator: React.FC = () => {
         onClose={() => setShowBoringExportDialog(false)}
         panels={boringPanels}
       />
+
+      {/* 공간 설정 팝업 (isSpaceConfigured === false 일 때) */}
+      {showSpaceConfigPopup && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            width: '90vw',
+            maxWidth: '1200px',
+            height: '85vh',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          }}>
+            <Step2SpaceAndCustomization
+              mode="configure"
+              designFileId={currentDesignFileId || undefined}
+              projectId={currentProjectId || undefined}
+              onPrevious={() => {}}
+              onClose={() => setShowSpaceConfigPopup(false)}
+              onComplete={() => {
+                console.log('✅ 공간 설정 팝업 완료');
+                setShowSpaceConfigPopup(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 모바일 읽기 전용 모드 전용 UI */}
       {isReadOnly && (
