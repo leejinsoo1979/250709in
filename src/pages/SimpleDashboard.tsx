@@ -3514,12 +3514,21 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 프로젝트 생성 버튼 */}
-        <div className={styles.createProjectSection}>
-          <button className={styles.createProjectBtn} onClick={handleCreateProject}>
-            <PlusIcon size={16} />
+        {/* 프로젝트/디자인 생성 버튼 */}
+        <div className={styles.createButtonsSection}>
+          <button className={styles.createBtn} onClick={handleCreateProject}>
+            <PlusIcon size={14} />
             프로젝트 생성
           </button>
+          {selectedProjectId && (
+            <button
+              className={styles.createBtn}
+              onClick={() => handleCreateDesign(selectedProjectId, selectedProject?.title)}
+            >
+              <PlusIcon size={14} />
+              디자인 생성
+            </button>
+          )}
         </div>
 
         {/* 네비게이션 메뉴 */}
@@ -3782,15 +3791,6 @@ const SimpleDashboard: React.FC = () => {
             <div className={styles.subHeaderContent}>
               {/* 메뉴별 타이틀 표시 (좌측) */}
               <div className={styles.subHeaderLeft}>
-                {activeMenu === 'all' && selectedProjectId && (
-                  <button
-                    className={styles.createDesignHeaderBtn}
-                    onClick={() => handleCreateDesign(selectedProjectId, selectedProject?.title)}
-                  >
-                    <PlusIcon size={14} />
-                    디자인 생성
-                  </button>
-                )}
                 {activeMenu === 'trash' && (
                   <h1 className={styles.subHeaderTitle}>휴지통</h1>
                 )}

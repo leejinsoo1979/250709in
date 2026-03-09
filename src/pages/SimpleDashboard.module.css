@@ -179,29 +179,32 @@
   color: var(--theme-text-secondary) !important;
 }
 
-/* 프로젝트 생성 섹션 */
-.createProjectSection {
-  padding: 0 24px 16px;
+/* 생성 버튼 섹션 */
+.createButtonsSection {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px;
 }
 
-.createProjectBtn {
-  width: 100%;
-  padding: 12px 16px;
+.createBtn {
+  flex: 1;
+  padding: 10px 8px;
   background: var(--theme-primary) !important;
   color: white !important;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
-.createProjectBtn:hover {
+.createBtn:hover {
   background: var(--theme-primary-hover) !important;
 }
 
