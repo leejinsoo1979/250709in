@@ -888,16 +888,7 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {onHelp && (
-              <button className={styles.actionButton} onClick={onHelp}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                  <path d="m9,9a3,3 0 1 1 5.83,1c0,2-3,3-3,3" stroke="currentColor" strokeWidth="2" />
-                  <circle cx="12" cy="17" r="1" fill="currentColor" />
-                </svg>
-                {t('common.help')}
-              </button>
-            )}
+            {/* 도움말 버튼 제거됨 */}
 
             {/* 조작법 버튼 */}
             <button className={styles.actionButton} onClick={handleHelpClick}>
