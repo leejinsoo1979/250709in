@@ -801,24 +801,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return 1;
   };
 
-  // 서랍 균등 채움 계산: 섹션을 서랍으로 꽉 채우되, 마이다 간격 23.6mm 유지, 마이다 최대 높이 320mm
+  // 서랍 균등 채움 계산: 섹션을 서랍으로 최대한 많이 채우되, 마이다 간격 23.6mm 유지
+  // 목표 마이다 높이: 150~250mm (적정 범위), 최소 80mm, 최대 320mm
   // effectiveHeight = 내경(sec.height) + 상판두께(panelThickness)
   // → 서랍 스택은 상판까지 포함해서 분할 (맨 위 gap이 상판에 밀착)
   const calculateEvenFillDrawers = (sectionInnerHeight: number): { count: number; heights: number[] } => {
     const gap = 23.6; // 마이다 간격 (DrawerRenderer gapHeight와 동일)
     const maxDrawerH = 320; // 마이다 최대 높이
     const minDrawerH = 80; // 서랍 최소 높이
+    const targetDrawerH = 200; // 목표 마이다 높이 (적정 크기)
     const effectiveHeight = sectionInnerHeight + panelThickness; // 상판 포함
 
     // 최소 서랍 수: 각 서랍이 maxDrawerH 이하가 되려면
-    // effectiveHeight - gap*(n+1) <= maxDrawerH * n
-    // n >= (effectiveHeight - gap) / (maxDrawerH + gap)
     const minCount = Math.max(1, Math.ceil((effectiveHeight - gap) / (maxDrawerH + gap)));
 
     // 최대 서랍 수: 각 서랍이 minDrawerH 이상이 되려면
     const maxCount = Math.max(1, Math.floor((effectiveHeight - gap) / (minDrawerH + gap)));
 
-    const count = Math.min(minCount, maxCount);
+    // 적정 서랍 수: 목표 높이(200mm)에 가장 가까운 서랍 수
+    const targetCount = Math.max(1, Math.round((effectiveHeight - gap) / (targetDrawerH + gap)));
+
+    // 적정 서랍 수를 [minCount, maxCount] 범위 내로 클램핑
+    const count = Math.max(minCount, Math.min(targetCount, maxCount));
     if (count < 1) return { count: 1, heights: [Math.max(minDrawerH, effectiveHeight - gap * 2)] };
 
     const totalGap = gap * (count + 1);
