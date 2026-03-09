@@ -693,7 +693,7 @@
 
 /* 프로젝트 트리 */
 .projectTree {
-  width: 260px;
+  width: 220px;
   min-width: 220px;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
@@ -728,8 +728,8 @@
 
 .treeToggleButton {
   position: fixed;
-  left: 480px;
-  /* 220px (sidebar) + 260px (tree) */
+  left: 440px;
+  /* 220px (sidebar) + 220px (tree) */
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
