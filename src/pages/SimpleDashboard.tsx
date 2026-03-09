@@ -386,8 +386,6 @@ const SimpleDashboard: React.FC = () => {
 
   // Firebase에서 폴더 데이터 불러오기
   const loadFolderDataForProject = useCallback(async (projectId: string) => {
-    if (!user) return;
-
     try {
       const { folders, error } = await loadFolderData(projectId);
       if (error) {
@@ -401,7 +399,7 @@ const SimpleDashboard: React.FC = () => {
     } catch (err) {
       console.error('폴더 데이터 불러오기 중 오류:', err);
     }
-  }, [user]);
+  }, []);
 
   // Firebase에서 디자인 파일들 불러오기
   const loadDesignFilesForProject = useCallback(async (projectId: string) => {
