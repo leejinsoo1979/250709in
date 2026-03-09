@@ -1,12 +1,13 @@
 /* ========================================
    레이아웃 빌더 팝업
+   다크/라이트 모두 --theme-* 변수 사용
    ======================================== */
 
 /* 오버레이 */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--theme-overlay, rgba(0, 0, 0, 0.55));
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -14,11 +15,12 @@
   animation: fadeIn 0.2s ease-out;
 }
 
-/* 메인 팝업 컨테이너 */
+/* 메인 팝업 */
 .popup {
-  background: var(--theme-surface, #fff);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 16px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--popup-shadow);
   width: 720px;
   max-width: 90vw;
   max-height: 90vh;
@@ -28,13 +30,15 @@
   overflow: hidden;
 }
 
-/* 헤더 */
+/* ========================================
+   헤더
+   ======================================== */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  border-bottom: 1px solid var(--theme-border);
   flex-shrink: 0;
 }
 
@@ -48,8 +52,8 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: var(--theme-primary-light, rgba(59, 130, 246, 0.1));
-  color: var(--theme-primary, #4a90d9);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,13 +63,13 @@
 .headerTitle {
   font-size: 16px;
   font-weight: 700;
-  color: var(--theme-text, #1a1a1a);
+  color: var(--theme-text);
   margin: 0;
 }
 
 .headerDimensions {
   font-size: 12px;
-  color: var(--theme-text-secondary, #888);
+  color: var(--theme-text-secondary);
   margin-top: 2px;
 }
 
@@ -75,7 +79,7 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--theme-text-secondary, #999);
+  color: var(--theme-text-muted);
   cursor: pointer;
   font-size: 20px;
   display: flex;
@@ -85,11 +89,13 @@
 }
 
 .closeBtn:hover {
-  background: var(--theme-surface-hover, #f3f4f6);
-  color: var(--theme-text, #333);
+  background: var(--theme-secondary-bg-hover);
+  color: var(--theme-text);
 }
 
-/* 바디 */
+/* ========================================
+   바디
+   ======================================== */
 .body {
   flex: 1;
   min-height: 0;
@@ -107,10 +113,11 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--theme-primary-light, rgba(59, 130, 246, 0.06));
+  background: var(--theme-primary-light);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   width: 100%;
-  max-width: 600px;
+  max-width: 620px;
 }
 
 .guideIcon {
@@ -120,13 +127,13 @@
 
 .guideText {
   font-size: 12px;
-  color: var(--theme-text-secondary, #666);
+  color: var(--theme-text-secondary);
   line-height: 1.5;
   margin: 0;
 }
 
 /* ========================================
-   캔버스 영역
+   캔버스
    ======================================== */
 .canvasWrapper {
   display: flex;
@@ -145,17 +152,16 @@
 
 .canvasInner {
   position: relative;
-  background: var(--theme-surface, #fff);
-  border: 2px solid var(--theme-text, #333);
-  border-radius: 2px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--theme-background-secondary);
+  border: 2px solid var(--theme-border-hover);
+  border-radius: 3px;
 }
 
-/* 셀 (leaf 영역) */
+/* 셀 (leaf) */
 .cell {
   position: absolute;
   box-sizing: border-box;
-  border: 1px dashed rgba(0, 0, 0, 0.15);
+  border: 1px dashed var(--theme-border-hover);
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
@@ -165,13 +171,14 @@
 }
 
 .cell:hover {
-  background: rgba(59, 130, 246, 0.04);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+  border-style: dashed;
 }
 
 .cellSelected {
-  background: rgba(59, 130, 246, 0.08) !important;
-  border: 2px solid var(--theme-primary, #4a90d9) !important;
+  background: var(--theme-primary-light) !important;
+  border: 2px solid var(--theme-primary) !important;
   border-style: solid !important;
   z-index: 1;
 }
@@ -187,7 +194,7 @@
 .cellLabel {
   font-size: 10px;
   font-weight: 500;
-  color: var(--theme-text-secondary, #999);
+  color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -195,7 +202,7 @@
 .cellDimension {
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-text, #333);
+  color: var(--theme-text);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -203,11 +210,11 @@
 .cellDimensionSub {
   font-size: 10px;
   font-weight: 400;
-  color: var(--theme-text-secondary, #999);
+  color: var(--theme-text-muted);
   white-space: nowrap;
 }
 
-/* 셀 내 인라인 분할 버튼 */
+/* 셀 내 분할 버튼 */
 .cellActions {
   display: flex;
   gap: 6px;
@@ -218,25 +225,24 @@
 .cellActionBtn {
   width: 32px;
   height: 32px;
-  border: 1.5px solid var(--theme-border, #ddd);
+  border: 1.5px solid var(--theme-border-hover);
   border-radius: 8px;
-  background: var(--theme-surface, #fff);
+  background: var(--theme-surface);
   cursor: pointer;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
-  color: var(--theme-text-secondary, #666);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--theme-text-secondary);
 }
 
 .cellActionBtn:hover {
-  background: var(--theme-primary, #4a90d9);
+  background: var(--theme-primary);
   color: #fff;
-  border-color: var(--theme-primary, #4a90d9);
+  border-color: var(--theme-primary);
   transform: scale(1.08);
-  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.3);
+  box-shadow: 0 2px 8px var(--theme-primary-shadow);
 }
 
 /* 리사이즈 핸들 */
@@ -251,7 +257,7 @@
   content: '';
   position: absolute;
   border-radius: 4px;
-  background: var(--theme-primary, #4a90d9);
+  background: var(--theme-primary);
   opacity: 0;
   transition: opacity 0.15s;
 }
@@ -285,29 +291,29 @@
 }
 
 .handle:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--theme-primary-light);
 }
 
 .handle:active {
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--theme-primary-light);
 }
 
 .handle:active::after {
   opacity: 1;
-  background: var(--theme-primary, #3b82f6);
 }
 
 /* ========================================
-   액션 바 (툴바)
+   액션 바
    ======================================== */
 .actionBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 600px;
+  max-width: 620px;
   padding: 12px 16px;
-  background: var(--theme-surface-hover, #f9fafb);
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 12px;
 }
 
@@ -323,15 +329,15 @@
   gap: 4px;
   padding: 4px 10px;
   border-radius: 6px;
-  background: var(--theme-primary-light, rgba(59, 130, 246, 0.1));
-  color: var(--theme-primary, #4a90d9);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
   font-size: 12px;
   font-weight: 600;
 }
 
 .selectionHint {
   font-size: 11px;
-  color: var(--theme-text-secondary, #999);
+  color: var(--theme-text-muted);
 }
 
 .actionBarRight {
@@ -345,21 +351,21 @@
   align-items: center;
   gap: 5px;
   padding: 7px 14px;
-  border: 1px solid var(--theme-border, #e5e7eb);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
-  background: var(--theme-surface, #fff);
+  background: var(--theme-surface);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
-  color: var(--theme-text, #333);
+  color: var(--theme-text);
   white-space: nowrap;
 }
 
 .actionBtn:hover:not(:disabled) {
-  border-color: var(--theme-primary, #4a90d9);
-  color: var(--theme-primary, #4a90d9);
-  background: var(--theme-primary-light, rgba(59, 130, 246, 0.04));
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  background: var(--theme-primary-light);
 }
 
 .actionBtn:disabled {
@@ -373,26 +379,26 @@
 }
 
 .actionBtnDanger {
-  color: #dc2626;
-  border-color: #fecaca;
+  color: var(--theme-danger);
+  border-color: var(--theme-danger-light);
 }
 
 .actionBtnDanger:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #dc2626;
-  color: #dc2626;
+  background: var(--theme-danger-light);
+  border-color: var(--theme-danger);
+  color: var(--theme-danger);
 }
 
 .resetBtn {
-  color: var(--theme-text-secondary, #888);
+  color: var(--theme-text-muted);
   border-color: transparent;
   background: transparent;
 }
 
 .resetBtn:hover:not(:disabled) {
-  background: var(--theme-surface-hover, #f3f4f6);
+  background: var(--theme-secondary-bg-hover);
   border-color: transparent;
-  color: var(--theme-text, #333);
+  color: var(--theme-text);
 }
 
 /* ========================================
@@ -404,43 +410,43 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid var(--theme-border, #e5e7eb);
+  border-top: 1px solid var(--theme-border);
   flex-shrink: 0;
 }
 
 .cancelBtn {
   padding: 9px 24px;
-  border: 1px solid var(--theme-border, #e5e7eb);
+  border: 1px solid var(--theme-border);
   border-radius: 10px;
-  background: var(--theme-surface, #fff);
+  background: var(--theme-surface);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  color: var(--theme-text, #333);
+  color: var(--theme-text);
   transition: all 0.15s;
 }
 
 .cancelBtn:hover {
-  background: var(--theme-surface-hover, #f3f4f6);
-  border-color: #d1d5db;
+  background: var(--theme-secondary-bg-hover);
+  border-color: var(--theme-border-hover);
 }
 
 .confirmBtn {
   padding: 9px 28px;
   border: none;
   border-radius: 10px;
-  background: var(--theme-primary, #4a90d9);
+  background: var(--theme-primary);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.25);
+  box-shadow: 0 2px 8px var(--theme-primary-shadow);
 }
 
 .confirmBtn:hover {
-  background: #3b7dd0;
-  box-shadow: 0 4px 16px rgba(74, 144, 217, 0.35);
+  background: var(--theme-primary-hover);
+  box-shadow: 0 4px 16px var(--theme-primary-shadow);
 }
 
 /* ========================================
