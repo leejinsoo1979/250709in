@@ -1319,6 +1319,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // ── 좌측 상판/바닥판 ──
       const drawerTouchesTop = sectionDrawerTouchesTop(section, section.height);
       const topDepthReduction = drawerTouchesTop ? drawerTopInset : 0;
+      if (section.showTopPanel !== false) {
       meshes.push(
         <BoxWithEdges key={`${prefix}-top-left`}
           args={[leftInnerW - widthReduction / 2, t, leftD - backReduction - topDepthReduction]}
@@ -1327,6 +1328,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${sectionLabel}좌상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
+      }
+      if (section.showBottomPanel !== false) {
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-left`}
           args={[leftInnerW - widthReduction / 2, t, leftD - backReduction]}
@@ -1335,7 +1338,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${sectionLabel}좌바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
+      }
       // ── 우측 상판/바닥판 ──
+      if (section.showTopPanel !== false) {
       meshes.push(
         <BoxWithEdges key={`${prefix}-top-right`}
           args={[rightInnerW - widthReduction / 2, t, rightD - backReduction - topDepthReduction]}
@@ -1344,6 +1349,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${sectionLabel}우상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
+      }
+      if (section.showBottomPanel !== false) {
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-right`}
           args={[rightInnerW - widthReduction / 2, t, rightD - backReduction]}
@@ -1352,7 +1359,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${sectionLabel}우바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
+      }
       // ── 좌측 백패널 ──
+      if (section.showBackPanel !== false) {
       const leftBackH = bInnerH + mmToUnit(backPanelHeightExtMm);
       const leftBackW = leftInnerW + mmToUnit(backPanelWidthExtMm / 2);
       meshes.push(
@@ -1373,6 +1382,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${sectionLabel}우백패널`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
+      }
     } else {
     // ═══ 기존 단일 깊이 렌더링 ═══
 
@@ -1410,6 +1420,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     // 서랍이 상판에 밀착(fullFill 또는 drawerAlign=top)하면 상판 85mm 들여쓰기
     const drawerTouchesTop = sectionDrawerTouchesTop(section, section.height);
     const topDepthReduction = drawerTouchesTop ? drawerTopInset : 0;
+    if (section.showTopPanel !== false) {
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-top`}
@@ -1424,6 +1435,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         furnitureId={placedFurnitureId}
       />
     );
+    }
+    if (section.showBottomPanel !== false) {
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-bottom`}
@@ -1438,8 +1451,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         furnitureId={placedFurnitureId}
       />
     );
+    }
 
     // ═══ 3. 백패널 ═══
+    if (section.showBackPanel !== false) {
     const backPanelH = bInnerH + mmToUnit(backPanelHeightExtMm);
     const backPanelW = bInnerW + mmToUnit(backPanelWidthExtMm);
     const backPanelZ = -boxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
@@ -1459,6 +1474,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         furnitureId={placedFurnitureId}
       />
     );
+    }
     } // else (기존 단일 깊이) 닫기
 
     // ═══ 4. 내부 요소 (칸막이, 서랍, 옷봉, 선반) ═══
@@ -1589,6 +1605,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
 
       // 상판/하판
+      if (section.showTopPanel !== false) {
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-top`}
@@ -1603,6 +1620,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           furnitureId={placedFurnitureId}
         />
       );
+      }
+      if (section.showBottomPanel !== false) {
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-bottom`}
@@ -1617,8 +1636,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           furnitureId={placedFurnitureId}
         />
       );
+      }
 
       // 백패널
+      if (section.showBackPanel !== false) {
       const bpH = bInnerH + mmToUnit(backPanelHeightExtMm);
       const bpW = subInnerW + mmToUnit(backPanelWidthExtMm);
       const bpZ = -subBoxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
@@ -1637,6 +1658,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           furnitureId={placedFurnitureId}
         />
       );
+      }
 
       // 내부 요소 (elements가 있을 때만)
       if (hasContent && (!isDragging || isEditMode)) {
