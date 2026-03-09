@@ -2479,22 +2479,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
   const depth = mmToThreeUnits(actualDepthMm);
 
-  // 깊이 디버그 로그 (일시적)
-  if (placedModule.customDepth || placedModule.freeDepth) {
-    console.log('🔴 [FurnitureItem] 깊이 계산:', {
-      id: placedModule.id,
-      moduleId: placedModule.moduleId,
-      customDepth: placedModule.customDepth,
-      freeDepth: placedModule.freeDepth,
-      moduleDepth,
-      adjustedDepthMm,
-      autoAdjustedDepthMm,
-      actualDepthMm,
-      columnPlacementMode: placedModule.columnPlacementMode,
-      isFreePlacement: placedModule.isFreePlacement,
-      isCustomizable: placedModule.isCustomizable,
-    });
-  }
 
   // 도어 두께 (20mm) - furnitureZ 계산에 필요하므로 먼저 선언
   const doorThicknessMm = 20;
