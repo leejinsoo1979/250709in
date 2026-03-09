@@ -4221,8 +4221,8 @@ const SimpleDashboard: React.FC = () => {
         )}
 
         <div className={styles.content}>
-          {/* 프로젝트 트리 - 전체 프로젝트 메뉴일 때만 표시 (내가 만든 프로젝트만) */}
-          {(activeMenu === 'all' || activeMenu === 'in-progress') && firebaseProjects.length > 0 && (
+          {/* 프로젝트 트리 - 전체/진행중/완료 프로젝트 메뉴일 때 표시 (내가 만든 프로젝트만) */}
+          {(activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed') && firebaseProjects.length > 0 && (
             <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
               <div className={styles.treeHeader}>
                 <button
@@ -4727,26 +4727,6 @@ const SimpleDashboard: React.FC = () => {
                                       {/* 디자인 카드 호버 오버레이 - 그리드 뷰에서만 표시 (휴지통 제외) */}
                                       {viewMode === 'grid' && activeMenu !== 'trash' && (
                                         <div className={styles.designCardOverlay}>
-                                          <button
-                                            className={styles.overlayButton}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              console.log('🔥 디자인 미리보기 버튼 클릭:', {
-                                                itemId: item.id,
-                                                itemType: item.type,
-                                                projectId: item.project.id,
-                                                hasDesignFile: !!item.designFile,
-                                                designFileId: item.designFile?.id,
-                                                itemData: item
-                                              });
-                                              // 실제 디자인 파일이 있으면 디자인 파일 ID 사용, 없으면 프로젝트 ID만 사용
-                                              const actualDesignFileId = item.designFile?.id || (item.id.endsWith('-design') ? undefined : item.id);
-                                              handleOpenViewer(item.project.id, actualDesignFileId);
-                                            }}
-                                          >
-                                            <EyeIcon size={16} />
-                                            디자인 미리보기
-                                          </button>
                                           <button
                                             className={`${styles.overlayButton} ${styles.primary}`}
                                             onClick={(e) => {
