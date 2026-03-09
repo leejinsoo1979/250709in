@@ -318,7 +318,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     setHeightInputs((prev) => ({ ...prev, [inputKey]: displayVal.toString() }));
   };
 
-  // 섹션 높이 ArrowUp/ArrowDown 키 핸들러 (1mm 단위, Shift 10mm)
+  // 섹션 높이 ArrowUp/ArrowDown 키 핸들러 (1mm 단위, Shift 10mm) — 2/3분할 공통
   const handleSectionHeightKeyDown = (e: React.KeyboardEvent, idx: number) => {
     if (e.key === 'Enter') {
       (e.target as HTMLInputElement).blur();
@@ -326,28 +326,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     e.preventDefault();
-    if (config.sections.length !== 2) return;
+    const sectionCount = config.sections.length;
+    if (sectionCount < 2) return;
 
     const step = e.shiftKey ? 10 : 1;
     const delta = e.key === 'ArrowUp' ? step : -step;
-    const totalInner = furnitureHeight - 4 * panelThickness;
-    const hasGap = config.sectionGap !== undefined && config.sectionGap >= 0;
     const current = config.sections[idx].height;
     const sections = [...config.sections];
 
-    if (hasGap) {
-      // 사이 띄움 모드: 이 섹션만 변경, 상대 섹션 유지, gap = 남은 공간
-      const otherH = sections[1 - idx].height;
-      const maxH = totalInner - otherH;
+    if (sectionCount === 3) {
+      // 3분할: 이 섹션만 변경
+      const totalInner = furnitureHeight - 6 * panelThickness;
+      const othersH = sections.reduce((sum, s, i) => i === idx ? sum : sum + s.height, 0);
+      const maxH = totalInner - othersH;
       const clamped = Math.max(100, Math.min(maxH, current + delta));
       if (clamped === current) return;
-      const newGap = totalInner - clamped - otherH;
       sections[idx] = { ...sections[idx], height: clamped };
-
-      applyConfig({ ...config, sections, sectionGap: Math.max(0, newGap) });
+      applyConfig({ ...config, sections });
       setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
     } else {
-      // 기존 모드: 상대 섹션 연동
+      // 2분할: 상대 섹션 연동
+      const totalInner = furnitureHeight - 4 * panelThickness;
       const clamped = Math.max(100, Math.min(totalInner - 100, current + delta));
       if (clamped === current) return;
       const otherH = totalInner - clamped;
@@ -376,24 +375,42 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 섹션 분할 (상/하 분할만 지원)
-  const handleSectionSplit = (split: boolean) => {
-    if (split) {
+  // 섹션 분할 (없음 / 2분할 / 3분할)
+  const handleSectionSplit = (mode: 'none' | '2split' | '3split') => {
+    if (mode === '2split') {
       const availableHeight = furnitureHeight - 4 * panelThickness;
-      const lowerOuterDefault = 1000; // 외경 기준 하부 1000mm
-      const lowerH = Math.min(lowerOuterDefault - 2 * panelThickness, availableHeight - 200); // 내경 = 외경 - 상하판 두께
+      const lowerOuterDefault = 1000;
+      const lowerH = Math.min(lowerOuterDefault - 2 * panelThickness, availableHeight - 200);
       const upperH = availableHeight - lowerH;
       applyConfig({
         ...config,
         splitDirection: 'topBottom',
         splitPosition: lowerH,
-        sectionGap: 0,
+        sectionGap: undefined,
         sections: [
           { id: 'section-lower', height: lowerH, elements: [{ type: 'open' }] },
           { id: 'section-upper', height: upperH, elements: [{ type: 'open' }] },
         ],
       });
       setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
+    } else if (mode === '3split') {
+      // 3분할: 하부/중간/상부 — 6개 패널(각 박스 상하판) 차감
+      const availableHeight = furnitureHeight - 6 * panelThickness;
+      const lowerH = Math.round(availableHeight * 0.4);
+      const middleH = Math.round(availableHeight * 0.2);
+      const upperH = availableHeight - lowerH - middleH;
+      applyConfig({
+        ...config,
+        splitDirection: 'topBottom',
+        splitPosition: lowerH,
+        sectionGap: undefined,
+        sections: [
+          { id: 'section-lower', height: lowerH, elements: [{ type: 'open' }] },
+          { id: 'section-middle', height: middleH, elements: [{ type: 'open' }] },
+          { id: 'section-upper', height: upperH, elements: [{ type: 'open' }] },
+        ],
+      });
+      setSectionHeightInputs({ 0: lowerH.toString(), 1: middleH.toString(), 2: upperH.toString() });
     } else {
       // 분할 해제 → 단일 섹션
       applyConfig({
@@ -414,11 +431,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 섹션 높이 확정 (onBlur / Enter)
+  // 섹션 높이 확정 (onBlur / Enter) — 2분할/3분할 공통
   const handleSectionHeightBlur = (idx: number) => {
-    if (config.sections.length !== 2) return;
-    const totalInner = furnitureHeight - 4 * panelThickness;
-    const hasGap = (config.sectionGap ?? 0) > 0 || config.sectionGap !== undefined && config.sectionGap >= 0;
+    const sectionCount = config.sections.length;
+    if (sectionCount < 2) return;
     const raw = sectionHeightInputs[idx] ?? '';
     if (raw === '') {
       setSectionHeightInputs((prev) => ({ ...prev, [idx]: config.sections[idx].height.toString() }));
@@ -427,35 +443,20 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const num = parseInt(raw, 10);
     const sections = [...config.sections];
 
-    if (hasGap && config.sectionGap !== undefined) {
-      // 사이 띄움 모드: 이 섹션만 변경, 상대 섹션 유지, gap = 남은 공간
-      const otherH = sections[1 - idx].height;
-      const maxH = totalInner - otherH; // 상대 섹션 고정, gap 최소 0
+    if (sectionCount === 3) {
+      // 3분할: 이 섹션만 변경, 나머지 유지 (초과분은 클램프)
+      const totalInner = furnitureHeight - 6 * panelThickness;
+      const othersH = sections.reduce((sum, s, i) => i === idx ? sum : sum + s.height, 0);
+      const maxH = totalInner - othersH;
       const clamped = Math.max(100, Math.min(maxH, num));
-      const newGap = totalInner - clamped - otherH;
       sections[idx] = { ...sections[idx], height: clamped };
-
-      // 서랍 높이 축소 체크 (변경된 섹션만)
-      const sec = sections[idx];
-      const el = sec.elements?.[0];
-      if (el?.type === 'drawer' && 'heights' in el) {
-        const gapTotal = 23.6 * (el.heights.length + 1);
-        const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
-        const maxAllowed = clamped - gapTotal;
-        if (totalDrawerH > maxAllowed) {
-          const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
-          const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
-          sections[idx] = { ...sec, elements: [{ ...el, heights: newHeights }] };
-        }
-      }
-
-      applyConfig({ ...config, sections, sectionGap: Math.max(0, newGap) });
+      applyConfig({ ...config, sections });
       setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
     } else {
-      // 기존 모드: 상대 섹션 연동
-      const availableHeight = totalInner;
-      const clamped = Math.max(100, Math.min(availableHeight - 100, num));
-      const otherH = availableHeight - clamped;
+      // 2분할: 상대 섹션 연동
+      const totalInner = furnitureHeight - 4 * panelThickness;
+      const clamped = Math.max(100, Math.min(totalInner - 100, num));
+      const otherH = totalInner - clamped;
       sections[idx] = { ...sections[idx], height: clamped };
       sections[1 - idx] = { ...sections[1 - idx], height: otherH };
 
@@ -478,28 +479,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
       applyConfig({ ...config, sections });
       setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
-    }
-  };
-
-  // 사이 띄움 토글 핸들러
-  const handleSectionGapToggle = (enabled: boolean) => {
-    if (config.sections.length !== 2) return;
-    if (enabled) {
-      // 사이 띄움 활성화: gap = 0으로 시작, 이후 섹션 높이 조절로 gap 생성
-      applyConfig({ ...config, sectionGap: 0 });
-    } else {
-      // 사이 띄움 비활성화: gap 제거, 양쪽 섹션이 전체 내경을 채우도록 복원
-      const totalInner = furnitureHeight - 4 * panelThickness;
-      const oldLower = config.sections[0].height;
-      const oldUpper = config.sections[1].height;
-      const ratio = totalInner / (oldLower + oldUpper);
-      const newLower = Math.round(oldLower * ratio);
-      const newUpper = totalInner - newLower;
-      const sections = [...config.sections];
-      sections[0] = { ...sections[0], height: newLower };
-      sections[1] = { ...sections[1], height: newUpper };
-      applyConfig({ ...config, sections, sectionGap: undefined });
-      setSectionHeightInputs({ 0: newLower.toString(), 1: newUpper.toString() });
     }
   };
 
@@ -2548,25 +2527,31 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
               <div className={styles.divider} />
 
-              {/* 섹션 분할 (상/하만 지원) */}
+              {/* 섹션 분할 (없음/2분할/3분할) */}
               <div className={styles.section}>
                 <div className={styles.sectionTitle}>섹션 분할</div>
                 <div className={styles.row}>
-                  <span className={styles.label}>상,하</span>
+                  <span className={styles.label}>분할</span>
                   <div className={styles.toggleGroup}>
                     <button
                       className={`${styles.toggleButton} ${!config.splitDirection ? styles.active : ''}`}
                       onClick={() => {
-                        if (config.splitDirection) handleSectionSplit(false);
+                        if (config.splitDirection) handleSectionSplit('none');
                       }}
                     >
                       없음
                     </button>
                     <button
-                      className={`${styles.toggleButton} ${config.splitDirection === 'topBottom' ? styles.active : ''}`}
-                      onClick={() => handleSectionSplit(true)}
+                      className={`${styles.toggleButton} ${config.splitDirection === 'topBottom' && config.sections.length === 2 ? styles.active : ''}`}
+                      onClick={() => handleSectionSplit('2split')}
                     >
-                      분할
+                      2분할
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${config.splitDirection === 'topBottom' && config.sections.length === 3 ? styles.active : ''}`}
+                      onClick={() => handleSectionSplit('3split')}
+                    >
+                      3분할
                     </button>
                   </div>
                 </div>
@@ -2576,111 +2561,84 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
               {/* 섹션 설정: 높이 + 타입 */}
               {config.sections.length > 1 ? (
-                /* 2단 분할: 상부→사이간격→하부 순서 */
+                /* 분할 모드: 상부→(중간→)하부 순서로 표시 */
                 [...config.sections].reverse().map((section, _i) => {
                   const realIdx = config.sections.length - 1 - _i;
-                  const isUpper = realIdx === 1;
+                  const sectionLabel = config.sections.length === 3
+                    ? (realIdx === 2 ? '상부 섹션' : realIdx === 1 ? '중간 섹션' : '하부 섹션')
+                    : (realIdx === 1 ? '상부 섹션' : '하부 섹션');
+                  const isLower = realIdx === 0;
                   const { type: currentType, drawerCount } = getSectionTypeInfo(section);
-                  const typeOptions = isUpper
-                    ? (['open', 'shelf', 'rod'] as const)
-                    : (['open', 'shelf', 'drawer', 'rod'] as const);
+                  // 하부 섹션만 서랍 가능
+                  const typeOptions = isLower
+                    ? (['open', 'shelf', 'drawer', 'rod'] as const)
+                    : (['open', 'shelf', 'rod'] as const);
 
                   return (
-                    <React.Fragment key={realIdx}>
-                      <div
-                        className={styles.section}
-                        onMouseEnter={() => moduleId && setHighlightedSection(`${moduleId}-${realIdx}`)}
-                        onMouseLeave={() => setHighlightedSection(null)}
-                      >
-                        <div className={styles.sectionTitle}>
-                          {isUpper ? '상부 섹션' : '하부 섹션'}
-                        </div>
-                        <div className={styles.row}>
-                          <span className={styles.label}>높이</span>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            className={`${styles.input} ${styles.inputSmall}`}
-                            value={sectionHeightInputs[realIdx] ?? section.height.toString()}
-                            onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
-                            onBlur={() => handleSectionHeightBlur(realIdx)}
-                            onKeyDown={(e) => handleSectionHeightKeyDown(e, realIdx)}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                        <div className={styles.row} style={{ marginTop: '8px' }}>
-                          <span className={styles.label}>타입</span>
-                        </div>
-                        <div className={styles.elementSelector}>
-                          {typeOptions.map((type) => (
-                            <button
-                              key={type}
-                              className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-                              onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
-                            >
-                              {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
-                            </button>
-                          ))}
-                        </div>
-                        {/* 서랍장: 단수 선택 (하부만) */}
-                        {currentType === 'drawer' && !isUpper && (
-                          <div style={{ marginTop: '8px' }}>
-                            <div className={styles.elementSelector}>
-                              {[1, 2, 3, 4].map((count) => (
-                                <button
-                                  key={count}
-                                  className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
-                                  onClick={() => handleSectionTypeChange(realIdx, 'drawer', count)}
-                                >
-                                  {count}단
-                                </button>
-                              ))}
-                            </div>
-                            <button
-                              style={{
-                                marginTop: '6px', width: '100%', padding: '6px 10px',
-                                border: '1px solid #4A90D9', borderRadius: '6px',
-                                background: '#4A90D9', color: '#fff',
-                                fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
-                              }}
-                              onClick={() => handleEvenFillDrawersForSection(realIdx)}
-                            >
-                              균등 채움
-                            </button>
-                          </div>
-                        )}
+                    <div
+                      key={realIdx}
+                      className={styles.section}
+                      onMouseEnter={() => moduleId && setHighlightedSection(`${moduleId}-${realIdx}`)}
+                      onMouseLeave={() => setHighlightedSection(null)}
+                    >
+                      <div className={styles.sectionTitle}>
+                        {sectionLabel}
                       </div>
-                      {/* 사이 띄움: 상부 섹션 뒤에 표시 */}
-                      {isUpper && (
-                        <div className={styles.section}>
-                          <div className={styles.row}>
-                            <span className={styles.label}>사이 띄움</span>
-                            <div className={styles.toggleGroup}>
+                      <div className={styles.row}>
+                        <span className={styles.label}>높이</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className={`${styles.input} ${styles.inputSmall}`}
+                          value={sectionHeightInputs[realIdx] ?? section.height.toString()}
+                          onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
+                          onBlur={() => handleSectionHeightBlur(realIdx)}
+                          onKeyDown={(e) => handleSectionHeightKeyDown(e, realIdx)}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                      <div className={styles.row} style={{ marginTop: '8px' }}>
+                        <span className={styles.label}>타입</span>
+                      </div>
+                      <div className={styles.elementSelector}>
+                        {typeOptions.map((type) => (
+                          <button
+                            key={type}
+                            className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
+                            onClick={() => handleSectionTypeChange(realIdx, type, type === 'drawer' ? 2 : undefined)}
+                          >
+                            {type === 'open' ? '비움' : type === 'shelf' ? '선반장' : type === 'drawer' ? '서랍장' : '옷장'}
+                          </button>
+                        ))}
+                      </div>
+                      {/* 서랍장: 단수 선택 (하부만) */}
+                      {currentType === 'drawer' && isLower && (
+                        <div style={{ marginTop: '8px' }}>
+                          <div className={styles.elementSelector}>
+                            {[1, 2, 3, 4].map((count) => (
                               <button
-                                className={`${styles.toggleButton} ${config.sectionGap === undefined ? styles.active : ''}`}
-                                onClick={() => handleSectionGapToggle(false)}
+                                key={count}
+                                className={`${styles.elementButton} ${drawerCount === count ? styles.active : ''}`}
+                                onClick={() => handleSectionTypeChange(realIdx, 'drawer', count)}
                               >
-                                없음
+                                {count}단
                               </button>
-                              <button
-                                className={`${styles.toggleButton} ${config.sectionGap !== undefined ? styles.active : ''}`}
-                                onClick={() => handleSectionGapToggle(true)}
-                              >
-                                띄움
-                              </button>
-                            </div>
+                            ))}
                           </div>
-                          {config.sectionGap !== undefined && (
-                            <div className={styles.row} style={{ marginTop: '4px' }}>
-                              <span className={styles.label}>간격</span>
-                              <span style={{ fontSize: '12px', color: '#666' }}>
-                                {config.sectionGap}mm
-                              </span>
-                            </div>
-                          )}
+                          <button
+                            style={{
+                              marginTop: '6px', width: '100%', padding: '6px 10px',
+                              border: '1px solid #4A90D9', borderRadius: '6px',
+                              background: '#4A90D9', color: '#fff',
+                              fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => handleEvenFillDrawersForSection(realIdx)}
+                          >
+                            균등 채움
+                          </button>
                         </div>
                       )}
-                    </React.Fragment>
+                    </div>
                   );
                 })
               ) : (

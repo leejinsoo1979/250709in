@@ -468,69 +468,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   };
 
   // 미드웨이(사이 간격) 아이콘 — 메인 편집 패널 열기 (sectionIndex 없이)
-  const renderMidwayIcon = (
-    key: string,
-    posX: number,
-    posY: number,
-    posZ: number,
-  ) => {
-    const isHov = hoveredIcon === key;
-    const themeColor = getThemeColor();
-    return (
-      <Html
-        key={`icon-${key}`}
-        position={[posX, posY, posZ]}
-        center
-        style={{
-          userSelect: 'none',
-          pointerEvents: 'auto',
-          zIndex: 100,
-          background: 'transparent',
-        }}
-      >
-        <div
-          style={{
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '28px',
-            height: '28px',
-            border: `2px solid ${themeColor}`,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.92)',
-            transition: 'all 0.2s ease',
-            opacity: isHov ? 1 : 0.7,
-            transform: isHov ? 'scale(1.15)' : 'scale(1)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (placedFurnitureId) {
-              // 메인 편집 패널 열기 (sectionIndex 없이 → 전체 설정 표시)
-              const canvasRect = gl.domElement.getBoundingClientRect();
-              const worldPos = new THREE.Vector3();
-              groupRef.current?.getWorldPosition(worldPos);
-              const rightEdge = worldPos.clone();
-              rightEdge.x += W / 2;
-              rightEdge.project(camera);
-              const rightScreenX = Math.round((rightEdge.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left);
-              const el = e.currentTarget as HTMLElement;
-              const iconRect = el.getBoundingClientRect();
-              useUIStore.getState().openCustomizableEditPopup(placedFurnitureId, undefined, undefined, undefined, rightScreenX + 12, Math.round(iconRect.top));
-            }
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onMouseEnter={() => setHoveredIcon(key)}
-          onMouseLeave={() => setHoveredIcon(null)}
-          title="사이 간격 설정"
-        >
-          <SettingsIcon color={themeColor} size={14} />
-        </div>
-      </Html>
-    );
-  };
-
   // 섹션 내경 치수 가이드 렌더링 (톱니 아이콘 클릭 시)
   const renderSectionDimensionGuides = () => {
     if (activePopup.type !== 'customizableEdit') return null;
@@ -663,16 +600,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const frontZ = D / 2 + 0.1;
 
     if (isSplit) {
-      const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
-      const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
-      const gapUnit = mmToUnit(customConfig.sectionGap ?? 0);
-      const lowerCenterY = -H / 2 + lowerH / 2;
-      const upperCenterY = -H / 2 + lowerH + gapUnit + upperH / 2;
-
-      // 미드웨이(사이 간격) 아이콘 — 클릭 시 메인 편집 패널 열기 (sectionIndex 없이)
-      if (customConfig.sectionGap !== undefined && customConfig.sectionGap > 0) {
-        const midwayCenterY = -H / 2 + lowerH + gapUnit / 2;
-        icons.push(renderMidwayIcon('midway', 0, midwayCenterY, frontZ));
+      // 각 섹션의 박스 높이(패널 포함)와 중심 Y 계산
+      const sectionBoxHeights = sections.map(s => mmToUnit(s.height + 2 * panelThickness));
+      const sectionCenterYs: number[] = [];
+      let currentBottom = -H / 2;
+      for (let i = 0; i < sections.length; i++) {
+        sectionCenterYs.push(currentBottom + sectionBoxHeights[i] / 2);
+        currentBottom += sectionBoxHeights[i];
       }
 
       const addPartitionIcons = (section: CustomSection, centerY: number, prefix: string, sIdx: number) => {
@@ -705,8 +639,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       };
 
-      addPartitionIcons(sections[0], lowerCenterY, 'lower', 0);
-      addPartitionIcons(sections[1], upperCenterY, 'upper', 1);
+      const sectionLabels = sections.length === 3
+        ? ['lower', 'middle', 'upper']
+        : ['lower', 'upper'];
+      sections.forEach((section, sIdx) => {
+        addPartitionIcons(section, sectionCenterYs[sIdx], sectionLabels[sIdx], sIdx);
+      });
     } else {
       // 단일 섹션에서도 서브분할 고려
       const section = sections[0];
@@ -773,10 +711,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     let centerY = 0;
     let areaH: number;
     if (isSplit) {
-      const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
-      const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
-      centerY = sIdx === 0 ? -H / 2 + lowerH / 2 : -H / 2 + lowerH + upperH / 2;
-      areaH = sIdx === 0 ? lowerH - t : upperH - t;
+      const sectionBoxHeights = sections.map(s => mmToUnit(s.height + 2 * panelThickness));
+      let currentBottom = -H / 2;
+      for (let i = 0; i < sIdx; i++) {
+        currentBottom += sectionBoxHeights[i];
+      }
+      centerY = currentBottom + sectionBoxHeights[sIdx] / 2;
+      areaH = sectionBoxHeights[sIdx] - t;
     } else {
       areaH = H - 2 * t;
     }
@@ -1362,33 +1303,39 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     >
       {isSplit ? (
         <>
-          {/* 2단 분할: 하부장(section[0]) + 상부장(section[1]) 각각 독립 박스 */}
+          {/* 분할 모드: 각 섹션을 독립 박스로 렌더링 (2분할 또는 3분할) */}
           {(() => {
-            const lowerH = mmToUnit(sections[0].height + 2 * panelThickness);
-            const upperH = mmToUnit(sections[1].height + 2 * panelThickness);
-            const gapUnit = mmToUnit(customConfig.sectionGap ?? 0);
-            const lowerCenterY = -H / 2 + lowerH / 2;
-            const upperCenterY = -H / 2 + lowerH + gapUnit + upperH / 2;
-
-            // 섹션별 깊이 적용
-            const lowerD = lowerSectionDepth ? mmToUnit(lowerSectionDepth) : D;
-            const upperD = upperSectionDepth ? mmToUnit(upperSectionDepth) : D;
-
-            // 깊이 차이에 따른 Z 오프셋 계산
-            // front: 뒤쪽 정렬 (앞에서 줄임) → Z를 뒤로 이동 (음수)
-            // back: 앞쪽 정렬 (뒤에서 줄임) → Z를 앞으로 이동 (양수)
-            const lowerDepthDiff = D - lowerD;
-            const lowerDepthZ = lowerDepthDiff === 0 ? 0
-              : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
-
-            const upperDepthDiff = D - upperD;
-            const upperDepthZ = upperDepthDiff === 0 ? 0
-              : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
+            const sectionBoxHeights = sections.map(s => mmToUnit(s.height + 2 * panelThickness));
+            const sectionCenterYs: number[] = [];
+            let currentBottom = -H / 2;
+            for (let i = 0; i < sections.length; i++) {
+              sectionCenterYs.push(currentBottom + sectionBoxHeights[i] / 2);
+              currentBottom += sectionBoxHeights[i];
+            }
 
             return (
               <>
-                {renderBox(sections[0], 0, W, lowerH, lowerD, lowerCenterY, lowerDepthZ)}
-                {renderBox(sections[1], 1, W, upperH, upperD, upperCenterY, upperDepthZ)}
+                {sections.map((section, sIdx) => {
+                  const boxH = sectionBoxHeights[sIdx];
+                  const centerY = sectionCenterYs[sIdx];
+                  // 섹션별 깊이: 하부(idx=0)와 상부(마지막)만 개별 깊이 지원
+                  let sectionD = D;
+                  let depthZ = 0;
+                  if (sIdx === 0 && lowerSectionDepth) {
+                    sectionD = mmToUnit(lowerSectionDepth);
+                    const diff = D - sectionD;
+                    depthZ = diff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? diff / 2 : -diff / 2;
+                  } else if (sIdx === sections.length - 1 && upperSectionDepth) {
+                    sectionD = mmToUnit(upperSectionDepth);
+                    const diff = D - sectionD;
+                    depthZ = diff === 0 ? 0 : upperSectionDepthDirection === 'back' ? diff / 2 : -diff / 2;
+                  }
+                  return (
+                    <React.Fragment key={`split-box-${sIdx}`}>
+                      {renderBox(section, sIdx, W, boxH, sectionD, centerY, depthZ)}
+                    </React.Fragment>
+                  );
+                })}
               </>
             );
           })()}
