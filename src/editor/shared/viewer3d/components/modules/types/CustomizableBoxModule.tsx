@@ -610,8 +610,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
 
       const addPartitionIcons = (section: CustomSection, centerY: number, prefix: string, sIdx: number) => {
-        // 영역별 아이콘 추가 (서브분할 고려)
-        const addAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number) => {
+        // 영역별 아이콘 추가 (서브분할 고려, 삭제된 영역은 스킵)
+        const addAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number, elements: CustomElement[] | undefined) => {
+          // 삭제된 영역은 아이콘 스킵
+          if (areaKey !== 'full' && !elements) return;
+
           const subSplit = section.areaSubSplits?.[areaKey];
           if (subSplit?.enabled) {
             const areaInnerH = mmToUnit(section.height);
@@ -632,10 +635,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
           const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
           const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-          addAreaIcon('left', leftCenterX);
-          addAreaIcon('right', rightCenterX);
+          addAreaIcon('left', leftCenterX, section.leftElements);
+          addAreaIcon('right', rightCenterX, section.rightElements);
         } else {
-          addAreaIcon('full', 0);
+          addAreaIcon('full', 0, section.elements);
         }
       };
 
@@ -648,7 +651,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     } else {
       // 단일 섹션에서도 서브분할 고려
       const section = sections[0];
-      const addSingleAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number) => {
+      const addSingleAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number, elements: CustomElement[] | undefined) => {
+        // 삭제된 영역은 아이콘 스킵
+        if (areaKey !== 'full' && !elements) return;
+
         const subSplit = section?.areaSubSplits?.[areaKey];
         if (subSplit?.enabled) {
           const areaInnerH = mmToUnit(section.height);
@@ -669,10 +675,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
         const leftCenterX = (-innerW / 2 + partX - t / 2) / 2;
         const rightCenterX = (partX + t / 2 + innerW / 2) / 2;
-        addSingleAreaIcon('left', leftCenterX);
-        addSingleAreaIcon('right', rightCenterX);
+        addSingleAreaIcon('left', leftCenterX, section?.leftElements);
+        addSingleAreaIcon('right', rightCenterX, section?.rightElements);
       } else {
-        addSingleAreaIcon('full', 0);
+        addSingleAreaIcon('full', 0, section?.elements);
       }
     }
 
@@ -1110,7 +1116,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const bInnerW = boxW - 2 * t;
     const bInnerH = boxH - 2 * t;
     const innerD = boxD - backReduction;
-    const sectionLabel = isSplit ? (sIdx === 0 ? '(하)' : '(상)') : '';
+    const sectionLabel = isSplit
+      ? (sections.length === 3 ? (sIdx === 0 ? '(하)' : sIdx === 1 ? '(중)' : '(상)') : (sIdx === 0 ? '(하)' : '(상)'))
+      : '';
 
     if (section.hasPartition && section.partitionPosition) {
       const partPos = mmToUnit(section.partitionPosition);
