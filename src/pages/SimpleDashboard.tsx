@@ -4029,6 +4029,29 @@ const SimpleDashboard: React.FC = () => {
                   );
                 })()}
 
+                {/* 전체 선택 버튼 */}
+                {sortedItems.some(item => item.type !== 'new-design' && item.type !== 'loading') && (
+                  <button
+                    className={`${styles.selectAllBtn} ${(() => {
+                      const selectableItems = sortedItems.filter(item => item.type !== 'new-design' && item.type !== 'loading');
+                      return selectableItems.length > 0 && selectableItems.every(item => selectedCards.has(item.id));
+                    })() ? styles.active : ''}`}
+                    onClick={() => handleSelectAll(sortedItems)}
+                    title="전체 선택/해제"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={(() => {
+                        const selectableItems = sortedItems.filter(item => item.type !== 'new-design' && item.type !== 'loading');
+                        return selectableItems.length > 0 && selectableItems.every(item => selectedCards.has(item.id));
+                      })()}
+                      onChange={() => handleSelectAll(sortedItems)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span>전체 선택</span>
+                  </button>
+                )}
+
                 {/* 검색바 */}
                 <div className={styles.searchContainer}>
                   <div className={styles.searchIcon}>
@@ -5393,9 +5416,6 @@ const SimpleDashboard: React.FC = () => {
                                         return user?.displayName || user?.email?.split('@')[0] || '이진수';
                                       })()}
                                     </span>
-                                  </div>
-                                  <div className={styles.cardBadge}>
-                                    V5.0
                                   </div>
                                 </div>
                               </div>
