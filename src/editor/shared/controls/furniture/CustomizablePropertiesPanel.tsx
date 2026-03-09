@@ -64,8 +64,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [subSplitHeightInputs, setSubSplitHeightInputs] = useState<Record<string, string>>({});
   // 섹션별 깊이 입력 - 키: sIdx (0, 1)
   const [sectionDepthInputs, setSectionDepthInputs] = useState<Record<number, string>>({});
-  // 섹션 사이 간격 입력 (상부/하부 사이 빈 공간)
-  const [sectionGapInput, setSectionGapInput] = useState<string>('0');
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -77,7 +75,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
       cfg.sections.forEach((s, i) => { sectionHInputs[i] = s.height.toString(); });
       setSectionHeightInputs(sectionHInputs);
       // 사이 간격 입력 초기화
-      setSectionGapInput((cfg.sectionGap ?? 0).toString());
       // 선반/서랍 높이 입력 초기화
       const hInputs: Record<string, string> = {};
       cfg.sections.forEach((s, sIdx) => {
@@ -333,40 +330,50 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     const step = e.shiftKey ? 10 : 1;
     const delta = e.key === 'ArrowUp' ? step : -step;
-    const availableHeight = furnitureHeight - 4 * panelThickness - (config.sectionGap ?? 0);
+    const totalInner = furnitureHeight - 4 * panelThickness;
+    const hasGap = config.sectionGap !== undefined && config.sectionGap >= 0;
     const current = config.sections[idx].height;
-    const clamped = Math.max(100, Math.min(availableHeight - 100, current + delta));
-    if (clamped === current) return;
-
-    const otherH = availableHeight - clamped;
     const sections = [...config.sections];
-    sections[idx] = { ...sections[idx], height: clamped };
-    sections[1 - idx] = { ...sections[1 - idx], height: otherH };
 
-    // 서랍 높이: 섹션 높이가 줄어서 서랍이 넘칠 때만 축소 (기존 높이 유지 원칙)
-    for (let sIdx = 0; sIdx < 2; sIdx++) {
-      const sec = sections[sIdx];
-      const el = sec.elements?.[0];
-      if (el?.type === 'drawer' && 'heights' in el) {
-        const newH = sections[sIdx].height;
-        const gapTotal = 23.6 * (el.heights.length + 1);
-        const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
-        const maxAllowed = newH - gapTotal;
-        if (totalDrawerH > maxAllowed) {
-          // 축소 필요: 비례 축소
-          const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
-          const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
-          sections[sIdx] = {
-            ...sec,
-            elements: [{ ...el, heights: newHeights }],
-          };
+    if (hasGap) {
+      // 사이 띄움 모드: 이 섹션만 변경, 상대 섹션 유지, gap = 남은 공간
+      const otherH = sections[1 - idx].height;
+      const maxH = totalInner - otherH;
+      const clamped = Math.max(100, Math.min(maxH, current + delta));
+      if (clamped === current) return;
+      const newGap = totalInner - clamped - otherH;
+      sections[idx] = { ...sections[idx], height: clamped };
+
+      applyConfig({ ...config, sections, sectionGap: Math.max(0, newGap) });
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
+    } else {
+      // 기존 모드: 상대 섹션 연동
+      const clamped = Math.max(100, Math.min(totalInner - 100, current + delta));
+      if (clamped === current) return;
+      const otherH = totalInner - clamped;
+      sections[idx] = { ...sections[idx], height: clamped };
+      sections[1 - idx] = { ...sections[1 - idx], height: otherH };
+
+      // 서랍 높이 축소 체크
+      for (let sIdx = 0; sIdx < 2; sIdx++) {
+        const sec = sections[sIdx];
+        const el = sec.elements?.[0];
+        if (el?.type === 'drawer' && 'heights' in el) {
+          const newH = sections[sIdx].height;
+          const gapTotal = 23.6 * (el.heights.length + 1);
+          const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
+          const maxAllowed = newH - gapTotal;
+          if (totalDrawerH > maxAllowed) {
+            const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
+            const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
+            sections[sIdx] = { ...sec, elements: [{ ...el, heights: newHeights }] };
+          }
         }
-        // 섹션이 커졌을 때는 서랍 높이를 유지 (덮개선반이 남은 공간 채움)
       }
-    }
 
-    applyConfig({ ...config, sections });
-    setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+      applyConfig({ ...config, sections });
+      setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+    }
   };
 
   // 섹션 분할 (상/하 분할만 지원)
@@ -387,7 +394,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
         ],
       });
       setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
-      setSectionGapInput('0');
     } else {
       // 분할 해제 → 단일 섹션
       applyConfig({
@@ -398,7 +404,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
         sections: [{ id: 'section-0', height: innerHeight, elements: config.sections[0]?.elements || [{ type: 'open' }] }],
       });
       setSectionHeightInputs({ 0: innerHeight.toString() });
-      setSectionGapInput('0');
     }
   };
 
@@ -412,94 +417,90 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 섹션 높이 확정 (onBlur / Enter)
   const handleSectionHeightBlur = (idx: number) => {
     if (config.sections.length !== 2) return;
-    const availableHeight = furnitureHeight - 4 * panelThickness - (config.sectionGap ?? 0);
+    const totalInner = furnitureHeight - 4 * panelThickness;
+    const hasGap = (config.sectionGap ?? 0) > 0 || config.sectionGap !== undefined && config.sectionGap >= 0;
     const raw = sectionHeightInputs[idx] ?? '';
     if (raw === '') {
-      // 빈 값이면 원래 값으로 복원
       setSectionHeightInputs((prev) => ({ ...prev, [idx]: config.sections[idx].height.toString() }));
       return;
     }
     const num = parseInt(raw, 10);
-    const clamped = Math.max(100, Math.min(availableHeight - 100, num));
-    const otherH = availableHeight - clamped;
     const sections = [...config.sections];
-    sections[idx] = { ...sections[idx], height: clamped };
-    sections[1 - idx] = { ...sections[1 - idx], height: otherH };
 
-    // 서랍 높이: 섹션 높이가 줄어서 서랍이 넘칠 때만 축소 (기존 높이 유지 원칙)
-    for (let sIdx = 0; sIdx < 2; sIdx++) {
-      const sec = sections[sIdx];
+    if (hasGap && config.sectionGap !== undefined) {
+      // 사이 띄움 모드: 이 섹션만 변경, 상대 섹션 유지, gap = 남은 공간
+      const otherH = sections[1 - idx].height;
+      const maxH = totalInner - otherH; // 상대 섹션 고정, gap 최소 0
+      const clamped = Math.max(100, Math.min(maxH, num));
+      const newGap = totalInner - clamped - otherH;
+      sections[idx] = { ...sections[idx], height: clamped };
+
+      // 서랍 높이 축소 체크 (변경된 섹션만)
+      const sec = sections[idx];
       const el = sec.elements?.[0];
       if (el?.type === 'drawer' && 'heights' in el) {
-        const newH = sIdx === idx ? clamped : otherH;
         const gapTotal = 23.6 * (el.heights.length + 1);
         const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
-        const maxAllowed = newH - gapTotal;
+        const maxAllowed = clamped - gapTotal;
         if (totalDrawerH > maxAllowed) {
           const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
           const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
-          sections[sIdx] = {
-            ...sec,
-            elements: [{ ...el, heights: newHeights }],
-          };
+          sections[idx] = { ...sec, elements: [{ ...el, heights: newHeights }] };
         }
       }
-    }
 
-    applyConfig({ ...config, sections });
-    setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+      applyConfig({ ...config, sections, sectionGap: Math.max(0, newGap) });
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
+    } else {
+      // 기존 모드: 상대 섹션 연동
+      const availableHeight = totalInner;
+      const clamped = Math.max(100, Math.min(availableHeight - 100, num));
+      const otherH = availableHeight - clamped;
+      sections[idx] = { ...sections[idx], height: clamped };
+      sections[1 - idx] = { ...sections[1 - idx], height: otherH };
+
+      // 서랍 높이 축소 체크
+      for (let sIdx = 0; sIdx < 2; sIdx++) {
+        const sec = sections[sIdx];
+        const el = sec.elements?.[0];
+        if (el?.type === 'drawer' && 'heights' in el) {
+          const newH = sIdx === idx ? clamped : otherH;
+          const gapTotal = 23.6 * (el.heights.length + 1);
+          const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
+          const maxAllowed = newH - gapTotal;
+          if (totalDrawerH > maxAllowed) {
+            const ratio = Math.max(maxAllowed, el.heights.length * 80) / totalDrawerH;
+            const newHeights = el.heights.map((h: number) => Math.round(h * ratio));
+            sections[sIdx] = { ...sec, elements: [{ ...el, heights: newHeights }] };
+          }
+        }
+      }
+
+      applyConfig({ ...config, sections });
+      setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+    }
   };
 
-  // 사이 간격 입력 변경 (문자열 state만 업데이트)
-  const handleSectionGapChange = (value: string) => {
-    if (value === '' || /^\d+$/.test(value)) {
-      setSectionGapInput(value);
-    }
-  };
-
-  // 사이 간격 확정 (onBlur / Enter) — gap만 변경, 섹션 높이 유지
-  const handleSectionGapBlur = () => {
+  // 사이 띄움 토글 핸들러
+  const handleSectionGapToggle = (enabled: boolean) => {
     if (config.sections.length !== 2) return;
-    const raw = sectionGapInput;
-    if (raw === '') {
-      setSectionGapInput((config.sectionGap ?? 0).toString());
-      return;
+    if (enabled) {
+      // 사이 띄움 활성화: gap = 0으로 시작, 이후 섹션 높이 조절로 gap 생성
+      applyConfig({ ...config, sectionGap: 0 });
+    } else {
+      // 사이 띄움 비활성화: gap 제거, 양쪽 섹션이 전체 내경을 채우도록 복원
+      const totalInner = furnitureHeight - 4 * panelThickness;
+      const oldLower = config.sections[0].height;
+      const oldUpper = config.sections[1].height;
+      const ratio = totalInner / (oldLower + oldUpper);
+      const newLower = Math.round(oldLower * ratio);
+      const newUpper = totalInner - newLower;
+      const sections = [...config.sections];
+      sections[0] = { ...sections[0], height: newLower };
+      sections[1] = { ...sections[1], height: newUpper };
+      applyConfig({ ...config, sections, sectionGap: undefined });
+      setSectionHeightInputs({ 0: newLower.toString(), 1: newUpper.toString() });
     }
-    const newGap = Math.max(0, parseInt(raw, 10));
-    const oldGap = config.sectionGap ?? 0;
-    if (newGap === oldGap) {
-      setSectionGapInput(newGap.toString());
-      return;
-    }
-    // gap 최대: 총 내부 높이 - 양쪽 섹션 최소 100mm씩
-    const totalInner = furnitureHeight - 4 * panelThickness;
-    const maxGap = Math.max(0, totalInner - 200);
-    const clampedGap = Math.min(newGap, maxGap);
-
-    applyConfig({ ...config, sectionGap: clampedGap });
-    setSectionGapInput(clampedGap.toString());
-  };
-
-  // 사이 간격 ArrowUp/ArrowDown 키 핸들러 — gap만 변경, 섹션 높이 유지
-  const handleSectionGapKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      (e.target as HTMLInputElement).blur();
-      return;
-    }
-    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-    e.preventDefault();
-    if (config.sections.length !== 2) return;
-
-    const step = e.shiftKey ? 10 : 1;
-    const delta = e.key === 'ArrowUp' ? step : -step;
-    const oldGap = config.sectionGap ?? 0;
-    const totalInner = furnitureHeight - 4 * panelThickness;
-    const maxGap = Math.max(0, totalInner - 200);
-    const newGap = Math.max(0, Math.min(maxGap, oldGap + delta));
-    if (newGap === oldGap) return;
-
-    applyConfig({ ...config, sectionGap: newGap });
-    setSectionGapInput(newGap.toString());
   };
 
   // 기존 모듈 기준 서랍 단수별 표준 사양 (shelving.ts FURNITURE_SPECS 참조)
@@ -2649,23 +2650,34 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      {/* 사이 간격: 상부 섹션 뒤에 표시 (상부→간격→하부 순서) */}
+                      {/* 사이 띄움: 상부 섹션 뒤에 표시 */}
                       {isUpper && (
                         <div className={styles.section}>
-                          <div className={styles.sectionTitle}>사이 간격</div>
                           <div className={styles.row}>
-                            <span className={styles.label}>간격</span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              className={`${styles.input} ${styles.inputSmall}`}
-                              value={sectionGapInput}
-                              onChange={(e) => handleSectionGapChange(e.target.value)}
-                              onBlur={handleSectionGapBlur}
-                              onKeyDown={handleSectionGapKeyDown}
-                            />
-                            <span className={styles.unit}>mm</span>
+                            <span className={styles.label}>사이 띄움</span>
+                            <div className={styles.toggleGroup}>
+                              <button
+                                className={`${styles.toggleButton} ${config.sectionGap === undefined ? styles.active : ''}`}
+                                onClick={() => handleSectionGapToggle(false)}
+                              >
+                                없음
+                              </button>
+                              <button
+                                className={`${styles.toggleButton} ${config.sectionGap !== undefined ? styles.active : ''}`}
+                                onClick={() => handleSectionGapToggle(true)}
+                              >
+                                띄움
+                              </button>
+                            </div>
                           </div>
+                          {config.sectionGap !== undefined && (
+                            <div className={styles.row} style={{ marginTop: '4px' }}>
+                              <span className={styles.label}>간격</span>
+                              <span style={{ fontSize: '12px', color: '#666' }}>
+                                {config.sectionGap}mm
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </React.Fragment>
