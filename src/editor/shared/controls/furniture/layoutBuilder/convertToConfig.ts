@@ -1,12 +1,12 @@
 /**
  * LayoutNode 트리 → CustomFurnitureConfig 변환
  *
- * 렌더러 모델: 각 섹션은 독립 박스 (공유 패널 모델)
+ * 렌더러 모델: 각 섹션은 독립 박스 (모든 섹션이 자체 상/하판 보유)
  *   → section.height = 내경(inner height), 패널 두께 제외
- *   → N개 섹션: N+1개 패널 (외부 상판 + N-1개 구분판 + 외부 바닥판)
+ *   → N개 섹션: 물리적으로 N+1개 패널 (경계부에서 상하판이 겹침)
  *   → sum(section.height) = furnitureHeight - (N+1)*panelThickness
- *   → section[0]: showBottomPanel=true(바닥판), showTopPanel=true(구분판 역할)
- *   → section[1+]: showBottomPanel=false(아래 섹션과 공유), showTopPanel=true
+ *   → 모든 섹션: showBottomPanel=true, showTopPanel=true (독립 박스)
+ *   → 렌더러가 경계부에서 1*PT만큼 겹쳐서 배치
  *
  * 수평 분할(horizontalSplit): 서브박스도 독립 박스
  *   → position = 좌측 박스 내경 너비 (mm)
@@ -56,8 +56,8 @@ export function convertToConfig(
   if (layout.direction === 'vertical') {
     const children = layout.children!;
     const N = children.length;
-    // 공유 패널 모델: N+1개 패널 (외부 상판 + N-1개 구분판 + 외부 바닥판)
-    // → 인접 섹션 사이에 단일 구분판만 존재 (이중 패널 방지)
+    // 독립 박스 모델: 물리적으로 N+1개 패널 (경계부 공유)
+    // → 각 섹션은 자체 상/하판 보유 (렌더러가 경계부에서 겹쳐 배치)
     const availableHeight = height - (N + 1) * PANEL_THICKNESS;
 
     // 캔버스 순서 → 3D 순서 변환:
@@ -70,13 +70,8 @@ export function convertToConfig(
       const sectionInnerHeight = Math.round(child.ratio * availableHeight);
       const section = createSection(`section-${idx}`, sectionInnerHeight);
 
-      // 패널 소유 규칙:
-      // - section[0] (최하부): 바닥판(O) + 상판(O, 구분판 역할)
-      // - section[중간]: 바닥판(X, 아래 섹션과 공유) + 상판(O, 구분판 역할)
-      // - section[마지막] (최상부): 바닥판(X, 아래 섹션과 공유) + 상판(O)
-      if (idx > 0) {
-        section.showBottomPanel = false;
-      }
+      // 독립 박스: 모든 섹션이 자체 상/하판 보유
+      // 렌더러가 경계부에서 인접 섹션의 상/하판을 1*PT만큼 겹쳐서 배치
 
       // child가 horizontal → 해당 섹션에 horizontalSplit
       if (child.direction === 'horizontal' && child.children) {
