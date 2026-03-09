@@ -56,6 +56,8 @@ interface BoxModuleProps {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
+  lowerLeftSectionDepth?: number; // 하부 좌측 영역 깊이 (mm)
+  lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
   doorSplit?: boolean; // 도어 분할 여부
   upperDoorTopGap?: number; // 상부 섹션 도어 상단 갭
   upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭
@@ -119,6 +121,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   upperSectionDepth, // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection, // 하부 깊이 줄이는 방향
   upperSectionDepthDirection, // 상부 깊이 줄이는 방향
+  lowerLeftSectionDepth, // 하부 좌측 영역 깊이 (mm)
+  lowerRightSectionDepth, // 하부 우측 영역 깊이 (mm)
   doorSplit,
   upperDoorTopGap,
   upperDoorBottomGap,
@@ -210,6 +214,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           upperSectionDepth={upperSectionDepth}
           lowerSectionDepthDirection={lowerSectionDepthDirection}
           upperSectionDepthDirection={upperSectionDepthDirection}
+          lowerLeftSectionDepth={lowerLeftSectionDepth}
+          lowerRightSectionDepth={lowerRightSectionDepth}
           backPanelThickness={backPanelThicknessProp}
           isEditable={_isCustomizable}
           onPointerDown={onPointerDown}

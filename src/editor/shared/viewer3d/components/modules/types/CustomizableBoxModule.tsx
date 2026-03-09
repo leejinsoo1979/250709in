@@ -35,6 +35,8 @@ interface CustomizableBoxModuleProps {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
+  lowerLeftSectionDepth?: number; // 하부 좌측 영역 깊이 (mm)
+  lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
   backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
@@ -216,6 +218,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
+  lowerLeftSectionDepth,
+  lowerRightSectionDepth,
   backPanelThickness: backPanelThicknessProp,
   isEditable = true,
   onPointerDown,
@@ -1185,11 +1189,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const partD = innerD - frontInset; // 칸막이 깊이 (앞 오프셋만큼 줄어듦)
       const partZ = backReduction / 2 - frontInset / 2; // Z 위치 (앞 오프셋만큼 뒤로)
 
+      // 하부 섹션(sIdx===0)에서 좌/우 독립 깊이 계산
+      const isLowerSection = sIdx === 0 && isSplit;
+      const leftBoxD = isLowerSection && lowerLeftSectionDepth
+        ? mmToUnit(lowerLeftSectionDepth) : boxD;
+      const rightBoxD = isLowerSection && lowerRightSectionDepth
+        ? mmToUnit(lowerRightSectionDepth) : boxD;
+      // 칸막이 깊이 = 짧은 쪽에 맞춤
+      const minAreaD = Math.min(leftBoxD, rightBoxD);
+      const adjustedPartD = minAreaD - backReduction - frontInset;
+
       // 칸막이 수직 패널
       meshes.push(
         <BoxWithEdges
           key={`partition-${sIdx}`}
-          args={[t, bInnerH, partD]}
+          args={[t, bInnerH, adjustedPartD > 0 ? adjustedPartD : partD]}
           position={[partitionX, centerY, partZ]}
           material={material}
           renderMode={renderMode}
@@ -1208,7 +1222,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'left', section.leftElements,
-          leftInnerW, bInnerH, centerY, leftCenterX, boxD,
+          leftInnerW, bInnerH, centerY, leftCenterX, leftBoxD,
           `${sectionLabel}좌`, `s${sIdx}-left`, sIdx
         )
       );
@@ -1220,7 +1234,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'right', section.rightElements,
-          rightInnerW, bInnerH, centerY, rightCenterX, boxD,
+          rightInnerW, bInnerH, centerY, rightCenterX, rightBoxD,
           `${sectionLabel}우`, `s${sIdx}-right`, sIdx
         )
       );
@@ -1261,6 +1275,104 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const bInnerH = boxH - 2 * t;
     const prefix = `box-${sIdx}`;
     const sectionLabel = sIdx === 0 ? '하부' : '상부';
+
+    // 하부 섹션 칸막이 좌/우 독립 깊이 여부
+    const isLowerWithPartition = sIdx === 0 && isSplit && section.hasPartition && section.partitionPosition;
+    const hasIndependentDepth = isLowerWithPartition && (lowerLeftSectionDepth || lowerRightSectionDepth);
+    const leftD = hasIndependentDepth && lowerLeftSectionDepth ? mmToUnit(lowerLeftSectionDepth) : boxD;
+    const rightD = hasIndependentDepth && lowerRightSectionDepth ? mmToUnit(lowerRightSectionDepth) : boxD;
+    const leftZOffset = (boxD - leftD) / 2;
+    const rightZOffset = (boxD - rightD) / 2;
+
+    if (hasIndependentDepth && section.partitionPosition) {
+      // ═══ 좌/우 독립 깊이 분리 렌더링 ═══
+      const partPos = mmToUnit(section.partitionPosition);
+      const partitionX = -bInnerW / 2 + partPos;
+      // 좌측 영역 너비 (외벽~칸막이)
+      const leftOuterW = partPos + t; // 좌측판 포함 너비
+      const leftInnerW = partPos - t / 2;
+      const leftCenterX = -bInnerW / 2 - t / 2 + leftOuterW / 2;
+      // 우측 영역 너비 (칸막이~외벽)
+      const rightOuterW = boxW - leftOuterW - t; // 칸막이 두께 포함
+      const rightInnerW = bInnerW - partPos - t / 2;
+      const rightCenterX = partitionX + t / 2 + rightOuterW / 2;
+
+      // ── 좌측 측판 ──
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-left`}
+          args={[t, boxH, leftD]} position={[-bInnerW / 2 - t / 2, centerY, leftZOffset]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}좌측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+      // ── 우측 측판 ──
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-right`}
+          args={[t, boxH, rightD]} position={[bInnerW / 2 + t / 2, centerY, rightZOffset]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}우측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+
+      // ── 좌측 상판/바닥판 ──
+      const drawerTouchesTop = sectionDrawerTouchesTop(section, section.height);
+      const topDepthReduction = drawerTouchesTop ? drawerTopInset : 0;
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-top-left`}
+          args={[leftInnerW - widthReduction / 2, t, leftD - backReduction - topDepthReduction]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY + boxH / 2 - t / 2, leftZOffset + backReduction / 2 - topDepthReduction / 2]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}좌상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-bottom-left`}
+          args={[leftInnerW - widthReduction / 2, t, leftD - backReduction]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2, leftZOffset + backReduction / 2]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}좌바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+      // ── 우측 상판/바닥판 ──
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-top-right`}
+          args={[rightInnerW - widthReduction / 2, t, rightD - backReduction - topDepthReduction]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY + boxH / 2 - t / 2, rightZOffset + backReduction / 2 - topDepthReduction / 2]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}우상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-bottom-right`}
+          args={[rightInnerW - widthReduction / 2, t, rightD - backReduction]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2, rightZOffset + backReduction / 2]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
+          panelName={`${sectionLabel}우바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+      // ── 좌측 백패널 ──
+      const leftBackH = bInnerH + mmToUnit(backPanelHeightExtMm);
+      const leftBackW = leftInnerW + mmToUnit(backPanelWidthExtMm / 2);
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-back-left`}
+          args={[leftBackW, leftBackH, backPanelT]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY, -leftD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm) + leftZOffset]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted} isBackPanel
+          panelName={`${sectionLabel}좌백패널`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+      // ── 우측 백패널 ──
+      const rightBackW = rightInnerW + mmToUnit(backPanelWidthExtMm / 2);
+      meshes.push(
+        <BoxWithEdges key={`${prefix}-back-right`}
+          args={[rightBackW, leftBackH, backPanelT]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY, -rightD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm) + rightZOffset]}
+          material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted} isBackPanel
+          panelName={`${sectionLabel}우백패널`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+        />
+      );
+    } else {
+    // ═══ 기존 단일 깊이 렌더링 ═══
 
     // ═══ 1. 측판 (좌/우) - 전체 높이, 전체 깊이 ═══
     meshes.push(
@@ -1345,6 +1457,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         furnitureId={placedFurnitureId}
       />
     );
+    } // else (기존 단일 깊이) 닫기
 
     // ═══ 4. 내부 요소 (칸막이, 서랍, 옷봉, 선반) ═══
     if (!isDragging || isEditMode) {
