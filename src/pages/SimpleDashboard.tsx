@@ -6,7 +6,7 @@ import { PiFolderFill, PiFolderPlus, PiCrownDuotone } from "react-icons/pi";
 import { GoPeople } from "react-icons/go";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
-import { TiThSmall } from "react-icons/ti";
+// TiThSmall 제거 (전체 프로젝트 탭 삭제됨)
 import { TfiShare, TfiShareAlt } from "react-icons/tfi";
 import { BsBookmarkStarFill } from "react-icons/bs";
 import { VscLink, VscServerProcess } from "react-icons/vsc";
@@ -177,7 +177,7 @@ const SimpleDashboard: React.FC = () => {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   // 브레드크럼 네비게이션 상태
-  const [breadcrumbPath, setBreadcrumbPath] = useState<string[]>(['전체 프로젝트']);
+  const [breadcrumbPath, setBreadcrumbPath] = useState<string[]>(['진행중 프로젝트']);
 
   // 검색 상태
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -267,7 +267,7 @@ const SimpleDashboard: React.FC = () => {
   // URL 경로에서 현재 메뉴 결정
   const getMenuFromPath = () => {
     const path = location.pathname.replace('/dashboard', '');
-    if (path === '' || path === '/') return 'all';
+    if (path === '' || path === '/') return 'in-progress';
     const menu = path.substring(1); // Remove leading slash
     return menu as 'all' | 'in-progress' | 'completed' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash';
   };
@@ -988,7 +988,7 @@ const SimpleDashboard: React.FC = () => {
       if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
         const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
           activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-            '전체 프로젝트';
+            '진행중 프로젝트';
         setBreadcrumbPath([rootPath, selectedProject.title]);
       }
 
@@ -1031,7 +1031,7 @@ const SimpleDashboard: React.FC = () => {
         const currentMenu = getMenuFromPath();
         const rootPath = currentMenu === 'shared-by-me' ? '공유한 프로젝트' :
           currentMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-            '전체 프로젝트';
+            '진행중 프로젝트';
         setBreadcrumbPath([rootPath, targetProject.title]);
         loadFolderDataForProject(urlProjectId);
         loadDesignFilesForProject(urlProjectId);
@@ -1044,7 +1044,7 @@ const SimpleDashboard: React.FC = () => {
       const currentMenu = getMenuFromPath();
       const rootPath = currentMenu === 'shared-by-me' ? '공유한 프로젝트' :
         currentMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-          '전체 프로젝트';
+          '진행중 프로젝트';
       setBreadcrumbPath([rootPath]);
     }
   }, [urlProjectId, firebaseProjects, sharedByMeProjects, sharedWithMeProjects, selectedProjectId]);
@@ -1159,7 +1159,7 @@ const SimpleDashboard: React.FC = () => {
           setCurrentFolderId(null);
           const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
             activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-              '전체 프로젝트';
+              '진행중 프로젝트';
           setBreadcrumbPath([rootPath, selectedProject.title]);
           navigate(`/dashboard?projectId=${selectedProjectId}`);
         }
@@ -1169,7 +1169,7 @@ const SimpleDashboard: React.FC = () => {
           setCurrentFolderId(null);
           const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
             activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-              '전체 프로젝트';
+              '진행중 프로젝트';
           setBreadcrumbPath([rootPath]);
           if (activeMenu === 'shared-by-me') {
             navigate('/dashboard/shared-by-me');
@@ -1256,7 +1256,7 @@ const SimpleDashboard: React.FC = () => {
       console.log('📝 Breadcrumb 업데이트:', selectedProject.title);
       const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-          '전체 프로젝트';
+          '진행중 프로젝트';
       setBreadcrumbPath([rootPath, selectedProject.title]);
     }
   }, [selectedProject, breadcrumbPath, activeMenu]);
@@ -1587,8 +1587,10 @@ const SimpleDashboard: React.FC = () => {
         break;
       case 'all':
       default:
-        // 전체 프로젝트는 내가 만든 프로젝트만 표시 (공유받은 프로젝트 제외)
-        filteredProjects = firebaseProjects.filter(p => !deletedProjectIds.has(p.id));
+        // 기본값 = 진행중 프로젝트 (status가 없거나 'in_progress'인 경우)
+        filteredProjects = firebaseProjects.filter(p =>
+          !deletedProjectIds.has(p.id) && (!p.status || p.status === 'in_progress')
+        );
         break;
     }
 
@@ -2237,7 +2239,7 @@ const SimpleDashboard: React.FC = () => {
       setSelectedProjectId(null);
       const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-          '전체 프로젝트';
+          '진행중 프로젝트';
       setBreadcrumbPath([rootPath]);
       // URL에서 projectId 제거 (현재 메뉴 유지)
       const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
@@ -2265,7 +2267,7 @@ const SimpleDashboard: React.FC = () => {
         // activeMenu에 따라 breadcrumb 첫 번째 항목 설정
         const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
           activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-            '전체 프로젝트';
+            '진행중 프로젝트';
         setBreadcrumbPath([rootPath, targetProject.title]);
         // URL에 projectId 추가 (activeMenu에 맞는 경로 사용)
         const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
@@ -2292,7 +2294,7 @@ const SimpleDashboard: React.FC = () => {
         // activeMenu에 따라 breadcrumb 첫 번째 항목 설정
         const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
           activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-            '전체 프로젝트';
+            '진행중 프로젝트';
         setBreadcrumbPath([rootPath, '로딩 중...']);
         // URL에 projectId 추가 (activeMenu에 맞는 경로 사용)
         const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
@@ -2320,7 +2322,7 @@ const SimpleDashboard: React.FC = () => {
       setCurrentFolderId(null);
       const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-          '전체 프로젝트';
+          '진행중 프로젝트';
       setBreadcrumbPath([rootPath]);
       // URL을 해당 메뉴로 업데이트
       if (activeMenu === 'shared-by-me') {
@@ -2335,7 +2337,7 @@ const SimpleDashboard: React.FC = () => {
       setCurrentFolderId(null);
       const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-          '전체 프로젝트';
+          '진행중 프로젝트';
       setBreadcrumbPath([rootPath, selectedProject.title]);
       // URL을 해당 프로젝트로 업데이트
       navigate(`/dashboard?projectId=${selectedProjectId}`);
@@ -2506,7 +2508,7 @@ const SimpleDashboard: React.FC = () => {
               const newPath = [...prev];
               const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
                 activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-                  '전체 프로젝트';
+                  '진행중 프로젝트';
               const projectIndex = newPath.findIndex(path => path !== rootPath);
               if (projectIndex !== -1) {
                 newPath[projectIndex] = newName.trim();
@@ -3344,7 +3346,7 @@ const SimpleDashboard: React.FC = () => {
         <main className={styles.mobileContent}>
           {/* 타이틀 섹션 */}
           <div className={styles.mobileTitleSection}>
-            <h1 className={styles.mobileTitle}>전체 프로젝트</h1>
+            <h1 className={styles.mobileTitle}>진행중 프로젝트</h1>
             <button className={styles.mobileCreateBtn} onClick={handleCreateProject}>
               <PlusIcon size={18} />
               프로젝트 생성
@@ -3553,7 +3555,7 @@ const SimpleDashboard: React.FC = () => {
               setActiveMenu('all');
               setSelectedProjectId(null);
               setCurrentFolderId(null);
-              setBreadcrumbPath(['전체 프로젝트']);
+              setBreadcrumbPath(['진행중 프로젝트']);
               navigate('/dashboard');
             }}
             style={{ cursor: 'pointer' }}
@@ -3573,31 +3575,13 @@ const SimpleDashboard: React.FC = () => {
         {/* 네비게이션 메뉴 */}
         <nav className={styles.navSection}>
           <div
-            className={`${styles.navItem} ${activeMenu === 'all' ? styles.active : ''}`}
-            onClick={() => {
-              console.log('🏠 전체 프로젝트 클릭');
-              setActiveMenu('all');
-              setSelectedProjectId(null);
-              setCurrentFolderId(null);
-              setBreadcrumbPath(['전체 프로젝트']);
-              navigate('/dashboard');
-            }}
-          >
-            <div className={styles.navItemIcon}>
-              <TiThSmall size={20} />
-            </div>
-            <span>전체 프로젝트</span>
-            <span className={styles.navItemCount}>{firebaseProjects.length}</span>
-          </div>
-
-          <div
             className={`${styles.navItem} ${activeMenu === 'in-progress' ? styles.active : ''}`}
             onClick={() => {
               setActiveMenu('in-progress');
               setSelectedProjectId(null);
               setCurrentFolderId(null);
               setBreadcrumbPath(['진행중 프로젝트']);
-              navigate('/dashboard/in-progress');
+              navigate('/dashboard');
             }}
           >
             <div className={styles.navItemIcon}>
@@ -4137,8 +4121,8 @@ const SimpleDashboard: React.FC = () => {
                   )}
                 </div>
 
-                {/* 뷰 모드 토글 */}
-                <div className={styles.viewToggleGroup}>
+                {/* 뷰 모드 토글 - 리스트 보기는 추후 디자인 개편 예정으로 숨김 */}
+                {/* <div className={styles.viewToggleGroup}>
                   <button
                     className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
                     onClick={() => handleViewModeToggle('grid')}
@@ -4162,7 +4146,7 @@ const SimpleDashboard: React.FC = () => {
                       <rect x="1" y="12" width="14" height="2" rx="1" />
                     </svg>
                   </button>
-                </div>
+                </div> */}
 
                 {/* 정렬 드롭다운 */}
                 <button
@@ -4365,7 +4349,7 @@ const SimpleDashboard: React.FC = () => {
                                       setCurrentFolderId(folder.id);
                                       const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
                                         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-                                          '전체 프로젝트';
+                                          '진행중 프로젝트';
                                       setBreadcrumbPath([rootPath, selectedProject.title, folder.name]);
                                     }}
                                     style={{ cursor: 'pointer' }}
@@ -4591,7 +4575,7 @@ const SimpleDashboard: React.FC = () => {
                               if (folder && selectedProject) {
                                 const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
                                   activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-                                    '전체 프로젝트';
+                                    '진행중 프로젝트';
                                 setBreadcrumbPath([rootPath, selectedProject.title, folder.name]);
                               }
                             } else if (item.type === 'design') {
