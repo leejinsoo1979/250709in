@@ -3663,32 +3663,6 @@ const SimpleDashboard: React.FC = () => {
           </div>
 
           <div
-            className={`${styles.navItem} ${activeMenu === 'profile' ? styles.active : ''}`}
-            onClick={() => {
-              setActiveMenu('profile');
-              setBreadcrumbPath([]);
-            }}
-          >
-            <div className={styles.navItemIcon}>
-              <UserIcon size={20} />
-            </div>
-            <span>내 정보 관리</span>
-          </div>
-
-          <div
-            className={`${styles.navItem} ${activeMenu === 'team' ? styles.active : ''}`}
-            onClick={() => {
-              setActiveMenu('team');
-              setBreadcrumbPath([]);
-            }}
-          >
-            <div className={styles.navItemIcon}>
-              <UsersIcon size={20} />
-            </div>
-            <span>팀 관리</span>
-          </div>
-
-          <div
             className={`${styles.navItem} ${activeMenu === 'trash' ? styles.active : ''}`}
             onClick={() => {
               console.log('🗑️ 휴지통 클릭');
