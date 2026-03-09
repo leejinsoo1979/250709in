@@ -182,26 +182,28 @@
 /* 생성 버튼 섹션 */
 .createButtonsSection {
   display: flex;
-  gap: 8px;
-  padding: 0 16px 16px;
+  gap: 6px;
+  padding: 0 12px 12px;
 }
 
 .createBtn {
   flex: 1;
-  padding: 8px 16px;
+  padding: 7px 4px;
   background: var(--theme-primary, #2563eb) !important;
   color: white !important;
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 3px;
   transition: background-color 0.2s;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .createBtn:hover {
