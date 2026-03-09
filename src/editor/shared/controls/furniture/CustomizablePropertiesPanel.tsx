@@ -68,6 +68,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [sectionWidthInputs, setSectionWidthInputs] = useState<Record<number, string>>({});
   // 좌우 섹션분할 너비 입력 - 키: "sIdx-left" / "sIdx-right"
   const [hSplitInputs, setHSplitInputs] = useState<Record<string, string>>({});
+  // 좌우 섹션분할 깊이 입력 - 키: "sIdx-left" / "sIdx-center" / "sIdx-right"
+  const [hSplitDepthInputs, setHSplitDepthInputs] = useState<Record<string, string>>({});
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -746,6 +748,43 @@ const CustomizablePropertiesPanel: React.FC = () => {
     } else {
       split.rightElements = undefined;
     }
+    sec.horizontalSplit = split;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 좌우분할 서브 박스 깊이 변경
+  const handleHSplitDepthChange = (sIdx: number, side: 'left' | 'center' | 'right', value: string) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    if (!sec.horizontalSplit) return;
+
+    const split = { ...sec.horizontalSplit };
+    const depthKey = `${side}Depth` as 'leftDepth' | 'centerDepth' | 'rightDepth';
+
+    if (!value || value.trim() === '') {
+      split[depthKey] = undefined;
+    } else {
+      const num = parseInt(value);
+      if (!isNaN(num)) {
+        const fullDepth = placedModule.customDepth || placedModule.freeDepth || 600;
+        split[depthKey] = Math.max(100, Math.min(fullDepth, num));
+      }
+    }
+    sec.horizontalSplit = split;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
+  // 좌우분할 서브 박스 깊이 방향 변경
+  const handleHSplitDepthDirectionChange = (sIdx: number, side: 'left' | 'center' | 'right', dir: 'front' | 'back') => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    if (!sec.horizontalSplit) return;
+
+    const split = { ...sec.horizontalSplit };
+    const dirKey = `${side}DepthDirection` as 'leftDepthDirection' | 'centerDepthDirection' | 'rightDepthDirection';
+    split[dirKey] = dir;
     sec.horizontalSplit = split;
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
@@ -2896,6 +2935,41 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 </div>
                               </div>
                             )}
+                            {/* 서브 박스 개별 깊이 */}
+                            <div style={{ marginTop: '6px', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '6px' }}>
+                              <div className={styles.row}>
+                                <span className={styles.label} style={{ fontSize: '10px' }}>깊이</span>
+                                <input
+                                  className={styles.input}
+                                  type="number"
+                                  value={hSplitDepthInputs[`${realIdx}-${side}`] ?? (section.horizontalSplit?.[`${side}Depth` as 'leftDepth' | 'centerDepth' | 'rightDepth']?.toString() || '')}
+                                  placeholder="전체"
+                                  onChange={(e) => setHSplitDepthInputs(prev => ({ ...prev, [`${realIdx}-${side}`]: e.target.value }))}
+                                  onBlur={(e) => {
+                                    handleHSplitDepthChange(realIdx, side, e.target.value);
+                                    setHSplitDepthInputs(prev => { const next = { ...prev }; delete next[`${realIdx}-${side}`]; return next; });
+                                  }}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                  style={{ width: '60px' }}
+                                />
+                                <span className={styles.unit}>mm</span>
+                              </div>
+                              {section.horizontalSplit?.[`${side}Depth` as 'leftDepth' | 'centerDepth' | 'rightDepth'] && (
+                                <div className={styles.row} style={{ marginTop: '2px' }}>
+                                  <span className={styles.label} style={{ fontSize: '10px' }}>방향</span>
+                                  <div className={styles.toggleGroup}>
+                                    <button
+                                      className={`${styles.toggleButton} ${(section.horizontalSplit?.[`${side}DepthDirection` as 'leftDepthDirection' | 'centerDepthDirection' | 'rightDepthDirection'] ?? 'front') === 'front' ? styles.active : ''}`}
+                                      onClick={() => handleHSplitDepthDirectionChange(realIdx, side, 'front')}
+                                    >앞</button>
+                                    <button
+                                      className={`${styles.toggleButton} ${(section.horizontalSplit?.[`${side}DepthDirection` as 'leftDepthDirection' | 'centerDepthDirection' | 'rightDepthDirection'] ?? 'front') === 'back' ? styles.active : ''}`}
+                                      onClick={() => handleHSplitDepthDirectionChange(realIdx, side, 'back')}
+                                    >뒤</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </>
                         )}
                       </div>
@@ -3175,6 +3249,41 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 </div>
                               </div>
                             )}
+                            {/* 서브 박스 개별 깊이 */}
+                            <div style={{ marginTop: '6px', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '6px' }}>
+                              <div className={styles.row}>
+                                <span className={styles.label} style={{ fontSize: '10px' }}>깊이</span>
+                                <input
+                                  className={styles.input}
+                                  type="number"
+                                  value={hSplitDepthInputs[`0-${side}`] ?? (section.horizontalSplit?.[`${side}Depth` as 'leftDepth' | 'centerDepth' | 'rightDepth']?.toString() || '')}
+                                  placeholder="전체"
+                                  onChange={(e) => setHSplitDepthInputs(prev => ({ ...prev, [`0-${side}`]: e.target.value }))}
+                                  onBlur={(e) => {
+                                    handleHSplitDepthChange(0, side, e.target.value);
+                                    setHSplitDepthInputs(prev => { const next = { ...prev }; delete next[`0-${side}`]; return next; });
+                                  }}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                  style={{ width: '60px' }}
+                                />
+                                <span className={styles.unit}>mm</span>
+                              </div>
+                              {section.horizontalSplit?.[`${side}Depth` as 'leftDepth' | 'centerDepth' | 'rightDepth'] && (
+                                <div className={styles.row} style={{ marginTop: '2px' }}>
+                                  <span className={styles.label} style={{ fontSize: '10px' }}>방향</span>
+                                  <div className={styles.toggleGroup}>
+                                    <button
+                                      className={`${styles.toggleButton} ${(section.horizontalSplit?.[`${side}DepthDirection` as 'leftDepthDirection' | 'centerDepthDirection' | 'rightDepthDirection'] ?? 'front') === 'front' ? styles.active : ''}`}
+                                      onClick={() => handleHSplitDepthDirectionChange(0, side, 'front')}
+                                    >앞</button>
+                                    <button
+                                      className={`${styles.toggleButton} ${(section.horizontalSplit?.[`${side}DepthDirection` as 'leftDepthDirection' | 'centerDepthDirection' | 'rightDepthDirection'] ?? 'front') === 'back' ? styles.active : ''}`}
+                                      onClick={() => handleHSplitDepthDirectionChange(0, side, 'back')}
+                                    >뒤</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </>
                         )}
                       </div>

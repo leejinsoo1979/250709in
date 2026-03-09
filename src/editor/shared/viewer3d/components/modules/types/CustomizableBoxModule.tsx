@@ -1412,6 +1412,23 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const sectionLabel = sections.length > 1 ? (sIdx === 0 ? '하부' : '상부') : '';
     const bInnerH = boxH - 2 * t;
 
+    // ─── 서브 박스별 개별 깊이 계산 ───
+    const getSubBoxDepth = (side: 'left' | 'center' | 'right') => {
+      const depthField = side === 'left' ? hs.leftDepth
+        : side === 'center' ? hs.centerDepth
+        : hs.rightDepth;
+      const dirField = side === 'left' ? hs.leftDepthDirection
+        : side === 'center' ? hs.centerDepthDirection
+        : hs.rightDepthDirection;
+
+      if (!depthField) return { subD: boxD, subDepthZ: 0 };
+      const subD = mmToUnit(depthField);
+      const diff = boxD - subD;
+      const dir = dirField || 'front';
+      const subDepthZ = diff === 0 ? 0 : dir === 'back' ? diff / 2 : -diff / 2;
+      return { subD, subDepthZ };
+    };
+
     // ─── 서브 박스 렌더링 ───
     const renderSubBox = (
       side: string,
@@ -1419,15 +1436,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       subCenterX: number,
       elements: CustomElement[] | undefined,
       label: string,
+      subBoxD: number,
+      subDepthZ: number,
     ) => {
       const prefix = `box-${sIdx}-hsplit-${side}`;
       const hasContent = !!elements;
+      const subMeshes: React.ReactNode[] = [];
 
       // 측판 (좌/우)
-      meshes.push(
+      subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-left-panel`}
-          args={[t, boxH, boxD]}
+          args={[t, boxH, subBoxD]}
           position={[subCenterX - subInnerW / 2 - t / 2, centerY, 0]}
           material={material}
           renderMode={renderMode}
@@ -1438,10 +1458,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           furnitureId={placedFurnitureId}
         />
       );
-      meshes.push(
+      subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-right-panel`}
-          args={[t, boxH, boxD]}
+          args={[t, boxH, subBoxD]}
           position={[subCenterX + subInnerW / 2 + t / 2, centerY, 0]}
           material={material}
           renderMode={renderMode}
@@ -1454,10 +1474,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
 
       // 상판/하판
-      meshes.push(
+      subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-top`}
-          args={[subInnerW - widthReduction, t, boxD - backReduction]}
+          args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
           position={[subCenterX, centerY + boxH / 2 - t / 2, backReduction / 2]}
           material={material}
           renderMode={renderMode}
@@ -1468,10 +1488,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           furnitureId={placedFurnitureId}
         />
       );
-      meshes.push(
+      subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-bottom`}
-          args={[subInnerW - widthReduction, t, boxD - backReduction]}
+          args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
           position={[subCenterX, centerY - boxH / 2 + t / 2, backReduction / 2]}
           material={material}
           renderMode={renderMode}
@@ -1486,8 +1506,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // 백패널
       const bpH = bInnerH + mmToUnit(backPanelHeightExtMm);
       const bpW = subInnerW + mmToUnit(backPanelWidthExtMm);
-      const bpZ = -boxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
-      meshes.push(
+      const bpZ = -subBoxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
+      subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-back`}
           args={[bpW, bpH, backPanelT]}
@@ -1505,20 +1525,34 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
       // 내부 요소 (elements가 있을 때만)
       if (hasContent && (!isDragging || isEditMode)) {
-        meshes.push(
+        subMeshes.push(
           ...renderSectionElements(
-            elements!, subInnerW, bInnerH, centerY, subCenterX, boxD,
+            elements!, subInnerW, bInnerH, centerY, subCenterX, subBoxD,
             label, `s${sIdx}-hsplit-${side}`
           )
         );
       }
+
+      // 깊이 오프셋이 있으면 group으로 감싸기
+      if (subDepthZ !== 0) {
+        meshes.push(
+          <group key={`${prefix}-depth-group`} position={[0, 0, subDepthZ]}>
+            {subMeshes}
+          </group>
+        );
+      } else {
+        meshes.push(...subMeshes);
+      }
     };
 
-    renderSubBox('left', leftInnerW, leftCenterX, hs.leftElements, `${sectionLabel}좌`);
+    const { subD: leftD, subDepthZ: leftDZ } = getSubBoxDepth('left');
+    renderSubBox('left', leftInnerW, leftCenterX, hs.leftElements, `${sectionLabel}좌`, leftD, leftDZ);
     if (is3Split) {
-      renderSubBox('center', centerInnerW, centerCenterX, hs.centerElements, `${sectionLabel}중`);
+      const { subD: centerD, subDepthZ: centerDZ } = getSubBoxDepth('center');
+      renderSubBox('center', centerInnerW, centerCenterX, hs.centerElements, `${sectionLabel}중`, centerD, centerDZ);
     }
-    renderSubBox('right', rightInnerW, rightCenterX, hs.rightElements, `${sectionLabel}우`);
+    const { subD: rightD, subDepthZ: rightDZ } = getSubBoxDepth('right');
+    renderSubBox('right', rightInnerW, rightCenterX, hs.rightElements, `${sectionLabel}우`, rightD, rightDZ);
 
     if (depthOffset !== 0) {
       return [
