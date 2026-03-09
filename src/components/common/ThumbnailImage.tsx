@@ -41,9 +41,7 @@ interface ThumbnailImageProps {
 const EmptyDesignThumbnail: React.FC<{
   className: string;
   spaceConfig?: { width: number; height: number; depth: number };
-}> = ({ className, spaceConfig }) => {
-  const hasDimensions = spaceConfig?.width && spaceConfig?.depth && spaceConfig?.height;
-
+}> = ({ className }) => {
   return (
     <div className={`${className} thumbnail-empty-design`} style={{
       display: 'flex',
@@ -58,18 +56,9 @@ const EmptyDesignThumbnail: React.FC<{
       padding: '8px',
       boxSizing: 'border-box',
     }}>
-      {hasDimensions ? (
-        <>
-          <span style={{ fontSize: 'clamp(10px, 1.2vw, 16px)', fontWeight: '700', opacity: 0.95, letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.2 }}>
-            {Math.round(spaceConfig!.width)} x {Math.round(spaceConfig!.height)}
-          </span>
-          <span style={{ fontSize: 'clamp(8px, 0.8vw, 11px)', fontWeight: '400', opacity: 0.75, textAlign: 'center' }}>
-            현재 배치된 가구가 없습니다.
-          </span>
-        </>
-      ) : (
-        <span style={{ fontSize: 'clamp(11px, 1.2vw, 16px)', fontWeight: '600' }}>디자인</span>
-      )}
+      <span style={{ fontSize: 'clamp(8px, 0.8vw, 11px)', fontWeight: '400', opacity: 0.75, textAlign: 'center' }}>
+        현재 배치된 가구가 없습니다.
+      </span>
     </div>
   );
 };
