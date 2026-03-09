@@ -200,23 +200,20 @@
 }
 
 .createBtn {
-  flex: 1;
-  padding: 7px 4px;
+  padding: 8px 16px;
   background: var(--theme-primary, #2563eb) !important;
   color: white !important;
   border: none;
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 6px;
   transition: background-color 0.2s;
   white-space: nowrap;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .createBtn:hover {
