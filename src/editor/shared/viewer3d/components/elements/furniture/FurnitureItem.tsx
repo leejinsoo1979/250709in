@@ -2801,8 +2801,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               />
             </mesh>
 
-            {/* 가구 상단 아이콘 툴바 */}
-            {!isPanelListTabActive && (
+            {/* 가구 상단 아이콘 툴바 (readOnly 모드에서는 숨김) */}
+            {!isPanelListTabActive && !readOnly && (
               <Html
                 position={[0, height / 2 + mmToThreeUnits(50), 0]}
                 center
@@ -2936,8 +2936,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           </>
         )}
 
-        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관) */}
-        {placedModule.isLocked && (
+        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관, readOnly 모드에서는 숨김) */}
+        {placedModule.isLocked && !readOnly && (
           <Html
             position={[0, 0, 0]}
             center
