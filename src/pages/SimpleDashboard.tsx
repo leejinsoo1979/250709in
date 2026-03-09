@@ -5693,11 +5693,22 @@ const SimpleDashboard: React.FC = () => {
                   }
                 } else {
                   if (moreMenu.itemType === 'project') {
-                    const project = allProjects.find(p => p.id === moreMenu.itemId);
-                    if (project) {
-                      moveToTrash(project);
-                      closeMoreMenu();
+                    if (window.confirm(`프로젝트 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?`)) {
+                      const project = allProjects.find(p => p.id === moreMenu.itemId)
+                        || firebaseProjects.find(p => p.id === moreMenu.itemId);
+                      if (project) {
+                        await moveToTrash(project);
+                      } else {
+                        // allProjects에서 못 찾으면 직접 Firebase 삭제
+                        const { error } = await deleteProject(moreMenu.itemId);
+                        if (error) {
+                          alert('프로젝트 삭제 실패: ' + error);
+                        } else {
+                          await loadFirebaseProjects();
+                        }
+                      }
                     }
+                    closeMoreMenu();
                   } else {
                     handleDeleteItem();
                   }
