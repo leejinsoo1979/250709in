@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
+import { PlacedModule, CurrentDragData, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
@@ -60,6 +60,10 @@ interface FurnitureDataState {
 
   // 패널 결 방향 초기화 (측판/백패널/도어를 기본값으로 리셋)
   resetPanelGrainDirections: () => void;
+
+  // 레이아웃 빌더 팝업에서 확인한 커스텀 설정 (배치 전 임시 저장)
+  pendingCustomConfig: CustomFurnitureConfig | null;
+  setPendingCustomConfig: (config: CustomFurnitureConfig | null) => void;
 }
 
 // 가구 데이터 Store 생성
@@ -79,6 +83,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 드래그 상태 초기값 (FurnitureDragProvider와 동일)
   currentDragData: null,
+
+  // 레이아웃 빌더 pending 상태
+  pendingCustomConfig: null,
+  setPendingCustomConfig: (config) => set({ pendingCustomConfig: config }),
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {

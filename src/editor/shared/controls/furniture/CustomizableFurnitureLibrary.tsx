@@ -1,9 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { MdOutlineAutoAwesomeMosaic } from 'react-icons/md';
+import LayoutBuilderPopup from './layoutBuilder/LayoutBuilderPopup';
 import styles from './CustomizableFurnitureLibrary.module.css';
 
 // 커스터마이징 가구 카테고리별 기본 치수 (mm)
@@ -52,14 +53,28 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
   filter = 'full',
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
+  const { setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig } = useFurnitureStore();
+
+  // 레이아웃 빌더 팝업 상태
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'full' | 'upper' | 'lower'>('full');
 
   // 공간 높이로 전체장 높이 결정
   const internalSpace = calculateInternalSpace(spaceInfo);
 
   const handleItemClick = useCallback((category: 'full' | 'upper' | 'lower') => {
-    const defaults = CUSTOMIZABLE_DEFAULTS[category];
-    const moduleId = createCustomizableModuleId(category, defaults.width);
+    // 레이아웃 빌더 팝업 열기
+    setSelectedCategory(category);
+    setIsPopupOpen(true);
+  }, []);
+
+  // 레이아웃 빌더 확인 → pendingCustomConfig 저장 → 배치 모드 활성화
+  const handlePopupConfirm = useCallback((config: CustomFurnitureConfig) => {
+    const defaults = CUSTOMIZABLE_DEFAULTS[selectedCategory];
+    const moduleId = createCustomizableModuleId(selectedCategory, defaults.width);
+
+    setPendingCustomConfig(config);
+    setIsPopupOpen(false);
 
     // 자유배치 모드로 전환 후 Click & Place 활성화
     if (spaceInfo.layoutMode !== 'free-placement') {
@@ -67,7 +82,11 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     }
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [spaceInfo.layoutMode, setSpaceInfo, internalSpace, setSelectedFurnitureId, setFurniturePlacementMode]);
+  }, [selectedCategory, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig]);
+
+  const handlePopupClose = useCallback(() => {
+    setIsPopupOpen(false);
+  }, []);
 
   const category = filter;
   const defaults = CUSTOMIZABLE_DEFAULTS[category];
@@ -90,8 +109,21 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
         </div>
       </div>
       <p className={styles.helpText}>
-        클릭 후 공간에 배치하세요. 배치 후 설정 아이콘을 눌러 내부 구조를 편집할 수 있습니다.
+        클릭 후 레이아웃을 설계하세요. 배치 후 설정 아이콘을 눌러 내부 구조를 편집할 수 있습니다.
       </p>
+
+      {/* 레이아웃 빌더 팝업 */}
+      <LayoutBuilderPopup
+        isOpen={isPopupOpen}
+        onClose={handlePopupClose}
+        onConfirm={handlePopupConfirm}
+        category={selectedCategory}
+        dimensions={{
+          width: CUSTOMIZABLE_DEFAULTS[selectedCategory].width,
+          height: selectedCategory === 'full' ? internalSpace.height : CUSTOMIZABLE_DEFAULTS[selectedCategory].height,
+          depth: CUSTOMIZABLE_DEFAULTS[selectedCategory].depth,
+        }}
+      />
     </div>
   );
 };

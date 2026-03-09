@@ -16,6 +16,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 
 export interface PlaceFurnitureFreeParams {
@@ -122,11 +123,16 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const pp = params.pendingPlacement;
   const isMyCabinetPlacement = !!(pp?.customConfig); // My캐비닛에서 배치한 경우
   const isEditingMyCabinet = !!useMyCabinetStore.getState().editingCabinetId; // My캐비닛 "수정" 모드
+  const pendingLayoutConfig = useFurnitureStore.getState().pendingCustomConfig; // 레이아웃 빌더에서 설정한 config
   let customConfig: CustomFurnitureConfig | undefined;
   if (isCustomizable) {
-    customConfig = pp?.customConfig
-      ? JSON.parse(JSON.stringify(pp.customConfig))
-      : createDefaultCustomConfig(effectiveHeight - 36); // 상하판 두께 제외
+    if (pp?.customConfig) {
+      customConfig = JSON.parse(JSON.stringify(pp.customConfig));
+    } else if (pendingLayoutConfig) {
+      customConfig = JSON.parse(JSON.stringify(pendingLayoutConfig));
+    } else {
+      customConfig = createDefaultCustomConfig(effectiveHeight - 36); // 상하판 두께 제외
+    }
   }
 
   // 서랍장(2단/4단) 하부섹션 상판 85mm 들여쓰기 기본값
@@ -159,6 +165,11 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   // 배치 완료 후 pendingPlacement 초기화
   if (pp) {
     useMyCabinetStore.getState().setPendingPlacement(null);
+  }
+
+  // 레이아웃 빌더 pending config 초기화
+  if (pendingLayoutConfig) {
+    useFurnitureStore.getState().setPendingCustomConfig(null);
   }
 
   console.log('✅ [placeFurnitureFree] 배치 완료:', newModule);
