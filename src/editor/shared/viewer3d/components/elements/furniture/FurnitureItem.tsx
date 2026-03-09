@@ -2382,9 +2382,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  const shouldResetCustomDepth = !isFurnitureDragging && slotInfo && !slotInfo.hasColumn && !!placedModule.customDepth;
+  // 기둥이 슬롯을 벗어났을 때만 customDepth 제거 (사용자가 직접 설정한 깊이는 유지)
+  const shouldResetCustomDepth = !isFurnitureDragging && slotInfo && !slotInfo.hasColumn && !!placedModule.customDepth && !!placedModule.columnSlotInfo;
 
-  if (slotInfo && !slotInfo.hasColumn && placedModule.customDepth) {
+  if (slotInfo && !slotInfo.hasColumn && placedModule.customDepth && placedModule.columnSlotInfo) {
     // 기둥이 슬롯을 벗어났을 때 customDepth 제거
     // 깊이를 원래대로 복구
     adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
