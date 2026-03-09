@@ -2778,6 +2778,25 @@
   line-height: 1.2;
 }
 
+.createDesignHeaderBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--theme-primary, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.createDesignHeaderBtn:hover {
+  background: var(--theme-primary-hover, #1d4ed8);
+}
+
 .subHeaderDescription {
   font-size: 14px;
   color: var(--theme-text-secondary);

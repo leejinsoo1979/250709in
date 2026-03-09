@@ -113,7 +113,6 @@ const SimpleDashboard: React.FC = () => {
   }, [location.pathname]);
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-  const [sidebarImageError, setSidebarImageError] = useState(false);
   const [headerImageError, setHeaderImageError] = useState(false);
 
   // 프로필 사진 디버깅 및 에러 리셋
@@ -123,7 +122,6 @@ const SimpleDashboard: React.FC = () => {
       console.log('🖼️ User displayName:', user.displayName);
       console.log('🖼️ User email:', user.email);
       // photoURL이 변경되면 에러 상태 리셋
-      setSidebarImageError(false);
       setHeaderImageError(false);
     }
   }, [user?.photoURL]);
@@ -3516,46 +3514,6 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 사용자 프로필 영역 */}
-        <div className={styles.profileSection}>
-          <div className={styles.userInfo}>
-            <div className={styles.userAvatar}>
-              {user?.photoURL && !sidebarImageError ? (
-                <img
-                  src={user.photoURL}
-                  alt="프로필"
-                  referrerPolicy="no-referrer"
-
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    objectFit: 'cover'
-                  }}
-                  onLoad={() => {
-                    console.log('✅ Sidebar 프로필 이미지 로드 성공');
-                    setSidebarImageError(false);
-                  }}
-                  onError={(e) => {
-                    console.error('❌ Sidebar 프로필 이미지 로드 실패:', user.photoURL);
-                    setSidebarImageError(true);
-                  }}
-                />
-              ) : (
-                <UserIcon size={16} />
-              )}
-            </div>
-            <div className={styles.userDetails}>
-              <div className={styles.userName}>
-                {user?.displayName || user?.email?.split('@')[0] || '사용자'}
-              </div>
-              <div className={styles.userEmail}>
-                {user?.email || '로그인이 필요합니다'}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* 프로젝트 생성 버튼 */}
         <div className={styles.createProjectSection}>
           <button className={styles.createProjectBtn} onClick={handleCreateProject}>
@@ -3824,8 +3782,14 @@ const SimpleDashboard: React.FC = () => {
             <div className={styles.subHeaderContent}>
               {/* 메뉴별 타이틀 표시 (좌측) */}
               <div className={styles.subHeaderLeft}>
-                {activeMenu === 'all' && (
-                  <h1 className={styles.subHeaderTitle}>전체 프로젝트</h1>
+                {activeMenu === 'all' && selectedProjectId && (
+                  <button
+                    className={styles.createDesignHeaderBtn}
+                    onClick={() => handleCreateDesign(selectedProjectId, selectedProject?.title)}
+                  >
+                    <PlusIcon size={14} />
+                    디자인 생성
+                  </button>
                 )}
                 {activeMenu === 'trash' && (
                   <h1 className={styles.subHeaderTitle}>휴지통</h1>
