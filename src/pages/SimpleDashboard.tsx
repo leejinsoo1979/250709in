@@ -1059,7 +1059,7 @@ const SimpleDashboard: React.FC = () => {
 
   // 메뉴 변경 시 파일트리 자동 접기/펼치기
   useEffect(() => {
-    if (activeMenu === 'all') {
+    if ((activeMenu === 'all' || activeMenu === 'in-progress')) {
       // 전체 프로젝트 메뉴일 때는 파일트리 펼치기
       setIsFileTreeCollapsed(false);
     } else {
@@ -2039,7 +2039,7 @@ const SimpleDashboard: React.FC = () => {
     let items = getDisplayedItems();
 
     // 전체 프로젝트 메뉴에서는 디자인 타입 제외 (프로젝트만 표시)
-    if (activeMenu === 'all' && !selectedProjectId) {
+    if ((activeMenu === 'all' || activeMenu === 'in-progress') && !selectedProjectId) {
       items = items.filter(item => item.type === 'project' || item.type === 'new-design');
       console.log('🚫 전체 프로젝트 - 디자인 제외 필터링:', {
         filteredCount: items.length,
@@ -2242,7 +2242,7 @@ const SimpleDashboard: React.FC = () => {
           '진행중 프로젝트';
       setBreadcrumbPath([rootPath]);
       // URL에서 projectId 제거 (현재 메뉴 유지)
-      const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
+      const menuPath = (activeMenu === 'all' || activeMenu === 'in-progress') ? '' : `/${activeMenu}`;
       navigate(`/dashboard${menuPath}`);
     } else {
       // 새 프로젝트 선택
@@ -2270,7 +2270,7 @@ const SimpleDashboard: React.FC = () => {
             '진행중 프로젝트';
         setBreadcrumbPath([rootPath, targetProject.title]);
         // URL에 projectId 추가 (activeMenu에 맞는 경로 사용)
-        const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
+        const menuPath = (activeMenu === 'all' || activeMenu === 'in-progress') ? '' : `/${activeMenu}`;
         navigate(`/dashboard${menuPath}?projectId=${projectId}`);
 
         // 프로젝트를 선택하면 자동으로 확장
@@ -2297,7 +2297,7 @@ const SimpleDashboard: React.FC = () => {
             '진행중 프로젝트';
         setBreadcrumbPath([rootPath, '로딩 중...']);
         // URL에 projectId 추가 (activeMenu에 맞는 경로 사용)
-        const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
+        const menuPath = (activeMenu === 'all' || activeMenu === 'in-progress') ? '' : `/${activeMenu}`;
         navigate(`/dashboard${menuPath}?projectId=${projectId}`);
 
         // 프로젝트를 선택하면 자동으로 확장
@@ -3478,9 +3478,9 @@ const SimpleDashboard: React.FC = () => {
         {/* 모바일 하단 네비게이션 */}
         <nav className={styles.mobileBottomNav}>
           <button
-            className={`${styles.mobileNavItem} ${activeMenu === 'all' ? styles.active : ''}`}
+            className={`${styles.mobileNavItem} ${activeMenu === 'in-progress' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('all');
+              setActiveMenu('in-progress');
               setMobileFilter('owned');
             }}
           >
@@ -3552,7 +3552,7 @@ const SimpleDashboard: React.FC = () => {
           <div
             className={styles.logo}
             onClick={() => {
-              setActiveMenu('all');
+              setActiveMenu('in-progress');
               setSelectedProjectId(null);
               setCurrentFolderId(null);
               setBreadcrumbPath(['진행중 프로젝트']);
@@ -3767,12 +3767,12 @@ const SimpleDashboard: React.FC = () => {
         </header>
 
         {/* 서브헤더 - 프로젝트 관련 메뉴에서만 표시 */}
-        {(activeMenu === 'all' || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && (
+        {((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && (
           <div className={styles.subHeader}>
             <div className={styles.subHeaderContent}>
               {/* 메뉴별 타이틀 표시 (좌측) */}
               <div className={styles.subHeaderLeft}>
-                {activeMenu === 'all' && selectedProjectId && (
+                {(activeMenu === 'all' || activeMenu === 'in-progress') && selectedProjectId && (
                   <button
                     className={styles.createDesignHeaderBtn}
                     onClick={() => handleCreateDesign(selectedProjectId, selectedProject?.title)}
@@ -4222,7 +4222,7 @@ const SimpleDashboard: React.FC = () => {
 
         <div className={styles.content}>
           {/* 프로젝트 트리 - 전체 프로젝트 메뉴일 때만 표시 (내가 만든 프로젝트만) */}
-          {activeMenu === 'all' && firebaseProjects.length > 0 && (
+          {(activeMenu === 'all' || activeMenu === 'in-progress') && firebaseProjects.length > 0 && (
             <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
               <div className={styles.treeHeader}>
                 <button
@@ -4415,7 +4415,7 @@ const SimpleDashboard: React.FC = () => {
             {/* 파일 경로 (브레드크럼) */}
             <div className={styles.breadcrumb}>
               {activeMenu === 'bookmarks' && <h2 className={styles.pageTitle}>북마크</h2>}
-              {(activeMenu === 'all' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && breadcrumbPath.map((item, index) => (
+              {((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && breadcrumbPath.map((item, index) => (
                 <React.Fragment key={index}>
                   <span
                     className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.active : ''}`}
@@ -4441,10 +4441,10 @@ const SimpleDashboard: React.FC = () => {
             {/* 기존 프로젝트 그리드 (all, trash, bookmarks, shared-by-me, shared-with-me 메뉴일 때 표시) */}
             {console.log('🔍 activeMenu 체크:', {
               activeMenu,
-              isAllTrashBookmarks: activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me',
-              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me')
+              isAllTrashBookmarks: (activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me',
+              shouldShowGrid: ((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me')
             })}
-            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') ? (
+            {((activeMenu === 'all' || activeMenu === 'in-progress') || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') ? (
               <>
                 {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
                   <div className={styles.listTableHeader}>
@@ -5324,14 +5324,14 @@ const SimpleDashboard: React.FC = () => {
                         {activeMenu === 'shared-by-me' && '공유한 프로젝트가 없습니다'}
                         {activeMenu === 'shared-with-me' && '공유받은 프로젝트가 없습니다'}
                         {activeMenu === 'trash' && '휴지통이 비어있습니다'}
-                        {activeMenu === 'all' && '아직 생성된 프로젝트가 없습니다'}
+                        {(activeMenu === 'all' || activeMenu === 'in-progress') && '아직 생성된 프로젝트가 없습니다'}
                       </div>
                       <div className={styles.emptyStateSubtitle}>
                         {activeMenu === 'bookmarks' && '프로젝트를 북마크하려면 ⋯ 메뉴를 사용하세요'}
                         {activeMenu === 'shared-by-me' && '프로젝트를 공유하면 여기에 표시됩니다'}
                         {activeMenu === 'shared-with-me' && '다른 사용자가 공유한 프로젝트가 여기에 표시됩니다'}
                         {activeMenu === 'trash' && '삭제된 프로젝트가 여기에 표시됩니다'}
-                        {activeMenu === 'all' && '새 프로젝트를 생성해보세요'}
+                        {(activeMenu === 'all' || activeMenu === 'in-progress') && '새 프로젝트를 생성해보세요'}
                       </div>
                     </div>
                   ) : null}
@@ -5380,30 +5380,7 @@ const SimpleDashboard: React.FC = () => {
                 공유하기
               </div>
             )}
-            {/* 공유 탭이 아닐 때만 북마크 버튼 표시 */}
-            {activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && (moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
-              <div
-                className={styles.moreMenuItem}
-                onClick={() => {
-                  if (moreMenu.itemType === 'project') {
-                    toggleBookmark(moreMenu.itemId);
-                  } else if (moreMenu.itemType === 'design') {
-                    toggleDesignBookmark(moreMenu.itemId);
-                  } else if (moreMenu.itemType === 'folder') {
-                    toggleFolderBookmark(moreMenu.itemId);
-                  }
-                  closeMoreMenu();
-                }}
-              >
-                <StarIcon size={14} />
-                {moreMenu.itemType === 'project'
-                  ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                  : moreMenu.itemType === 'design'
-                    ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                    : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                }
-              </div>
-            )}
+            {/* 북마크 버튼 - 추후 디자인 개편 예정으로 숨김 */}
             {/* 프로젝트 상태 변경 (프로젝트 타입일 때만) */}
             {moreMenu.itemType === 'project' && activeMenu !== 'trash' && activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && (
               <div
