@@ -5,8 +5,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--theme-overlay, rgba(0, 0, 0, 0.3));
-  z-index: 999;
+  background-color: var(--theme-overlay, rgba(0, 0, 0, 0.5));
+  z-index: 10000;
 }
 
 /* 설정 패널 */
@@ -18,7 +18,7 @@
   width: 400px;
   background: var(--theme-surface, white);
   box-shadow: -4px 0 20px var(--theme-shadow, rgba(0, 0, 0, 0.15));
-  z-index: 1000;
+  z-index: 10001;
   display: flex;
   flex-direction: column;
   animation: slideIn 0.3s ease-out;
