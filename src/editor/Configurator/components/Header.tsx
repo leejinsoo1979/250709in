@@ -854,29 +854,7 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Undo 버튼 - 읽기 전용 모드에서는 숨김 */}
-            {!readOnly && (
-              <button
-                className={styles.actionButton}
-                onClick={handleUndo}
-                disabled={!canUndo()}
-                title="실행 취소 (Ctrl+Z)"
-              >
-                <Undo size={20} />
-              </button>
-            )}
-
-            {/* Redo 버튼 - 읽기 전용 모드에서는 숨김 */}
-            {!readOnly && (
-              <button
-                className={styles.actionButton}
-                onClick={handleRedo}
-                disabled={!canRedo()}
-                title="다시 실행 (Ctrl+Y)"
-              >
-                <Redo size={20} />
-              </button>
-            )}
+            {/* Undo/Redo 버튼 제거됨 */}
 
             {onNext && (
               <button className={styles.actionButton} onClick={onNext}>
