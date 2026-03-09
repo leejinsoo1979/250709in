@@ -4,6 +4,7 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { createProject } from '@/services/projectDataService';
 import { getCurrentUserAsync } from '@/firebase/auth';
+import { createDesignFile } from '@/firebase/projects';
 import { serverTimestamp } from 'firebase/firestore';
 import Input from '@/components/common/Input';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -241,9 +242,29 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onClose, projectId: pro
                   setSaving(false);
                 }
               } else {
-                // 이미 프로젝트가 있으면 대시보드로 이동 (모달 닫기)
-                console.log('✅ projectId가 있어서 대시보드로 이동:', projectId);
-                onClose();
+                // 프로젝트가 있으면 디자인 파일 생성
+                console.log('✅ projectId가 있어서 디자인 파일 생성:', projectId);
+                setSaving(true);
+                try {
+                  const result = await createDesignFile({
+                    name: basicInfo.title?.trim() || '새 디자인',
+                    projectId: projectId,
+                    spaceConfig: spaceInfo,
+                    furniture: { placedModules: [] },
+                  });
+
+                  if (result.id) {
+                    console.log('✅ 디자인 파일 생성 완료:', result.id);
+                    onClose();
+                  } else {
+                    alert('디자인 파일 생성 실패: ' + (result.error || '알 수 없는 오류'));
+                  }
+                } catch (error) {
+                  console.error('❌ 디자인 파일 생성 오류:', error);
+                  alert('디자인 파일 생성 중 오류가 발생했습니다.');
+                } finally {
+                  setSaving(false);
+                }
               }
             }}
             disabled={!canProceed || saving}
