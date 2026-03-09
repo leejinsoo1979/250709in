@@ -64,6 +64,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [subSplitHeightInputs, setSubSplitHeightInputs] = useState<Record<string, string>>({});
   // 섹션별 깊이 입력 - 키: sIdx (0, 1)
   const [sectionDepthInputs, setSectionDepthInputs] = useState<Record<number, string>>({});
+  // 칸막이 좌/우 독립 깊이 입력 - 키: "left" / "right"
+  const [indepDepthInputs, setIndepDepthInputs] = useState<Record<string, string>>({});
   // 섹션별 너비 입력 - 키: sIdx
   const [sectionWidthInputs, setSectionWidthInputs] = useState<Record<number, string>>({});
   // 좌우 섹션분할 너비 입력 - 키: "sIdx-left" / "sIdx-right"
@@ -284,6 +286,30 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const updateKey = sIdx === 0 ? 'lowerSectionDepth' : 'upperSectionDepth';
     updatePlacedModule(moduleId, { [updateKey]: clamped });
     setSectionDepthInputs((prev) => ({ ...prev, [sIdx]: clamped.toString() }));
+  };
+
+  // 칸막이 좌/우 독립 깊이 입력 변경
+  const handleIndepDepthInputChange = (side: 'left' | 'right', value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setIndepDepthInputs((prev) => ({ ...prev, [side]: value }));
+    }
+  };
+
+  // 칸막이 좌/우 독립 깊이 확정
+  const handleIndepDepthBlur = (side: 'left' | 'right') => {
+    const raw = indepDepthInputs[side] ?? '';
+    const key = side === 'left' ? 'lowerLeftSectionDepth' : 'lowerRightSectionDepth';
+    const currentDepth = (side === 'left'
+      ? placedModule.lowerLeftSectionDepth
+      : placedModule.lowerRightSectionDepth) ?? placedModule.lowerSectionDepth ?? furnitureDepth;
+    if (raw === '') {
+      setIndepDepthInputs((prev) => ({ ...prev, [side]: currentDepth.toString() }));
+      return;
+    }
+    const num = parseInt(raw, 10);
+    const clamped = Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, num));
+    updatePlacedModule(moduleId, { [key]: clamped });
+    setIndepDepthInputs((prev) => ({ ...prev, [side]: clamped.toString() }));
   };
 
   // Enter 키 핸들러
@@ -2317,42 +2343,64 @@ const CustomizablePropertiesPanel: React.FC = () => {
               </div>
             )}
             {/* 깊이 */}
-            <div className={styles.row}>
-              <span className={styles.label}>깊이</span>
-              {config.sections.length > 1 ? (
-                <>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className={`${styles.input} ${styles.inputSmall}`}
-                    value={sectionDepthInputs[sIdx] ?? (sIdx === 0 ? (placedModule.lowerSectionDepth ?? furnitureDepth) : (placedModule.upperSectionDepth ?? furnitureDepth)).toString()}
-                    placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
-                    onChange={(e) => handleSectionDepthInputChange(sIdx, e.target.value)}
-                    onBlur={() => handleSectionDepthBlur(sIdx)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                    style={{ width: '70px' }}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className={`${styles.input} ${styles.inputSmall}`}
-                    value={depthInput}
-                    placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
-                    onChange={(e) => handleDepthInputChange(e.target.value)}
-                    onBlur={handleDepthInputBlur}
-                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                    style={{ width: '70px' }}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </>
-              )}
-            </div>
-            {/* 깊이 줄이는 방향 (2섹션일 때만) */}
-            {config.sections.length > 1 && (
+            {sIdx === 0 && areaSide && areaSide !== 'center' && section.hasPartition ? (
+              /* 하부 칸막이 좌/우 독립 깊이 */
+              <div className={styles.row}>
+                <span className={styles.label}>깊이</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={indepDepthInputs[areaSide] ?? (
+                    (areaSide === 'left' ? placedModule.lowerLeftSectionDepth : placedModule.lowerRightSectionDepth)
+                    ?? placedModule.lowerSectionDepth ?? furnitureDepth
+                  ).toString()}
+                  placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                  onChange={(e) => handleIndepDepthInputChange(areaSide, e.target.value)}
+                  onBlur={() => handleIndepDepthBlur(areaSide)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  style={{ width: '70px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+            ) : (
+              <div className={styles.row}>
+                <span className={styles.label}>깊이</span>
+                {config.sections.length > 1 ? (
+                  <>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className={`${styles.input} ${styles.inputSmall}`}
+                      value={sectionDepthInputs[sIdx] ?? (sIdx === 0 ? (placedModule.lowerSectionDepth ?? furnitureDepth) : (placedModule.upperSectionDepth ?? furnitureDepth)).toString()}
+                      placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                      onChange={(e) => handleSectionDepthInputChange(sIdx, e.target.value)}
+                      onBlur={() => handleSectionDepthBlur(sIdx)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      style={{ width: '70px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className={`${styles.input} ${styles.inputSmall}`}
+                      value={depthInput}
+                      placeholder={`${MIN_DEPTH}-${MAX_DEPTH}`}
+                      onChange={(e) => handleDepthInputChange(e.target.value)}
+                      onBlur={handleDepthInputBlur}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      style={{ width: '70px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </>
+                )}
+              </div>
+            )}
+            {/* 깊이 줄이는 방향 (2섹션일 때만, 칸막이 독립깊이 제외) */}
+            {config.sections.length > 1 && !(sIdx === 0 && areaSide && areaSide !== 'center' && section.hasPartition) && (
               <div className={styles.row}>
                 <span className={styles.label}>방향</span>
                 <div className={styles.toggleGroup}>
