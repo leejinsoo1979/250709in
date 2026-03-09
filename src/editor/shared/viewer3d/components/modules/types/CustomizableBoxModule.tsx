@@ -632,14 +632,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         };
 
         if (section.horizontalSplit) {
-          // 좌우 섹션분할: 각 독립 박스 중심에 아이콘
+          // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (외경 W 기준)
           const hs = section.horizontalSplit;
           const totalInnerWMm = (width - 2 * panelThickness);
           const leftOuterWMm = hs.position + 2 * panelThickness;
           const rightInnerWMm = totalInnerWMm - hs.position - 2 * panelThickness;
           const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
-          const leftCX = -innerW / 2 + mmToUnit(leftOuterWMm) / 2;
-          const rightCX = innerW / 2 - mmToUnit(rightOuterWMm) / 2;
+          const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
+          const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
           if (hs.leftElements) {
             icons.push(renderSectionIcon(`${prefix}-hsplit-left`, leftCX, centerY, frontZ, sIdx, 'left'));
           }
@@ -687,14 +687,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       };
 
       if (section?.horizontalSplit) {
-        // 좌우 섹션분할: 각 독립 박스 중심에 아이콘
+        // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (외경 W 기준)
         const hs = section.horizontalSplit;
         const totalInnerWMm = (width - 2 * panelThickness);
         const leftOuterWMm = hs.position + 2 * panelThickness;
         const rightInnerWMm = totalInnerWMm - hs.position - 2 * panelThickness;
         const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
-        const leftCX = -innerW / 2 + mmToUnit(leftOuterWMm) / 2;
-        const rightCX = innerW / 2 - mmToUnit(rightOuterWMm) / 2;
+        const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
+        const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
         if (hs.leftElements) {
           icons.push(renderSectionIcon('single-hsplit-left', leftCX, 0, frontZ, 0, 'left'));
         }
@@ -1364,9 +1364,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const rightOuterW = mmToUnit(rightOuterWMm);
     const rightInnerW = mmToUnit(rightInnerWMm);
 
-    // 중심 X 계산 (전체 박스 내에서의 위치)
-    const leftCenterX = -totalInnerW / 2 + leftOuterW / 2;
-    const rightCenterX = totalInnerW / 2 - rightOuterW / 2;
+    // 중심 X 계산 (전체 외경 boxW 기준 — 좌측+우측 외경 합 = boxW)
+    const leftCenterX = -boxW / 2 + leftOuterW / 2;
+    const rightCenterX = boxW / 2 - rightOuterW / 2;
 
     const sectionLabel = sections.length > 1 ? (sIdx === 0 ? '하부' : '상부') : '';
     const bInnerH = boxH - 2 * t;
