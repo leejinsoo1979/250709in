@@ -170,9 +170,11 @@ function buildHorizontalSplit(
 /**
  * H-split children 중 vertical이 있으면 areaSubSplits 생성
  *
- * areaSubSplit = 서브박스 내에서 상하 2분할 (독립 박스 모델)
- * 2개 서브섹션 × 2패널 = 4패널 → usableHeight = sectionInnerH - 4*PT
- * 하지만 areaSubSplit.lowerHeight는 하부 서브섹션의 내경 높이
+ * areaSubSplit = 서브박스 내에서 상하 2분할
+ * 렌더러는 lowerHeight를 섹션 내경 높이 내에서 직접 분할 (패널 차감 없음)
+ * 구분판은 렌더러가 별도 렌더링
+ *
+ * lowerHeight = 하부 영역 높이 (mm), 상부 = 섹션높이 - 하부높이
  */
 function buildAreaSubSplits(
   hNode: LayoutNode,
@@ -190,12 +192,10 @@ function buildAreaSubSplits(
     const areaName = areaNames[idx];
     if (child.direction === 'vertical' && child.children) {
       hasSubSplits = true;
-      // 독립 박스 모델: 2개 서브섹션 → 4개 패널 차감
-      const numSubSections = child.children.length;
-      const usableHeight = parentInnerHeight - 2 * numSubSections * PANEL_THICKNESS;
-      // children[마지막] = 하부
+      // 렌더러는 패널 차감 없이 섹션 내경 높이를 직접 분할
+      // children[마지막] = 캔버스 아래 = 3D 하부
       const lastChild = child.children[child.children.length - 1];
-      const lowerHeight = Math.round(lastChild.ratio * usableHeight);
+      const lowerHeight = Math.round(lastChild.ratio * parentInnerHeight);
       areas[areaName] = {
         enabled: true,
         lowerHeight,
