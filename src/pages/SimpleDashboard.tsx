@@ -387,19 +387,78 @@ const SimpleDashboard: React.FC = () => {
   // Firebase에서 폴더 데이터 불러오기
   const loadFolderDataForProject = useCallback(async (projectId: string) => {
     try {
-      const { folders, error } = await loadFolderData(projectId);
+      const { folders: loadedFolders, error } = await loadFolderData(projectId);
       if (error) {
         console.error('폴더 데이터 불러오기 에러:', error);
+        // Firebase 실패 시 localStorage 백업에서 복원
+        const uid = user?.uid;
+        if (uid) {
+          const backup = localStorage.getItem(`folders_backup_${uid}_${projectId}`);
+          if (backup) {
+            try {
+              const backupFolders = JSON.parse(backup);
+              console.log('📂 localStorage 백업에서 폴더 복원:', backupFolders.length, '개');
+              setFolders(prev => ({
+                ...prev,
+                [projectId]: backupFolders
+              }));
+              return;
+            } catch (parseErr) {
+              console.error('폴더 백업 파싱 오류:', parseErr);
+            }
+          }
+        }
       } else {
+        // Firebase에서 빈 배열이 반환되면 localStorage 백업 확인
+        if (loadedFolders.length === 0) {
+          const uid = user?.uid;
+          if (uid) {
+            const backup = localStorage.getItem(`folders_backup_${uid}_${projectId}`);
+            if (backup) {
+              try {
+                const backupFolders = JSON.parse(backup);
+                if (backupFolders.length > 0) {
+                  console.log('📂 Firebase에 폴더 없음, localStorage 백업에서 복원:', backupFolders.length, '개');
+                  setFolders(prev => ({
+                    ...prev,
+                    [projectId]: backupFolders
+                  }));
+                  // Firebase에 다시 저장 시도
+                  saveFolderData(projectId, backupFolders).catch(() => {});
+                  return;
+                }
+              } catch (parseErr) {
+                console.error('폴더 백업 파싱 오류:', parseErr);
+              }
+            }
+          }
+        }
         setFolders(prev => ({
           ...prev,
-          [projectId]: folders
+          [projectId]: loadedFolders
         }));
       }
     } catch (err) {
       console.error('폴더 데이터 불러오기 중 오류:', err);
+      // 예외 발생 시 localStorage 백업에서 복원
+      const uid = user?.uid;
+      if (uid) {
+        const backup = localStorage.getItem(`folders_backup_${uid}_${projectId}`);
+        if (backup) {
+          try {
+            const backupFolders = JSON.parse(backup);
+            console.log('📂 예외 발생, localStorage 백업에서 폴더 복원:', backupFolders.length, '개');
+            setFolders(prev => ({
+              ...prev,
+              [projectId]: backupFolders
+            }));
+          } catch (parseErr) {
+            console.error('폴더 백업 파싱 오류:', parseErr);
+          }
+        }
+      }
     }
-  }, []);
+  }, [user]);
 
   // Firebase에서 디자인 파일들 불러오기
   const loadDesignFilesForProject = useCallback(async (projectId: string) => {
@@ -508,9 +567,13 @@ const SimpleDashboard: React.FC = () => {
       const { error } = await saveFolderData(projectId, folderData);
       if (error) {
         console.error('폴더 데이터 저장 에러:', error);
+        // localStorage에 백업 저장 (Firebase 실패 시 데이터 보존)
+        localStorage.setItem(`folders_backup_${user.uid}_${projectId}`, JSON.stringify(folderData));
       }
     } catch (err) {
       console.error('폴더 데이터 저장 중 오류:', err);
+      // localStorage에 백업 저장
+      localStorage.setItem(`folders_backup_${user.uid}_${projectId}`, JSON.stringify(folderData));
     }
   }, [user]);
 
