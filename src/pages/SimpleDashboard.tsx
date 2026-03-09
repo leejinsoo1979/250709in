@@ -3767,10 +3767,18 @@ const SimpleDashboard: React.FC = () => {
             <div className={styles.subHeaderContent}>
               {/* 메뉴별 타이틀 표시 (좌측) */}
               <div className={styles.subHeaderLeft}>
+                {activeMenu === 'all' && selectedProjectId && (
+                  <button
+                    className={styles.createDesignHeaderBtn}
+                    onClick={() => handleCreateDesign(selectedProjectId, selectedProject?.title)}
+                  >
+                    <PlusIcon size={14} />
+                    디자인 생성
+                  </button>
+                )}
                 {activeMenu === 'trash' && (
                   <h1 className={styles.subHeaderTitle}>휴지통</h1>
                 )}
-                {/* 북마크는 타이틀 없음 */}
               </div>
 
               {/* 우측 액션 버튼들 */}
@@ -4232,19 +4240,6 @@ const SimpleDashboard: React.FC = () => {
                   />
                 </div>
               </div>
-
-              {/* 디자인 생성 버튼 */}
-              {selectedProjectId && (
-                <div className={styles.treeCreateDesignBtn}>
-                  <button onClick={() => {
-                    const project = firebaseProjects.find(p => p.id === selectedProjectId);
-                    handleCreateDesign(selectedProjectId, project?.title);
-                  }}>
-                    <PlusIcon size={14} />
-                    디자인 생성
-                  </button>
-                </div>
-              )}
 
               <div className={styles.treeContent}>
                 {firebaseProjects.length > 0 ? (
