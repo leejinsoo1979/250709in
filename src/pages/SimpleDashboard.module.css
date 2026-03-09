@@ -1166,11 +1166,11 @@
 
 /* 드래그 중인 카드 */
 .designCard[draggable="true"] {
-  cursor: grab;
+  cursor: pointer;
 }
 
 .designCard[draggable="true"]:active {
-  cursor: grabbing;
+  cursor: pointer;
 }
 
 /* 디자인 카드 체크박스 */
