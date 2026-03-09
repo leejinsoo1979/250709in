@@ -200,6 +200,7 @@
 }
 
 .createBtn {
+  width: 160px;
   padding: 8px 16px;
   background: var(--theme-primary, #2563eb) !important;
   color: white !important;
@@ -2827,8 +2828,10 @@
 }
 
 .createDesignHeaderBtn {
+  width: 160px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 16px;
   background: var(--theme-primary, #2563eb);
