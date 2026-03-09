@@ -2375,8 +2375,19 @@ const SimpleDashboard: React.FC = () => {
 
     // 클릭한 버튼의 위치 계산
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = rect.right - 160; // 메뉴 너비(160px)를 고려하여 오른쪽 정렬
-    const y = rect.bottom + 4; // 버튼 아래에 약간의 간격
+    const menuWidth = 180;
+    const menuHeight = 250; // 메뉴 최대 높이 추정
+    let x = rect.right - menuWidth;
+    let y = rect.bottom + 4;
+
+    // 뷰포트 경계 체크 — 메뉴가 화면 밖으로 넘어가지 않도록
+    if (x < 8) x = 8;
+    if (x + menuWidth > window.innerWidth - 8) x = window.innerWidth - menuWidth - 8;
+    if (y + menuHeight > window.innerHeight - 8) {
+      // 버튼 위로 메뉴 표시
+      y = rect.top - menuHeight - 4;
+      if (y < 8) y = 8;
+    }
 
     setMoreMenu({
       visible: true,
@@ -5522,14 +5533,22 @@ const SimpleDashboard: React.FC = () => {
             <div
               className={`${styles.moreMenuItem} ${styles.deleteItem}`}
               onClick={async () => {
+                // moreMenu 값을 핸들러 시작 시점에 캡처 (비동기 중 null이 될 수 있음)
+                const menuSnapshot = moreMenu ? { ...moreMenu } : null;
+                if (!menuSnapshot) {
+                  console.error('❌ moreMenu가 null - 삭제 중단');
+                  return;
+                }
+                console.log('🗑️ 삭제 버튼 클릭됨:', { activeMenu, itemType: menuSnapshot.itemType, itemId: menuSnapshot.itemId, itemName: menuSnapshot.itemName });
+
                 if (activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') {
                   // 공유 해제 로직
                   if (window.confirm('공유를 해제하시겠습니까?')) {
-                    console.log('🔗 공유 해제:', moreMenu.itemId, moreMenu.itemType);
+                    console.log('🔗 공유 해제:', menuSnapshot.itemId, menuSnapshot.itemType);
 
-                    if (moreMenu.itemType === 'design' && selectedProjectId && user) {
+                    if (menuSnapshot.itemType === 'design' && selectedProjectId && user) {
                       // 디자인 파일 공유 해제
-                      const result = await revokeDesignFileAccess(selectedProjectId, user.uid, moreMenu.itemId);
+                      const result = await revokeDesignFileAccess(selectedProjectId, user.uid, menuSnapshot.itemId);
                       if (result.success) {
                         // 공유받은 프로젝트 목록 새로고침
                         const shared = await getSharedProjectsForUser(user.uid);
@@ -5642,13 +5661,13 @@ const SimpleDashboard: React.FC = () => {
                         setSharedWithMeProjects(Array.from(sharedProjectsMap.values()));
                       }
                       alert(result.message);
-                    } else if (moreMenu.itemType === 'project' && user) {
+                    } else if (menuSnapshot.itemType === 'project' && user) {
                       // 프로젝트가 내가 공유한 것인지 확인
-                      const isSharedByMe = sharedByMeProjects.some(p => p.id === moreMenu.itemId);
-                      const isSharedWithMe = sharedWithMeProjects.some(p => p.id === moreMenu.itemId);
+                      const isSharedByMe = sharedByMeProjects.some(p => p.id === menuSnapshot.itemId);
+                      const isSharedWithMe = sharedWithMeProjects.some(p => p.id === menuSnapshot.itemId);
 
                       console.log('🔗 공유 해제 시도:', {
-                        projectId: moreMenu.itemId,
+                        projectId: menuSnapshot.itemId,
                         isSharedByMe,
                         isSharedWithMe,
                         userId: user.uid,
@@ -5659,21 +5678,21 @@ const SimpleDashboard: React.FC = () => {
                       if (isSharedByMe) {
                         // 내가 공유한 프로젝트 - 모든 사용자의 접근 권한 해제
                         console.log('📤 내가 공유한 프로젝트 - 모든 권한 해제');
-                        const result = await revokeAllProjectAccess(moreMenu.itemId);
+                        const result = await revokeAllProjectAccess(menuSnapshot.itemId);
                         console.log('📤 결과:', result);
                         if (result.success) {
                           // sharedByMeProjects 목록에서 제거
-                          setSharedByMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                          setSharedByMeProjects(prev => prev.filter(p => p.id !== menuSnapshot.itemId));
                         }
                         alert(result.message);
                       } else if (isSharedWithMe) {
                         // 공유받은 프로젝트 - 내 접근 권한만 해제
                         console.log('📥 공유받은 프로젝트 - 내 권한만 해제');
-                        const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
+                        const result = await revokeProjectAccess(menuSnapshot.itemId, user.uid);
                         console.log('📥 결과:', result);
                         if (result.success) {
                           // 공유받은 프로젝트 목록에서 제거
-                          setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                          setSharedWithMeProjects(prev => prev.filter(p => p.id !== menuSnapshot.itemId));
                           console.log('✅ sharedWithMeProjects에서 제거됨');
                         } else {
                           console.error('❌ 공유 해제 실패:', result.message);
@@ -5692,23 +5711,37 @@ const SimpleDashboard: React.FC = () => {
                     handleDeleteItem();
                   }
                 } else {
-                  if (moreMenu.itemType === 'project') {
-                    if (window.confirm(`프로젝트 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?`)) {
-                      const project = allProjects.find(p => p.id === moreMenu.itemId)
-                        || firebaseProjects.find(p => p.id === moreMenu.itemId);
-                      if (project) {
-                        await moveToTrash(project);
-                      } else {
-                        // allProjects에서 못 찾으면 직접 Firebase 삭제
-                        const { error } = await deleteProject(moreMenu.itemId);
-                        if (error) {
-                          alert('프로젝트 삭제 실패: ' + error);
+                  // 일반 탭에서 삭제
+                  if (menuSnapshot.itemType === 'project') {
+                    if (window.confirm(`프로젝트 "${menuSnapshot.itemName}"을(를) 삭제하시겠습니까?`)) {
+                      console.log('🗑️ 프로젝트 삭제 시작:', menuSnapshot.itemId);
+                      try {
+                        const project = allProjects.find(p => p.id === menuSnapshot.itemId)
+                          || firebaseProjects.find(p => p.id === menuSnapshot.itemId);
+                        if (project) {
+                          console.log('🗑️ moveToTrash 호출:', project.id, project.title);
+                          await moveToTrash(project);
+                          console.log('✅ moveToTrash 완료');
                         } else {
-                          await loadFirebaseProjects();
+                          // allProjects에서 못 찾으면 직접 Firebase 삭제
+                          console.log('⚠️ allProjects에서 프로젝트 못 찾음, 직접 삭제:', menuSnapshot.itemId);
+                          const { error } = await deleteProject(menuSnapshot.itemId);
+                          if (error) {
+                            alert('프로젝트 삭제 실패: ' + error);
+                          } else {
+                            await loadFirebaseProjects();
+                            console.log('✅ 직접 삭제 완료');
+                          }
                         }
+                      } catch (err) {
+                        console.error('❌ 프로젝트 삭제 중 예외:', err);
+                        alert('프로젝트 삭제 중 오류가 발생했습니다.');
                       }
                     }
                     closeMoreMenu();
+                  } else if (menuSnapshot.itemType === 'design' || menuSnapshot.itemType === 'folder') {
+                    // 디자인 파일/폴더 삭제
+                    handleDeleteItem();
                   } else {
                     handleDeleteItem();
                   }
