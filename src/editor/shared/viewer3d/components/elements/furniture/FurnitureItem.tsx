@@ -2743,26 +2743,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
-        onDoubleClick={(e) => {
-          // 잠긴 가구는 더블클릭으로 잠금 해제
+        onClick={(e) => {
+          // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
+          if (onFurnitureClick && placedModule.slotIndex !== undefined) {
+            e.stopPropagation();
+            onFurnitureClick(placedModule.id, placedModule.slotIndex);
+            return;
+          }
+          // 잠긴 가구는 클릭으로 잠금 해제
           if (placedModule.isLocked) {
             e.stopPropagation();
             const updateModule = useFurnitureStore.getState().updateModule;
             updateModule(placedModule.id, { isLocked: false });
           } else {
+            // 원클릭으로 편집 팝업 열기 (고스트 활성화)
             onDoubleClick(e, placedModule.id);
-          }
-        }}
-        onClick={(e) => {
-          console.log('🖱️ FurnitureItem onClick:', {
-            furnitureId: placedModule.id,
-            slotIndex: placedModule.slotIndex,
-            hasOnFurnitureClick: !!onFurnitureClick
-          });
-          // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
-          if (onFurnitureClick && placedModule.slotIndex !== undefined) {
-            e.stopPropagation();
-            onFurnitureClick(placedModule.id, placedModule.slotIndex);
           }
         }}
         onPointerDown={handlePointerDown}

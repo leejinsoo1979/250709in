@@ -1117,63 +1117,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   });
   
-  // 도어 클릭 핸들러 - 개별 또는 전역 상태 토글
-  const handleDoorClick = (event: ThreeEvent<MouseEvent>) => {
-    event.stopPropagation();
-
-    console.log('🚪 도어 클릭 이벤트 발생:', {
-      moduleId: moduleData?.id,
-      furnitureId,
-      sectionIndex,
-      useIndividualState,
-      currentDoorOpen: isDoorOpen,
-      willBeOpen: !isDoorOpen
-    });
-
-    // furnitureId가 있으면 개별 도어 토글, 아니면 전역 토글
-    if (useIndividualState) {
-      toggleIndividualDoor(furnitureId!, effectiveSectionIndex);
-      console.log('🚪 개별 도어 상태 토글:', {
-        furnitureId,
-        sectionIndex: effectiveSectionIndex,
-        key: `${furnitureId}-${effectiveSectionIndex}`
-      });
-    } else {
-      const { toggleDoors } = useUIStore.getState();
-      toggleDoors();
-      console.log('🚪 전역 도어 상태 토글');
-    }
-
-    // Three.js 렌더러에 다시 그리기 요청 (react-three-fiber의 invalidate 사용)
-    if (gl) {
-      // invalidate 함수가 있으면 사용, 없으면 직접 렌더
-      if ('invalidate' in gl) {
-        (gl as any).invalidate();
-      }
-    }
-
-    // 토글 후 상태 확인
-    setTimeout(() => {
-      if (useIndividualState) {
-        const newState = useUIStore.getState().isIndividualDoorOpen(furnitureId!, effectiveSectionIndex);
-        console.log('🚪 개별 도어 상태 토글 완료, 새로운 상태:', newState);
-      } else {
-        const newState = useUIStore.getState().doorsOpen;
-        console.log('🚪 전역 도어 상태 토글 완료, 새로운 상태:', newState);
-      }
-    }, 100);
-  };
-
-  // 도어 호버 핸들러
-  const handleDoorPointerOver = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
-
-  const handleDoorPointerOut = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation();
-    document.body.style.cursor = 'auto';
-  };
+  // 도어 클릭 핸들러 제거됨 - Close/Open 버튼으로만 도어 열고닫기
   
   // 애니메이션 설정 - 적당한 속도 (80도 열림)
   // 부드럽고 자연스러운 애니메이션을 위해 tension/friction 조정
@@ -1422,9 +1366,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 renderMode={renderMode}
                 isDragging={isDragging}
                 isEditMode={isEditMode}
-                onClick={handleDoorClick}
-                onPointerOver={handleDoorPointerOver}
-                onPointerOut={handleDoorPointerOut}
                 furnitureId={furnitureId}
                 panelName="좌측 도어"
                 textureUrl={textureUrl}
@@ -1829,9 +1770,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 renderMode={renderMode}
                 isDragging={isDragging}
                 isEditMode={isEditMode}
-                onClick={handleDoorClick}
-                onPointerOver={handleDoorPointerOver}
-                onPointerOut={handleDoorPointerOut}
                 furnitureId={furnitureId}
                 panelName="우측 도어"
                 textureUrl={textureUrl}
@@ -2259,9 +2197,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              onClick={handleDoorClick}
-              onPointerOver={handleDoorPointerOver}
-              onPointerOut={handleDoorPointerOut}
               furnitureId={furnitureId}
               panelName="도어"
               textureUrl={textureUrl}

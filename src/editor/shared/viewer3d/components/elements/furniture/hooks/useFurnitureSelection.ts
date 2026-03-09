@@ -24,7 +24,7 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
   const [dragMode, setDragMode] = useState(false);
   const isDragging = useRef(false);
 
-  // 가구 클릭 핸들러 (더블클릭 편집모드)
+  // 가구 클릭 핸들러 (원클릭 편집모드)
   const handleFurnitureClick = (e: ThreeEvent<MouseEvent>, placedModuleId: string) => {
     // 읽기 전용 모드에서는 편집 불가
     if (readOnly) {
@@ -36,7 +36,7 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
     // 드래그였다면 클릭 이벤트 무시
     if (isDragging.current) return;
 
-    console.log('🖱️ 더블클릭 감지:', {
+    console.log('🖱️ 가구 클릭 감지:', {
       placedModuleId,
       event: e.type,
       button: e.button
