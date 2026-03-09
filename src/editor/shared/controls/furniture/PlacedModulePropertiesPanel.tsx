@@ -629,56 +629,37 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalLowerDoorTopGap, setOriginalLowerDoorTopGap] = useState<number>(0);
   const [originalLowerDoorBottomGap, setOriginalLowerDoorBottomGap] = useState<number>(45);
 
-  const [showWarning, setShowWarning] = useState(false);
-
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log('🔑 키 입력 감지:', e.key, 'activePopup.type:', activePopup.type, 'showWarning:', showWarning);
-      
-      // 경고창이 열려있을 때
-      if (showWarning) {
-        if (e.key === 'Enter' || e.key === 'Escape') {
-          e.preventDefault();
-          setShowWarning(false);
-          console.log('✅ 경고창 닫기');
-        }
-        return;
-      }
-
       const activeElement = document.activeElement as HTMLElement | null;
       const isFormElement = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
       if (isFormElement) {
         if (e.key === 'Escape') {
           e.preventDefault();
-          console.log('✅ ESC키로 팝업 닫기 (입력 필드 포커스)');
           closeAllPopups();
         }
         return;
       }
-      
+
       // 메인 팝업이 열려있을 때 (furnitureEdit 타입 체크)
       if (activePopup.type === 'furnitureEdit') {
         if (e.key === 'Enter') {
           e.preventDefault();
-          console.log('✅ 엔터키로 팝업 닫기');
-          closeAllPopups(); // 확인 버튼과 동일한 동작
+          closeAllPopups();
         } else if (e.key === 'Escape') {
           e.preventDefault();
-          console.log('✅ ESC키로 팝업 닫기');
-          closeAllPopups(); // 취소와 동일한 동작
+          closeAllPopups();
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    console.log('🎯 키 이벤트 리스너 등록');
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      console.log('🎯 키 이벤트 리스너 제거');
     };
-  }, [activePopup.type, showWarning, closeAllPopups]);
+  }, [activePopup.type, closeAllPopups]);
   
   // 기본 가구 깊이 계산 (가구별 defaultDepth 우선, 없으면 fallback)
   const getDefaultDepth = useCallback((moduleData?: ModuleData) => {
@@ -1410,14 +1391,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   };
 
   const handleHingePositionChange = (position: 'left' | 'right') => {
-    // 커버도어인 경우 경고 표시
-    if (isCoverDoor) {
-      setShowWarning(true);
-      // 3초 후 자동으로 경고 숨김
-      setTimeout(() => setShowWarning(false), 3000);
-      return;
-    }
-    
     setHingePosition(position);
     if (activePopup.id) {
       updatePlacedModule(activePopup.id, { hingePosition: position });
@@ -2542,25 +2515,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         </div>
       </div>
       
-      {/* 경고 팝업 */}
-      {showWarning && (
-        <div className={styles.warningOverlay}>
-          <div className={styles.warningModal}>
-            <div className={styles.warningIcon}>⚠️</div>
-            <div className={styles.warningMessage}>
-              {t('furniture.coverDoorNote')}
-            </div>
-            <button 
-              className={styles.warningCloseButton}
-              onClick={() => setShowWarning(false)}
-            >
-              {t('common.confirm')}
-            </button>
-          </div>
-        </div>
-      )}
-
-
     </div>
   );
 };
