@@ -8,6 +8,40 @@ import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 
 /**
+ * 패널 이름에서 기본 결방향(grain) 결정
+ * - 사용자가 panelGrainDirections에 명시적으로 설정하지 않은 패널에 적용
+ * - 측판/백패널/도어/칸막이: VERTICAL (결이 높이 방향)
+ * - 상판/바닥/선반/분할판/보강대: HORIZONTAL (결이 너비 방향)
+ * - 서랍 바닥/MDF 패널: NONE (결 무관, 회전 허용)
+ */
+function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' {
+  // MDF 재질 패널 (결 방향 없음)
+  if (panelName.includes('백패널')) return 'VERTICAL';
+  if (panelName.includes('바닥') && panelName.includes('서랍')) return 'NONE'; // 서랍 바닥 (MDF)
+
+  // 서랍 부품
+  if (panelName.includes('마이다')) return 'VERTICAL';     // 서랍 손잡이판
+  if (panelName.includes('서랍') && panelName.includes('앞판')) return 'HORIZONTAL';
+  if (panelName.includes('서랍') && panelName.includes('뒷판')) return 'HORIZONTAL';
+  if (panelName.includes('서랍') && (panelName.includes('좌측판') || panelName.includes('우측판'))) return 'VERTICAL';
+
+  // 가구 구조 패널 - 세로 방향
+  if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) return 'VERTICAL';
+  if (panelName.includes('칸막이')) return 'VERTICAL';
+  if (panelName.includes('좌우 분할판')) return 'VERTICAL'; // horizontalSplit 분할판
+  if (panelName.includes('도어') || panelName.includes('Door')) return 'VERTICAL';
+
+  // 가구 구조 패널 - 가로 방향
+  if (panelName.includes('상판') || panelName.includes('바닥')) return 'HORIZONTAL';
+  if (panelName.includes('선반')) return 'HORIZONTAL';
+  if (panelName.includes('분할판')) return 'HORIZONTAL';    // areaSubSplit 수평 분할판
+  if (panelName.includes('보강대')) return 'HORIZONTAL';
+
+  // 기본값: HORIZONTAL (가로 결)
+  return 'HORIZONTAL';
+}
+
+/**
  * Hook for live panel data binding from Configurator
  * Subscribes to furniture store changes and provides normalized panels
  */
@@ -181,9 +215,11 @@ export function useLivePanelData() {
 
         // Panel 타입으로 변환하고 고유 ID 할당
         const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
-          // 패널 이름으로 결방향 찾기
+          // 패널 이름으로 결방향 찾기 (사용자 설정 > 패널 타입 기본값)
           const grainDirection = panelGrainDirections[panel.name];
-          const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
+          const grainValue = grainDirection
+            ? (grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL')
+            : getDefaultGrain(panel.name);
 
           // 측판인지 확인
           const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
@@ -507,10 +543,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       // Panel 타입으로 변환하고 고유 ID 할당
       const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
-        // 패널 이름으로 결방향 찾기
+        // 패널 이름으로 결방향 찾기 (사용자 설정 > 패널 타입 기본값)
         const grainDirection = panelGrainDirections[panel.name];
-        // horizontal -> HORIZONTAL, vertical -> VERTICAL
-        const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
+        const grainValue = grainDirection
+          ? (grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL')
+          : getDefaultGrain(panel.name);
 
         // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));

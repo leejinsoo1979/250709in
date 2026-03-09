@@ -803,33 +803,83 @@ export const calculatePanelDetails = (
         }
       };
 
-      // 칸막이 여부에 따라 요소 처리
-      if (section.hasPartition) {
+      // areaSubSplits 헬퍼: 영역별 상하 분할 처리
+      const processAreaSubSplits = (areaKey: string, areaWidth: number) => {
+        const split = section.areaSubSplits?.[areaKey];
+        if (!split?.enabled) return;
+        // 수평 분할판 (상하 분할)
+        targetPanel.push({
+          name: `${sectionPrefix}${areaKey === 'full' ? '' : areaKey + ' '}분할판`,
+          width: areaWidth - 1,
+          depth: customDepth - 26,
+          thickness: basicThicknessCC,
+          material: 'PB'
+        });
+        // 상/하 영역 요소
+        processElements(split.upperElements, `${areaKey === 'full' ? '' : areaKey + ' '}상부 `, areaWidth);
+        processElements(split.lowerElements, `${areaKey === 'full' ? '' : areaKey + ' '}하부 `, areaWidth);
+      };
+
+      // === 좌우 분할(horizontalSplit) / 칸막이 / 단일 영역 처리 ===
+      if (section.horizontalSplit) {
+        // 독립 박스 좌우 분할
+        const hs = section.horizontalSplit;
+        const leftWidth = hs.position;
+        const is3Way = hs.secondPosition !== undefined;
+        const numDividers = is3Way ? 2 : 1;
+
+        // 분할판 패널: 각 분할 위치에 2개 (독립 박스: 좌박스 우측판 + 우박스 좌측판)
+        for (let d = 0; d < numDividers; d++) {
+          targetPanel.push({
+            name: `${sectionPrefix}좌우 분할판 ${d + 1}A`,
+            width: customDepth - 26,
+            height: section.height,
+            thickness: basicThicknessCC,
+            material: 'PB'
+          });
+          targetPanel.push({
+            name: `${sectionPrefix}좌우 분할판 ${d + 1}B`,
+            width: customDepth - 26,
+            height: section.height,
+            thickness: basicThicknessCC,
+            material: 'PB'
+          });
+        }
+
+        // 각 서브박스의 요소 처리
+        if (is3Way) {
+          const centerWidth = hs.secondPosition!;
+          const rightWidth = sectionInnerWidth - leftWidth - centerWidth - numDividers * 2 * basicThicknessCC;
+          processElements(hs.leftElements, '좌 ', leftWidth);
+          processElements(hs.centerElements, '중 ', centerWidth);
+          processElements(hs.rightElements, '우 ', rightWidth);
+          // areaSubSplits for each sub-area
+          processAreaSubSplits('left', leftWidth);
+          processAreaSubSplits('center', centerWidth);
+          processAreaSubSplits('right', rightWidth);
+        } else {
+          const rightWidth = sectionInnerWidth - leftWidth - 2 * basicThicknessCC;
+          processElements(hs.leftElements, '좌 ', leftWidth);
+          processElements(hs.rightElements, '우 ', rightWidth);
+          // areaSubSplits for each sub-area
+          processAreaSubSplits('left', leftWidth);
+          processAreaSubSplits('right', rightWidth);
+        }
+      } else if (section.hasPartition) {
+        // 칸막이 (기존 로직)
         const partPos = section.partitionPosition || sectionInnerWidth / 2;
         const leftWidth = partPos;
         const rightWidth = sectionInnerWidth - partPos - basicThicknessCC;
         processElements(section.leftElements, `${sectionPrefix}좌 `, leftWidth);
         processElements(section.rightElements, `${sectionPrefix}우 `, rightWidth);
+        // areaSubSplits for partition areas
+        processAreaSubSplits('left', leftWidth);
+        processAreaSubSplits('right', rightWidth);
       } else {
+        // 단일 영역
         processElements(section.elements, '', sectionInnerWidth);
-      }
-
-      // areaSubSplits 처리
-      if (section.areaSubSplits) {
-        for (const [areaKey, split] of Object.entries(section.areaSubSplits)) {
-          if (!split.enabled) continue;
-          // 수평 분할판
-          targetPanel.push({
-            name: `${sectionPrefix}${areaKey === 'full' ? '' : areaKey + ' '}분할판`,
-            width: sectionInnerWidth - 1,
-            depth: customDepth - 26,
-            thickness: basicThicknessCC,
-            material: 'PB'
-          });
-          // 상/하 영역 요소
-          processElements(split.upperElements, `${areaKey === 'full' ? '' : areaKey + ' '}상부 `, sectionInnerWidth);
-          processElements(split.lowerElements, `${areaKey === 'full' ? '' : areaKey + ' '}하부 `, sectionInnerWidth);
-        }
+        // areaSubSplits for full area
+        processAreaSubSplits('full', sectionInnerWidth);
       }
     });
   }
