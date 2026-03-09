@@ -2885,16 +2885,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       <div key={side} style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
-                          <div className={styles.toggleGroup}>
+                          <div className={styles.toggleGroup} style={{ flex: 'none' }}>
                             <button
                               className={`${styles.toggleButton} ${!isDeleted ? styles.active : ''}`}
                               onClick={() => { if (isDeleted) handleHSplitTypeChange(realIdx, side, 'open'); }}
-                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                              style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
                             >활성</button>
                             <button
                               className={`${styles.toggleButton} ${isDeleted ? styles.active : ''}`}
                               onClick={() => { if (!isDeleted) handleHSplitDelete(realIdx, side); }}
-                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                              style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
                             >비움</button>
                           </div>
                         </div>
@@ -2950,16 +2950,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     >
                       <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>{sectionLabel}</span>
-                        <div className={styles.toggleGroup}>
+                        <div className={styles.toggleGroup} style={{ flex: 'none' }}>
                           <button
                             className={`${styles.toggleButton} ${section.enabled !== false ? styles.active : ''}`}
                             onClick={() => handleSectionEnabledToggle(realIdx, true)}
-                            style={{ fontSize: '10px', padding: '2px 8px' }}
+                            style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
                           >활성</button>
                           <button
                             className={`${styles.toggleButton} ${section.enabled === false ? styles.active : ''}`}
                             onClick={() => handleSectionEnabledToggle(realIdx, false)}
-                            style={{ fontSize: '10px', padding: '2px 8px' }}
+                            style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
                           >비움</button>
                         </div>
                       </div>
@@ -3122,16 +3122,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       <div key={side} style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
-                          <div className={styles.toggleGroup}>
+                          <div className={styles.toggleGroup} style={{ flex: 'none' }}>
                             <button
                               className={`${styles.toggleButton} ${!isDeleted ? styles.active : ''}`}
                               onClick={() => { if (isDeleted) handleHSplitTypeChange(0, side, 'open'); }}
-                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                              style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
                             >활성</button>
                             <button
                               className={`${styles.toggleButton} ${isDeleted ? styles.active : ''}`}
                               onClick={() => { if (!isDeleted) handleHSplitDelete(0, side); }}
-                              style={{ fontSize: '10px', padding: '2px 8px' }}
+                              style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
                             >비움</button>
                           </div>
                         </div>
