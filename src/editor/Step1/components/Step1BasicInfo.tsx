@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { createProject } from '@/services/projectDataService';
@@ -15,7 +16,8 @@ interface Step1BasicInfoProps {
   projectTitle?: string;
 }
 
-const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projectId: propsProjectId, projectTitle: propsProjectTitle }) => {
+const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onClose, projectId: propsProjectId, projectTitle: propsProjectTitle }) => {
+  const navigate = useNavigate();
   // Store 전체 가져오기
   const projectStore = useProjectStore();
   const { basicInfo, setBasicInfo, projectId: storeProjectId, setProjectId, projectTitle: storeProjectTitle } = projectStore;
@@ -71,66 +73,13 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
     });
   });
   
-  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [hasFloorFinish, setHasFloorFinish] = useState(spaceInfo.hasFloorFinish || false);
-  const [floorFinishHeight, setFloorFinishHeight] = useState(spaceInfo.floorFinish?.height || 10);
+  const { spaceInfo } = useSpaceConfigStore();
   const [saving, setSaving] = useState(false);
-  
-  const locationOptions = ['안방', '거실', '아이방', '옷방', '창고'];
 
-  const canProceed = basicInfo.title && basicInfo.title.trim() && basicInfo.location && basicInfo.location.trim();
+  const canProceed = basicInfo.title && basicInfo.title.trim();
 
   const handleUpdate = (updates: Partial<typeof basicInfo>) => {
     setBasicInfo({ ...basicInfo, ...updates });
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleLocationSelect = (location: string) => {
-    handleUpdate({ location });
-    setShowDropdown(false);
-  };
-
-  const handleFloorFinishToggle = () => {
-    const newHasFloorFinish = !hasFloorFinish;
-    setHasFloorFinish(newHasFloorFinish);
-    setSpaceInfo({
-      ...spaceInfo,
-      hasFloorFinish: newHasFloorFinish,
-      floorFinish: newHasFloorFinish ? {
-        type: 'wood',
-        thickness: 5,
-        height: floorFinishHeight
-      } : null
-    });
-  };
-
-  const handleFloorFinishHeightChange = (height: number) => {
-    setFloorFinishHeight(height);
-    if (hasFloorFinish) {
-      setSpaceInfo({
-        ...spaceInfo,
-        floorFinish: {
-          type: 'wood',
-          thickness: 5,
-          height: height
-        }
-      });
-    }
   };
 
   return (
@@ -211,47 +160,6 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                   />
                 </div>
                 
-                <div className={styles.inputGroup}>
-                  <label className={styles.fieldLabel}>
-                    {basicInfo.location && basicInfo.location.trim() && (
-                      <span className={styles.checkIcon}>✓</span>
-                    )}
-                    설치 위치
-                  </label>
-                  <div className={styles.inputWrapper} ref={dropdownRef}>
-                    <Input
-                      placeholder="설치 위치를 선택하거나 입력해주세요"
-                      value={basicInfo.location || ''}
-                      onChange={(e) => handleUpdate({ location: e.target.value })}
-                      onFocus={() => setShowDropdown(true)}
-                      fullWidth
-                      size="medium"
-                    />
-                    <button
-                      type="button"
-                      className={styles.dropdownToggle}
-                      onClick={() => setShowDropdown(!showDropdown)}
-                    >
-                      <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                    {showDropdown && (
-                      <div className={styles.dropdown}>
-                        {locationOptions.map((option) => (
-                          <button
-                            key={option}
-                            className={styles.dropdownOption}
-                            onClick={() => handleLocationSelect(option)}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* 바닥 마감재 섹션 제거 (Step2에서 설정) */}
               </div>
             </div>
@@ -262,7 +170,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
           <button
             className={styles.nextButton}
             onClick={async () => {
-              console.log('🔥 다음 단계 버튼 클릭, projectId:', projectId);
+              console.log('🔥 확인 버튼 클릭, projectId:', projectId);
               if (!projectId) {
                 console.log('⚠️ projectId가 없어서 새 프로젝트 생성 시도');
                 // 프로젝트가 없으면 생성
@@ -282,8 +190,8 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                       title: basicInfo.title,
                       location: basicInfo.location,
                       description: basicInfo.description || '',
-                      unitType: basicInfo.unitType || 'household',
-                      category: basicInfo.category || 'residential',
+                      unitType: (basicInfo as any).unitType || 'household',
+                      category: (basicInfo as any).category || 'residential',
                       createdAt: currentTimestamp,
                       updatedAt: currentTimestamp,
                       version: '1.0.0'
@@ -316,12 +224,13 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                     }
                   };
 
-                  const result = await createProject(projectData);
-                  
+                  const result = await createProject(projectData as any);
+
                   if (result.success && result.data) {
-                    setProjectId(result.data); // 프로젝트 ID 저장
+                    setProjectId(result.data);
                     console.log('프로젝트 생성 완료:', result.data);
-                    onNext();
+                    // 대시보드로 이동
+                    navigate('/dashboard');
                   } else {
                     alert(`프로젝트 생성 실패: ${result.error || '알 수 없는 오류'}`);
                   }
@@ -332,14 +241,14 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                   setSaving(false);
                 }
               } else {
-                // 이미 프로젝트가 있으면 다음 단계로
-                console.log('✅ projectId가 있어서 다음 단계로 이동:', projectId);
-                onNext();
+                // 이미 프로젝트가 있으면 대시보드로 이동 (모달 닫기)
+                console.log('✅ projectId가 있어서 대시보드로 이동:', projectId);
+                onClose();
               }
             }}
             disabled={!canProceed || saving}
           >
-            {saving ? '저장 중...' : '다음 단계'}
+            {saving ? '저장 중...' : '확인'}
           </button>
         </div>
       </div>
