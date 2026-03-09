@@ -151,6 +151,10 @@ export interface PlacedModule {
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 섹션 깊이 줄이는 방향 (front: 앞에서, back: 뒤에서, 기본: front)
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 섹션 깊이 줄이는 방향 (front: 앞에서, back: 뒤에서, 기본: front)
 
+  // 하부 섹션 칸막이 좌/우 독립 깊이 (칸막이가 있을 때만 사용)
+  lowerLeftSectionDepth?: number;  // 하부 좌측 영역 깊이 (mm)
+  lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
+
   // 하부장 상부패널 오프셋 (2섹션 가구용)
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm) - 0: 상부섹션 바닥판과 같은 위치, 양수: 앞쪽으로 줄어듦
 
