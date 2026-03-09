@@ -862,6 +862,33 @@
   opacity: 0.7;
 }
 
+.treeCreateDesignBtn {
+  padding: 6px 12px;
+}
+
+.treeCreateDesignBtn button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--theme-primary, #4A90D9);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.treeCreateDesignBtn button:hover {
+  background: var(--theme-primary-hover, #3a7bc8);
+}
+
+.projectTree.collapsed .treeCreateDesignBtn {
+  display: none;
+}
+
 .treeContent {
   flex: 1;
   padding: 8px 10px;

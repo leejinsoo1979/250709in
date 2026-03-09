@@ -4257,6 +4257,21 @@ const SimpleDashboard: React.FC = () => {
                 </div>
               </div>
 
+              {/* 디자인 생성 버튼 */}
+              {selectedProjectId && (
+                <div className={styles.treeCreateDesignBtn}>
+                  <button
+                    onClick={() => {
+                      const project = firebaseProjects.find(p => p.id === selectedProjectId);
+                      handleCreateDesign(selectedProjectId, project?.title);
+                    }}
+                  >
+                    <PlusIcon size={14} />
+                    디자인 생성
+                  </button>
+                </div>
+              )}
+
               <div className={styles.treeContent}>
                 {firebaseProjects.length > 0 ? (
                   <div>
