@@ -2811,7 +2811,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
               }
 
               // 라벨 조합
-              const sectionLabel = config.sections.length === 1 ? '섹션' : (focusedSectionIndex === 0 ? '하부섹션' : '상부섹션');
+              const sectionLabel = config.sections.length === 1
+                ? '섹션'
+                : config.sections.length === 3
+                  ? (focusedSectionIndex === 2 ? '상부섹션' : focusedSectionIndex === 1 ? '중간섹션' : '하부섹션')
+                  : (focusedSectionIndex === 0 ? '하부섹션' : '상부섹션');
               const sideLabel = focusedAreaSide ? ` ${focusedAreaSide === 'left' ? '좌측' : '우측'}` : '';
               const subPartLabel = focusedSubPart ? (focusedSubPart === 'upper' ? ' 상부' : ' 하부') : '';
 
