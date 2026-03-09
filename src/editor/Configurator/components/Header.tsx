@@ -173,6 +173,16 @@ const Header: React.FC<HeaderProps> = ({
   const cameraMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
 
+  // 프로젝트명(경로) 클릭 → 자동저장 후 대시보드 이동
+  const handleNavigateToDashboard = async () => {
+    try {
+      await onSave();
+    } catch (e) {
+      console.error('자동저장 실패:', e);
+    }
+    navigate('/dashboard');
+  };
+
   // HistoryStore에서 undo/redo 기능 가져오기
   const { canUndo, canRedo, undo, redo } = useHistoryStore();
   const setSpaceInfo = useSpaceConfigStore(state => state.setSpaceInfo);
@@ -351,15 +361,6 @@ const Header: React.FC<HeaderProps> = ({
   };
 
 
-  // 프로젝트 이름 변경 핸들러
-  const handleProjectNameClick = () => {
-    const currentName = projectName || t('project.untitled');
-    const newName = prompt(t('project.enterName'), currentName);
-    if (newName && newName.trim() && newName.trim() !== currentName) {
-      onProjectNameChange?.(newName.trim());
-    }
-  };
-
   // 프로필 클릭 핸들러
   const handleProfileClick = () => {
     if (profileButtonRef.current) {
@@ -429,7 +430,13 @@ const Header: React.FC<HeaderProps> = ({
             <div className={styles.designFileName}>
               {projectName && designFileName ? (
                 <>
-                  {projectName} <span className={styles.separator}>›</span>{' '}
+                  <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={handleNavigateToDashboard}
+                    title="대시보드로 이동 (자동저장)"
+                  >
+                    {projectName}
+                  </span> <span className={styles.separator}>›</span>{' '}
                   {isEditingDesignName ? (
                     <input
                       ref={designNameInputRef}
@@ -468,7 +475,13 @@ const Header: React.FC<HeaderProps> = ({
                   )}
                 </>
               ) : projectName ? (
-                projectName
+                <span
+                  style={{ cursor: 'pointer' }}
+                  onClick={handleNavigateToDashboard}
+                  title="대시보드로 이동 (자동저장)"
+                >
+                  {projectName}
+                </span>
               ) : designFileName ? (
                 <>
                   {isEditingDesignName ? (
