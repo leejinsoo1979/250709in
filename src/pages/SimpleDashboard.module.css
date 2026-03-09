@@ -180,6 +180,19 @@
 }
 
 /* 생성 버튼 섹션 */
+.sidebarSubHeader {
+  height: 65px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--theme-border);
+  flex-shrink: 0;
+}
+
+.sidebarSubHeader .createBtn {
+  width: 100%;
+}
+
 .createButtonsSection {
   display: flex;
   gap: 6px;

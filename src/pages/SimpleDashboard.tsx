@@ -3499,8 +3499,8 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 프로젝트 생성 버튼 */}
-        <div className={styles.createButtonsSection}>
+        {/* 사이드바 서브헤더 - 우측 서브헤더와 높이 정렬 */}
+        <div className={styles.sidebarSubHeader}>
           <button className={styles.createBtn} onClick={handleCreateProject}>
             <PlusIcon size={14} />
             프로젝트 생성
