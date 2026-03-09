@@ -801,29 +801,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return 1;
   };
 
-  // 서랍 균등 채움 계산: 섹션을 서랍으로 채우되, 마이다 간격 23.6mm 유지
-  // 목표 마이다 높이: 280mm (외경 1000mm까지 3단 유지), 최소 80mm, 최대 320mm
-  // effectiveHeight = 내경(sec.height) + 상판두께(panelThickness)
-  // → 서랍 스택은 상판까지 포함해서 분할 (맨 위 gap이 상판에 밀착)
-  const calculateEvenFillDrawers = (sectionInnerHeight: number): { count: number; heights: number[] } => {
+  // 서랍 균등 채움 계산: 현재 서랍 단수를 유지하면서 마이다 간격 23.6mm 기준으로 균등 분배
+  // currentCount가 주어지면 그 단수 유지, 없으면 자동 계산
+  const calculateEvenFillDrawers = (sectionInnerHeight: number, currentCount?: number): { count: number; heights: number[] } => {
     const gap = 23.6; // 마이다 간격 (DrawerRenderer gapHeight와 동일)
     const maxDrawerH = 320; // 마이다 최대 높이
     const minDrawerH = 80; // 서랍 최소 높이
-    const targetDrawerH = 280; // 목표 마이다 높이 (외경 1000mm까지 3단 유지)
     const effectiveHeight = sectionInnerHeight + panelThickness; // 상판 포함
 
-    // 최소 서랍 수: 각 서랍이 maxDrawerH 이하가 되려면
-    const minCount = Math.max(1, Math.ceil((effectiveHeight - gap) / (maxDrawerH + gap)));
-
-    // 최대 서랍 수: 각 서랍이 minDrawerH 이상이 되려면
-    const maxCount = Math.max(1, Math.floor((effectiveHeight - gap) / (minDrawerH + gap)));
-
-    // 적정 서랍 수: 목표 높이(280mm)에 가장 가까운 서랍 수
-    const targetCount = Math.max(1, Math.round((effectiveHeight - gap) / (targetDrawerH + gap)));
-
-    // 적정 서랍 수를 [minCount, maxCount] 범위 내로 클램핑
-    const count = Math.max(minCount, Math.min(targetCount, maxCount));
-    if (count < 1) return { count: 1, heights: [Math.max(minDrawerH, effectiveHeight - gap * 2)] };
+    let count: number;
+    if (currentCount && currentCount >= 1) {
+      // 현재 단수 유지 — 해당 단수로 균등 분배
+      count = currentCount;
+    } else {
+      // 단수 자동 계산 (서랍 타입 처음 선택 시)
+      const minCount = Math.max(1, Math.ceil((effectiveHeight - gap) / (maxDrawerH + gap)));
+      count = minCount;
+    }
 
     const totalGap = gap * (count + 1);
     const perDrawer = Math.round((effectiveHeight - totalGap) / count);
@@ -833,11 +827,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 서랍 균등 채움 핸들러 (focused section 편집용)
+  // 현재 서랍 단수를 유지하면서 균등 분배
   const handleEvenFillDrawers = (sIdx: number, side: 'full' | 'left' | 'right') => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const sectionHeight = sec.height;
-    const { heights } = calculateEvenFillDrawers(sectionHeight);
+
+    // 현재 서랍 단수 가져오기
+    const currentElements = side === 'full' ? sec.elements : side === 'left' ? sec.leftElements : sec.rightElements;
+    const currentDrawer = currentElements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
+    const currentCount = currentDrawer?.heights?.length;
+
+    const { heights } = calculateEvenFillDrawers(sectionHeight, currentCount);
 
     const newElement: CustomElement = { type: 'drawer', heights };
 
@@ -861,11 +862,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 서랍 균등 채움 핸들러 (섹션 타입 선택 영역용)
+  // 이미 서랍이 있으면 현재 단수 유지, 없으면 자동 계산
   const handleEvenFillDrawersForSection = (sIdx: number) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
     const sectionHeight = sec.height;
-    const { heights } = calculateEvenFillDrawers(sectionHeight);
+
+    // 현재 서랍 단수 가져오기
+    const currentDrawer = sec.elements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
+    const currentCount = currentDrawer?.heights?.length;
+
+    const { heights } = calculateEvenFillDrawers(sectionHeight, currentCount);
 
     sec.elements = [{ type: 'drawer', heights }];
     sec.hasPartition = false;
