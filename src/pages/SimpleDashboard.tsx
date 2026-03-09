@@ -10,6 +10,7 @@ import { TiThSmall } from "react-icons/ti";
 import { TfiShare, TfiShareAlt } from "react-icons/tfi";
 import { BsBookmarkStarFill } from "react-icons/bs";
 import { VscLink, VscServerProcess } from "react-icons/vsc";
+import { MdOutlinePending, MdCheckCircleOutline } from "react-icons/md";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
@@ -270,11 +271,11 @@ const SimpleDashboard: React.FC = () => {
     const path = location.pathname.replace('/dashboard', '');
     if (path === '' || path === '/') return 'all';
     const menu = path.substring(1); // Remove leading slash
-    return menu as 'all' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash';
+    return menu as 'all' | 'in-progress' | 'completed' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash';
   };
 
   // 메뉴 상태 추가 - URL과 동기화
-  const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash'>(getMenuFromPath());
+  const [activeMenu, setActiveMenu] = useState<'all' | 'in-progress' | 'completed' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash'>(getMenuFromPath());
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
   const [bookmarkedDesigns, setBookmarkedDesigns] = useState<Set<string>>(new Set());
   const [bookmarkedFolders, setBookmarkedFolders] = useState<Set<string>>(new Set());
@@ -1494,6 +1495,18 @@ const SimpleDashboard: React.FC = () => {
     });
 
     switch (activeMenu) {
+      case 'in-progress':
+        // 진행중 프로젝트 (status가 없거나 'in_progress'인 경우)
+        filteredProjects = firebaseProjects.filter(p =>
+          !deletedProjectIds.has(p.id) && (!p.status || p.status === 'in_progress')
+        );
+        break;
+      case 'completed':
+        // 완료된 프로젝트
+        filteredProjects = firebaseProjects.filter(p =>
+          !deletedProjectIds.has(p.id) && p.status === 'completed'
+        );
+        break;
       case 'bookmarks':
         // 북마크된 프로젝트들 반환
         filteredProjects = allProjects.filter(p =>
@@ -3572,6 +3585,44 @@ const SimpleDashboard: React.FC = () => {
           </div>
 
           <div
+            className={`${styles.navItem} ${activeMenu === 'in-progress' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('in-progress');
+              setSelectedProjectId(null);
+              setCurrentFolderId(null);
+              setBreadcrumbPath(['진행중 프로젝트']);
+              navigate('/dashboard/in-progress');
+            }}
+          >
+            <div className={styles.navItemIcon}>
+              <MdOutlinePending size={20} />
+            </div>
+            <span>진행중</span>
+            <span className={styles.navItemCount}>
+              {firebaseProjects.filter(p => !p.status || p.status === 'in_progress').length}
+            </span>
+          </div>
+
+          <div
+            className={`${styles.navItem} ${activeMenu === 'completed' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('completed');
+              setSelectedProjectId(null);
+              setCurrentFolderId(null);
+              setBreadcrumbPath(['완료된 프로젝트']);
+              navigate('/dashboard/completed');
+            }}
+          >
+            <div className={styles.navItemIcon}>
+              <MdCheckCircleOutline size={20} />
+            </div>
+            <span>완료</span>
+            <span className={styles.navItemCount}>
+              {firebaseProjects.filter(p => p.status === 'completed').length}
+            </span>
+          </div>
+
+          <div
             className={`${styles.navItem} ${activeMenu === 'bookmarks' ? styles.active : ''}`}
             onClick={() => {
               console.log('⭐ 북마크 클릭');
@@ -5483,6 +5534,42 @@ const SimpleDashboard: React.FC = () => {
                     ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
                     : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
                 }
+              </div>
+            )}
+            {/* 프로젝트 상태 변경 (프로젝트 타입일 때만) */}
+            {moreMenu.itemType === 'project' && activeMenu !== 'trash' && activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && (
+              <div
+                className={styles.moreMenuItem}
+                onClick={async () => {
+                  const targetProject = firebaseProjects.find(p => p.id === moreMenu.itemId);
+                  const currentStatus = targetProject?.status || 'in_progress';
+                  const newStatus = currentStatus === 'completed' ? 'in_progress' : 'completed';
+                  try {
+                    const { updateProject } = await import('@/firebase/projects');
+                    const { error } = await updateProject(moreMenu.itemId, { status: newStatus } as any);
+                    if (error) {
+                      alert('상태 변경 실패: ' + error);
+                    } else {
+                      // 로컬 상태 업데이트
+                      setFirebaseProjects(prev => prev.map(p =>
+                        p.id === moreMenu.itemId ? { ...p, status: newStatus } : p
+                      ));
+                    }
+                  } catch (err) {
+                    console.error('상태 변경 오류:', err);
+                  }
+                  closeMoreMenu();
+                }}
+              >
+                {(() => {
+                  const targetProject = firebaseProjects.find(p => p.id === moreMenu.itemId);
+                  const currentStatus = targetProject?.status || 'in_progress';
+                  return currentStatus === 'completed' ? (
+                    <><MdOutlinePending size={14} /> 진행중으로 변경</>
+                  ) : (
+                    <><MdCheckCircleOutline size={14} /> 완료로 변경</>
+                  );
+                })()}
               </div>
             )}
             {/* 공유 탭일 때는 공유 해제, 일반 탭일 때는 삭제하기 */}

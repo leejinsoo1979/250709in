@@ -76,6 +76,7 @@ export async function listProjects(
           },
           thumbnail: data.thumbnail,
           folderId: data.folderId,
+          status: data.status || 'in_progress',
           spaceInfo: data.spaceConfig,
           placedModules: data.furniture?.placedModules || [],
         });

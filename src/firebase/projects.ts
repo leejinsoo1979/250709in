@@ -578,16 +578,17 @@ export const updateProject = async (
       console.log('✅ [Firebase] 공유 편집 권한 확인됨');
     }
 
-    const updateData = {
+    const updateData: Record<string, any> = {
       updatedAt: serverTimestamp(),
       ...(updates.title && { title: updates.title }),
       ...(updates.projectData && { projectData: updates.projectData }),
       ...(updates.spaceConfig && { spaceConfig: updates.spaceConfig }),
-      ...(updates.furniture && { 
+      ...(updates.furniture && {
         furniture: updates.furniture,
-        'stats.furnitureCount': updates.furniture.placedModules.length 
+        'stats.furnitureCount': updates.furniture.placedModules.length
       }),
-      ...(thumbnail && { thumbnail })
+      ...(thumbnail && { thumbnail }),
+      ...((updates as any).status && { status: (updates as any).status }),
     };
 
     if (updates.spaceConfig) {
@@ -1043,6 +1044,7 @@ export function subscribeToUserProjects(
           thumbnail: data.thumbnail || null,
           createdAt: data.createdAt || Timestamp.now(),
           updatedAt: data.updatedAt || Timestamp.now(),
+          status: data.status || 'in_progress',
           userId: data.userId,
         };
       });

@@ -87,7 +87,8 @@ export interface ProjectSummary {
   };
   thumbnail?: string;
   folderId?: string;
-  
+  status?: 'in_progress' | 'completed'; // 프로젝트 상태 (기본: in_progress)
+
   // 협업 관련 필드
   isShared?: boolean;
   sharedWith?: string[]; // 공유된 사용자 ID 목록
