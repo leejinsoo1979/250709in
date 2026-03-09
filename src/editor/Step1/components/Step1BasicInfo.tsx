@@ -89,7 +89,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onClose, projectId: pro
       {saving && (
         <div className={styles.loadingOverlay}>
           <LoadingSpinner 
-            message="프로젝트 생성 중..."
+            message="디자인 생성중..."
             size="large"
             type="spinner"
           />
@@ -251,11 +251,14 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onClose, projectId: pro
                     projectId: projectId,
                     spaceConfig: spaceInfo,
                     furniture: { placedModules: [] },
+                    isSpaceConfigured: false,
                   });
 
                   if (result.id) {
                     console.log('✅ 디자인 파일 생성 완료:', result.id);
                     onClose();
+                    // 에디터로 이동 (공간 설정은 에디터 진입 시 팝업으로 수행)
+                    navigate(`/configurator?projectId=${projectId}&designFileId=${result.id}&designFileName=${encodeURIComponent(basicInfo.title?.trim() || '새 디자인')}`, { replace: true });
                   } else {
                     alert('디자인 파일 생성 실패: ' + (result.error || '알 수 없는 오류'));
                   }
