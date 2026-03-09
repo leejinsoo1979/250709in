@@ -445,6 +445,9 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
                     <ProjectIcon size={16} color="#666" />
                   </div>
                   <span>{project.title}</span>
+                  <span className={styles.treeItemCount}>
+                    {((designFiles[project.id] || []).length) + ((folders[project.id] || []).reduce((sum, f) => sum + f.children.length, 0))}
+                  </span>
                   <div className={styles.treeItemActions}>
                     <button 
                       className={styles.treeItemActionBtn}
@@ -544,37 +547,6 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
                       </div>
                     ))}
                     
-                    {/* 디자인 파일들 (폴더에 없는 것들) */}
-                    {(designFiles[project.id] || []).map(designFile => (
-                      <div 
-                        key={designFile.id}
-                        className={`${styles.treeItem} ${styles.childItem}`}
-                        onClick={() => handleDesignFileClick(project.id, designFile.id, designFile.name)}
-                      >
-                        <div className={styles.treeItemIcon}>
-                          <div className={styles.designIcon}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                              <path d="M2 2l7.586 7.586"/>
-                              <circle cx="11" cy="11" r="2"/>
-                            </svg>
-                          </div>
-                        </div>
-                        <span>{designFile.name}</span>
-                        <div className={styles.treeItemActions}>
-                          <button 
-                            className={styles.treeItemActionBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoreMenuOpen(e, designFile.id, designFile.name, 'design');
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
