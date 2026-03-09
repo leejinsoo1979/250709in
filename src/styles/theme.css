@@ -27,7 +27,7 @@
   --theme-text: #ffffff;
   --theme-text-secondary: #cccccc;
   --theme-text-muted: #999999;
-  --theme-border: #2a2a2a;
+  --theme-border: #333333;
   --theme-border-hover: #444444;
   --theme-shadow: rgba(0, 0, 0, 0.5);
   --theme-overlay: rgba(0, 0, 0, 0.8);
@@ -77,7 +77,7 @@
   --theme-text: #111827;
   --theme-text-secondary: #4b5563;
   --theme-text-muted: #6b7280;
-  --theme-border: #e5e7eb;
+  --theme-border: #d1d5db;
   --theme-border-hover: #cbd5e1;
   --theme-shadow: rgba(0, 0, 0, 0.08);
   --theme-overlay: rgba(255, 255, 255, 0.75);
