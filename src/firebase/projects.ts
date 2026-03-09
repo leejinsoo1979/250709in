@@ -240,6 +240,11 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       updatedAt: now,
     };
 
+    // isSpaceConfigured 필드가 있을 때만 추가
+    if (data.isSpaceConfigured !== undefined) {
+      baseData.isSpaceConfigured = data.isSpaceConfigured;
+    }
+
     // thumbnail이 있을 때만 추가
     if (data.thumbnail !== undefined && data.thumbnail !== null) {
       baseData.thumbnail = data.thumbnail;
@@ -730,14 +735,15 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
 
 // 디자인파일 업데이트 (썸네일 포함)
 export const updateDesignFile = async (
-  designFileId: string, 
-  updates: { 
+  designFileId: string,
+  updates: {
     name?: string;
     spaceConfig?: any;
     furniture?: any;
     thumbnail?: string;
     updatedAt?: string;
     projectData?: any;  // 추가
+    isSpaceConfigured?: boolean;
   }
 ): Promise<{ error: string | null }> => {
   try {
