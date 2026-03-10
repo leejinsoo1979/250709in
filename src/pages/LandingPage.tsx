@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { ShimmerText } from '@/components/ui/shimmer-text';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 
@@ -9,40 +8,19 @@ export default function LandingPage() {
   return (
     <div className="bg-zinc-950 min-h-screen flex items-center justify-center px-8">
       <div className="text-center">
-        {/* Three Dots + think thing thank */}
-        <div className="flex items-center justify-center gap-6 mb-10">
-          <div className="flex items-center gap-3">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-white"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: 1,
-                  opacity: 1,
-                  y: [0, -10, 0],
-                }}
-                transition={{
-                  scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
-                  opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
-                  y: {
-                    duration: 2,
-                    delay: 0.8 + i * 0.25,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  },
-                }}
-              />
-            ))}
-          </div>
-          <ShimmerText
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-wide text-white"
-            duration={2}
-            delay={1}
-          >
-            think thing thank
-          </ShimmerText>
-        </div>
+        {/* Logo */}
+        <motion.div
+          className="flex justify-center mb-10"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <img
+            src="/images/ttt_logo/tttlogo4.png"
+            alt="think thing thank"
+            className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto"
+          />
+        </motion.div>
 
         {/* craft */}
         <motion.h1
