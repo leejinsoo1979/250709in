@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, User, ChevronDown, Undo, Redo } from 'lucide-react';
+import { Settings, User, ChevronDown, Undo, Redo, FileText } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
+import { RxDashboard } from 'react-icons/rx';
 import { TbTableExport } from 'react-icons/tb';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
@@ -561,6 +562,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className={styles.designFileName}>
               {projectName && designFileName ? (
                 <>
+                  <RxDashboard size={14} style={{ opacity: 0.6, flexShrink: 0 }} />
                   <span
                     style={{ cursor: 'pointer' }}
                     onClick={handleNavigateToDashboard}
@@ -568,6 +570,7 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     {projectName}
                   </span> <span className={styles.separator}>›</span>{' '}
+                  <FileText size={14} style={{ opacity: 0.6, flexShrink: 0 }} />
                   {isEditingDesignName ? (
                     <input
                       ref={designNameInputRef}
@@ -606,15 +609,19 @@ const Header: React.FC<HeaderProps> = ({
                   )}
                 </>
               ) : projectName ? (
-                <span
-                  style={{ cursor: 'pointer' }}
-                  onClick={handleNavigateToDashboard}
-                  title="대시보드로 이동 (자동저장)"
-                >
-                  {projectName}
-                </span>
+                <>
+                  <RxDashboard size={14} style={{ opacity: 0.6, flexShrink: 0 }} />
+                  <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={handleNavigateToDashboard}
+                    title="대시보드로 이동 (자동저장)"
+                  >
+                    {projectName}
+                  </span>
+                </>
               ) : designFileName ? (
                 <>
+                  <FileText size={14} style={{ opacity: 0.6, flexShrink: 0 }} />
                   {isEditingDesignName ? (
                     <input
                       ref={designNameInputRef}
