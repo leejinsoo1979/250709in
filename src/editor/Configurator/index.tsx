@@ -3880,6 +3880,16 @@ const Configurator: React.FC = () => {
             onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
             onSave={saveProject}
             readOnly={isReadOnly}
+            onExportPDF={() => setIsConvertModalOpen(true)}
+            onCNCOptimizer={() => {
+              const params = new URLSearchParams();
+              if (currentProjectId) params.set('projectId', currentProjectId);
+              if (currentDesignFileId) params.set('designFileId', currentDesignFileId);
+              const queryString = params.toString();
+              navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
+                state: { fromConfigurator: true }
+              });
+            }}
             onShare={async () => {
               if (isReadOnly) {
                 // 읽기 전용 모드: 현재 URL을 복사
