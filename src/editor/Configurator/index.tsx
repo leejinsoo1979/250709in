@@ -2925,6 +2925,15 @@ const Configurator: React.FC = () => {
           />
         </div>
 
+        {/* 자유배치 모드: 공간유형 아래에 이격거리 표시 */}
+        {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
+          <GapControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+            forceShow
+          />
+        )}
+
         {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>

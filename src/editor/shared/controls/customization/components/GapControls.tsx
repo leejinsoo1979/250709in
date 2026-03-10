@@ -5,9 +5,10 @@ import styles from './GapControls.module.css';
 interface GapControlsProps {
   spaceInfo: SpaceInfo;
   onUpdate: (updates: Partial<SpaceInfo>) => void;
+  forceShow?: boolean; // 자유배치 모드 등에서 강제 표시
 }
 
-const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
+const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceShow = false }) => {
   // 실제 스토어에 저장된 값 사용 (자동 계산하지 않음)
   const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left ?? 1.5);
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right ?? 1.5);
@@ -20,37 +21,45 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
     }
   }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right]);
 
-  // spaceInfo가 없거나 노서라운드가 아닌 경우 렌더링하지 않음
-  if (!spaceInfo || spaceInfo.surroundType !== 'no-surround') {
-    return null;
-  }
-
-  // 벽 상태 확인
-  const hasLeftWall = spaceInfo.wallConfig?.left ?? true;
-  const hasRightWall = spaceInfo.wallConfig?.right ?? true;
-
-  // 빌트인(양쪽 벽이 모두 있는 경우)에만 표시
-  // 세미스탠딩(한쪽 벽만) 또는 프리스탠딩(벽 없음)에서는 렌더링하지 않음
-  if (!(hasLeftWall && hasRightWall)) {
-    const desiredGapConfig = {
-      left: hasLeftWall ? (spaceInfo.gapConfig?.left ?? 1.5) : 0,
-      right: hasRightWall ? (spaceInfo.gapConfig?.right ?? 1.5) : 0,
-    };
-
-    if (
-      !spaceInfo.gapConfig ||
-      spaceInfo.gapConfig.left !== desiredGapConfig.left ||
-      spaceInfo.gapConfig.right !== desiredGapConfig.right
-    ) {
-      onUpdate({ gapConfig: desiredGapConfig });
+  if (!forceShow) {
+    // spaceInfo가 없거나 노서라운드가 아닌 경우 렌더링하지 않음
+    if (!spaceInfo || spaceInfo.surroundType !== 'no-surround') {
+      return null;
     }
 
-    return null;
+    // 벽 상태 확인
+    const hasLeftWall = spaceInfo.wallConfig?.left ?? true;
+    const hasRightWall = spaceInfo.wallConfig?.right ?? true;
+
+    // 빌트인(양쪽 벽이 모두 있는 경우)에만 표시
+    // 세미스탠딩(한쪽 벽만) 또는 프리스탠딩(벽 없음)에서는 렌더링하지 않음
+    if (!(hasLeftWall && hasRightWall)) {
+      const desiredGapConfig = {
+        left: hasLeftWall ? (spaceInfo.gapConfig?.left ?? 1.5) : 0,
+        right: hasRightWall ? (spaceInfo.gapConfig?.right ?? 1.5) : 0,
+      };
+
+      if (
+        !spaceInfo.gapConfig ||
+        spaceInfo.gapConfig.left !== desiredGapConfig.left ||
+        spaceInfo.gapConfig.right !== desiredGapConfig.right
+      ) {
+        onUpdate({ gapConfig: desiredGapConfig });
+      }
+
+      return null;
+    }
   }
+
+  // forceShow일 때는 양쪽 모두 활성화, 아닐 때는 벽 상태 기반
+  const hasLeftWall = forceShow ? true : (spaceInfo.wallConfig?.left ?? true);
+  const hasRightWall = forceShow ? true : (spaceInfo.wallConfig?.right ?? true);
 
   const updateGap = (side: 'left' | 'right', value: number) => {
     const newGapConfig = {
-      ...spaceInfo.gapConfig,
+      left: spaceInfo.gapConfig?.left ?? 1.5,
+      right: spaceInfo.gapConfig?.right ?? 1.5,
+      top: spaceInfo.gapConfig?.top ?? 0,
       [side]: value
     };
 
