@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { PlusIcon, UsersIcon } from '../components/common/Icons';
-import { createProject, saveFolderData, FolderData } from '@/firebase/projects';
+import { createProject, createDesignFile, saveFolderData, FolderData } from '@/firebase/projects';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { checkCredits } from '@/firebase/userProfiles';
 import SettingsPanel from '@/components/common/SettingsPanel';
@@ -66,6 +66,11 @@ const SimpleDashboard: React.FC = () => {
   const [isStep1ModalOpen, setIsStep1ModalOpen] = useState(false);
   const [modalProjectId, setModalProjectId] = useState<string | null>(null);
   const [modalProjectTitle, setModalProjectTitle] = useState<string | null>(null);
+
+  // SaaS 모드 디자인 생성 모달 (이름만 입력, 에디터 이동 없음)
+  const [isSaasDesignModalOpen, setIsSaasDesignModalOpen] = useState(false);
+  const [newDesignName, setNewDesignName] = useState('');
+  const [isCreatingDesign, setIsCreatingDesign] = useState(false);
 
   const [viewerModal, setViewerModal] = useState<{
     isOpen: boolean;
@@ -284,6 +289,52 @@ const SimpleDashboard: React.FC = () => {
     setIsStep1ModalOpen(true);
   }, [user, nav.currentProjectId, data.projects]);
 
+  // SaaS 모드 디자인 생성 (이름만 입력, 에디터 이동 없음)
+  const handleSaasCreateDesign = useCallback(() => {
+    if (!nav.currentProjectId) {
+      alert('프로젝트를 먼저 선택해주세요.');
+      return;
+    }
+    setIsSaasDesignModalOpen(true);
+    setNewDesignName('');
+  }, [nav.currentProjectId]);
+
+  const handleSaasCreateDesignSubmit = useCallback(async () => {
+    if (!newDesignName.trim() || !nav.currentProjectId) return;
+
+    setIsCreatingDesign(true);
+    try {
+      const { hasEnough, currentCredits } = await checkCredits(20);
+      if (!hasEnough) {
+        setCreditError({ isOpen: true, currentCredits, requiredCredits: 20 });
+        return;
+      }
+
+      const { id, error } = await createDesignFile({
+        name: newDesignName.trim(),
+        projectId: nav.currentProjectId,
+        spaceConfig: DEFAULT_SPACE_CONFIG,
+        furniture: { placedModules: [] },
+      });
+
+      if (error) {
+        alert('디자인 생성에 실패했습니다: ' + error);
+        return;
+      }
+
+      if (id) {
+        setIsSaasDesignModalOpen(false);
+        setNewDesignName('');
+        await data.refreshDesignFiles(nav.currentProjectId);
+      }
+    } catch (error) {
+      console.error('디자인 생성 실패:', error);
+      alert('디자인 생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsCreatingDesign(false);
+    }
+  }, [newDesignName, nav.currentProjectId, data]);
+
   // Step1 모달 닫기
   const handleCloseStep1Modal = useCallback(async () => {
     setIsStep1ModalOpen(false);
@@ -459,7 +510,7 @@ const SimpleDashboard: React.FC = () => {
           onItemDoubleClick={handleItemDoubleClick}
           onItemContextMenu={handleItemContextMenu}
           onCreateProject={handleCreateProject}
-          onCreateDesign={() => handleCreateDesign()}
+          onCreateDesign={handleSaasCreateDesign}
         />
       ) : (
         <>
@@ -597,6 +648,36 @@ const SimpleDashboard: React.FC = () => {
                 className={styles.modalCreateBtn}
               >
                 {isCreatingFolder ? '생성 중...' : '생성'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SaaS 디자인 생성 모달 (이름만 입력) */}
+      {isSaasDesignModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => { setIsSaasDesignModalOpen(false); setNewDesignName(''); }}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>새 디자인</h2>
+            <input
+              type="text"
+              className={styles.modalInput}
+              placeholder="디자인 이름을 입력하세요"
+              value={newDesignName}
+              onChange={e => setNewDesignName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSaasCreateDesignSubmit()}
+              autoFocus
+            />
+            <div className={styles.modalActions}>
+              <button onClick={() => { setIsSaasDesignModalOpen(false); setNewDesignName(''); }} className={styles.modalCancelBtn}>
+                취소
+              </button>
+              <button
+                onClick={handleSaasCreateDesignSubmit}
+                disabled={!newDesignName.trim() || isCreatingDesign}
+                className={styles.modalCreateBtn}
+              >
+                {isCreatingDesign ? '생성 중...' : '생성'}
               </button>
             </div>
           </div>

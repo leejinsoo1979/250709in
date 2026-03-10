@@ -321,9 +321,11 @@
 }
 
 .subHeaderLeft {
+  width: 220px;
+  min-width: 220px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
 }
 
 .subHeaderTitle {
