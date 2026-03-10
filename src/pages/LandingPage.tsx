@@ -18,7 +18,7 @@ export default function LandingPage() {
           <img
             src="/images/ttt_logo/tttlogo4.png"
             alt="think thing thank"
-            className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto"
+            className="h-16 sm:h-20 md:h-24 lg:h-28 w-auto"
           />
         </motion.div>
 
