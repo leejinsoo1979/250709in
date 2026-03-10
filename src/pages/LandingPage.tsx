@@ -17,9 +17,9 @@ export default function LandingPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 sm:px-10 py-4">
         <img
-          src="/images/ttt_logo/tttlogo.png"
+          src="/images/ttt_logo/tttlogo4.png"
           alt="think thing thank"
-          className="h-6 sm:h-7 w-auto invert cursor-pointer"
+          className="h-6 sm:h-7 w-auto cursor-pointer"
           onClick={() => navigate('/')}
         />
         <div className="flex items-center">
