@@ -135,8 +135,8 @@ export default function LandingPage() {
           transform: 'translate(-50%, -50%)',
           transition: 'width 0.2s ease, height 0.2s ease, background 0.2s ease, box-shadow 0.2s ease',
           borderRadius: '50%',
-          width: cursorOnInteractive ? '60px' : '20px',
-          height: cursorOnInteractive ? '60px' : '20px',
+          width: cursorOnInteractive ? '40px' : '20px',
+          height: cursorOnInteractive ? '40px' : '20px',
           background: cursorOnInteractive
             ? 'transparent'
             : isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)',
