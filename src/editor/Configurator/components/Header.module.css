@@ -10,7 +10,7 @@
 .container {
   height: 100%;
   width: 100%;
-  padding: 0 var(--spacing-lg, 16px);
+  padding: 0 var(--spacing-lg, 16px) 0 var(--spacing-sm, 8px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -20,7 +20,7 @@
 .logoSection {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg, 16px);
+  gap: var(--spacing-md, 12px);
   flex: 0 0 auto;
   min-width: 0;
 }

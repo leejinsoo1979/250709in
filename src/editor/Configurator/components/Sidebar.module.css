@@ -18,10 +18,37 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Hamburger Button ── */
+.hamburgerButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 12px auto 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.hamburgerButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+.hamburgerButton.active {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+}
+
 /* ── Navigation ── */
 .tabList {
   flex: 1;
-  padding: 16px 0;
+  padding: 12px 0;
   display: flex;
   flex-direction: column;
   gap: 14px;

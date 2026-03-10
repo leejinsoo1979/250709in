@@ -3883,6 +3883,8 @@ const Configurator: React.FC = () => {
             owner={projectOwner}
             collaborators={collaborators}
             onAddCollaborator={() => setIsShareModalOpen(true)}
+            onFileTreeToggle={handleFileTreeToggle}
+            isFileTreeOpen={isFileTreeOpen}
           />
 
           {/* 사이드바 컨텐츠 패널 */}

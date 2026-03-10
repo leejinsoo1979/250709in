@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, Menu, User, ChevronDown, Undo, Redo, Sun, Moon } from 'lucide-react';
+import { Settings, User, ChevronDown, Undo, Redo, Sun, Moon } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { TbTableExport } from 'react-icons/tb';
@@ -412,17 +412,6 @@ const Header: React.FC<HeaderProps> = ({
       <div className={styles.container}>
         {/* 로고 영역 */}
         <div className={styles.logoSection}>
-          {/* 햄버거 메뉴 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
-            <button
-              className={`${styles.hamburgerButton} ${isFileTreeOpen ? styles.active : ''}`}
-              onClick={onFileTreeToggle}
-              title="파일 트리 열기/닫기"
-            >
-              <Menu size={20} />
-            </button>
-          )}
-
           <div className={styles.logo}>
             <Logo size="medium" onClick={() => navigate('/')} />
           </div>

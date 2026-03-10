@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Menu, Settings, User } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
@@ -29,6 +29,8 @@ interface SidebarProps {
   owner?: { userId: string; name: string; photoURL?: string } | null;
   collaborators?: ProjectCollaborator[];
   onAddCollaborator?: () => void;
+  onFileTreeToggle?: () => void;
+  isFileTreeOpen?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -41,7 +43,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   readOnly = false,
   owner,
   collaborators = [],
-  onAddCollaborator
+  onAddCollaborator,
+  onFileTreeToggle,
+  isFileTreeOpen,
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -155,6 +159,17 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+      {/* 햄버거 메뉴 버튼 */}
+      {!readOnly && onFileTreeToggle && (
+        <button
+          className={`${styles.hamburgerButton} ${isFileTreeOpen ? styles.active : ''}`}
+          onClick={onFileTreeToggle}
+          title="파일 트리 열기/닫기"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
       {/* Navigation tabs */}
       <nav className={styles.tabList}>
         {tabs.map((tab) => (
