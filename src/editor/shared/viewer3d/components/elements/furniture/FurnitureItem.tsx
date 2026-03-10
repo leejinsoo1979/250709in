@@ -1306,6 +1306,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
+  // 자유배치 표준 모듈: EP 두께만큼 가구 본체 너비 축소
+  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+    const epThk = placedModule.endPanelThickness || 18;
+    if (placedModule.hasLeftEndPanel) furnitureWidthMm -= epThk;
+    if (placedModule.hasRightEndPanel) furnitureWidthMm -= epThk;
+  }
+
   // 너비 줄임 여부 저장 (위치 조정에서 사용)
   let widthReduced = false;
 
@@ -2452,8 +2459,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 일반: 계산된 위치 사용
 
+  // 자유배치 EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
+  let freeEpOffsetX = 0;
+  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+    const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
+    const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
+    const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
+    freeEpOffsetX = (rightEp - leftEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
+  }
+
   const furnitureGroupPosition: [number, number, number] = [
-    adjustedPosition.x + positionAdjustmentForEndPanel,
+    adjustedPosition.x + positionAdjustmentForEndPanel + freeEpOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
     furnitureZ
   ];
