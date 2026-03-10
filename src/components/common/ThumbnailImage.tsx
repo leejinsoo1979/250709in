@@ -48,17 +48,16 @@ const EmptyDesignThumbnail: React.FC<{
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, var(--theme-primary, #10b981), color-mix(in srgb, var(--theme-primary, #10b981) 80%, black))',
-      color: 'white',
-      gap: 'clamp(2px, 0.5vw, 6px)',
+      background: 'var(--theme-background-secondary, #1a1a1a)',
+      color: 'var(--theme-text-muted, #666)',
       width: '100%',
       height: '100%',
-      padding: '8px',
       boxSizing: 'border-box',
     }}>
-      <span style={{ fontSize: 'clamp(8px, 0.8vw, 11px)', fontWeight: '400', opacity: 0.75, textAlign: 'center' }}>
-        현재 배치된 가구가 없습니다.
-      </span>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14,2 14,8 20,8" />
+      </svg>
     </div>
   );
 };
