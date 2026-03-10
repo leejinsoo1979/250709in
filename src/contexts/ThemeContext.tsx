@@ -404,6 +404,12 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   // body 스타일 강제 적용
   document.body.style.backgroundColor = mode.background;
   document.body.style.color = mode.text;
+
+  // 테마별 favicon 전환
+  const favEl = document.getElementById('favicon-16') as HTMLLinkElement | null;
+  if (favEl) {
+    favEl.href = theme.mode === 'dark' ? '/images/favicon-dark.png?v=4' : '/images/favicon-light.png?v=4';
+  }
   
   console.log('🎨 테마 적용 완료:', {
     mode: theme.mode,
