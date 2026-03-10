@@ -2284,11 +2284,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       </group>
 
       {/* 엔드패널(EP) 렌더링 — 본체 바깥, 원래 W 기준 위치 */}
+      {/* EndPanelWithTexture → BoxWithEdges는 Three.js 단위를 기대하므로 mmToUnit 변환 필요 */}
       {hasLeftEndPanel && (
         <EndPanelWithTexture
-          width={epThicknessMm}
-          height={height}
-          depth={depth}
+          width={leftEP}
+          height={H}
+          depth={D}
           position={[-(W / 2) + leftEP / 2, 0, 0]}
           spaceInfo={spaceInfo}
           renderMode={renderMode}
@@ -2296,9 +2297,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       )}
       {hasRightEndPanel && (
         <EndPanelWithTexture
-          width={epThicknessMm}
-          height={height}
-          depth={depth}
+          width={rightEP}
+          height={H}
+          depth={D}
           position={[(W / 2) - rightEP / 2, 0, 0]}
           spaceInfo={spaceInfo}
           renderMode={renderMode}
