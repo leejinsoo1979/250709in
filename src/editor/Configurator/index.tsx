@@ -3835,6 +3835,7 @@ const Configurator: React.FC = () => {
                 currentFolderId={null}
                 activeMenu={fileTreeActiveMenu}
                 autoExpandProjectId={searchParams.get('projectId')}
+                showDesignFiles
                 onNavigate={(projectId, _folderId, _label) => {
                   if (projectId) {
                     // 프로젝트 클릭 시 대시보드로 이동하지 않고 트리만 확장
@@ -3842,6 +3843,10 @@ const Configurator: React.FC = () => {
                 }}
                 onMenuChange={(menu) => {
                   setFileTreeActiveMenu(menu);
+                }}
+                onDesignFileClick={(projectId, designFileId, _name) => {
+                  navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}`, { replace: true });
+                  setIsFileTreeOpen(false);
                 }}
               />
             </div>
