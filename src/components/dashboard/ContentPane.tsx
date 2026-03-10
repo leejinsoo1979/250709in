@@ -84,9 +84,18 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return '디자인';
   };
 
-  const getItemIcon = (item: ExplorerItem, size: number) => {
+  const getItemIcon = (item: ExplorerItem, size: number, isCard?: boolean) => {
     if (item.type === 'folder' || item.type === 'project') {
       return <Folder size={size} className={styles.itemIconFolder} />;
+    }
+    // 카드 뷰에서는 디자인 아이콘에 배경 스타일 적용
+    if (isCard) {
+      return (
+        <div className={styles.designPlaceholder}>
+          <FileText size={Math.max(size * 0.35, 20)} />
+          <span className={styles.designPlaceholderLabel}>{item.name}</span>
+        </div>
+      );
     }
     return <FileText size={size} className={styles.itemIconDesign} />;
   };
@@ -208,7 +217,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               {item.thumbnail ? (
                 <img src={item.thumbnail} alt={item.name} />
               ) : (
-                getItemIcon(item, iconSize)
+                getItemIcon(item, iconSize, true)
               )}
             </div>
             <div className={styles.tileInfo}>
@@ -250,7 +259,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             {item.thumbnail ? (
               <img src={item.thumbnail} alt={item.name} />
             ) : (
-              getItemIcon(item, Math.max(thumbSize * 0.5, 16))
+              getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
             )}
           </div>
           <div className={styles.iconName} title={item.name} style={{ maxWidth: thumbSize + 20 }}>

@@ -536,7 +536,10 @@ const SimpleDashboard: React.FC = () => {
         />
       ) : (
         <>
-          {/* 메인 바디: 좌측(네비버튼+트리) + 우측(컨텐츠) */}
+          {/* 주소 표시줄 (전체 너비) */}
+          <ExplorerToolbar nav={nav} hideSearch />
+
+          {/* 메인 바디: 좌측(트리) + 우측(컨텐츠) */}
           <div className={styles.explorerBody}>
             {/* 모바일 햄버거 버튼 */}
             {isMobile && (
@@ -549,10 +552,9 @@ const SimpleDashboard: React.FC = () => {
               </button>
             )}
 
-            {/* 좌측 칼럼: 탐색 툴바 + 네비게이션 */}
+            {/* 좌측 칼럼: 네비게이션 트리 */}
             {(!isMobile || mobileNavOpen) && (
               <div className={isMobile ? styles.mobileNavOverlay : styles.leftColumn}>
-                <ExplorerToolbar nav={nav} hideSearch />
                 <NavigationPane
                   projects={data.projects}
                   folders={data.folders}
