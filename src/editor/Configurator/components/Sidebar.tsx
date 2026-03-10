@@ -4,10 +4,9 @@ import { LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { TbBoxAlignRight, TbBrandAsana, TbTableExport } from 'react-icons/tb';
+import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
 import { MdOutlineDashboardCustomize } from 'react-icons/md';
 import { PiShareNetworkLight } from "react-icons/pi";
-import { SiConvertio } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -26,8 +25,6 @@ interface SidebarProps {
   onSave?: () => Promise<void>;
   readOnly?: boolean;
   onShare?: () => void;
-  onExportPDF?: () => void;
-  onCNCOptimizer?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -38,9 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onResetUnsavedChanges,
   onSave,
   readOnly = false,
-  onShare,
-  onExportPDF,
-  onCNCOptimizer
+  onShare
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -171,26 +166,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom action buttons */}
       <div className={styles.actionGroup}>
-        {!readOnly && onExportPDF && (
-          <button
-            className={styles.actionButton}
-            onClick={onExportPDF}
-            data-tooltip={t('export.title')}
-          >
-            <TbTableExport size={17} />
-          </button>
-        )}
-
-        {!readOnly && onCNCOptimizer && (
-          <button
-            className={styles.actionButton}
-            onClick={onCNCOptimizer}
-            data-tooltip={t('common.converting')}
-          >
-            <SiConvertio size={17} />
-          </button>
-        )}
-
         <button
           className={styles.actionButton}
           onClick={() => onShare?.()}
