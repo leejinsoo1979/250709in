@@ -2034,6 +2034,62 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
+          {/* 엔드패널(EP) 토글 (자유배치 모드) */}
+          {currentPlacedModule?.isFreePlacement && moduleData && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>엔드패널</h5>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={currentPlacedModule.hasLeftEndPanel === true}
+                    onChange={() => {
+                      updatePlacedModule(currentPlacedModule.id, {
+                        hasLeftEndPanel: !currentPlacedModule.hasLeftEndPanel,
+                      });
+                    }}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#333' }}>좌측 EP</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={currentPlacedModule.hasRightEndPanel === true}
+                    onChange={() => {
+                      updatePlacedModule(currentPlacedModule.id, {
+                        hasRightEndPanel: !currentPlacedModule.hasRightEndPanel,
+                      });
+                    }}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#333' }}>우측 EP</span>
+                </label>
+              </div>
+              {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
+                <div style={{ marginTop: '8px' }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>EP 두께</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={currentPlacedModule.endPanelThickness ?? 18}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) {
+                          const num = v === '' ? 18 : Math.max(15, Math.min(25, parseInt(v, 10)));
+                          updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
+                        }
+                      }}
+                      className={styles.dimensionInput}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 노서라운드 좌우 이격거리 (자유배치 + 노서라운드 모드) */}
           {currentPlacedModule?.isFreePlacement &&
            spaceInfo.surroundType === 'no-surround' && (
