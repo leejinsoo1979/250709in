@@ -378,11 +378,13 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        {/* 로고 영역 */}
+        {/* 로고 영역 — 고정 너비, 애니메이션 격리 */}
+        <div className={styles.logo}>
+          <Logo size="medium" onClick={() => navigate('/')} />
+        </div>
+
+        {/* 프로젝트/디자인 경로 — 로고와 분리 */}
         <div className={styles.logoSection}>
-          <div className={styles.logo}>
-            <Logo size="medium" onClick={() => navigate('/')} />
-          </div>
           <div className={styles.projectInfo}>
             <div className={styles.designFileName}>
               {projectName && designFileName ? (

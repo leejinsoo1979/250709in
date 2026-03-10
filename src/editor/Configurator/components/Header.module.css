@@ -20,7 +20,7 @@
 .logoSection {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md, 12px);
+  gap: 0;
   flex: 0 0 auto;
   min-width: 0;
 }
@@ -96,6 +96,10 @@
   display: flex;
   align-items: center;
   height: 32px;
+  /* 로고 애니메이션이 인접 요소에 영향 주지 않도록 고정 너비 */
+  width: 120px;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .logo img {
@@ -108,7 +112,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 16px;
 }
 
 .separator {
