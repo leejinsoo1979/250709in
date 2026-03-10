@@ -35,8 +35,8 @@ interface LayoutCanvasProps {
 }
 
 // 캔버스 최대 영역 내에서 비율 유지하면서 가능한 크게 그림
-const MAX_CANVAS_WIDTH = 520;
-const MAX_CANVAS_HEIGHT = 340;
+const MAX_CANVAS_WIDTH = 620;
+const MAX_CANVAS_HEIGHT = 420;
 const HANDLE_HIT_AREA = 12;
 
 const LayoutCanvas: React.FC<LayoutCanvasProps> = ({

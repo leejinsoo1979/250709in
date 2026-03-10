@@ -45,7 +45,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 }) => {
   // 싱글/듀얼 타입 (full 카테고리에서만 사용)
   const [cabinetType, setCabinetType] = useState<'single' | 'dual'>('dual');
-  const [typeConfirmed, setTypeConfirmed] = useState(true); // 기본 듀얼 확정
+  const [typeConfirmed, setTypeConfirmed] = useState(false); // 팝업 열릴 때 선택 표시
   const currentWidth = category === 'full' ? (cabinetType === 'single' ? 500 : 1000) : dimensions.width;
 
   const {
@@ -63,10 +63,11 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
     leafCount,
   } = useLayoutBuilder(currentWidth, dimensions.height);
 
-  // 팝업 열릴 때 듀얼로 초기화
+  // 팝업 열릴 때 초기화
   useEffect(() => {
     if (isOpen) {
       setCabinetType('dual');
+      setTypeConfirmed(false);
     }
   }, [isOpen]);
 
@@ -127,62 +128,34 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
         {/* 바디 */}
         <div className={styles.body}>
           {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
-          {category === 'full' && !typeConfirmed && (
-            <div style={{
-              display: 'flex', gap: '6px', padding: '0 4px',
-            }}>
+          {category === 'full' && (
+            <div className={styles.typeSelector}>
               <button
+                className={`${styles.typeBtn} ${cabinetType === 'single' ? styles.typeBtnActive : ''}`}
                 onClick={() => handleTypeChange('single')}
-                style={{
-                  flex: 1, padding: '6px 12px', borderRadius: '6px',
-                  border: '1px solid #ddd', background: '#fff',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '8px', whiteSpace: 'nowrap',
-                }}
               >
-                <div style={{ width: '12px', height: '16px', border: '2px solid #666', borderRadius: '2px', flexShrink: 0 }} />
-                <span style={{ fontSize: '12px', fontWeight: '600' }}>싱글</span>
-                <span style={{ fontSize: '11px', color: '#888' }}>500mm</span>
-              </button>
-              <button
-                onClick={() => handleTypeChange('dual')}
-                style={{
-                  flex: 1, padding: '6px 12px', borderRadius: '6px',
-                  border: '1px solid #ddd', background: '#fff',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '8px', whiteSpace: 'nowrap',
-                }}
-              >
-                <div style={{ display: 'flex', gap: '1px', flexShrink: 0 }}>
-                  <div style={{ width: '10px', height: '16px', border: '2px solid #666', borderRadius: '2px' }} />
-                  <div style={{ width: '10px', height: '16px', border: '2px solid #666', borderRadius: '2px' }} />
+                <div className={styles.typeBtnIcon}>
+                  <div style={{ width: '14px', height: '20px', border: '2px solid currentColor', borderRadius: '2px' }} />
                 </div>
-                <span style={{ fontSize: '12px', fontWeight: '600' }}>듀얼</span>
-                <span style={{ fontSize: '11px', color: '#888' }}>1000mm</span>
+                <div className={styles.typeBtnText}>
+                  <span className={styles.typeBtnLabel}>싱글</span>
+                  <span className={styles.typeBtnSize}>500mm</span>
+                </div>
               </button>
-            </div>
-          )}
-          {category === 'full' && typeConfirmed && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px',
-            }}>
-              <span style={{ fontSize: '12px', color: '#666' }}>타입:</span>
-              <span style={{
-                fontSize: '12px', fontWeight: '600', padding: '2px 8px',
-                background: '#f0f7ff', border: '1px solid #4A90D9',
-                borderRadius: '4px', color: '#4A90D9',
-              }}>
-                {cabinetType === 'single' ? '싱글 500mm' : '듀얼 1000mm'}
-              </span>
               <button
-                onClick={() => setTypeConfirmed(false)}
-                style={{
-                  fontSize: '11px', color: '#888', background: 'none',
-                  border: 'none', cursor: 'pointer', textDecoration: 'underline',
-                  padding: 0,
-                }}
+                className={`${styles.typeBtn} ${cabinetType === 'dual' ? styles.typeBtnActive : ''}`}
+                onClick={() => handleTypeChange('dual')}
               >
-                변경
+                <div className={styles.typeBtnIcon}>
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    <div style={{ width: '12px', height: '20px', border: '2px solid currentColor', borderRadius: '2px' }} />
+                    <div style={{ width: '12px', height: '20px', border: '2px solid currentColor', borderRadius: '2px' }} />
+                  </div>
+                </div>
+                <div className={styles.typeBtnText}>
+                  <span className={styles.typeBtnLabel}>듀얼</span>
+                  <span className={styles.typeBtnSize}>1000mm</span>
+                </div>
               </button>
             </div>
           )}
@@ -191,7 +164,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
           <div className={styles.guide}>
             <span className={styles.guideIcon}>💡</span>
             <p className={styles.guideText}>
-              영역을 클릭하여 선택 후 분할하세요. 경계선을 드래그하면 크기를 조정할 수 있습니다. 최대 3단계 분할 가능.
+              영역 클릭 후 분할 | 경계선 드래그로 크기 조정 | 최대 3단계
             </p>
           </div>
 
