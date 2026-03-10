@@ -2,7 +2,8 @@
 .tabBar {
   display: flex;
   align-items: center;
-  height: 32px;
+  height: var(--configurator-tabbar-height, 32px);
+  min-height: var(--configurator-tabbar-height, 32px);
   background: var(--theme-surface, #ffffff);
   border-bottom: 1px solid var(--theme-border, #e0e0e0);
   overflow-x: auto;

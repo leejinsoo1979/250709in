@@ -2102,16 +2102,17 @@ const Configurator: React.FC = () => {
 
   // 에디터 탭 동기화: 디자인 파일 로드 성공 후 탭 추가/활성화
   useEffect(() => {
-    if (currentProjectId && currentDesignFileId && currentDesignFileName) {
+    if (currentProjectId && currentDesignFileId) {
+      const designName = currentDesignFileName || urlDesignFileName || '새 디자인';
       const projectName = basicInfo.title || urlProjectName || '프로젝트';
       useUIStore.getState().addTab({
         projectId: currentProjectId,
         projectName,
         designFileId: currentDesignFileId,
-        designFileName: currentDesignFileName,
+        designFileName: designName,
       });
     }
-  }, [currentProjectId, currentDesignFileId, currentDesignFileName]);
+  }, [currentProjectId, currentDesignFileId, currentDesignFileName, basicInfo.title]);
 
   // 폴더명 자동 조회 (디자인파일이 폴더에 속한 경우)
   useEffect(() => {

@@ -11,8 +11,6 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose }) => {
   const openTabs = useUIStore((s) => s.openTabs);
   const activeTabId = useUIStore((s) => s.activeTabId);
 
-  if (openTabs.length === 0) return null;
-
   return (
     <div className={styles.tabBar}>
       {openTabs.map((tab) => (
