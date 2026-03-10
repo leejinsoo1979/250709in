@@ -38,6 +38,8 @@ export function convertToConfig(
 ): CustomFurnitureConfig {
   const { width, height } = dimensions;
 
+  console.log('🔧 [convertToConfig] 입력:', { layout: JSON.stringify(layout), dimensions });
+
   // 가구 전체 내경 (단일 박스: 상/하판 2개 차감)
   const totalInnerHeight = height - 2 * PANEL_THICKNESS;
   // 가구 전체 내경 너비 (좌/우측판 2개 차감)
@@ -53,8 +55,11 @@ export function convertToConfig(
 
   // Case 2: 루트가 vertical(상하 분할) → sections 배열
   if (layout.direction === 'vertical') {
-    const children = layout.children!;
-    const N = children.length;
+    // 중첩 vertical 평탄화: vertical→vertical 중첩 시 leaf/horizontal만 남기고 비율 곱셈
+    // 예: root.V[A.V[A1.leaf(0.5), A2.leaf(0.5)](0.5), B.leaf(0.5)]
+    //   → [A1(0.25), A2(0.25), B(0.5)] (3섹션)
+    const flatChildren = flattenVerticalChildren(layout.children!);
+    const N = flatChildren.length;
     // 독립 박스 모델: 각 섹션이 자체 상/하판 보유 (겹침 없음)
     // N개 섹션 → 2*N개 수평 패널
     const availableHeight = height - 2 * N * PANEL_THICKNESS;
@@ -63,7 +68,7 @@ export function convertToConfig(
     // 캔버스: children[0]=위, children[last]=아래 (Y축 아래로 증가)
     // 3D렌더러: sections[0]=하부, sections[last]=상부 (Y축 위로 증가)
     // → reverse해서 캔버스 아래→sections[0](하부), 캔버스 위→sections[last](상부)
-    const reversed = [...children].reverse();
+    const reversed = [...flatChildren].reverse();
 
     const sections = reversed.map((child, idx) => {
       const sectionInnerHeight = Math.round(child.ratio * availableHeight);
@@ -87,6 +92,7 @@ export function convertToConfig(
       return section;
     });
 
+    console.log('🔧 [convertToConfig] 결과 sections:', sections.map(s => ({ id: s.id, height: s.height })));
     return {
       sections,
       panelThickness: PANEL_THICKNESS,
@@ -117,6 +123,50 @@ export function convertToConfig(
   };
 }
 
+/**
+ * 중첩된 vertical 노드를 평탄화
+ *
+ * 레이아웃 빌더는 분할 시 항상 2개 children을 생성하므로,
+ * 3분할 = vertical→vertical 중첩이 됨.
+ * 이를 평탄화하여 leaf/horizontal 노드만 남기고 비율을 곱셈으로 계산.
+ *
+ * 예: [V(0.5)[leaf(0.5), leaf(0.5)], leaf(0.5)]
+ *   → [leaf(0.25), leaf(0.25), leaf(0.5)]
+ */
+function flattenVerticalChildren(children: LayoutNode[]): LayoutNode[] {
+  const result: LayoutNode[] = [];
+  for (const child of children) {
+    if (child.direction === 'vertical' && child.children) {
+      // 재귀 평탄화: 중첩 vertical의 children도 처리
+      const nested = flattenVerticalChildren(child.children);
+      for (const n of nested) {
+        result.push({ ...n, ratio: child.ratio * n.ratio });
+      }
+    } else {
+      result.push(child);
+    }
+  }
+  return result;
+}
+
+/**
+ * 중첩된 horizontal 노드를 평탄화 (vertical과 동일 로직)
+ */
+function flattenHorizontalChildren(children: LayoutNode[]): LayoutNode[] {
+  const result: LayoutNode[] = [];
+  for (const child of children) {
+    if (child.direction === 'horizontal' && child.children) {
+      const nested = flattenHorizontalChildren(child.children);
+      for (const n of nested) {
+        result.push({ ...n, ratio: child.ratio * n.ratio });
+      }
+    } else {
+      result.push(child);
+    }
+  }
+  return result;
+}
+
 function createSection(id: string, innerHeight: number): CustomSection {
   return {
     id,
@@ -139,7 +189,8 @@ function buildHorizontalSplit(
   hNode: LayoutNode,
   parentInnerWidth: number,
 ) {
-  const children = hNode.children!;
+  // 중첩 horizontal 평탄화 (vertical과 동일한 이유)
+  const children = flattenHorizontalChildren(hNode.children!);
   // 독립 박스 모델: 각 divider는 2개 패널(좌박스 우측판 + 우박스 좌측판)
   const numDividers = children.length - 1;
   const usableWidth = parentInnerWidth - 2 * numDividers * PANEL_THICKNESS;
@@ -186,7 +237,8 @@ function buildAreaSubSplits(
   hNode: LayoutNode,
   parentInnerHeight: number,
 ): Record<string, any> | null {
-  const children = hNode.children!;
+  // 중첩 horizontal 평탄화
+  const children = flattenHorizontalChildren(hNode.children!);
   const areas: Record<string, any> = {};
   let hasSubSplits = false;
 
