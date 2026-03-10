@@ -18,7 +18,10 @@ export const calculatePanelDetails = (
   doorBottomGap?: number, // 바닥에서 도어 하단까지 이격거리 (mm)
   baseHeight?: number, // 받침대 높이 (mm) - 브라켓 보링 Y오프셋 계산용
   backPanelThicknessMm?: number, // 백패널 두께 (mm, 기본값: 9)
-  customConfig?: CustomFurnitureConfig // 커스텀 가구 내부 구조
+  customConfig?: CustomFurnitureConfig, // 커스텀 가구 내부 구조
+  hasLeftEndPanel?: boolean, // 좌측 엔드패널 여부
+  hasRightEndPanel?: boolean, // 우측 엔드패널 여부
+  endPanelThickness?: number // 엔드패널 두께 (mm, 기본값: 18)
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[] } = {
     upper: [],     // 상부장 패널
@@ -895,6 +898,27 @@ export const calculatePanelDetails = (
   if (panels.door.length > 0 && hasDoor) {
     result.push({ name: `=== ${t('furniture.door')} ===` });
     result.push(...panels.door);
+  }
+
+  // 엔드패널(EP) — 좌/우 독립
+  const epT = endPanelThickness || 18;
+  if (hasLeftEndPanel) {
+    result.push({
+      name: '엔드패널(좌)',
+      width: height,
+      height: customDepth,
+      thickness: epT,
+      quantity: 1,
+    });
+  }
+  if (hasRightEndPanel) {
+    result.push({
+      name: '엔드패널(우)',
+      width: height,
+      height: customDepth,
+      thickness: epT,
+      quantity: 1,
+    });
   }
 
   return result;
