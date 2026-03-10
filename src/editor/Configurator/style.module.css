@@ -28,7 +28,14 @@
   bottom: 0;
   background: var(--theme-overlay);
   z-index: 100;
-  animation: fadeIn 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.fileTreeOverlay.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* 파일 트리 패널 (2-column: 좌측 트리 + 우측 파일 타일) */
@@ -43,9 +50,43 @@
   box-shadow: var(--theme-shadow);
   z-index: 101;
   overflow: hidden;
-  animation: slideInFromLeft 0.3s ease;
   display: flex;
   flex-direction: row;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fileTreePanel.open {
+  transform: translateX(0);
+}
+
+/* 파일 트리 접기 버튼 */
+.fileTreeFoldButton {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 48px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text-muted);
+  z-index: 102;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.fileTreeFoldButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+  width: 20px;
+  right: -20px;
 }
 
 /* NavigationPane(좌측 트리) 너비 고정 */
