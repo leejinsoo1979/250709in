@@ -37,36 +37,84 @@
   flex: 1;
 }
 
-.viewToggle {
-  display: flex;
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  overflow: hidden;
+/* 보기 모드 드롭다운 */
+.viewDropdown {
+  position: relative;
 }
 
-.viewBtn {
+.viewDropdownBtn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 30px;
+  gap: 6px;
   height: 28px;
-  border: none;
+  padding: 0 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
   background: transparent;
-  color: var(--theme-text-muted);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.12s;
+  white-space: nowrap;
 }
 
-.viewBtn:hover {
+.viewDropdownBtn:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-text);
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+.viewMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  z-index: 100;
+  animation: menuFadeIn 0.12s ease;
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.viewMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: left;
+}
+
+.viewMenuItem:hover {
   background: var(--theme-background-secondary);
   color: var(--theme-text);
 }
 
-.viewBtnActive {
+.viewMenuItemActive {
   background: var(--theme-primary-light);
   color: var(--theme-primary);
+  font-weight: 600;
 }
 
+/* 정렬 */
 .sortSelect {
   height: 28px;
   padding: 0 8px;

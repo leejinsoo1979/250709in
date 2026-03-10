@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Folder, FileText, MoreHorizontal } from 'lucide-react';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState } from '@/hooks/dashboard/types';
+import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
 import styles from './ContentPane.module.css';
 
 interface ContentPaneProps {
@@ -39,19 +40,18 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   dragHandlers,
   isLoading,
 }) => {
-  // 검색 + 정렬 적용
+  const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
+
+  // 검색 + 정렬
   const filteredItems = useMemo(() => {
     let result = items;
 
-    // 검색 필터
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter(item => item.name.toLowerCase().includes(term));
     }
 
-    // 정렬
     result = [...result].sort((a, b) => {
-      // 폴더를 항상 먼저
       if (a.type === 'folder' && b.type !== 'folder') return -1;
       if (a.type !== 'folder' && b.type === 'folder') return 1;
 
@@ -78,12 +78,31 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
 
-  const getItemIcon = (item: ExplorerItem) => {
-    if (item.type === 'folder' || item.type === 'project') {
-      return <Folder size={viewMode === 'icons' ? 40 : 16} className={styles.itemIconFolder} />;
-    }
-    return <FileText size={viewMode === 'icons' ? 40 : 16} className={styles.itemIconDesign} />;
+  const getTypeLabel = (type: string) => {
+    if (type === 'project') return '프로젝트';
+    if (type === 'folder') return '폴더';
+    return '디자인';
   };
+
+  const getItemIcon = (item: ExplorerItem, size: number) => {
+    if (item.type === 'folder' || item.type === 'project') {
+      return <Folder size={size} className={styles.itemIconFolder} />;
+    }
+    return <FileText size={size} className={styles.itemIconDesign} />;
+  };
+
+  // 드래그 속성 생성 헬퍼
+  const getDragProps = (item: ExplorerItem) => ({
+    draggable: item.type === 'design',
+    onDragStart: (e: React.DragEvent) => {
+      if (item.type === 'design' && item.projectId) {
+        dragHandlers.onDragStart(e, { id: item.id, name: item.name, type: 'design' as const, projectId: item.projectId });
+      }
+    },
+    onDragOver: item.type === 'folder' ? (e: React.DragEvent) => dragHandlers.onDragOver(e, item.id) : undefined,
+    onDrop: item.type === 'folder' ? (e: React.DragEvent) => dragHandlers.onDrop(e, item.id) : undefined,
+    onDragEnd: dragHandlers.onDragEnd,
+  });
 
   if (isLoading) {
     return (
@@ -103,51 +122,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     );
   }
 
-  // 아이콘 뷰
-  if (viewMode === 'icons') {
-    return (
-      <div className={styles.iconGrid}>
-        {filteredItems.map(item => (
-          <div
-            key={item.id}
-            className={`${styles.iconCard} ${selectedItems.has(item.id) ? styles.iconCardSelected : ''} ${
-              dragState.dragOverFolder === item.id ? styles.dragOver : ''
-            }`}
-            onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
-            onDoubleClick={() => onItemDoubleClick(item)}
-            onContextMenu={e => onItemContextMenu(e, item)}
-            draggable={item.type === 'design'}
-            onDragStart={e => {
-              if (item.type === 'design' && item.projectId) {
-                dragHandlers.onDragStart(e, {
-                  id: item.id,
-                  name: item.name,
-                  type: 'design',
-                  projectId: item.projectId,
-                });
-              }
-            }}
-            onDragOver={item.type === 'folder' ? e => dragHandlers.onDragOver(e, item.id) : undefined}
-            onDrop={item.type === 'folder' ? e => dragHandlers.onDrop(e, item.id) : undefined}
-            onDragEnd={dragHandlers.onDragEnd}
-          >
-            <div className={styles.iconThumbnail}>
-              {item.thumbnail ? (
-                <img src={item.thumbnail} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                getItemIcon(item)
-              )}
-            </div>
-            <div className={styles.iconName} title={item.name}>
-              {item.name}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // 자세히 뷰 (테이블)
+  // ── 자세히 뷰 (테이블) ──
   if (viewMode === 'details') {
     return (
       <div className={styles.detailsTable}>
@@ -171,39 +146,19 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
             onDoubleClick={() => onItemDoubleClick(item)}
             onContextMenu={e => onItemContextMenu(e, item)}
-            draggable={item.type === 'design'}
-            onDragStart={e => {
-              if (item.type === 'design' && item.projectId) {
-                dragHandlers.onDragStart(e, {
-                  id: item.id, name: item.name, type: 'design', projectId: item.projectId,
-                });
-              }
-            }}
-            onDragOver={item.type === 'folder' ? e => dragHandlers.onDragOver(e, item.id) : undefined}
-            onDrop={item.type === 'folder' ? e => dragHandlers.onDrop(e, item.id) : undefined}
-            onDragEnd={dragHandlers.onDragEnd}
+            {...getDragProps(item)}
           >
             <div className={styles.colName}>
-              {getItemIcon(item)}
+              {getItemIcon(item, 16)}
               <span className={styles.rowName}>{item.name}</span>
             </div>
-            <div className={styles.colType}>
-              {item.type === 'project' ? '프로젝트' : item.type === 'folder' ? '폴더' : '디자인'}
-            </div>
+            <div className={styles.colType}>{getTypeLabel(item.type)}</div>
             <div className={styles.colSize}>
-              {item.spaceSize
-                ? `${item.spaceSize.width}x${item.spaceSize.height}x${item.spaceSize.depth}`
-                : '-'}
+              {item.spaceSize ? `${item.spaceSize.width}x${item.spaceSize.height}x${item.spaceSize.depth}` : '-'}
             </div>
             <div className={styles.colDate}>{formatDate(item.updatedAt)}</div>
             <div className={styles.colActions}>
-              <button
-                className={styles.moreBtn}
-                onClick={e => {
-                  e.stopPropagation();
-                  onItemContextMenu(e, item);
-                }}
-              >
+              <button className={styles.moreBtn} onClick={e => { e.stopPropagation(); onItemContextMenu(e, item); }}>
                 <MoreHorizontal size={16} />
               </button>
             </div>
@@ -213,20 +168,94 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     );
   }
 
-  // 목록 뷰
+  // ── 목록 뷰 ──
+  if (viewMode === 'list') {
+    return (
+      <div className={styles.listView}>
+        {filteredItems.map(item => (
+          <div
+            key={item.id}
+            className={`${styles.listItem} ${selectedItems.has(item.id) ? styles.listItemSelected : ''}`}
+            onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
+            onDoubleClick={() => onItemDoubleClick(item)}
+            onContextMenu={e => onItemContextMenu(e, item)}
+          >
+            {getItemIcon(item, 16)}
+            <span className={styles.listName}>{item.name}</span>
+            <span className={styles.listDate}>{formatDate(item.updatedAt)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── 타일 뷰 ──
+  if (viewMode === 'tiles') {
+    return (
+      <div className={styles.tileGrid}>
+        {filteredItems.map(item => (
+          <div
+            key={item.id}
+            className={`${styles.tileCard} ${selectedItems.has(item.id) ? styles.tileCardSelected : ''} ${
+              dragState.dragOverFolder === item.id ? styles.dragOver : ''
+            }`}
+            onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
+            onDoubleClick={() => onItemDoubleClick(item)}
+            onContextMenu={e => onItemContextMenu(e, item)}
+            {...getDragProps(item)}
+          >
+            <div className={styles.tileThumbnail}>
+              {item.thumbnail ? (
+                <img src={item.thumbnail} alt={item.name} />
+              ) : (
+                getItemIcon(item, iconSize)
+              )}
+            </div>
+            <div className={styles.tileInfo}>
+              <div className={styles.tileName} title={item.name}>{item.name}</div>
+              <div className={styles.tileMeta}>
+                {getTypeLabel(item.type)}
+                {item.spaceSize && ` · ${item.spaceSize.width}x${item.spaceSize.depth}`}
+              </div>
+              <div className={styles.tileMeta}>{formatDate(item.updatedAt)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── 아이콘 뷰 (extra-large / large / medium / small) ──
+  // 크기에 따라 그리드 컬럼 & 썸네일 크기 조정
+  const gridMinWidth = viewMode === 'extra-large' ? 280 : viewMode === 'large' ? 160 : viewMode === 'medium' ? 120 : 90;
+  const thumbSize = iconSize;
+
   return (
-    <div className={styles.listView}>
+    <div
+      className={styles.iconGrid}
+      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
+    >
       {filteredItems.map(item => (
         <div
           key={item.id}
-          className={`${styles.listItem} ${selectedItems.has(item.id) ? styles.listItemSelected : ''}`}
+          className={`${styles.iconCard} ${selectedItems.has(item.id) ? styles.iconCardSelected : ''} ${
+            dragState.dragOverFolder === item.id ? styles.dragOver : ''
+          }`}
           onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
           onDoubleClick={() => onItemDoubleClick(item)}
           onContextMenu={e => onItemContextMenu(e, item)}
+          {...getDragProps(item)}
         >
-          {getItemIcon(item)}
-          <span className={styles.listName}>{item.name}</span>
-          <span className={styles.listDate}>{formatDate(item.updatedAt)}</span>
+          <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
+            {item.thumbnail ? (
+              <img src={item.thumbnail} alt={item.name} />
+            ) : (
+              getItemIcon(item, Math.max(thumbSize * 0.5, 16))
+            )}
+          </div>
+          <div className={styles.iconName} title={item.name} style={{ maxWidth: thumbSize + 20 }}>
+            {item.name}
+          </div>
         </div>
       ))}
     </div>

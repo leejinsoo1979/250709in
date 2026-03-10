@@ -57,8 +57,19 @@ export type QuickAccessMenu =
   | 'profile'        // 프로필
   | 'team';          // 팀
 
-// 뷰 모드
-export type ViewMode = 'icons' | 'list' | 'details';
+// 뷰 모드 (윈도우 탐색기 스타일)
+export type ViewMode = 'extra-large' | 'large' | 'medium' | 'small' | 'list' | 'details' | 'tiles';
+
+// 아이콘 크기 매핑 (px)
+export const VIEW_MODE_ICON_SIZE: Record<ViewMode, number> = {
+  'extra-large': 256,
+  'large': 128,
+  'medium': 80,
+  'small': 48,
+  'list': 16,
+  'details': 16,
+  'tiles': 64,
+};
 
 // 정렬 기준
 export type SortBy = 'name' | 'date' | 'type';

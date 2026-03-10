@@ -41,11 +41,10 @@
   color: var(--theme-primary);
 }
 
-/* 아이콘 뷰 */
+/* ── 아이콘 뷰 (extra-large / large / medium / small) ── */
 .iconGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  gap: 8px;
   padding: 16px;
   overflow-y: auto;
 }
@@ -55,7 +54,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px 8px;
+  padding: 10px 6px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.12s;
@@ -72,14 +71,13 @@
 }
 
 .iconThumbnail {
-  width: 80px;
-  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--theme-background);
+  flex-shrink: 0;
 }
 
 .iconThumbnail img {
@@ -91,14 +89,83 @@
 .iconName {
   font-size: 12px;
   text-align: center;
-  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--theme-text);
+  line-height: 1.3;
 }
 
-/* 자세히 뷰 (테이블) */
+/* ── 타일 뷰 ── */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.tileCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 2px solid transparent;
+}
+
+.tileCard:hover {
+  background: var(--theme-background-secondary);
+}
+
+.tileCardSelected {
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+}
+
+.tileThumbnail {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--theme-background);
+  flex-shrink: 0;
+}
+
+.tileThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tileInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tileName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tileMeta {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+/* ── 자세히 뷰 (테이블) ── */
 .detailsTable {
   display: flex;
   flex-direction: column;
@@ -201,7 +268,7 @@
   color: var(--theme-text);
 }
 
-/* 목록 뷰 */
+/* ── 목록 뷰 ── */
 .listView {
   display: flex;
   flex-direction: column;

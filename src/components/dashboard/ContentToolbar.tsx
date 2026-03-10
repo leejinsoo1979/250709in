@@ -1,5 +1,5 @@
-import React from 'react';
-import { Grid, List, AlignJustify, Plus, FolderPlus, FilePlus } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, FolderPlus, FilePlus, ChevronDown, LayoutGrid, List, Table, Grid3X3, Image, Layers } from 'lucide-react';
 import type { ViewMode, SortBy } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
@@ -11,8 +11,18 @@ interface ContentToolbarProps {
   onCreateProject: () => void;
   onCreateFolder: () => void;
   onCreateDesign?: () => void;
-  showCreateFolder: boolean; // 프로젝트 내부일 때만 폴더 생성 가능
+  showCreateFolder: boolean;
 }
+
+const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
+  { mode: 'extra-large', label: '아주 큰 아이콘', icon: <Image size={15} /> },
+  { mode: 'large', label: '큰 아이콘', icon: <LayoutGrid size={15} /> },
+  { mode: 'medium', label: '보통 아이콘', icon: <Grid3X3 size={15} /> },
+  { mode: 'small', label: '작은 아이콘', icon: <Layers size={15} /> },
+  { mode: 'list', label: '목록', icon: <List size={15} /> },
+  { mode: 'details', label: '자세히', icon: <Table size={15} /> },
+  { mode: 'tiles', label: '타일', icon: <LayoutGrid size={15} /> },
+];
 
 const ContentToolbar: React.FC<ContentToolbarProps> = ({
   viewMode,
@@ -24,6 +34,23 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onCreateDesign,
   showCreateFolder,
 }) => {
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
+
+  // 바깥 클릭 시 메뉴 닫기
+  useEffect(() => {
+    if (!viewMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
+        setViewMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [viewMenuOpen]);
+
+  const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
+
   return (
     <div className={styles.toolbar}>
       {/* 생성 버튼 */}
@@ -50,29 +77,34 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
 
       <div className={styles.spacer} />
 
-      {/* 뷰 모드 전환 */}
-      <div className={styles.viewToggle}>
+      {/* 보기 모드 드롭다운 */}
+      <div className={styles.viewDropdown} ref={viewMenuRef}>
         <button
-          className={`${styles.viewBtn} ${viewMode === 'icons' ? styles.viewBtnActive : ''}`}
-          onClick={() => onViewModeChange('icons')}
-          title="아이콘 뷰"
+          className={styles.viewDropdownBtn}
+          onClick={() => setViewMenuOpen(prev => !prev)}
         >
-          <Grid size={16} />
+          {currentViewOption.icon}
+          <span>{currentViewOption.label}</span>
+          <ChevronDown size={12} className={viewMenuOpen ? styles.chevronUp : ''} />
         </button>
-        <button
-          className={`${styles.viewBtn} ${viewMode === 'list' ? styles.viewBtnActive : ''}`}
-          onClick={() => onViewModeChange('list')}
-          title="목록 뷰"
-        >
-          <List size={16} />
-        </button>
-        <button
-          className={`${styles.viewBtn} ${viewMode === 'details' ? styles.viewBtnActive : ''}`}
-          onClick={() => onViewModeChange('details')}
-          title="자세히 뷰"
-        >
-          <AlignJustify size={16} />
-        </button>
+
+        {viewMenuOpen && (
+          <div className={styles.viewMenu}>
+            {VIEW_OPTIONS.map(opt => (
+              <button
+                key={opt.mode}
+                className={`${styles.viewMenuItem} ${viewMode === opt.mode ? styles.viewMenuItemActive : ''}`}
+                onClick={() => {
+                  onViewModeChange(opt.mode);
+                  setViewMenuOpen(false);
+                }}
+              >
+                {opt.icon}
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 정렬 */}

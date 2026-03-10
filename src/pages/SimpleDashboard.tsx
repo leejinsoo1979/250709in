@@ -45,7 +45,7 @@ const SimpleDashboard: React.FC = () => {
   const actions = useExplorerActions(data, nav);
 
   // --- 로컬 UI 상태 ---
-  const [viewMode, setViewMode] = useState<ViewMode>('icons');
+  const [viewMode, setViewMode] = useState<ViewMode>('medium');
   const [sortBy, setSortBy] = useState<SortBy>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
