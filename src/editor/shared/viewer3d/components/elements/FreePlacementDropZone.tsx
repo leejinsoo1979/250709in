@@ -711,11 +711,33 @@ const FreePlacementDropZone: React.FC = () => {
     if (!editingFreeModuleId) return;
     // 이격거리 편집 중이면 드래그 시작하지 않음
     if (editingGapIndex !== null) return;
+
+    // 클릭 지점이 가구 위인지 확인 — 아니면 선택 해제 + 팝업 닫기
+    const mod = placedModules.find(m => m.id === editingFreeModuleId);
+    if (mod && e.point) {
+      const bounds = getModuleBoundsX(mod);
+      const clickXmm = e.point.x * 100;
+      const clickYmm = e.point.y * 100;
+      const modHeight = mod.freeHeight || 2325;
+      const modBottomY = (mod.position.y * 100) - modHeight / 2;
+      const modTopY = (mod.position.y * 100) + modHeight / 2;
+      const margin = 30; // 30mm 여유
+      const outsideX = clickXmm < bounds.left - margin || clickXmm > bounds.right + margin;
+      const outsideY = clickYmm < modBottomY - margin || clickYmm > modTopY + margin;
+      if (outsideX || outsideY) {
+        // 허공 클릭 → 선택 해제
+        useFurnitureStore.getState().setSelectedFurnitureId(null);
+        useUIStore.getState().setSelectedFurnitureId(null);
+        useUIStore.getState().closeAllPopups();
+        return;
+      }
+    }
+
     e.stopPropagation();
     setMovingModuleId(editingFreeModuleId);
     setIsDraggingPlaced(true);
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
-  }, [editingFreeModuleId, editingGapIndex]);
+  }, [editingFreeModuleId, editingGapIndex, placedModules]);
 
   // 이동 시 zone 변경에 따른 높이/Y 재계산
   const recalcZoneUpdate = useCallback((mod: typeof placedModules[0], newXmm: number) => {
