@@ -131,9 +131,9 @@ export default function EnterpriseSignUpPage() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">신청이 완료되었습니다</h2>
+            <h2 className="text-2xl font-bold text-white mb-3">가입이 완료되었습니다</h2>
             <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
-              담당자가 확인 후 입력하신 이메일로<br />연락드리겠습니다.
+              계정이 생성되었습니다.<br />등록하신 이메일과 비밀번호로 로그인하세요.
             </p>
             <button
               onClick={() => navigate('/login')}
@@ -150,7 +150,55 @@ export default function EnterpriseSignUpPage() {
             transition={{ duration: 0.4 }}
           >
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">기업계정 가입</h1>
-            <p className="text-zinc-500 text-sm mb-12">기업 정보를 입력해주시면 담당자가 안내드립니다</p>
+            <p className="text-zinc-500 text-sm mb-12">기업 정보를 입력하고 계정을 생성하세요</p>
+
+            {/* 로그인 계정 정보 */}
+            <section className="mb-10">
+              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">로그인 계정 정보</h2>
+              <div className="space-y-5">
+                <Field label="로그인 이메일" required>
+                  <Input type="email" value={form.loginEmail} onChange={(v) => update('loginEmail', v)} placeholder="login@company.com" required />
+                </Field>
+                <Field label="비밀번호" required>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={(e) => update('password', e.target.value)}
+                      placeholder="6자 이상 입력"
+                      required
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </Field>
+                <Field label="비밀번호 확인" required>
+                  <div className="relative">
+                    <input
+                      type={showPasswordConfirm ? 'text' : 'password'}
+                      value={form.passwordConfirm}
+                      onChange={(e) => update('passwordConfirm', e.target.value)}
+                      placeholder="비밀번호 재입력"
+                      required
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </Field>
+              </div>
+            </section>
 
             {/* 회사 정보 */}
             <section className="mb-10">
@@ -195,8 +243,8 @@ export default function EnterpriseSignUpPage() {
                     <Input value={form.department} onChange={(v) => update('department', v)} placeholder="디자인팀 / 팀장" />
                   </Field>
                 </div>
-                <Field label="이메일" required>
-                  <Input type="email" value={form.contactEmail} onChange={(v) => update('contactEmail', v)} placeholder="email@company.com" required />
+                <Field label="이메일">
+                  <Input type="email" value={form.contactEmail} onChange={(v) => update('contactEmail', v)} placeholder="담당자 이메일 (로그인 이메일과 다를 경우)" />
                 </Field>
                 <Field label="연락처" required>
                   <Input type="tel" value={form.contactPhone} onChange={(v) => update('contactPhone', v)} placeholder="010-0000-0000" required />
