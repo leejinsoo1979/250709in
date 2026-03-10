@@ -23,13 +23,12 @@ export default function LandingPage() {
           onClick={() => navigate('/')}
         />
         <div className="flex items-center">
-          <Button
-            variant="ghost"
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800 text-sm font-medium"
+          <button
+            className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
             onClick={() => navigate('/login')}
           >
             Sign in
-          </Button>
+          </button>
         </div>
       </header>
 
