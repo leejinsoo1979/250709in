@@ -3366,7 +3366,8 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
-        {/* 프레임 설정 - 양쪽 탭에서 모두 표시 */}
+        {/* 프레임 설정 - 슬롯배치 모드에서만 표시 */}
+        {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (<>
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -3601,7 +3602,7 @@ const Configurator: React.FC = () => {
           spaceInfo={spaceInfo}
           onUpdate={handleSpaceInfoUpdate}
         />
-
+        </>)}
 
         {/* 받침대 - 양쪽 탭에서 모두 표시 */}
         <div className={styles.configSection}>
