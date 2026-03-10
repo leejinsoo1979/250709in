@@ -1,0 +1,16 @@
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 16px;
+  background: var(--theme-surface);
+  border-top: 1px solid var(--theme-border);
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  flex-shrink: 0;
+}
+
+.divider {
+  color: var(--theme-border);
+}

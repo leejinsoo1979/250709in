@@ -1,0 +1,152 @@
+.pane {
+  display: flex;
+  flex-shrink: 0;
+  background: var(--theme-surface);
+  border-right: 1px solid var(--theme-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 2px;
+}
+
+.section {
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--theme-text-muted);
+  padding: 8px 16px 4px;
+  user-select: none;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+.menuItemActive {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  font-weight: 500;
+}
+
+.menuIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.menuLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 트리 아이템 */
+.treeItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: left;
+}
+
+.treeItem:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+.treeItemActive {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  font-weight: 500;
+}
+
+.treeItemNested {
+  padding-left: 36px;
+}
+
+.expandIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+}
+
+.folderIcon {
+  flex-shrink: 0;
+  color: var(--theme-text-muted);
+}
+
+.treeLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.treeChildren {
+  /* No extra padding needed, treeItemNested handles it */
+}
+
+/* 리사이즈 핸들 */
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+  transition: background 0.15s;
+}
+
+.resizeHandle:hover,
+.resizeActive {
+  background: var(--theme-primary);
+  opacity: 0.4;
+}
