@@ -24,7 +24,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <header className={styles.header}>
       <div className={styles.left}>
-        <Logo size="small" onClick={onLogoClick} />
+        <Logo size="large" onClick={onLogoClick} />
       </div>
 
       <div className={styles.right}>
