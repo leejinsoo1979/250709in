@@ -1615,14 +1615,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
       )}
       
-      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 - 자유배치 모드에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 왼쪽 벽이 있는지 확인
             const hasLeftWall = spaceInfo.wallConfig?.left;
-            
+
+            // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
+            if (isFreePlacement && !hasLeftWall) return null;
+
             // 가장 왼쪽 가구 위치 찾기
             let leftmostFurnitureX: number | null = null;
-            if (placedModules.length > 0) {
+            if (!isFreePlacement && placedModules.length > 0) {
               placedModules.forEach(module => {
                 const widthMm = getModuleWidthMm(module);
                 if (widthMm !== null) {
@@ -1640,10 +1643,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (!hasLeftWall && leftmostFurnitureX === null) {
               return null;
             }
-            
+
             let leftValue: number;
             let leftText: string;
-            
+
             if (hasLeftWall) {
               // 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left ?? 1.5;
@@ -1818,14 +1821,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 - 자유배치 모드에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 오른쪽 벽이 있는지 확인
             const hasRightWall = spaceInfo.wallConfig?.right;
-            
+
+            // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
+            if (isFreePlacement && !hasRightWall) return null;
+
             // 가장 오른쪽 가구 위치 찾기
             let rightmostFurnitureX: number | null = null;
-            if (placedModules.length > 0) {
+            if (!isFreePlacement && placedModules.length > 0) {
               placedModules.forEach(module => {
                 const widthMm = getModuleWidthMm(module);
                 if (widthMm !== null) {
@@ -1843,10 +1849,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (!hasRightWall && rightmostFurnitureX === null) {
               return null;
             }
-            
+
             let rightValue: number;
             let rightText: string;
-            
+
             if (hasRightWall) {
               // 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right ?? 1.5;
