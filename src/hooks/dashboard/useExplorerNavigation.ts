@@ -8,8 +8,8 @@ export function useExplorerNavigation(): UseExplorerNavigationReturn {
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 빠른 액세스 메뉴
-  const [activeMenu, setActiveMenu] = useState<QuickAccessMenu>('all');
+  // 빠른 액세스 메뉴 (기본: 진행중 프로젝트)
+  const [activeMenu, setActiveMenu] = useState<QuickAccessMenu>('in-progress');
 
   // 현재 위치 (히스토리에서 파생)
   const current = history[historyIndex];
