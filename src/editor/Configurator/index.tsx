@@ -2100,10 +2100,12 @@ const Configurator: React.FC = () => {
     }
   }, [currentProjectId, currentDesignFileId, isReadOnly]);
 
-  // 에디터 탭 동기화: 디자인 파일 로드 시 탭 추가/활성화
+  // 에디터 탭 동기화: 로딩 완료 후에만 탭 추가/활성화
   // closedTabIds: 수동으로 닫은 탭 ID 기록 (같은 URL에서 재생성 방지)
   const closedTabIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    // 로딩 중에는 탭 동기화하지 않음 (잘못된 파일명 방지)
+    if (loading) return;
     if (currentProjectId && currentDesignFileId) {
       const tabId = `${currentProjectId}_${currentDesignFileId}`;
       // 수동으로 닫은 탭이면 재생성하지 않음
@@ -2126,7 +2128,7 @@ const Configurator: React.FC = () => {
         });
       }
     }
-  }, [currentProjectId, currentDesignFileId, currentDesignFileName, basicInfo.title]);
+  }, [loading, currentProjectId, currentDesignFileId, currentDesignFileName, basicInfo.title]);
 
   // 폴더명 자동 조회 (디자인파일이 폴더에 속한 경우)
   useEffect(() => {
