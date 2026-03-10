@@ -20,9 +20,9 @@ export default function LandingPage() {
           onClick={() => navigate('/')}
         >
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-white" />
-            <div className="w-2 h-2 rounded-full bg-white" />
-            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-3.5 h-3.5 rounded-full bg-white" />
+            <div className="w-3.5 h-3.5 rounded-full bg-white" />
+            <div className="w-3.5 h-3.5 rounded-full bg-white" />
           </div>
           <span className="text-white font-black text-lg ml-1">CRAFT</span>
         </div>

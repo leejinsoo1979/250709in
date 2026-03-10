@@ -6,9 +6,9 @@ interface LogoProps {
 }
 
 const sizeConfig = {
-  small: { dot: 4, gap: 2, fontSize: 14, dotGap: 3 },
-  medium: { dot: 6, gap: 4, fontSize: 18, dotGap: 4 },
-  large: { dot: 8, gap: 6, fontSize: 24, dotGap: 5 },
+  small: { dot: 9, gap: 3, fontSize: 14, dotGap: 3 },
+  medium: { dot: 12, gap: 5, fontSize: 18, dotGap: 4 },
+  large: { dot: 16, gap: 6, fontSize: 24, dotGap: 5 },
 };
 
 const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
