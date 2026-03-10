@@ -2573,8 +2573,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
               
-              {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
-              {topFrameHeight > 0 && (
+              {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 - 자유배치에서는 숨김 */}
+              {topFrameHeight > 0 && !isFreePlacement && (
               <group>
                 <NativeLine name="dimension_line"
                   points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topFrameLineTopY, 0.002]]}
@@ -3553,7 +3553,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 - 자유배치에서는 숨김 */}
+                {!isFreePlacement && (
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
@@ -3585,6 +3586,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {topFrameHeight}
                   </Text>
                 </group>
+                )}
 
                 {/* 5. 상부 프레임 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (
@@ -4496,7 +4498,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 - 자유배치에서는 숨김 */}
+                {!isFreePlacement && (
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
@@ -4528,6 +4531,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {topFrameHeight}
                 </Text>
               </group>
+                )}
 
                 {/* 5. 상부 프레임 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (
@@ -4850,8 +4854,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>
         
-        {/* 좌측 프레임 폭 치수선 - 외부로 이동 */}
-        {showDimensions && <group>
+        {/* 좌측 프레임 폭 치수선 - 외부로 이동 - 자유배치에서는 숨김 */}
+        {showDimensions && !isFreePlacement && <group>
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
@@ -4963,8 +4967,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>}
 
-        {/* 우측 프레임 폭 치수선 - 외부로 이동 */}
-        {showDimensions && <group>
+        {/* 우측 프레임 폭 치수선 - 외부로 이동 - 자유배치에서는 숨김 */}
+        {showDimensions && !isFreePlacement && <group>
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
