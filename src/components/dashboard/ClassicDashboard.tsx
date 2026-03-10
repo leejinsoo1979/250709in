@@ -190,7 +190,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
             }}
             style={{ cursor: 'pointer' }}
           >
-            <Logo size="medium" />
+            <Logo size="large" />
           </div>
         </div>
 
