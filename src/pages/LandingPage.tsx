@@ -94,7 +94,7 @@ export default function LandingPage() {
             ))}
             {/* think thing thank 텍스트 */}
             <motion.span
-              className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight ml-2`}
+              className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide ml-2`}
               style={{ display: 'inline-flex' }}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
