@@ -2,6 +2,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { AdjustableFoot } from './AdjustableFoot';
 import { useUIStore } from '@/store/uiStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 
 interface AdjustableFootsRendererProps {
   width: number; // 가구 폭 (Three.js units)
@@ -13,7 +14,7 @@ interface AdjustableFootsRendererProps {
   isHighlighted?: boolean;
   isFloating?: boolean; // 띄움배치 여부
   baseHeight?: number; // 받침대 높이 (mm)
-  baseDepth?: number; // 받침대 깊이 (mm, 0~300)
+  baseDepth?: number; // 받침대 깊이 (mm, 0~300) - 폴백용, store 값 우선
   viewMode?: '2D' | '3D';
   view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
 }
@@ -29,75 +30,60 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   depth,
   yOffset = 0,
   backZOffset = 0,
-  material,
   renderMode = 'solid',
   isHighlighted = false,
   isFloating = false,
-  baseHeight = 65, // 기본값 65mm
-  baseDepth = 0, // 기본값 0mm
   viewMode = '3D',
   view2DDirection,
 }) => {
   const storeViewMode = useUIStore(state => state.viewMode);
   const storeView2DDirection = useUIStore(state => state.view2DDirection);
+  // Store에서 직접 baseDepth 읽기 (실시간 반영 보장)
+  const storeBaseDepth = useSpaceConfigStore(state => state.spaceInfo.baseConfig?.depth ?? 0);
+  const storeBaseHeight = useSpaceConfigStore(state => state.spaceInfo.baseConfig?.height ?? 65);
+  const storeIsFloating = useSpaceConfigStore(state =>
+    state.spaceInfo.baseConfig?.type === 'stand' &&
+    state.spaceInfo.baseConfig?.placementType === 'float'
+  );
+
+  // Store 값 우선, prop은 폴백
+  const effectiveBaseDepth = storeBaseDepth;
+  const effectiveBaseHeight = storeBaseHeight;
+  const effectiveIsFloating = storeIsFloating || isFloating;
 
   const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';
   const effectiveView2DDirection =
     view2DDirection ?? (effectiveViewMode === '2D' ? storeView2DDirection : undefined);
 
   // 띄움배치일 때는 발통 렌더링 안 함
-  if (isFloating) {
+  if (effectiveIsFloating) {
     return null;
   }
-
-  // console.log('🦶🦶 AdjustableFootsRenderer 렌더링 체크:', {
-  //   viewMode: effectiveViewMode,
-  //   view2DDirection: effectiveView2DDirection,
-  //   isTopView: effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'),
-  //   willRender: !(effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'))
-  // });
 
   // 2D 탑뷰일 때만 발통 렌더링 안 함
   if (effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all')) {
-    // console.log('🦶🦶 탑뷰이므로 조절발 렌더링 안함 (effective view)', {
-    //   effectiveViewMode,
-    //   effectiveView2DDirection,
-    // });
     return null;
   }
   const mmToThreeUnits = (mm: number) => mm * 0.01;
-  
+
   // width, depth는 이미 Three.js units
   const furnitureWidth = width;
   const furnitureDepth = depth;
-  
+
   // 64×64mm 정사각형 플레이트의 바깥쪽 모서리가 가구 모서리에 맞도록
   const plateSize = mmToThreeUnits(64);
   const plateHalf = plateSize / 2; // 플레이트 크기의 절반 (32mm)
-  
+
   // X축 위치 (플레이트 바깥쪽 모서리가 가구 모서리에 맞도록)
   const leftX = -furnitureWidth / 2 + plateHalf;
   const rightX = furnitureWidth / 2 - plateHalf;
-  
+
   // Z축 위치
   // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로
   // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽 (받침대 깊이 영향 없음)
-  const baseDepthOffset = mmToThreeUnits(baseDepth);
+  const baseDepthOffset = mmToThreeUnits(effectiveBaseDepth);
   const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset;
   const backZ = -furnitureDepth / 2 + plateHalf;
-
-  // console.log('🦶 조절발통 위치 계산:', {
-  //   'width(units)': width.toFixed(2),
-  //   'depth(units)': depth.toFixed(2),
-  //   'width(mm)': (width * 100).toFixed(0) + 'mm',
-  //   'depth(mm)': (depth * 100).toFixed(0) + 'mm',
-  //   'baseDepth(mm)': baseDepth + 'mm',
-  //   'plateHalf': plateHalf.toFixed(2) + ' units (32mm)',
-  //   leftX: leftX.toFixed(2) + ' units',
-  //   rightX: rightX.toFixed(2) + ' units',
-  //   frontZ: frontZ.toFixed(2) + ' units (받침대 깊이 적용)',
-  //   backZ: backZ.toFixed(2) + ' units (받침대 깊이 미적용)',
-  // });
 
   // 발통 위치 배열 (네 모서리, 회전 없음)
   const footPositions: Array<{pos: [number, number, number], rot: number}> = [
@@ -116,7 +102,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
           rotation={item.rot}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
-          baseHeight={baseHeight}
+          baseHeight={effectiveBaseHeight}
         />
       ))}
     </group>
