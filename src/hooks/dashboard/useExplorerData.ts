@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { doc, getDocFromServer } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { ProjectSummary } from '@/firebase/types';
@@ -29,8 +29,8 @@ export function useExplorerData(
   // 프로젝트 목록
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setInitialLoadComplete] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // 디자인 파일
   const [projectDesignFiles, setProjectDesignFiles] = useState<{ [projectId: string]: any[] }>({});
@@ -347,21 +347,6 @@ export function useExplorerData(
         ownerPhotoURL: owner?.photoURL || undefined,
       });
     });
-
-    // 폴더 내부일 때 하위 폴더 항목도 추가
-    if (currentFolderId) {
-      const parentFolder = projectFolders.find(f => f.id === currentFolderId);
-      if (parentFolder?.children) {
-        // children 중 folder 타입만 (디자인 파일은 위에서 처리)
-        parentFolder.children
-          .filter(c => c.type === 'folder')
-          .forEach(c => {
-            items.push({
-              id: c.id, name: c.name, type: 'folder', projectId: currentProjectId,
-            });
-          });
-      }
-    }
 
     return items;
   })();

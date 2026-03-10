@@ -39,7 +39,7 @@ export interface DragState {
   draggedItem: {
     id: string;
     name: string;
-    type: 'design' | 'folder';
+    type: 'design' | 'file';
     projectId: string;
   } | null;
   dragOverFolder: string | null;
