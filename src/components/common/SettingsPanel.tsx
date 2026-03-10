@@ -190,19 +190,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('settings.info')}</h3>
-            <div className={styles.infoList}>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>{t('settings.version')}</span>
-                <span className={styles.infoValue}>1.0.0</span>
-              </div>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>{t('settings.lastUpdate')}</span>
-                <span className={styles.infoValue}>2024.01.15</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </>
