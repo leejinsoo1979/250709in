@@ -3839,9 +3839,7 @@ const Configurator: React.FC = () => {
                   }
                 }}
                 onMenuChange={() => {
-                  // 에디터에서는 대시보드로 이동
-                  navigate('/');
-                  setIsFileTreeOpen(false);
+                  // 에디터에서는 빠른 액세스 클릭해도 이동하지 않음
                 }}
                 onGoHome={() => {
                   navigate('/');
