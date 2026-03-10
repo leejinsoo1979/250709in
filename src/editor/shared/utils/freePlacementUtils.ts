@@ -180,7 +180,6 @@ export function calcResizedPositionX(
   spaceInfo: SpaceInfo
 ): number {
   const oldBounds = getModuleBoundsX(module);
-  const oldWidth = oldBounds.right - oldBounds.left;
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
 
   const SNAP_THRESHOLD = 3; // 3mm 이내면 "붙어있다"로 판단
