@@ -3880,6 +3880,9 @@ const Configurator: React.FC = () => {
             onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
             onSave={saveProject}
             readOnly={isReadOnly}
+            owner={projectOwner}
+            collaborators={collaborators}
+            onAddCollaborator={() => setIsShareModalOpen(true)}
             onShare={async () => {
               if (isReadOnly) {
                 // 읽기 전용 모드: 현재 URL을 복사

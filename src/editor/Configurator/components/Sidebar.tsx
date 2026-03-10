@@ -1,12 +1,15 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
 import { MdOutlineDashboardCustomize } from 'react-icons/md';
 import { PiShareNetworkLight } from "react-icons/pi";
+import { PiCrownDuotone } from "react-icons/pi";
+import { GoPersonAdd } from "react-icons/go";
+import { ProjectCollaborator } from '@/firebase/shareLinks';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -25,6 +28,9 @@ interface SidebarProps {
   onSave?: () => Promise<void>;
   readOnly?: boolean;
   onShare?: () => void;
+  owner?: { userId: string; name: string; photoURL?: string } | null;
+  collaborators?: ProjectCollaborator[];
+  onAddCollaborator?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -35,7 +41,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   onResetUnsavedChanges,
   onSave,
   readOnly = false,
-  onShare
+  onShare,
+  owner,
+  collaborators = [],
+  onAddCollaborator
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -166,6 +175,60 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom action buttons */}
       <div className={styles.actionGroup}>
+        {/* 소유자/협업자 아바타 */}
+        {owner && (
+          <div
+            className={styles.actionButton}
+            data-tooltip={owner.name}
+            style={{ position: 'relative' }}
+          >
+            <PiCrownDuotone size={10} style={{ position: 'absolute', top: 2, right: 2, color: '#facc15' }} />
+            <div style={{
+              width: 24, height: 24, borderRadius: '50%', overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: theme.mode === 'dark' ? '#2a2a2a' : '#e5e5e5'
+            }}>
+              {owner.photoURL ? (
+                <img src={owner.photoURL} alt={owner.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <User size={14} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {collaborators.map((collab, i) => (
+          <div
+            key={`${collab.userId}-${i}`}
+            className={styles.actionButton}
+            data-tooltip={collab.userName || collab.userEmail}
+          >
+            <div style={{
+              width: 24, height: 24, borderRadius: '50%', overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: theme.mode === 'dark' ? '#2a2a2a' : '#e5e5e5'
+            }}>
+              {collab.photoURL ? (
+                <img src={collab.photoURL} alt={collab.userName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <User size={14} />
+              )}
+            </div>
+          </div>
+        ))}
+
+        {!readOnly && user?.uid === owner?.userId && onAddCollaborator && (
+          <button
+            className={styles.actionButton}
+            onClick={onAddCollaborator}
+            data-tooltip="협업자 추가"
+          >
+            <GoPersonAdd size={17} />
+          </button>
+        )}
+
+        <div style={{ borderTop: '1px solid var(--theme-border, rgba(255,255,255,0.1))', width: '60%', margin: '4px auto' }} />
+
         <button
           className={styles.actionButton}
           onClick={() => onShare?.()}
