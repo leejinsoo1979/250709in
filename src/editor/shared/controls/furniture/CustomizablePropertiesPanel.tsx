@@ -2999,22 +2999,81 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
         {/* 내부 요소 편집 */}
         {section.horizontalSplit ? (
-          /* 좌우분할 모드: 각 서브 박스별 요소 편집 */
+          /* 좌우분할 모드: 각 서브 박스별 요소 편집 + 상하분할 */
           <>
-            <div className={styles.areaCard}>
-              <div className={styles.areaTitle}>좌측 영역</div>
-              {renderElementEditor(sIdx, 'left', section.horizontalSplit.leftElements, section.height)}
-            </div>
-            {section.horizontalSplit.secondPosition != null && section.horizontalSplit.centerElements && (
-              <div className={styles.areaCard}>
-                <div className={styles.areaTitle}>중앙 영역</div>
-                {renderElementEditor(sIdx, 'center', section.horizontalSplit.centerElements, section.height)}
-              </div>
-            )}
-            <div className={styles.areaCard}>
-              <div className={styles.areaTitle}>우측 영역</div>
-              {renderElementEditor(sIdx, 'right', section.horizontalSplit.rightElements, section.height)}
-            </div>
+            {(['left', ...(section.horizontalSplit.secondPosition != null ? ['center'] : []), 'right'] as const).map((side) => {
+              const sideLabel = side === 'left' ? '좌측' : side === 'center' ? '중앙' : '우측';
+              const sideElements = side === 'left' ? section.horizontalSplit!.leftElements
+                : side === 'center' ? section.horizontalSplit!.centerElements
+                : section.horizontalSplit!.rightElements;
+              if (side === 'center' && !sideElements) return null;
+              const areaSubSplit = section.areaSubSplits?.[side];
+              const isAreaSubSplit = areaSubSplit?.enabled || false;
+              const subSplitKeyArea = `${sIdx}-${side}`;
+              return (
+                <div className={styles.areaCard} key={side}>
+                  <div className={styles.areaTitle}>{sideLabel} 영역</div>
+                  {/* 상하분할 토글 */}
+                  <div className={styles.row} style={{ marginBottom: '8px' }}>
+                    <span className={styles.label}>상하분할</span>
+                    <div className={styles.toggleGroup}>
+                      <button
+                        className={`${styles.toggleButton} ${!isAreaSubSplit ? styles.active : ''}`}
+                        onClick={() => handleAreaSubSplitToggle(sIdx, side as 'left' | 'center' | 'right', false)}
+                      >없음</button>
+                      <button
+                        className={`${styles.toggleButton} ${isAreaSubSplit ? styles.active : ''}`}
+                        onClick={() => handleAreaSubSplitToggle(sIdx, side as 'left' | 'center' | 'right', true)}
+                      >분할</button>
+                    </div>
+                  </div>
+                  {isAreaSubSplit && areaSubSplit ? (
+                    <>
+                      <div className={styles.row}>
+                        <span className={styles.label}>하부 높이</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className={`${styles.input} ${styles.inputSmall}`}
+                          value={subSplitHeightInputs[subSplitKeyArea] ?? areaSubSplit.lowerHeight.toString()}
+                          onChange={(e) => {
+                            setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKeyArea]: e.target.value }));
+                          }}
+                          onBlur={() => {
+                            const val = parseInt(subSplitHeightInputs[subSplitKeyArea] || '0');
+                            const minV = 100;
+                            const maxV = section.height - 100;
+                            const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(section.height / 2) : val));
+                            handleAreaSubSplitHeight(sIdx, side, clamped);
+                            setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKeyArea]: clamped.toString() }));
+                          }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          style={{ width: '70px' }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                      <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
+                        상부: {section.height - areaSubSplit.lowerHeight}mm / 하부: {areaSubSplit.lowerHeight}mm
+                      </div>
+                      <div style={{ marginTop: '12px' }}>
+                        <div className={styles.sectionTitle}>상부 내부 구조</div>
+                        <div className={styles.areaCard}>
+                          {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'upper', areaSubSplit.upperElements, section.height - areaSubSplit.lowerHeight)}
+                        </div>
+                      </div>
+                      <div style={{ marginTop: '12px' }}>
+                        <div className={styles.sectionTitle}>하부 내부 구조</div>
+                        <div className={styles.areaCard}>
+                          {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'lower', areaSubSplit.lowerElements, areaSubSplit.lowerHeight)}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    renderElementEditor(sIdx, side as 'left' | 'center' | 'right', sideElements, section.height)
+                  )}
+                </div>
+              );
+            })}
           </>
         ) : hasPartition ? (
           <>
