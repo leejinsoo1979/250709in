@@ -17,7 +17,7 @@ import { ShareLinkModal } from '@/components/ShareLinkModal';
 import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
 import { PopupManager } from '@/components/PopupManager';
-import { Chatbot } from '@/components/Chatbot';
+// import { Chatbot } from '@/components/Chatbot';
 import { useResponsive } from '@/hooks/useResponsive';
 
 // Explorer 컴포넌트
