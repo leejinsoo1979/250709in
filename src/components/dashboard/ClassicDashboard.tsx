@@ -181,12 +181,18 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
           </div>
         </div>
 
-        {/* 사이드바 서브헤더 - 프로젝트 생성 버튼 */}
+        {/* 사이드바 서브헤더 - 프로젝트/디자인 생성 버튼 */}
         <div className={styles.sidebarSubHeader}>
           <button className={styles.createBtn} onClick={onCreateProject}>
             <PlusIcon size={14} />
             프로젝트 생성
           </button>
+          {nav.currentProjectId && (
+            <button className={styles.createBtn} onClick={onCreateDesign}>
+              <PlusIcon size={14} />
+              디자인 생성
+            </button>
+          )}
         </div>
 
         {/* 네비게이션 메뉴 */}
@@ -284,15 +290,6 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
         <div className={styles.subHeader}>
           <div className={styles.subHeaderContent}>
             <div className={styles.subHeaderLeft}>
-              {(nav.activeMenu === 'in-progress' || nav.activeMenu === 'all') && nav.currentProjectId && (
-                <button
-                  className={styles.createDesignHeaderBtn}
-                  onClick={onCreateDesign}
-                >
-                  <PlusIcon size={14} />
-                  디자인 생성
-                </button>
-              )}
               {nav.activeMenu === 'completed' && !nav.currentProjectId && (
                 <h1 className={styles.subHeaderTitle}>완료된 프로젝트</h1>
               )}
@@ -571,18 +568,6 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                 </div>
               ) : (
                 <>
-                  {/* 새 디자인 카드 - 프로젝트 내부일 때 */}
-                  {nav.currentProjectId && (
-                    <div className={`${styles.designCard} ${styles.newDesignCard}`} onClick={onCreateDesign}>
-                      <div className={`${styles.cardThumbnail} ${styles.newDesignThumbnail}`}>
-                        <div className={styles.newDesignContent}>
-                          <PlusIcon size={32} />
-                          <span>새로운 디자인</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* 폴더 카드 */}
                   {filteredItems.filter(item => item.type === 'folder').map(item => (
                     <div
