@@ -47,8 +47,8 @@ export default function LandingPage() {
     setCraftHovered(true);
     setCraftAnimating(true);
     craftControls.start({
-      scale: [1, 1.08, 1],
-      transition: { duration: 0.4, ease: 'easeOut' },
+      scale: [1, 1.03, 1],
+      transition: { duration: 0.5, ease: 'easeOut' },
     });
   }, [craftControls]);
 
@@ -187,31 +187,21 @@ export default function LandingPage() {
                   display: 'inline-block',
                   textShadow: isCraftActive
                     ? isDark
-                      ? '0 0 30px rgba(255,255,255,0.5), 0 0 80px rgba(255,255,255,0.25)'
-                      : '0 0 30px rgba(0,0,0,0.2), 0 0 80px rgba(0,0,0,0.1)'
+                      ? '0 0 20px rgba(255,255,255,0.3), 0 0 60px rgba(255,255,255,0.1)'
+                      : '0 0 20px rgba(0,0,0,0.12), 0 0 60px rgba(0,0,0,0.05)'
                     : 'none',
-                  transition: 'text-shadow 0.3s ease',
+                  transition: 'text-shadow 0.4s ease',
                 }}
                 animate={{
-                  y: isCraftActive ? [0, -20, 4, -8, 0] : 0,
-                  rotateZ: isCraftActive ? [0, -6, 4, -2, 0] : 0,
-                  scale: isCraftActive ? [1, 1.1, 0.95, 1.03, 1] : 1,
+                  y: isCraftActive ? [0, -10, 0] : 0,
                 }}
                 transition={{
                   y: isCraftActive
-                    ? { duration: 1.2, delay: i * 0.08, times: [0, 0.2, 0.45, 0.7, 1], ease: 'easeOut' }
-                    : { duration: 0.3 },
-                  rotateZ: isCraftActive
-                    ? { duration: 1.2, delay: i * 0.08, times: [0, 0.2, 0.45, 0.7, 1], ease: 'easeOut' }
-                    : { duration: 0.3 },
-                  scale: isCraftActive
-                    ? { duration: 1.2, delay: i * 0.08, times: [0, 0.2, 0.45, 0.7, 1], ease: 'easeOut' }
+                    ? { duration: 1.4, delay: i * 0.07, times: [0, 0.3, 1], ease: 'easeInOut' }
                     : { duration: 0.3 },
                 }}
                 whileHover={{
-                  y: -16,
-                  scale: 1.2,
-                  rotateZ: [-3, 3, 0],
+                  y: -8,
                   transition: { duration: 0.2, ease: 'easeOut' },
                 }}
               >
