@@ -3076,7 +3076,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               if (!hasLeft && !hasRight) return null;
 
               const epThicknessMm = placedModule.endPanelThickness || 18;
+              const epOffsetMm = placedModule.endPanelOffset ?? 0;
               const epW = mmToThreeUnits(epThicknessMm);
+              const epOffsetUnits = mmToThreeUnits(epOffsetMm);
               const epD = depth;
 
               // EP는 바닥(Y=0)부터 가구 상단까지 — 상부장도 바닥까지 내려옴
@@ -3094,7 +3096,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={epD}
-                      position={[-(width / 2) - epW / 2, epYRelative, 0]}
+                      position={[-(width / 2) - epW / 2 - epOffsetUnits, epYRelative, 0]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
                     />
@@ -3104,7 +3106,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={epD}
-                      position={[(width / 2) + epW / 2, epYRelative, 0]}
+                      position={[(width / 2) + epW / 2 + epOffsetUnits, epYRelative, 0]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
                     />

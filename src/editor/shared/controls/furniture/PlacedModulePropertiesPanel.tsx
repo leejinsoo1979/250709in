@@ -2140,25 +2140,47 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </label>
               </div>
               {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
-                <div style={{ marginTop: '8px' }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 두께</label>
-                  <div className={styles.inputWithUnit}>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={currentPlacedModule.endPanelThickness ?? 18}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) {
-                          const num = v === '' ? 18 : Math.max(15, Math.min(25, parseInt(v, 10)));
-                          updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
-                        }
-                      }}
-                      className={styles.dimensionInput}
-                    />
-                    <span className={styles.unit}>mm</span>
+                <>
+                  <div style={{ marginTop: '8px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 두께</label>
+                    <div className={styles.inputWithUnit}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={currentPlacedModule.endPanelThickness ?? 18}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === '' || /^\d+$/.test(v)) {
+                            const num = v === '' ? 18 : Math.max(15, Math.min(25, parseInt(v, 10)));
+                            updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
+                          }
+                        }}
+                        className={styles.dimensionInput}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
                   </div>
-                </div>
+                  <div style={{ marginTop: '8px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 옵셋</label>
+                    <div className={styles.inputWithUnit}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={currentPlacedModule.endPanelOffset ?? 0}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                            const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                            updatePlacedModule(currentPlacedModule.id, { endPanelOffset: num });
+                          }
+                        }}
+                        className={styles.dimensionInput}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                    <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>범위: -50mm ~ 50mm</span>
+                  </div>
+                </>
               )}
             </div>
           )}
