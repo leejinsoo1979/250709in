@@ -131,6 +131,7 @@ const Configurator: React.FC = () => {
   });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
+  const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<'in-progress' | 'completed' | 'shared-with-me' | 'shared-by-me' | 'trash'>('in-progress');
   const [fileTreeFolders, setFileTreeFolders] = useState<{ [projectId: string]: FolderDataType[] }>({});
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
@@ -3831,15 +3832,15 @@ const Configurator: React.FC = () => {
                 folders={fileTreeFolders}
                 currentProjectId={searchParams.get('projectId')}
                 currentFolderId={null}
-                activeMenu="in-progress"
+                activeMenu={fileTreeActiveMenu}
                 autoExpandProjectId={searchParams.get('projectId')}
                 onNavigate={(projectId, _folderId, _label) => {
                   if (projectId) {
                     // 프로젝트 클릭 시 대시보드로 이동하지 않고 트리만 확장
                   }
                 }}
-                onMenuChange={() => {
-                  // 에디터에서는 빠른 액세스 클릭해도 이동하지 않음
+                onMenuChange={(menu) => {
+                  setFileTreeActiveMenu(menu);
                 }}
                 onGoHome={() => {
                   navigate('/');
