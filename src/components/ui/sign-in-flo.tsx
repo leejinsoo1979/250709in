@@ -86,14 +86,14 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6">
         <motion.div
-          className="w-full max-w-sm"
+          className="w-full max-w-md border border-zinc-800 rounded-2xl bg-zinc-900/40 p-10"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {/* Title */}
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
               {title ?? (isSignUp ? "Create Account" : "Welcome back")}
             </h1>
             <p className="text-zinc-500 text-sm">
@@ -102,47 +102,47 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="relative">
-                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Full Name"
                   required
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-11 pr-5 py-3.5 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
                 />
               </div>
             )}
 
             <div className="relative">
-              <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
                 required
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-11 pr-5 py-3.5 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
               />
             </div>
 
             <div className="relative">
-              <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 required
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-10 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-11 pr-11 py-3.5 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -168,7 +168,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-zinc-950 py-3 rounded-lg font-semibold text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-white text-zinc-950 py-3.5 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin mx-auto" />
@@ -195,7 +195,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             type="button"
             onClick={onGoogleLogin}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 py-3.5 rounded-full border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg width="16" height="16" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
