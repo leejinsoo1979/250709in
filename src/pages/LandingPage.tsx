@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,18 @@ export default function LandingPage() {
   const [dotsHovered, setDotsHovered] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
   const [textHovered, setTextHovered] = useState(false);
+  const [autoAnimate, setAutoAnimate] = useState(false);
 
-  const isAnimating = dotsHovered || buttonHovered || textHovered;
+  const isAnimating = dotsHovered || buttonHovered || textHovered || autoAnimate;
+
+  // 2초 간격 자동 애니메이션
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAutoAnimate(true);
+      setTimeout(() => setAutoAnimate(false), 1800);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className={`${isDark ? 'bg-zinc-950' : 'bg-white'} min-h-screen flex flex-col transition-colors duration-300`}>
@@ -75,7 +85,7 @@ export default function LandingPage() {
                   scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
                   opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
                   y: isAnimating
-                    ? { duration: 1.8, delay: i * 0.12, repeat: Infinity, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                    ? { duration: 1.8, delay: i * 0.12, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
                     : { duration: 0.3 },
                 }}
               />
@@ -106,7 +116,7 @@ export default function LandingPage() {
                 }}
                 transition={{
                   y: isAnimating
-                    ? { duration: 1.8, delay: i * 0.06, repeat: Infinity, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                    ? { duration: 1.8, delay: i * 0.06, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
                     : { duration: 0.3 },
                 }}
               >
