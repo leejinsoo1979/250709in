@@ -4,7 +4,8 @@ import { LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { TbBoxAlignRight, TbBrandAsana, TbBookmarks } from 'react-icons/tb';
+import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
+import { MdOutlineDashboardCustomize } from 'react-icons/md';
 import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -139,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'myCabinet' as SidebarTab,
-      icon: <TbBookmarks size={22} />,
+      icon: <MdOutlineDashboardCustomize size={22} />,
       label: '커스텀'
     }
   ];
