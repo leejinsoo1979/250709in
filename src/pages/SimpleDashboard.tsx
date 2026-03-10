@@ -514,6 +514,12 @@ const SimpleDashboard: React.FC = () => {
           onCreateProject={handleCreateProject}
           onCreateDesign={handleSaasCreateDesign}
           onOpenEditor={(item) => {
+            // 이미 공간설정 완료된 디자인은 바로 에디터로 이동
+            if (item.thumbnail || item.spaceSize) {
+              handleItemDoubleClick(item);
+              return;
+            }
+            // 공간설정 안 된 디자인은 Step2(공간설정) 팝업
             const project = data.projects.find(p => p.id === (item.projectId || nav.currentProjectId));
             const targetProjectId = item.projectId || nav.currentProjectId;
             if (targetProjectId) {
