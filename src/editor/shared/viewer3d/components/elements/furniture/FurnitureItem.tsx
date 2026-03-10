@@ -3052,6 +3052,43 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               return null;
             })()}
+
+            {/* 자유배치 표준 모듈 엔드패널 렌더링 */}
+            {placedModule.isFreePlacement && !placedModule.customConfig && (() => {
+              const hasLeft = placedModule.hasLeftEndPanel;
+              const hasRight = placedModule.hasRightEndPanel;
+              if (!hasLeft && !hasRight) return null;
+
+              const epThicknessMm = placedModule.endPanelThickness || 18;
+              const epW = mmToThreeUnits(epThicknessMm);
+              const epH = height;
+              const epD = depth;
+
+              return (
+                <>
+                  {hasLeft && (
+                    <EndPanelWithTexture
+                      width={epW}
+                      height={epH}
+                      depth={epD}
+                      position={[-(width / 2) - epW / 2, 0, 0]}
+                      spaceInfo={zoneSpaceInfo}
+                      renderMode={renderMode}
+                    />
+                  )}
+                  {hasRight && (
+                    <EndPanelWithTexture
+                      width={epW}
+                      height={epH}
+                      depth={epD}
+                      position={[(width / 2) + epW / 2, 0, 0]}
+                      spaceInfo={zoneSpaceInfo}
+                      renderMode={renderMode}
+                    />
+                  )}
+                </>
+              );
+            })()}
           </>
         ) : (
           // 기본 가구 (단순 Box) 렌더링
