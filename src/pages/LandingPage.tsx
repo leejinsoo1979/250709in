@@ -70,34 +70,24 @@ export default function LandingPage() {
           onMouseEnter={() => { setDotsHovered(true); setTextHovered(true); }}
           onMouseLeave={() => { setDotsHovered(false); setTextHovered(false); }}
         >
-          {/* ... think thing thank */}
-          <motion.div
-            className={`${isDark ? 'text-white/40' : 'text-zinc-400'} text-lg sm:text-xl md:text-2xl tracking-widest font-light mb-4`}
+          {/* ... think thing thank 로고 이미지 */}
+          <motion.img
+            src="/images/ttt_logo/tttlogo2.png"
+            alt="think thing thank"
+            className="h-6 sm:h-8 md:h-10 mb-5"
+            style={{ filter: isDark ? 'invert(1)' : 'none' }}
             initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            {'...  think  thing  thank'.split('').map((char, i) => (
-              <motion.span
-                key={i}
-                style={{ display: 'inline-block', whiteSpace: 'pre' }}
-                animate={{
-                  y: isAnimating ? [0, -6, 0, 0] : 0,
-                  opacity: isAnimating ? [0.6, 1, 0.6, 0.6] : 0.6,
-                }}
-                transition={{
-                  y: isAnimating
-                    ? { duration: 1.8, delay: i * 0.03, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
-                    : { duration: 0.3 },
-                  opacity: isAnimating
-                    ? { duration: 1.8, delay: i * 0.03, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
-                    : { duration: 0.3 },
-                }}
-              >
-                {char}
-              </motion.span>
-            ))}
-          </motion.div>
+            animate={{
+              opacity: 1,
+              y: isAnimating ? [0, -6, 0, 0] : 0,
+            }}
+            transition={{
+              opacity: { duration: 0.6, ease: "easeOut" },
+              y: isAnimating
+                ? { duration: 1.8, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                : { duration: 0.3 },
+            }}
+          />
 
           {/* CRAFT */}
           <motion.div
