@@ -65,7 +65,7 @@ export function ShimmerText({
   delay = 1.5,
 }: ShimmerTextProps) {
   return (
-    <div className="group overflow-hidden">
+    <div className="group">
       <div>
         <motion.div
           className={cn(
