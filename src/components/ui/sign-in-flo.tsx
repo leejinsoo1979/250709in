@@ -20,6 +20,7 @@ export interface SignInFloProps {
   googleLoading?: boolean;
   title?: string;
   subtitle?: string;
+  defaultSignUp?: boolean;
 }
 
 export const SignInFlo: React.FC<SignInFloProps> = ({
@@ -31,12 +32,13 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   googleLoading = false,
   title,
   subtitle,
+  defaultSignUp = false,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(defaultSignUp);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const nav = useNavigate();

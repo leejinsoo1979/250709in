@@ -6,9 +6,10 @@ import { SignInFlo } from '@/components/ui/sign-in-flo';
 
 interface SplitLoginFormProps {
   onSuccess?: () => void;
+  defaultSignUp?: boolean;
 }
 
-export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => {
+export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defaultSignUp }) => {
   const navigate = useNavigate();
   useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +83,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       error={error}
       loading={loading}
       googleLoading={googleLoading}
+      defaultSignUp={defaultSignUp}
     />
   );
 };
