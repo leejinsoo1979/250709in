@@ -343,6 +343,9 @@ export function useLivePanelData() {
             bracketBoringPositions: panel.bracketBoringPositions,
             bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
             isBracketSide: panel.isBracketSide,
+            // 3D 뷰어 패널 하이라이트용
+            meshName: panel.name,
+            furnitureId: placedModule.id,
           };
         });
 
