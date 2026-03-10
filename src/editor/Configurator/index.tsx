@@ -1999,6 +1999,16 @@ const Configurator: React.FC = () => {
                 setCurrentDesignFileName(designFile.name);
                 console.log('📝 디자인파일명 설정:', designFile.name);
 
+                // 디자인 파일 로드 성공 → 탭 추가 (확정된 이름 사용)
+                if (projectId && designFileId) {
+                  useUIStore.getState().addTab({
+                    projectId,
+                    projectName: useProjectStore.getState().basicInfo.title || '프로젝트',
+                    designFileId,
+                    designFileName: designFile.name,
+                  });
+                }
+
                 // 읽기 전용 모드에서는 URL 변경 금지 (무한 루프 방지)
                 if (mode !== 'readonly') {
                   // URL에 디자인파일명이 없으면 추가 (새로고침 시 유지하기 위해)
@@ -2100,35 +2110,8 @@ const Configurator: React.FC = () => {
     }
   }, [currentProjectId, currentDesignFileId, isReadOnly]);
 
-  // 에디터 탭 동기화: 로딩 완료 후에만 탭 추가/활성화
-  // closedTabIds: 수동으로 닫은 탭 ID 기록 (같은 URL에서 재생성 방지)
-  const closedTabIdsRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    // 로딩 중에는 탭 동기화하지 않음 (잘못된 파일명 방지)
-    if (loading) return;
-    if (currentProjectId && currentDesignFileId) {
-      const tabId = `${currentProjectId}_${currentDesignFileId}`;
-      // 수동으로 닫은 탭이면 재생성하지 않음
-      if (closedTabIdsRef.current.has(tabId)) {
-        return;
-      }
-      const { openTabs } = useUIStore.getState();
-      const existing = openTabs.find(t => t.id === tabId);
-      const designName = currentDesignFileName || urlDesignFileName || '새 디자인';
-      const projectName = basicInfo.title || urlProjectName || '프로젝트';
-      if (existing) {
-        useUIStore.getState().updateTab(tabId, { designFileName: designName, projectName });
-        useUIStore.getState().setActiveTab(tabId);
-      } else {
-        useUIStore.getState().addTab({
-          projectId: currentProjectId,
-          projectName,
-          designFileId: currentDesignFileId,
-          designFileName: designName,
-        });
-      }
-    }
-  }, [loading, currentProjectId, currentDesignFileId, currentDesignFileName, basicInfo.title]);
+  // 탭 동기화는 useEffect 대신 명시적 호출로만 처리
+  // (디자인 파일 로드 성공, 파일트리 클릭, 첫 저장 시에만 addTab 호출)
 
   // 폴더명 자동 조회 (디자인파일이 폴더에 속한 경우)
   useEffect(() => {
@@ -2806,12 +2789,8 @@ const Configurator: React.FC = () => {
         console.warn('탭 닫기 전 자동 저장 실패:', e);
       }
     }
-    // 닫은 탭 기록 (useEffect에서 재생성 방지)
-    closedTabIdsRef.current.add(tab.id);
     const nextTabId = useUIStore.getState().removeTab(tab.id);
     if (nextTabId) {
-      // 다음 탭으로 이동 → 다른 파일이므로 closedTabIds에서 다음 탭 ID 제거 (열려야 하므로)
-      closedTabIdsRef.current.delete(nextTabId);
       const nextTab = useUIStore.getState().openTabs.find(t => t.id === nextTabId);
       if (nextTab) {
         navigate(`/configurator?projectId=${nextTab.projectId}&designFileId=${nextTab.designFileId}`, { replace: true });
@@ -4048,8 +4027,6 @@ const Configurator: React.FC = () => {
                         try { await saveProject(); } catch {}
                         // 탭 추가 (프로젝트명 조회) — 닫힌 탭 기록에서 제거하여 재오픈 허용
                         const proj = fileTreeProjects.find(p => p.id === fileTreeSelectedProjectId);
-                        const newTabId = `${fileTreeSelectedProjectId}_${file.id}`;
-                        closedTabIdsRef.current.delete(newTabId);
                         useUIStore.getState().addTab({
                           projectId: fileTreeSelectedProjectId!,
                           projectName: proj?.title || '프로젝트',
