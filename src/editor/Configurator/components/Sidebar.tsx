@@ -6,7 +6,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
 import { MdOutlineDashboardCustomize } from 'react-icons/md';
-import { PiShareNetworkLight } from "react-icons/pi";
 import { PiCrownDuotone } from "react-icons/pi";
 import { GoPersonAdd } from "react-icons/go";
 import { ProjectCollaborator } from '@/firebase/shareLinks';
@@ -27,7 +26,6 @@ interface SidebarProps {
   onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>;
   onSave?: () => Promise<void>;
   readOnly?: boolean;
-  onShare?: () => void;
   owner?: { userId: string; name: string; photoURL?: string } | null;
   collaborators?: ProjectCollaborator[];
   onAddCollaborator?: () => void;
@@ -41,7 +39,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   onResetUnsavedChanges,
   onSave,
   readOnly = false,
-  onShare,
   owner,
   collaborators = [],
   onAddCollaborator
