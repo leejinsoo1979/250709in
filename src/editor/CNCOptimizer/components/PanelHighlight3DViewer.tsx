@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useRef } from 'react';
+import React, { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -16,6 +16,29 @@ import styles from './PanelHighlight3DViewer.module.css';
 interface PanelHighlight3DViewerProps {
   highlightedPanelName: string | null;
   highlightedFurnitureId: string | null;
+}
+
+/** WebGL ErrorBoundary — Canvas 생성 실패 시 fallback UI */
+class WebGLErrorBoundary extends Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn('[PanelHighlight3DViewer] WebGL error caught:', error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
 }
 
 /** 카메라 자동 위치 조정 컴포넌트 */
@@ -180,6 +203,59 @@ const FurnitureRenderer: React.FC<{
   );
 };
 
+/** Canvas 내부 3D Scene */
+const Scene3D: React.FC<{
+  spaceInfo: SpaceInfo;
+  placedModules: PlacedModule[];
+  targetSize: THREE.Vector3;
+  highlightedPanelId: string | null;
+}> = ({ spaceInfo, placedModules, targetSize, highlightedPanelId }) => {
+  return (
+    <Suspense fallback={null}>
+      <ViewerThemeProvider viewMode="3D">
+        <Space3DViewProvider
+          spaceInfo={spaceInfo}
+          svgSize={{ width: 400, height: 280 }}
+          renderMode="solid"
+          viewMode="3D"
+        >
+          {/* 조명 */}
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[5, 10, 8]} intensity={1.8} />
+          <directionalLight position={[-3, 5, -5]} intensity={0.4} />
+
+          {/* 카메라 자동 맞춤 */}
+          <CameraFitter targetSize={targetSize} />
+
+          {/* 궤도 컨트롤 */}
+          <OrbitControls
+            {...{
+              enablePan: false,
+              enableZoom: true,
+              enableRotate: true,
+              minDistance: 0.5,
+              maxDistance: 8,
+              target: [0, targetSize.y / 2, 0],
+            } as any}
+          />
+
+          {/* 가구 렌더링 */}
+          {placedModules.map((pm) => (
+            <FurnitureRenderer
+              key={pm.id}
+              placedModule={pm}
+              spaceInfo={spaceInfo}
+            />
+          ))}
+
+          {/* 반투명 처리 (UIStore 하이라이트 보완) */}
+          <PanelDimmer highlightedPanelId={highlightedPanelId} />
+        </Space3DViewProvider>
+      </ViewerThemeProvider>
+    </Suspense>
+  );
+};
+
 const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   highlightedPanelName,
   highlightedFurnitureId,
@@ -187,6 +263,13 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const placedModules = useFurnitureStore((state) => state.placedModules);
   const setHighlightedPanel = useUIStore((state) => state.setHighlightedPanel);
+
+  // 지연 마운트: 이전 WebGL 컨텍스트 정리 대기
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setReady(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // UIStore 하이라이트 동기화
   useEffect(() => {
@@ -222,56 +305,52 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     );
   }
 
+  // 지연 마운트 대기 중
+  if (!ready) {
+    return (
+      <div className={styles.empty}>
+        <span>3D 뷰어 로딩중...</span>
+      </div>
+    );
+  }
+
+  const fallbackUI = (
+    <div className={styles.empty}>
+      <span>3D 뷰어를 사용할 수 없습니다</span>
+    </div>
+  );
+
   return (
     <div className={styles.container}>
-      <Canvas
-        gl={{ antialias: true, alpha: true }}
-        dpr={[1, 1.5]}
-        style={{ background: 'transparent' }}
-      >
-        <Suspense fallback={null}>
-          <ViewerThemeProvider viewMode="3D">
-            <Space3DViewProvider
-              spaceInfo={spaceInfo}
-              svgSize={{ width: 400, height: 280 }}
-              renderMode="solid"
-              viewMode="3D"
-            >
-              {/* 조명 */}
-              <ambientLight intensity={0.6} />
-              <directionalLight position={[5, 10, 8]} intensity={1.8} />
-              <directionalLight position={[-3, 5, -5]} intensity={0.4} />
-
-              {/* 카메라 자동 맞춤 */}
-              <CameraFitter targetSize={targetSize} />
-
-              {/* 궤도 컨트롤 */}
-              <OrbitControls
-                {...{
-                  enablePan: false,
-                  enableZoom: true,
-                  enableRotate: true,
-                  minDistance: 0.5,
-                  maxDistance: 8,
-                  target: [0, targetSize.y / 2, 0],
-                } as any}
-              />
-
-              {/* 가구 렌더링 */}
-              {placedModules.map((pm) => (
-                <FurnitureRenderer
-                  key={pm.id}
-                  placedModule={pm}
-                  spaceInfo={spaceInfo}
-                />
-              ))}
-
-              {/* 반투명 처리 (UIStore 하이라이트 보완) */}
-              <PanelDimmer highlightedPanelId={highlightedPanelId} />
-            </Space3DViewProvider>
-          </ViewerThemeProvider>
-        </Suspense>
-      </Canvas>
+      <WebGLErrorBoundary fallback={fallbackUI}>
+        <Canvas
+          gl={{
+            antialias: true,
+            alpha: true,
+            powerPreference: 'low-power',
+            failIfMajorPerformanceCaveat: false,
+          }}
+          dpr={[1, 1.5]}
+          frameloop="demand"
+          style={{ background: 'transparent' }}
+          onCreated={({ gl }) => {
+            // Canvas 생성 성공 로그
+            console.log('[PanelHighlight3DViewer] WebGL context created');
+            // unmount 시 컨텍스트 정리
+            gl.domElement.addEventListener('webglcontextlost', (e) => {
+              e.preventDefault();
+              console.warn('[PanelHighlight3DViewer] WebGL context lost');
+            });
+          }}
+        >
+          <Scene3D
+            spaceInfo={spaceInfo}
+            placedModules={placedModules}
+            targetSize={targetSize}
+            highlightedPanelId={highlightedPanelId}
+          />
+        </Canvas>
+      </WebGLErrorBoundary>
 
       {/* 하이라이트 안내 */}
       {highlightedPanelName && (
