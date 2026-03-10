@@ -225,9 +225,13 @@ const SimpleDashboard: React.FC = () => {
 
   // 폴더 생성
   const handleCreateFolder = useCallback(() => {
+    if (!nav.currentProjectId) {
+      alert('프로젝트를 먼저 선택해주세요.');
+      return;
+    }
     setIsCreateFolderModalOpen(true);
     setNewFolderName('');
-  }, []);
+  }, [nav.currentProjectId]);
 
   const handleCreateFolderSubmit = useCallback(async () => {
     if (!newFolderName.trim() || !nav.currentProjectId) return;
