@@ -3899,10 +3899,6 @@ const Configurator: React.FC = () => {
                     handleSpaceInfoUpdate({ layoutMode: 'equal-division' });
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="7" height="18" rx="1" />
-                    <rect x="14" y="3" width="7" height="18" rx="1" />
-                  </svg>
                   슬롯배치
                 </button>
                 <button
@@ -3916,11 +3912,6 @@ const Configurator: React.FC = () => {
                     handleSpaceInfoUpdate({ layoutMode: 'free-placement' });
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="2" width="8" height="8" rx="1" />
-                    <rect x="14" y="6" width="8" height="8" rx="1" />
-                    <rect x="5" y="14" width="8" height="8" rx="1" />
-                  </svg>
                   자유배치
                 </button>
               </div>
