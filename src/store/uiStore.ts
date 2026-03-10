@@ -780,7 +780,7 @@ export const useUIStore = create<UIState>()(
       partialize: (state) => ({
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,  // localStorage에 저장
-        showDimensions: state.showDimensions,  // localStorage에 저장
+        // showDimensions는 항상 켜진 상태로 시작 (persist 제외)
         shadowEnabled: state.shadowEnabled,  // 그래픽 설정 유지
         edgeOutlineEnabled: state.edgeOutlineEnabled,  // 그래픽 설정 유지
         dashboardLayout: state.dashboardLayout,  // 대시보드 레이아웃 유지
