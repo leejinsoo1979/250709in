@@ -25,7 +25,10 @@ import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
 import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
-import DashboardFileTree from '@/components/FileTree/DashboardFileTree';
+import NavigationPane from '@/components/dashboard/NavigationPane';
+import { getUserProjects, loadFolderData as loadFolderDataFn } from '@/firebase/projects';
+import type { ProjectSummary } from '@/firebase/types';
+import type { FolderData as FolderDataType } from '@/firebase/projects';
 import { TouchCompatibleControl } from './components/TouchCompatibleControls';
 import SlotSelector from './components/SlotSelector';
 
@@ -127,6 +130,8 @@ const Configurator: React.FC = () => {
     return panelClosed !== 'true';
   });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
+  const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
+  const [fileTreeFolders, setFileTreeFolders] = useState<{ [projectId: string]: FolderDataType[] }>({});
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
@@ -2640,8 +2645,18 @@ const Configurator: React.FC = () => {
   };
 
   // FileTree 토글 핸들러
-  const handleFileTreeToggle = () => {
-    setIsFileTreeOpen(!isFileTreeOpen);
+  const handleFileTreeToggle = async () => {
+    const willOpen = !isFileTreeOpen;
+    setIsFileTreeOpen(willOpen);
+    // 파일트리 열릴 때 프로젝트 목록 로드
+    if (willOpen && user && fileTreeProjects.length === 0) {
+      try {
+        const result = await getUserProjects(user.uid);
+        setFileTreeProjects(result.projects || []);
+      } catch (err) {
+        console.error('파일트리 프로젝트 로드 에러:', err);
+      }
+    }
   };
 
   // 3D 모델 내보내기 핸들러
@@ -3803,46 +3818,30 @@ const Configurator: React.FC = () => {
       />
 
       <div className={styles.mainContent}>
-        {/* 파일 트리 오버레이 */}
+        {/* 파일 트리 오버레이 (대시보드 좌측바 스타일) */}
         {isFileTreeOpen && (
           <>
-            {/* 배경 오버레이 */}
             <div
               className={styles.fileTreeOverlay}
               onClick={() => setIsFileTreeOpen(false)}
             />
-            {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
-              <DashboardFileTree
-                onFileSelect={(projectId, designFileId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', { projectId, designFileId, designFileName });
-
-                  // 읽기 전용 모드에서는 파일 선택 차단
-                  if (isReadOnly) {
-                    console.log('👁️ 읽기 전용 모드 - 파일 선택 차단');
-                    setIsFileTreeOpen(false);
-                    return;
+              <NavigationPane
+                projects={fileTreeProjects}
+                folders={fileTreeFolders}
+                currentProjectId={searchParams.get('projectId')}
+                currentFolderId={null}
+                activeMenu="in-progress"
+                onNavigate={(projectId, _folderId, _label) => {
+                  if (projectId) {
+                    // 프로젝트 클릭 시 대시보드로 이동하지 않고 트리만 확장
                   }
-
-                  // 디자인 파일 선택 시 해당 프로젝트 로드
-                  navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`);
-                  setIsFileTreeOpen(false); // 파일트리 닫기
-                  console.log('✅ 디자인 파일 선택 완료 - 네비게이션 완료');
                 }}
-                onCreateNew={() => {
-                  console.log('🆕 파일트리에서 새 파일 생성 요청');
-
-                  // 읽기 전용 모드에서는 새 파일 생성 차단
-                  if (isReadOnly) {
-                    console.log('👁️ 읽기 전용 모드 - 새 파일 생성 차단');
-                    setIsFileTreeOpen(false);
-                    return;
-                  }
-
-                  handleNewProject();
-                  setIsFileTreeOpen(false); // 파일트리 닫기
+                onMenuChange={() => {
+                  // 에디터에서는 대시보드로 이동
+                  navigate('/');
+                  setIsFileTreeOpen(false);
                 }}
-                onClose={() => setIsFileTreeOpen(false)}
               />
             </div>
           </>
