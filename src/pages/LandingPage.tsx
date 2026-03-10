@@ -6,11 +6,10 @@ import { Button } from '@/components/ui/button';
 export default function LandingPage() {
   const navigate = useNavigate();
   const [dotsHovered, setDotsHovered] = useState(false);
-  const [craftHovered, setCraftHovered] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
   const [textHovered, setTextHovered] = useState(false);
 
-  const isAnimating = dotsHovered || craftHovered || buttonHovered || textHovered;
+  const isAnimating = dotsHovered || buttonHovered || textHovered;
 
   return (
     <div className="bg-zinc-950 min-h-screen flex flex-col">
@@ -68,24 +67,29 @@ export default function LandingPage() {
             ))}
           </div>
           <motion.span
-            className="text-white font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-normal cursor-pointer"
-            style={{ wordSpacing: '0.15em', display: 'inline-flex' }}
+            className="text-white font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-normal cursor-pointer"
+            style={{ display: 'inline-flex' }}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             onMouseEnter={() => setTextHovered(true)}
             onMouseLeave={() => setTextHovered(false)}
           >
-            {'think thing thank'.split('').map((char, i) => (
+            {'CRAFT'.split('').map((char, i) => (
               <motion.span
                 key={i}
-                style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
+                style={{
+                  display: 'inline-block',
+                  textShadow: isAnimating
+                    ? '0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.2), 0 0 100px rgba(255,255,255,0.1)'
+                    : 'none',
+                }}
                 animate={{
-                  y: isAnimating ? [0, -8, 0, 0] : 0,
+                  y: isAnimating ? [0, -12, 0, 0] : 0,
                 }}
                 transition={{
                   y: isAnimating
-                    ? { duration: 1.8, delay: i * 0.04, repeat: Infinity, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                    ? { duration: 1.8, delay: i * 0.06, repeat: Infinity, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
                     : { duration: 0.3 },
                 }}
               >
@@ -94,28 +98,6 @@ export default function LandingPage() {
             ))}
           </motion.span>
         </div>
-
-        {/* craft */}
-        <motion.h1
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-normal leading-normal mb-12 overflow-visible cursor-pointer transition-all duration-300"
-          style={{
-            textShadow: isAnimating
-              ? '0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.2), 0 0 100px rgba(255,255,255,0.1)'
-              : 'none',
-          }}
-          initial={{ opacity: 0, y: 40 }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            scale: isAnimating ? 1.05 : 1,
-            letterSpacing: isAnimating ? '0.05em' : '0em',
-          }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          onMouseEnter={() => setCraftHovered(true)}
-          onMouseLeave={() => setCraftHovered(false)}
-        >
-          craft
-        </motion.h1>
 
         {/* Start Design Button */}
         <motion.div
