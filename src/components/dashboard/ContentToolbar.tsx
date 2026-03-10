@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, List, AlignJustify, Plus, FolderPlus } from 'lucide-react';
+import { Grid, List, AlignJustify, Plus, FolderPlus, FilePlus } from 'lucide-react';
 import type { ViewMode, SortBy } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
@@ -10,6 +10,7 @@ interface ContentToolbarProps {
   onSortChange: (sort: SortBy) => void;
   onCreateProject: () => void;
   onCreateFolder: () => void;
+  onCreateDesign?: () => void;
   showCreateFolder: boolean; // 프로젝트 내부일 때만 폴더 생성 가능
 }
 
@@ -20,6 +21,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onSortChange,
   onCreateProject,
   onCreateFolder,
+  onCreateDesign,
   showCreateFolder,
 }) => {
   return (
@@ -31,10 +33,18 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
           <span>새 프로젝트</span>
         </button>
         {showCreateFolder && (
-          <button className={styles.createBtn} onClick={onCreateFolder}>
-            <FolderPlus size={16} />
-            <span>새 폴더</span>
-          </button>
+          <>
+            <button className={styles.createBtn} onClick={onCreateFolder}>
+              <FolderPlus size={16} />
+              <span>새 폴더</span>
+            </button>
+            {onCreateDesign && (
+              <button className={styles.createBtn} onClick={onCreateDesign}>
+                <FilePlus size={16} />
+                <span>새 디자인</span>
+              </button>
+            )}
+          </>
         )}
       </div>
 
