@@ -58,19 +58,31 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   let hasLeftWall: boolean;
   let hasRightWall: boolean;
 
-  if (installType === 'freestanding') {
-    // 벽없음: 이격거리 자체가 불필요 → 렌더링 안 함
-    return null;
-  } else if (installType === 'semistanding') {
-    // 한쪽벽: 벽 있는 쪽만 이격거리
-    hasLeftWall = spaceInfo.wallConfig?.left ?? true;
-    hasRightWall = spaceInfo.wallConfig?.right ?? true;
-    // 둘 다 false면 표시 안 함
-    if (!hasLeftWall && !hasRightWall) return null;
+  if (forceShow) {
+    // 자유배치: installType에 따라 벽 상태 결정하되, 항상 표시
+    if (installType === 'freestanding') {
+      hasLeftWall = true;
+      hasRightWall = true;
+    } else if (installType === 'semistanding') {
+      hasLeftWall = spaceInfo.wallConfig?.left ?? true;
+      hasRightWall = spaceInfo.wallConfig?.right ?? true;
+      // 한쪽벽인데 둘 다 false면 양쪽 다 표시
+      if (!hasLeftWall && !hasRightWall) { hasLeftWall = true; hasRightWall = true; }
+    } else {
+      hasLeftWall = true;
+      hasRightWall = true;
+    }
   } else {
-    // 빌트인: 양쪽 다
-    hasLeftWall = true;
-    hasRightWall = true;
+    if (installType === 'freestanding') {
+      return null;
+    } else if (installType === 'semistanding') {
+      hasLeftWall = spaceInfo.wallConfig?.left ?? true;
+      hasRightWall = spaceInfo.wallConfig?.right ?? true;
+      if (!hasLeftWall && !hasRightWall) return null;
+    } else {
+      hasLeftWall = true;
+      hasRightWall = true;
+    }
   }
 
   const updateGap = (side: 'left' | 'right', value: number) => {
