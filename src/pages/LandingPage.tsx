@@ -1,10 +1,12 @@
 import * as React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Box, Palette, Ruler, Download, Cloud, Zap } from 'lucide-react';
 import { Navbar1 } from '@/components/blocks/navbar1';
 import { useTheme } from '@/contexts/ThemeContext';
+import { ShimmerText } from '@/components/ui/shimmer-text';
+import { motion } from 'motion/react';
 
 const navbarData = {
   logo: {
@@ -127,27 +129,58 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-8">
           <div className="max-w-[1400px] mx-auto text-center">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
-              <span className="text-zinc-400 text-sm ml-1">Professional Furniture Design Tool</span>
-              <ChevronRight className="w-4 h-4 text-zinc-500" />
+            {/* Three Dots + think thing thank */}
+            <div className="flex items-center justify-center gap-6 mb-10">
+              <div className="flex items-center gap-3">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-white"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: i * 0.15,
+                      ease: "easeOut",
+                    }}
+                  />
+                ))}
+              </div>
+              <ShimmerText
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white"
+                duration={2}
+                delay={1}
+              >
+                think thing thank
+              </ShimmerText>
             </div>
 
-            <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-white mb-8 max-w-4xl mx-auto"
-              style={{
-                letterSpacing: "-0.0325em",
-                lineHeight: 1.1,
-              }}>
-              Design Your Perfect Furniture Space
-            </h1>
+            {/* craft - 큰 타이포 */}
+            <motion.h1
+              className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black text-white tracking-tighter leading-none mb-12"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            >
+              craft
+            </motion.h1>
 
-            <p className="text-zinc-400 text-lg max-w-xl mb-12 mx-auto">
+            <motion.p
+              className="text-zinc-400 text-lg max-w-xl mb-12 mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+            >
               <span className="text-white font-medium">Create stunning 3D furniture layouts.</span>{' '}
               Professional design tools for visualizing, customizing, and exporting production-ready furniture designs.
-            </p>
+            </motion.p>
 
-            <div className="flex flex-wrap gap-6 justify-center">
+            <motion.div
+              className="flex flex-wrap gap-6 justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            >
               <Button
                 size="lg"
                 className="text-white hover:opacity-90 rounded-full px-8"
@@ -163,7 +196,7 @@ export default function LandingPage() {
                 onClick={() => navigate('/configurator')}>
                 View Demo
               </Button>
-            </div>
+            </motion.div>
           </div>
 
           {/* Hero Video with 3D Effect */}
