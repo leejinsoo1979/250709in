@@ -112,7 +112,7 @@ export function useExplorerActions(
             } catch { /* ignore */ }
           }
         } else if (item.type === 'design' && item.projectId) {
-          const { error } = await deleteDesignFile(item.projectId, item.id);
+          const { error } = await deleteDesignFile(item.id, item.projectId);
           if (error) {
             alert('디자인파일 삭제 실패: ' + error);
           }
@@ -215,6 +215,7 @@ export function useExplorerActions(
               projectId: destProjectId!,
               spaceConfig: designFile?.spaceConfig || DEFAULT_SPACE_CONFIG,
               furniture: designFile?.furniture || { placedModules: [] },
+              thumbnail: designFile?.thumbnail,
             };
             await createDesignFile(newData);
           } else {
@@ -283,6 +284,7 @@ export function useExplorerActions(
             projectId,
             spaceConfig: designFile?.spaceConfig || DEFAULT_SPACE_CONFIG,
             furniture: designFile?.furniture || { placedModules: [] },
+            thumbnail: designFile?.thumbnail,
           });
         } else if (item.type === 'project') {
           await createProject({ title: `${item.name} (복사본)` });
