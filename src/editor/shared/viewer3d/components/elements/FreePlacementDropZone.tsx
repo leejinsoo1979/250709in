@@ -709,11 +709,13 @@ const FreePlacementDropZone: React.FC = () => {
   // 편집 중인 가구 드래그 시작 (더블클릭 후 드래그)
   const handleEditDragPointerDown = useCallback((e: any) => {
     if (!editingFreeModuleId) return;
+    // 이격거리 편집 중이면 드래그 시작하지 않음
+    if (editingGapIndex !== null) return;
     e.stopPropagation();
     setMovingModuleId(editingFreeModuleId);
     setIsDraggingPlaced(true);
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
-  }, [editingFreeModuleId]);
+  }, [editingFreeModuleId, editingGapIndex]);
 
   // 이동 시 zone 변경에 따른 높이/Y 재계산
   const recalcZoneUpdate = useCallback((mod: typeof placedModules[0], newXmm: number) => {
@@ -1115,16 +1117,22 @@ const FreePlacementDropZone: React.FC = () => {
               style={{ pointerEvents: 'auto' }}
               zIndexRange={[10000, 10001]}
             >
-              <div style={{
-                background: 'white',
-                padding: '2px 4px',
-                borderRadius: '4px',
-                border: `2px solid ${themeColor}`,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2px',
-              }}>
+              <div
+                style={{
+                  background: 'white',
+                  padding: '2px 4px',
+                  borderRadius: '4px',
+                  border: `2px solid ${themeColor}`,
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px',
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+              >
                 <input
                   ref={gapInputRef}
                   type="number"
@@ -1147,6 +1155,7 @@ const FreePlacementDropZone: React.FC = () => {
                   }}
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                 />
                 <span style={{ fontSize: '11px', color: '#666', fontWeight: '600' }}>mm</span>
               </div>
@@ -1168,9 +1177,23 @@ const FreePlacementDropZone: React.FC = () => {
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
                   cursor: 'pointer',
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.12)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
                   handleGapLabelClick(i, gap.width);
                 }}
               >
