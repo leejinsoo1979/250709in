@@ -89,6 +89,13 @@
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumbIcon {
+  flex-shrink: 0;
 }
 
 .breadcrumbItem:hover {

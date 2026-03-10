@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUp, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp, Search, FileText } from 'lucide-react';
+import { MdOutlinePending } from 'react-icons/md';
+import { RxDashboard } from 'react-icons/rx';
+import { FcFolder } from 'react-icons/fc';
 import type { UseExplorerNavigationReturn, BreadcrumbItem } from '@/hooks/dashboard/types';
 import styles from './ExplorerToolbar.module.css';
 
@@ -17,6 +20,13 @@ const ExplorerToolbar: React.FC<ExplorerToolbarProps> = ({
   hideSearch = false,
 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const getBreadcrumbIcon = (item: BreadcrumbItem) => {
+    if (item.type === 'root') return <MdOutlinePending size={14} className={styles.breadcrumbIcon} />;
+    if (item.type === 'project') return <RxDashboard size={14} className={styles.breadcrumbIcon} />;
+    if (item.type === 'folder') return <FcFolder size={14} className={styles.breadcrumbIcon} />;
+    return <FileText size={14} className={styles.breadcrumbIcon} />;
+  };
 
   const handleBreadcrumbClick = (item: BreadcrumbItem) => {
     if (item.type === 'root') {
@@ -70,6 +80,7 @@ const ExplorerToolbar: React.FC<ExplorerToolbarProps> = ({
                 }`}
                 onClick={() => handleBreadcrumbClick(item)}
               >
+                {getBreadcrumbIcon(item)}
                 {item.label}
               </button>
             </React.Fragment>

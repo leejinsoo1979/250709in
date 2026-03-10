@@ -5,6 +5,8 @@ import { IoFileTrayStackedOutline } from 'react-icons/io5';
 import { PiFolderFill } from 'react-icons/pi';
 import { VscServerProcess } from 'react-icons/vsc';
 import { LuFileBox } from 'react-icons/lu';
+import { RxDashboard } from 'react-icons/rx';
+import { FcFolder } from 'react-icons/fc';
 import {
   TrashIcon, PlusIcon, SettingsIcon, LogOutIcon, UserIcon, SearchIcon,
 } from '@/components/common/Icons';
@@ -151,22 +153,28 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
 
   // 브레드크럼
   const breadcrumbPath = useMemo(() => {
-    const path: string[] = [];
-    if (nav.activeMenu === 'in-progress') path.push('진행중 프로젝트');
-    else if (nav.activeMenu === 'completed') path.push('완료된 프로젝트');
-    else if (nav.activeMenu === 'shared-by-me') path.push('공유한 프로젝트');
-    else if (nav.activeMenu === 'shared-with-me') path.push('공유받은 프로젝트');
-    else if (nav.activeMenu === 'trash') path.push('휴지통');
-    else path.push('전체 프로젝트');
+    const path: { label: string; type: 'root' | 'project' | 'folder' }[] = [];
+    if (nav.activeMenu === 'in-progress') path.push({ label: '진행중 프로젝트', type: 'root' });
+    else if (nav.activeMenu === 'completed') path.push({ label: '완료된 프로젝트', type: 'root' });
+    else if (nav.activeMenu === 'shared-by-me') path.push({ label: '공유한 프로젝트', type: 'root' });
+    else if (nav.activeMenu === 'shared-with-me') path.push({ label: '공유받은 프로젝트', type: 'root' });
+    else if (nav.activeMenu === 'trash') path.push({ label: '휴지통', type: 'root' });
+    else path.push({ label: '전체 프로젝트', type: 'root' });
 
-    if (selectedProject) path.push(selectedProject.title);
+    if (selectedProject) path.push({ label: selectedProject.title, type: 'project' });
     if (nav.currentFolderId) {
       const folders = data.folders[nav.currentProjectId!] || [];
       const folder = folders.find(f => f.id === nav.currentFolderId);
-      if (folder) path.push(folder.name);
+      if (folder) path.push({ label: folder.name, type: 'folder' });
     }
     return path;
   }, [nav.activeMenu, selectedProject, nav.currentFolderId, nav.currentProjectId, data.folders]);
+
+  const getBreadcrumbIcon = (type: 'root' | 'project' | 'folder') => {
+    if (type === 'root') return <MdOutlinePending size={14} />;
+    if (type === 'project') return <RxDashboard size={14} />;
+    return <FcFolder size={14} />;
+  };
 
   return (
     <div className={styles.dashboard} data-menu={nav.activeMenu}>
@@ -492,7 +500,8 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                       }
                     }}
                   >
-                    {item}
+                    {getBreadcrumbIcon(item.type)}
+                    {item.label}
                   </span>
                   {index < breadcrumbPath.length - 1 && (
                     <span className={styles.breadcrumbSeparator}>/</span>

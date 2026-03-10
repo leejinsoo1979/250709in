@@ -753,6 +753,9 @@
   border-radius: 4px;
   transition: all 0.2s;
   color: var(--theme-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .breadcrumbItem:hover {
