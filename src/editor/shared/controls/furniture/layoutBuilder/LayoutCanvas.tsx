@@ -102,22 +102,42 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
     return parent.children.findIndex(c => c.id === handle.nodeId);
   }, [layout]);
 
+  // 부모 노드의 실제 캔버스 크기 계산 (중첩 분할에서 정확한 리사이즈를 위해)
+  const computeParentSize = useCallback((parentId: string, direction: 'horizontal' | 'vertical'): number => {
+    // 루트에서 부모까지의 경로를 추적하여 실제 크기를 계산
+    const computeNodeSize = (
+      node: LayoutNode,
+      rect: { width: number; height: number },
+      targetId: string,
+    ): number | null => {
+      if (node.id === targetId) {
+        return direction === 'horizontal' ? rect.width : rect.height;
+      }
+      if (!node.children) return null;
+
+      for (const child of node.children) {
+        let childRect: { width: number; height: number };
+        if (node.direction === 'horizontal') {
+          childRect = { width: rect.width * child.ratio, height: rect.height };
+        } else {
+          childRect = { width: rect.width, height: rect.height * child.ratio };
+        }
+        const found = computeNodeSize(child, childRect, targetId);
+        if (found !== null) return found;
+      }
+      return null;
+    };
+
+    const result = computeNodeSize(layout, { width: canvasWidth, height: canvasHeight }, parentId);
+    return result ?? (direction === 'horizontal' ? canvasWidth : canvasHeight);
+  }, [layout, canvasWidth, canvasHeight]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent, handle: ResizeHandle) => {
     e.preventDefault();
     e.stopPropagation();
     const childIndex = getChildIndex(handle);
-    // 부모 노드의 해당 방향 전체 사이즈 (px)
-    const find = (node: LayoutNode, id: string): LayoutNode | null => {
-      if (node.id === id) return node;
-      if (node.children) for (const c of node.children) {
-        const f = find(c, id);
-        if (f) return f;
-      }
-      return null;
-    };
-    // 부모가 루트면 캔버스 전체, 아니면 부모의 실제 영역을 구해야 하지만
-    // 간단하게 핸들 방향의 캔버스 전체 사이즈 사용 (비율 기반이므로)
-    const totalSize = handle.direction === 'horizontal' ? canvasWidth : canvasHeight;
+    // 부모 노드의 실제 픽셀 크기 계산 (중첩 분할에서도 정확하게)
+    const totalSize = computeParentSize(handle.parentId, handle.direction);
     setDragState({
       parentId: handle.parentId,
       childIndex,
@@ -125,7 +145,7 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
       startPos: handle.direction === 'horizontal' ? e.clientX : e.clientY,
       totalSize,
     });
-  }, [getChildIndex, canvasWidth, canvasHeight]);
+  }, [getChildIndex, computeParentSize]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragState) return;
@@ -163,17 +183,17 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
           <div className={styles.cellActions}>
             <button
               className={styles.cellActionBtn}
-              onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'horizontal'); }}
-              title="좌우 분할"
-            >
-              ┃
-            </button>
-            <button
-              className={styles.cellActionBtn}
               onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'vertical'); }}
               title="상하 분할"
             >
-              ━
+              <span className={styles.cellActionLabel}>상하</span>
+            </button>
+            <button
+              className={styles.cellActionBtn}
+              onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'horizontal'); }}
+              title="좌우 분할"
+            >
+              <span className={styles.cellActionLabel}>좌우</span>
             </button>
           </div>
         )}

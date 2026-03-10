@@ -45,18 +45,18 @@ const LayoutToolbar: React.FC<LayoutToolbarProps> = ({
         <button
           className={styles.actionBtn}
           disabled={!splitAllowed}
-          onClick={() => selectedNodeId && onSplit(selectedNodeId, 'horizontal')}
-        >
-          <span className={styles.actionBtnIcon}>┃</span>
-          좌우 분할
-        </button>
-        <button
-          className={styles.actionBtn}
-          disabled={!splitAllowed}
           onClick={() => selectedNodeId && onSplit(selectedNodeId, 'vertical')}
         >
           <span className={styles.actionBtnIcon}>━</span>
           상하 분할
+        </button>
+        <button
+          className={styles.actionBtn}
+          disabled={!splitAllowed}
+          onClick={() => selectedNodeId && onSplit(selectedNodeId, 'horizontal')}
+        >
+          <span className={styles.actionBtnIcon}>┃</span>
+          좌우 분할
         </button>
         <button
           className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
