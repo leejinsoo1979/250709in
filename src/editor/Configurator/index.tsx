@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore, type EditorTab } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
 import { getProject, updateProject, createProject, createDesignFile, getDesignFiles } from '@/firebase/projects';
@@ -21,6 +21,7 @@ import { use3DExport, type ExportFormat } from '@/editor/shared/hooks/use3DExpor
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
+import TabBar from './components/TabBar';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
 import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './components/RightPanel';
@@ -1121,6 +1122,16 @@ const Configurator: React.FC = () => {
               useFurnitureStore.getState().markAsSaved();
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
 
+              // 첫 저장 후 탭에 designFileId 반영
+              if (effectiveProjectId) {
+                useUIStore.getState().addTab({
+                  projectId: effectiveProjectId,
+                  projectName: basicInfo.title || '프로젝트',
+                  designFileId,
+                  designFileName: basicInfo.title || '새 디자인',
+                });
+              }
+
               // BroadcastChannel로 디자인 파일 생성 알림 (readonly 모드에서는 전송하지 않음)
               if (!isReadOnly) {
                 try {
@@ -1496,6 +1507,12 @@ const Configurator: React.FC = () => {
     // 즉시 UI 업데이트
     setBasicInfo({ ...basicInfo, title: newName });
 
+    // 탭의 프로젝트명도 업데이트
+    if (currentProjectId && currentDesignFileId) {
+      const tabId = `${currentProjectId}_${currentDesignFileId}`;
+      useUIStore.getState().updateTab(tabId, { projectName: newName });
+    }
+
     // 프로젝트가 저장된 상태라면 자동 저장
     if (currentProjectId) {
       setSaving(true);
@@ -1549,6 +1566,12 @@ const Configurator: React.FC = () => {
     // 즉시 UI 업데이트
     setCurrentDesignFileName(newName);
     console.log('✅ currentDesignFileName 상태 업데이트:', newName);
+
+    // 탭 이름도 업데이트
+    if (currentProjectId && currentDesignFileId) {
+      const tabId = `${currentProjectId}_${currentDesignFileId}`;
+      useUIStore.getState().updateTab(tabId, { designFileName: newName });
+    }
 
     // URL 파라미터도 업데이트
     const currentParams = new URLSearchParams(window.location.search);
@@ -2065,6 +2088,19 @@ const Configurator: React.FC = () => {
       setCollaborators([]);
     }
   }, [currentProjectId, currentDesignFileId, isReadOnly]);
+
+  // 에디터 탭 동기화: 디자인 파일 로드 성공 후 탭 추가/활성화
+  useEffect(() => {
+    if (currentProjectId && currentDesignFileId && currentDesignFileName) {
+      const projectName = basicInfo.title || urlProjectName || '프로젝트';
+      useUIStore.getState().addTab({
+        projectId: currentProjectId,
+        projectName,
+        designFileId: currentDesignFileId,
+        designFileName: currentDesignFileName,
+      });
+    }
+  }, [currentProjectId, currentDesignFileId, currentDesignFileName]);
 
   // 폴더에서 실제 디자인파일명 찾기 (URL에 designFileId나 designFileName이 없을 때만)
   useEffect(() => {
@@ -2693,6 +2729,40 @@ const Configurator: React.FC = () => {
           setFileTreeDesignFiles([]);
         }
       }
+    }
+  };
+
+  // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
+  const handleTabSwitch = async (tab: EditorTab) => {
+    // 현재 파일 자동 저장
+    try {
+      await saveProject();
+    } catch (e) {
+      console.warn('탭 전환 전 자동 저장 실패:', e);
+    }
+    useUIStore.getState().setActiveTab(tab.id);
+    navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
+  };
+
+  // 탭 닫기 핸들러 (자동 저장 → 탭 제거 → 인접 탭 또는 대시보드)
+  const handleTabClose = async (tab: EditorTab) => {
+    // 닫히는 탭이 활성 탭이면 저장
+    if (useUIStore.getState().activeTabId === tab.id) {
+      try {
+        await saveProject();
+      } catch (e) {
+        console.warn('탭 닫기 전 자동 저장 실패:', e);
+      }
+    }
+    const nextTabId = useUIStore.getState().removeTab(tab.id);
+    if (nextTabId) {
+      const nextTab = useUIStore.getState().openTabs.find(t => t.id === nextTabId);
+      if (nextTab) {
+        navigate(`/configurator?projectId=${nextTab.projectId}&designFileId=${nextTab.designFileId}`, { replace: true });
+      }
+    } else {
+      // 마지막 탭 → 대시보드로 이동
+      navigate('/dashboard');
     }
   };
 
@@ -3855,6 +3925,14 @@ const Configurator: React.FC = () => {
         boringFurnitureCount={boringFurnitureCount}
       />
 
+      {/* 에디터 파일 탭 바 */}
+      {!isMobile && (
+        <TabBar
+          onTabSwitch={handleTabSwitch}
+          onTabClose={handleTabClose}
+        />
+      )}
+
       <div className={styles.mainContent}>
         {/* 파일 트리 오버레이 (대시보드 좌측바 스타일) */}
         <div
@@ -3912,7 +3990,17 @@ const Configurator: React.FC = () => {
                       className={`${styles.fileTreeFileCard} ${
                         searchParams.get('designFileId') === file.id ? styles.fileTreeFileCardActive : ''
                       }`}
-                      onClick={() => {
+                      onClick={async () => {
+                        // 현재 파일 자동 저장
+                        try { await saveProject(); } catch {}
+                        // 탭 추가 (프로젝트명 조회)
+                        const proj = fileTreeProjects.find(p => p.id === fileTreeSelectedProjectId);
+                        useUIStore.getState().addTab({
+                          projectId: fileTreeSelectedProjectId!,
+                          projectName: proj?.title || '프로젝트',
+                          designFileId: file.id,
+                          designFileName: file.name,
+                        });
                         navigate(`/configurator?projectId=${fileTreeSelectedProjectId}&designFileId=${file.id}`, { replace: true });
                         setIsFileTreeOpen(false);
                       }}
