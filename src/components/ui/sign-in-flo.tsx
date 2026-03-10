@@ -94,7 +94,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           {/* Title */}
           <div className="text-center mb-10">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-              {title ?? (isSignUp ? "Create Account" : "Welcome back")}
+              {title ?? (isSignUp ? "Create Account" : "Start designing your furniture")}
             </h1>
             <p className="text-zinc-500 text-sm">
               {subtitle ?? (isSignUp ? "Sign up to get started" : "Sign in to continue")}
