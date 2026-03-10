@@ -20,6 +20,7 @@ import { Chatbot } from '@/components/Chatbot';
 import { useResponsive } from '@/hooks/useResponsive';
 
 // Explorer 컴포넌트
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ExplorerToolbar from '@/components/dashboard/ExplorerToolbar';
 import NavigationPane from '@/components/dashboard/NavigationPane';
 import ContentToolbar from '@/components/dashboard/ContentToolbar';
@@ -435,6 +436,12 @@ const SimpleDashboard: React.FC = () => {
   // --- 렌더 ---
   return (
     <div className={styles.explorerLayout}>
+      {/* 헤더: 로고 + 프로필 */}
+      <DashboardHeader
+        onLogoClick={() => nav.navigateToRoot()}
+        onProfileClick={() => setIsProfilePopupOpen(true)}
+      />
+
       {/* 상단 탐색 툴바 */}
       <ExplorerToolbar
         nav={nav}
