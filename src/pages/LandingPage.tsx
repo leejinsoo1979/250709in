@@ -24,7 +24,7 @@ export default function LandingPage() {
         />
         <div className="flex items-center">
           <button
-            className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
+            className="text-white text-sm font-medium border border-zinc-600 hover:border-white rounded-full px-5 py-2 transition-colors"
             onClick={() => navigate('/login')}
           >
             Sign in
