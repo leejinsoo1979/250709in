@@ -32,10 +32,11 @@
 .createProjectBtn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  border: 1px dashed var(--theme-border);
+  border: 2px dashed var(--theme-primary);
   border-radius: 6px;
   background: transparent;
   color: var(--theme-primary);
