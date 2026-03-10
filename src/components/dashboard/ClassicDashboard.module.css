@@ -72,10 +72,10 @@
 .createBtn {
   width: 192px;
   padding: 10px 16px;
-  border: none;
+  border: 1.5px solid var(--theme-primary);
   border-radius: 8px;
-  background: var(--theme-primary);
-  color: white;
+  background: transparent;
+  color: var(--theme-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -83,11 +83,12 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .createBtn:hover {
-  background: var(--theme-primary-hover);
+  background: var(--theme-primary);
+  color: white;
 }
 
 /* 네비게이션 메뉴 */
