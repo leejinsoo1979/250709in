@@ -136,6 +136,7 @@ const Configurator: React.FC = () => {
   const [fileTreeFolders, setFileTreeFolders] = useState<{ [projectId: string]: FolderDataType[] }>({});
   // 파일트리 우측 패널: 선택된 프로젝트의 디자인 파일 목록
   const [fileTreeSelectedProjectId, setFileTreeSelectedProjectId] = useState<string | null>(null);
+  const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
@@ -3857,15 +3858,21 @@ const Configurator: React.FC = () => {
             projects={fileTreeProjects}
             folders={fileTreeFolders}
             currentProjectId={fileTreeSelectedProjectId || searchParams.get('projectId')}
-            currentFolderId={null}
+            currentFolderId={fileTreeSelectedFolderId}
             activeMenu={fileTreeActiveMenu}
             autoExpandProjectId={searchParams.get('projectId')}
-            onNavigate={async (projectId, _folderId, _label) => {
+            onNavigate={async (projectId, folderId, _label) => {
               if (projectId) {
                 setFileTreeSelectedProjectId(projectId);
+                setFileTreeSelectedFolderId(folderId || null);
                 try {
                   const { designFiles } = await getDesignFiles(projectId);
-                  setFileTreeDesignFiles(designFiles);
+                  // 폴더 선택 시 해당 폴더의 파일만 필터링
+                  if (folderId) {
+                    setFileTreeDesignFiles(designFiles.filter(f => f.folderId === folderId));
+                  } else {
+                    setFileTreeDesignFiles(designFiles);
+                  }
                 } catch {
                   setFileTreeDesignFiles([]);
                 }
