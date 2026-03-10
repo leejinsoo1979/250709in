@@ -1261,12 +1261,24 @@ const SimpleDashboard: React.FC = () => {
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               onClick={() => {
                 const item = contextMenu.item;
-                if (confirm(`"${item.name}"을(를) 삭제하시겠습니까?`)) {
-                  actions.deleteItems([{
-                    id: item.id,
-                    type: item.type,
-                    projectId: item.projectId || nav.currentProjectId || undefined,
-                  }]);
+                // 선택된 항목이 여러 개이고 우클릭한 항목이 선택에 포함되면 전체 삭제
+                const selectedCount = actions.selectedItems.size;
+                const isInSelection = actions.selectedItems.has(item.id);
+                if (selectedCount > 1 && isInSelection) {
+                  const itemsToDelete = data.currentItems
+                    .filter(i => actions.selectedItems.has(i.id))
+                    .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
+                  if (confirm(`${itemsToDelete.length}개 항목을 삭제하시겠습니까?`)) {
+                    actions.deleteItems(itemsToDelete);
+                  }
+                } else {
+                  if (confirm(`"${item.name}"을(를) 삭제하시겠습니까?`)) {
+                    actions.deleteItems([{
+                      id: item.id,
+                      type: item.type,
+                      projectId: item.projectId || nav.currentProjectId || undefined,
+                    }]);
+                  }
                 }
                 setContextMenu(null);
               }}
