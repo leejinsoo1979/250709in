@@ -116,7 +116,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={lowerSectionDepth} upperSectionDepthMm={upperSectionDepth} lowerSectionTopOffsetMm={lowerSectionTopOffset} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections} renderMode={renderMode}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={lowerSectionDepth} upperSectionDepthMm={upperSectionDepth} lowerSectionDepthDirection={lowerSectionDepthDirection} upperSectionDepthDirection={upperSectionDepthDirection} lowerSectionTopOffsetMm={lowerSectionTopOffset} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections} renderMode={renderMode}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <>
@@ -137,6 +137,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
                 sectionDepths={sectionDepths}
+                sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
                 lowerSectionTopOffsetMm={lowerSectionTopOffset}
                 isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
               />
@@ -204,7 +205,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                     // 상부 섹션의 깊이 사용
                     const sectionDepth = sectionDepths[sectionIndex];
                     const depthDiff = depth - sectionDepth;
-                    rodZPosition = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                    const sectionDir = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+                    rodZPosition = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
                   }
 
                   return (
@@ -236,7 +238,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                 width={width}
                 depth={depth}
                 yOffset={-height / 2}
-                backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+                backZOffset={sectionDepths && sectionDepths[0] ? (lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) : 0) : 0}
                 renderMode={renderMode}
                 isHighlighted={false}
                 isFloating={isFloating}

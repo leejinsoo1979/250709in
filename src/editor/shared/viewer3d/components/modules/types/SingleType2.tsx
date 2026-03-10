@@ -416,6 +416,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
+            sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
             lowerSectionTopOffsetMm={lowerSectionTopOffset}
             isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
           />
@@ -523,7 +524,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
               // Z 위치: 깊이 변화에 따른 오프셋 (앞면 고정)
               const depthDiff = depth - currentSectionDepth;
-              const rodZOffset = depthDiff / 2;
+              const sectionDir = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+              const rodZOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
 
               console.log(`🎽 ClothingRod Z 오프셋 계산 (섹션${sectionIndex}):`, {
                 depth_mm: depth / 0.01,
@@ -889,7 +891,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
         const lowerDepth = sectionDepths[0] || depth;
         const depthDiff = depth - lowerDepth;
-        const zOffset = depthDiff / 2; // 앞면 고정, 뒤쪽만 이동
+        const zOffset = depthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
 
         return (
           <group position={[0, 0, zOffset]}>

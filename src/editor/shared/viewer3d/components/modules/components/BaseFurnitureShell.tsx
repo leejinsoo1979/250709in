@@ -142,6 +142,8 @@ interface BaseFurnitureShellProps {
   // 섹션별 깊이 (mm)
   lowerSectionDepthMm?: number;
   upperSectionDepthMm?: number;
+  lowerSectionDepthDirection?: 'front' | 'back';
+  upperSectionDepthDirection?: 'front' | 'back';
 
   // 하부장 상부패널 오프셋 (mm)
   lowerSectionTopOffsetMm?: number;
@@ -201,6 +203,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   },
   lowerSectionDepthMm,
   upperSectionDepthMm,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   lowerSectionTopOffsetMm,
   isLeftEndPanel = false,
   isRightEndPanel = false,
@@ -332,8 +336,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
               const lowerDepthDiff = depth - lowerDepth;
               const upperDepthDiff = depth - upperDepth;
-              const lowerZOffset = lowerDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
-              const upperZOffset = upperDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+              const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
+              const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
               return (
                 <>
@@ -480,13 +484,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
                   const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
 
-                  // 하부 섹션 깊이 차이 (뒤쪽으로만 줄어듦)
+                  // 하부 섹션 깊이 차이 (방향에 따라 줄어듦)
                   const lowerDepthDiff = depth - lowerSectionDepth;
-                  const lowerZOffset = lowerDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
 
                   // 상부 섹션 깊이 차이
                   const upperDepthDiff = depth - upperSectionDepth;
-                  const upperZOffset = upperDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
                   // 백패널 두께
                   const backPanelThickness = depth - adjustedDepthForShelves;
@@ -564,11 +568,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
                   const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
 
-                  // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
+                  // 깊이 차이 계산 (방향에 따라 줄어듦)
                   const lowerDepthDiff = depth - lowerSectionDepth;
                   const upperDepthDiff = depth - upperSectionDepth;
-                  const lowerZOffset = lowerDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
-                  const upperZOffset = upperDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
+                  const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
                   // 백패널 두께
                   const backPanelThickness = depth - adjustedDepthForShelves;
@@ -660,11 +664,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
                   const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
 
-                  // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
+                  // 깊이 차이 계산 (방향에 따라 줄어듦)
                   const lowerDepthDiff = depth - lowerSectionDepth;
                   const upperDepthDiff = depth - upperSectionDepth;
-                  const lowerZOffset = lowerDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
-                  const upperZOffset = upperDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
+                  const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
                   // 백패널 두께
                   const backPanelThickness = depth - adjustedDepthForShelves;
@@ -780,7 +784,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
                   const upperDepth = mmToThreeUnits(upperSectionDepthMm);
                   const depthDiff = depth - upperDepth;
-                  return depthDiff / 2 + backReduction / 2; // 앞쪽 고정, 뒤쪽 줄어듦 + 백패널 맞춤
+                  const dirOffset = upperSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
+                  return dirOffset + backReduction / 2; // 방향에 따른 오프셋 + 백패널 맞춤
                 }
                 return backReduction / 2; // 앞쪽 고정, 뒤에서 26mm 줄임
               })()]}
@@ -863,7 +868,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
                   const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
                   const depthDiff = depth - lowerDepth;
-                  return depthDiff / 2 + backReduction / 2; // 앞쪽 고정, 뒤쪽 줄어듦 + 백패널 맞춤
+                  const dirOffset = lowerSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
+                  return dirOffset + backReduction / 2; // 방향에 따른 오프셋 + 백패널 맞춤
                 }
                 return backReduction / 2; // 앞쪽 고정, 뒤에서 26mm 줄임
               })()]}
@@ -993,11 +999,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
                 const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
 
-                // 깊이 차이에 따른 Z 오프셋 (앞쪽 고정, 뒤쪽 줄어듦)
+                // 깊이 차이에 따른 Z 오프셋 (방향에 따라 앞/뒤에서 줄어듦)
                 const lowerDepthDiff = depth - lowerSectionDepth;
                 const upperDepthDiff = depth - upperSectionDepth;
-                const lowerZOffset = lowerDepthDiff / 2;
-                const upperZOffset = upperDepthDiff / 2;
+                const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
+                const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
                 const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset) + lowerZOffset;
                 const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset) + upperZOffset;
