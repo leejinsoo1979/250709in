@@ -298,7 +298,7 @@
   padding: 9px 16px;
   border: none;
   border-radius: 8px;
-  background: var(--theme-danger, #ef4444);
+  background: var(--theme-primary, #3b82f6);
   color: #fff;
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
