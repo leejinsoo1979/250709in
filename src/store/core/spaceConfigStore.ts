@@ -273,6 +273,10 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       gapConfig: info.gapConfig,
       baseConfig: info.baseConfig
     });
+    console.log('🔴 [layoutMode DEBUG] setSpaceInfo 입력:', {
+      layoutMode_incoming: info.layoutMode,
+      type: typeof info.layoutMode
+    });
 
     // baseConfig.depth 업데이트 감지
     if (info.baseConfig?.depth !== undefined) {
@@ -380,6 +384,11 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         width: newState.spaceInfo.width,
         baseConfig: newState.spaceInfo.baseConfig,
         'baseConfig.depth': newState.spaceInfo.baseConfig?.depth
+      });
+      console.log('🔴 [layoutMode DEBUG] 최종 store layoutMode:', {
+        이전: state.spaceInfo.layoutMode,
+        입력: info.layoutMode,
+        최종: newState.spaceInfo.layoutMode
       });
       
       // wallConfig 업데이트 디버그

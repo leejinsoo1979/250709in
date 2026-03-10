@@ -865,6 +865,13 @@ export const updateDesignFile = async (
     // Firebase는 undefined 값을 허용하지 않으므로 모든 undefined 값을 제거
     const updateData = removeUndefinedValues(updateDataRaw);
 
+    console.log('🔴 [layoutMode DEBUG] Firebase 저장 직전:', {
+      layoutMode_input: updates.spaceConfig?.layoutMode,
+      layoutMode_clean: spaceConfigClean?.layoutMode,
+      layoutMode_final: updateData?.spaceConfig?.layoutMode,
+      hasSpaceConfig: !!updateData?.spaceConfig
+    });
+
     // 찾은 경로에 업데이트
     await updateDoc(designDocRef, updateData);
     
