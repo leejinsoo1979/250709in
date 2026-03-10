@@ -3053,7 +3053,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               return null;
             })()}
 
-            {/* 자유배치 표준 모듈 엔드패널 렌더링 */}
+            {/* 자유배치 표준 모듈 엔드패널 렌더링 — 바닥까지 내려옴 */}
             {placedModule.isFreePlacement && !placedModule.customConfig && (() => {
               const hasLeft = placedModule.hasLeftEndPanel;
               const hasRight = placedModule.hasRightEndPanel;
@@ -3061,8 +3061,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               const epThicknessMm = placedModule.endPanelThickness || 18;
               const epW = mmToThreeUnits(epThicknessMm);
-              const epH = height;
               const epD = depth;
+
+              // EP는 바닥(Y=0)부터 가구 상단까지 — 상부장도 바닥까지 내려옴
+              // 그룹 Y = adjustedPosition.y (가구 중심 절대 Y)
+              // 가구 상단 절대 Y = adjustedPosition.y + height/2
+              // EP 높이 = 가구 상단 절대 Y = adjustedPosition.y + height/2
+              const groupY = adjustedPosition.y; // Three.js 단위
+              const epH = groupY + height / 2; // 바닥~가구상단
+              const epYRelative = (height / 2 - groupY) / 2; // 그룹 내 EP 중심 Y
 
               return (
                 <>
@@ -3071,7 +3078,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={epD}
-                      position={[-(width / 2) - epW / 2, 0, 0]}
+                      position={[-(width / 2) - epW / 2, epYRelative, 0]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
                     />
@@ -3081,7 +3088,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={epD}
-                      position={[(width / 2) + epW / 2, 0, 0]}
+                      position={[(width / 2) + epW / 2, epYRelative, 0]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
                     />
