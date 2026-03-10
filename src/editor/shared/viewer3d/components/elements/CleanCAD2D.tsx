@@ -1121,17 +1121,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 - 자유배치 모드에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
+      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasLeftFurniture) && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-        
+
         // 왼쪽 벽이 있는지 확인
         const hasLeftWall = spaceInfo.wallConfig?.left;
-        
+
+        // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
+        if (isFreePlacement && !hasLeftWall) return null;
+
         // 왼쪽 엔드패널 값 결정
         let leftValue: number;
         let leftText: string;
-        
+
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
@@ -1233,17 +1236,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
       
-      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 - 자유배치 모드에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasRightFurniture) && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-        
+
         // 오른쪽 벽이 있는지 확인
         const hasRightWall = spaceInfo.wallConfig?.right;
-        
+
+        // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
+        if (isFreePlacement && !hasRightWall) return null;
+
         // 오른쪽 엔드패널 값 결정
         let rightValue: number;
         let rightText: string;
-        
+
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
