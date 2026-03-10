@@ -8,8 +8,9 @@ export default function LandingPage() {
   const [dotsHovered, setDotsHovered] = useState(false);
   const [craftHovered, setCraftHovered] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
+  const [textHovered, setTextHovered] = useState(false);
 
-  const isAnimating = dotsHovered || craftHovered || buttonHovered;
+  const isAnimating = dotsHovered || craftHovered || buttonHovered || textHovered;
 
   return (
     <div className="bg-zinc-950 min-h-screen flex items-center justify-center px-8">
@@ -42,13 +43,30 @@ export default function LandingPage() {
             ))}
           </div>
           <motion.span
-            className="text-white font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-normal"
-            style={{ wordSpacing: '0.15em' }}
+            className="text-white font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-normal cursor-pointer"
+            style={{ wordSpacing: '0.15em', display: 'inline-flex' }}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            onMouseEnter={() => setTextHovered(true)}
+            onMouseLeave={() => setTextHovered(false)}
           >
-            think thing thank
+            {'think thing thank'.split('').map((char, i) => (
+              <motion.span
+                key={i}
+                style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
+                animate={{
+                  y: isAnimating ? [0, -8, 0] : 0,
+                }}
+                transition={{
+                  y: isAnimating
+                    ? { duration: 0.8, delay: i * 0.04, repeat: Infinity, ease: "easeInOut" }
+                    : { duration: 0.3 },
+                }}
+              >
+                {char}
+              </motion.span>
+            ))}
           </motion.span>
         </div>
 
