@@ -25,14 +25,14 @@ export default function LandingPage() {
               />
             ))}
           </div>
-          <motion.img
-            src="/images/ttt_logo/tttlogo.png"
-            alt="think thing thank"
-            className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto invert"
+          <motion.span
+            className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          />
+          >
+            think thing thank
+          </motion.span>
         </div>
 
         {/* craft */}
