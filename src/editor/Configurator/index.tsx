@@ -90,6 +90,7 @@ const Configurator: React.FC = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
+  const [currentFolderName, setCurrentFolderName] = useState<string>('');
   const [showSpaceConfigPopup, setShowSpaceConfigPopup] = useState(false);
 
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
@@ -1991,6 +1992,23 @@ const Configurator: React.FC = () => {
               } else {
                 console.error('❌ 디자인파일에 name 필드가 없습니다!');
               }
+
+              // 폴더명 설정 (folderId가 있으면 폴더 데이터에서 이름 조회)
+              if (designFile.folderId && designFile.projectId) {
+                try {
+                  const folderResult = await loadFolderDataFn(designFile.projectId);
+                  if (folderResult.folders) {
+                    const folder = folderResult.folders.find(f => f.id === designFile.folderId);
+                    if (folder) {
+                      setCurrentFolderName(folder.name);
+                    }
+                  }
+                } catch (e) {
+                  console.error('폴더명 조회 실패:', e);
+                }
+              } else {
+                setCurrentFolderName('');
+              }
               // 공간 설정 미완료 감지 → 팝업 표시
               if ((designFile as any).isSpaceConfigured === false && mode !== 'readonly') {
                 console.log('⚠️ 공간 설정 미완료 디자인 감지 → 공간 설정 팝업 표시');
@@ -3780,6 +3798,7 @@ const Configurator: React.FC = () => {
       <Header
         title={currentDesignFileName || urlDesignFileName || basicInfo.title || "새로운 디자인"}
         projectName={urlProjectName || basicInfo.title || "새로운 프로젝트"}
+        folderName={currentFolderName}
         designFileName={currentDesignFileName || urlDesignFileName}
         projectId={currentProjectId}
         designFileId={currentDesignFileId}

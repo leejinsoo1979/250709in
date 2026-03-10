@@ -56,6 +56,7 @@ const OrthographicCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
 interface HeaderProps {
   title: string;
   projectName?: string; // 프로젝트명 추가
+  folderName?: string; // 폴더명 추가
   designFileName?: string; // 디자인 파일명 추가
   projectId?: string | null; // 프로젝트 ID 추가
   designFileId?: string | null; // 디자인 파일 ID 추가
@@ -100,6 +101,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   title,
   projectName,
+  folderName,
   designFileName,
   projectId,
   designFileId,
@@ -569,7 +571,17 @@ const Header: React.FC<HeaderProps> = ({
                     title="대시보드로 이동 (자동저장)"
                   >
                     {projectName}
-                  </span> <span className={styles.separator}>›</span>{' '}
+                  </span>
+                  {folderName && (
+                    <>
+                      {' '}<span className={styles.separator}>›</span>{' '}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.6, flexShrink: 0 }}>
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      <span style={{ opacity: 0.8 }}>{folderName}</span>
+                    </>
+                  )}
+                  {' '}<span className={styles.separator}>›</span>{' '}
                   <FileText size={14} style={{ opacity: 0.6, flexShrink: 0 }} />
                   {isEditingDesignName ? (
                     <input
