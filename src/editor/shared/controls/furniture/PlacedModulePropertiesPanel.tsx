@@ -611,6 +611,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5);
   const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(defaultDoorBottomGap);
 
+  // 도어 셋팅 (자유배치 모드)
+  const [doorSettingMode, setDoorSettingMode] = useState<'auto' | 'manual'>('auto');
+  const [doorOverlayLeft, setDoorOverlayLeft] = useState<number>(0);
+  const [doorOverlayRight, setDoorOverlayRight] = useState<number>(0);
+  const [doorOverlayTop, setDoorOverlayTop] = useState<number>(0);
+  const [doorOverlayBottom, setDoorOverlayBottom] = useState<number>(0);
+  const [doorOverlayLeftInput, setDoorOverlayLeftInput] = useState<string>('0');
+  const [doorOverlayRightInput, setDoorOverlayRightInput] = useState<string>('0');
+  const [doorOverlayTopInput, setDoorOverlayTopInput] = useState<string>('0');
+  const [doorOverlayBottomInput, setDoorOverlayBottomInput] = useState<string>('0');
+  const [originalDoorSettingMode, setOriginalDoorSettingMode] = useState<'auto' | 'manual'>('auto');
+  const [originalDoorOverlayLeft, setOriginalDoorOverlayLeft] = useState<number>(0);
+  const [originalDoorOverlayRight, setOriginalDoorOverlayRight] = useState<number>(0);
+  const [originalDoorOverlayTop, setOriginalDoorOverlayTop] = useState<number>(0);
+  const [originalDoorOverlayBottom, setOriginalDoorOverlayBottom] = useState<number>(0);
+
   // 취소 시 복원을 위한 모든 초기값 저장
   const [originalCustomDepth, setOriginalCustomDepth] = useState<number>(580);
   const [originalCustomWidth, setOriginalCustomWidth] = useState<number>(600);
@@ -902,6 +918,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setLowerDoorBottomGapInput(lowerBottomGap.toString());
       setOriginalLowerDoorBottomGap(lowerBottomGap); // 원래 값 저장
 
+      // 도어 셋팅 (자유배치 모드) 초기화
+      const doorSettingModeVal = currentPlacedModule.doorSettingMode ?? 'auto';
+      const overlayLeft = currentPlacedModule.doorOverlayLeft ?? 0;
+      const overlayRight = currentPlacedModule.doorOverlayRight ?? 0;
+      const overlayTop = currentPlacedModule.doorOverlayTop ?? 0;
+      const overlayBottom = currentPlacedModule.doorOverlayBottom ?? 0;
+      setDoorSettingMode(doorSettingModeVal);
+      setDoorOverlayLeft(overlayLeft);
+      setDoorOverlayRight(overlayRight);
+      setDoorOverlayTop(overlayTop);
+      setDoorOverlayBottom(overlayBottom);
+      setDoorOverlayLeftInput(overlayLeft.toString());
+      setDoorOverlayRightInput(overlayRight.toString());
+      setDoorOverlayTopInput(overlayTop.toString());
+      setDoorOverlayBottomInput(overlayBottom.toString());
+      setOriginalDoorSettingMode(doorSettingModeVal);
+      setOriginalDoorOverlayLeft(overlayLeft);
+      setOriginalDoorOverlayRight(overlayRight);
+      setOriginalDoorOverlayTop(overlayTop);
+      setOriginalDoorOverlayBottom(overlayBottom);
+
       // 2섹션 가구의 섹션 깊이 초기화
       const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
       if (sections.length === 2) {
@@ -1049,7 +1086,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         upperDoorTopGap: originalUpperDoorTopGap,
         upperDoorBottomGap: originalUpperDoorBottomGap,
         lowerDoorTopGap: originalLowerDoorTopGap,
-        lowerDoorBottomGap: originalLowerDoorBottomGap
+        lowerDoorBottomGap: originalLowerDoorBottomGap,
+        doorSettingMode: originalDoorSettingMode,
+        doorOverlayLeft: originalDoorOverlayLeft,
+        doorOverlayRight: originalDoorOverlayRight,
+        doorOverlayTop: originalDoorOverlayTop,
+        doorOverlayBottom: originalDoorOverlayBottom
       });
     }
     closeAllPopups();
@@ -1263,6 +1305,57 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (currentPlacedModule) {
         updatePlacedModule(currentPlacedModule.id, { doorBottomGap: newValue });
       }
+    }
+  };
+
+  // 도어 셋팅 모드 변경 핸들러
+  const handleDoorSettingModeChange = (mode: 'auto' | 'manual') => {
+    setDoorSettingMode(mode);
+    if (currentPlacedModule) {
+      if (mode === 'auto') {
+        // 자동 모드로 전환 시 오버레이 값 초기화
+        setDoorOverlayLeft(0);
+        setDoorOverlayRight(0);
+        setDoorOverlayTop(0);
+        setDoorOverlayBottom(0);
+        setDoorOverlayLeftInput('0');
+        setDoorOverlayRightInput('0');
+        setDoorOverlayTopInput('0');
+        setDoorOverlayBottomInput('0');
+        updatePlacedModule(currentPlacedModule.id, {
+          doorSettingMode: 'auto',
+          doorOverlayLeft: 0,
+          doorOverlayRight: 0,
+          doorOverlayTop: 0,
+          doorOverlayBottom: 0
+        });
+      } else {
+        updatePlacedModule(currentPlacedModule.id, { doorSettingMode: 'manual' });
+      }
+    }
+  };
+
+  // 도어 오버레이 값 변경 핸들러
+  const handleDoorOverlayChange = (direction: 'left' | 'right' | 'top' | 'bottom', inputValue: string) => {
+    const setInput = { left: setDoorOverlayLeftInput, right: setDoorOverlayRightInput, top: setDoorOverlayTopInput, bottom: setDoorOverlayBottomInput }[direction];
+    setInput(inputValue);
+
+    const numValue = parseFloat(inputValue);
+    if (!isNaN(numValue) && currentPlacedModule) {
+      const setValue = { left: setDoorOverlayLeft, right: setDoorOverlayRight, top: setDoorOverlayTop, bottom: setDoorOverlayBottom }[direction];
+      const propKey = { left: 'doorOverlayLeft', right: 'doorOverlayRight', top: 'doorOverlayTop', bottom: 'doorOverlayBottom' }[direction];
+      setValue(numValue);
+      updatePlacedModule(currentPlacedModule.id, { [propKey]: numValue });
+    }
+  };
+
+  const handleDoorOverlayBlur = (direction: 'left' | 'right' | 'top' | 'bottom') => {
+    const inputMap = { left: doorOverlayLeftInput, right: doorOverlayRightInput, top: doorOverlayTopInput, bottom: doorOverlayBottomInput };
+    const valueMap = { left: doorOverlayLeft, right: doorOverlayRight, top: doorOverlayTop, bottom: doorOverlayBottom };
+    const setInputMap = { left: setDoorOverlayLeftInput, right: setDoorOverlayRightInput, top: setDoorOverlayTopInput, bottom: setDoorOverlayBottomInput };
+    const numValue = parseFloat(inputMap[direction]);
+    if (isNaN(numValue)) {
+      setInputMap[direction](valueMap[direction].toString());
     }
   };
 
@@ -2631,6 +2724,125 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
           */}
+
+          {/* 도어 셋팅 (자유배치 모드, 도어가 있을 때만) */}
+          {!showDetails && currentPlacedModule?.isFreePlacement && moduleData.hasDoor && hasDoor && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>도어 셋팅</h5>
+              <div className={styles.doorTabSelector}>
+                <button
+                  className={`${styles.doorTab} ${doorSettingMode === 'auto' ? styles.activeDoorTab : ''}`}
+                  onClick={() => handleDoorSettingModeChange('auto')}
+                >
+                  자동
+                  <span className={styles.doorTabSubtitle}>기본값 적용</span>
+                </button>
+                <button
+                  className={`${styles.doorTab} ${doorSettingMode === 'manual' ? styles.activeDoorTab : ''}`}
+                  onClick={() => handleDoorSettingModeChange('manual')}
+                >
+                  수동
+                  <span className={styles.doorTabSubtitle}>직접 설정</span>
+                </button>
+              </div>
+
+              {doorSettingMode === 'manual' && (
+                <>
+                  <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '0 0 12px 0' }}>
+                    가구 기준으로 도어를 확장/축소 (mm)
+                  </p>
+                  <div className={styles.doorGapContainer}>
+                    <div className={styles.doorGapField}>
+                      <label className={styles.doorGapLabel}>좌측 ←</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={doorOverlayLeftInput}
+                          onChange={(e) => handleDoorOverlayChange('left', e.target.value)}
+                          onBlur={() => handleDoorOverlayBlur('left')}
+                          className={`${styles.depthInput} furniture-depth-input`}
+                          placeholder="0"
+                          style={{
+                            color: '#000000',
+                            backgroundColor: '#ffffff',
+                            WebkitTextFillColor: '#000000',
+                            opacity: 1
+                          }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                    <div className={styles.doorGapField}>
+                      <label className={styles.doorGapLabel}>우측 →</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={doorOverlayRightInput}
+                          onChange={(e) => handleDoorOverlayChange('right', e.target.value)}
+                          onBlur={() => handleDoorOverlayBlur('right')}
+                          className={`${styles.depthInput} furniture-depth-input`}
+                          placeholder="0"
+                          style={{
+                            color: '#000000',
+                            backgroundColor: '#ffffff',
+                            WebkitTextFillColor: '#000000',
+                            opacity: 1
+                          }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.doorGapContainer} style={{ marginTop: '8px' }}>
+                    <div className={styles.doorGapField}>
+                      <label className={styles.doorGapLabel}>상단 ↑</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={doorOverlayTopInput}
+                          onChange={(e) => handleDoorOverlayChange('top', e.target.value)}
+                          onBlur={() => handleDoorOverlayBlur('top')}
+                          className={`${styles.depthInput} furniture-depth-input`}
+                          placeholder="0"
+                          style={{
+                            color: '#000000',
+                            backgroundColor: '#ffffff',
+                            WebkitTextFillColor: '#000000',
+                            opacity: 1
+                          }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                    <div className={styles.doorGapField}>
+                      <label className={styles.doorGapLabel}>하단 ↓</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={doorOverlayBottomInput}
+                          onChange={(e) => handleDoorOverlayChange('bottom', e.target.value)}
+                          onBlur={() => handleDoorOverlayBlur('bottom')}
+                          className={`${styles.depthInput} furniture-depth-input`}
+                          placeholder="0"
+                          style={{
+                            color: '#000000',
+                            backgroundColor: '#ffffff',
+                            WebkitTextFillColor: '#000000',
+                            opacity: 1
+                          }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* 백패널 두께 설정 */}
           <div className={styles.propertySection}>

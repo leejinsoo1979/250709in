@@ -178,6 +178,13 @@ export interface PlacedModule {
   panelGrainDirections?: {
     [panelName: string]: 'horizontal' | 'vertical'; // 패널 이름별 결 방향
   };
+
+  // 도어 셋팅 (자유배치 모드)
+  doorSettingMode?: 'auto' | 'manual'; // 자동/수동 모드 (기본값: 'auto')
+  doorOverlayLeft?: number;   // 도어 좌측 확장 (mm, 기본값: 0)
+  doorOverlayRight?: number;  // 도어 우측 확장 (mm, 기본값: 0)
+  doorOverlayTop?: number;    // 도어 상단 확장 (mm, 기본값: 0)
+  doorOverlayBottom?: number; // 도어 하단 확장 (mm, 기본값: 0)
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입
