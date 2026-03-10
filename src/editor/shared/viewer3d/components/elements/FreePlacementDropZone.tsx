@@ -979,14 +979,18 @@ const FreePlacementDropZone: React.FC = () => {
         </>
       )}
 
-      {/* 고스트 가구 너비 치수 (상단 CAD 스타일) */}
+      {/* 고스트 가구 너비 치수 (상단 CAD 스타일) + 전체 공간 폭 치수 */}
       {ghostPosition && activeDimensions && !isColliding && (() => {
         const slotDimY = spaceInfo.height * 0.01 + 120 * 0.01;
+        const topDimY = spaceInfo.height * 0.01 + 120 * 0.01 * 3; // 전체 폭 치수선 Y (3단)
         const ghostLeftX = ghostPosition.x - (activeDimensions.width * 0.01) / 2;
         const ghostRightX = ghostPosition.x + (activeDimensions.width * 0.01) / 2;
         const ghostTopY = ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2;
+        const spaceLeftX = -(spaceInfo.width * 0.01) / 2;
+        const spaceRightX = (spaceInfo.width * 0.01) / 2;
         return (
           <group>
+            {/* 고스트 가구 너비 치수 */}
             <DynamicLine points={[ghostLeftX, ghostTopY, 0.002, ghostLeftX, slotDimY, 0.002]} color={themeColor} />
             <DynamicLine points={[ghostRightX, ghostTopY, 0.002, ghostRightX, slotDimY, 0.002]} color={themeColor} />
             <DynamicLine points={[ghostLeftX, slotDimY, 0.002, ghostRightX, slotDimY, 0.002]} color={themeColor} />
@@ -1008,6 +1012,25 @@ const FreePlacementDropZone: React.FC = () => {
                 whiteSpace: 'nowrap',
               }}>
                 {activeDimensions.width}mm
+              </div>
+            </Html>
+
+            {/* 전체 공간 폭 치수선 (고스트 활성화 시에도 항상 표시) */}
+            <DynamicLine points={[spaceLeftX, topDimY, 0.003, spaceRightX, topDimY, 0.003]} color="#888888" />
+            <DynamicLine points={[spaceLeftX, 0, 0.003, spaceLeftX, topDimY + 0.04, 0.003]} color="#888888" />
+            <DynamicLine points={[spaceRightX, 0, 0.003, spaceRightX, topDimY + 0.04, 0.003]} color="#888888" />
+            <Html
+              position={[0, topDimY + 0.06, 0.003]}
+              center
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              <div style={{
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#888888',
+                whiteSpace: 'nowrap',
+              }}>
+                {spaceInfo.width}
               </div>
             </Html>
           </group>
