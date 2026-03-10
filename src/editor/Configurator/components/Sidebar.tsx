@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, Menu, User } from 'lucide-react';
+import { LogOut, Menu, User, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isFileTreeOpen,
 }) => {
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { theme, toggleMode } = useTheme();
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
 
@@ -240,6 +240,15 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <div style={{ borderTop: '1px solid var(--theme-border, rgba(255,255,255,0.1))', width: '60%', margin: '4px auto' }} />
+
+        {/* 다크/라이트 모드 토글 */}
+        <button
+          className={styles.actionButton}
+          onClick={toggleMode}
+          data-tooltip={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
+        >
+          {theme.mode === 'dark' ? <Sun size={17} strokeWidth={1.8} /> : <Moon size={17} strokeWidth={1.8} />}
+        </button>
 
         {!readOnly && (
           <button

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, User, ChevronDown, Undo, Redo, Sun, Moon } from 'lucide-react';
+import { Settings, User, ChevronDown, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { TbTableExport } from 'react-icons/tb';
@@ -162,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({
   // UIStore에서 카메라 및 그래픽 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
   const { colors } = useThemeColors();
-  const { theme, toggleMode } = useTheme();
+  useTheme(); // 테마 컨텍스트 연결 유지
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -485,36 +485,10 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* 소유자/협업자 섹션은 좌측 사이드바 하단으로 이동됨 */}
-        </div>
 
-
-        {/* 중앙 액션 버튼들 - 모바일에서는 숨김 */}
-        {!isMobile && (
-          <div className={styles.centerActions}>
-            {/* 읽기 전용 모드 표시 */}
-            {readOnly && (
-              <div style={{
-                padding: '6px 12px',
-                backgroundColor: `${colors.primary}15`,
-                border: `1px solid ${colors.primary}40`,
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '13px',
-                fontWeight: '500',
-                color: colors.primary
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" />
-                </svg>
-                읽기 전용
-              </div>
-            )}
-
-            {/* 파일 드롭다운 메뉴 - 읽기 전용 모드에서는 숨김 */}
-            {!readOnly && (
+          {/* 파일 메뉴 + 저장 버튼 - 좌측 로고 옆 */}
+          {!isMobile && !readOnly && (
+            <>
               <div
                 className={styles.fileMenuContainer}
                 onMouseEnter={handleFileMenuMouseEnter}
@@ -704,15 +678,6 @@ const Header: React.FC<HeaderProps> = ({
             <button className={styles.actionButton} onClick={handleHelpClick}>
               <FaRegKeyboard size={20} />
               {t('help.title')}
-            </button>
-
-            {/* 앱 다크/라이트 모드 토글 */}
-            <button
-              className={styles.actionButton}
-              onClick={toggleMode}
-              title={theme.mode === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-            >
-              {theme.mode === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
             {/* 뷰모드/그래픽 설정은 설정 패널로 이동됨 */}
