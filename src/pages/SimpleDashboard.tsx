@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { PlusIcon, UsersIcon } from '../components/common/Icons';
 import { createProject, saveFolderData, FolderData } from '@/firebase/projects';
 import { useAuth } from '@/auth/AuthProvider';
@@ -88,6 +89,9 @@ const SimpleDashboard: React.FC = () => {
   const [shareProjectName, setShareProjectName] = useState('');
   const [shareDesignFileId, setShareDesignFileId] = useState<string | null>(null);
   const [shareDesignFileName, setShareDesignFileName] = useState('');
+
+  // 모바일 네비게이션 토글
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // 이름 변경 모달
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -369,6 +373,47 @@ const SimpleDashboard: React.FC = () => {
     setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
   }, []);
 
+  // --- 키보드 네비게이션 ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); nav.goBack(); return; }
+      if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); nav.goForward(); return; }
+      if (e.key === 'Backspace') { e.preventDefault(); nav.goUp(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') { e.preventDefault(); actions.selectAll(); return; }
+      if (e.key === 'Delete' && actions.selectedItems.size > 0) {
+        e.preventDefault();
+        const itemsToDelete = data.currentItems
+          .filter(item => actions.selectedItems.has(item.id))
+          .map(item => ({ id: item.id, type: item.type, projectId: item.projectId || nav.currentProjectId || undefined }));
+        if (itemsToDelete.length > 0 && confirm(`${itemsToDelete.length}개 항목을 삭제하시겠습니까?`)) {
+          actions.deleteItems(itemsToDelete);
+        }
+        return;
+      }
+      if (e.key === 'Enter' && actions.selectedItems.size === 1) {
+        const selectedId = Array.from(actions.selectedItems)[0];
+        const item = data.currentItems.find(i => i.id === selectedId);
+        if (item) handleItemDoubleClick(item);
+        return;
+      }
+      if (e.key === 'Escape') { actions.clearSelection(); return; }
+      if (e.key === 'F2' && actions.selectedItems.size === 1) {
+        const selectedId = Array.from(actions.selectedItems)[0];
+        const item = data.currentItems.find(i => i.id === selectedId);
+        if (item) {
+          setRenameTarget({ id: item.id, name: item.name, type: item.type as 'folder' | 'design' | 'project' });
+          setIsRenameModalOpen(true);
+        }
+        return;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nav, actions, data.currentItems, handleItemDoubleClick]);
+
   // --- 로딩/에러 상태 ---
 
   if (loading) {
@@ -399,17 +444,39 @@ const SimpleDashboard: React.FC = () => {
 
       {/* 메인 바디: 좌측 트리 + 우측 컨텐츠 */}
       <div className={styles.explorerBody}>
+        {/* 모바일 햄버거 버튼 */}
+        {isMobile && (
+          <button
+            className={styles.mobileNavToggle}
+            onClick={() => setMobileNavOpen(prev => !prev)}
+            aria-label="네비게이션 토글"
+          >
+            {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        )}
+
         {/* 좌측 네비게이션 */}
-        {!isMobile && (
-          <NavigationPane
-            projects={data.projects}
-            folders={data.folders}
-            currentProjectId={nav.currentProjectId}
-            currentFolderId={nav.currentFolderId}
-            activeMenu={nav.activeMenu}
-            onNavigate={nav.navigateTo}
-            onMenuChange={nav.setActiveMenu}
-          />
+        {(!isMobile || mobileNavOpen) && (
+          <div className={isMobile ? styles.mobileNavOverlay : undefined}>
+            <NavigationPane
+              projects={data.projects}
+              folders={data.folders}
+              currentProjectId={nav.currentProjectId}
+              currentFolderId={nav.currentFolderId}
+              activeMenu={nav.activeMenu}
+              onNavigate={(projectId, folderId, label) => {
+                nav.navigateTo(projectId, folderId, label);
+                if (isMobile) setMobileNavOpen(false);
+              }}
+              onMenuChange={(menu) => {
+                nav.setActiveMenu(menu);
+                if (isMobile) setMobileNavOpen(false);
+              }}
+            />
+            {isMobile && (
+              <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />
+            )}
+          </div>
         )}
 
         {/* 우측 컨텐츠 영역 */}

@@ -23,6 +23,47 @@
   overflow: hidden;
 }
 
+/* ===== 모바일 네비게이션 ===== */
+
+.mobileNavToggle {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1500;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.mobileNavToggle:hover {
+  background: var(--theme-background-secondary);
+  transform: scale(1.05);
+}
+
+.mobileNavOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1400;
+  display: flex;
+}
+
+.mobileNavBackdrop {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+}
+
 /* ===== 모달 스타일 ===== */
 
 .modalOverlay {
