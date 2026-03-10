@@ -48,7 +48,7 @@
 .tab.active {
   background: var(--theme-background, #ffffff);
   color: var(--theme-primary, #21b691);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .tab.active::after {
