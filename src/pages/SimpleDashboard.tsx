@@ -1406,8 +1406,8 @@ const SimpleDashboard: React.FC = () => {
           }}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {/* 프로젝트 생성 (프로젝트 밖에서만) */}
-          {!nav.currentProjectId && (
+          {/* 프로젝트 생성 (진행중 프로젝트 메뉴에서만) */}
+          {!nav.currentProjectId && (nav.activeMenu === 'all' || nav.activeMenu === 'in-progress') && (
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
