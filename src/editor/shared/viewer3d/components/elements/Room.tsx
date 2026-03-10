@@ -275,6 +275,9 @@ const Room: React.FC<RoomProps> = ({
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
   const isFreePlacement = layoutMode === 'free-placement';
 
+  // 자유배치 모드에서는 프레임 숨김 (사용자가 직접 추가)
+  const effectiveShowFrame = isFreePlacement ? false : showFrame;
+
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
 
@@ -2023,7 +2026,7 @@ const Room: React.FC<RoomProps> = ({
         showFrame,
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasLeftFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+      {effectiveShowFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasLeftFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         console.log('🔥🔥🔥 [좌측 프레임/엔드패널 메인 렌더링 블록]', {
           surroundType: spaceInfo.surroundType,
           wallConfigLeft: wallConfig?.left,
@@ -2286,7 +2289,7 @@ const Room: React.FC<RoomProps> = ({
         });
         return null;
       })()}
-      {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+      {effectiveShowFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
@@ -2508,7 +2511,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
       {/* 상부 프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {showFrame && topBottomFrameHeightMm > 0 && (() => {
+      {effectiveShowFrame && topBottomFrameHeightMm > 0 && (() => {
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
@@ -2925,7 +2928,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 서브프레임 - 상단 프레임에서 앞쪽으로 내려오는 판 (ㄱ자의 세로 부분, X축 기준 90도 회전) */}
       {/* 노서라운드 모드에서는 상부 서브프레임도 숨김 */}
       {/* 상부 서브프레임 - 측면 뷰에서도 표시 */}
-      {showFrame && false && topBottomFrameHeightMm > 18 && (
+      {effectiveShowFrame && false && topBottomFrameHeightMm > 18 && (
         <>
           {/* 기둥이 있는 경우 상단 서브프레임을 분절하여 렌더링 */}
           {(() => {
@@ -3082,7 +3085,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
       {/* 좌우측 뷰에서는 숨김 */}
-      {showFrame && spaceInfo.surroundType !== 'no-surround' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
+      {effectiveShowFrame && spaceInfo.surroundType !== 'no-surround' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
           (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
 
@@ -3189,7 +3192,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
       {/* 좌우측 뷰에서는 숨김 */}
-      {showFrame && spaceInfo.surroundType !== 'no-surround' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
+      {effectiveShowFrame && spaceInfo.surroundType !== 'no-surround' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
           (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
 
@@ -3296,7 +3299,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
+      {effectiveShowFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
         console.log('🎯 베이스프레임 높이 확인:', {
           '최종_높이': baseFrameHeightMm,
           baseFrameHeight_ThreeUnits: baseFrameHeight,
