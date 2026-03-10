@@ -26,10 +26,10 @@ export default function LandingPage() {
                   scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
                   opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
                   y: {
-                    duration: 1.2,
-                    delay: 0.8 + i * 0.15,
+                    duration: 0.5,
+                    delay: 0.8 + i * 0.1,
                     repeat: Infinity,
-                    repeatDelay: 0.6,
+                    repeatDelay: 0.2,
                     ease: "easeInOut",
                   },
                 }}
