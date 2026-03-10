@@ -67,12 +67,17 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
     <div className="min-h-screen bg-zinc-950 flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-8 sm:px-12 py-5">
-        <img
-          src="/images/ttt_logo/tttlogo4.png"
-          alt="think thing thank"
-          className="h-8 sm:h-9 w-auto cursor-pointer"
+        <div
+          className="flex items-center gap-1.5 cursor-pointer"
           onClick={onNavigateHome}
-        />
+        >
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-white" />
+          </div>
+          <span className="text-white font-black text-lg ml-1">CRAFT</span>
+        </div>
         <div className="w-20" />
       </header>
 
