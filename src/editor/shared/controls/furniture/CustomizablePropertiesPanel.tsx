@@ -1012,8 +1012,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return { count, heights: Array(count).fill(clampedHeight) };
   };
 
-  // 서랍 균등 채움 핸들러 (focused section 편집용)
-  // 현재 서랍 단수를 유지하면서 균등 분배
+  // 서랍 균등분할 핸들러 (focused section 편집용)
+  // 현재 서랍 단수를 유지하면서 모든 서랍을 동일 크기로 균등 분배
   const handleEvenFillDrawers = (sIdx: number, side: 'full' | 'left' | 'center' | 'right') => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
@@ -1047,7 +1047,43 @@ const CustomizablePropertiesPanel: React.FC = () => {
     setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
   };
 
-  // 서랍 균등 채움 핸들러 (섹션 타입 선택 영역용)
+  // 서랍 사용자 정의 핸들러 (focused section 편집용)
+  // 기존 모듈의 표준 서랍 사이즈를 디폴트로 적용
+  const handleStandardDrawers = (sIdx: number, side: 'full' | 'left' | 'center' | 'right') => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+
+    // 현재 서랍 단수 가져오기
+    const currentElements = side === 'full' ? sec.elements : side === 'left' ? sec.leftElements : sec.rightElements;
+    const currentDrawer = currentElements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
+    const currentCount = currentDrawer?.heights?.length || 1;
+
+    // DRAWER_STANDARD 기준 높이 사용 (단수에 맞는 표준 높이)
+    const standard = DRAWER_STANDARD[currentCount];
+    const heights = standard ? [...standard.heights] : [255];
+
+    const newElement: CustomElement = { type: 'drawer', heights };
+
+    if (side === 'full') {
+      sec.elements = [newElement];
+    } else if (side === 'left') {
+      sec.leftElements = [newElement];
+    } else {
+      sec.rightElements = [newElement];
+    }
+
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+
+    // heightInputs 동기화
+    const newHInputs: Record<string, string> = {};
+    heights.forEach((h, hIdx) => {
+      newHInputs[`${sIdx}-${side}-0-${hIdx}`] = h.toString();
+    });
+    setHeightInputs((prev) => ({ ...prev, ...newHInputs }));
+  };
+
+  // 서랍 균등분할 핸들러 (섹션 타입 선택 영역용)
   // 이미 서랍이 있으면 현재 단수 유지, 없으면 자동 계산
   const handleEvenFillDrawersForSection = (sIdx: number) => {
     const sections = [...config.sections];
@@ -1752,17 +1788,30 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <button
-                style={{
-                  marginTop: '6px', width: '100%', padding: '6px 10px',
-                  border: '1px solid #4A90D9', borderRadius: '6px',
-                  background: '#4A90D9', color: '#fff',
-                  fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
-                }}
-                onClick={() => handleEvenFillDrawers(sIdx, side)}
-              >
-                균등 채움
-              </button>
+              <div style={{ marginTop: '6px', display: 'flex', gap: '4px' }}>
+                <button
+                  style={{
+                    flex: 1, padding: '6px 10px',
+                    border: '1px solid #4A90D9', borderRadius: '6px',
+                    background: '#4A90D9', color: '#fff',
+                    fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onClick={() => handleEvenFillDrawers(sIdx, side)}
+                >
+                  균등분할
+                </button>
+                <button
+                  style={{
+                    flex: 1, padding: '6px 10px',
+                    border: '1px solid #4A90D9', borderRadius: '6px',
+                    background: 'transparent', color: '#4A90D9',
+                    fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onClick={() => handleStandardDrawers(sIdx, side)}
+                >
+                  사용자 정의
+                </button>
+              </div>
             </div>
           );
         })()}
