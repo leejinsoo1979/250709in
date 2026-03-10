@@ -10,7 +10,7 @@
 .container {
   height: 100%;
   width: 100%;
-  padding: 0 var(--spacing-lg, 16px) 0 var(--spacing-sm, 8px);
+  padding: 0 var(--spacing-lg, 16px) 0 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
