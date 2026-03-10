@@ -1,20 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ArrowUp, Search } from 'lucide-react';
-import type { UseExplorerNavigationReturn, BreadcrumbItem, QuickAccessMenu } from '@/hooks/dashboard/types';
+import type { UseExplorerNavigationReturn, BreadcrumbItem } from '@/hooks/dashboard/types';
 import styles from './ExplorerToolbar.module.css';
-
-// 빠른 액세스 메뉴 라벨 매핑
-const MENU_LABELS: Record<QuickAccessMenu, string> = {
-  'all': '전체',
-  'in-progress': '진행중 프로젝트',
-  'completed': '완료된 프로젝트',
-  'bookmarks': '즐겨찾기',
-  'shared-with-me': '공유받은 파일',
-  'shared-by-me': '공유한 파일',
-  'trash': '휴지통',
-  'profile': '프로필',
-  'team': '팀',
-};
 
 interface ExplorerToolbarProps {
   nav: UseExplorerNavigationReturn;
@@ -40,14 +27,6 @@ const ExplorerToolbar: React.FC<ExplorerToolbarProps> = ({
       nav.navigateTo(nav.currentProjectId, item.id, item.label);
     }
   };
-
-  // 루트일 때 activeMenu에 맞는 라벨 표시
-  const displayBreadcrumb = nav.breadcrumbPath.map((item, i) => {
-    if (i === 0 && item.type === 'root') {
-      return { ...item, label: MENU_LABELS[nav.activeMenu] || '전체' };
-    }
-    return item;
-  });
 
   return (
     <div className={styles.toolbar}>
@@ -82,12 +61,12 @@ const ExplorerToolbar: React.FC<ExplorerToolbarProps> = ({
       {/* 우측: 주소 표시줄 (브레드크럼) */}
       <div className={styles.addressSection}>
         <div className={styles.addressBar}>
-          {displayBreadcrumb.map((item, i) => (
+          {nav.breadcrumbPath.map((item, i) => (
             <React.Fragment key={item.id}>
               {i > 0 && <span className={styles.separator}>&gt;</span>}
               <button
                 className={`${styles.breadcrumbItem} ${
-                  i === displayBreadcrumb.length - 1 ? styles.breadcrumbActive : ''
+                  i === nav.breadcrumbPath.length - 1 ? styles.breadcrumbActive : ''
                 }`}
                 onClick={() => handleBreadcrumbClick(item)}
               >

@@ -1,10 +1,23 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { NavigationEntry, BreadcrumbItem, QuickAccessMenu, UseExplorerNavigationReturn } from './types';
 
+// 빠른 액세스 메뉴 라벨 매핑
+const MENU_LABELS: Record<QuickAccessMenu, string> = {
+  'all': '전체',
+  'in-progress': '진행중 프로젝트',
+  'completed': '완료된 프로젝트',
+  'bookmarks': '즐겨찾기',
+  'shared-with-me': '공유받은 파일',
+  'shared-by-me': '공유한 파일',
+  'trash': '휴지통',
+  'profile': '프로필',
+  'team': '팀',
+};
+
 export function useExplorerNavigation(): UseExplorerNavigationReturn {
   // 히스토리 스택
   const [history, setHistory] = useState<NavigationEntry[]>([
-    { projectId: null, folderId: null, label: '전체' }
+    { projectId: null, folderId: null, label: '진행중 프로젝트' }
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
@@ -23,11 +36,11 @@ export function useExplorerNavigation(): UseExplorerNavigationReturn {
 
   // 브레드크럼 경로 (히스토리 현재 위치 기반)
   const breadcrumbPath = useMemo<BreadcrumbItem[]>(() => {
-    const path: BreadcrumbItem[] = [{ id: 'root', label: '전체', type: 'root' }];
+    const rootLabel = MENU_LABELS[activeMenu] || '진행중 프로젝트';
+    const path: BreadcrumbItem[] = [{ id: 'root', label: rootLabel, type: 'root' }];
 
     if (currentProjectId) {
       const projectLabel = current?.label || currentProjectId;
-      // 프로젝트와 폴더가 모두 있으면 라벨을 분리
       if (currentFolderId) {
         // 프로젝트명은 히스토리에서 찾기
         const projectEntry = history.find(
@@ -53,7 +66,7 @@ export function useExplorerNavigation(): UseExplorerNavigationReturn {
     }
 
     return path;
-  }, [currentProjectId, currentFolderId, current, history]);
+  }, [currentProjectId, currentFolderId, current, history, activeMenu]);
 
   // 네비게이션: 특정 위치로 이동
   const navigateTo = useCallback((
@@ -64,7 +77,7 @@ export function useExplorerNavigation(): UseExplorerNavigationReturn {
     const entry: NavigationEntry = {
       projectId,
       folderId,
-      label: label || (projectId ? projectId : '전체'),
+      label: label || (projectId ? projectId : MENU_LABELS[activeMenu] || '진행중 프로젝트'),
     };
 
     setHistory(prev => {
@@ -86,11 +99,7 @@ export function useExplorerNavigation(): UseExplorerNavigationReturn {
       return prev + 1;
     });
 
-    // 프로젝트/폴더 네비게이션이면 activeMenu를 all로
-    if (projectId !== null) {
-      setActiveMenu('all');
-    }
-  }, [historyIndex, history]);
+  }, [historyIndex, history, activeMenu]);
 
   // 뒤로
   const goBack = useCallback(() => {
@@ -115,15 +124,15 @@ export function useExplorerNavigation(): UseExplorerNavigationReturn {
       );
       navigateTo(currentProjectId, null, projectEntry?.label || '');
     } else if (currentProjectId) {
-      // 프로젝트 루트에 있으면 → 전체로
-      navigateTo(null, null, '전체');
+      // 프로젝트 루트에 있으면 → 현재 메뉴로
+      navigateTo(null, null, MENU_LABELS[activeMenu] || '진행중 프로젝트');
     }
-  }, [currentFolderId, currentProjectId, history, navigateTo]);
+  }, [currentFolderId, currentProjectId, history, navigateTo, activeMenu]);
 
   // 루트로 이동
   const navigateToRoot = useCallback(() => {
-    navigateTo(null, null, '전체');
-  }, [navigateTo]);
+    navigateTo(null, null, MENU_LABELS[activeMenu] || '진행중 프로젝트');
+  }, [navigateTo, activeMenu]);
 
   return {
     currentProjectId,
