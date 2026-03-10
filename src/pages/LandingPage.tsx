@@ -38,7 +38,7 @@ export default function LandingPage() {
 
         {/* craft */}
         <motion.h1
-          className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black text-white tracking-normal leading-normal mb-12 overflow-visible"
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-normal leading-normal mb-12 overflow-visible"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
