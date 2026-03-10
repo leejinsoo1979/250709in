@@ -520,7 +520,7 @@ const SimpleDashboard: React.FC = () => {
               const { setProjectId, setProjectTitle, setBasicInfo } = useProjectStore.getState();
               setProjectId(targetProjectId);
               setProjectTitle(project?.title || '새 프로젝트');
-              setBasicInfo({ title: item.name });
+              setBasicInfo({ title: item.name, location: project?.title || '기본 위치' });
               setModalProjectId(targetProjectId);
               setModalProjectTitle(project?.title || '새 프로젝트');
               setModalInitialStep(2);
