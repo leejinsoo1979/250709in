@@ -162,6 +162,10 @@ interface UIState {
   isEraserMode: boolean;
   hoveredMeasureLineId: string | null; // 호버 중인 측정선 ID
 
+  // 대시보드 레이아웃 타입
+  dashboardLayout: 'saas' | 'windows';
+  setDashboardLayout: (layout: 'saas' | 'windows') => void;
+
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -302,6 +306,7 @@ const initialUIState = {
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
+  dashboardLayout: 'windows' as const,  // 기본값: 윈도우 스타일
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -696,6 +701,9 @@ export const useUIStore = create<UIState>()(
       setHoveredMeasureLineId: (id) =>
         set({ hoveredMeasureLineId: id }),
 
+      setDashboardLayout: (layout) =>
+        set({ dashboardLayout: layout }),
+
       resetUI: () =>
         set(initialUIState),
       };
@@ -708,6 +716,7 @@ export const useUIStore = create<UIState>()(
         showDimensions: state.showDimensions,  // localStorage에 저장
         shadowEnabled: state.shadowEnabled,  // 그래픽 설정 유지
         edgeOutlineEnabled: state.edgeOutlineEnabled,  // 그래픽 설정 유지
+        dashboardLayout: state.dashboardLayout,  // 대시보드 레이아웃 유지
         // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
         // doorsOpen과 activePopup은 세션별로 초기화
       }),
