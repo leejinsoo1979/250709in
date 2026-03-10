@@ -118,6 +118,21 @@ const SimpleDashboard: React.FC = () => {
     item: ExplorerItem;
   } | null>(null);
 
+  // 컨텍스트 메뉴 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    const prevent = (e: MouseEvent) => { e.preventDefault(); setContextMenu(null); };
+    window.addEventListener('mousedown', close);
+    window.addEventListener('contextmenu', prevent);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('contextmenu', prevent);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [contextMenu]);
+
   // --- 초기화 효과 ---
 
   // 로그인하지 않은 사용자 리다이렉트
@@ -851,13 +866,8 @@ const SimpleDashboard: React.FC = () => {
 
       {/* 우클릭 컨텍스트 메뉴 */}
       {contextMenu && (
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 99999 }}
-          onClick={() => setContextMenu(null)}
-          onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
-        >
+        <>
           <div
-            onClick={(e) => e.stopPropagation()}
             style={{
               position: 'fixed',
               left: contextMenu.x,
@@ -872,6 +882,7 @@ const SimpleDashboard: React.FC = () => {
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
               fontSize: 13,
             }}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             {/* 열기 */}
             <button
@@ -1004,7 +1015,7 @@ const SimpleDashboard: React.FC = () => {
               <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Del</span>
             </button>
           </div>
-        </div>
+        </>
       )}
 
       {/* 팝업 매니저 */}
