@@ -31,6 +31,7 @@ interface ClassicDashboardProps {
   onCreateProject: () => void;
   onCreateDesign: () => void;
   onOpenEditor?: (item: ExplorerItem) => void;
+  onBlankContextMenu?: (e: React.MouseEvent) => void;
 }
 
 const menuItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
@@ -50,6 +51,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
   onCreateProject,
   onCreateDesign,
   onOpenEditor,
+  onBlankContextMenu,
 }) => {
   const { user } = useAuth();
   const { isAdmin } = useAdmin(user);
@@ -500,7 +502,13 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
             </div>
 
             {/* 디자인 그리드 */}
-            <div className={styles.designGrid}>
+            <div
+              className={styles.designGrid}
+              onContextMenu={(e) => {
+                if ((e.target as HTMLElement).closest(`.${styles.designCard}, .${styles.folderCard}`)) return;
+                if (onBlankContextMenu) onBlankContextMenu(e);
+              }}
+            >
               {data.isLoading ? (
                 <>
                   {[1, 2, 3, 4].map(i => (

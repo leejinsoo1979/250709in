@@ -111,18 +111,24 @@ const SimpleDashboard: React.FC = () => {
     type: 'folder' | 'design' | 'project';
   } | null>(null);
 
-  // 컨텍스트 메뉴
+  // 컨텍스트 메뉴 (아이템 우클릭)
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
     item: ExplorerItem;
   } | null>(null);
 
+  // 빈 영역 컨텍스트 메뉴 (허공 우클릭)
+  const [blankContextMenu, setBlankContextMenu] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
   // 컨텍스트 메뉴 바깥 클릭 시 닫기
   useEffect(() => {
-    if (!contextMenu) return;
-    const close = () => setContextMenu(null);
-    const prevent = (e: MouseEvent) => { e.preventDefault(); setContextMenu(null); };
+    if (!contextMenu && !blankContextMenu) return;
+    const close = () => { setContextMenu(null); setBlankContextMenu(null); };
+    const prevent = (e: MouseEvent) => { e.preventDefault(); close(); };
     window.addEventListener('mousedown', close);
     window.addEventListener('contextmenu', prevent);
     window.addEventListener('scroll', close, true);
@@ -131,7 +137,7 @@ const SimpleDashboard: React.FC = () => {
       window.removeEventListener('contextmenu', prevent);
       window.removeEventListener('scroll', close, true);
     };
-  }, [contextMenu]);
+  }, [contextMenu, blankContextMenu]);
 
   // --- 초기화 효과 ---
 
@@ -533,6 +539,11 @@ const SimpleDashboard: React.FC = () => {
           onItemContextMenu={handleItemContextMenu}
           onCreateProject={handleCreateProject}
           onCreateDesign={handleSaasCreateDesign}
+          onBlankContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setBlankContextMenu({ x: e.clientX, y: e.clientY });
+          }}
           onOpenEditor={(item) => {
             // 이미 공간설정 완료된 디자인은 바로 에디터로 이동
             if (item.thumbnail || item.spaceSize) {
@@ -1016,6 +1027,79 @@ const SimpleDashboard: React.FC = () => {
             </button>
           </div>
         </>
+      )}
+
+      {/* 빈 영역 우클릭 컨텍스트 메뉴 */}
+      {blankContextMenu && (
+        <div
+          style={{
+            position: 'fixed',
+            left: blankContextMenu.x,
+            top: blankContextMenu.y,
+            minWidth: 200,
+            background: 'var(--theme-surface, #1e1e1e)',
+            border: '1px solid var(--theme-border-hover, #444)',
+            borderRadius: 6,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            padding: '4px 0',
+            zIndex: 100000,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontSize: 13,
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {/* 프로젝트 생성 */}
+          <button
+            style={{
+              width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+              color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            onClick={() => { handleCreateProject(); setBlankContextMenu(null); }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            새 프로젝트
+          </button>
+
+          {/* 폴더 생성 (프로젝트 내부일 때만) */}
+          {nav.currentProjectId && (
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => { handleCreateFolder(); setBlankContextMenu(null); }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+              새 폴더
+            </button>
+          )}
+
+          {/* 디자인 생성 (프로젝트 내부일 때만) */}
+          {nav.currentProjectId && (
+            <>
+              <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => { handleSaasCreateDesign(); setBlankContextMenu(null); }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+                새 디자인
+              </button>
+            </>
+          )}
+        </div>
       )}
 
       {/* 팝업 매니저 */}
