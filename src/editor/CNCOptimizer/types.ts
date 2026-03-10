@@ -28,6 +28,9 @@ export interface Panel {
   bracketBoringPositions?: number[];      // 브라켓 타공 Y좌표 (힌지 Y위치와 동일)
   bracketBoringDepthPositions?: number[]; // 브라켓 타공 X좌표 [20, 52]
   isBracketSide?: boolean;                // 브라켓 타공 대상 측판 여부
+  // 3D 뷰어 패널 하이라이트용
+  meshName?: string;                       // 3D mesh 매칭용 패널 이름 (예: "좌측판", "선반 1")
+  furnitureId?: string;                    // 해당 패널이 속한 가구 ID
 }
 
 export interface StockPanel {
