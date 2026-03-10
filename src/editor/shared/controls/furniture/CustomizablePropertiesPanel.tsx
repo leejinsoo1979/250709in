@@ -2521,7 +2521,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   className={`${styles.toggleButton} ${isSubSplit ? styles.active : ''}`}
                   onClick={() => handleAreaSubSplitToggle(sIdx, areaSide, true)}
                 >
-                  추가
+                  분할
                 </button>
               </div>
             </div>
