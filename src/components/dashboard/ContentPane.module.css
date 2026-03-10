@@ -171,6 +171,14 @@
   object-fit: cover;
 }
 
+.iconInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
 .iconName {
   font-size: 12px;
   text-align: center;
@@ -179,6 +187,14 @@
   white-space: nowrap;
   color: var(--theme-text);
   line-height: 1.3;
+  width: 100%;
+}
+
+.iconMeta {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* ── 타일 뷰 ── */
