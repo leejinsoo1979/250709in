@@ -9,6 +9,7 @@ interface PanelListItemProps {
   onQuantityChange: (delta: number) => void;
   getColorHex: (color: string) => string;
   getMaterialName: (material: string) => string;
+  onHover?: (panelName: string | null, furnitureId: string | null) => void;
 }
 
 const PanelListItem: React.FC<PanelListItemProps> = ({
@@ -17,12 +18,15 @@ const PanelListItem: React.FC<PanelListItemProps> = ({
   onToggle,
   onQuantityChange,
   getColorHex,
-  getMaterialName
+  getMaterialName,
+  onHover
 }) => {
   return (
-    <div 
+    <div
       className={`${styles.panelItem} ${isSelected ? styles.selected : ''}`}
       onClick={onToggle}
+      onMouseEnter={() => onHover?.(panel.meshName || panel.name, panel.furnitureId || null)}
+      onMouseLeave={() => onHover?.(null, null)}
     >
       <div 
         className={styles.panelColor}
