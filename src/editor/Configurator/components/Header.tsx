@@ -637,10 +637,7 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                 )}
               </div>
-            )}
 
-            {/* 저장 버튼 - 파일 메뉴 바로 옆으로 이동, 읽기 전용 모드에서는 숨김 */}
-            {!readOnly && (
               <button
                 className={styles.actionButton}
                 onClick={() => {
@@ -658,9 +655,34 @@ const Header: React.FC<HeaderProps> = ({
                 </svg>
                 {saving ? t('common.saving') : t('common.save')}
               </button>
-            )}
+            </>
+          )}
+        </div>
 
-            {/* Undo/Redo 버튼 제거됨 */}
+        {/* 중앙 액션 버튼들 - 모바일에서는 숨김 */}
+        {!isMobile && (
+          <div className={styles.centerActions}>
+            {/* 읽기 전용 모드 표시 */}
+            {readOnly && (
+              <div style={{
+                padding: '6px 12px',
+                backgroundColor: `${colors.primary}15`,
+                border: `1px solid ${colors.primary}40`,
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: colors.primary
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" />
+                </svg>
+                읽기 전용
+              </div>
+            )}
 
             {onNext && (
               <button className={styles.actionButton} onClick={onNext}>
@@ -671,16 +693,6 @@ const Header: React.FC<HeaderProps> = ({
                 {t('common.finish')}
               </button>
             )}
-
-            {/* 도움말 버튼 제거됨 */}
-
-            {/* 조작법 버튼 */}
-            <button className={styles.actionButton} onClick={handleHelpClick}>
-              <FaRegKeyboard size={20} />
-              {t('help.title')}
-            </button>
-
-            {/* 뷰모드/그래픽 설정은 설정 패널로 이동됨 */}
           </div>
         )}
 
@@ -703,7 +715,14 @@ const Header: React.FC<HeaderProps> = ({
               </svg>
             </button>
           )}
-          {/* 내보내기 버튼은 컨버팅 드롭다운 내로 이동됨 */}
+
+          {/* 조작법 버튼 - 컨버팅 옆 */}
+          {!isMobile && (
+            <button className={styles.actionButton} onClick={handleHelpClick}>
+              <FaRegKeyboard size={20} />
+              {t('help.title')}
+            </button>
+          )}
 
           {/* CNC 옵티마이저 버튼 - 읽기 전용 모드에서는 숨김 */}
           {!readOnly && (
