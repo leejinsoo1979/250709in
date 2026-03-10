@@ -135,17 +135,25 @@ const SimpleDashboard: React.FC = () => {
   } | null>(null);
 
   // 컨텍스트 메뉴 바깥 클릭 시 닫기
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+  const blankContextMenuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!contextMenu && !blankContextMenu) return;
-    const close = () => { setContextMenu(null); setBlankContextMenu(null); };
-    const prevent = (e: MouseEvent) => { e.preventDefault(); close(); };
+    const close = (e: MouseEvent) => {
+      // 메뉴 내부 클릭은 무시 (onClick이 먼저 처리)
+      if (contextMenuRef.current?.contains(e.target as Node)) return;
+      if (blankContextMenuRef.current?.contains(e.target as Node)) return;
+      setContextMenu(null);
+      setBlankContextMenu(null);
+    };
+    const prevent = (e: MouseEvent) => { e.preventDefault(); setContextMenu(null); setBlankContextMenu(null); };
     window.addEventListener('mousedown', close);
     window.addEventListener('contextmenu', prevent);
-    window.addEventListener('scroll', close, true);
+    window.addEventListener('scroll', () => { setContextMenu(null); setBlankContextMenu(null); }, true);
     return () => {
       window.removeEventListener('mousedown', close);
       window.removeEventListener('contextmenu', prevent);
-      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('scroll', () => { setContextMenu(null); setBlankContextMenu(null); }, true);
     };
   }, [contextMenu, blankContextMenu]);
 
@@ -662,6 +670,12 @@ const SimpleDashboard: React.FC = () => {
                     if (isMobile) setMobileNavOpen(false);
                   }}
                   onCreateProject={handleCreateProject}
+                  menuCounts={{
+                    'in-progress': data.projects.filter(p => !p.status || p.status === 'in_progress').length,
+                    'completed': data.projects.filter(p => p.status === 'completed').length,
+                    'shared-with-me': data.sharedWithMeProjects.length,
+                    'shared-by-me': data.sharedByMeProjects.length,
+                  }}
                 />
                 {isMobile && (
                   <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />
@@ -974,6 +988,7 @@ const SimpleDashboard: React.FC = () => {
       {contextMenu && (
         <>
           <div
+            ref={contextMenuRef}
             style={{
               position: 'fixed',
               left: contextMenu.x,
@@ -1266,6 +1281,7 @@ const SimpleDashboard: React.FC = () => {
       {/* 빈 영역 우클릭 컨텍스트 메뉴 */}
       {blankContextMenu && (
         <div
+          ref={blankContextMenuRef}
           style={{
             position: 'fixed',
             left: blankContextMenu.x,

@@ -18,6 +18,7 @@ interface NavigationPaneProps {
   onNavigate: (projectId: string | null, folderId?: string | null, label?: string) => void;
   onMenuChange: (menu: QuickAccessMenu) => void;
   onCreateProject?: () => void;
+  menuCounts?: Partial<Record<QuickAccessMenu, number>>;
 }
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
@@ -29,6 +30,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   onNavigate,
   onMenuChange,
   onCreateProject,
+  menuCounts,
 }) => {
   const { user } = useAuth();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -152,6 +154,9 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             >
               <span className={styles.menuIcon}>{item.icon}</span>
               <span className={styles.menuLabel}>{item.label}</span>
+              {menuCounts?.[item.key] !== undefined && menuCounts[item.key]! > 0 && (
+                <span className={styles.menuBadge}>{menuCounts[item.key]}</span>
+              )}
             </button>
           ))}
         </div>

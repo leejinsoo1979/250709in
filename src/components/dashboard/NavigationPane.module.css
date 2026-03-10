@@ -121,6 +121,21 @@
   text-overflow: ellipsis;
 }
 
+.menuBadge {
+  margin-left: auto;
+  padding: 1px 6px;
+  background: var(--theme-background-secondary);
+  border-radius: 10px;
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  font-weight: 500;
+}
+
+.menuItemActive .menuBadge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
 /* 트리 아이템 */
 .treeItem {
   display: flex;
