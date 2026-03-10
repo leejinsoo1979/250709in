@@ -618,6 +618,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const spaceWidth = mmToThreeUnits(spaceInfo.width);
   const spaceHeight = mmToThreeUnits(spaceInfo.height);
 
+  // 커스터마이징 가구 포함 모듈 너비 추출 헬퍼
+  // getModuleById()는 customizable-* 모듈에 null 반환 → fallback 필요
+  const getModuleWidthMm = (module: typeof placedModules[number]): number | null => {
+    if (module.isFreePlacement && module.freeWidth) return module.freeWidth;
+    const moduleData = getModuleById(module.moduleId);
+    if (moduleData) return module.adjustedWidth || moduleData.dimensions.width;
+    // customizable 모듈 fallback
+    if (module.adjustedWidth) return module.adjustedWidth;
+    if (module.moduleWidth) return module.moduleWidth;
+    if (module.freeWidth) return module.freeWidth;
+    // moduleId에서 추출: customizable-full-1000 → 1000
+    const match = module.moduleId.match(/(\d+)$/);
+    if (match) return parseInt(match[1]);
+    return null;
+  };
+
   // 가구별 실시간 치수선 및 가이드 미리 계산 (hooks는 항상 호출되어야 함)
   const furnitureDimensions = React.useMemo(() => {
     if (placedModules.length === 0 || currentViewDirection === 'top') return null;
@@ -1013,13 +1029,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let rightmostFurnitureX = null;
             
             placedModules.forEach(module => {
-              const moduleData = getModuleById(module.moduleId);
-              if (moduleData) {
+              const widthMm = getModuleWidthMm(module);
+              if (widthMm !== null) {
                 const moduleX = module.position.x;
-                const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
+                const moduleWidth = widthMm * 0.01;
                 const moduleLeft = moduleX - moduleWidth / 2;
                 const moduleRight = moduleX + moduleWidth / 2;
-                
+
                 if (leftmostFurnitureX === null || moduleLeft < leftmostFurnitureX) {
                   leftmostFurnitureX = moduleLeft;
                 }
@@ -1028,7 +1044,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
               }
             });
-            
+
             // 가구가 있으면 가구 경계를 기준으로 폭 계산
             if (leftmostFurnitureX !== null && rightmostFurnitureX !== null) {
               actualLeftEdge = leftmostFurnitureX;
@@ -1105,8 +1121,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드 모드 좌측 엔드패널 치수선 (자유배치에서는 FreePlacementDropZone이 처리) */}
-      {showDimensions && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
+      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
         // 왼쪽 벽이 있는지 확인
@@ -1217,8 +1233,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
       
-      {/* 노서라운드 모드 우측 엔드패널 치수선 (자유배치에서는 FreePlacementDropZone이 처리) */}
-      {showDimensions && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
         // 오른쪽 벽이 있는지 확인
@@ -1599,19 +1615,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
       )}
       
-      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 (자유배치 제외) */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 왼쪽 벽이 있는지 확인
             const hasLeftWall = spaceInfo.wallConfig?.left;
             
             // 가장 왼쪽 가구 위치 찾기
-            let leftmostFurnitureX = null;
+            let leftmostFurnitureX: number | null = null;
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
-                const moduleData = getModuleById(module.moduleId);
-                if (moduleData) {
+                const widthMm = getModuleWidthMm(module);
+                if (widthMm !== null) {
                   const moduleX = module.position.x;
-                  const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
+                  const moduleWidth = widthMm * 0.01;
                   const moduleLeft = moduleX - moduleWidth / 2;
                   if (leftmostFurnitureX === null || moduleLeft < leftmostFurnitureX) {
                     leftmostFurnitureX = moduleLeft;
@@ -1619,7 +1635,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
               });
             }
-            
+
             // 벽이 없고 가구도 없으면 치수 표시하지 않음
             if (!hasLeftWall && leftmostFurnitureX === null) {
               return null;
@@ -1802,19 +1818,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 (자유배치 제외) */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 오른쪽 벽이 있는지 확인
             const hasRightWall = spaceInfo.wallConfig?.right;
             
             // 가장 오른쪽 가구 위치 찾기
-            let rightmostFurnitureX = null;
+            let rightmostFurnitureX: number | null = null;
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
-                const moduleData = getModuleById(module.moduleId);
-                if (moduleData) {
+                const widthMm = getModuleWidthMm(module);
+                if (widthMm !== null) {
                   const moduleX = module.position.x;
-                  const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
+                  const moduleWidth = widthMm * 0.01;
                   const moduleRight = moduleX + moduleWidth / 2;
                   if (rightmostFurnitureX === null || moduleRight > rightmostFurnitureX) {
                     rightmostFurnitureX = moduleRight;
@@ -1822,7 +1838,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
               });
             }
-            
+
             // 벽이 없고 가구도 없으면 치수 표시하지 않음
             if (!hasRightWall && rightmostFurnitureX === null) {
               return null;
