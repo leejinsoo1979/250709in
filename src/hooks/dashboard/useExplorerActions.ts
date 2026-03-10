@@ -258,38 +258,37 @@ export function useExplorerActions(
           if (cb.mode === 'copy') {
             // 디자인 복제: 원본 데이터를 가져와서 새로 생성
             const { designFile } = await getDesignFileById(item.id);
-            const newData = {
+            const newData: any = {
               name: `${item.name} (복사본)`,
               projectId: destProjectId!,
               spaceConfig: designFile?.spaceConfig || DEFAULT_SPACE_CONFIG,
               furniture: designFile?.furniture || { placedModules: [] },
               thumbnail: designFile?.thumbnail,
             };
+            if (targetFolderId) newData.folderId = targetFolderId;
             await createDesignFile(newData);
           } else {
-            // cut: 폴더 간 이동 (같은 프로젝트 내에서만)
-            if (destProjectId && targetFolderId) {
+            // cut: 폴더 간 이동
+            if (destProjectId) {
               const projectFolders = data.folders[destProjectId] || [];
               // 기존 폴더에서 제거
-              let movedItem: any = null;
-              const cleaned = projectFolders.map(folder => {
-                const childIdx = folder.children.findIndex(c => c.id === item.id);
-                if (childIdx !== -1) {
-                  movedItem = folder.children[childIdx];
-                  return { ...folder, children: folder.children.filter(c => c.id !== item.id) };
-                }
-                return folder;
-              });
+              const cleaned = projectFolders.map(folder => ({
+                ...folder,
+                children: (folder.children || []).filter(c => c.id !== item.id),
+              }));
               // 대상 폴더에 추가
-              if (movedItem) {
-                const updated = cleaned.map(folder => {
-                  if (folder.id === targetFolderId) {
-                    return { ...folder, children: [...folder.children, movedItem] };
-                  }
-                  return folder;
-                });
-                await saveFolderData(destProjectId, updated);
-              }
+              const moveEntry = { id: item.id, name: item.name, type: 'design' as const, projectId: destProjectId };
+              const updated = targetFolderId
+                ? cleaned.map(folder => {
+                    if (folder.id === targetFolderId) {
+                      return { ...folder, children: [...(folder.children || []), moveEntry] };
+                    }
+                    return folder;
+                  })
+                : cleaned;
+              await saveFolderData(destProjectId, updated);
+              // Firebase 디자인 파일의 folderId도 업데이트
+              await updateDesignFile(item.id, { folderId: targetFolderId || null });
             }
           }
         } else if (item.type === 'project') {

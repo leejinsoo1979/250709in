@@ -858,7 +858,8 @@ export const updateDesignFile = async (
       ...(updates.projectData && { projectData: updates.projectData }),
       ...(spaceConfigClean && { spaceConfig: spaceConfigClean }),
       ...(updates.furniture && { furniture: updates.furniture }),
-      ...(updates.thumbnail && { thumbnail: updates.thumbnail })
+      ...(updates.thumbnail && { thumbnail: updates.thumbnail }),
+      ...(updates.folderId !== undefined && { folderId: updates.folderId }),
     };
     
     // Firebase는 undefined 값을 허용하지 않으므로 모든 undefined 값을 제거
