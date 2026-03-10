@@ -8,19 +8,32 @@ export default function LandingPage() {
   return (
     <div className="bg-zinc-950 min-h-screen flex items-center justify-center px-8">
       <div className="text-center">
-        {/* Logo */}
-        <motion.div
-          className="flex justify-center mb-10"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <img
-            src="/images/ttt_logo/tttlogo4.png"
+        {/* Dots Animation + Logo */}
+        <div className="flex items-center justify-center gap-4 sm:gap-6 mb-10">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full bg-white"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, y: [0, -10, 0] }}
+                transition={{
+                  scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
+                  opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
+                  y: { duration: 2, delay: 0.8 + i * 0.25, repeat: Infinity, ease: "easeInOut" },
+                }}
+              />
+            ))}
+          </div>
+          <motion.img
+            src="/images/ttt_logo/tttlogo.png"
             alt="think thing thank"
-            className="h-16 sm:h-20 md:h-24 lg:h-28 w-auto"
+            className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto invert"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           />
-        </motion.div>
+        </div>
 
         {/* craft */}
         <motion.h1
