@@ -46,6 +46,11 @@
   animation: slideInFromLeft 0.3s ease;
 }
 
+/* NavigationPane이 fileTreePanel 전체 너비 채우기 */
+.fileTreePanel > div {
+  width: 100% !important;
+}
+
 /* 준비중 패널 */
 .preparingPanel {
   display: flex;
