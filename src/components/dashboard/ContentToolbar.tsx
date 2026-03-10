@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, LayoutGrid, List, Table, Grid3X3, Image, Layers } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, LayoutGrid, List, Table, Grid3X3, Image } from 'lucide-react';
 import type { ViewMode, SortBy } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
@@ -18,7 +18,6 @@ const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] =
   { mode: 'extra-large', label: '아주 큰 아이콘', icon: <Image size={15} /> },
   { mode: 'large', label: '큰 아이콘', icon: <LayoutGrid size={15} /> },
   { mode: 'medium', label: '보통 아이콘', icon: <Grid3X3 size={15} /> },
-  { mode: 'small', label: '작은 아이콘', icon: <Layers size={15} /> },
   { mode: 'list', label: '목록', icon: <List size={15} /> },
   { mode: 'details', label: '자세히', icon: <Table size={15} /> },
   { mode: 'tiles', label: '타일', icon: <LayoutGrid size={15} /> },
