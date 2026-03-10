@@ -406,9 +406,9 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   document.body.style.color = mode.text;
 
   // 테마별 favicon 전환
-  const favEl = document.getElementById('favicon-16') as HTMLLinkElement | null;
+  const favEl = document.getElementById('app-favicon') as HTMLLinkElement | null;
   if (favEl) {
-    favEl.href = theme.mode === 'dark' ? '/images/favicon-dark.png?v=5' : '/images/favicon-light.png?v=5';
+    favEl.href = theme.mode === 'dark' ? '/images/favicon-dark.png?v=6' : '/images/favicon-light.png?v=6';
   }
   
   console.log('🎨 테마 적용 완료:', {
