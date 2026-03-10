@@ -717,8 +717,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 모듈 데이터 가져오기 (조건부 렌더링 전에 미리 계산)
   const moduleData = currentPlacedModule
     ? (() => {
-        // My캐비넷 모듈 (customConfig 있지만 isCustomizable false): buildModuleDataFromPlacedModule 사용
-        if (currentPlacedModule.customConfig && !currentPlacedModule.isCustomizable) {
+        // 커스텀 모듈 (My캐비넷 또는 customizable 자유배치): buildModuleDataFromPlacedModule 사용
+        if (currentPlacedModule.customConfig && (!currentPlacedModule.isCustomizable || currentPlacedModule.moduleId.startsWith('customizable-'))) {
           return buildModuleDataFromPlacedModule(currentPlacedModule) || ({
             id: currentPlacedModule.moduleId,
             name: '커스텀 캐비넷',
