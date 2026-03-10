@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { PlusIcon, UsersIcon } from '../components/common/Icons';
@@ -33,6 +33,7 @@ import ClassicDashboard from '@/components/dashboard/ClassicDashboard';
 import { useExplorerNavigation } from '@/hooks/dashboard/useExplorerNavigation';
 import { useExplorerData } from '@/hooks/dashboard/useExplorerData';
 import { useExplorerActions } from '@/hooks/dashboard/useExplorerActions';
+import { useMarqueeSelection } from '@/hooks/dashboard/useMarqueeSelection';
 import type { ViewMode, SortBy, SortDirection, ExplorerItem } from '@/hooks/dashboard/types';
 
 import styles from './SimpleDashboard.module.css';
@@ -47,6 +48,15 @@ const SimpleDashboard: React.FC = () => {
   const nav = useExplorerNavigation();
   const data = useExplorerData(nav.currentProjectId, nav.currentFolderId, nav.activeMenu);
   const actions = useExplorerActions(data, nav);
+
+  // 마키(올가미) 선택
+  const contentAreaRef = useRef<HTMLDivElement>(null);
+  const { marqueeRect, marqueeHandlers } = useMarqueeSelection({
+    containerRef: contentAreaRef,
+    onSelectionChange: actions.setSelectedItems,
+    existingSelection: actions.selectedItems,
+    enabled: dashboardLayout === 'windows',
+  });
 
   // --- 로컬 UI 상태 ---
   const [viewMode, setViewMode] = useState<ViewMode>('medium');
@@ -456,16 +466,58 @@ const SimpleDashboard: React.FC = () => {
     setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
   }, []);
 
-  // --- 키보드 네비게이션 ---
+  // --- 선택된 아이템 헬퍼 ---
+  const getSelectedExplorerItems = useCallback(() => {
+    return data.currentItems.filter(item => actions.selectedItems.has(item.id));
+  }, [data.currentItems, actions.selectedItems]);
+
+  // --- 키보드 네비게이션 + 단축키 ---
   useEffect(() => {
+    if (dashboardLayout !== 'windows') return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
 
+      const isMod = e.ctrlKey || e.metaKey;
+
+      // 네비게이션
       if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); nav.goBack(); return; }
       if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); nav.goForward(); return; }
       if (e.key === 'Backspace') { e.preventDefault(); nav.goUp(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') { e.preventDefault(); actions.selectAll(); return; }
+
+      // Ctrl+A: 전체선택
+      if (isMod && e.key === 'a') { e.preventDefault(); actions.selectAll(); return; }
+
+      // Ctrl+C: 복사
+      if (isMod && e.key === 'c' && actions.selectedItems.size > 0) {
+        e.preventDefault();
+        actions.copyItems(getSelectedExplorerItems());
+        return;
+      }
+
+      // Ctrl+X: 잘라내기
+      if (isMod && e.key === 'x' && actions.selectedItems.size > 0) {
+        e.preventDefault();
+        actions.cutItems(getSelectedExplorerItems());
+        return;
+      }
+
+      // Ctrl+V: 붙여넣기
+      if (isMod && e.key === 'v' && actions.clipboard) {
+        e.preventDefault();
+        actions.pasteItems(nav.currentProjectId || undefined, nav.currentFolderId || undefined);
+        return;
+      }
+
+      // Ctrl+D: 복제
+      if (isMod && e.key === 'd' && actions.selectedItems.size > 0) {
+        e.preventDefault();
+        actions.duplicateItems(getSelectedExplorerItems());
+        return;
+      }
+
+      // Delete: 삭제
       if (e.key === 'Delete' && actions.selectedItems.size > 0) {
         e.preventDefault();
         const itemsToDelete = data.currentItems
@@ -476,13 +528,19 @@ const SimpleDashboard: React.FC = () => {
         }
         return;
       }
+
+      // Enter: 열기
       if (e.key === 'Enter' && actions.selectedItems.size === 1) {
         const selectedId = Array.from(actions.selectedItems)[0];
         const item = data.currentItems.find(i => i.id === selectedId);
         if (item) handleItemDoubleClick(item);
         return;
       }
+
+      // Escape: 선택 해제
       if (e.key === 'Escape') { actions.clearSelection(); return; }
+
+      // F2: 이름 바꾸기
       if (e.key === 'F2' && actions.selectedItems.size === 1) {
         const selectedId = Array.from(actions.selectedItems)[0];
         const item = data.currentItems.find(i => i.id === selectedId);
@@ -495,7 +553,7 @@ const SimpleDashboard: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nav, actions, data.currentItems, handleItemDoubleClick]);
+  }, [nav, actions, data.currentItems, handleItemDoubleClick, dashboardLayout, getSelectedExplorerItems]);
 
   // --- 로딩/에러 상태 ---
 
@@ -613,6 +671,7 @@ const SimpleDashboard: React.FC = () => {
 
             {/* 우측 컨텐츠 영역 */}
             <div
+              ref={contentAreaRef}
               className={styles.explorerContent}
               onContextMenu={(e) => {
                 // 아이템 위에서 클릭한 경우 무시 (아이템 자체 컨텍스트 메뉴 우선)
@@ -622,6 +681,7 @@ const SimpleDashboard: React.FC = () => {
                 e.stopPropagation();
                 setBlankContextMenu({ x: e.clientX, y: e.clientY });
               }}
+              {...marqueeHandlers}
             >
               <ContentToolbar
                 viewMode={viewMode}
@@ -632,6 +692,10 @@ const SimpleDashboard: React.FC = () => {
                 onCreateFolder={nav.currentProjectId ? handleCreateFolder : undefined}
                 onCreateDesign={nav.currentProjectId ? () => handleCreateDesign() : undefined}
                 nav={nav}
+                totalItemCount={data.currentItems.length}
+                selectedCount={actions.selectedItems.size}
+                onSelectAll={actions.selectAll}
+                onClearSelection={actions.clearSelection}
               />
 
               <ContentPane
@@ -650,6 +714,23 @@ const SimpleDashboard: React.FC = () => {
                 projectDesignFiles={data.projectDesignFiles}
                 isLoading={data.isLoading}
               />
+
+              {/* 마키 선택 오버레이 */}
+              {marqueeRect && (
+                <div
+                  style={{
+                    position: 'fixed',
+                    left: marqueeRect.x,
+                    top: marqueeRect.y,
+                    width: marqueeRect.width,
+                    height: marqueeRect.height,
+                    border: '1px solid var(--theme-primary, #3b82f6)',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    pointerEvents: 'none',
+                    zIndex: 10000,
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -1066,6 +1147,93 @@ const SimpleDashboard: React.FC = () => {
             {/* 구분선 */}
             <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
 
+            {/* 복사 */}
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => {
+                const selected = getSelectedExplorerItems();
+                const items = selected.length > 0 ? selected : [contextMenu.item];
+                actions.copyItems(items);
+                setContextMenu(null);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              복사
+              <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+C</span>
+            </button>
+
+            {/* 잘라내기 */}
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => {
+                const selected = getSelectedExplorerItems();
+                const items = selected.length > 0 ? selected : [contextMenu.item];
+                actions.cutItems(items);
+                setContextMenu(null);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+              잘라내기
+              <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+X</span>
+            </button>
+
+            {/* 붙여넣기 (클립보드에 항목이 있을 때) */}
+            {actions.clipboard && (
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => {
+                  actions.pasteItems(nav.currentProjectId || undefined, nav.currentFolderId || undefined);
+                  setContextMenu(null);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                붙여넣기
+                <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+V</span>
+              </button>
+            )}
+
+            {/* 복제 */}
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => {
+                const selected = getSelectedExplorerItems();
+                const items = selected.length > 0 ? selected : [contextMenu.item];
+                actions.duplicateItems(items);
+                setContextMenu(null);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16V4a2 2 0 012-2h12"/></svg>
+              복제
+              <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+D</span>
+            </button>
+
+            {/* 구분선 */}
+            <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+
             {/* 삭제 */}
             <button
               style={{
@@ -1162,6 +1330,30 @@ const SimpleDashboard: React.FC = () => {
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
                 새 디자인
+              </button>
+            </>
+          )}
+
+          {/* 붙여넣기 (클립보드에 항목이 있을 때) */}
+          {actions.clipboard && (
+            <>
+              <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => {
+                  actions.pasteItems(nav.currentProjectId || undefined, nav.currentFolderId || undefined);
+                  setBlankContextMenu(null);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                붙여넣기
+                <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+V</span>
               </button>
             </>
           )}
