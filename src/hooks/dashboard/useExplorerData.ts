@@ -269,11 +269,45 @@ export function useExplorerData(
 
   // --- currentItems 계산 ---
 
+  // 삭제되지 않은 프로젝트만 필터 (일반 뷰용)
+  const activeProjects = projects.filter(p => !p.isDeleted);
+  // 삭제된 프로젝트 (휴지통용)
+  const deletedProjects = projects.filter(p => p.isDeleted);
+
   const currentItems: ExplorerItem[] = (() => {
+    // 휴지통 메뉴
+    if (activeMenu === 'trash') {
+      const items: ExplorerItem[] = [];
+      // 삭제된 프로젝트
+      deletedProjects.forEach(p => {
+        items.push({
+          id: p.id, name: p.title, type: 'project',
+          updatedAt: p.updatedAt, thumbnail: p.thumbnail,
+          spaceSize: p.spaceSize, status: p.status,
+        });
+      });
+      // 삭제된 디자인 파일 (모든 프로젝트에서)
+      Object.entries(projectDesignFiles).forEach(([projectId, files]) => {
+        (files || []).filter((df: any) => df.isDeleted).forEach((df: any) => {
+          const owner = projectOwners[df.userId];
+          items.push({
+            id: df.id, name: df.name, type: 'design',
+            projectId, folderId: df.folderId,
+            updatedAt: df.deletedAt || df.updatedAt, thumbnail: df.thumbnail,
+            spaceSize: df.spaceSize, furnitureCount: df.furnitureCount,
+            userId: df.userId,
+            ownerName: owner?.displayName,
+            ownerPhotoURL: owner?.photoURL || undefined,
+          });
+        });
+      });
+      return items;
+    }
+
     // 빠른 액세스 메뉴 모드
     if (activeMenu === 'bookmarks') {
       const items: ExplorerItem[] = [];
-      projects.filter(p => bookmarkedProjects.has(p.id)).forEach(p => {
+      activeProjects.filter(p => bookmarkedProjects.has(p.id)).forEach(p => {
         items.push({
           id: p.id, name: p.title, type: 'project',
           updatedAt: p.updatedAt, thumbnail: p.thumbnail,
@@ -301,11 +335,11 @@ export function useExplorerData(
 
     // 프로젝트가 선택되지 않은 경우 → 프로젝트 목록 표시
     if (!currentProjectId) {
-      let filteredProjects = projects;
+      let filteredProjects = activeProjects;
       if (activeMenu === 'in-progress') {
-        filteredProjects = projects.filter(p => !p.status || p.status === 'in_progress');
+        filteredProjects = activeProjects.filter(p => !p.status || p.status === 'in_progress');
       } else if (activeMenu === 'completed') {
-        filteredProjects = projects.filter(p => p.status === 'completed');
+        filteredProjects = activeProjects.filter(p => p.status === 'completed');
       }
       return filteredProjects.map(p => ({
         id: p.id, name: p.title, type: 'project' as const,
@@ -329,11 +363,12 @@ export function useExplorerData(
       });
     }
 
-    // 디자인 파일들
+    // 디자인 파일들 (삭제되지 않은 것만)
     const designFiles = projectDesignFiles[currentProjectId] || [];
-    const filteredDesignFiles = currentFolderId
+    const filteredDesignFiles = (currentFolderId
       ? designFiles.filter((df: any) => df.folderId === currentFolderId)
-      : designFiles.filter((df: any) => !df.folderId);
+      : designFiles.filter((df: any) => !df.folderId)
+    ).filter((df: any) => !df.isDeleted);
 
     filteredDesignFiles.forEach((df: any) => {
       const owner = projectOwners[df.userId];

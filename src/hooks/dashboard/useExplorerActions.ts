@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
-import { deleteProject, deleteDesignFile, saveFolderData, createDesignFile, createProject, getDesignFileById, getProject } from '@/firebase/projects';
+import { saveFolderData, createDesignFile, createProject, getDesignFileById, getProject, softDeleteDesignFile, softDeleteProject, restoreDesignFile, restoreProject, permanentDeleteDesignFile, permanentDeleteProject } from '@/firebase/projects';
 import { DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
 import type { DragState, ExplorerItem, ClipboardState, SelectItemOptions, UseExplorerDataReturn, UseExplorerNavigationReturn, UseExplorerActionsReturn } from './types';
 
@@ -96,23 +96,17 @@ export function useExplorerActions(
 
   // --- 삭제 ---
 
+  // 휴지통으로 이동 (소프트 삭제)
   const deleteItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
     for (const item of items) {
       try {
         if (item.type === 'project') {
-          const { error } = await deleteProject(item.id);
+          const { error } = await softDeleteProject(item.id);
           if (error) {
             alert('프로젝트 삭제 실패: ' + error);
-          } else {
-            // BroadcastChannel 알림
-            try {
-              const ch = new BroadcastChannel('project-updates');
-              ch.postMessage({ type: 'PROJECT_DELETED', projectId: item.id });
-              ch.close();
-            } catch { /* ignore */ }
           }
         } else if (item.type === 'design' && item.projectId) {
-          const { error } = await deleteDesignFile(item.id, item.projectId);
+          const { error } = await softDeleteDesignFile(item.id, item.projectId);
           if (error) {
             alert('디자인파일 삭제 실패: ' + error);
           }
@@ -131,6 +125,60 @@ export function useExplorerActions(
     if (nav.currentProjectId) {
       await data.refreshDesignFiles(nav.currentProjectId);
       await data.refreshFolders(nav.currentProjectId);
+    }
+    clearSelection();
+  }, [data, nav.currentProjectId, clearSelection]);
+
+  // 휴지통에서 복원
+  const restoreItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
+    for (const item of items) {
+      try {
+        if (item.type === 'project') {
+          const { error } = await restoreProject(item.id);
+          if (error) alert('프로젝트 복원 실패: ' + error);
+        } else if (item.type === 'design' && item.projectId) {
+          const { error } = await restoreDesignFile(item.id, item.projectId);
+          if (error) alert('디자인파일 복원 실패: ' + error);
+        }
+      } catch (err) {
+        console.error('복원 중 오류:', err);
+      }
+    }
+
+    await data.refreshProjects();
+    if (nav.currentProjectId) {
+      await data.refreshDesignFiles(nav.currentProjectId);
+    }
+    clearSelection();
+  }, [data, nav.currentProjectId, clearSelection]);
+
+  // 영구 삭제
+  const permanentDeleteItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
+    for (const item of items) {
+      try {
+        if (item.type === 'project') {
+          const { error } = await permanentDeleteProject(item.id);
+          if (error) {
+            alert('프로젝트 영구 삭제 실패: ' + error);
+          } else {
+            try {
+              const ch = new BroadcastChannel('project-updates');
+              ch.postMessage({ type: 'PROJECT_DELETED', projectId: item.id });
+              ch.close();
+            } catch { /* ignore */ }
+          }
+        } else if (item.type === 'design' && item.projectId) {
+          const { error } = await permanentDeleteDesignFile(item.id, item.projectId);
+          if (error) alert('디자인파일 영구 삭제 실패: ' + error);
+        }
+      } catch (err) {
+        console.error('영구 삭제 중 오류:', err);
+      }
+    }
+
+    await data.refreshProjects();
+    if (nav.currentProjectId) {
+      await data.refreshDesignFiles(nav.currentProjectId);
     }
     clearSelection();
   }, [data, nav.currentProjectId, clearSelection]);
@@ -402,6 +450,8 @@ export function useExplorerActions(
     selectAll,
     clearSelection,
     deleteItems,
+    restoreItems,
+    permanentDeleteItems,
     renameItem,
     duplicateProject,
     toggleBookmark,

@@ -176,10 +176,13 @@ export async function listDesignFiles(
         furnitureCount: data.furniture?.placedModules?.length || 0,
         thumbnail: data.thumbnail,
         spaceConfig: data.spaceConfig,
-        furniture: data.furniture
+        furniture: data.furniture,
+        isDeleted: data.isDeleted || false,
+        deletedAt: data.deletedAt,
+        userId: data.userId,
       });
     });
-    
+
     console.log('🎨 Found designs in legacy:', designs.length);
     return { designs, error: null };
     

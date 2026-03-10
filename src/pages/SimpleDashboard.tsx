@@ -652,10 +652,12 @@ const SimpleDashboard: React.FC = () => {
                 <NavigationPane
                   projects={
                     nav.activeMenu === 'in-progress'
-                      ? data.projects.filter(p => !p.status || p.status === 'in_progress')
+                      ? data.projects.filter(p => !p.isDeleted && (!p.status || p.status === 'in_progress'))
                       : nav.activeMenu === 'completed'
-                        ? data.projects.filter(p => p.status === 'completed')
-                        : data.projects
+                        ? data.projects.filter(p => !p.isDeleted && p.status === 'completed')
+                        : nav.activeMenu === 'trash'
+                          ? data.projects.filter(p => p.isDeleted)
+                          : data.projects.filter(p => !p.isDeleted)
                   }
                   folders={data.folders}
                   currentProjectId={nav.currentProjectId}
@@ -672,10 +674,11 @@ const SimpleDashboard: React.FC = () => {
                   onCreateProject={handleCreateProject}
                   onItemContextMenu={handleItemContextMenu}
                   menuCounts={{
-                    'in-progress': data.projects.filter(p => !p.status || p.status === 'in_progress').length,
-                    'completed': data.projects.filter(p => p.status === 'completed').length,
+                    'in-progress': data.projects.filter(p => !p.isDeleted && (!p.status || p.status === 'in_progress')).length,
+                    'completed': data.projects.filter(p => !p.isDeleted && p.status === 'completed').length,
                     'shared-with-me': data.sharedWithMeProjects.length,
                     'shared-by-me': data.sharedByMeProjects.length,
+                    'trash': data.projects.filter(p => p.isDeleted).length + Object.values(data.projectDesignFiles).flat().filter((df: any) => df.isDeleted).length,
                   }}
                 />
                 {isMobile && (
@@ -1006,6 +1009,83 @@ const SimpleDashboard: React.FC = () => {
             }}
             onMouseDown={(e) => e.stopPropagation()}
           >
+            {/* === 휴지통 전용 컨텍스트 메뉴 === */}
+            {nav.activeMenu === 'trash' ? (
+              <>
+                {/* 복원 */}
+                <button
+                  style={{
+                    width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                    color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                  onClick={() => {
+                    const item = contextMenu.item;
+                    const selectedCount = actions.selectedItems.size;
+                    const isInSelection = actions.selectedItems.has(item.id);
+                    if (selectedCount > 1 && isInSelection) {
+                      const itemsToRestore = data.currentItems
+                        .filter(i => actions.selectedItems.has(i.id))
+                        .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
+                      actions.restoreItems(itemsToRestore);
+                    } else {
+                      actions.restoreItems([{
+                        id: item.id,
+                        type: item.type,
+                        projectId: item.projectId || nav.currentProjectId || undefined,
+                      }]);
+                    }
+                    setContextMenu(null);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                  복원
+                </button>
+
+                {/* 구분선 */}
+                <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+
+                {/* 영구 삭제 */}
+                <button
+                  style={{
+                    width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                    color: '#ef4444', textAlign: 'left', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                  onClick={() => {
+                    const item = contextMenu.item;
+                    const selectedCount = actions.selectedItems.size;
+                    const isInSelection = actions.selectedItems.has(item.id);
+                    if (selectedCount > 1 && isInSelection) {
+                      const itemsToDelete = data.currentItems
+                        .filter(i => actions.selectedItems.has(i.id))
+                        .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
+                      if (confirm(`${itemsToDelete.length}개 항목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
+                        actions.permanentDeleteItems(itemsToDelete);
+                      }
+                    } else {
+                      if (confirm(`"${item.name}"을(를) 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
+                        actions.permanentDeleteItems([{
+                          id: item.id,
+                          type: item.type,
+                          projectId: item.projectId || nav.currentProjectId || undefined,
+                        }]);
+                      }
+                    }
+                    setContextMenu(null);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  영구 삭제
+                </button>
+              </>
+            ) : (
+            <>
+            {/* === 일반 컨텍스트 메뉴 === */}
             {/* 열기 */}
             <button
               style={{
@@ -1287,6 +1367,8 @@ const SimpleDashboard: React.FC = () => {
               삭제
               <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Del</span>
             </button>
+            </>
+            )}
           </div>
         </>
       )}

@@ -148,6 +148,8 @@ export interface UseExplorerActionsReturn {
   selectAll: () => void;
   clearSelection: () => void;
   deleteItems: (items: { id: string; type: string; projectId?: string }[]) => Promise<void>;
+  restoreItems: (items: { id: string; type: string; projectId?: string }[]) => Promise<void>;
+  permanentDeleteItems: (items: { id: string; type: string; projectId?: string }[]) => Promise<void>;
   renameItem: (id: string, type: string, newName: string, projectId?: string) => Promise<void>;
   duplicateProject: (projectId: string) => Promise<void>;
   toggleBookmark: (id: string, type: 'project' | 'design' | 'folder') => Promise<void>;

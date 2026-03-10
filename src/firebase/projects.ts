@@ -1013,6 +1013,98 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
   }
 };
 
+// ── 소프트 삭제 (휴지통) ──
+
+// 디자인파일 소프트 삭제 (휴지통으로 이동)
+export const softDeleteDesignFile = async (designFileId: string, projectId: string): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) return { error: '로그인이 필요합니다.' };
+
+    const docRef = doc(db, 'designFiles', designFileId);
+    const snap = await getDocFromServer(docRef);
+    if (!snap.exists()) return { error: '디자인 파일을 찾을 수 없습니다.' };
+
+    await updateDoc(docRef, {
+      isDeleted: true,
+      deletedAt: serverTimestamp(),
+    });
+    await updateProjectStats(projectId);
+    return { error: null };
+  } catch (error) {
+    console.error('소프트 삭제 에러:', error);
+    return { error: '삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+// 프로젝트 소프트 삭제 (휴지통으로 이동)
+export const softDeleteProject = async (projectId: string): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) return { error: '로그인이 필요합니다.' };
+
+    const projectRef = doc(db, 'projects', projectId);
+    const snap = await getDocFromServer(projectRef);
+    if (!snap.exists()) return { error: '프로젝트를 찾을 수 없습니다.' };
+
+    await updateDoc(projectRef, {
+      isDeleted: true,
+      deletedAt: serverTimestamp(),
+    });
+    return { error: null };
+  } catch (error) {
+    console.error('프로젝트 소프트 삭제 에러:', error);
+    return { error: '삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+// 디자인파일 복원
+export const restoreDesignFile = async (designFileId: string, projectId: string): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) return { error: '로그인이 필요합니다.' };
+
+    const docRef = doc(db, 'designFiles', designFileId);
+    await updateDoc(docRef, {
+      isDeleted: false,
+      deletedAt: null,
+    });
+    await updateProjectStats(projectId);
+    return { error: null };
+  } catch (error) {
+    console.error('복원 에러:', error);
+    return { error: '복원 중 오류가 발생했습니다.' };
+  }
+};
+
+// 프로젝트 복원
+export const restoreProject = async (projectId: string): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) return { error: '로그인이 필요합니다.' };
+
+    const projectRef = doc(db, 'projects', projectId);
+    await updateDoc(projectRef, {
+      isDeleted: false,
+      deletedAt: null,
+    });
+    return { error: null };
+  } catch (error) {
+    console.error('프로젝트 복원 에러:', error);
+    return { error: '복원 중 오류가 발생했습니다.' };
+  }
+};
+
+// 디자인파일 영구 삭제
+export const permanentDeleteDesignFile = async (designFileId: string, projectId: string): Promise<{ error: string | null }> => {
+  return deleteDesignFile(designFileId, projectId);
+};
+
+// 프로젝트 영구 삭제
+export const permanentDeleteProject = async (projectId: string): Promise<{ error: string | null }> => {
+  return deleteProject(projectId);
+};
+
 // 사용자의 프로젝트 목록 가져오기
 export const getUserProjects = async (userId?: string): Promise<{ projects: ProjectSummary[]; error: string | null }> => {
   // Use the new repository pattern
@@ -1058,8 +1150,16 @@ export function subscribeToUserProjects(
           thumbnail: data.thumbnail || null,
           createdAt: data.createdAt || Timestamp.now(),
           updatedAt: data.updatedAt || Timestamp.now(),
+          furnitureCount: data.stats?.furnitureCount || 0,
+          spaceSize: {
+            width: data.spaceConfig?.width || 0,
+            height: data.spaceConfig?.height || 0,
+            depth: data.spaceConfig?.depth || 0,
+          },
           status: data.status || 'in_progress',
           userId: data.userId,
+          isDeleted: data.isDeleted || false,
+          deletedAt: data.deletedAt,
         };
       });
 

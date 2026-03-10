@@ -79,6 +79,8 @@ export async function listProjects(
           status: data.status || 'in_progress',
           spaceInfo: data.spaceConfig,
           placedModules: data.furniture?.placedModules || [],
+          isDeleted: data.isDeleted || false,
+          deletedAt: data.deletedAt,
         });
       }
     });
