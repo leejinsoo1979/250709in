@@ -63,7 +63,8 @@ import {
   HeightControl,
   InstallTypeControls,
   SurroundControls,
-  BaseControls
+  BaseControls,
+  FloorFinishControls
 } from '@/editor/shared/controls';
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 import { BoringExportDialog } from '@/editor/shared/controls/boring';
@@ -126,7 +127,7 @@ const Configurator: React.FC = () => {
     const mode = searchParams.get('mode');
     return mode === 'readonly' ? null : 'module';
   });
-  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
+  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'placement' | 'module'>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(() => {
     // URL 파라미터로 패널 상태 초기화 (미리보기 팝업용)
     const panelClosed = searchParams.get('panelClosed');
@@ -3059,6 +3060,25 @@ const Configurator: React.FC = () => {
   const renderRightPanelContent = () => {
     return (
       <div className={styles.spaceControls}>
+        {/* 탭 헤더 */}
+        <div className={styles.rightPanelTabs}>
+          <div className={styles.tabGroup}>
+            <button
+              className={`${styles.rightPanelTab} ${activeRightPanelTab === 'placement' ? styles.active : ''}`}
+              onClick={() => setActiveRightPanelTab('placement')}
+            >
+              배치속성
+            </button>
+            <button
+              className={`${styles.rightPanelTab} ${activeRightPanelTab === 'module' ? styles.active : ''}`}
+              onClick={() => setActiveRightPanelTab('module')}
+            >
+              배치모듈
+            </button>
+          </div>
+        </div>
+
+        {activeRightPanelTab === 'placement' && (<>
         {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
@@ -3132,7 +3152,7 @@ const Configurator: React.FC = () => {
                   mainDoorCount: undefined,
                   droppedCeilingDoorCount: undefined
                 });
-                setActiveRightPanelTab('slotA');
+                setActiveRightPanelTab('placement');
               }}
             >
               없음
@@ -3166,7 +3186,7 @@ const Configurator: React.FC = () => {
                     droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
                     mainDoorCount: adjustedMainDoorCount
                   });
-                  setActiveRightPanelTab('slotA');
+                  setActiveRightPanelTab('placement');
                 }
               }}
             >
@@ -3816,6 +3836,27 @@ const Configurator: React.FC = () => {
             disabled={hasSpecialDualFurniture}
           />
         </div>
+
+        {/* 걸래받이(바닥마감재) */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>걸래받이</h3>
+          </div>
+          <FloorFinishControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+          />
+        </div>
+        </>)}
+
+        {activeRightPanelTab === 'module' && (
+          <div className={styles.configSection}>
+            <div style={{ padding: '16px 0', color: 'var(--theme-text-secondary)', fontSize: '13px', textAlign: 'center' }}>
+              가구를 선택하면 배치모듈 정보가 표시됩니다.
+            </div>
+          </div>
+        )}
 
       </div>
     );
