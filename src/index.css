@@ -57,8 +57,9 @@ a:hover {
   color: var(--theme-primary-hover, #535bf2);
 }
 
-html {
+html, body {
   background: #09090b;
+  overscroll-behavior: none;
 }
 
 body {

@@ -16,43 +16,30 @@ interface EnterpriseForm {
 }
 
 const EXPECTED_USERS_OPTIONS = [
-  '1~5명',
-  '6~20명',
-  '21~50명',
-  '51~100명',
-  '100명 이상',
+  '1~5명', '6~20명', '21~50명', '51~100명', '100명 이상',
 ];
 
 export default function EnterpriseSignUpPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState<EnterpriseForm>({
-    companyName: '',
-    businessNumber: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    department: '',
-    expectedUsers: '',
-    message: '',
+    companyName: '', businessNumber: '', contactName: '',
+    contactEmail: '', contactPhone: '', department: '',
+    expectedUsers: '', message: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const update = (field: keyof EnterpriseForm, value: string) => {
+  const update = (field: keyof EnterpriseForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-
     try {
       await addDoc(collection(db, 'enterprise_inquiries'), {
-        ...form,
-        status: 'pending',
-        createdAt: serverTimestamp(),
+        ...form, status: 'pending', createdAt: serverTimestamp(),
       });
       setSubmitted(true);
     } catch {
@@ -62,14 +49,10 @@ export default function EnterpriseSignUpPage() {
     }
   };
 
-  const inputClass =
-    'w-full bg-transparent border-b border-zinc-700 px-1 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-white transition-colors';
-  const labelClass = 'block text-zinc-500 text-xs font-medium mb-1';
-
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
-      {/* Header - 고정 */}
-      <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-8 sm:px-12 py-5">
+    <div className="min-h-screen bg-zinc-950">
+      {/* Header */}
+      <header className="sticky top-0 z-20 bg-zinc-950 border-b border-zinc-900 flex items-center justify-between px-8 sm:px-12 py-4">
         <img
           src="/images/ttt_logo/tttlogo4.png"
           alt="think thing thank"
@@ -84,176 +67,155 @@ export default function EnterpriseSignUpPage() {
         </button>
       </header>
 
-      {/* Content */}
-      <div className="flex-1 flex items-start justify-center px-6 py-12 sm:py-16">
-        <motion.div
-          className="w-full max-w-md"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-        >
-          {submitted ? (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-3">신청이 완료되었습니다</h2>
-              <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
-                담당자가 확인 후 입력하신 이메일로<br />연락드리겠습니다.
-              </p>
-              <button
-                onClick={() => navigate('/login')}
-                className="bg-white text-zinc-950 py-3 px-8 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
-              >
-                로그인 페이지로 이동
-              </button>
+      <div className="max-w-xl mx-auto px-6 py-12 sm:py-16">
+        {submitted ? (
+          <motion.div
+            className="text-center py-20"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
-          ) : (
-            <>
-              {/* Title */}
-              <div className="mb-12">
-                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">기업계정 가입</h1>
-                <p className="text-zinc-500 text-sm">기업 정보를 입력해주시면 담당자가 안내드립니다</p>
+            <h2 className="text-2xl font-bold text-white mb-3">신청이 완료되었습니다</h2>
+            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+              담당자가 확인 후 입력하신 이메일로<br />연락드리겠습니다.
+            </p>
+            <button
+              onClick={() => navigate('/login')}
+              className="bg-white text-zinc-950 py-3 px-8 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
+            >
+              로그인 페이지로 이동
+            </button>
+          </motion.div>
+        ) : (
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">기업계정 가입</h1>
+            <p className="text-zinc-500 text-sm mb-12">기업 정보를 입력해주시면 담당자가 안내드립니다</p>
+
+            {/* 회사 정보 */}
+            <section className="mb-10">
+              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">회사 정보</h2>
+              <div className="space-y-5">
+                <Field label="회사명" required>
+                  <Input value={form.companyName} onChange={(v) => update('companyName', v)} placeholder="주식회사 예시" required />
+                </Field>
+                <Field label="사업자등록번호">
+                  <Input value={form.businessNumber} onChange={(v) => update('businessNumber', v)} placeholder="000-00-00000" />
+                </Field>
+                <Field label="예상 사용 인원">
+                  <div className="flex flex-wrap gap-2">
+                    {EXPECTED_USERS_OPTIONS.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => update('expectedUsers', opt)}
+                        className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
+                          form.expectedUsers === opt
+                            ? 'bg-white text-zinc-950 border-white'
+                            : 'text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
               </div>
+            </section>
 
-              <form onSubmit={handleSubmit} className="space-y-10">
-                {/* 회사 정보 */}
-                <div className="space-y-6">
-                  <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">회사 정보</p>
-
-                  <div>
-                    <label className={labelClass}>회사명 <span className="text-red-400">*</span></label>
-                    <input
-                      type="text"
-                      value={form.companyName}
-                      onChange={(e) => update('companyName', e.target.value)}
-                      placeholder="주식회사 예시"
-                      required
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>사업자등록번호</label>
-                    <input
-                      type="text"
-                      value={form.businessNumber}
-                      onChange={(e) => update('businessNumber', e.target.value)}
-                      placeholder="000-00-00000"
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>예상 사용 인원</label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {EXPECTED_USERS_OPTIONS.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => update('expectedUsers', opt)}
-                          className={`px-4 py-2 rounded-full text-xs font-medium border transition-colors ${
-                            form.expectedUsers === opt
-                              ? 'bg-white text-zinc-950 border-white'
-                              : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-400'
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+            {/* 담당자 정보 */}
+            <section className="mb-10">
+              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">담당자 정보</h2>
+              <div className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="담당자명" required>
+                    <Input value={form.contactName} onChange={(v) => update('contactName', v)} placeholder="홍길동" required />
+                  </Field>
+                  <Field label="부서/직책">
+                    <Input value={form.department} onChange={(v) => update('department', v)} placeholder="디자인팀 / 팀장" />
+                  </Field>
                 </div>
+                <Field label="이메일" required>
+                  <Input type="email" value={form.contactEmail} onChange={(v) => update('contactEmail', v)} placeholder="email@company.com" required />
+                </Field>
+                <Field label="연락처" required>
+                  <Input type="tel" value={form.contactPhone} onChange={(v) => update('contactPhone', v)} placeholder="010-0000-0000" required />
+                </Field>
+              </div>
+            </section>
 
-                {/* 담당자 정보 */}
-                <div className="space-y-6">
-                  <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">담당자 정보</p>
+            {/* 문의 내용 */}
+            <section className="mb-10">
+              <Field label="문의 내용">
+                <textarea
+                  value={form.message}
+                  onChange={(e) => update('message', e.target.value)}
+                  placeholder="추가 요청사항이나 문의사항을 입력해주세요"
+                  rows={4}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                />
+              </Field>
+            </section>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelClass}>담당자명 <span className="text-red-400">*</span></label>
-                      <input
-                        type="text"
-                        value={form.contactName}
-                        onChange={(e) => update('contactName', e.target.value)}
-                        placeholder="홍길동"
-                        required
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>부서/직책</label>
-                      <input
-                        type="text"
-                        value={form.department}
-                        onChange={(e) => update('department', e.target.value)}
-                        placeholder="디자인팀 / 팀장"
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
+            {error && (
+              <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                {error}
+              </div>
+            )}
 
-                  <div>
-                    <label className={labelClass}>이메일 <span className="text-red-400">*</span></label>
-                    <input
-                      type="email"
-                      value={form.contactEmail}
-                      onChange={(e) => update('contactEmail', e.target.value)}
-                      placeholder="email@company.com"
-                      required
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>연락처 <span className="text-red-400">*</span></label>
-                    <input
-                      type="tel"
-                      value={form.contactPhone}
-                      onChange={(e) => update('contactPhone', e.target.value)}
-                      placeholder="010-0000-0000"
-                      required
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                {/* 문의 내용 */}
-                <div>
-                  <label className={labelClass}>문의 내용</label>
-                  <textarea
-                    value={form.message}
-                    onChange={(e) => update('message', e.target.value)}
-                    placeholder="추가 요청사항이나 문의사항을 입력해주세요"
-                    rows={3}
-                    className="w-full bg-transparent border-b border-zinc-700 px-1 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-white transition-colors resize-none"
-                  />
-                </div>
-
-                {error && (
-                  <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-white text-zinc-950 py-3.5 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? (
-                    <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin mx-auto" />
-                  ) : (
-                    '가입 신청하기'
-                  )}
-                </button>
-              </form>
-            </>
-          )}
-        </motion.div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-white text-zinc-950 py-4 rounded-full font-semibold text-base hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin mx-auto" />
+              ) : (
+                '가입 신청하기'
+              )}
+            </button>
+          </motion.form>
+        )}
       </div>
     </div>
+  );
+}
+
+/* ── 서브 컴포넌트 ── */
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-zinc-400 text-xs font-medium mb-2">
+        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function Input({
+  value, onChange, placeholder, type = 'text', required,
+}: {
+  value: string; onChange: (v: string) => void; placeholder: string; type?: string; required?: boolean;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+    />
   );
 }
