@@ -33,6 +33,11 @@
   background: var(--theme-primary-light) !important;
 }
 
+/* 드래그 중 폴더 자식 요소가 이벤트 가로채지 않도록 */
+.dragOver * {
+  pointer-events: none;
+}
+
 .itemIconFolder {
   color: #f0b429;
 }

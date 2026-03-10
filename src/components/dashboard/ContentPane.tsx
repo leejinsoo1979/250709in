@@ -134,23 +134,48 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         checked={isSelected}
         onChange={() => {}}
         onClick={(e) => handleCheckboxClick(e, item.id)}
+        draggable={false}
         tabIndex={-1}
       />
     );
   };
 
   // 드래그 속성 생성 헬퍼
-  const getDragProps = (item: ExplorerItem) => ({
-    draggable: item.type === 'design',
-    onDragStart: (e: React.DragEvent) => {
-      if (item.type === 'design' && item.projectId) {
-        dragHandlers.onDragStart(e, { id: item.id, name: item.name, type: 'design' as const, projectId: item.projectId });
-      }
-    },
-    onDragOver: item.type === 'folder' ? (e: React.DragEvent) => dragHandlers.onDragOver(e, item.id) : undefined,
-    onDrop: item.type === 'folder' ? (e: React.DragEvent) => dragHandlers.onDrop(e, item.id) : undefined,
-    onDragEnd: dragHandlers.onDragEnd,
-  });
+  const getDragProps = (item: ExplorerItem) => {
+    const isFolder = item.type === 'folder';
+    const isDesign = item.type === 'design';
+    return {
+      draggable: isDesign,
+      onDragStart: (e: React.DragEvent) => {
+        if (isDesign && item.projectId) {
+          dragHandlers.onDragStart(e, { id: item.id, name: item.name, type: 'design' as const, projectId: item.projectId });
+        }
+      },
+      // 폴더: 드롭 대상 — onDragOver에서 preventDefault 필수
+      onDragOver: isFolder ? (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragHandlers.onDragOver(e, item.id);
+      } : undefined,
+      onDragEnter: isFolder ? (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+      } : undefined,
+      onDrop: isFolder ? (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragHandlers.onDrop(e, item.id);
+      } : undefined,
+      onDragLeave: isFolder ? (e: React.DragEvent) => {
+        // 자식 요소로 이동할 때 dragLeave가 발생하지 않도록
+        const rect = e.currentTarget.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+          dragHandlers.onDragOver(e, '');
+        }
+      } : undefined,
+      onDragEnd: dragHandlers.onDragEnd,
+    };
+  };
 
   if (isLoading) {
     return (

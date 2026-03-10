@@ -304,6 +304,7 @@ export function useExplorerActions(
 
   const onDragStart = useCallback((e: React.DragEvent, item: DragState['draggedItem']) => {
     if (!item) return;
+    console.log('[DragStart]', item.name, item.id);
 
     // 멀티 드래그: 선택된 아이템이 여러 개이고 드래그 시작 아이템이 선택에 포함된 경우
     let draggedItems: DragState['draggedItems'] = [item];
@@ -337,11 +338,13 @@ export function useExplorerActions(
   const onDragOver = useCallback((e: React.DragEvent, folderId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragState(prev => ({ ...prev, dragOverFolder: folderId }));
+    if (folderId) console.log('[DragOver] folder:', folderId);
+    setDragState(prev => prev.dragOverFolder === folderId ? prev : { ...prev, dragOverFolder: folderId || null });
   }, []);
 
   const onDrop = useCallback(async (e: React.DragEvent, targetFolderId: string) => {
     e.preventDefault();
+    console.log('[Drop] target folder:', targetFolderId, 'currentProject:', nav.currentProjectId);
     if (!nav.currentProjectId) return;
 
     // ref에서 최신 드래그 상태 읽기 (stale closure 방지)
