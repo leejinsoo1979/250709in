@@ -446,7 +446,7 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
                   </div>
                   <span>{project.title}</span>
                   <span className={styles.treeItemCount}>
-                    {((designFiles[project.id] || []).length) + ((folders[project.id] || []).reduce((sum, f) => sum + f.children.length, 0))}
+                    {(designFiles[project.id] || []).filter((df: any) => !df.isDeleted).length}
                   </span>
                   <div className={styles.treeItemActions}>
                     <button 
@@ -495,7 +495,12 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
                             <FolderIcon size={16} color="currentColor" />
                           </div>
                           <span>{folder.name}</span>
-                          <span className={styles.treeItemCount}>{folder.children.length}</span>
+                          <span className={styles.treeItemCount}>
+                            {(folder.children || []).filter(child => {
+                              const allFiles = designFiles[project.id] || [];
+                              return !allFiles.find((df: any) => df.id === child.id && df.isDeleted);
+                            }).length}
+                          </span>
                           <div className={styles.treeItemActions}>
                             <button 
                               className={styles.treeItemActionBtn}

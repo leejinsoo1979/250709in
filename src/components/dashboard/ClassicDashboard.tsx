@@ -424,8 +424,8 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                                 <IoFileTrayStackedOutline size={16} />
                               </div>
                               <span>{project.title}</span>
-                              {designFiles.length > 0 && (
-                                <span className={styles.treeItemCount}>{designFiles.length}</span>
+                              {designFiles.filter((df: any) => !df.isDeleted).length > 0 && (
+                                <span className={styles.treeItemCount}>{designFiles.filter((df: any) => !df.isDeleted).length}</span>
                               )}
                               <div className={styles.treeItemActions}>
                                 <button
@@ -459,9 +459,14 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                                         <PiFolderFill size={16} style={{ color: 'var(--theme-primary, #10b981)' }} />
                                       </div>
                                       <span>{folder.name}</span>
-                                      {folder.children && folder.children.length > 0 && (
-                                        <span className={styles.treeItemCount}>{folder.children.length}</span>
-                                      )}
+                                      {(() => {
+                                        const activeCount = (folder.children || []).filter(child =>
+                                          !designFiles.find((df: any) => df.id === child.id && df.isDeleted)
+                                        ).length;
+                                        return activeCount > 0 ? (
+                                          <span className={styles.treeItemCount}>{activeCount}</span>
+                                        ) : null;
+                                      })()}
                                     </div>
                                   </div>
                                 ))}
