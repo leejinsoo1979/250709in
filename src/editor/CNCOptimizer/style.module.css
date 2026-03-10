@@ -394,13 +394,23 @@
   color: var(--theme-text-muted);
 }
 
-/* 우측 패널 - 2D 뷰어 */
+/* 우측 패널 - 3D + 2D 뷰어 */
 .rightPanel {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+}
+
+/* 3D 패널 하이라이트 뷰어 */
+.viewer3dContainer {
+  height: 280px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid var(--theme-border);
+  overflow: hidden;
+  background: var(--theme-background);
 }
 
 .previewViewer {

@@ -9,6 +9,7 @@ import { getModuleById } from '@/data/modules';
 import styles from './style.module.css';
 import { Panel, StockPanel, OptimizedResult, PlacedPanel, PanelGroup } from './types';
 import PanelListItem from './components/PanelListItem';
+import PanelHighlight3DViewer from './components/PanelHighlight3DViewer';
 import StockItem from './components/StockItem';
 import OptimizationResult from './components/OptimizationResult';
 import CuttingLayoutPreview from './components/CuttingLayoutPreview';
@@ -80,6 +81,10 @@ const CNCOptimizer: React.FC = () => {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
+
+  // 3D 패널 하이라이트 상태
+  const [hoveredPanelName, setHoveredPanelName] = useState<string | null>(null);
+  const [hoveredFurnitureId, setHoveredFurnitureId] = useState<string | null>(null);
   
   // Use live panels instead of local state
   const panelsList = livePanels;
@@ -425,6 +430,10 @@ const CNCOptimizer: React.FC = () => {
                         onQuantityChange={(delta) => handleQuantityChange(panel.id, delta)}
                         getColorHex={getColorHex}
                         getMaterialName={getMaterialName}
+                        onHover={(name, fid) => {
+                          setHoveredPanelName(name);
+                          setHoveredFurnitureId(fid);
+                        }}
                       />
                     ))}
                   </div>
@@ -449,8 +458,16 @@ const CNCOptimizer: React.FC = () => {
                 </div>
               </div>
               
-              {/* 우측: 2D 패널 뷰어 */}
+              {/* 우측: 3D 뷰어 + 2D 패널 뷰어 */}
               <div className={styles.rightPanel}>
+                {/* 3D 패널 하이라이트 뷰어 */}
+                <div className={styles.viewer3dContainer}>
+                  <PanelHighlight3DViewer
+                    highlightedPanelName={hoveredPanelName}
+                    highlightedFurnitureId={hoveredFurnitureId}
+                  />
+                </div>
+
                 <div className={styles.previewViewer}>
                   <div className={styles.previewHeader}>
                     <div>
