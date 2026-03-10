@@ -161,3 +161,65 @@ export function clampToSpaceBoundsThreeX(
   const clampedMM = clampToSpaceBoundsX(xThreeUnits * 100, furnitureWidthMM, spaceInfo);
   return SpaceCalculator.mmToThreeUnits(clampedMM);
 }
+
+/**
+ * 자유배치 가구 너비 변경 시 위치(X) 보정
+ *
+ * 벽이나 다른 가구에 붙어있는 쪽은 고정하고, 반대쪽으로만 확장/축소한다.
+ * - 왼쪽 붙음 → 왼쪽 고정, 오른쪽으로 확장/축소
+ * - 오른쪽 붙음 → 오른쪽 고정, 왼쪽으로 확장/축소
+ * - 양쪽 붙음 → 중심 고정 (기존 동작)
+ * - 양쪽 안 붙음 → 중심 고정 (기존 동작)
+ *
+ * @returns 보정된 Three.js X 좌표 (position.x)
+ */
+export function calcResizedPositionX(
+  module: PlacedModule,
+  newWidthMm: number,
+  allModules: PlacedModule[],
+  spaceInfo: SpaceInfo
+): number {
+  const oldBounds = getModuleBoundsX(module);
+  const oldWidth = oldBounds.right - oldBounds.left;
+  const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+
+  const SNAP_THRESHOLD = 3; // 3mm 이내면 "붙어있다"로 판단
+
+  // 왼쪽에 뭔가 붙어있는지 확인 (벽 또는 다른 가구)
+  let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD;
+  // 오른쪽에 뭔가 붙어있는지 확인 (벽 또는 다른 가구)
+  let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD;
+
+  // 다른 가구의 경계와 비교
+  for (const other of allModules) {
+    if (other.id === module.id) continue;
+    if (!other.isFreePlacement) continue;
+    const otherBounds = getModuleBoundsX(other);
+    if (Math.abs(oldBounds.left - otherBounds.right) <= SNAP_THRESHOLD) {
+      leftAttached = true;
+    }
+    if (Math.abs(oldBounds.right - otherBounds.left) <= SNAP_THRESHOLD) {
+      rightAttached = true;
+    }
+  }
+
+  const currentCenterMm = module.position.x * 100;
+  let newCenterMm: number;
+
+  if (leftAttached && !rightAttached) {
+    // 왼쪽 고정 → 오른쪽으로만 확장
+    const fixedLeft = oldBounds.left;
+    newCenterMm = fixedLeft + newWidthMm / 2;
+  } else if (rightAttached && !leftAttached) {
+    // 오른쪽 고정 → 왼쪽으로만 확장
+    const fixedRight = oldBounds.right;
+    newCenterMm = fixedRight - newWidthMm / 2;
+  } else {
+    // 양쪽 다 붙어있거나, 양쪽 다 안 붙어있으면 → 중심 고정
+    newCenterMm = currentCenterMm;
+  }
+
+  // 공간 경계 내로 클램핑
+  const clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
+  return clampedMm * 0.01; // Three.js 단위로 변환
+}

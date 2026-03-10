@@ -10,6 +10,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey } from './CustomizableFurnitureLibrary';
+import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -1834,7 +1835,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const val = parseInt(freeWidthInput, 10);
                         console.log('🔴 [freeWidth onBlur]', { freeWidthInput, val, hasModule: !!currentPlacedModule, moduleId: currentPlacedModule?.id, currentFreeWidth: currentPlacedModule?.freeWidth, currentModuleWidth: currentPlacedModule?.moduleWidth });
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeWidth: val, moduleWidth: val });
+                          // 붙어있는 방향 유지하며 위치 보정
+                          const newX = currentPlacedModule.isFreePlacement
+                            ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
+                            : currentPlacedModule.position.x;
+                          updatePlacedModule(currentPlacedModule.id, {
+                            freeWidth: val,
+                            moduleWidth: val,
+                            position: { ...currentPlacedModule.position, x: newX },
+                          });
                           setFreeWidthInput(val.toString());
                           // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
                           const store = useFurnitureStore.getState();
