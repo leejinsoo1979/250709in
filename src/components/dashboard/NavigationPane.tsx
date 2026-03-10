@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
 import { useAuth } from '@/auth/AuthProvider';
-import { loadFolderData } from '@/firebase/projects';
+import { loadFolderData, getDesignFiles } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
 import type { QuickAccessMenu } from '@/hooks/dashboard/types';
@@ -37,6 +37,21 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
 
   // 폴더 데이터 (Firebase에서 직접 로드)
   const [localFolders, setLocalFolders] = useState<{ [projectId: string]: FolderData[] }>({});
+  // 프로젝트별 디자인 파일 개수
+  const [designFileCounts, setDesignFileCounts] = useState<{ [projectId: string]: number }>({});
+
+  // 프로젝트별 디자인 파일 수 로드
+  const loadDesignFileCount = useCallback(async (projectId: string) => {
+    try {
+      const { designFiles } = await getDesignFiles(projectId);
+      setDesignFileCounts(prev => ({
+        ...prev,
+        [projectId]: designFiles.length
+      }));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // 프로젝트 확장 시 폴더 로드
   const loadProjectData = useCallback(async (projectId: string) => {
@@ -54,6 +69,14 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
       console.error('프로젝트 데이터 로드 에러:', error);
     }
   }, [user]);
+
+  // 프로젝트 목록 변경 시 디자인 파일 수 로드
+  useEffect(() => {
+    projects.forEach(project => {
+      loadDesignFileCount(project.id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects]);
 
   // 프로젝트 확장/축소
   const toggleProject = useCallback((projectId: string) => {
@@ -164,9 +187,9 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                   <span className={styles.treeLabel} title={project.title}>
                     {project.title}
                   </span>
-                  {isExpanded && projectLocalFolders.length > 0 && (
+                  {designFileCounts[project.id] !== undefined && designFileCounts[project.id] > 0 && (
                     <span className={styles.treeBadge}>
-                      {projectLocalFolders.length}
+                      {designFileCounts[project.id]}
                     </span>
                   )}
                 </button>
