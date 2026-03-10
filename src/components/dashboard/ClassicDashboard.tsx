@@ -453,35 +453,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                                   </div>
                                 ))}
 
-                                {/* 디자인 파일 목록 */}
-                                {designFiles
-                                  .filter(df => {
-                                    // 폴더에 속한 파일 제외
-                                    const filesInFolders = new Set(
-                                      projectFolders.flatMap(f => f.children?.map((c: any) => c.id) || [])
-                                    );
-                                    return !filesInFolders.has(df.id);
-                                  })
-                                  .map(df => (
-                                    <div
-                                      key={df.id}
-                                      className={styles.treeItem}
-                                      onClick={() => {
-                                        const item: ExplorerItem = {
-                                          id: df.id,
-                                          name: df.name,
-                                          type: 'design',
-                                          projectId: project.id,
-                                        };
-                                        onItemDoubleClick(item);
-                                      }}
-                                    >
-                                      <div className={styles.treeItemIcon}>
-                                        <div className={styles.designIcon}>D</div>
-                                      </div>
-                                      <span>{df.name}</span>
-                                    </div>
-                                  ))}
+                                {/* 디자인 파일은 트리에 표시하지 않음 (폴더까지만) */}
                               </div>
                             )}
                           </div>
