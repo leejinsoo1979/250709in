@@ -84,14 +84,10 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
   // 로딩 중일 때 표시할 UI
   if (loading) {
     return (
-      <div className={styles.loadingScreen}>
-        <LoadingSpinner 
-          message="프로젝트를 불러오는 중..."
-          size="large"
-          type="spinner"
-        />
-        <p className={styles.loadingSubtext}>잠시만 기다려주세요.</p>
-      </div>
+      <LoadingSpinner
+        fullscreen
+        message="프로젝트를 불러오는 중..."
+      />
     );
   }
 

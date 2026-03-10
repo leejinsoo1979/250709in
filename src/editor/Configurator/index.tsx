@@ -2016,18 +2016,29 @@ const Configurator: React.FC = () => {
                 console.error('❌ 디자인파일에 name 필드가 없습니다!');
               }
 
-              // 폴더명 설정 (folderId가 있으면 폴더 데이터에서 이름 조회)
-              if (designFile.folderId && designFile.projectId) {
+              // 폴더명 설정 (폴더 데이터에서 이름 조회)
+              if (designFile.projectId) {
                 try {
                   const folderResult = await loadFolderDataFn(designFile.projectId);
-                  if (folderResult.folders) {
-                    const folder = folderResult.folders.find(f => f.id === designFile.folderId);
-                    if (folder) {
-                      setCurrentFolderName(folder.name);
+                  if (folderResult.folders && folderResult.folders.length > 0) {
+                    let foundFolder = null;
+                    // 1차: folderId로 직접 매칭
+                    if (designFile.folderId) {
+                      foundFolder = folderResult.folders.find(f => f.id === designFile.folderId);
                     }
+                    // 2차: folderId가 없으면 children에서 designFileId로 검색
+                    if (!foundFolder && designFileId) {
+                      foundFolder = folderResult.folders.find(f =>
+                        f.children?.some(c => c.id === designFileId)
+                      );
+                    }
+                    setCurrentFolderName(foundFolder ? foundFolder.name : '');
+                  } else {
+                    setCurrentFolderName('');
                   }
                 } catch (e) {
                   console.error('폴더명 조회 실패:', e);
+                  setCurrentFolderName('');
                 }
               } else {
                 setCurrentFolderName('');
@@ -3769,13 +3780,10 @@ const Configurator: React.FC = () => {
   // readonly 모드가 아닐 때만 로딩 화면 표시
   if (loading && !isReadOnly) {
     return (
-      <div className={styles.loadingContainer}>
-        <LoadingSpinner
-          message="에디터를 준비하는 중..."
-          size="large"
-          type="dots"
-        />
-      </div>
+      <LoadingSpinner
+        fullscreen
+        message="에디터를 준비하는 중..."
+      />
     );
   }
 
