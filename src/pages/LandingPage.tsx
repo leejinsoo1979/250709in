@@ -45,7 +45,7 @@ export default function LandingPage() {
           craft
         </motion.h1>
 
-        {/* Start Designing Button */}
+        {/* Start Design Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -56,7 +56,7 @@ export default function LandingPage() {
             className="bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-10 text-lg font-semibold"
             onClick={() => navigate('/dashboard')}
           >
-            Start Designing
+            Start Design
           </Button>
         </motion.div>
       </div>
