@@ -181,20 +181,12 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
           </div>
         </div>
 
-        {/* 사이드바 서브헤더 - 생성 버튼 */}
+        {/* 사이드바 서브헤더 - 프로젝트 생성 버튼 */}
         <div className={styles.sidebarSubHeader}>
-          <div className={styles.createButtons}>
-            <button className={styles.createBtn} onClick={onCreateProject}>
-              <PlusIcon size={14} />
-              프로젝트 생성
-            </button>
-            {nav.currentProjectId && (
-              <button className={styles.createBtn} onClick={onCreateDesign}>
-                <PlusIcon size={14} />
-                디자인 생성
-              </button>
-            )}
-          </div>
+          <button className={styles.createBtn} onClick={onCreateProject}>
+            <PlusIcon size={14} />
+            프로젝트 생성
+          </button>
         </div>
 
         {/* 네비게이션 메뉴 */}
@@ -292,6 +284,12 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
         <div className={styles.subHeader}>
           <div className={styles.subHeaderContent}>
             <div className={styles.subHeaderLeft}>
+              {(nav.activeMenu === 'in-progress' || nav.activeMenu === 'all') && nav.currentProjectId && (
+                <button className={styles.createDesignHeaderBtn} onClick={onCreateDesign}>
+                  <PlusIcon size={14} />
+                  디자인 생성
+                </button>
+              )}
               {nav.activeMenu === 'completed' && !nav.currentProjectId && (
                 <h1 className={styles.subHeaderTitle}>완료된 프로젝트</h1>
               )}
