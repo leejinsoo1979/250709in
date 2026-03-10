@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FolderPlus, FilePlus, ChevronDown, LayoutGrid, List, Table, Grid3X3, Image, Layers } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, LayoutGrid, List, Table, Grid3X3, Image, Layers } from 'lucide-react';
 import type { ViewMode, SortBy } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
@@ -54,19 +54,17 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     <div className={styles.toolbar}>
       {/* 생성 버튼 */}
       <div className={styles.actions}>
+        {onCreateDesign && (
+          <button className={styles.createBtn} onClick={onCreateDesign}>
+            <Plus size={16} />
+            <span>새 디자인</span>
+          </button>
+        )}
         {showCreateFolder && (
-          <>
-            <button className={styles.createBtn} onClick={onCreateFolder}>
-              <FolderPlus size={16} />
-              <span>새 폴더</span>
-            </button>
-            {onCreateDesign && (
-              <button className={styles.createBtn} onClick={onCreateDesign}>
-                <FilePlus size={16} />
-                <span>새 디자인</span>
-              </button>
-            )}
-          </>
+          <button className={styles.createBtn} onClick={onCreateFolder}>
+            <FolderPlus size={16} />
+            <span>새 폴더</span>
+          </button>
         )}
       </div>
 
