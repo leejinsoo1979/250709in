@@ -55,7 +55,7 @@ const EmptyDesignThumbnail: React.FC<{
       height: '100%',
       boxSizing: 'border-box',
     }}>
-      <LuFileBox size={48} />
+      <LuFileBox className="thumbnail-empty-icon" size={48} strokeWidth={1} />
     </div>
   );
 };

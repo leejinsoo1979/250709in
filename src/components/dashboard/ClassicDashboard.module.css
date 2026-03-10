@@ -931,6 +931,11 @@
   object-fit: cover;
 }
 
+.thumbnailImg :global(.thumbnail-empty-icon) {
+  width: 28px;
+  height: 28px;
+}
+
 .thumbnailEmpty {
   background: var(--theme-background-secondary);
   border: 0.5px solid var(--theme-border, rgba(0,0,0,0.1));

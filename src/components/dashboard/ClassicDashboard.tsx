@@ -589,7 +589,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                               if (designFiles.length === 0) {
                                 return (
                                   <div className={styles.emptyThumbnailState}>
-                                    <LuFileBox size={48} />
+                                    <LuFileBox size={48} strokeWidth={1} />
                                     <span>생성된 파일이 없습니다</span>
                                   </div>
                                 );
@@ -621,7 +621,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                           </div>
                         ) : (
                           <div className={styles.placeholderThumbnail}>
-                            <LuFileBox size={48} />
+                            <LuFileBox size={48} strokeWidth={1} />
                           </div>
                         )}
 
