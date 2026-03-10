@@ -3832,6 +3832,7 @@ const Configurator: React.FC = () => {
                 currentProjectId={searchParams.get('projectId')}
                 currentFolderId={null}
                 activeMenu="in-progress"
+                autoExpandProjectId={searchParams.get('projectId')}
                 onNavigate={(projectId, _folderId, _label) => {
                   if (projectId) {
                     // 프로젝트 클릭 시 대시보드로 이동하지 않고 트리만 확장
@@ -3839,6 +3840,10 @@ const Configurator: React.FC = () => {
                 }}
                 onMenuChange={() => {
                   // 에디터에서는 대시보드로 이동
+                  navigate('/');
+                  setIsFileTreeOpen(false);
+                }}
+                onGoHome={() => {
                   navigate('/');
                   setIsFileTreeOpen(false);
                 }}

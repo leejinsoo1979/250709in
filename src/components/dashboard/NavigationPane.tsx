@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus } from 'lucide-react';
+import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
 import { useAuth } from '@/auth/AuthProvider';
@@ -20,6 +20,8 @@ interface NavigationPaneProps {
   onCreateProject?: () => void;
   menuCounts?: Partial<Record<QuickAccessMenu, number>>;
   onItemContextMenu?: (e: React.MouseEvent, item: ExplorerItem) => void;
+  autoExpandProjectId?: string | null;
+  onGoHome?: () => void;
 }
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
@@ -33,6 +35,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   onCreateProject,
   menuCounts,
   onItemContextMenu,
+  autoExpandProjectId,
+  onGoHome,
 }) => {
   const { user } = useAuth();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -81,6 +85,18 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects]);
+
+  // 현재 프로젝트 자동 확장
+  useEffect(() => {
+    if (autoExpandProjectId && !expandedProjects.has(autoExpandProjectId)) {
+      setExpandedProjects(prev => {
+        const next = new Set(prev);
+        next.add(autoExpandProjectId);
+        return next;
+      });
+      loadProjectData(autoExpandProjectId);
+    }
+  }, [autoExpandProjectId, loadProjectData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 프로젝트 확장/축소
   const toggleProject = useCallback((projectId: string) => {
@@ -140,6 +156,19 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
       )}
 
       <div className={styles.content}>
+        {/* 메인 화면 */}
+        {onGoHome && (
+          <div className={styles.section}>
+            <button
+              className={styles.menuItem}
+              onClick={onGoHome}
+            >
+              <span className={styles.menuIcon}><Home size={16} /></span>
+              <span className={styles.menuLabel}>메인 화면</span>
+            </button>
+          </div>
+        )}
+
         {/* 빠른 액세스 */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>빠른 액세스</div>
