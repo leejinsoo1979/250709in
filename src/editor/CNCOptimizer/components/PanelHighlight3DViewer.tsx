@@ -138,22 +138,24 @@ const FurnitureRenderer: React.FC<{
 
   if (!moduleData) return null;
 
+  const pm = placedModule as any;
+
   // customSections 반영
   const finalModuleData = useMemo(() => {
-    if (placedModule.customSections && moduleData.modelConfig) {
+    if (pm.customSections && moduleData.modelConfig) {
       return {
         ...moduleData,
         modelConfig: {
           ...moduleData.modelConfig,
-          sections: placedModule.customSections,
+          sections: pm.customSections,
         },
       };
     }
     return moduleData;
-  }, [moduleData, placedModule.customSections]);
+  }, [moduleData, pm.customSections]);
 
-  const width = placedModule.width || finalModuleData.dimensions.width;
-  const depth = placedModule.depth || finalModuleData.dimensions.depth;
+  const width = pm.width || finalModuleData.dimensions.width;
+  const depth = pm.depth || finalModuleData.dimensions.depth;
 
   return (
     <BoxModule
@@ -166,14 +168,14 @@ const FurnitureRenderer: React.FC<{
       customDepth={depth}
       adjustedWidth={width}
       panelGrainDirections={placedModule.panelGrainDirections}
-      backPanelThickness={placedModule.backPanelThickness}
-      isCustomizable={placedModule.isCustomizable}
-      customConfig={placedModule.customConfig}
-      customSections={placedModule.customSections}
-      lowerSectionDepth={placedModule.lowerSectionDepth}
-      upperSectionDepth={placedModule.upperSectionDepth}
-      lowerSectionDepthDirection={placedModule.lowerSectionDepthDirection}
-      upperSectionDepthDirection={placedModule.upperSectionDepthDirection}
+      backPanelThickness={pm.backPanelThickness}
+      isCustomizable={pm.isCustomizable}
+      customConfig={pm.customConfig}
+      customSections={pm.customSections}
+      lowerSectionDepth={pm.lowerSectionDepth}
+      upperSectionDepth={pm.upperSectionDepth}
+      lowerSectionDepthDirection={pm.lowerSectionDepthDirection}
+      upperSectionDepthDirection={pm.upperSectionDepthDirection}
     />
   );
 };
@@ -205,10 +207,10 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   // 가구 전체 크기 추산 (카메라 위치용)
   const targetSize = useMemo(() => {
     if (!placedModules.length || !spaceInfo) return new THREE.Vector3(1, 2, 0.6);
-    const first = placedModules[0];
-    const w = (first.width || 600) / 1000;
-    const h = (first.customHeight || spaceInfo.height || 2400) / 1000;
-    const d = (first.depth || spaceInfo.depth || 600) / 1000;
+    const first = placedModules[0] as any;
+    const w = ((first.width || 600) as number) / 1000;
+    const h = ((first.customHeight || spaceInfo.height || 2400) as number) / 1000;
+    const d = ((first.depth || spaceInfo.depth || 600) as number) / 1000;
     return new THREE.Vector3(w, h, d);
   }, [placedModules, spaceInfo]);
 
@@ -245,12 +247,14 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
 
               {/* 궤도 컨트롤 */}
               <OrbitControls
-                enablePan={false}
-                enableZoom={true}
-                enableRotate={true}
-                minDistance={0.5}
-                maxDistance={8}
-                target={[0, targetSize.y / 2, 0]}
+                {...{
+                  enablePan: false,
+                  enableZoom: true,
+                  enableRotate: true,
+                  minDistance: 0.5,
+                  maxDistance: 8,
+                  target: [0, targetSize.y / 2, 0],
+                } as any}
               />
 
               {/* 가구 렌더링 */}
