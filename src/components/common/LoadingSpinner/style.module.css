@@ -123,23 +123,6 @@
   animation: brandFadeIn 0.6s ease-out both;
 }
 
-/* 프로그레스 바 */
-.progressBar {
-  width: 180px;
-  height: 3px;
-  background: var(--theme-border, rgba(255, 255, 255, 0.1));
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  width: 40%;
-  background: var(--theme-primary, #667eea);
-  border-radius: 2px;
-  animation: progressSlide 1.5s ease-in-out infinite;
-}
-
 /* 브랜드 메시지 */
 .brandMessage {
   margin: 0;
@@ -161,14 +144,3 @@
   }
 }
 
-@keyframes progressSlide {
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(250%);
-  }
-  100% {
-    transform: translateX(500%);
-  }
-}

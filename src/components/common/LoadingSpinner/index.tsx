@@ -21,15 +21,12 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   const { theme } = useTheme();
   const displayMessage = message || t('common.loading');
 
-  // 풀스크린: 로고 + 로딩 바 중앙 표시
+  // 풀스크린: 로고 애니메이션 중앙 표시
   if (fullscreen) {
     return (
       <div className={`${styles.container} ${styles.fullscreen} ${styles.brandBg}`} data-theme-color={theme.color}>
         <div className={styles.brandCenter}>
-          <Logo size="large" />
-          <div className={styles.progressBar}>
-            <div className={styles.progressFill} />
-          </div>
+          <Logo size="large" loading />
           {displayMessage && (
             <p className={styles.brandMessage}>{displayMessage}</p>
           )}
