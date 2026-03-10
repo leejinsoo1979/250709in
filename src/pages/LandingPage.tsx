@@ -26,7 +26,8 @@ export default function LandingPage() {
             ))}
           </div>
           <motion.span
-            className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight"
+            className="text-white font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-normal"
+            style={{ wordSpacing: '0.15em' }}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
