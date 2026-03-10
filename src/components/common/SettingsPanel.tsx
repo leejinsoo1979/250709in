@@ -129,38 +129,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
                 </select>
               </div>
               
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>{t('settings.notifications')}</span>
-                  <span className={styles.settingDescription}>{t('settings.notificationsDesc')}</span>
-                </div>
-                <label className={styles.switch}>
-                  <input type="checkbox" defaultChecked />
-                  <span className={styles.slider}></span>
-                </label>
-              </div>
-              
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>{t('settings.autoSave')}</span>
-                  <span className={styles.settingDescription}>{t('settings.autoSaveDesc')}</span>
-                </div>
-                <label className={styles.switch}>
-                  <input type="checkbox" defaultChecked />
-                  <span className={styles.slider}></span>
-                </label>
-              </div>
-              
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>{t('settings.gridSnap')}</span>
-                  <span className={styles.settingDescription}>{t('settings.gridSnapDesc')}</span>
-                </div>
-                <label className={styles.switch}>
-                  <input type="checkbox" defaultChecked />
-                  <span className={styles.slider}></span>
-                </label>
-              </div>
             </div>
           </div>
 
