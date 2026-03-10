@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './style.module.css';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
+import Logo from '@/components/common/Logo';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -10,8 +11,8 @@ interface LoadingSpinnerProps {
   fullscreen?: boolean;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  message, 
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  message,
   size = 'medium',
   type = 'spinner',
   fullscreen = false
@@ -19,11 +20,26 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   const { t } = useTranslation();
   const { theme } = useTheme();
   const displayMessage = message || t('common.loading');
-  
-  const containerClass = fullscreen 
-    ? `${styles.container} ${styles.fullscreen} ${styles.gradientBg}` 
-    : styles.container;
-  
+
+  // 풀스크린: 로고 + 로딩 바 중앙 표시
+  if (fullscreen) {
+    return (
+      <div className={`${styles.container} ${styles.fullscreen} ${styles.brandBg}`} data-theme-color={theme.color}>
+        <div className={styles.brandCenter}>
+          <Logo size="large" />
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} />
+          </div>
+          {displayMessage && (
+            <p className={styles.brandMessage}>{displayMessage}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const containerClass = styles.container;
+
   return (
     <div className={containerClass} data-theme-color={theme.color}>
       {type === 'spinner' ? (
@@ -44,4 +60,4 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   );
 };
 
-export default LoadingSpinner; 
+export default LoadingSpinner;
