@@ -30,7 +30,6 @@ import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
-import ViewerToolbar from './components/ViewerToolbar';
 import SlotSelector from '@/editor/Configurator/components/SlotSelector';
 import { useFurniturePlacement } from './components/elements/furniture/hooks/useFurniturePlacement';
 
@@ -1770,9 +1769,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {viewMode === '2D' && <MeasurementTool viewDirection={view2DDirection} />}
             </React.Suspense>
           </ThreeCanvas>
-
-          {/* 간접조명 툴바 - 3D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
-          {!isEmbedded && <ViewerToolbar viewMode={viewMode} />}
 
           {/* 분할 모드 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
           {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (
