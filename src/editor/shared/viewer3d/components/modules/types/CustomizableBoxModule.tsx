@@ -1711,19 +1711,55 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
       }
 
-      // 내부 요소 (서브분할 areaSubSplits 지원)
+      // 서브분할 구분판 (구조 패널로 취급 → isDragging 상태에서도 항상 렌더링)
+      const areaKey = side as 'left' | 'center' | 'right';
+      const subSplit = section.areaSubSplits?.[areaKey];
+      if (subSplit?.enabled) {
+        const lowerH = mmToUnit(subSplit.lowerHeight);
+        const dividerY = hsCenterY - bInnerH / 2 + lowerH;
+        subMeshes.push(
+          <BoxWithEdges
+            key={`${prefix}-subsplit-divider`}
+            position={[subCenterX, dividerY, 0]}
+            args={[subInnerW, t, subBoxD - t]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isHighlighted={isHighlighted}
+            panelName={`${label}서브분할판`}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={placedFurnitureId}
+          />
+        );
+      }
+
+      // 내부 요소 (선반, 서랍 등 — 드래그 중에는 숨김)
       if ((!isDragging || isEditMode)) {
-        const areaKey = side as 'left' | 'center' | 'right';
-        const subSplit = section.areaSubSplits?.[areaKey];
         if (subSplit?.enabled) {
-          // 서브분할 있음: 구분판 + 상/하부 요소 렌더링
-          subMeshes.push(
-            ...renderAreaWithSubSplit(
-              section, areaKey, elements,
-              subInnerW, bInnerH, hsCenterY, subCenterX, subBoxD,
-              label, `s${sIdx}-hsplit-${side}`, sIdx
-            )
-          );
+          // 서브분할 있음: 상/하부 요소 렌더링 (구분판은 위에서 이미 렌더링됨)
+          const lowerH = mmToUnit(subSplit.lowerHeight);
+          const upperH = bInnerH - lowerH;
+          const lowerCenterY = hsCenterY - bInnerH / 2 + lowerH / 2;
+          const upperCenterY = hsCenterY + bInnerH / 2 - upperH / 2;
+
+          if (subSplit.lowerElements && subSplit.lowerElements.length > 0) {
+            subMeshes.push(
+              ...renderSectionElements(
+                subSplit.lowerElements, subInnerW, lowerH - t / 2,
+                lowerCenterY - t / 4, subCenterX, subBoxD,
+                `${label}하`, `s${sIdx}-hsplit-${side}-lower`
+              )
+            );
+          }
+          if (subSplit.upperElements && subSplit.upperElements.length > 0) {
+            subMeshes.push(
+              ...renderSectionElements(
+                subSplit.upperElements, subInnerW, upperH - t / 2,
+                upperCenterY + t / 4, subCenterX, subBoxD,
+                `${label}상`, `s${sIdx}-hsplit-${side}-upper`
+              )
+            );
+          }
         } else if (hasContent) {
           // 서브분할 없음: 기존 방식
           subMeshes.push(
