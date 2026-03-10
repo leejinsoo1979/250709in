@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { CustomFurnitureConfig, CustomSection, CustomElement, AreaSubSplit } from '@/editor/shared/furniture/types';
-import { getCustomizableCategory } from './CustomizableFurnitureLibrary';
+import { getCustomizableCategory, isCustomizableModuleId, getCustomDimensionKey } from './CustomizableFurnitureLibrary';
 import { generateCabinetThumbnail } from '@/editor/shared/utils/cabinetThumbnailGenerator';
 import { captureFurnitureThumbnail } from '@/editor/shared/utils/furnitureThumbnailCapture';
 import styles from './CustomizablePropertiesPanel.module.css';
@@ -234,6 +234,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
         setSectionWidthInputs(newInputs);
       }
       updatePlacedModule(moduleId, { freeWidth: num, moduleWidth: num });
+      // 커스터마이징 가구 마지막 치수 기억 + 듀얼↔싱글 연동
+      if (placedModule && isCustomizableModuleId(placedModule.moduleId)) {
+        const key = getCustomDimensionKey(placedModule.moduleId);
+        const store = useFurnitureStore.getState();
+        const dims = { width: num, height: furnitureHeight, depth: furnitureDepth };
+        store.setLastCustomDimensions(key, dims);
+        if (key === 'full-dual') {
+          store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(num / 2) });
+        } else if (key === 'full-single') {
+          store.setLastCustomDimensions('full-dual', { ...dims, width: num * 2 });
+        }
+      }
     }
   };
 
@@ -261,6 +273,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
     } else {
       setDepthError('');
       updatePlacedModule(moduleId, { freeDepth: num });
+      // 커스터마이징 가구 마지막 치수 기억 + 듀얼↔싱글 연동
+      if (placedModule && isCustomizableModuleId(placedModule.moduleId)) {
+        const key = getCustomDimensionKey(placedModule.moduleId);
+        const store = useFurnitureStore.getState();
+        const dims = { width: furnitureWidth, height: furnitureHeight, depth: num };
+        store.setLastCustomDimensions(key, dims);
+        if (key === 'full-dual') {
+          store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
+        } else if (key === 'full-single') {
+          store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
+        }
+      }
     }
   };
 

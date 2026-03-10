@@ -1839,11 +1839,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 커스터마이징 가구면 마지막 치수 기억
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
-                            useFurnitureStore.getState().setLastCustomDimensions(key, {
+                            const store = useFurnitureStore.getState();
+                            const dims = {
                               width: val,
                               height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
                               depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
-                            });
+                            };
+                            store.setLastCustomDimensions(key, dims);
+                            // 듀얼↔싱글 너비 연동 (듀얼=싱글*2)
+                            if (key === 'full-dual') {
+                              store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(val / 2) });
+                            } else if (key === 'full-single') {
+                              store.setLastCustomDimensions('full-dual', { ...dims, width: val * 2 });
+                            }
                           }
                         }
                       }}
@@ -1875,11 +1883,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 커스터마이징 가구면 마지막 치수 기억
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
-                            useFurnitureStore.getState().setLastCustomDimensions(key, {
+                            const store = useFurnitureStore.getState();
+                            const dims = {
                               width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
                               height: val,
                               depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
-                            });
+                            };
+                            store.setLastCustomDimensions(key, dims);
+                            // 듀얼↔싱글 높이/깊이 연동
+                            if (key === 'full-dual') {
+                              store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (key === 'full-single') {
+                              store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
+                            }
                           }
                         }
                       }}
@@ -1911,11 +1927,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 커스터마이징 가구면 마지막 치수 기억
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
-                            useFurnitureStore.getState().setLastCustomDimensions(key, {
+                            const store = useFurnitureStore.getState();
+                            const dims = {
                               width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
                               height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
                               depth: val,
-                            });
+                            };
+                            store.setLastCustomDimensions(key, dims);
+                            // 듀얼↔싱글 깊이 연동
+                            if (key === 'full-dual') {
+                              store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (key === 'full-single') {
+                              store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
+                            }
                           }
                         }
                       }}
