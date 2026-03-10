@@ -111,6 +111,13 @@ const SimpleDashboard: React.FC = () => {
     type: 'folder' | 'design' | 'project';
   } | null>(null);
 
+  // 컨텍스트 메뉴
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    item: ExplorerItem;
+  } | null>(null);
+
   // --- 초기화 효과 ---
 
   // 로그인하지 않은 사용자 리다이렉트
@@ -166,13 +173,7 @@ const SimpleDashboard: React.FC = () => {
   const handleItemContextMenu = useCallback((e: React.MouseEvent, item: ExplorerItem) => {
     e.preventDefault();
     e.stopPropagation();
-    // 이름 바꾸기 모달 표시
-    setRenameTarget({
-      id: item.id,
-      name: item.name,
-      type: item.type as 'folder' | 'design' | 'project',
-    });
-    setIsRenameModalOpen(true);
+    setContextMenu({ x: e.clientX, y: e.clientY, item });
   }, []);
 
   // 프로젝트 생성
@@ -843,6 +844,164 @@ const SimpleDashboard: React.FC = () => {
             <p className={styles.comingSoonDesc}>키친 디자인 기능은 현재 개발 중입니다.<br />빠른 시일 내에 만나보실 수 있습니다.</p>
             <button className={styles.comingSoonBtn} onClick={() => setIsComingSoonModalOpen(false)}>
               확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 우클릭 컨텍스트 메뉴 */}
+      {contextMenu && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 99999 }}
+          onClick={() => setContextMenu(null)}
+          onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              left: contextMenu.x,
+              top: contextMenu.y,
+              minWidth: 200,
+              background: 'var(--theme-surface, #1e1e1e)',
+              border: '1px solid var(--theme-border, #333)',
+              borderRadius: 6,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+              padding: '4px 0',
+              zIndex: 100000,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              fontSize: 13,
+            }}
+          >
+            {/* 열기 */}
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => {
+                handleItemDoubleClick(contextMenu.item);
+                setContextMenu(null);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              열기
+            </button>
+
+            {/* 에디터로 이동 (디자인만) */}
+            {contextMenu.item.type === 'design' && (
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => {
+                  const item = contextMenu.item;
+                  const projectId = item.projectId || nav.currentProjectId;
+                  if (projectId) {
+                    navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(item.name)}`);
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                에디터로 이동
+              </button>
+            )}
+
+            {/* 구분선 */}
+            <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+
+            {/* 이름 바꾸기 */}
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => {
+                setRenameTarget({
+                  id: contextMenu.item.id,
+                  name: contextMenu.item.name,
+                  type: contextMenu.item.type as 'folder' | 'design' | 'project',
+                });
+                setIsRenameModalOpen(true);
+                setContextMenu(null);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+              이름 바꾸기
+              <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>F2</span>
+            </button>
+
+            {/* 공유 (프로젝트/디자인) */}
+            {(contextMenu.item.type === 'project' || contextMenu.item.type === 'design') && (
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => {
+                  const item = contextMenu.item;
+                  if (item.type === 'project') {
+                    setShareProjectId(item.id);
+                    setShareProjectName(item.name);
+                    setShareDesignFileId(null);
+                    setShareDesignFileName('');
+                  } else {
+                    const projectId = item.projectId || nav.currentProjectId || '';
+                    setShareProjectId(projectId);
+                    setShareProjectName('');
+                    setShareDesignFileId(item.id);
+                    setShareDesignFileName(item.name);
+                  }
+                  setShareModalOpen(true);
+                  setContextMenu(null);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                공유
+              </button>
+            )}
+
+            {/* 구분선 */}
+            <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+
+            {/* 삭제 */}
+            <button
+              style={{
+                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                color: '#ef4444', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              onClick={() => {
+                const item = contextMenu.item;
+                if (confirm(`"${item.name}"을(를) 삭제하시겠습니까?`)) {
+                  actions.deleteItems([{
+                    id: item.id,
+                    type: item.type,
+                    projectId: item.projectId || nav.currentProjectId || undefined,
+                  }]);
+                }
+                setContextMenu(null);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              삭제
+              <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Del</span>
             </button>
           </div>
         </div>
