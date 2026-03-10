@@ -82,6 +82,8 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   const filteredItemIds = useMemo(() => filteredItems.map(i => i.id), [filteredItems]);
 
   const handleItemClick = (e: React.MouseEvent, id: string) => {
+    // 단순 클릭은 체크하지 않음 — Ctrl/Cmd/Shift 클릭만 선택
+    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) return;
     onItemClick(id, {
       multi: e.ctrlKey || e.metaKey,
       shift: e.shiftKey,
