@@ -3,10 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { signUpWithEmail } from '@/firebase/auth';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface EnterpriseForm {
   companyName: string;
   businessNumber: string;
+  loginEmail: string;
+  password: string;
+  passwordConfirm: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -22,13 +27,15 @@ const EXPECTED_USERS_OPTIONS = [
 export default function EnterpriseSignUpPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState<EnterpriseForm>({
-    companyName: '', businessNumber: '', contactName: '',
-    contactEmail: '', contactPhone: '', department: '',
+    companyName: '', businessNumber: '', loginEmail: '', password: '', passwordConfirm: '',
+    contactName: '', contactEmail: '', contactPhone: '', department: '',
     expectedUsers: '', message: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   const update = (field: keyof EnterpriseForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -37,10 +44,49 @@ export default function EnterpriseSignUpPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    // 비밀번호 확인
+    if (form.password !== form.passwordConfirm) {
+      setError('비밀번호가 일치하지 않습니다.');
+      setSubmitting(false);
+      return;
+    }
+    if (form.password.length < 6) {
+      setError('비밀번호는 6자 이상이어야 합니다.');
+      setSubmitting(false);
+      return;
+    }
+
     try {
+      // 1. Firebase Auth 계정 생성
+      const { user, error: authError } = await signUpWithEmail(
+        form.loginEmail, form.password, form.contactName
+      );
+      if (authError || !user) {
+        // Firebase 에러 메시지 한글 변환
+        if (authError?.includes('email-already-in-use')) {
+          setError('이미 사용 중인 이메일입니다.');
+        } else if (authError?.includes('invalid-email')) {
+          setError('올바르지 않은 이메일 형식입니다.');
+        } else if (authError?.includes('weak-password')) {
+          setError('비밀번호가 너무 약합니다. 6자 이상 입력해주세요.');
+        } else {
+          setError(authError || '계정 생성 중 오류가 발생했습니다.');
+        }
+        setSubmitting(false);
+        return;
+      }
+
+      // 2. Firestore에 기업 정보 저장
+      const { password: _pw, passwordConfirm: _pwc, ...formData } = form;
       await addDoc(collection(db, 'enterprise_inquiries'), {
-        ...form, status: 'pending', createdAt: serverTimestamp(),
+        ...formData,
+        uid: user.uid,
+        status: 'approved',
+        accountType: 'enterprise',
+        createdAt: serverTimestamp(),
       });
+
       setSubmitted(true);
     } catch {
       setError('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
@@ -53,12 +99,17 @@ export default function EnterpriseSignUpPage() {
     <div className="min-h-screen bg-zinc-950">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-zinc-950 border-b border-zinc-900 flex items-center justify-between px-8 sm:px-12 py-4">
-        <img
-          src="/images/ttt_logo/tttlogo4.png"
-          alt="think thing thank"
-          className="h-8 sm:h-9 w-auto cursor-pointer"
+        <div
+          className="flex items-center gap-1.5 cursor-pointer"
           onClick={() => navigate('/')}
-        />
+        >
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-white" />
+          </div>
+          <span className="text-white font-black text-lg ml-1">CRAFT</span>
+        </div>
         <button
           className="text-sm text-zinc-400 hover:text-white transition-colors"
           onClick={() => navigate('/login')}
