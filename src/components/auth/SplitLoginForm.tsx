@@ -2,11 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
-import Button from '@/components/common/Button';
-import Input from '@/components/common/Input';
-import Logo from '@/components/common/Logo';
-import { Interactive3DBackground } from './Interactive3DBackground';
-import styles from './SplitLoginForm.module.css';
 
 interface SplitLoginFormProps {
   onSuccess?: () => void;
@@ -22,280 +17,186 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
-  
-  // 디버깅 로그
-  console.log('🔍 SplitLoginForm 상태:', {
-    user: user?.email,
-    authLoading,
-    path: window.location.pathname
-  });
 
-  // 로그인 상태 확인만 (리다이렉트 없음)
-  useEffect(() => {
-    console.log('🔍 로그인 상태:', {
-      user: user?.email,
-      authLoading
-    });
-  }, [user, authLoading]);
-  
-  // 리다이렉트 결과 처리 (모바일 Google 로그인)
   useEffect(() => {
     const checkRedirectResult = async () => {
       const result = await handleRedirectResult();
       if (result.user) {
-        console.log('✅ Google 리다이렉트 로그인 성공');
         navigate('/dashboard');
       } else if (result.error) {
         setError(result.error);
       }
     };
-    
     checkRedirectResult();
   }, [navigate]);
 
-  // 이메일/비밀번호 로그인/회원가입 처리
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      let result;
-      
-      if (isSignUp) {
-        result = await signUpWithEmail(email, password, displayName);
-      } else {
-        result = await signInWithEmail(email, password);
-      }
+      const result = isSignUp
+        ? await signUpWithEmail(email, password, displayName)
+        : await signInWithEmail(email, password);
 
       if (result.error) {
         setError(result.error);
       } else if (result.user) {
-        console.log('✅ 인증 성공:', result.user.email);
         onSuccess?.();
-        // 로그인 성공 시 대시보드로 이동
         navigate('/dashboard');
       }
-    } catch (err) {
+    } catch {
       setError('예상치 못한 오류가 발생했습니다.');
-      console.error('인증 에러:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Firebase 설정 확인
-  const isFirebaseConfigured = () => {
-    const hasConfig = !!(
-      import.meta.env.VITE_FIREBASE_API_KEY &&
-      import.meta.env.VITE_FIREBASE_AUTH_DOMAIN &&
-      import.meta.env.VITE_FIREBASE_PROJECT_ID
-    );
-    
-    if (!hasConfig) {
-      console.warn('⚠️ Firebase 환경변수가 설정되지 않았습니다:', {
-        apiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
-        authDomain: !!import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-        projectId: !!import.meta.env.VITE_FIREBASE_PROJECT_ID
-      });
-    }
-    
-    return hasConfig;
-  };
-
-  // 구글 로그인 처리
   const handleGoogleLogin = async () => {
     setLoading(true);
     setGoogleLoading(true);
     setError(null);
 
-    console.log('🔍 구글 로그인 시도...');
-    console.log('🔍 Firebase 설정 상태:', isFirebaseConfigured());
-
-    if (!isFirebaseConfigured()) {
-      setError('Firebase 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.');
-      setLoading(false);
-      setGoogleLoading(false);
-      return;
-    }
-
     try {
-      console.log('🔍 signInWithGoogle 호출...');
       const result = await signInWithGoogle();
-
       if (result.error) {
-        console.error('❌ 구글 로그인 실패:', result.error);
         setError(result.error);
       } else if (result.user) {
-        console.log('✅ 구글 로그인 성공:', result.user.email);
-        // 로그인 성공 시 대시보드로 이동
         navigate('/dashboard');
       }
-    } catch (err) {
-      console.error('❌ 구글 로그인 예외 발생:', err);
-      setError('구글 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } catch {
+      setError('구글 로그인 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
       setGoogleLoading(false);
     }
   };
 
-
   return (
-    <div className={styles.container}>
-      {/* Google Login Loading Overlay */}
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+      {/* Google Loading Overlay */}
       {googleLoading && (
-        <div className={styles.loadingOverlay}>
-          <div className={styles.loadingModal}>
-            <div className={styles.loadingSpinner} />
-            <p className={styles.loadingText}>Google 로그인 중...</p>
-            <p className={styles.loadingSubtext}>팝업 창에서 계정을 선택해주세요</p>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-zinc-900 border border-zinc-800 px-12 py-10 rounded-2xl text-center">
+            <div className="w-10 h-10 border-3 border-zinc-700 border-t-white rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white font-medium">Google 로그인 중...</p>
+            <p className="text-zinc-500 text-sm mt-1">팝업 창에서 계정을 선택해주세요</p>
           </div>
         </div>
       )}
-      <Interactive3DBackground />
-      <div className={styles.leftPanel}>
-        <div className={styles.leftContent}>
-          <div className={styles.logo}>
-            <Logo size="large" onClick={() => navigate('/')} />
+
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div
+          className="flex items-center justify-center gap-2 mb-10 cursor-pointer"
+          onClick={() => navigate('/')}
+        >
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-white" />
+            <div className="w-2.5 h-2.5 rounded-full bg-white" />
+            <div className="w-2.5 h-2.5 rounded-full bg-white" />
           </div>
-          
-          <h1 className={styles.welcomeTitle}>Hey, Hello!</h1>
-          <p className={styles.welcomeSubtitle}>
-            Join The Waitlist For The Design System!
-          </p>
+          <span className="text-white font-bold text-lg tracking-tight ml-2">
+            think thing thank
+          </span>
         </div>
-      </div>
 
-      <div className={styles.rightPanel}>
-        <div className={styles.formContainer}>
-          <h2 className={styles.formTitle}>Welcome Back</h2>
-          <p className={styles.formSubtitle}>
-            Let's get started with your 30 days free trial.
-          </p>
+        {/* Title */}
+        <h1 className="text-white text-2xl font-bold text-center mb-2">
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </h1>
+        <p className="text-zinc-500 text-sm text-center mb-8">
+          {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
+        </p>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {isSignUp && (
-              <Input
-                type="text"
-                placeholder="Name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                className={styles.input}
-                style={{
-                  backgroundColor: '#F9FAFB',
-                  color: '#1A1A1A',
-                  borderColor: '#E5E7EB'
-                } as React.CSSProperties}
-              />
-            )}
+        {/* Google Button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 text-sm font-medium hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
 
-            <Input
-              type="email"
-              placeholder="Username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-zinc-800" />
+          <span className="text-zinc-600 text-xs uppercase tracking-wider">or</span>
+          <div className="flex-1 h-px bg-zinc-800" />
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignUp && (
+            <input
+              type="text"
+              placeholder="Name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
               required
-              className={styles.input}
-              style={{
-                backgroundColor: '#F9FAFB',
-                color: '#1A1A1A',
-                borderColor: '#E5E7EB'
-              } as React.CSSProperties}
+              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
             />
+          )}
 
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={styles.input}
-              style={{
-                backgroundColor: '#F9FAFB',
-                color: '#1A1A1A',
-                borderColor: '#E5E7EB'
-              } as React.CSSProperties}
-            />
-            
-            {!isSignUp && (
-              <div className={styles.forgotPasswordWrapper}>
-                <a href="#" className={styles.forgotPassword}>
-                  Forgot Password?
-                </a>
-              </div>
-            )}
-            
-            {error && (
-              <div className={styles.error}>
-                {error}
-              </div>
-            )}
-            
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className={styles.loginButton}
-            >
-              {loading ? 'Processing...' : 'Login'}
-            </Button>
-          </form>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+          />
 
-          <div className={styles.divider}>
-            <span>OR</span>
-          </div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+          />
 
-          <div className={styles.socialButtons}>
-            <button
-              type="button"
-              className={`${styles.socialButton} ${styles.googleButton}`}
-              onClick={handleGoogleLogin}
-              disabled={loading}
-            >
-              <svg className={styles.socialIcon} viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <span>Google</span>
-            </button>
-            
-          </div>
-
-          {/* 데모체험 버튼 */}
-          <div className={styles.demoSection}>
-            <div className={styles.divider}>
-              <span>또는</span>
+          {!isSignUp && (
+            <div className="text-right">
+              <a href="#" className="text-zinc-500 text-xs hover:text-white transition-colors">
+                Forgot password?
+              </a>
             </div>
-            <button
-              type="button"
-              className={styles.demoButton}
-              onClick={() => navigate('/configurator')}
-            >
-              데모체험하기
-            </button>
-          </div>
+          )}
 
-          <p className={styles.signupPrompt}>
-            {isSignUp ? '이미 계정이 있으신가요?' : "Don't have an account?"}{' '}
-            <a 
-              href="#" 
-              className={styles.signupLink}
-              onClick={(e) => {
-                e.preventDefault();
-                setIsSignUp(!isSignUp);
-                setError(null);
-              }}
-            >
-              {isSignUp ? 'Login' : 'Sign Up'}
-            </a>
-          </p>
-        </div>
+          {error && (
+            <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-white text-zinc-950 text-sm font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Login'}
+          </button>
+        </form>
+
+        {/* Toggle */}
+        <p className="text-zinc-600 text-sm text-center mt-6">
+          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <button
+            onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
+            className="text-white font-medium hover:underline"
+          >
+            {isSignUp ? 'Login' : 'Sign Up'}
+          </button>
+        </p>
       </div>
     </div>
   );
