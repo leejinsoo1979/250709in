@@ -888,6 +888,15 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </>
           )}
+
+          {/* 설정 버튼 */}
+          <button
+            className={styles.settingsButton}
+            onClick={() => window.dispatchEvent(new CustomEvent('openSettingsPanel'))}
+            title="설정"
+          >
+            <Settings size={18} strokeWidth={1.8} />
+          </button>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, Menu, Settings, User } from 'lucide-react';
+import { LogOut, Menu, User } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
@@ -240,14 +240,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <div style={{ borderTop: '1px solid var(--theme-border, rgba(255,255,255,0.1))', width: '60%', margin: '4px auto' }} />
-
-        <button
-          className={styles.actionButton}
-          onClick={() => window.dispatchEvent(new CustomEvent('openSettingsPanel'))}
-          data-tooltip="설정"
-        >
-          <Settings size={17} strokeWidth={1.8} />
-        </button>
 
         {!readOnly && (
           <button

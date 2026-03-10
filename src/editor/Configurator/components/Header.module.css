@@ -217,6 +217,25 @@
   margin-left: auto;
 }
 
+.settingsButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: none;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settingsButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
 .convertButton {
   background: var(--theme-primary);
   border: none;
