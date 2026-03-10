@@ -15,12 +15,17 @@ export default function LandingPage() {
     <div className="bg-zinc-950 min-h-screen flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-8 sm:px-12 py-5">
-        <img
-          src="/images/ttt_logo/tttlogo4.png"
-          alt="think thing thank"
-          className="h-8 sm:h-9 w-auto cursor-pointer"
+        <div
+          className="flex items-center gap-1.5 cursor-pointer"
           onClick={() => navigate('/')}
-        />
+        >
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-white" />
+          </div>
+          <span className="text-white font-black text-lg ml-1">CRAFT</span>
+        </div>
         <div className="flex items-center gap-3">
           <button
             className="bg-transparent text-white text-sm font-semibold rounded-full px-6 py-2 border border-white hover:bg-white/10 transition-colors"
