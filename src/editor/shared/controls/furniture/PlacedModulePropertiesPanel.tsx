@@ -1824,7 +1824,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {/* 가로 */}
                 <div className={styles.depthInputWrapper}>
-                  <label style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>{t('furniture.furnitureWidth')}</label>
+                  <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>{t('furniture.furnitureWidth')}</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1879,7 +1879,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
                 {/* 세로 */}
                 <div className={styles.depthInputWrapper}>
-                  <label style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>{t('furniture.furnitureHeight')}</label>
+                  <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>{t('furniture.furnitureHeight')}</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1925,7 +1925,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
                 {/* 깊이 */}
                 <div className={styles.depthInputWrapper}>
-                  <label style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>{t('furniture.furnitureDepth')}</label>
+                  <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>{t('furniture.furnitureDepth')}</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1989,7 +1989,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   }}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                 />
-                <span style={{ fontSize: '13px', color: '#333' }}>걸래받이</span>
+                <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>걸래받이</span>
               </label>
             </div>
           )}
@@ -2009,7 +2009,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   }}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                 />
-                <span style={{ fontSize: '13px', color: '#333' }}>상부프레임</span>
+                <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>상부프레임</span>
               </label>
             </div>
           )}
@@ -2029,7 +2029,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   }}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                 />
-                <span style={{ fontSize: '13px', color: '#333' }}>하부프레임</span>
+                <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>하부프레임</span>
               </label>
             </div>
           )}
@@ -2050,7 +2050,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     }}
                     style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                   />
-                  <span style={{ fontSize: '13px', color: '#333' }}>좌측 EP</span>
+                  <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>좌측 EP</span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
@@ -2063,12 +2063,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     }}
                     style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                   />
-                  <span style={{ fontSize: '13px', color: '#333' }}>우측 EP</span>
+                  <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>우측 EP</span>
                 </label>
               </div>
               {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
                 <div style={{ marginTop: '8px' }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>EP 두께</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 두께</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2097,7 +2097,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <h5 className={styles.sectionTitle}>좌우 이격거리</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>좌측</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2117,7 +2117,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>우측</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2180,7 +2180,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   기둥 앞에 배치
                 </button>
               </div>
-              <div style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--theme-text-secondary)' }}>
                 {columnPlacementMode === 'beside'
                   ? '가구가 기둥 옆에 배치됩니다 (기본)'
                   : '가구가 기둥 앞에 배치되어 기둥을 가립니다'}
@@ -2197,7 +2197,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <div style={{ display: 'flex', gap: '12px' }}>
                 {/* 하부 섹션 */}
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>하부 섹션</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>하부 섹션</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2255,7 +2255,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
                 {/* 상부 섹션 */}
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>상부 섹션</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>상부 섹션</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
