@@ -1,36 +1,17 @@
 import React from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large';
   onClick?: () => void;
 }
 
-const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
-  const { theme } = useTheme();
-  
-  // 크기별 설정
-  const sizeConfig = {
-    small: {
-      mSize: 20,
-      logoFontSize: 14,
-      gap: 6,
-      mBorderRadius: 4,
-    },
-    medium: {
-      mSize: 32,
-      logoFontSize: 18,
-      gap: 8,
-      mBorderRadius: 6,
-    },
-    large: {
-      mSize: 40,
-      logoFontSize: 24,
-      gap: 10,
-      mBorderRadius: 8,
-    },
-  };
+const sizeConfig = {
+  small: { dot: 4, gap: 2, fontSize: 14, dotGap: 3 },
+  medium: { dot: 6, gap: 4, fontSize: 18, dotGap: 4 },
+  large: { dot: 8, gap: 6, fontSize: 24, dotGap: 5 },
+};
 
+const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
   const config = sizeConfig[size];
 
   return (
@@ -40,41 +21,24 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
         display: 'flex',
         alignItems: 'center',
         gap: config.gap,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
+        cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      {/* m 박스 */}
-      <div
-        style={{
-          width: config.mSize,
-          height: config.mSize,
-          backgroundColor: 'var(--theme-primary)',
-          borderRadius: config.mBorderRadius,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#ffffff',
-          fontSize: config.mSize * 0.6,
-          fontWeight: 'bold',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          transition: 'all 0.2s ease',
-        }}
-      >
-        m
+      <div style={{ display: 'flex', alignItems: 'center', gap: config.dotGap }}>
+        <div style={{ width: config.dot, height: config.dot, borderRadius: '50%', backgroundColor: 'var(--theme-text, #ffffff)' }} />
+        <div style={{ width: config.dot, height: config.dot, borderRadius: '50%', backgroundColor: 'var(--theme-text, #ffffff)' }} />
+        <div style={{ width: config.dot, height: config.dot, borderRadius: '50%', backgroundColor: 'var(--theme-text, #ffffff)' }} />
       </div>
-      
-      {/* logo 텍스트 */}
       <span
         style={{
-          fontSize: config.logoFontSize,
-          fontWeight: '600',
-          color: 'var(--theme-text)',
+          fontSize: config.fontSize,
+          fontWeight: 900,
+          color: 'var(--theme-text, #ffffff)',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          transition: 'color 0.2s ease',
+          letterSpacing: '0.02em',
         }}
       >
-        logo
+        CRAFT
       </span>
     </div>
   );
