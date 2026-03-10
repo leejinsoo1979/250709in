@@ -76,7 +76,7 @@ export default function LandingPage() {
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={`dot-${i}`}
-                className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`}
+                className={`w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{
                   scale: 1,
@@ -94,7 +94,7 @@ export default function LandingPage() {
             ))}
             {/* think thing thank 텍스트 */}
             <motion.span
-              className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-lg sm:text-xl md:text-2xl tracking-tight ml-1`}
+              className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight ml-2`}
               style={{ display: 'inline-flex' }}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
