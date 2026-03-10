@@ -684,7 +684,7 @@ const SimpleDashboard: React.FC = () => {
                     nav.setActiveMenu(menu);
                     if (isMobile) setMobileNavOpen(false);
                   }}
-                  onCreateProject={handleCreateProject}
+                  onCreateProject={nav.activeMenu === 'trash' ? undefined : handleCreateProject}
                   onItemContextMenu={handleItemContextMenu}
                   menuCounts={{
                     'in-progress': data.projects.filter(p => !p.isDeleted && (!p.status || p.status === 'in_progress')).length,
@@ -1406,81 +1406,119 @@ const SimpleDashboard: React.FC = () => {
           }}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {/* 프로젝트 생성 (진행중 프로젝트 메뉴에서만) */}
-          {!nav.currentProjectId && (nav.activeMenu === 'all' || nav.activeMenu === 'in-progress') && (
-            <button
-              style={{
-                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-              onClick={() => { handleCreateProject(); setBlankContextMenu(null); }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-              새 프로젝트
-            </button>
-          )}
-
-          {/* 폴더 생성 (프로젝트 내부일 때만) */}
-          {nav.currentProjectId && (
-            <button
-              style={{
-                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-              onClick={() => { handleCreateFolder(); setBlankContextMenu(null); }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-              새 폴더
-            </button>
-          )}
-
-          {/* 디자인 생성 (프로젝트 내부일 때만) */}
-          {nav.currentProjectId && (
+          {nav.activeMenu === 'trash' ? (
             <>
-              <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+              {/* 휴지통 비우기 */}
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  color: '#ef4444', textAlign: 'left', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                onClick={() => { handleSaasCreateDesign(); setBlankContextMenu(null); }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-                새 디자인
-              </button>
-            </>
-          )}
-
-          {/* 붙여넣기 (클립보드에 항목이 있을 때) */}
-          {actions.clipboard && (
-            <>
-              <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
-              <button
-                style={{
-                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                onClick={() => {
-                  actions.pasteItems(nav.currentProjectId || undefined, nav.currentFolderId || undefined);
+                onClick={async () => {
+                  const trashItems = data.currentItems;
+                  if (trashItems.length === 0) {
+                    setBlankContextMenu(null);
+                    return;
+                  }
+                  if (!confirm(`휴지통의 ${trashItems.length}개 항목을 모두 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+                    setBlankContextMenu(null);
+                    return;
+                  }
+                  const itemsToDelete = trashItems.map(i => ({
+                    id: i.id,
+                    type: i.type,
+                    projectId: i.projectId || nav.currentProjectId || undefined,
+                  }));
+                  await actions.permanentDeleteItems(itemsToDelete);
                   setBlankContextMenu(null);
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-                붙여넣기
-                <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+V</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                휴지통 비우기
               </button>
+            </>
+          ) : (
+            <>
+              {/* 프로젝트 생성 (진행중 프로젝트 메뉴에서만) */}
+              {!nav.currentProjectId && (nav.activeMenu === 'all' || nav.activeMenu === 'in-progress') && (
+                <button
+                  style={{
+                    width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                    color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                  onClick={() => { handleCreateProject(); setBlankContextMenu(null); }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+                  새 프로젝트
+                </button>
+              )}
+
+              {/* 폴더 생성 (프로젝트 내부일 때만) */}
+              {nav.currentProjectId && (
+                <button
+                  style={{
+                    width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                    color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                  onClick={() => { handleCreateFolder(); setBlankContextMenu(null); }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                  새 폴더
+                </button>
+              )}
+
+              {/* 디자인 생성 (프로젝트 내부일 때만) */}
+              {nav.currentProjectId && (
+                <>
+                  <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+                  <button
+                    style={{
+                      width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                      color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    onClick={() => { handleSaasCreateDesign(); setBlankContextMenu(null); }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+                    새 디자인
+                  </button>
+                </>
+              )}
+
+              {/* 붙여넣기 (클립보드에 항목이 있을 때) */}
+              {actions.clipboard && (
+                <>
+                  <div style={{ height: 1, background: 'var(--theme-border, #333)', margin: '4px 0' }} />
+                  <button
+                    style={{
+                      width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                      color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    onClick={() => {
+                      actions.pasteItems(nav.currentProjectId || undefined, nav.currentFolderId || undefined);
+                      setBlankContextMenu(null);
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                    붙여넣기
+                    <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+V</span>
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
