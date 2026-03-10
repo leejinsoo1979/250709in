@@ -22,7 +22,7 @@ import { useResponsive } from '@/hooks/useResponsive';
 
 // Explorer 컴포넌트
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import ExplorerToolbar from '@/components/dashboard/ExplorerToolbar';
+
 import NavigationPane from '@/components/dashboard/NavigationPane';
 import ContentToolbar from '@/components/dashboard/ContentToolbar';
 import ContentPane from '@/components/dashboard/ContentPane';
@@ -567,9 +567,6 @@ const SimpleDashboard: React.FC = () => {
         />
       ) : (
         <>
-          {/* 주소 표시줄 (전체 너비) */}
-          <ExplorerToolbar nav={nav} hideSearch />
-
           {/* 메인 바디: 좌측(트리) + 우측(컨텐츠) */}
           <div className={styles.explorerBody}>
             {/* 모바일 햄버거 버튼 */}
@@ -628,7 +625,7 @@ const SimpleDashboard: React.FC = () => {
                 onCreateProject={handleCreateProject}
                 onCreateFolder={nav.currentProjectId ? handleCreateFolder : undefined}
                 onCreateDesign={nav.currentProjectId ? () => handleCreateDesign() : undefined}
-                showCreateFolder={!!nav.currentProjectId}
+                nav={nav}
               />
 
               <ContentPane

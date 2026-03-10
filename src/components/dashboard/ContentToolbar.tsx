@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, LayoutGrid, List, Table, Grid3X3, Image } from 'lucide-react';
-import type { ViewMode, SortBy } from '@/hooks/dashboard/types';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image } from 'lucide-react';
+import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
 interface ContentToolbarProps {
@@ -11,7 +11,7 @@ interface ContentToolbarProps {
   onCreateProject: () => void;
   onCreateFolder?: () => void;
   onCreateDesign?: () => void;
-  showCreateFolder?: boolean;
+  nav?: UseExplorerNavigationReturn;
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -30,11 +30,11 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onSortChange,
   onCreateFolder,
   onCreateDesign,
+  nav,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
 
-  // 바깥 클릭 시 메뉴 닫기
   useEffect(() => {
     if (!viewMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -48,8 +48,65 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
 
   const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
 
+  const handleBreadcrumbClick = (item: BreadcrumbItem) => {
+    if (!nav) return;
+    if (item.type === 'root') {
+      nav.navigateToRoot();
+    } else if (item.type === 'project') {
+      nav.navigateTo(item.id, null, item.label);
+    } else if (item.type === 'folder') {
+      nav.navigateTo(nav.currentProjectId, item.id, item.label);
+    }
+  };
+
   return (
     <div className={styles.toolbar}>
+      {/* 네비게이션 버튼 + 브레드크럼 */}
+      {nav && (
+        <div className={styles.navGroup}>
+          <button
+            className={styles.navBtn}
+            onClick={nav.goBack}
+            disabled={!nav.canGoBack}
+            title="뒤로"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            className={styles.navBtn}
+            onClick={nav.goForward}
+            disabled={!nav.canGoForward}
+            title="앞으로"
+          >
+            <ChevronRight size={16} />
+          </button>
+          <button
+            className={styles.navBtn}
+            onClick={nav.goUp}
+            disabled={!nav.canGoUp}
+            title="상위 폴더"
+          >
+            <ArrowUp size={16} />
+          </button>
+
+          <div className={styles.breadcrumb}>
+            {nav.breadcrumbPath.map((item, i) => (
+              <React.Fragment key={item.id}>
+                {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
+                <button
+                  className={`${styles.breadcrumbItem} ${
+                    i === nav.breadcrumbPath.length - 1 ? styles.breadcrumbActive : ''
+                  }`}
+                  onClick={() => handleBreadcrumbClick(item)}
+                >
+                  {item.label}
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 생성 버튼 */}
       <div className={styles.actions}>
         {onCreateDesign && (
