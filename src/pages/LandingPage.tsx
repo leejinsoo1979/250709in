@@ -17,11 +17,21 @@ export default function LandingPage() {
                 key={i}
                 className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-white"
                 initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                  y: [0, -12, 0],
+                }}
                 transition={{
-                  duration: 0.5,
-                  delay: i * 0.15,
-                  ease: "easeOut",
+                  scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
+                  opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
+                  y: {
+                    duration: 1.2,
+                    delay: 0.8 + i * 0.15,
+                    repeat: Infinity,
+                    repeatDelay: 0.6,
+                    ease: "easeInOut",
+                  },
                 }}
               />
             ))}
