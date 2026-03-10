@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { Folder, FileText, MoreHorizontal } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
+import { LuFileBox } from 'react-icons/lu';
+import ThumbnailImage from '@/components/common/ThumbnailImage';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
 import styles from './ContentPane.module.css';
@@ -23,6 +25,7 @@ interface ContentPaneProps {
     onDrop: (e: React.DragEvent, targetFolderId: string) => void;
     onDragEnd: () => void;
   };
+  projectDesignFiles?: { [projectId: string]: any[] };
   isLoading?: boolean;
 }
 
@@ -39,6 +42,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   onItemContextMenu,
   onSortDirectionToggle,
   dragHandlers,
+  projectDesignFiles,
   isLoading,
 }) => {
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
@@ -264,7 +268,41 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           {...getDragProps(item)}
         >
           <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
-            {item.thumbnail ? (
+            {viewMode === 'extra-large' && item.type === 'project' && projectDesignFiles ? (
+              (() => {
+                const designFiles = projectDesignFiles[item.id] || [];
+                if (designFiles.length === 0) {
+                  return (
+                    <div className={styles.projectGridEmpty}>
+                      <LuFileBox size={32} strokeWidth={1} />
+                    </div>
+                  );
+                }
+                const displayItems = designFiles.slice(0, 4);
+                return (
+                  <div className={styles.projectGrid}>
+                    {displayItems.map((df: any) => (
+                      <div key={df.id} className={styles.projectGridItem}>
+                        <ThumbnailImage
+                          project={{ id: item.id, title: item.name } as any}
+                          designFile={{
+                            thumbnail: df.thumbnail,
+                            updatedAt: df.updatedAt,
+                            spaceConfig: df.spaceConfig,
+                            furniture: df.furniture,
+                          }}
+                          className={styles.projectGridImg}
+                          alt={df.name}
+                        />
+                      </div>
+                    ))}
+                    {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
+                      <div key={`empty-${i}`} className={styles.projectGridItemEmpty} />
+                    ))}
+                  </div>
+                );
+              })()
+            ) : item.thumbnail ? (
               <img src={item.thumbnail} alt={item.name} />
             ) : (
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)

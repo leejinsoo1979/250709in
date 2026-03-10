@@ -644,6 +644,7 @@ const SimpleDashboard: React.FC = () => {
                 onItemContextMenu={handleItemContextMenu}
                 onSortDirectionToggle={handleSortDirectionToggle}
                 dragHandlers={actions.dragHandlers}
+                projectDesignFiles={data.projectDesignFiles}
                 isLoading={data.isLoading}
               />
             </div>

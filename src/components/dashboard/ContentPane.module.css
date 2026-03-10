@@ -333,3 +333,45 @@
   font-size: 12px;
   flex-shrink: 0;
 }
+
+/* ── 프로젝트 분할창 썸네일 (아주 큰 아이콘) ── */
+.projectGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 0;
+  border: 1px solid var(--theme-border, rgba(0,0,0,0.1));
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.projectGridItem {
+  overflow: hidden;
+  position: relative;
+  border: 0.5px solid var(--theme-border, rgba(0,0,0,0.1));
+}
+
+.projectGridItem img,
+.projectGridImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.projectGridItemEmpty {
+  background: var(--theme-background-secondary);
+  border: 0.5px solid var(--theme-border, rgba(0,0,0,0.1));
+}
+
+.projectGridEmpty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text-muted);
+  background: var(--theme-background-secondary);
+  border-radius: 6px;
+}
