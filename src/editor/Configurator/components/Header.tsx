@@ -171,14 +171,18 @@ const Header: React.FC<HeaderProps> = ({
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
 
-  // 프로젝트명(경로) 클릭 → 자동저장 후 대시보드 이동
+  // 프로젝트명(경로) 클릭 → 자동저장 후 대시보드 이동 (해당 프로젝트 선택)
   const handleNavigateToDashboard = async () => {
     try {
       await onSave();
     } catch (e) {
       console.error('자동저장 실패:', e);
     }
-    navigate('/dashboard');
+    if (projectId) {
+      navigate(`/dashboard?projectId=${projectId}`);
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   // HistoryStore에서 undo/redo 기능 가져오기

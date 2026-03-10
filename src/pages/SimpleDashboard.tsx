@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { PlusIcon, UsersIcon } from '../components/common/Icons';
 import { createProject, createDesignFile, saveFolderData, updateProject, FolderData } from '@/firebase/projects';
@@ -40,6 +40,7 @@ import styles from './SimpleDashboard.module.css';
 
 const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const { isMobile } = useResponsive();
   const { dashboardLayout } = useUIStore();
@@ -165,6 +166,18 @@ const SimpleDashboard: React.FC = () => {
       navigate('/auth', { replace: true });
     }
   }, [user, loading, navigate]);
+
+  // URL 쿼리 파라미터로 프로젝트 자동 선택 (에디터에서 프로젝트명 클릭 시)
+  useEffect(() => {
+    const targetProjectId = searchParams.get('projectId');
+    if (!targetProjectId || data.projects.length === 0) return;
+    const project = data.projects.find(p => p.id === targetProjectId);
+    if (project) {
+      nav.navigateTo(targetProjectId, null, project.title || targetProjectId);
+      // 쿼리 파라미터 제거 (중복 실행 방지)
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, data.projects]);
 
   // 대시보드 진입 시 store isDirty 초기화
   useEffect(() => {
