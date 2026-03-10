@@ -1,6 +1,6 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing, SpaceCalculator } from './indexing';
+import { SpaceCalculator } from './indexing';
 
 /**
  * 자유배치 모드 유틸리티
@@ -18,12 +18,16 @@ export interface FurnitureBoundsX {
 
 /**
  * 내부 공간의 X 범위 반환 (mm 단위)
+ * 자유배치에서는 프레임 두께 대신 이격거리(gapConfig)만 적용
  */
 export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number; endX: number } {
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  const totalWidth = spaceInfo.width || 2400;
+  const halfW = totalWidth / 2;
+  const leftGap = spaceInfo.gapConfig?.left ?? 0;
+  const rightGap = spaceInfo.gapConfig?.right ?? 0;
   return {
-    startX: indexing.internalStartX,
-    endX: indexing.internalStartX + indexing.internalWidth,
+    startX: -halfW + leftGap,
+    endX: halfW - rightGap,
   };
 }
 
