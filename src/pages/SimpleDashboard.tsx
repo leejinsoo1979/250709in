@@ -609,7 +609,17 @@ const SimpleDashboard: React.FC = () => {
             )}
 
             {/* 우측 컨텐츠 영역 */}
-            <div className={styles.explorerContent}>
+            <div
+              className={styles.explorerContent}
+              onContextMenu={(e) => {
+                // 아이템 위에서 클릭한 경우 무시 (아이템 자체 컨텍스트 메뉴 우선)
+                const target = e.target as HTMLElement;
+                if (target.closest('[data-item-card]')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setBlankContextMenu({ x: e.clientX, y: e.clientY });
+              }}
+            >
               <ContentToolbar
                 viewMode={viewMode}
                 sortBy={sortBy}
@@ -634,11 +644,6 @@ const SimpleDashboard: React.FC = () => {
                 onItemContextMenu={handleItemContextMenu}
                 onSortDirectionToggle={handleSortDirectionToggle}
                 dragHandlers={actions.dragHandlers}
-                onBlankContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setBlankContextMenu({ x: e.clientX, y: e.clientY });
-                }}
                 isLoading={data.isLoading}
               />
             </div>

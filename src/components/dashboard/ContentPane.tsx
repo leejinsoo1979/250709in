@@ -23,7 +23,6 @@ interface ContentPaneProps {
     onDrop: (e: React.DragEvent, targetFolderId: string) => void;
     onDragEnd: () => void;
   };
-  onBlankContextMenu?: (e: React.MouseEvent) => void;
   isLoading?: boolean;
 }
 
@@ -40,7 +39,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   onItemContextMenu,
   onSortDirectionToggle,
   dragHandlers,
-  onBlankContextMenu,
   isLoading,
 }) => {
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
@@ -106,14 +104,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return <FileText size={size} className={styles.itemIconDesign} />;
   };
 
-  // 빈 영역 우클릭 헬퍼
-  const handleBlankContextMenu = (e: React.MouseEvent) => {
-    // 아이템 위에서 클릭한 경우 무시
-    const target = e.target as HTMLElement;
-    if (target.closest(`.${styles.tableRow}, .${styles.listItem}, .${styles.tileCard}, .${styles.iconCard}`)) return;
-    if (onBlankContextMenu) onBlankContextMenu(e);
-  };
-
   // 드래그 속성 생성 헬퍼
   const getDragProps = (item: ExplorerItem) => ({
     draggable: item.type === 'design',
@@ -138,7 +128,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
 
   if (filteredItems.length === 0) {
     return (
-      <div className={styles.emptyState} onContextMenu={onBlankContextMenu}>
+      <div className={styles.emptyState}>
         <FcFolder size={48} className={styles.emptyIcon} />
         <span>{searchTerm ? '검색 결과가 없습니다' : '항목이 없습니다'}</span>
       </div>
@@ -148,7 +138,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 자세히 뷰 (테이블) ──
   if (viewMode === 'details') {
     return (
-      <div className={styles.detailsTable} onContextMenu={handleBlankContextMenu}>
+      <div className={styles.detailsTable}>
         <div className={styles.tableHeader}>
           <div className={styles.colName} onClick={onSortDirectionToggle}>
             이름 {sortBy === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
@@ -163,6 +153,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         {filteredItems.map(item => (
           <div
             key={item.id}
+            data-item-card
             className={`${styles.tableRow} ${selectedItems.has(item.id) ? styles.tableRowSelected : ''} ${
               dragState.dragOverFolder === item.id ? styles.dragOver : ''
             }`}
@@ -194,10 +185,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 목록 뷰 ──
   if (viewMode === 'list') {
     return (
-      <div className={styles.listView} onContextMenu={handleBlankContextMenu}>
+      <div className={styles.listView}>
         {filteredItems.map(item => (
           <div
             key={item.id}
+            data-item-card
             className={`${styles.listItem} ${selectedItems.has(item.id) ? styles.listItemSelected : ''}`}
             onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
             onDoubleClick={() => onItemDoubleClick(item)}
@@ -215,10 +207,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 타일 뷰 ──
   if (viewMode === 'tiles') {
     return (
-      <div className={styles.tileGrid} onContextMenu={handleBlankContextMenu}>
+      <div className={styles.tileGrid}>
         {filteredItems.map(item => (
           <div
             key={item.id}
+            data-item-card
             className={`${styles.tileCard} ${selectedItems.has(item.id) ? styles.tileCardSelected : ''} ${
               dragState.dragOverFolder === item.id ? styles.dragOver : ''
             }`}
@@ -257,11 +250,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     <div
       className={styles.iconGrid}
       style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
-      onContextMenu={handleBlankContextMenu}
     >
       {filteredItems.map(item => (
         <div
           key={item.id}
+          data-item-card
           className={`${styles.iconCard} ${selectedItems.has(item.id) ? styles.iconCardSelected : ''} ${
             dragState.dragOverFolder === item.id ? styles.dragOver : ''
           }`}
