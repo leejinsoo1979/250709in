@@ -843,9 +843,6 @@ const Header: React.FC<HeaderProps> = ({
                         <User size={16} />
                       )}
                     </div>
-                    <span className={styles.userProfileName}>
-                      {user?.displayName || user?.email?.split('@')[0] || '사용자'}
-                    </span>
                   </div>
                 </div>
               ) : (
