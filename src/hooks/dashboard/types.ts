@@ -42,7 +42,19 @@ export interface DragState {
     type: 'design' | 'file';
     projectId: string;
   } | null;
+  draggedItems: {
+    id: string;
+    name: string;
+    type: 'design' | 'file';
+    projectId: string;
+  }[];
   dragOverFolder: string | null;
+}
+
+// 클립보드 상태
+export interface ClipboardState {
+  items: ExplorerItem[];
+  mode: 'copy' | 'cut';
 }
 
 // 빠른 액세스 메뉴 타입
@@ -120,17 +132,30 @@ export interface UseExplorerDataReturn {
   refreshFolders: (projectId: string) => Promise<void>;
 }
 
+// selectItem 옵션
+export interface SelectItemOptions {
+  multi?: boolean;
+  shift?: boolean;
+  orderedIds?: string[];
+}
+
 // useExplorerActions 반환 타입
 export interface UseExplorerActionsReturn {
   selectedItems: Set<string>;
+  setSelectedItems: (items: Set<string>) => void;
   dragState: DragState;
-  selectItem: (id: string, multi?: boolean) => void;
+  selectItem: (id: string, optionsOrMulti?: boolean | SelectItemOptions) => void;
   selectAll: () => void;
   clearSelection: () => void;
   deleteItems: (items: { id: string; type: string; projectId?: string }[]) => Promise<void>;
   renameItem: (id: string, type: string, newName: string, projectId?: string) => Promise<void>;
   duplicateProject: (projectId: string) => Promise<void>;
   toggleBookmark: (id: string, type: 'project' | 'design' | 'folder') => Promise<void>;
+  clipboard: ClipboardState | null;
+  copyItems: (items: ExplorerItem[]) => void;
+  cutItems: (items: ExplorerItem[]) => void;
+  pasteItems: (targetProjectId?: string, targetFolderId?: string) => Promise<void>;
+  duplicateItems: (items: ExplorerItem[]) => Promise<void>;
   dragHandlers: {
     onDragStart: (e: React.DragEvent, item: DragState['draggedItem']) => void;
     onDragOver: (e: React.DragEvent, folderId: string) => void;
