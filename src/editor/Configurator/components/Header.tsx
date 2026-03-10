@@ -590,6 +590,7 @@ const Header: React.FC<HeaderProps> = ({
                     </button>
                     <div
                       className={styles.dropdownItemWithSubmenu}
+                      style={{ display: 'none' }}
                       onMouseEnter={() => {
                         if (submenuTimeoutRef.current) {
                           clearTimeout(submenuTimeoutRef.current);
