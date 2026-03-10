@@ -485,179 +485,179 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* 소유자/협업자 섹션은 좌측 사이드바 하단으로 이동됨 */}
+        </div>
 
-          {/* 파일 메뉴 + 저장 버튼 - 좌측 로고 옆 */}
-          {!isMobile && !readOnly && (
-            <>
-              <div
-                className={styles.fileMenuContainer}
-                onMouseEnter={handleFileMenuMouseEnter}
-                onMouseLeave={handleFileMenuMouseLeave}
-              >
-                <button
-                  className={styles.actionButton}
-                  onClick={handleFileMenuToggle}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
-                    <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" />
-                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" />
-                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" />
-                    <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                  {t('common.file')}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
-                    <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                </button>
-
-                {isFileMenuOpen && (
-                  <div className={styles.fileDropdown}>
-                    <button
-                      className={styles.dropdownItem}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🆕 Header - 새디자인 버튼 직접 클릭됨');
-                        handleNewProject();
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
-                        <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" />
-                        <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" strokeWidth="2" />
-                        <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {currentLanguage === 'ko' ? '새 디자인' : t('project.newProject')}
-                    </button>
-                    <div
-                      className={styles.dropdownItemWithSubmenu}
-                      style={{ display: 'none' }}
-                      onMouseEnter={() => {
-                        if (submenuTimeoutRef.current) {
-                          clearTimeout(submenuTimeoutRef.current);
-                          submenuTimeoutRef.current = null;
-                        }
-                        setIs3DExportSubmenuOpen(true);
-                      }}
-                      onMouseLeave={() => {
-                        submenuTimeoutRef.current = setTimeout(() => {
-                          setIs3DExportSubmenuOpen(false);
-                        }, 150);
-                      }}
-                    >
-                      <button
-                        className={styles.dropdownItem}
-                        disabled={!onExport3D}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        3D 모델 다운로드
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 'auto' }}>
-                          <polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2" />
-                        </svg>
-                      </button>
-                      {is3DExportSubmenuOpen && (
-                        <div className={styles.submenu}>
-                          <button
-                            className={styles.submenuItem}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
-                              setIsFileMenuOpen(false);
-                              setIs3DExportSubmenuOpen(false);
-                              onExport3D?.('glb');
-                            }}
-                          >
-                            GLB 파일 (.glb)
-                          </button>
-                          <button
-                            className={styles.submenuItem}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('📦 Header - OBJ로 다운로드 버튼 클릭됨');
-                              setIsFileMenuOpen(false);
-                              setIs3DExportSubmenuOpen(false);
-                              onExport3D?.('obj');
-                            }}
-                          >
-                            OBJ 파일 (.obj)
-                          </button>
-                          <button
-                            className={styles.submenuItem}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('📦 Header - STL로 다운로드 버튼 클릭됨');
-                              setIsFileMenuOpen(false);
-                              setIs3DExportSubmenuOpen(false);
-                              onExport3D?.('stl');
-                            }}
-                          >
-                            STL 파일 (.stl)
-                          </button>
-                          <button
-                            className={styles.submenuItem}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('📦 Header - DAE로 다운로드 버튼 클릭됨');
-                              setIsFileMenuOpen(false);
-                              setIs3DExportSubmenuOpen(false);
-                              onExport3D?.('dae');
-                            }}
-                          >
-                            DAE 파일 (.dae)
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      className={styles.dropdownItem}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('💾 Header - 다른이름으로 저장 버튼 클릭됨');
-                        handleSaveAs();
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2" />
-                        <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
-                        <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
-                        <path d="M7 16h2v2H7z" stroke="currentColor" strokeWidth="1" />
-                      </svg>
-                      {t('project.saveAs')}
-                    </button>
-                  </div>
-                )}
-              </div>
-
+        {/* 파일 메뉴 + 저장 버튼 - 로고/경로와 분리 */}
+        {!isMobile && !readOnly && (
+          <div className={styles.fileActionGroup}>
+            <div
+              className={styles.fileMenuContainer}
+              onMouseEnter={handleFileMenuMouseEnter}
+              onMouseLeave={handleFileMenuMouseLeave}
+            >
               <button
                 className={styles.actionButton}
-                onClick={() => {
-                  console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
-                  if (onSave) {
-                    onSave();
-                  }
-                }}
-                disabled={saving}
+                onClick={handleFileMenuToggle}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2" />
-                  <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
-                  <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
+                  <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" />
+                  <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" />
+                  <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" />
+                  <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" />
                 </svg>
-                {saving ? t('common.saving') : t('common.save')}
+                {t('common.file')}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
+                  <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2" />
+                </svg>
               </button>
-            </>
-          )}
-        </div>
+
+              {isFileMenuOpen && (
+                <div className={styles.fileDropdown}>
+                  <button
+                    className={styles.dropdownItem}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('🆕 Header - 새디자인 버튼 직접 클릭됨');
+                      handleNewProject();
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
+                      <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" />
+                      <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" strokeWidth="2" />
+                      <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    {currentLanguage === 'ko' ? '새 디자인' : t('project.newProject')}
+                  </button>
+                  <div
+                    className={styles.dropdownItemWithSubmenu}
+                    style={{ display: 'none' }}
+                    onMouseEnter={() => {
+                      if (submenuTimeoutRef.current) {
+                        clearTimeout(submenuTimeoutRef.current);
+                        submenuTimeoutRef.current = null;
+                      }
+                      setIs3DExportSubmenuOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      submenuTimeoutRef.current = setTimeout(() => {
+                        setIs3DExportSubmenuOpen(false);
+                      }, 150);
+                    }}
+                  >
+                    <button
+                      className={styles.dropdownItem}
+                      disabled={!onExport3D}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      3D 모델 다운로드
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 'auto' }}>
+                        <polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    </button>
+                    {is3DExportSubmenuOpen && (
+                      <div className={styles.submenu}>
+                        <button
+                          className={styles.submenuItem}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
+                            setIsFileMenuOpen(false);
+                            setIs3DExportSubmenuOpen(false);
+                            onExport3D?.('glb');
+                          }}
+                        >
+                          GLB 파일 (.glb)
+                        </button>
+                        <button
+                          className={styles.submenuItem}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('📦 Header - OBJ로 다운로드 버튼 클릭됨');
+                            setIsFileMenuOpen(false);
+                            setIs3DExportSubmenuOpen(false);
+                            onExport3D?.('obj');
+                          }}
+                        >
+                          OBJ 파일 (.obj)
+                        </button>
+                        <button
+                          className={styles.submenuItem}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('📦 Header - STL로 다운로드 버튼 클릭됨');
+                            setIsFileMenuOpen(false);
+                            setIs3DExportSubmenuOpen(false);
+                            onExport3D?.('stl');
+                          }}
+                        >
+                          STL 파일 (.stl)
+                        </button>
+                        <button
+                          className={styles.submenuItem}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('📦 Header - DAE로 다운로드 버튼 클릭됨');
+                            setIsFileMenuOpen(false);
+                            setIs3DExportSubmenuOpen(false);
+                            onExport3D?.('dae');
+                          }}
+                        >
+                          DAE 파일 (.dae)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className={styles.dropdownItem}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('💾 Header - 다른이름으로 저장 버튼 클릭됨');
+                      handleSaveAs();
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2" />
+                      <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
+                      <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
+                      <path d="M7 16h2v2H7z" stroke="currentColor" strokeWidth="1" />
+                    </svg>
+                    {t('project.saveAs')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              className={styles.actionButton}
+              onClick={() => {
+                console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
+                if (onSave) {
+                  onSave();
+                }
+              }}
+              disabled={saving}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2" />
+                <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
+                <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
+              </svg>
+              {saving ? t('common.saving') : t('common.save')}
+            </button>
+          </div>
+        )}
 
         {/* 중앙 액션 버튼들 - 모바일에서는 숨김 */}
         {!isMobile && (

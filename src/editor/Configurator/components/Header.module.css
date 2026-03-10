@@ -25,6 +25,14 @@
   min-width: 0;
 }
 
+.fileActionGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+  flex: 0 0 auto;
+}
+
 .hamburgerButton {
   display: flex;
   align-items: center;
