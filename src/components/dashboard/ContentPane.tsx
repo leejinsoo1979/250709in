@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { Folder, FileText, MoreHorizontal } from 'lucide-react';
+import { FileText, MoreHorizontal } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { LuFileBox } from 'react-icons/lu';
+import { RxDashboard } from 'react-icons/rx';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
@@ -91,7 +92,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
 
   const getItemIcon = (item: ExplorerItem, size: number, isCard?: boolean) => {
     if (item.type === 'project') {
-      return <Folder size={size} className={styles.itemIconFolder} />;
+      return <RxDashboard size={size} className={styles.itemIconProject} />;
     }
     if (item.type === 'folder') {
       return <FcFolder size={size} className={styles.itemIconFolder} />;
@@ -268,7 +269,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           {...getDragProps(item)}
         >
           <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
-            {(viewMode === 'extra-large' || viewMode === 'large') && item.type === 'project' && projectDesignFiles ? (
+            {(viewMode === 'extra-large' || viewMode === 'large' || viewMode === 'medium') && item.type === 'project' && projectDesignFiles ? (
               (() => {
                 const designFiles = projectDesignFiles[item.id] || [];
                 if (designFiles.length === 0) {

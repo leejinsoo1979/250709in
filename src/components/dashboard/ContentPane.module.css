@@ -37,6 +37,10 @@
   color: #f0b429;
 }
 
+.itemIconProject {
+  color: var(--theme-primary);
+}
+
 .itemIconDesign {
   color: var(--theme-primary);
 }
