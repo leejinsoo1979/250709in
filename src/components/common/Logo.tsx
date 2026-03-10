@@ -15,7 +15,7 @@ const sizeConfig = {
 const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
   const config = sizeConfig[size];
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = theme.mode === 'dark';
 
   return (
     <div
