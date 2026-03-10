@@ -247,7 +247,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={toggleMode}
           data-tooltip={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
         >
-          {theme.mode === 'dark' ? <Sun size={17} strokeWidth={1.8} /> : <Moon size={17} strokeWidth={1.8} />}
+          {theme.mode === 'dark' ? <Moon size={17} strokeWidth={1.8} /> : <Sun size={17} strokeWidth={1.8} />}
         </button>
 
         {!readOnly && (
