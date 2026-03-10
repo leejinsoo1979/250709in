@@ -31,6 +31,8 @@ interface SidebarProps {
   onAddCollaborator?: () => void;
   onFileTreeToggle?: () => void;
   isFileTreeOpen?: boolean;
+  layoutMode?: 'equal-division' | 'free-placement';
+  onLayoutModeChange?: (mode: 'equal-division' | 'free-placement') => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -46,6 +48,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onAddCollaborator,
   onFileTreeToggle,
   isFileTreeOpen,
+  layoutMode = 'equal-division',
+  onLayoutModeChange,
 }) => {
   const { user } = useAuth();
   const { theme, toggleMode } = useTheme();
@@ -168,6 +172,33 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <Menu size={20} />
         </button>
+      )}
+
+      {/* 배치 모드 토글 */}
+      {!readOnly && onLayoutModeChange && (
+        <div className={styles.layoutModeToggle}>
+          <button
+            className={`${styles.layoutModeBtn} ${layoutMode === 'equal-division' ? styles.layoutModeActive : ''}`}
+            onClick={() => onLayoutModeChange('equal-division')}
+            data-tooltip="슬롯배치"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+          </button>
+          <button
+            className={`${styles.layoutModeBtn} ${layoutMode === 'free-placement' ? styles.layoutModeActive : ''}`}
+            onClick={() => onLayoutModeChange('free-placement')}
+            data-tooltip="자유배치"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="2" width="8" height="8" rx="1" />
+              <rect x="14" y="6" width="8" height="8" rx="1" />
+              <rect x="5" y="14" width="8" height="8" rx="1" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* Navigation tabs */}

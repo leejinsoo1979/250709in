@@ -45,6 +45,49 @@
   color: var(--theme-primary);
 }
 
+/* ── Layout Mode Toggle ── */
+.layoutModeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--theme-border);
+  flex-shrink: 0;
+}
+
+.layoutModeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: 1.5px solid var(--theme-border);
+  border-radius: 5px;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.layoutModeBtn:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+  border-color: var(--theme-text-secondary);
+}
+
+.layoutModeActive {
+  background: var(--theme-primary);
+  color: #fff;
+  border-color: var(--theme-primary);
+}
+
+.layoutModeActive:hover {
+  background: var(--theme-primary-hover);
+  border-color: var(--theme-primary-hover);
+  color: #fff;
+}
+
 /* ── Navigation ── */
 .tabList {
   flex: 1;

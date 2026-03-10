@@ -3309,41 +3309,7 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
-        {/* 배치 방식 */}
-        <div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>배치 방식</h3>
-          </div>
-          <div className={styles.toggleButtonGroup}>
-            <button
-              className={`${styles.toggleButton} ${(spaceInfo.layoutMode || 'equal-division') === 'equal-division' ? styles.toggleButtonActive : ''}`}
-              onClick={() => {
-                if ((spaceInfo.layoutMode || 'equal-division') === 'equal-division') return;
-                if (placedModules.length > 0) {
-                  if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
-                  clearAllModules();
-                }
-                handleSpaceInfoUpdate({ layoutMode: 'equal-division' });
-              }}
-            >
-              슬롯배치
-            </button>
-            <button
-              className={`${styles.toggleButton} ${spaceInfo.layoutMode === 'free-placement' ? styles.toggleButtonActive : ''}`}
-              onClick={() => {
-                if (spaceInfo.layoutMode === 'free-placement') return;
-                if (placedModules.length > 0) {
-                  if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
-                  clearAllModules();
-                }
-                handleSpaceInfoUpdate({ layoutMode: 'free-placement' });
-              }}
-            >
-              자유배치
-            </button>
-          </div>
-        </div>
+        {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
         {/* 컬럼수 표시 */}
         {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
@@ -3884,6 +3850,15 @@ const Configurator: React.FC = () => {
             onAddCollaborator={() => setIsShareModalOpen(true)}
             onFileTreeToggle={handleFileTreeToggle}
             isFileTreeOpen={isFileTreeOpen}
+            layoutMode={spaceInfo.layoutMode || 'equal-division'}
+            onLayoutModeChange={(mode) => {
+              if ((spaceInfo.layoutMode || 'equal-division') === mode) return;
+              if (placedModules.length > 0) {
+                if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
+                clearAllModules();
+              }
+              handleSpaceInfoUpdate({ layoutMode: mode });
+            }}
           />
 
           {/* 사이드바 컨텐츠 패널 */}
