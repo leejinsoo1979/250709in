@@ -70,24 +70,54 @@ export default function LandingPage() {
           onMouseEnter={() => { setDotsHovered(true); setTextHovered(true); }}
           onMouseLeave={() => { setDotsHovered(false); setTextHovered(false); }}
         >
-          {/* ... think thing thank 로고 이미지 */}
-          <motion.img
-            src="/images/ttt_logo/tttlogo2.png"
-            alt="think thing thank"
-            className="h-6 sm:h-8 md:h-10 mb-5"
-            style={{ filter: isDark ? 'invert(1)' : 'none' }}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{
-              opacity: 1,
-              y: isAnimating ? [0, -6, 0, 0] : 0,
-            }}
-            transition={{
-              opacity: { duration: 0.6, ease: "easeOut" },
-              y: isAnimating
-                ? { duration: 1.8, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
-                : { duration: 0.3 },
-            }}
-          />
+          {/* ... think thing thank — dots + 텍스트 개별 애니메이션 */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-5">
+            {/* 3 dots */}
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={`dot-${i}`}
+                className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                  y: isAnimating ? [0, -8, 0, 0] : 0,
+                }}
+                transition={{
+                  scale: { duration: 0.4, delay: i * 0.1, ease: "easeOut" },
+                  opacity: { duration: 0.4, delay: i * 0.1, ease: "easeOut" },
+                  y: isAnimating
+                    ? { duration: 1.8, delay: i * 0.08, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                    : { duration: 0.3 },
+                }}
+              />
+            ))}
+            {/* think thing thank 텍스트 */}
+            <motion.span
+              className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-lg sm:text-xl md:text-2xl tracking-tight ml-1`}
+              style={{ display: 'inline-flex' }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
+              {'think thing thank'.split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
+                  animate={{
+                    y: isAnimating ? [0, -6, 0, 0] : 0,
+                  }}
+                  transition={{
+                    y: isAnimating
+                      ? { duration: 1.8, delay: 0.24 + i * 0.03, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                      : { duration: 0.3 },
+                  }}
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </motion.span>
+          </div>
 
           {/* CRAFT */}
           <motion.div
