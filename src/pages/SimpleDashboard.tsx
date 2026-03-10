@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { PlusIcon, UsersIcon } from '../components/common/Icons';
-import { createProject, createDesignFile, saveFolderData, FolderData } from '@/firebase/projects';
+import { createProject, createDesignFile, saveFolderData, updateProject, FolderData } from '@/firebase/projects';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
@@ -1002,6 +1002,33 @@ const SimpleDashboard: React.FC = () => {
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 공유
+              </button>
+            )}
+
+            {/* 완료된 프로젝트로 이동 (프로젝트만) */}
+            {contextMenu.item.type === 'project' && (
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={async () => {
+                  const item = contextMenu.item;
+                  setContextMenu(null);
+                  const result = await updateProject(item.id, { status: 'completed' } as any);
+                  if (result.error) {
+                    alert(result.error);
+                  } else {
+                    alert(`"${item.name}"이(가) 완료된 프로젝트로 이동되었습니다.`);
+                    window.location.reload();
+                  }
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                완료된 프로젝트로 이동
               </button>
             )}
 
