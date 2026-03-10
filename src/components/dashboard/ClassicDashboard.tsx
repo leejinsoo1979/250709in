@@ -181,18 +181,20 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
           </div>
         </div>
 
-        {/* 사이드바 서브헤더 - 프로젝트/디자인 생성 버튼 */}
+        {/* 사이드바 서브헤더 - 생성 버튼 */}
         <div className={styles.sidebarSubHeader}>
-          <button className={styles.createBtn} onClick={onCreateProject}>
-            <PlusIcon size={14} />
-            프로젝트 생성
-          </button>
-          {nav.currentProjectId && (
-            <button className={styles.createBtn} onClick={onCreateDesign}>
+          <div className={styles.createButtons}>
+            <button className={styles.createBtn} onClick={onCreateProject}>
               <PlusIcon size={14} />
-              디자인 생성
+              프로젝트 생성
             </button>
-          )}
+            {nav.currentProjectId && (
+              <button className={styles.createBtn} onClick={onCreateDesign}>
+                <PlusIcon size={14} />
+                디자인 생성
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 네비게이션 메뉴 */}
