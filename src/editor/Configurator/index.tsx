@@ -27,7 +27,7 @@ import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './comp
 import { ModuleContent } from './components/RightPanel';
 import NavigationPane from '@/components/dashboard/NavigationPane';
 import { getUserProjects, loadFolderData as loadFolderDataFn } from '@/firebase/projects';
-import type { ProjectSummary } from '@/firebase/types';
+import type { ProjectSummary, DesignFileSummary } from '@/firebase/types';
 import type { FolderData as FolderDataType } from '@/firebase/projects';
 import type { QuickAccessMenu } from '@/hooks/dashboard/types';
 import { TouchCompatibleControl } from './components/TouchCompatibleControls';
@@ -134,6 +134,9 @@ const Configurator: React.FC = () => {
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
   const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
   const [fileTreeFolders, setFileTreeFolders] = useState<{ [projectId: string]: FolderDataType[] }>({});
+  // 파일트리 우측 패널: 선택된 프로젝트의 디자인 파일 목록
+  const [fileTreeSelectedProjectId, setFileTreeSelectedProjectId] = useState<string | null>(null);
+  const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
@@ -2651,12 +2654,25 @@ const Configurator: React.FC = () => {
     const willOpen = !isFileTreeOpen;
     setIsFileTreeOpen(willOpen);
     // 파일트리 열릴 때 프로젝트 목록 로드
-    if (willOpen && user && fileTreeProjects.length === 0) {
-      try {
-        const result = await getUserProjects(user.uid);
-        setFileTreeProjects(result.projects || []);
-      } catch (err) {
-        console.error('파일트리 프로젝트 로드 에러:', err);
+    if (willOpen && user) {
+      if (fileTreeProjects.length === 0) {
+        try {
+          const result = await getUserProjects(user.uid);
+          setFileTreeProjects(result.projects || []);
+        } catch (err) {
+          console.error('파일트리 프로젝트 로드 에러:', err);
+        }
+      }
+      // 현재 프로젝트의 디자인 파일 자동 로드
+      const currentPid = searchParams.get('projectId');
+      if (currentPid && !fileTreeSelectedProjectId) {
+        setFileTreeSelectedProjectId(currentPid);
+        try {
+          const { designFiles } = await getDesignFiles(currentPid);
+          setFileTreeDesignFiles(designFiles);
+        } catch {
+          setFileTreeDesignFiles([]);
+        }
       }
     }
   };
@@ -3828,27 +3844,73 @@ const Configurator: React.FC = () => {
               onClick={() => setIsFileTreeOpen(false)}
             />
             <div className={styles.fileTreePanel}>
+              {/* 좌측: 프로젝트/폴더 트리 */}
               <NavigationPane
                 projects={fileTreeProjects}
                 folders={fileTreeFolders}
-                currentProjectId={searchParams.get('projectId')}
+                currentProjectId={fileTreeSelectedProjectId || searchParams.get('projectId')}
                 currentFolderId={null}
                 activeMenu={fileTreeActiveMenu}
                 autoExpandProjectId={searchParams.get('projectId')}
-                showDesignFiles
-                onNavigate={(projectId, _folderId, _label) => {
+                onNavigate={async (projectId, _folderId, _label) => {
                   if (projectId) {
-                    // 프로젝트 클릭 시 대시보드로 이동하지 않고 트리만 확장
+                    setFileTreeSelectedProjectId(projectId);
+                    try {
+                      const { designFiles } = await getDesignFiles(projectId);
+                      setFileTreeDesignFiles(designFiles);
+                    } catch {
+                      setFileTreeDesignFiles([]);
+                    }
                   }
                 }}
                 onMenuChange={(menu) => {
                   setFileTreeActiveMenu(menu);
                 }}
-                onDesignFileClick={(projectId, designFileId, _name) => {
-                  navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}`, { replace: true });
-                  setIsFileTreeOpen(false);
-                }}
               />
+              {/* 우측: 선택 프로젝트의 디자인 파일 타일 목록 */}
+              <div className={styles.fileTreeContent}>
+                {fileTreeSelectedProjectId ? (
+                  fileTreeDesignFiles.length > 0 ? (
+                    <div className={styles.fileTreeFileList}>
+                      {fileTreeDesignFiles.map(file => (
+                        <button
+                          key={file.id}
+                          className={`${styles.fileTreeFileCard} ${
+                            searchParams.get('designFileId') === file.id ? styles.fileTreeFileCardActive : ''
+                          }`}
+                          onClick={() => {
+                            navigate(`/configurator?projectId=${fileTreeSelectedProjectId}&designFileId=${file.id}`, { replace: true });
+                            setIsFileTreeOpen(false);
+                          }}
+                        >
+                          <div className={styles.fileTreeFileThumbnail}>
+                            {file.thumbnail ? (
+                              <img src={file.thumbnail} alt={file.name} />
+                            ) : (
+                              <div className={styles.fileTreeFilePlaceholder}>
+                                <span>{file.spaceSize ? `${file.spaceSize.width}x${file.spaceSize.depth}` : ''}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.fileTreeFileInfo}>
+                            <div className={styles.fileTreeFileName}>{file.name}</div>
+                            <div className={styles.fileTreeFileMeta}>
+                              프로젝트 · {file.spaceSize ? `${file.spaceSize.width}x${file.spaceSize.depth}` : '-'}
+                            </div>
+                            <div className={styles.fileTreeFileMeta}>
+                              {file.updatedAt?.toDate ? file.updatedAt.toDate().toLocaleDateString('ko-KR') : '-'}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.fileTreeEmpty}>디자인 파일이 없습니다</div>
+                  )
+                ) : (
+                  <div className={styles.fileTreeEmpty}>프로젝트를 선택하세요</div>
+                )}
+              </div>
             </div>
           </>
         )}

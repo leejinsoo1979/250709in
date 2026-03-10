@@ -31,24 +31,150 @@
   animation: fadeIn 0.3s ease;
 }
 
-/* 파일 트리 패널 */
+/* 파일 트리 패널 (2-column: 좌측 트리 + 우측 파일 타일) */
 .fileTreePanel {
   position: fixed;
-  top: 56px; /* 헤더 높이만큼 아래에서 시작 */
+  top: 56px;
   left: 0;
   bottom: 0;
-  width: 320px;
+  width: 640px;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
   box-shadow: var(--theme-shadow);
   z-index: 101;
   overflow: hidden;
   animation: slideInFromLeft 0.3s ease;
+  display: flex;
+  flex-direction: row;
 }
 
-/* NavigationPane이 fileTreePanel 전체 너비 채우기 */
-.fileTreePanel > div {
-  width: 100% !important;
+/* NavigationPane(좌측 트리) 너비 고정 */
+.fileTreePanel > div:first-child {
+  width: 240px !important;
+  min-width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--theme-border);
+}
+
+/* 우측 파일 타일 영역 */
+.fileTreeContent {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  background: var(--theme-background-secondary);
+}
+
+.fileTreeContent::-webkit-scrollbar {
+  width: 4px;
+}
+
+.fileTreeContent::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 2px;
+}
+
+/* 파일 타일 목록 (세로 배열) */
+.fileTreeFileList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 파일 타일 카드 (가로: 썸네일 좌측 + 정보 우측) */
+.fileTreeFileCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: 10px;
+  background: var(--theme-surface);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.fileTreeFileCard:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.fileTreeFileCardActive {
+  border-color: var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface));
+  box-shadow: 0 0 0 1px var(--theme-primary);
+}
+
+/* 썸네일 영역 */
+.fileTreeFileThumbnail {
+  width: 80px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--theme-background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fileTreeFileThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fileTreeFilePlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  background: var(--theme-background-secondary);
+  border: 1px dashed var(--theme-border);
+  border-radius: 8px;
+}
+
+/* 파일 정보 */
+.fileTreeFileInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fileTreeFileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileTreeFileMeta {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 빈 상태 */
+.fileTreeEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--theme-text-muted);
+  font-size: 13px;
 }
 
 /* 준비중 패널 */
@@ -1381,14 +1507,27 @@
 /* 파일 트리 반응형 디자인 */
 @media (max-width: 768px) {
   .fileTreePanel {
-    width: 280px;
+    width: 100%;
+  }
+
+  .fileTreePanel > div:first-child {
+    width: 200px !important;
+    min-width: 200px;
   }
 }
 
 @media (max-width: 480px) {
   .fileTreePanel {
     width: 100%;
-    right: 0;
+    flex-direction: column;
+  }
+
+  .fileTreePanel > div:first-child {
+    width: 100% !important;
+    min-width: auto;
+    max-height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--theme-border);
   }
 }
 
