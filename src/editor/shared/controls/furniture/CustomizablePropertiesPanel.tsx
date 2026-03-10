@@ -599,21 +599,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       case 'drawer': {
         const count = drawerCount || 2;
-        const standard = DRAWER_STANDARD[count] || DRAWER_STANDARD[2];
-        // 서랍 단수에 따라 하부 섹션 높이 자동 조절 (2단 분할 시)
-        // sectionHeight는 외경(패널 포함)이므로 내경(sec.height)으로 변환: 외경 - 2 * panelThickness
-        if (config.sections.length === 2 && sIdx === 0) {
-          // 독립 박스 모델: 2섹션 → 4개 패널
-          const availableHeight = furnitureHeight - 4 * panelThickness;
-          const lowerInner = standard.sectionHeight - 2 * panelThickness;
-          const lowerH = Math.min(lowerInner, availableHeight - 100);
-          const upperH = availableHeight - lowerH;
-          sec.height = lowerH;
-          sections[1] = { ...sections[1], height: upperH };
-          setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
-        }
-        // 기존 모듈과 동일한 개별 서랍 높이 적용
-        newElement = { type: 'drawer', heights: [...standard.heights] };
+        // 균등 분배 계산으로 서랍 높이 결정
+        const { heights: drawerHeights } = calculateEvenFillDrawers(sec.height, count);
+        newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
       case 'rod':
@@ -767,8 +755,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       case 'drawer': {
         const count = drawerCount || 2;
-        const standard = DRAWER_STANDARD[count] || DRAWER_STANDARD[2];
-        newElement = { type: 'drawer', heights: [...standard.heights] };
+        const { heights: drawerHeights } = calculateEvenFillDrawers(sec.height, count);
+        newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
       case 'rod':
@@ -962,8 +950,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       case 'drawer': {
         const maxCount = getMaxDrawerCount(subHeight);
-        const standard = DRAWER_STANDARD[maxCount] || DRAWER_STANDARD[1];
-        newElement = { type: 'drawer', heights: [...standard.heights] };
+        const { heights: drawerHeights } = calculateEvenFillDrawers(subHeight, maxCount);
+        newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
       case 'rod':
@@ -1106,8 +1094,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         // 서랍 단수: 명시적 지정 또는 영역 높이 기반 최대값
         const maxCount = getMaxDrawerCount(sectionHeight);
         const count = drawerCount || maxCount;
-        const standard = DRAWER_STANDARD[count] || DRAWER_STANDARD[1];
-        newElement = { type: 'drawer', heights: [...standard.heights] };
+        const { heights: drawerHeights } = calculateEvenFillDrawers(sectionHeight, count);
+        newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
       case 'rod':
