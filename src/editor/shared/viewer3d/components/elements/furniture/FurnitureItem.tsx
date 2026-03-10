@@ -2465,7 +2465,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
-    freeEpOffsetX = (rightEp - leftEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
+    freeEpOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
   }
 
   const furnitureGroupPosition: [number, number, number] = [
