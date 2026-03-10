@@ -42,7 +42,7 @@ const menuItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[
 const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
   nav,
   data,
-  actions,
+  actions: _actions,
   onItemDoubleClick,
   onItemContextMenu,
   onCreateProject,
@@ -601,8 +601,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                     <div
                       key={item.id}
                       className={styles.designCard}
-                      onClick={e => actions.selectItem(item.id, e.ctrlKey || e.metaKey)}
-                      onDoubleClick={() => onItemDoubleClick(item)}
+                      onClick={() => onItemDoubleClick(item)}
                       onContextMenu={e => onItemContextMenu(e, item)}
                     >
                       <div className={styles.cardThumbnail}>
