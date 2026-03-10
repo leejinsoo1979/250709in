@@ -321,9 +321,12 @@
 }
 
 .subHeaderLeft {
+  width: 220px;
+  min-width: 220px;
   display: flex;
   align-items: center;
-  padding-left: 12px;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .subHeaderTitle {
