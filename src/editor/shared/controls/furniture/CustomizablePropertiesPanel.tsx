@@ -1131,7 +1131,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
         // 서랍 단수: 명시적 지정 또는 영역 높이 기반 최대값
         const maxCount = getMaxDrawerCount(sectionHeight);
         const count = drawerCount || maxCount;
-        const { heights: drawerHeights } = calculateEvenFillDrawers(sectionHeight, count);
+        // 기본값은 DRAWER_STANDARD 표준 사이즈 (사용자 정의 기본값)
+        const standard = DRAWER_STANDARD[count];
+        const drawerHeights = standard ? [...standard.heights] : [255];
         newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
