@@ -235,7 +235,7 @@ export default function EnterpriseSignUpPage() {
             <section className="mb-10">
               <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">담당자 정보</h2>
               <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <Field label="담당자명" required>
                     <Input value={form.contactName} onChange={(v) => update('contactName', v)} placeholder="홍길동" required />
                   </Field>
