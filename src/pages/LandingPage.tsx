@@ -10,7 +10,7 @@ export default function LandingPage() {
       <div className="text-center">
         {/* Dots Animation + Logo */}
         <div className="flex items-center justify-center gap-4 sm:gap-6 mb-10">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
