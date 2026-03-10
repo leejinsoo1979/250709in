@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder } from 'lucide-react';
+import { FcFolder } from 'react-icons/fc';
 import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
@@ -47,6 +48,14 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   }, [viewMenuOpen]);
 
   const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
+
+  const getBreadcrumbIcon = (item: BreadcrumbItem) => {
+    switch (item.type) {
+      case 'root': return <Clock size={13} />;
+      case 'project': return <Folder size={13} />;
+      case 'folder': return <FcFolder size={13} />;
+    }
+  };
 
   const handleBreadcrumbClick = (item: BreadcrumbItem) => {
     if (!nav) return;
@@ -99,6 +108,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                   }`}
                   onClick={() => handleBreadcrumbClick(item)}
                 >
+                  <span className={styles.breadcrumbIcon}>{getBreadcrumbIcon(item)}</span>
                   {item.label}
                 </button>
               </React.Fragment>

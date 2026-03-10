@@ -58,7 +58,16 @@
   margin: 0 2px;
 }
 
+.breadcrumbIcon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  color: var(--theme-primary);
+}
+
 .breadcrumbItem {
+  display: inline-flex;
+  align-items: center;
   background: none;
   border: none;
   color: var(--theme-text-secondary);
