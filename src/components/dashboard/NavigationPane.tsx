@@ -56,25 +56,19 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   const loadDesignFileCount = useCallback(async (projectId: string) => {
     try {
       const { designFiles } = await getDesignFiles(projectId);
-      setDesignFileCounts(prev => ({
-        ...prev,
-        [projectId]: designFiles.length
-      }));
+      setDesignFileCounts(prev => ({ ...prev, [projectId]: designFiles.length }));
     } catch {
       // ignore
     }
   }, []);
 
   // 프로젝트 확장 시 폴더 로드
-  const loadProjectData = useCallback(async (projectId: string) => {
+  const loadProjectFolders = useCallback(async (projectId: string) => {
     if (!user) return;
     try {
       const folderResult = await loadFolderData(projectId);
       if (folderResult.folders) {
-        setLocalFolders(prev => ({
-          ...prev,
-          [projectId]: folderResult.folders
-        }));
+        setLocalFolders(prev => ({ ...prev, [projectId]: folderResult.folders }));
       }
     } catch (error) {
       console.error('프로젝트 데이터 로드 에러:', error);
@@ -87,7 +81,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
     const newExpanded = new Set<string>();
     projects.forEach(project => {
       newExpanded.add(project.id);
-      loadProjectData(project.id);
+      loadProjectFolders(project.id);
       loadDesignFileCount(project.id);
     });
     setExpandedProjects(newExpanded);
@@ -102,11 +96,11 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
         next.delete(projectId);
       } else {
         next.add(projectId);
-        loadProjectData(projectId);
+        loadProjectFolders(projectId);
       }
       return next;
     });
-  }, [loadProjectData]);
+  }, [loadProjectFolders]);
 
   // 리사이즈 핸들
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
@@ -115,8 +109,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
     const startX = e.clientX;
     const startWidth = paneWidth;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = Math.max(180, Math.min(350, startWidth + e.clientX - startX));
+    const handleMouseMove = (ev: MouseEvent) => {
+      const newWidth = Math.max(180, Math.min(350, startWidth + ev.clientX - startX));
       setPaneWidth(newWidth);
     };
 
@@ -138,6 +132,15 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
     { key: 'trash', label: '휴지통', icon: <Trash2 size={16} /> },
   ];
 
+  // activeMenu에 따라 프로젝트 필터링
+  const filteredProjects = projects.filter(project => {
+    if (activeMenu === 'trash') return project.isDeleted;
+    if (project.isDeleted) return false;
+    if (activeMenu === 'in-progress') return !project.status || project.status === 'in_progress';
+    if (activeMenu === 'completed') return project.status === 'completed';
+    return true;
+  });
+
   return (
     <div className={styles.pane} style={{ width: paneWidth }}>
       {/* 상단 툴바 */}
@@ -154,10 +157,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
         {/* 메인 화면 */}
         {onGoHome && (
           <div className={styles.section}>
-            <button
-              className={styles.menuItem}
-              onClick={onGoHome}
-            >
+            <button className={styles.menuItem} onClick={onGoHome}>
               <span className={styles.menuIcon}><Home size={16} /></span>
               <span className={styles.menuLabel}>메인 화면</span>
             </button>
@@ -194,10 +194,10 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           <div className={styles.sectionTitle}>
             {quickAccessItems.find(item => item.key === activeMenu)?.label || '프로젝트'}
           </div>
-          {projects.map(project => {
+          {filteredProjects.map(project => {
             const isExpanded = expandedProjects.has(project.id);
             const isSelected = currentProjectId === project.id && !currentFolderId;
-            const projectLocalFolders = localFolders[project.id] || [];
+            const projectFolders = localFolders[project.id] || [];
             const fileCount = designFileCounts[project.id] || 0;
             return (
               <div key={project.id}>
@@ -222,10 +222,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                 >
                   <span
                     className={styles.expandIcon}
-                    onClick={e => {
-                      e.stopPropagation();
-                      toggleProject(project.id);
-                    }}
+                    onClick={ev => { ev.stopPropagation(); toggleProject(project.id); }}
                   >
                     {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </span>
@@ -234,16 +231,14 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                     {project.title}
                   </span>
                   {fileCount > 0 && (
-                    <span className={styles.treeBadge}>
-                      {fileCount}
-                    </span>
+                    <span className={styles.treeBadge}>{fileCount}</span>
                   )}
                 </button>
 
                 {/* 확장 시: 폴더만 표시 */}
-                {isExpanded && projectLocalFolders.length > 0 && (
+                {isExpanded && projectFolders.length > 0 && (
                   <div className={styles.treeChildren}>
-                    {projectLocalFolders.map(folder => {
+                    {projectFolders.map(folder => {
                       const isFolderSelected = currentProjectId === project.id && currentFolderId === folder.id;
                       return (
                         <button
@@ -251,9 +246,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                           className={`${styles.treeItem} ${styles.treeItemNested} ${
                             isFolderSelected ? styles.treeItemActive : ''
                           }`}
-                          onClick={() => {
-                            onNavigate(project.id, folder.id, folder.name);
-                          }}
+                          onClick={() => onNavigate(project.id, folder.id, folder.name)}
                           onContextMenu={(e) => {
                             if (onItemContextMenu) {
                               e.preventDefault();

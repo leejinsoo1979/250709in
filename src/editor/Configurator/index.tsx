@@ -29,6 +29,7 @@ import NavigationPane from '@/components/dashboard/NavigationPane';
 import { getUserProjects, loadFolderData as loadFolderDataFn } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData as FolderDataType } from '@/firebase/projects';
+import type { QuickAccessMenu } from '@/hooks/dashboard/types';
 import { TouchCompatibleControl } from './components/TouchCompatibleControls';
 import SlotSelector from './components/SlotSelector';
 
@@ -131,7 +132,7 @@ const Configurator: React.FC = () => {
   });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
-  const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<'in-progress' | 'completed' | 'shared-with-me' | 'shared-by-me' | 'trash'>('in-progress');
+  const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
   const [fileTreeFolders, setFileTreeFolders] = useState<{ [projectId: string]: FolderDataType[] }>({});
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
@@ -3841,10 +3842,6 @@ const Configurator: React.FC = () => {
                 }}
                 onMenuChange={(menu) => {
                   setFileTreeActiveMenu(menu);
-                }}
-                onGoHome={() => {
-                  navigate('/');
-                  setIsFileTreeOpen(false);
                 }}
               />
             </div>
