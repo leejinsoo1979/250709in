@@ -44,6 +44,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   // 추가: 섹션별 깊이 및 도어 분할 관련
   lowerSectionDepth,
   upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   doorSplit,
   upperDoorTopGap,
   upperDoorBottomGap,

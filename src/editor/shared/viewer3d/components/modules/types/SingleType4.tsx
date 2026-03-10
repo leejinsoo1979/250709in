@@ -44,6 +44,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   lowerSectionDepth,
   upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   lowerSectionTopOffset,
   zone
 }) => {

@@ -31,6 +31,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   backPanelThickness,
   lowerSectionDepth,
   upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   doorSplit,
   doorTopGap = 5,
   doorBottomGap = 25,
@@ -153,7 +155,9 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
       let rodZPosition = 0;
       if (sectionDepths && sectionDepths[index]) {
         const sectionDepth = sectionDepths[index];
-        rodZPosition = (depth - sectionDepth) / 2;
+        const depthDiff = depth - sectionDepth;
+        const sectionDir = index === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+        rodZPosition = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
       }
 
       return (
@@ -187,7 +191,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
   const shouldRenderFeet = showFurniture && !(viewMode === '2D' && view2DDirection === 'top') && !isFloating;
   const lowerSectionDepthUnits = sectionDepths?.[0] ?? depth;
-  const footZOffset = (depth - lowerSectionDepthUnits) / 2;
+  const lowerDepthDiff = depth - lowerSectionDepthUnits;
+  const footZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
 
   return (
     <>
@@ -226,6 +231,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 textureUrl={spaceInfo.materialConfig?.doorTexture}
                 panelGrainDirections={panelGrainDirections}
                 sectionDepths={sectionDepths}
+                sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
                 lowerSectionTopOffsetMm={lowerSectionTopOffset}
                 isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
               />

@@ -52,6 +52,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   lowerSectionDepth,
   upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   lowerSectionTopOffset,
   zone // 단내림 영역 정보
 }) => {
@@ -215,9 +217,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               // 현재 섹션의 깊이 가져오기
               const currentSectionDepth = (sectionDepths && sectionDepths[index]) ? sectionDepths[index] : depth;
 
-              // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
+              // 깊이 차이 계산 (방향에 따라 앞/뒤에서 줄어듦)
               const depthDiff = depth - currentSectionDepth;
-              const zOffset = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+              const sectionDir = index === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+              const zOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
 
               return (
                 <React.Fragment key={`side-panels-${index}`}>
@@ -278,7 +281,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
                     const panelDepth = lowerSectionDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
-                    const panelZOffset = lowerDepthDiff / 2 + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0)/2;
+                    const panelZOffset = (lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2) + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0)/2;
 
                     return (
                       <BoxWithEdges
@@ -304,7 +307,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     const upperSectionDepth = (sectionDepths && sectionDepths[1]) ? sectionDepths[1] : depth;
                     const upperDepthDiff = depth - upperSectionDepth;
                     const panelDepth = upperSectionDepth - mmToThreeUnits(26);
-                    const panelZOffset = upperDepthDiff / 2 + mmToThreeUnits(13);
+                    const panelZOffset = (upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2) + mmToThreeUnits(13);
 
                     return (
                       <BoxWithEdges
@@ -351,7 +354,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
         args={[innerWidth - mmToThreeUnits(1), basicThickness, (sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth) - mmToThreeUnits(26)]}
-        position={[0, height/2 - basicThickness/2, (sectionDepths && sectionDepths[1] ? (depth - sectionDepths[1]) / 2 : 0) + mmToThreeUnits(13)]}
+        position={[0, height/2 - basicThickness/2, (sectionDepths && sectionDepths[1] ? ((depth - sectionDepths[1]) === 0 ? 0 : upperSectionDepthDirection === 'back' ? (depth - sectionDepths[1]) / 2 : -(depth - sectionDepths[1]) / 2) : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -408,7 +411,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
         args={[innerWidth - mmToThreeUnits(1), basicThickness, (sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth) - mmToThreeUnits(26)]}
-        position={[0, -height/2 + basicThickness/2, (sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) / 2 : 0) + mmToThreeUnits(13)]}
+        position={[0, -height/2 + basicThickness/2, (sectionDepths && sectionDepths[0] ? ((depth - sectionDepths[0]) === 0 ? 0 : lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) / 2 : -(depth - sectionDepths[0]) / 2) : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -438,12 +441,12 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             // 하부 섹션 깊이 및 Z 오프셋
             const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
             const lowerDepthDiff = depth - lowerSectionDepth;
-            const lowerZOffset = lowerDepthDiff / 2;
+            const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
 
             // 상부 섹션 깊이 및 Z 오프셋
             const upperSectionDepth = (sectionDepths && sectionDepths[1]) ? sectionDepths[1] : depth;
             const upperDepthDiff = depth - upperSectionDepth;
-            const upperZOffset = upperDepthDiff / 2;
+            const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
             return (
               <>
@@ -613,6 +616,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
+            sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
             lowerSectionTopOffsetMm={lowerSectionTopOffset}
             isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
           />
@@ -677,7 +681,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               if (sectionDepths && sectionDepths[sectionIndex]) {
                 const sectionDepth = sectionDepths[sectionIndex];
                 const depthDiff = depth - sectionDepth;
-                rodZPosition = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                const sectionDir = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+                rodZPosition = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
               }
 
               return (
@@ -704,7 +709,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             width={width}
             depth={depth}
             yOffset={-height / 2}
-            backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+            backZOffset={sectionDepths && sectionDepths[0] ? (lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) : 0) : 0}
             renderMode={renderMode}
             isHighlighted={false}
             isFloating={isFloating}

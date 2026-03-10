@@ -42,6 +42,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   doorBottomGap = 25,
   lowerSectionDepth,
   upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   doorSplit,
   upperDoorTopGap,
   upperDoorBottomGap,
@@ -196,7 +198,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               // Z축 위치 조정: 깊이가 줄어들면 뒤쪽에서 줄어들도록
               // 앞면 위치는 고정, 뒤쪽에서 줄어듦
               const depthDiff = depth - currentDepth;
-              const zOffset = depthDiff / 2; // 양수는 앞쪽으로 이동 (중심 기준)
+              const sectionDir = index === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+              const zOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
 
               // 현재 섹션의 중심 Y 위치
               const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
@@ -252,12 +255,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   // 하부 섹션 깊이 (index=0)
                   const lowerDepth = sectionDepths[0] || depth;
                   const lowerDepthDiff = depth - lowerDepth;
-                  const lowerZOffset = lowerDepthDiff / 2;
+                  const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
 
                   // 상부 섹션 깊이 (index=1)
                   const upperDepth = sectionDepths[1] || depth;
                   const upperDepthDiff = depth - upperDepth;
-                  const upperZOffset = upperDepthDiff / 2;
+                  const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
                   console.log('📦 중간판 실제 렌더링 위치:', {
                     sectionCenterY,
@@ -555,7 +558,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         const topPanelDepth = sectionDepths[lastSectionIndex] || depth;
         const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
         const topPanelDepthDiff = depth - topPanelDepth;
-        const topPanelZOffset = topPanelDepthDiff / 2 + backReduction / 2;
+        const topPanelZOffset = (topPanelDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? topPanelDepthDiff / 2 : -topPanelDepthDiff / 2) + backReduction / 2;
 
         return (
           <BoxWithEdges
@@ -580,7 +583,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         const bottomPanelDepth = sectionDepths[0] || depth;
         const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
         const bottomPanelDepthDiff = depth - bottomPanelDepth;
-        const bottomPanelZOffset = bottomPanelDepthDiff / 2 + backReduction / 2;
+        const bottomPanelZOffset = (bottomPanelDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? bottomPanelDepthDiff / 2 : -bottomPanelDepthDiff / 2) + backReduction / 2;
 
         return (
           <BoxWithEdges
@@ -629,8 +632,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             const lowerDepthDiff = depth - lowerDepth;
             const upperDepthDiff = depth - upperDepth;
 
-            const lowerBackPanelZ = -lowerDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerDepthDiff/2;
-            const upperBackPanelZ = -upperDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperDepthDiff/2;
+            const lowerBackPanelZ = -lowerDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff/2 : -lowerDepthDiff/2);
+            const upperBackPanelZ = -upperDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff/2 : -upperDepthDiff/2);
 
             return (
               <>

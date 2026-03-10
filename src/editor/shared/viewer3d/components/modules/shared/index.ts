@@ -42,6 +42,8 @@ export interface FurnitureTypeProps {
   doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 25)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+  lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
+  upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm)
   doorSplit?: boolean; // 도어 분할 여부 (기본값: false - 병합)
   upperDoorTopGap?: number; // 상부 섹션 도어 상단 갭 (분할 모드, 기본값: 5)

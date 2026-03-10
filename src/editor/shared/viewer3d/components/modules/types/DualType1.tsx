@@ -36,6 +36,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
   lowerSectionDepth,
   upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   doorSplit,
   doorTopGap = 5,
   doorBottomGap = 25,
@@ -252,6 +254,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               sectionDepths={sectionDepths}
+              sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
             />
@@ -307,7 +310,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 // 현재 섹션의 깊이 및 Z 오프셋 계산
                 const currentSectionDepth = sectionDepths[sectionIndex] || depth;
                 const depthDiff = depth - currentSectionDepth;
-                const zOffset = depthDiff / 2; // 앞면 고정, 뒤쪽만 이동
+                const sectionDir = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+                const zOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
 
                 // 안전선반 또는 마감 패널 위치 찾기
                 const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
@@ -380,7 +384,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               width={width}
               depth={depth}
               yOffset={-height / 2}
-              backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+              backZOffset={sectionDepths && sectionDepths[0] ? (lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) : 0) : 0}
               renderMode={renderMode}
               isHighlighted={false}
               isFloating={isFloating}

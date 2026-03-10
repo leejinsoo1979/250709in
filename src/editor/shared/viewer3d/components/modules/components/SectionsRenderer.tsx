@@ -64,6 +64,9 @@ interface SectionsRendererProps {
   // 섹션별 깊이 배열 (Three.js 단위)
   sectionDepths?: number[];
 
+  // 섹션별 깊이 방향 (앞에서/뒤에서)
+  sectionDepthDirections?: ('front' | 'back')[];
+
   // 텍스처 URL과 패널별 결 방향
   textureUrl?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
@@ -99,6 +102,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   hideSectionDimensions = false,
   placedFurnitureId,
   sectionDepths,
+  sectionDepthDirections,
   textureUrl,
   panelGrainDirections,
   lowerSectionTopOffsetMm = 0,
@@ -290,9 +294,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const backPanelThickness = depth - adjustedDepthForShelves;
       const currentAdjustedDepthForShelves = currentSectionDepth - backPanelThickness;
 
-      // Z 오프셋 계산 (섹션 깊이가 줄어들면 앞쪽으로 이동)
+      // Z 오프셋 계산 (방향에 따라 앞/뒤로 이동)
       const depthDiff = depth - currentSectionDepth;
-      const currentShelfZOffset = shelfZOffset + depthDiff / 2;
+      const sectionDir = sectionDepthDirections?.[index] || 'front';
+      const directionOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
+      const currentShelfZOffset = shelfZOffset + directionOffset;
 
       // 섹션 이름 결정 (상부/하부 구분)
       const sectionName = allSections.length >= 2
