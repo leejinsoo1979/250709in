@@ -979,12 +979,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       )}
 
-      {/* 저장 상태 표시 */}
-      {saveStatus === 'success' && (
-        <div className={styles.saveSuccess}>
-          ✓ {t('messages.saveSuccess')}
-        </div>
-      )}
+      {/* 저장 에러 표시 (성공 알림은 생략) */}
       {saveStatus === 'error' && (
         <div className={styles.saveError}>
           ✕ {t('messages.saveFailed')}
