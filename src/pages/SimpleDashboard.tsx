@@ -584,7 +584,13 @@ const SimpleDashboard: React.FC = () => {
             {(!isMobile || mobileNavOpen) && (
               <div className={isMobile ? styles.mobileNavOverlay : styles.leftColumn}>
                 <NavigationPane
-                  projects={data.projects}
+                  projects={
+                    nav.activeMenu === 'in-progress'
+                      ? data.projects.filter(p => !p.status || p.status === 'in_progress')
+                      : nav.activeMenu === 'completed'
+                        ? data.projects.filter(p => p.status === 'completed')
+                        : data.projects
+                  }
                   folders={data.folders}
                   currentProjectId={nav.currentProjectId}
                   currentFolderId={nav.currentFolderId}
@@ -1165,8 +1171,8 @@ const SimpleDashboard: React.FC = () => {
       {/* 팝업 매니저 */}
       <PopupManager />
 
-      {/* 챗봇 */}
-      <Chatbot />
+      {/* 챗봇 - 비활성화 */}
+      {/* <Chatbot /> */}
     </div>
   );
 };
