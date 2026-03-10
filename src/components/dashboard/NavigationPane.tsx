@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home } from 'lucide-react';
+import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home, FileText } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
+import type { DesignFileSummary } from '@/firebase/types';
 import { useAuth } from '@/auth/AuthProvider';
 import { loadFolderData, getDesignFiles } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
@@ -45,43 +46,46 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
 
   // 폴더 데이터 (Firebase에서 직접 로드)
   const [localFolders, setLocalFolders] = useState<{ [projectId: string]: FolderData[] }>({});
-  // 프로젝트별 디자인 파일 개수
-  const [designFileCounts, setDesignFileCounts] = useState<{ [projectId: string]: number }>({});
+  // 프로젝트별 디자인 파일 목록
+  const [designFileMap, setDesignFileMap] = useState<{ [projectId: string]: DesignFileSummary[] }>({});
 
-  // 프로젝트별 디자인 파일 수 로드
-  const loadDesignFileCount = useCallback(async (projectId: string) => {
+  // 프로젝트별 디자인 파일 로드
+  const loadDesignFiles = useCallback(async (projectId: string) => {
     try {
       const { designFiles } = await getDesignFiles(projectId);
-      setDesignFileCounts(prev => ({
+      setDesignFileMap(prev => ({
         ...prev,
-        [projectId]: designFiles.length
+        [projectId]: designFiles
       }));
     } catch {
       // ignore
     }
   }, []);
 
-  // 프로젝트 확장 시 폴더 로드
+  // 프로젝트 확장 시 폴더 + 디자인 파일 로드
   const loadProjectData = useCallback(async (projectId: string) => {
     if (!user) return;
 
     try {
-      const { folders: folderData } = await loadFolderData(projectId);
-      if (folderData) {
+      const [folderResult] = await Promise.all([
+        loadFolderData(projectId),
+        loadDesignFiles(projectId),
+      ]);
+      if (folderResult.folders) {
         setLocalFolders(prev => ({
           ...prev,
-          [projectId]: folderData
+          [projectId]: folderResult.folders
         }));
       }
     } catch (error) {
       console.error('프로젝트 데이터 로드 에러:', error);
     }
-  }, [user]);
+  }, [user, loadDesignFiles]);
 
-  // 프로젝트 목록 변경 시 디자인 파일 수 로드
+  // 프로젝트 목록 변경 시 디자인 파일 로드
   useEffect(() => {
     projects.forEach(project => {
-      loadDesignFileCount(project.id);
+      loadDesignFiles(project.id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects]);
@@ -203,6 +207,10 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             const isExpanded = expandedProjects.has(project.id);
             const isSelected = currentProjectId === project.id && !currentFolderId;
             const projectLocalFolders = localFolders[project.id] || [];
+            const projectDesignFiles = designFileMap[project.id] || [];
+            const fileCount = projectDesignFiles.length;
+            // 폴더에 속하지 않은 루트 디자인 파일
+            const rootDesignFiles = projectDesignFiles.filter(f => !f.folderId);
             return (
               <div key={project.id}>
                 <button
@@ -237,47 +245,80 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                   <span className={styles.treeLabel} title={project.title}>
                     {project.title}
                   </span>
-                  {designFileCounts[project.id] !== undefined && designFileCounts[project.id] > 0 && (
+                  {fileCount > 0 && (
                     <span className={styles.treeBadge}>
-                      {designFileCounts[project.id]}
+                      {fileCount}
                     </span>
                   )}
                 </button>
 
-                {/* 확장 시: 폴더만 표시 */}
-                {isExpanded && projectLocalFolders.length > 0 && (
+                {/* 확장 시: 폴더 + 디자인 파일 표시 */}
+                {isExpanded && (projectLocalFolders.length > 0 || rootDesignFiles.length > 0) && (
                   <div className={styles.treeChildren}>
+                    {/* 폴더 */}
                     {projectLocalFolders.map(folder => {
                       const isFolderSelected = currentProjectId === project.id && currentFolderId === folder.id;
+                      const folderFiles = projectDesignFiles.filter(f => f.folderId === folder.id);
 
                       return (
-                        <button
-                          key={folder.id}
-                          className={`${styles.treeItem} ${styles.treeItemNested} ${
-                            isFolderSelected ? styles.treeItemActive : ''
-                          }`}
-                          onClick={() => onNavigate(project.id, folder.id, folder.name)}
-                          onContextMenu={(e) => {
-                            if (onItemContextMenu) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              onItemContextMenu(e, {
-                                id: folder.id,
-                                name: folder.name,
-                                type: 'folder',
-                                projectId: project.id,
-                              });
-                            }
-                          }}
-                        >
-                          <span style={{ width: 14 }} />
-                          <FcFolder size={14} className={styles.folderIcon} />
-                          <span className={styles.treeLabel} title={folder.name}>
-                            {folder.name}
-                          </span>
-                        </button>
+                        <div key={folder.id}>
+                          <button
+                            className={`${styles.treeItem} ${styles.treeItemNested} ${
+                              isFolderSelected ? styles.treeItemActive : ''
+                            }`}
+                            onClick={() => onNavigate(project.id, folder.id, folder.name)}
+                            onContextMenu={(e) => {
+                              if (onItemContextMenu) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onItemContextMenu(e, {
+                                  id: folder.id,
+                                  name: folder.name,
+                                  type: 'folder',
+                                  projectId: project.id,
+                                });
+                              }
+                            }}
+                          >
+                            <span style={{ width: 14 }} />
+                            <FcFolder size={14} className={styles.folderIcon} />
+                            <span className={styles.treeLabel} title={folder.name}>
+                              {folder.name}
+                            </span>
+                            {folderFiles.length > 0 && (
+                              <span className={styles.treeBadge}>{folderFiles.length}</span>
+                            )}
+                          </button>
+                          {/* 폴더 내 디자인 파일 */}
+                          {folderFiles.map(file => (
+                            <button
+                              key={file.id}
+                              className={`${styles.treeItem} ${styles.treeItemDeep}`}
+                              onClick={() => onNavigate(project.id, folder.id, file.name)}
+                              title={`${file.name} (${file.spaceSize.width}×${file.spaceSize.height}mm)`}
+                            >
+                              <span style={{ width: 28 }} />
+                              <FileText size={13} className={styles.fileIcon} />
+                              <span className={styles.treeLabel}>{file.name}</span>
+                            </button>
+                          ))}
+                        </div>
                       );
                     })}
+
+                    {/* 루트 디자인 파일 (폴더에 속하지 않은 파일) */}
+                    {rootDesignFiles.map(file => (
+                      <button
+                        key={file.id}
+                        className={`${styles.treeItem} ${styles.treeItemNested}`}
+                        onClick={() => onNavigate(project.id, null, file.name)}
+                        title={`${file.name} (${file.spaceSize.width}×${file.spaceSize.height}mm)`}
+                      >
+                        <span style={{ width: 14 }} />
+                        <FileText size={13} className={styles.fileIcon} />
+                        <span className={styles.treeLabel}>{file.name}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>

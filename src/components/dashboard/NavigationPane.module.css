@@ -218,6 +218,11 @@
   color: var(--theme-text-muted);
 }
 
+.fileIcon {
+  flex-shrink: 0;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
 .treeLabel {
   white-space: nowrap;
   overflow: hidden;
