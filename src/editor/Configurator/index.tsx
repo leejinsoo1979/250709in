@@ -3850,15 +3850,6 @@ const Configurator: React.FC = () => {
             onAddCollaborator={() => setIsShareModalOpen(true)}
             onFileTreeToggle={handleFileTreeToggle}
             isFileTreeOpen={isFileTreeOpen}
-            layoutMode={spaceInfo.layoutMode || 'equal-division'}
-            onLayoutModeChange={(mode) => {
-              if ((spaceInfo.layoutMode || 'equal-division') === mode) return;
-              if (placedModules.length > 0) {
-                if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
-                clearAllModules();
-              }
-              handleSpaceInfoUpdate({ layoutMode: mode });
-            }}
           />
 
           {/* 사이드바 컨텐츠 패널 */}
@@ -3870,6 +3861,46 @@ const Configurator: React.FC = () => {
               pointerEvents: activeSidebarTab ? 'auto' : 'none'
             }}
           >
+            {/* 배치 모드 토글 */}
+            {!isReadOnly && (
+              <div className={styles.layoutModeToggle}>
+                <button
+                  className={`${styles.layoutModeBtn} ${(spaceInfo.layoutMode || 'equal-division') === 'equal-division' ? styles.layoutModeActive : ''}`}
+                  onClick={() => {
+                    if ((spaceInfo.layoutMode || 'equal-division') === 'equal-division') return;
+                    if (placedModules.length > 0) {
+                      if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
+                      clearAllModules();
+                    }
+                    handleSpaceInfoUpdate({ layoutMode: 'equal-division' });
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="18" rx="1" />
+                    <rect x="14" y="3" width="7" height="18" rx="1" />
+                  </svg>
+                  슬롯배치
+                </button>
+                <button
+                  className={`${styles.layoutModeBtn} ${(spaceInfo.layoutMode || 'equal-division') === 'free-placement' ? styles.layoutModeActive : ''}`}
+                  onClick={() => {
+                    if ((spaceInfo.layoutMode || 'equal-division') === 'free-placement') return;
+                    if (placedModules.length > 0) {
+                      if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
+                      clearAllModules();
+                    }
+                    handleSpaceInfoUpdate({ layoutMode: 'free-placement' });
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="2" width="8" height="8" rx="1" />
+                    <rect x="14" y="6" width="8" height="8" rx="1" />
+                    <rect x="5" y="14" width="8" height="8" rx="1" />
+                  </svg>
+                  자유배치
+                </button>
+              </div>
+            )}
             {renderSidebarContent()}
           </div>
         </>
