@@ -86,7 +86,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
         </div>
       )}
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm border border-zinc-800 rounded-2xl p-8">
         {/* Logo */}
         <div
           className="flex items-center justify-center gap-2 mb-10 cursor-pointer"
@@ -104,7 +104,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
 
         {/* Title */}
         <h1 className="text-white text-2xl font-bold text-center mb-2">
-          {isSignUp ? 'Create Account' : 'Welcome Back'}
+          {isSignUp ? 'Create Account' : 'Start designing your furniture'}
         </h1>
         <p className="text-zinc-500 text-sm text-center mb-8">
           {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
