@@ -738,19 +738,7 @@ const Header: React.FC<HeaderProps> = ({
               </svg>
             </button>
           )}
-          {/* 내보내기 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && onExportPDF && (
-            <button
-              className={styles.convertButton}
-              onClick={() => {
-                console.log('내보내기 버튼 클릭됨');
-                onExportPDF(); // PDF 핸들러가 실제로는 ConvertModal을 열어줌
-              }}
-            >
-              <TbTableExport size={20} style={{ marginRight: '4px' }} />
-              {t('export.title')}
-            </button>
-          )}
+          {/* 내보내기 버튼은 컨버팅 드롭다운 내로 이동됨 */}
 
           {/* CNC 옵티마이저 버튼 - 읽기 전용 모드에서는 숨김 */}
           {!readOnly && (
@@ -814,21 +802,17 @@ const Header: React.FC<HeaderProps> = ({
                     {t('export.cuttingOptimizer')}
                   </button>
 
-                  {onConvert && (
+                  {onExportPDF && (
                     <button
                       className={styles.dropdownItem}
                       onClick={() => {
-                        onConvert();
+                        console.log('내보내기 버튼 클릭됨');
+                        onExportPDF();
                         setIsConvertMenuOpen(false);
                       }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                        <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {t('export.drawingEditor')}
+                      <TbTableExport size={16} style={{ marginRight: '8px' }} />
+                      {t('export.title')}
                     </button>
                   )}
 
