@@ -2066,27 +2066,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 자유배치 걸래받이 토글 (상부장 제외, floor 타입만) */}
-          {currentPlacedModule?.isFreePlacement &&
-           moduleData &&
-           moduleData.category !== 'upper' &&
-           spaceInfo.baseConfig?.type === 'floor' && (
-            <div className={styles.propertySection}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={currentPlacedModule.hasBase !== false}
-                  onChange={() => {
-                    const newValue = currentPlacedModule.hasBase === false;
-                    updatePlacedModule(currentPlacedModule.id, { hasBase: newValue });
-                  }}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
-                />
-                <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>걸래받이</span>
-              </label>
-            </div>
-          )}
-
           {/* 자유배치 상부프레임 토글 (하부장 제외) */}
           {currentPlacedModule?.isFreePlacement &&
            moduleData &&
@@ -2107,18 +2086,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 자유배치 하부프레임 토글 (상부장 제외) */}
+          {/* 자유배치 하부프레임 토글 (상부장 제외, floor 타입만) */}
           {currentPlacedModule?.isFreePlacement &&
            moduleData &&
-           moduleData.category !== 'upper' && (
+           moduleData.category !== 'upper' &&
+           spaceInfo.baseConfig?.type === 'floor' && (
             <div className={styles.propertySection}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
-                  checked={currentPlacedModule.hasBottomFrame !== false}
+                  checked={currentPlacedModule.hasBase !== false}
                   onChange={() => {
-                    const newValue = currentPlacedModule.hasBottomFrame === false;
-                    updatePlacedModule(currentPlacedModule.id, { hasBottomFrame: newValue });
+                    const newValue = currentPlacedModule.hasBase === false;
+                    updatePlacedModule(currentPlacedModule.id, { hasBase: newValue });
                   }}
                   style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                 />
