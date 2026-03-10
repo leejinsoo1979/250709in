@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useAnimation } from 'motion/react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,48 @@ export default function LandingPage() {
   const [buttonHovered, setButtonHovered] = useState(false);
 
   const craftControls = useAnimation();
+
+  // Custom dot cursor
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const [cursorOnInteractive, setCursorOnInteractive] = useState(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const cursor = cursorRef.current;
+    if (!container || !cursor) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
+    };
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const interactive = target.closest('button, a, [role="button"], .cursor-pointer');
+      setCursorOnInteractive(!!interactive);
+    };
+
+    const handleMouseLeave = () => {
+      cursor.style.opacity = '0';
+    };
+
+    const handleMouseEnter = () => {
+      cursor.style.opacity = '1';
+    };
+
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseover', handleMouseOver);
+    container.addEventListener('mouseleave', handleMouseLeave);
+    container.addEventListener('mouseenter', handleMouseEnter);
+
+    return () => {
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseover', handleMouseOver);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+      container.removeEventListener('mouseenter', handleMouseEnter);
+    };
+  }, []);
 
   // think thing thank: 3초 간격 자동 애니메이션
   useEffect(() => {
@@ -71,7 +113,41 @@ export default function LandingPage() {
   const isCraftActive = craftAnimating || craftHovered || buttonHovered;
 
   return (
-    <div className={`${isDark ? 'bg-zinc-950' : 'bg-white'} min-h-screen flex flex-col transition-colors duration-300`}>
+    <div
+      ref={containerRef}
+      className={`${isDark ? 'bg-zinc-950' : 'bg-white'} min-h-screen flex flex-col transition-colors duration-300`}
+      style={{ cursor: 'none' }}
+      data-landing-cursor
+    >
+      {/* Hide native cursor on all child elements */}
+      <style>{`
+        [data-landing-cursor] * { cursor: none !important; }
+      `}</style>
+      {/* Custom Dot Cursor */}
+      <div
+        ref={cursorRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 9999,
+          transform: 'translate(-50%, -50%)',
+          transition: 'width 0.2s ease, height 0.2s ease, background 0.2s ease, box-shadow 0.2s ease',
+          borderRadius: '50%',
+          width: cursorOnInteractive ? '40px' : '10px',
+          height: cursorOnInteractive ? '40px' : '10px',
+          background: cursorOnInteractive
+            ? 'transparent'
+            : isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)',
+          boxShadow: cursorOnInteractive
+            ? isDark
+              ? 'inset 0 0 0 2px rgba(255,255,255,0.7)'
+              : 'inset 0 0 0 2px rgba(0,0,0,0.6)'
+            : 'none',
+          opacity: 0,
+        }}
+      />
       {/* Header */}
       <header className="flex items-center justify-between px-8 sm:px-12 py-5">
         <div
