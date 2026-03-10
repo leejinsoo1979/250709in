@@ -31,7 +31,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onSortChange,
   onCreateFolder,
   onCreateDesign,
-  showCreateFolder,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
@@ -60,12 +59,10 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
             <span>새 디자인</span>
           </button>
         )}
-        {showCreateFolder && (
-          <button className={styles.createBtn} onClick={onCreateFolder}>
-            <FolderPlus size={16} />
-            <span>새 폴더</span>
-          </button>
-        )}
+        <button className={styles.createBtn} onClick={onCreateFolder}>
+          <FolderPlus size={16} />
+          <span>새 폴더</span>
+        </button>
       </div>
 
       <div className={styles.spacer} />
