@@ -58,29 +58,19 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
   // 레이아웃 빌더 팝업 상태
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'full' | 'upper' | 'lower'>('full');
-  // 싱글/듀얼 선택 상태
-  const [showTypeSelector, setShowTypeSelector] = useState(false);
-  const [selectedWidth, setSelectedWidth] = useState(1000);
 
   // 공간 높이로 전체장 높이 결정
   const internalSpace = calculateInternalSpace(spaceInfo);
 
-  const handleItemClick = useCallback(() => {
-    setShowTypeSelector(true);
+  const handleItemClick = useCallback((category: 'full' | 'upper' | 'lower') => {
+    setSelectedCategory(category);
+    setIsPopupOpen(true);
   }, []);
 
-  // 싱글/듀얼 선택 후 팝업 열기
-  const handleTypeSelect = useCallback((type: 'single' | 'dual') => {
-    const width = type === 'single' ? 500 : 1000;
-    setSelectedWidth(width);
-    setSelectedCategory(filter);
-    setShowTypeSelector(false);
-    setIsPopupOpen(true);
-  }, [filter]);
-
   // 레이아웃 빌더 확인 → pendingCustomConfig 저장 → 배치 모드 활성화
-  const handlePopupConfirm = useCallback((config: CustomFurnitureConfig) => {
-    const moduleId = createCustomizableModuleId(selectedCategory, selectedWidth);
+  // width는 팝업 내부에서 싱글/듀얼 선택에 따라 결정됨
+  const handlePopupConfirm = useCallback((config: CustomFurnitureConfig, width: number) => {
+    const moduleId = createCustomizableModuleId(selectedCategory, width);
 
     setPendingCustomConfig(config);
     setIsPopupOpen(false);
@@ -91,7 +81,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     }
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [selectedCategory, selectedWidth, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig]);
+  }, [selectedCategory, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig]);
 
   const handlePopupClose = useCallback(() => {
     setIsPopupOpen(false);
@@ -104,7 +94,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     <div className={styles.container}>
       <div
         className={styles.item}
-        onClick={handleItemClick}
+        onClick={() => handleItemClick(category)}
       >
         <div className={styles.itemIcon}>
           <MdOutlineAutoAwesomeMosaic size={32} />
@@ -113,48 +103,6 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
           <span className={styles.itemLabel}>{defaults.label}</span>
         </div>
       </div>
-
-      {/* 싱글/듀얼 선택 UI */}
-      {showTypeSelector && (
-        <div style={{
-          display: 'flex', gap: '8px', marginTop: '8px', padding: '0 4px',
-        }}>
-          <button
-            onClick={() => handleTypeSelect('single')}
-            style={{
-              flex: 1, padding: '10px 8px', borderRadius: '8px',
-              border: '1px solid #ddd', background: '#fff',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: '4px', transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#4A90D9'; e.currentTarget.style.background = '#f0f7ff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.background = '#fff'; }}
-          >
-            <div style={{ width: '20px', height: '36px', border: '2px solid #666', borderRadius: '3px' }} />
-            <span style={{ fontSize: '12px', fontWeight: '600' }}>싱글</span>
-            <span style={{ fontSize: '10px', color: '#999' }}>W 500mm</span>
-          </button>
-          <button
-            onClick={() => handleTypeSelect('dual')}
-            style={{
-              flex: 1, padding: '10px 8px', borderRadius: '8px',
-              border: '1px solid #ddd', background: '#fff',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: '4px', transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#4A90D9'; e.currentTarget.style.background = '#f0f7ff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.background = '#fff'; }}
-          >
-            <div style={{ display: 'flex', gap: '2px' }}>
-              <div style={{ width: '18px', height: '36px', border: '2px solid #666', borderRadius: '3px' }} />
-              <div style={{ width: '18px', height: '36px', border: '2px solid #666', borderRadius: '3px' }} />
-            </div>
-            <span style={{ fontSize: '12px', fontWeight: '600' }}>듀얼</span>
-            <span style={{ fontSize: '10px', color: '#999' }}>W 1000mm</span>
-          </button>
-        </div>
-      )}
-
       <p className={styles.helpText}>
         클릭 후 레이아웃을 설계하세요. 배치 후 설정 아이콘을 눌러 내부 구조를 편집할 수 있습니다.
       </p>
@@ -166,7 +114,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
         onConfirm={handlePopupConfirm}
         category={selectedCategory}
         dimensions={{
-          width: selectedWidth,
+          width: CUSTOMIZABLE_DEFAULTS[selectedCategory].width,
           height: selectedCategory === 'full' ? internalSpace.height : CUSTOMIZABLE_DEFAULTS[selectedCategory].height,
           depth: CUSTOMIZABLE_DEFAULTS[selectedCategory].depth,
         }}

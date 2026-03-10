@@ -2,13 +2,14 @@
  * 레이아웃 빌더 팝업
  *
  * 커스텀 가구 생성 시 2D 인터랙티브 UI로 섹션 레이아웃 설계.
+ * - 싱글(500mm)/듀얼(1000mm) 타입 선택
  * - 가구 비율에 맞는 캔버스에 섹션 시각화
  * - 클릭으로 선택 → 분할/병합
  * - 드래그로 경계 조정
  * - 확인 시 CustomFurnitureConfig로 변환
  */
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { useLayoutBuilder } from './useLayoutBuilder';
@@ -20,7 +21,7 @@ import styles from './LayoutBuilderPopup.module.css';
 interface LayoutBuilderPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (config: CustomFurnitureConfig) => void;
+  onConfirm: (config: CustomFurnitureConfig, width: number) => void;
   category: 'full' | 'upper' | 'lower';
   dimensions: {
     width: number;
@@ -42,6 +43,10 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   category,
   dimensions,
 }) => {
+  // 싱글/듀얼 타입 (full 카테고리에서만 사용)
+  const [cabinetType, setCabinetType] = useState<'single' | 'dual'>('dual');
+  const currentWidth = category === 'full' ? (cabinetType === 'single' ? 500 : 1000) : dimensions.width;
+
   const {
     layout,
     selectedNodeId,
@@ -55,7 +60,20 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
     canSplit,
     canMerge,
     leafCount,
-  } = useLayoutBuilder(dimensions.width, dimensions.height);
+  } = useLayoutBuilder(currentWidth, dimensions.height);
+
+  // 팝업 열릴 때 듀얼로 초기화
+  useEffect(() => {
+    if (isOpen) {
+      setCabinetType('dual');
+    }
+  }, [isOpen]);
+
+  // 타입 변경 시 레이아웃 리셋
+  const handleTypeChange = useCallback((type: 'single' | 'dual') => {
+    setCabinetType(type);
+    resetLayout();
+  }, [resetLayout]);
 
   // ESC 닫기
   useEffect(() => {
@@ -78,12 +96,10 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   }, [isOpen]);
 
   const handleConfirm = useCallback(() => {
-    const config = convertToConfig(layout, dimensions);
-    console.log('🏗️ [LayoutBuilder] layout tree:', JSON.stringify(layout, null, 2));
-    console.log('🏗️ [LayoutBuilder] dimensions:', dimensions);
-    console.log('🏗️ [LayoutBuilder] converted config:', JSON.stringify(config, null, 2));
-    onConfirm(config);
-  }, [layout, dimensions, onConfirm]);
+    const dims = { ...dimensions, width: currentWidth };
+    const config = convertToConfig(layout, dims);
+    onConfirm(config, currentWidth);
+  }, [layout, dimensions, currentWidth, onConfirm]);
 
   if (!isOpen) return null;
 
@@ -99,7 +115,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
                 {CATEGORY_LABELS[category]} 레이아웃
               </h2>
               <div className={styles.headerDimensions}>
-                {dimensions.width} × {Math.round(dimensions.height)} × {dimensions.depth} mm
+                {currentWidth} × {Math.round(dimensions.height)} × {dimensions.depth} mm
               </div>
             </div>
           </div>
@@ -108,6 +124,49 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 
         {/* 바디 */}
         <div className={styles.body}>
+          {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
+          {category === 'full' && (
+            <div style={{
+              display: 'flex', gap: '8px', marginBottom: '12px', padding: '0 4px',
+            }}>
+              <button
+                onClick={() => handleTypeChange('single')}
+                style={{
+                  flex: 1, padding: '10px 12px', borderRadius: '8px',
+                  border: cabinetType === 'single' ? '2px solid #4A90D9' : '1px solid #ddd',
+                  background: cabinetType === 'single' ? '#f0f7ff' : '#fff',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', gap: '10px', transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ width: '16px', height: '28px', border: '2px solid #666', borderRadius: '2px' }} />
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '600' }}>싱글</div>
+                  <div style={{ fontSize: '11px', color: '#888' }}>W 500mm</div>
+                </div>
+              </button>
+              <button
+                onClick={() => handleTypeChange('dual')}
+                style={{
+                  flex: 1, padding: '10px 12px', borderRadius: '8px',
+                  border: cabinetType === 'dual' ? '2px solid #4A90D9' : '1px solid #ddd',
+                  background: cabinetType === 'dual' ? '#f0f7ff' : '#fff',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', gap: '10px', transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '2px' }}>
+                  <div style={{ width: '14px', height: '28px', border: '2px solid #666', borderRadius: '2px' }} />
+                  <div style={{ width: '14px', height: '28px', border: '2px solid #666', borderRadius: '2px' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '600' }}>듀얼</div>
+                  <div style={{ fontSize: '11px', color: '#888' }}>W 1000mm</div>
+                </div>
+              </button>
+            </div>
+          )}
+
           {/* 가이드 */}
           <div className={styles.guide}>
             <span className={styles.guideIcon}>💡</span>
@@ -121,7 +180,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
             layout={layout}
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
-            totalWidthMM={dimensions.width}
+            totalWidthMM={currentWidth}
             totalHeightMM={dimensions.height}
             computeRects={computeRects}
             computeHandles={computeHandles}
