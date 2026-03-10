@@ -14,6 +14,7 @@ import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
+import EnterpriseSignUpPage from '@/pages/EnterpriseSignUpPage';
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
@@ -142,6 +143,7 @@ function AppContent() {
         {/* 인증 페이지 */}
         <Route path="/login" element={<SplitLoginForm />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/enterprise-signup" element={<EnterpriseSignUpPage />} />
         <Route path="/auth" element={<SplitLoginForm />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />
         <Route path="/auth/ultra" element={<UltraModernLoginForm />} />

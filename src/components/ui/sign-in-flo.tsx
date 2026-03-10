@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -38,6 +39,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const nav = useNavigate();
   const loading = externalLoading || isSubmitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,7 +211,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           {/* Enterprise Button */}
           <button
             type="button"
-            onClick={() => window.location.href = 'mailto:contact@thinkthingthanks.com?subject=기업계정 가입 문의'}
+            onClick={() => nav('/enterprise-signup')}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 transition-colors mt-3"
           >
             <span className="text-zinc-300 text-sm font-medium">기업계정 가입</span>
