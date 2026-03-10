@@ -2023,8 +2023,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 전체 내부 너비 치수선 (항상 표시) */}
-      {(() => {
+      {/* 전체 내부 너비 치수선 (자유배치 모드에서는 숨김 - 프레임 없음) */}
+      {!isFreePlacement && (() => {
         const internalLeftX = threeUnitBoundaries[0];
         const internalRightX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
         const internalWidthMm = indexing.internalWidth;
