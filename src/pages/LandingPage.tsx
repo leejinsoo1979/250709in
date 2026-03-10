@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { theme, toggleMode } = useTheme();
+  const isDark = theme.mode === 'dark';
   const [dotsHovered, setDotsHovered] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
   const [textHovered, setTextHovered] = useState(false);
@@ -12,7 +16,7 @@ export default function LandingPage() {
   const isAnimating = dotsHovered || buttonHovered || textHovered;
 
   return (
-    <div className="bg-zinc-950 min-h-screen flex flex-col">
+    <div className={`${isDark ? 'bg-zinc-950' : 'bg-white'} min-h-screen flex flex-col transition-colors duration-300`}>
       {/* Header */}
       <header className="flex items-center justify-between px-8 sm:px-12 py-5">
         <div
@@ -20,21 +24,27 @@ export default function LandingPage() {
           onClick={() => navigate('/')}
         >
           <div className="flex items-center gap-1">
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
+            <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`} />
+            <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`} />
+            <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`} />
           </div>
-          <span className="text-white font-black text-lg ml-1">CRAFT</span>
+          <span className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-lg ml-1`}>CRAFT</span>
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="bg-transparent text-white text-sm font-semibold rounded-full px-6 py-2 border border-white hover:bg-white/10 transition-colors"
+            onClick={toggleMode}
+            className={`p-2 rounded-full transition-colors ${isDark ? 'text-white hover:bg-white/10' : 'text-zinc-900 hover:bg-zinc-100'}`}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button
+            className={`bg-transparent text-sm font-semibold rounded-full px-6 py-2 border transition-colors ${isDark ? 'text-white border-white hover:bg-white/10' : 'text-zinc-900 border-zinc-900 hover:bg-zinc-100'}`}
             onClick={() => navigate('/login')}
           >
             Login
           </button>
           <button
-            className="bg-white text-zinc-950 text-sm font-semibold rounded-full px-6 py-2 hover:bg-zinc-200 transition-colors"
+            className={`text-sm font-semibold rounded-full px-6 py-2 transition-colors ${isDark ? 'bg-white text-zinc-950 hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-700'}`}
             onClick={() => navigate('/signup')}
           >
             Sign up
@@ -54,7 +64,7 @@ export default function LandingPage() {
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full bg-white cursor-pointer"
+                className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'} cursor-pointer`}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{
                   scale: 1,
@@ -72,7 +82,7 @@ export default function LandingPage() {
             ))}
           </div>
           <motion.span
-            className="text-white font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-normal cursor-pointer"
+            className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-normal cursor-pointer`}
             style={{ display: 'inline-flex' }}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -86,7 +96,9 @@ export default function LandingPage() {
                 style={{
                   display: 'inline-block',
                   textShadow: isAnimating
-                    ? '0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.2), 0 0 100px rgba(255,255,255,0.1)'
+                    ? isDark
+                      ? '0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.2), 0 0 100px rgba(255,255,255,0.1)'
+                      : '0 0 20px rgba(0,0,0,0.15), 0 0 60px rgba(0,0,0,0.08), 0 0 100px rgba(0,0,0,0.04)'
                     : 'none',
                 }}
                 animate={{
@@ -112,7 +124,7 @@ export default function LandingPage() {
         >
           <Button
             size="lg"
-            className="bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-10 text-lg font-semibold"
+            className={`rounded-full px-10 text-lg font-semibold ${isDark ? 'bg-white text-zinc-950 hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-700'}`}
             onClick={() => navigate('/dashboard')}
             onMouseEnter={() => setButtonHovered(true)}
             onMouseLeave={() => setButtonHovered(false)}
