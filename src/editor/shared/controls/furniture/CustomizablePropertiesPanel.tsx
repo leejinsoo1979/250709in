@@ -895,14 +895,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const subSplits = { ...(sec.areaSubSplits || {}) };
     if (enabled) {
       const halfH = Math.round(sec.height / 2);
-      // 기존 요소를 하부로 이동 (horizontalSplit/칸막이 모두 대응)
-      const existingElements = getElementsBySide(sec, areaKey) || [{ type: 'open' as const }];
+      // 상/하 모두 빈 박스(open)로 초기화
       subSplits[areaKey] = {
         enabled: true,
         lowerHeight: halfH,
-        lowerElements: existingElements,
+        lowerElements: [{ type: 'open' }],
         upperElements: [{ type: 'open' }],
       };
+      // 기존 영역 요소도 초기화
+      setElementsBySide(sec, areaKey, [{ type: 'open' as const }]);
     } else {
       // 서브분할 해제: 하부 요소를 원래 영역으로 복원
       const sub = subSplits[areaKey];
