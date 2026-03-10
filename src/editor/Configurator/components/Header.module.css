@@ -332,25 +332,19 @@
 .userProfile {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border: 1px solid var(--theme-primary);
-  border-radius: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .userProfile:hover {
-  background: var(--theme-primary);
-  border-color: var(--theme-primary-hover);
-}
-
-.userProfile:hover .userProfileName {
-  color: white;
+  opacity: 0.8;
 }
 
 .userProfile:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
 }
 
 .userProfileAvatar {
