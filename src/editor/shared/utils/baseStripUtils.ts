@@ -41,6 +41,19 @@ function getLowerDepthZOffsetMM(module: PlacedModule): number {
  */
 function getBaseFrameBoundsX(module: PlacedModule): { left: number; right: number; category: 'full' | 'upper' | 'lower' } {
   const fullBounds = getModuleBoundsX(module);
+
+  // EP(엔드패널) 적용: 본체 너비 축소 + 비대칭 오프셋
+  const hasLeft = module.hasLeftEndPanel;
+  const hasRight = module.hasRightEndPanel;
+  if (hasLeft || hasRight) {
+    const epThk = module.endPanelThickness || 18;
+    const leftEpMM = hasLeft ? epThk : 0;
+    const rightEpMM = hasRight ? epThk : 0;
+    // 본체가 EP 두께만큼 줄어들고, 비대칭이면 중심이 이동
+    fullBounds.left += leftEpMM;
+    fullBounds.right -= rightEpMM;
+  }
+
   const sections = module.customConfig?.sections;
   if (!sections || sections.length === 0) return fullBounds;
 
