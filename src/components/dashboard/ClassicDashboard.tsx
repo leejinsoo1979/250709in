@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Search, Plus, FileText, MoreHorizontal, Eye, LayoutGrid, List } from 'lucide-react';
+import { Folder, Search, Plus, FileText, MoreHorizontal, LayoutGrid, List } from 'lucide-react';
+import { MdOutlinePending, MdCheckCircleOutline } from 'react-icons/md';
+import { TfiShare, TfiShareAlt } from 'react-icons/tfi';
+import { TrashIcon } from '@/components/common/Icons';
 import { useAuth } from '@/auth/AuthProvider';
 import type { ExplorerItem, QuickAccessMenu } from '@/hooks/dashboard/types';
 import type { UseExplorerNavigationReturn, UseExplorerDataReturn, UseExplorerActionsReturn } from '@/hooks/dashboard/types';
@@ -15,12 +18,12 @@ interface ClassicDashboardProps {
   onCreateDesign: () => void;
 }
 
-const menuItems: { key: QuickAccessMenu; label: string; icon: string }[] = [
-  { key: 'in-progress', label: '진행중 프로젝트', icon: '🕐' },
-  { key: 'completed', label: '완료된 프로젝트', icon: '✅' },
-  { key: 'shared-with-me', label: '공유받은 파일', icon: '📥' },
-  { key: 'shared-by-me', label: '공유한 파일', icon: '📤' },
-  { key: 'trash', label: '휴지통', icon: '🗑️' },
+const menuItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
+  { key: 'in-progress', label: '진행중 프로젝트', icon: <MdOutlinePending size={20} /> },
+  { key: 'completed', label: '완료된 프로젝트', icon: <MdCheckCircleOutline size={20} /> },
+  { key: 'shared-with-me', label: '공유받은 파일', icon: <TfiShareAlt size={18} /> },
+  { key: 'shared-by-me', label: '공유한 파일', icon: <TfiShare size={18} /> },
+  { key: 'trash', label: '휴지통', icon: <TrashIcon size={20} /> },
 ];
 
 const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
@@ -73,67 +76,70 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
 
   return (
     <div className={styles.container}>
-      {/* ══════ 좌측 사이드바 (기존 Sidebar 복원) ══════ */}
-      <div className={styles.sidebar}>
+      {/* ══════ 좌측 사이드바 ══════ */}
+      <aside className={styles.sidebar}>
+        {/* 프로필 */}
         <div className={styles.profileSection}>
-          <div className={styles.userImage}>
+          <div className={styles.userAvatar}>
             {user?.photoURL ? (
-              <img src={user.photoURL} alt="프로필" />
+              <img src={user.photoURL} alt="프로필" referrerPolicy="no-referrer" />
             ) : (
-              <span className={styles.userIcon}>👤</span>
+              <span className={styles.avatarFallback}>👤</span>
             )}
           </div>
-          <div className={styles.userInfo}>
-            <div className={styles.username}>{user?.displayName || '사용자'}</div>
-            <div className={styles.userEmail}>{user?.email || ''}</div>
-          </div>
-
-          <button className={styles.createProjectBtn} onClick={onCreateProject}>
-            <Plus size={16} />
-            새 프로젝트
-          </button>
+          <div className={styles.userName}>{user?.displayName || '사용자'}</div>
+          <div className={styles.userEmail}>{user?.email || ''}</div>
         </div>
 
+        {/* 프로젝트 생성 버튼 */}
+        <button className={styles.createProjectBtn} onClick={onCreateProject}>
+          <Plus size={16} />
+          새 프로젝트
+        </button>
+
         {/* 네비게이션 메뉴 */}
-        <nav className={styles.navigation}>
+        <nav className={styles.navSection}>
           {menuItems.map(item => (
-            <button
+            <div
               key={item.key}
-              className={`${styles.menuItem} ${
-                nav.activeMenu === item.key && !nav.currentProjectId ? styles.activeMenuItem : ''
+              className={`${styles.navItem} ${
+                nav.activeMenu === item.key && !nav.currentProjectId ? styles.active : ''
               }`}
               onClick={() => {
                 nav.setActiveMenu(item.key);
                 nav.navigateTo(null, null, item.label);
               }}
             >
-              <span className={styles.menuIcon}>{item.icon}</span>
-              <span className={styles.menuLabel}>{item.label}</span>
-            </button>
+              <div className={styles.navItemIcon}>{item.icon}</div>
+              <span>{item.label}</span>
+            </div>
           ))}
+        </nav>
 
-          <div className={styles.sectionDivider} />
-          <div className={styles.sectionTitle}>프로젝트</div>
-
+        {/* 프로젝트 리스트 */}
+        <div className={styles.projectListSection}>
+          <div className={styles.projectListTitle}>프로젝트</div>
           {data.projects.map(project => (
-            <button
+            <div
               key={project.id}
-              className={`${styles.menuItem} ${
-                nav.currentProjectId === project.id ? styles.activeMenuItem : ''
+              className={`${styles.navItem} ${
+                nav.currentProjectId === project.id ? styles.active : ''
               }`}
               onClick={() => nav.navigateTo(project.id, null, project.title)}
             >
-              <span className={styles.menuIcon}>📁</span>
-              <span className={styles.menuLabel}>{project.title}</span>
-            </button>
+              <div className={styles.navItemIcon}>
+                <Folder size={18} />
+              </div>
+              <span className={styles.navItemLabel}>{project.title}</span>
+            </div>
           ))}
-        </nav>
-      </div>
+        </div>
+      </aside>
 
       {/* ══════ 우측 메인 영역 ══════ */}
-      <div className={styles.mainArea}>
-        {/* 상단 바 (기존 TopBar 복원) */}
-        <div className={styles.topBar}>
+      <main className={styles.mainArea}>
+        {/* 서브헤더 (브레드크럼 + 검색 + 보기 토글 + 정렬) */}
+        <div className={styles.subHeader}>
           <div className={styles.breadcrumb}>
             {nav.currentProjectId ? (
               <>
@@ -141,16 +147,16 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                   전체 프로젝트
                 </button>
                 <span className={styles.breadcrumbSep}>›</span>
-                <span className={styles.breadcrumbText}>{breadcrumbLabel}</span>
+                <span className={styles.breadcrumbCurrent}>{breadcrumbLabel}</span>
               </>
             ) : (
-              <span className={styles.breadcrumbText}>{breadcrumbLabel}</span>
+              <span className={styles.breadcrumbCurrent}>{breadcrumbLabel}</span>
             )}
           </div>
 
           <div className={styles.searchSection}>
             <div className={styles.searchBar}>
-              <span className={styles.searchIcon}><Search size={16} /></span>
+              <Search size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 placeholder="프로젝트 이름으로 검색"
@@ -161,7 +167,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
             </div>
           </div>
 
-          <div className={styles.topBarActions}>
+          <div className={styles.subHeaderActions}>
             <div className={styles.viewToggle}>
               <button
                 className={`${styles.viewBtn} ${viewMode === 'list' ? styles.activeView : ''}`}
@@ -185,7 +191,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
           </div>
         </div>
 
-        {/* 카드 그리드 (기존 DesignGrid 복원) */}
+        {/* 디자인 그리드 */}
         <div className={styles.gridArea}>
           {data.isLoading ? (
             <div className={styles.emptyState}>
@@ -219,36 +225,30 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
               </button>
             </div>
           ) : viewMode === 'list' ? (
-            /* 목록 뷰 */
-            <div style={{ padding: 24 }}>
+            <div className={styles.listView}>
               {filteredItems.map(item => (
                 <div
                   key={item.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '10px 16px', borderBottom: '1px solid var(--theme-border)',
-                    cursor: 'pointer', transition: 'background 0.15s',
-                  }}
+                  className={styles.listItem}
                   onClick={e => actions.selectItem(item.id, e.ctrlKey || e.metaKey)}
                   onDoubleClick={() => onItemDoubleClick(item)}
                   onContextMenu={e => onItemContextMenu(e, item)}
                 >
                   {item.type === 'folder' || item.type === 'project'
-                    ? <Folder size={18} style={{ color: 'var(--theme-text-muted)' }} />
-                    : <FileText size={18} style={{ color: 'var(--theme-text-muted)' }} />}
-                  <span style={{ flex: 1, fontWeight: 500, color: 'var(--theme-text)' }}>{item.name}</span>
-                  <span style={{ fontSize: 13, color: 'var(--theme-text-secondary)' }}>{formatDate(item.updatedAt)}</span>
+                    ? <Folder size={18} className={styles.listItemIcon} />
+                    : <FileText size={18} className={styles.listItemIcon} />}
+                  <span className={styles.listItemName}>{item.name}</span>
+                  <span className={styles.listItemDate}>{formatDate(item.updatedAt)}</span>
                 </div>
               ))}
             </div>
           ) : (
-            /* 그리드 뷰 (체크무늬 패턴 카드) */
             <div className={styles.designGrid}>
               {/* 새 디자인 카드 - 프로젝트 내부일 때만 */}
               {nav.currentProjectId && (
                 <div className={styles.createDesignCard} onClick={onCreateDesign}>
                   <div className={styles.createIcon}>
-                    <Plus size={32} />
+                    <Plus size={28} />
                   </div>
                   <p className={styles.createText}>새로운 디자인</p>
                 </div>
@@ -268,20 +268,12 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                     ) : (
                       <div className={styles.placeholderThumbnail}>
                         {item.type === 'folder' || item.type === 'project'
-                          ? <Folder size={48} />
-                          : <FileText size={48} />}
+                          ? <Folder size={40} />
+                          : <FileText size={40} />}
                       </div>
                     )}
 
-                    {/* View more 배지 */}
-                    {item.type === 'design' && (
-                      <div className={styles.viewBadge}>
-                        <Eye size={14} />
-                        <span>View more</span>
-                      </div>
-                    )}
-
-                    {/* 호버 액션 버튼 */}
+                    {/* 호버 액션 */}
                     <div className={styles.cardHoverActions}>
                       <button
                         className={styles.actionButton}
@@ -295,11 +287,6 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
 
                   <div className={styles.cardInfo}>
                     <h3 className={styles.cardTitle}>{item.name}</h3>
-                    {item.spaceSize && (
-                      <p className={styles.cardMeta}>
-                        {item.spaceSize.width} × {item.spaceSize.height} × {item.spaceSize.depth}mm
-                      </p>
-                    )}
                     <p className={styles.cardDate}>{formatDate(item.updatedAt)}</p>
                   </div>
                 </div>
@@ -307,7 +294,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
