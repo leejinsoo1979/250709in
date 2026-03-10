@@ -787,7 +787,7 @@
 /* 디자인 카드 */
 .designCard {
   background: var(--theme-surface);
-  border: 1px solid var(--theme-text-muted, rgba(255,255,255,0.2));
+  border: 1.5px solid var(--theme-border-hover, #444);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
