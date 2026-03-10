@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
@@ -23,7 +23,7 @@ interface NavigationPaneProps {
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
   projects,
-  folders,
+  folders: _folders,
   currentProjectId,
   currentFolderId,
   activeMenu,
@@ -186,8 +186,6 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             const isSelected = currentProjectId === project.id && !currentFolderId;
             const projectLocalFolders = localFolders[project.id] || [];
             const projectDesignFiles = designFiles[project.id] || [];
-            const hasChildren = true; // 항상 확장 가능
-
             return (
               <div key={project.id}>
                 <button
