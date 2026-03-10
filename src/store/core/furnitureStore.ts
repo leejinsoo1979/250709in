@@ -71,7 +71,7 @@ interface FurnitureDataState {
 }
 
 // 가구 데이터 Store 생성
-export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
+export const useFurnitureStore = create<FurnitureDataState>((set) => ({
   // 가구 데이터 초기 상태
   placedModules: [],
 
@@ -120,23 +120,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
         const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
         module.doorBottomGap = isFloatPlacement ? floatHeight : 25;
-        console.log('🚪 [addModule] 도어 바닥 이격거리 초기화:', {
-          moduleId: module.moduleId,
-          placementType: spaceInfo.baseConfig?.placementType,
-          floatHeight,
-          doorBottomGap: module.doorBottomGap
-        });
       }
 
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
       if (sections && sections.length === 2) {
         const defaultDepth = newModuleData.dimensions.depth;
-        console.log('🔧 [addModule] 2단 가구 섹션 깊이 초기화:', {
-          moduleId: module.moduleId,
-          defaultDepth,
-          sectionsCount: sections.length
-        });
 
         // 섹션 깊이가 설정되지 않은 경우 기본값으로 초기화
         if (module.lowerSectionDepth === undefined) {
@@ -145,11 +134,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         if (module.upperSectionDepth === undefined) {
           module.upperSectionDepth = defaultDepth;
         }
-
-        console.log('✅ [addModule] 초기화된 섹션 깊이:', {
-          lowerSectionDepth: module.lowerSectionDepth,
-          upperSectionDepth: module.upperSectionDepth
-        });
       }
       
       // 자유배치 가구는 슬롯 충돌 체크 불필요 (X 좌표 기반 충돌 검사는 배치 시점에 이미 완료됨)
@@ -251,13 +235,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
-    console.log('🏪 furnitureStore.updatePlacedModule 호출됨:', { id, updates });
-    const currentModule = get().placedModules.find(m => m.id === id);
-    console.log('📦 현재 모듈:', currentModule);
-
     set((state) => {
-      const beforeCount = state.placedModules.length;
-      
       // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
       const checkTarget = state.placedModules.find(m => m.id === id);
       if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
@@ -365,29 +343,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 충돌이 없으면 일반 업데이트
       const newModules = state.placedModules.map(module => {
         if (module.id === id) {
-          const updated = { ...module, ...updates };
-          console.log('✅ [updatePlacedModule] 모듈 업데이트 완료:', {
-            id,
-            before: module,
-            updates,
-            after: updated
-          });
-          return updated;
+          return { ...module, ...updates };
         }
         return module;
       });
-
-      const afterUpdate = newModules.find(m => m.id === id);
-      console.log('📊 [updatePlacedModule] 최종 결과:', afterUpdate);
 
       return {
         placedModules: newModules
       };
     });
-
-    // 업데이트 후 실제 store 상태 확인
-    const updatedModule = get().placedModules.find(m => m.id === id);
-    console.log('🔍 [updatePlacedModule] store에서 재확인:', updatedModule);
   },
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)
@@ -474,12 +438,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   
   // 기둥 변경 시 가구 adjustedWidth 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => {
-    console.log('🔧 [updateFurnitureForColumns] 호출됨');
     set((state) => {
-      console.log('🔧 [updateFurnitureForColumns] placedModules 수:', state.placedModules.length);
-
       const columnSlots = analyzeColumnSlots(spaceInfo);
-      console.log('🔧 [updateFurnitureForColumns] columnSlots:', columnSlots);
 
       const updatedModules = state.placedModules.map(module => {
         if (module.slotIndex === undefined) return module;
@@ -494,20 +454,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
 
         const slotInfo = columnSlots[globalSlotIndex];
-        console.log(`🔧 [updateFurnitureForColumns] ${module.id}:`, {
-          slotIndex: module.slotIndex,
-          globalSlotIndex,
-          hasColumn: slotInfo?.hasColumn,
-          adjustedWidth: slotInfo?.adjustedWidth,
-          availableWidth: slotInfo?.availableWidth
-        });
-
         // 기둥이 있는 슬롯인 경우 adjustedWidth 설정 (소수점 2자리로 반올림)
         if (slotInfo?.hasColumn) {
           const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
           const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
 
-          console.log(`✅ [updateFurnitureForColumns] ${module.id} adjustedWidth 설정:`, newAdjustedWidth);
           return {
             ...module,
             adjustedWidth: newAdjustedWidth
@@ -570,19 +521,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // wallConfig/frameSize 변경 시 가구 너비 재계산
   resetFurnitureWidths: () => {
     set((state) => {
-      console.log('🔄 [furnitureStore] resetFurnitureWidths - customWidth/adjustedWidth 초기화');
-
       const updatedModules = state.placedModules.map(module => {
-        // customWidth와 adjustedWidth 초기화
         const updated = { ...module };
 
         if (module.customWidth !== undefined) {
-          console.log(`  - ${module.id}: customWidth ${module.customWidth} → undefined`);
           delete updated.customWidth;
         }
 
         if (module.adjustedWidth !== undefined) {
-          console.log(`  - ${module.id}: adjustedWidth ${module.adjustedWidth} → undefined`);
           delete updated.adjustedWidth;
         }
 

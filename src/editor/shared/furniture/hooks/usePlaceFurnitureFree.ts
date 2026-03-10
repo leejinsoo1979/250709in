@@ -5,7 +5,6 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { getModuleById, ModuleData } from '@/data/modules';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import {
   clampToSpaceBoundsX,
@@ -46,8 +45,6 @@ export interface PlaceFurnitureFreeResult {
 export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurnitureFreeResult {
   const { moduleId, xPositionMM, spaceInfo, dimensions, existingModules } = params;
 
-  console.log('🎯 [placeFurnitureFree] 호출:', { moduleId, xPositionMM, dimensions });
-
   const internalSpace = calculateInternalSpace(spaceInfo);
   const moduleData = params.moduleData || getModuleById(moduleId, internalSpace, spaceInfo);
 
@@ -67,11 +64,6 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   if (effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
     if (moduleData.category === 'full') {
       effectiveHeight = droppedZone.droppedInternalHeight;
-      console.log('📐 [placeFurnitureFree] 단내림 구간 높이 조정:', {
-        원래높이: dimensions.height,
-        단내림높이: effectiveHeight,
-        dropHeight: spaceInfo.droppedCeiling?.dropHeight,
-      });
     }
   }
 
@@ -88,11 +80,6 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
       const availableHeightMM = spaceInfo.height - floorFinishMM - topFrameMM - floatHeightMM;
 
       if (effectiveHeight > availableHeightMM) {
-        console.log('📐 [placeFurnitureFree] 띄움배치 높이 조정:', {
-          원래높이: effectiveHeight,
-          가용높이: availableHeightMM,
-          floatHeight: floatHeightMM,
-        });
         effectiveHeight = Math.max(availableHeightMM, 0);
       }
     }
@@ -173,14 +160,6 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     useFurnitureStore.getState().setPendingCustomConfig(null);
   }
 
-  console.log('✅ [placeFurnitureFree] 배치 완료:', {
-    id: newModule.id,
-    moduleId: newModule.moduleId,
-    isCustomizable: newModule.isCustomizable,
-    hasCustomConfig: !!newModule.customConfig,
-    customConfigSections: newModule.customConfig?.sections?.length,
-    pendingLayoutConfigUsed: !!pendingLayoutConfig,
-  });
   return { success: true, module: newModule };
 }
 
