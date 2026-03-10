@@ -17,24 +17,18 @@ export default function LandingPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 sm:px-10 py-4">
         <img
-          src="/images/ttt_logo/tttlogo4.png"
+          src="/images/ttt_logo/tttlogo.png"
           alt="think thing thank"
           className="h-6 sm:h-7 w-auto invert cursor-pointer"
           onClick={() => navigate('/')}
         />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center">
           <Button
             variant="ghost"
             className="text-zinc-400 hover:text-white hover:bg-zinc-800 text-sm font-medium"
             onClick={() => navigate('/login')}
           >
             Sign in
-          </Button>
-          <Button
-            className="bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-5 text-sm font-semibold"
-            onClick={() => navigate('/signup')}
-          >
-            Sign up
           </Button>
         </div>
       </header>
