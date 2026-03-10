@@ -29,6 +29,7 @@ interface ClassicDashboardProps {
   onItemContextMenu: (e: React.MouseEvent, item: ExplorerItem) => void;
   onCreateProject: () => void;
   onCreateDesign: () => void;
+  onOpenEditor?: (item: ExplorerItem) => void;
 }
 
 const menuItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
@@ -47,6 +48,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
   onItemContextMenu,
   onCreateProject,
   onCreateDesign,
+  onOpenEditor,
 }) => {
   const { user } = useAuth();
   const { isAdmin } = useAdmin(user);
@@ -635,7 +637,11 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                               className={styles.overlayButton}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onItemDoubleClick(item);
+                                if (onOpenEditor) {
+                                  onOpenEditor(item);
+                                } else {
+                                  onItemDoubleClick(item);
+                                }
                               }}
                             >
                               에디터로 이동

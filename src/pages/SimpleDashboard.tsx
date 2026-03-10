@@ -511,6 +511,19 @@ const SimpleDashboard: React.FC = () => {
           onItemContextMenu={handleItemContextMenu}
           onCreateProject={handleCreateProject}
           onCreateDesign={handleSaasCreateDesign}
+          onOpenEditor={(item) => {
+            const project = data.projects.find(p => p.id === (item.projectId || nav.currentProjectId));
+            const targetProjectId = item.projectId || nav.currentProjectId;
+            if (targetProjectId) {
+              const { setProjectId, setProjectTitle, resetBasicInfo } = useProjectStore.getState();
+              setProjectId(targetProjectId);
+              setProjectTitle(project?.title || '새 프로젝트');
+              resetBasicInfo();
+              setModalProjectId(targetProjectId);
+              setModalProjectTitle(project?.title || '새 프로젝트');
+              setIsStep1ModalOpen(true);
+            }
+          }}
         />
       ) : (
         <>
