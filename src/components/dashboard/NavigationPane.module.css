@@ -28,8 +28,8 @@
 .paneToolbar {
   display: flex;
   align-items: center;
-  height: 40px;
-  padding: 0 12px;
+  height: 48px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--theme-border);
   flex-shrink: 0;
 }
