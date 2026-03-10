@@ -19,18 +19,15 @@ export default function LandingPage() {
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{
                   scale: 1,
-                  opacity: 1,
-                  y: [0, -16, 0, 4, 0],
+                  opacity: [1, 0.25, 1],
                 }}
                 transition={{
                   scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
-                  opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
-                  y: {
-                    duration: 1.4,
-                    delay: 0.8 + i * 0.2,
+                  opacity: {
+                    duration: 1.8,
+                    delay: 0.8 + i * 0.4,
                     repeat: Infinity,
-                    ease: [0.45, 0, 0.55, 1],
-                    times: [0, 0.3, 0.6, 0.8, 1],
+                    ease: "easeInOut",
                   },
                 }}
               />
