@@ -24,16 +24,16 @@ export default function LandingPage() {
         />
         <div className="flex items-center gap-3">
           <button
-            className="bg-white text-zinc-950 text-sm font-semibold rounded-full px-6 py-2 hover:bg-zinc-200 transition-colors"
-            onClick={() => navigate('/signup')}
-          >
-            Sign up
-          </button>
-          <button
             className="bg-transparent text-white text-sm font-semibold rounded-full px-6 py-2 border border-white hover:bg-white/10 transition-colors"
             onClick={() => navigate('/login')}
           >
             Login
+          </button>
+          <button
+            className="bg-white text-zinc-950 text-sm font-semibold rounded-full px-6 py-2 hover:bg-zinc-200 transition-colors"
+            onClick={() => navigate('/signup')}
+          >
+            Sign up
           </button>
         </div>
       </header>
