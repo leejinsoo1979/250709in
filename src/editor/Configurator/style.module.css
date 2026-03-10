@@ -41,7 +41,7 @@
 /* 파일 트리 패널 (2-column: 좌측 트리 + 우측 파일 타일) */
 .fileTreePanel {
   position: fixed;
-  top: 56px;
+  top: var(--configurator-top-offset, 88px);
   left: 0;
   bottom: 0;
   width: 640px;
@@ -281,7 +281,7 @@
 .rightPanelContainer {
   position: fixed;
   right: 0;
-  top: var(--configurator-header-height, 56px);
+  top: var(--configurator-top-offset, 88px);
   bottom: 0;
   width: var(--right-panel-width, 320px);
   z-index: 10;
@@ -390,7 +390,7 @@
 .sidebarContent {
   position: fixed;
   left: var(--sidebar-icon-width, 64px); /* 사이드바 너비 - CSS 변수 사용 */
-  top: var(--configurator-header-height, 56px); /* 헤더 높이 */
+  top: var(--configurator-top-offset, 88px); /* 헤더 + 탭 바 높이 */
   bottom: 0;
   width: var(--sidebar-content-width, 240px); /* CSS 변수 사용 */
   min-width: 200px;
@@ -1601,7 +1601,7 @@
   /* 뷰어 전체 화면 - 하단 탭바 공간 확보 */
   .viewerArea {
     position: fixed !important;
-    top: var(--configurator-header-height, 56px) !important;
+    top: var(--configurator-header-height, 56px) !important; /* 모바일에서는 탭 바 없음 */
     left: 0 !important;
     right: 0 !important;
     bottom: 70px !important; /* 하단 탭바 높이 */

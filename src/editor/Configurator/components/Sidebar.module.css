@@ -7,7 +7,7 @@
 .sidebar {
   position: fixed;
   left: 0;
-  top: var(--configurator-header-height, 56px);
+  top: var(--configurator-top-offset, 88px);
   bottom: 0;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);

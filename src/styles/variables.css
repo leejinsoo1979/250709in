@@ -130,6 +130,12 @@
   /* 헤더 높이 (Configurator) */
   --configurator-header-height: 56px;
 
+  /* 탭 바 높이 (Configurator) */
+  --configurator-tabbar-height: 32px;
+
+  /* 헤더 + 탭 바 높이 합산 */
+  --configurator-top-offset: calc(var(--configurator-header-height) + var(--configurator-tabbar-height));
+
   /* 뷰어 최소 너비 - 나머지 공간 확보 */
   --viewer-min-width: clamp(300px, 40vw, 600px);
   
