@@ -59,18 +59,30 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
  * 최적화된 카메라 거리 계산 (3D 모드에서 충분히 멀리, 큰 공간도 전체 표시)
  */
 export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
-  // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
-  const diagonal = Math.sqrt(width * width + height * height + depth * depth);
+  // 치수 라벨 영역을 고려한 높이 패딩 (상단 치수 표시 공간 확보)
+  const dimensionLabelPadding = 400; // mm 단위 여유 공간
+  const effectiveHeight = height + dimensionLabelPadding;
 
-  // 적절한 여백으로 조정
-  const furnitureMargin = 0.85;
+  // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
+  const diagonal = Math.sqrt(width * width + effectiveHeight * effectiveHeight + depth * depth);
+
+  // W가 1200~2300 구간에서는 높이가 지배적이라 카메라가 너무 가까움
+  // 이 구간에 추가 여백을 적용
+  let furnitureMargin = 0.95;
+  if (width >= 1200 && width <= 2300) {
+    // 높이가 폭보다 클 때 추가 여백 적용
+    const heightDominance = height / Math.max(width, 1);
+    if (heightDominance > 1.0) {
+      furnitureMargin = 1.05 + (heightDominance - 1.0) * 0.1;
+    }
+  }
 
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
   const fovRad = (fov * Math.PI) / 180;
 
-  // 가장 큰 차원을 기준으로 기본 거리 계산
-  const maxDimension = Math.max(width, height, depth); // depth도 고려
+  // 가장 큰 차원을 기준으로 기본 거리 계산 (패딩 반영된 높이 사용)
+  const maxDimension = Math.max(width, effectiveHeight, depth);
   const baseDistance = (maxDimension / 2) / Math.tan(fovRad / 2);
 
   // 대각선 길이도 고려해서 더 안전한 거리 계산
@@ -81,7 +93,7 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   const distance = mmToThreeUnits(safeDistance * furnitureMargin);
 
   // 큰 공간에서도 전체가 보이도록 최대 거리 제한 대폭 증가
-  return Math.max(7, Math.min(150, distance)); // 적절한 최소 거리
+  return Math.max(7, Math.min(150, distance));
 };
 
 /**
