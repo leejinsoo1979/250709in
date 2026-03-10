@@ -23,6 +23,7 @@ interface ContentPaneProps {
     onDrop: (e: React.DragEvent, targetFolderId: string) => void;
     onDragEnd: () => void;
   };
+  onBlankContextMenu?: (e: React.MouseEvent) => void;
   isLoading?: boolean;
 }
 
@@ -39,6 +40,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   onItemContextMenu,
   onSortDirectionToggle,
   dragHandlers,
+  onBlankContextMenu,
   isLoading,
 }) => {
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
@@ -104,6 +106,14 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return <FileText size={size} className={styles.itemIconDesign} />;
   };
 
+  // 빈 영역 우클릭 헬퍼
+  const handleBlankContextMenu = (e: React.MouseEvent) => {
+    // 아이템 위에서 클릭한 경우 무시
+    const target = e.target as HTMLElement;
+    if (target.closest(`.${styles.tableRow}, .${styles.listItem}, .${styles.tileCard}, .${styles.iconCard}`)) return;
+    if (onBlankContextMenu) onBlankContextMenu(e);
+  };
+
   // 드래그 속성 생성 헬퍼
   const getDragProps = (item: ExplorerItem) => ({
     draggable: item.type === 'design',
@@ -128,7 +138,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
 
   if (filteredItems.length === 0) {
     return (
-      <div className={styles.emptyState}>
+      <div className={styles.emptyState} onContextMenu={onBlankContextMenu}>
         <FcFolder size={48} className={styles.emptyIcon} />
         <span>{searchTerm ? '검색 결과가 없습니다' : '항목이 없습니다'}</span>
       </div>
@@ -138,7 +148,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 자세히 뷰 (테이블) ──
   if (viewMode === 'details') {
     return (
-      <div className={styles.detailsTable}>
+      <div className={styles.detailsTable} onContextMenu={handleBlankContextMenu}>
         <div className={styles.tableHeader}>
           <div className={styles.colName} onClick={onSortDirectionToggle}>
             이름 {sortBy === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
@@ -184,7 +194,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 목록 뷰 ──
   if (viewMode === 'list') {
     return (
-      <div className={styles.listView}>
+      <div className={styles.listView} onContextMenu={handleBlankContextMenu}>
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -205,7 +215,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 타일 뷰 ──
   if (viewMode === 'tiles') {
     return (
-      <div className={styles.tileGrid}>
+      <div className={styles.tileGrid} onContextMenu={handleBlankContextMenu}>
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -247,6 +257,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     <div
       className={styles.iconGrid}
       style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
+      onContextMenu={handleBlankContextMenu}
     >
       {filteredItems.map(item => (
         <div

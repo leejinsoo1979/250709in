@@ -634,6 +634,11 @@ const SimpleDashboard: React.FC = () => {
                 onItemContextMenu={handleItemContextMenu}
                 onSortDirectionToggle={handleSortDirectionToggle}
                 dragHandlers={actions.dragHandlers}
+                onBlankContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setBlankContextMenu({ x: e.clientX, y: e.clientY });
+                }}
                 isLoading={data.isLoading}
               />
             </div>
