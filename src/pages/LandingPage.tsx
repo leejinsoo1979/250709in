@@ -30,7 +30,7 @@ export default function LandingPage() {
             Sign up
           </button>
           <button
-            className="text-white text-sm font-semibold rounded-full px-6 py-2 border border-white hover:bg-white hover:text-zinc-950 transition-colors"
+            className="bg-transparent text-white text-sm font-semibold rounded-full px-6 py-2 border border-white hover:bg-white/10 transition-colors"
             onClick={() => navigate('/login')}
           >
             Login
