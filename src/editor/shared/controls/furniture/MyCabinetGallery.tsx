@@ -90,7 +90,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'full', ed
       isDualSlot: isDual,
       moduleData: {
         id: moduleId,
-        name: cabinet.name || 'My캐비넷',
+        name: cabinet.name || '커스텀 캐비넷',
         dimensions: { width: slotWidth, height: cabinet.height, depth: cabinet.depth },
         type: 'default',
         color: '#C8B69E',
@@ -171,7 +171,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'full', ed
         <p className={libStyles.helpText}>
           저장된 캐비닛이 없습니다.
           <br />
-          커스텀 캐비닛을 편집한 후 "My캐비닛에 저장"을 눌러 저장하세요.
+          커스텀 캐비닛을 편집한 후 "커스텀에 저장"을 눌러 저장하세요.
         </p>
       </div>
     );

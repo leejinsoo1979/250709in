@@ -1568,7 +1568,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (editingCabinetId) {
       // 수정 모드: 덮어쓰기 or 새로 생성 선택
       const choice = window.confirm(
-        '기존 My캐비닛을 덮어쓰시겠습니까?\n\n[확인] → 기존 캐비닛 덮어쓰기\n[취소] → 새 캐비닛으로 저장'
+        '기존 커스텀 캐비넷을 덮어쓰시겠습니까?\n\n[확인] → 기존 캐비넷 덮어쓰기\n[취소] → 새 캐비넷으로 저장'
       );
 
       if (choice) {
@@ -1585,14 +1585,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
         if (error) {
           alert(error);
         } else {
-          alert('My캐비닛이 수정되었습니다.');
+          alert('커스텀 캐비넷이 수정되었습니다.');
           restoreEditBackup();
           setEditingCabinetId(null);
           closeAllPopups();
         }
       } else {
         // 새로 생성
-        const name = window.prompt('새 My캐비닛 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
+        const name = window.prompt('새 커스텀 캐비넷 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비넷' : '커스텀 캐비넷');
         if (!name) return;
 
         const { id, error } = await saveCabinet({
@@ -1611,7 +1611,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           if (id && thumbnailDataUrl) {
             await updateCabinet(id, { thumbnail: thumbnailDataUrl });
           }
-          alert('새 My캐비닛으로 저장되었습니다.');
+          alert('새 커스텀 캐비넷으로 저장되었습니다.');
           restoreEditBackup();
           setEditingCabinetId(null);
           closeAllPopups();
@@ -1619,7 +1619,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       }
     } else {
       // 신규 저장
-      const name = window.prompt('My캐비닛에 저장할 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비닛' : '커스텀 캐비닛');
+      const name = window.prompt('커스텀 캐비넷 이름을 입력하세요:', config.sections.length > 1 ? '커스텀 2단 캐비넷' : '커스텀 캐비넷');
       if (!name) return;
 
       const { id, error } = await saveCabinet({
@@ -1638,7 +1638,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         if (id && thumbnailDataUrl) {
           await updateCabinet(id, { thumbnail: thumbnailDataUrl });
         }
-        alert('My캐비닛에 저장되었습니다.');
+        alert('커스텀 캐비넷에 저장되었습니다.');
       }
     }
   };
@@ -3583,7 +3583,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           <>
             <div style={{ padding: '0 20px 8px', flexShrink: 0 }}>
               <button className={styles.saveButton} onClick={handleSaveToCabinet}>
-                {editingCabinetId ? 'My캐비닛 수정 저장' : 'My캐비닛에 저장'}
+                {editingCabinetId ? '커스텀 수정 저장' : '커스텀에 저장'}
               </button>
             </div>
             <div className={styles.footer} style={{ flexDirection: 'column', gap: '6px' }}>

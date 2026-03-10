@@ -46,7 +46,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
       return {
         id: selectedFurnitureId,
-        name: 'My캐비넷',
+        name: '커스텀 캐비넷',
         category: pendingPlacement.category,
         dimensions: {
           width: slotWidth,

@@ -119,11 +119,11 @@ const FreePlacementDropZone: React.FC = () => {
 
       return {
         id: selectedFurnitureId,
-        name: pp ? 'My캐비닛' : defaults.label,
+        name: pp ? '커스텀 캐비넷' : defaults.label,
         category: (pp ? pp.category : category) as 'full' | 'upper' | 'lower',
         dimensions: { width: useWidth, height: useHeight, depth: useDepth },
         color: '#D4C5A9',
-        description: pp ? 'My캐비닛' : defaults.label,
+        description: pp ? '커스텀 캐비넷' : defaults.label,
         hasDoor: false,
         isDynamic: false,
         type: 'box' as const,

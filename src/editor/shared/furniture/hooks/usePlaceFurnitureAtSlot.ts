@@ -100,7 +100,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     const slotWidth = isMyCabinetDual ? columnWidth * 2 : columnWidth;
     moduleData = {
       id: moduleId,
-      name: 'My캐비넷',
+      name: '커스텀 캐비넷',
       category: pp.category,
       dimensions: {
         width: slotWidth,

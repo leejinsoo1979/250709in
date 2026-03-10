@@ -140,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'myCabinet' as SidebarTab,
       icon: <TbBookmarks size={22} />,
-      label: 'My캐비닛'
+      label: '커스텀'
     }
   ];
 

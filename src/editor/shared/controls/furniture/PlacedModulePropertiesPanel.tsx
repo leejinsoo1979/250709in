@@ -719,7 +719,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         if (currentPlacedModule.customConfig && !currentPlacedModule.isCustomizable) {
           return buildModuleDataFromPlacedModule(currentPlacedModule) || ({
             id: currentPlacedModule.moduleId,
-            name: 'My캐비넷',
+            name: '커스텀 캐비넷',
             category: 'full' as const,
             dimensions: { width: 600, height: 2000, depth: 580 },
             color: '#C8B69E',
