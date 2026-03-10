@@ -1023,7 +1023,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let actualRightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
           let displayWidth = spaceInfo.width;
           
-          if (spaceInfo.surroundType === 'no-surround' && placedModules.length > 0) {
+          if (spaceInfo.surroundType === 'no-surround' && !isFreePlacement && placedModules.length > 0) {
             // 가장 왼쪽과 오른쪽 가구 위치 찾기
             let leftmostFurnitureX = null;
             let rightmostFurnitureX = null;
