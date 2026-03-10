@@ -787,11 +787,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const renderEditingHighlight = () => {
     let sIdx: number | undefined;
     let aSide: 'left' | 'center' | 'right' | undefined;
+    let subPart: 'upper' | 'lower' | undefined;
 
     // 1) 톱니 아이콘 팝업 (sectionIndex가 있을 때)
     if (activePopup.type === 'customizableEdit' && activePopup.id === placedFurnitureId && activePopup.sectionIndex !== undefined) {
       sIdx = activePopup.sectionIndex;
       aSide = activePopup.areaSide;
+      subPart = activePopup.subPart;
     }
     // 2) 메인 팝업에서 highlightedSection (예: "furnitureId-0")
     else if (highlightedSection && placedFurnitureId) {
@@ -832,6 +834,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     // X 위치 및 너비 계산
     let centerX = 0;
     let areaW = innerW;
+
+    // 칸막이(partition) 기반 좌/우 영역
     if (section.hasPartition && section.partitionPosition && aSide) {
       const partX = -innerW / 2 + mmToUnit(section.partitionPosition);
       if (aSide === 'left') {
@@ -840,6 +844,61 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       } else {
         centerX = (partX + t / 2 + innerW / 2) / 2;
         areaW = innerW / 2 - (partX + t / 2);
+      }
+    }
+    // horizontalSplit 기반 좌/우/중앙 영역
+    else if (section.horizontalSplit && aSide) {
+      const hs = section.horizontalSplit;
+      const totalInnerWMm = innerWidthMm;
+      const leftInnerWMm = hs.position;
+      const is3Split = hs.secondPosition !== undefined && hs.secondPosition > 0;
+
+      const leftOuterWMm = leftInnerWMm + 2 * panelThickness;
+      const leftOuterW = mmToUnit(leftOuterWMm);
+      const leftInnerWVal = mmToUnit(leftInnerWMm);
+
+      let centerInnerWMm = 0;
+      let centerOuterW = 0;
+      let centerInnerWVal = 0;
+      if (is3Split) {
+        centerInnerWMm = hs.secondPosition!;
+        centerOuterW = mmToUnit(centerInnerWMm + 2 * panelThickness);
+        centerInnerWVal = mmToUnit(centerInnerWMm);
+      }
+
+      const rightInnerWMm = is3Split
+        ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
+        : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
+      const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
+      const rightOuterW = mmToUnit(rightOuterWMm);
+      const rightInnerWVal = mmToUnit(rightInnerWMm);
+
+      const boxW = W;
+      if (aSide === 'left') {
+        centerX = -boxW / 2 + leftOuterW / 2;
+        areaW = leftInnerWVal;
+      } else if (aSide === 'center' && is3Split) {
+        centerX = -boxW / 2 + leftOuterW + centerOuterW / 2;
+        areaW = centerInnerWVal;
+      } else {
+        // right
+        centerX = boxW / 2 - rightOuterW / 2;
+        areaW = rightInnerWVal;
+      }
+    }
+
+    // subPart(상하 서브분할)에 따른 Y 영역 축소
+    if (subPart && aSide && section.areaSubSplits?.[aSide]?.enabled) {
+      const sub = section.areaSubSplits[aSide]!;
+      const lowerH = mmToUnit(sub.lowerHeight);
+      const upperH = areaH - lowerH;
+      const baseCenterY = centerY;
+      if (subPart === 'lower') {
+        centerY = baseCenterY - areaH / 2 + lowerH / 2;
+        areaH = lowerH;
+      } else {
+        centerY = baseCenterY + areaH / 2 - upperH / 2;
+        areaH = upperH;
       }
     }
 
