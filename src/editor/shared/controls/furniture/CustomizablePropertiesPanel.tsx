@@ -3886,7 +3886,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       onChange={() => updatePlacedModule(moduleId, { hasLeftEndPanel: !placedModule.hasLeftEndPanel })}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                     />
-                    <span style={{ fontSize: '13px', color: '#333' }}>좌측 EP</span>
+                    <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>좌측 EP</span>
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                     <input
@@ -3895,28 +3895,51 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       onChange={() => updatePlacedModule(moduleId, { hasRightEndPanel: !placedModule.hasRightEndPanel })}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                     />
-                    <span style={{ fontSize: '13px', color: '#333' }}>우측 EP</span>
+                    <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>우측 EP</span>
                   </label>
                 </div>
                 {(placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel) && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 20px 0' }}>
-                    <span style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap' }}>EP 두께</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={placedModule.endPanelThickness ?? 18}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/[^0-9]/g, '');
-                        if (v === '') return;
-                        const num = Math.max(15, Math.min(25, parseInt(v, 10)));
-                        updatePlacedModule(moduleId, { endPanelThickness: num });
-                      }}
-                      style={{
-                        width: '50px', padding: '4px 8px', border: '1px solid #ddd',
-                        borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                      }}
-                    />
-                    <span style={{ fontSize: '12px', color: '#999' }}>mm</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px 20px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 두께</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={placedModule.endPanelThickness ?? 18}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[^0-9]/g, '');
+                          if (v === '') return;
+                          const num = Math.max(15, Math.min(25, parseInt(v, 10)));
+                          updatePlacedModule(moduleId, { endPanelThickness: num });
+                        }}
+                        style={{
+                          width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                          borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                          background: 'var(--theme-background)', color: 'var(--theme-text)',
+                        }}
+                      />
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 옵셋</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={placedModule.endPanelOffset ?? 0}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[^0-9-]/g, '');
+                          if (v === '' || v === '-') return;
+                          const num = Math.max(-50, Math.min(50, parseInt(v, 10)));
+                          updatePlacedModule(moduleId, { endPanelOffset: num });
+                        }}
+                        style={{
+                          width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                          borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                          background: 'var(--theme-background)', color: 'var(--theme-text)',
+                        }}
+                      />
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                    </div>
                   </div>
                 )}
               </div>
