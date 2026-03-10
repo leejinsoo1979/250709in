@@ -260,6 +260,39 @@ input:checked + .slider:before {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
+/* 세그먼트 컨트롤 (뷰모드 선택) */
+.segmentedControl {
+  display: flex;
+  background: var(--theme-background-secondary, #f3f4f6);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.segmentButton {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.segmentButton:hover {
+  color: var(--theme-text, #374151);
+}
+
+.segmentActive {
+  background: var(--theme-surface, white);
+  color: var(--theme-text, #111827);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .panel {

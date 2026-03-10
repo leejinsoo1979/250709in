@@ -5,7 +5,6 @@ import { Settings, User, ChevronDown, Undo, Redo, Sun, Moon } from 'lucide-react
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { TbTableExport } from 'react-icons/tb';
-import { HiViewfinderCircle } from "react-icons/hi2";
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -153,24 +152,20 @@ const Header: React.FC<HeaderProps> = ({
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
-  const [isGraphicsMenuOpen, setIsGraphicsMenuOpen] = useState(false);
-  const graphicsMenuRef = useRef<HTMLDivElement>(null);
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
-  const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
   const [is3DExportSubmenuOpen, setIs3DExportSubmenuOpen] = useState(false);
   const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그래픽 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
   const { colors } = useThemeColors();
   const { theme, toggleMode } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
-  const cameraMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
 
   // 프로젝트명(경로) 클릭 → 자동저장 후 대시보드 이동
@@ -202,17 +197,6 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, []);
 
-  // 그래픽 설정 드롭다운 외부 클릭 감지
-  useEffect(() => {
-    if (!isGraphicsMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (graphicsMenuRef.current && !graphicsMenuRef.current.contains(e.target as Node)) {
-        setIsGraphicsMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isGraphicsMenuOpen]);
 
   // 설정 패널 열기 이벤트 리스너
   useEffect(() => {
@@ -390,22 +374,6 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, [isConvertMenuOpen]);
 
-  // 카메라 메뉴 외부 클릭 감지
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (cameraMenuRef.current && !cameraMenuRef.current.contains(event.target as Node)) {
-        setIsCameraMenuOpen(false);
-      }
-    };
-
-    if (isCameraMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isCameraMenuOpen]);
 
   return (
     <header className={styles.header}>
@@ -747,92 +715,7 @@ const Header: React.FC<HeaderProps> = ({
               {theme.mode === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            {/* 카메라 설정 드롭다운 (3D only) */}
-            {viewMode === '3D' && <div className={styles.dropdownContainer} ref={cameraMenuRef}>
-              <button
-                className={styles.actionButton}
-                onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
-              >
-                <HiViewfinderCircle size={20} />
-                뷰모드
-                <ChevronDown size={16} style={{ marginLeft: '4px' }} />
-              </button>
-
-              {isCameraMenuOpen && (
-                <div className={styles.dropdownMenu}>
-                  <button
-                    className={`${styles.dropdownItem} ${cameraMode === 'perspective' ? styles.active : ''}`}
-                    onClick={() => {
-                      setCameraMode('perspective');
-                      setIsCameraMenuOpen(false);
-                    }}
-                  >
-                    <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
-                      <PerspectiveCubeIcon size={20} />
-                    </div>
-                    <span className={styles.checkmark}>
-                      {cameraMode === 'perspective' && '✓'}
-                    </span>
-                    Perspective
-                  </button>
-                  <button
-                    className={`${styles.dropdownItem} ${cameraMode === 'orthographic' ? styles.active : ''}`}
-                    onClick={() => {
-                      setCameraMode('orthographic');
-                      setIsCameraMenuOpen(false);
-                    }}
-                  >
-                    <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
-                      <OrthographicCubeIcon size={20} />
-                    </div>
-                    <span className={styles.checkmark}>
-                      {cameraMode === 'orthographic' && '✓'}
-                    </span>
-                    Orthographic
-                  </button>
-                </div>
-              )}
-            </div>}
-
-            {/* 그래픽 설정 드롭다운 (3D) / 다크(2D) 토글 */}
-            <div className={styles.headerToggleGroup}>
-              {viewMode === '3D' && (
-                <div className={styles.graphicsDropdownWrapper} ref={graphicsMenuRef}>
-                  <button
-                    className={styles.graphicsDropdownButton}
-                    onClick={() => setIsGraphicsMenuOpen(!isGraphicsMenuOpen)}
-                  >
-                    그래픽
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 3 }}>
-                      <path d="M2 4L5 7L8 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  {isGraphicsMenuOpen && (
-                    <div className={styles.graphicsDropdownMenu}>
-                      <button
-                        className={styles.graphicsMenuItem}
-                        onClick={() => setShadowEnabled(!shadowEnabled)}
-                      >
-                        <span>그림자</span>
-                        <span className={`${styles.miniToggle} ${shadowEnabled ? styles.miniToggleOn : ''}`}>
-                          <span className={styles.miniToggleKnob} />
-                        </span>
-                      </button>
-                      <button
-                        className={styles.graphicsMenuItem}
-                        onClick={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)}
-                      >
-                        <span>윤곽선</span>
-                        <span className={`${styles.miniToggle} ${edgeOutlineEnabled ? styles.miniToggleOn : ''}`}>
-                          <span className={styles.miniToggleKnob} />
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* 2D 다크/라이트 토글은 캔버스 우측 도구 버튼으로 이동 */}
-            </div>
+            {/* 뷰모드/그래픽 설정은 설정 패널로 이동됨 */}
           </div>
         )}
 
