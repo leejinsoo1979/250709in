@@ -38,7 +38,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
           fontWeight: 900,
           color: isDark ? '#ffffff' : '#374151',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          letterSpacing: '0.02em',
+          letterSpacing: '0.15em',
         }}
       >
         CRAFT
