@@ -92,7 +92,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     <div className={styles.toolbar}>
       {/* 전체선택 체크박스 */}
       {onSelectAll && totalItemCount > 0 && (
-        <label className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
+        <div className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
           <input
             type="checkbox"
             checked={isAllSelected}
@@ -101,7 +101,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
             }}
             onChange={handleSelectAllToggle}
           />
-        </label>
+        </div>
       )}
 
       {/* 네비게이션 버튼 + 브레드크럼 */}
