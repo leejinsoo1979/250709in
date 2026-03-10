@@ -37,7 +37,7 @@ export default function LandingPage() {
             ))}
           </div>
           <ShimmerText
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-wide text-white"
             duration={2}
             delay={1}
           >
