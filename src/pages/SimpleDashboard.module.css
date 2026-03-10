@@ -15,6 +15,13 @@
   overflow: hidden;
 }
 
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
 .explorerContent {
   display: flex;
   flex-direction: column;

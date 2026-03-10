@@ -5,14 +5,16 @@ import styles from './ExplorerToolbar.module.css';
 
 interface ExplorerToolbarProps {
   nav: UseExplorerNavigationReturn;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
+  hideSearch?: boolean;
 }
 
 const ExplorerToolbar: React.FC<ExplorerToolbarProps> = ({
   nav,
-  searchTerm,
+  searchTerm = '',
   onSearchChange,
+  hideSearch = false,
 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
@@ -75,18 +77,20 @@ const ExplorerToolbar: React.FC<ExplorerToolbarProps> = ({
       </div>
 
       {/* 검색 */}
-      <div className={`${styles.searchBox} ${isSearchFocused ? styles.searchFocused : ''}`}>
-        <Search size={16} className={styles.searchIcon} />
-        <input
-          type="text"
-          className={styles.searchInput}
-          placeholder="검색..."
-          value={searchTerm}
-          onChange={e => onSearchChange(e.target.value)}
-          onFocus={() => setIsSearchFocused(true)}
-          onBlur={() => setIsSearchFocused(false)}
-        />
-      </div>
+      {!hideSearch && onSearchChange && (
+        <div className={`${styles.searchBox} ${isSearchFocused ? styles.searchFocused : ''}`}>
+          <Search size={16} className={styles.searchIcon} />
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="검색..."
+            value={searchTerm}
+            onChange={e => onSearchChange(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+          />
+        </div>
+      )}
     </div>
   );
 };

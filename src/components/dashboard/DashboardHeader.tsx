@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings } from 'lucide-react';
+import { User, Settings, Search } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import styles from './DashboardHeader.module.css';
@@ -8,12 +8,16 @@ interface DashboardHeaderProps {
   onLogoClick?: () => void;
   onProfileClick?: () => void;
   onOpenSettings?: () => void;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onLogoClick,
   onProfileClick,
   onOpenSettings,
+  searchTerm,
+  onSearchChange,
 }) => {
   const { user } = useAuth();
 
@@ -24,6 +28,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       </div>
 
       <div className={styles.right}>
+        {onSearchChange !== undefined && (
+          <div className={styles.searchBox}>
+            <Search size={14} className={styles.searchIcon} />
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="검색..."
+              value={searchTerm || ''}
+              onChange={e => onSearchChange(e.target.value)}
+            />
+          </div>
+        )}
         {onOpenSettings && (
           <button
             className={styles.settingsBtn}

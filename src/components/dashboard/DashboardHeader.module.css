@@ -75,3 +75,39 @@
   background: var(--theme-background-secondary);
   color: var(--theme-text-muted);
 }
+
+/* 검색박스 (헤더 내장) */
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  background: var(--theme-background);
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  transition: border-color 0.15s;
+}
+
+.searchBox:focus-within {
+  border-color: var(--theme-primary);
+}
+
+.searchIcon {
+  color: var(--theme-text-muted);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  color: var(--theme-text);
+  font-size: 13px;
+  outline: none;
+  width: 140px;
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--theme-text-muted);
+}
