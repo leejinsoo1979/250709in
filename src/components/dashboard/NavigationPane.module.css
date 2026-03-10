@@ -98,9 +98,13 @@
 }
 
 .menuItemActive {
-  background: var(--theme-primary-light);
-  color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: white;
   font-weight: 500;
+}
+
+.menuItemActive .menuIcon {
+  color: white;
 }
 
 .menuIcon {
@@ -138,9 +142,13 @@
 }
 
 .treeItemActive {
-  background: var(--theme-primary-light);
-  color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: white;
   font-weight: 500;
+}
+
+.treeItemActive .folderIcon {
+  color: white;
 }
 
 .treeItemNested {
