@@ -64,41 +64,48 @@ export default function LandingPage() {
 
       <div className="flex-1 flex items-center justify-center px-8">
       <div className="text-center">
-        {/* Dots + Logo */}
-        <div className="flex items-center justify-center gap-6 sm:gap-8 md:gap-10 mb-10">
-          <div
-            className="flex items-center gap-3 sm:gap-4 md:gap-5"
-            onMouseEnter={() => setDotsHovered(true)}
-            onMouseLeave={() => setDotsHovered(false)}
+        {/* ... think thing thank + CRAFT */}
+        <div
+          className="flex flex-col items-center mb-10 cursor-pointer"
+          onMouseEnter={() => { setDotsHovered(true); setTextHovered(true); }}
+          onMouseLeave={() => { setDotsHovered(false); setTextHovered(false); }}
+        >
+          {/* ... think thing thank */}
+          <motion.div
+            className={`${isDark ? 'text-white/40' : 'text-zinc-400'} text-lg sm:text-xl md:text-2xl tracking-widest font-light mb-4`}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            {[0, 1, 2].map((i) => (
-              <motion.div
+            {'...  think  thing  thank'.split('').map((char, i) => (
+              <motion.span
                 key={i}
-                className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'} cursor-pointer`}
-                initial={{ scale: 0, opacity: 0 }}
+                style={{ display: 'inline-block', whiteSpace: 'pre' }}
                 animate={{
-                  scale: 1,
-                  opacity: 1,
-                  y: isAnimating ? [0, -16, 0, 0] : 0,
+                  y: isAnimating ? [0, -6, 0, 0] : 0,
+                  opacity: isAnimating ? [0.6, 1, 0.6, 0.6] : 0.6,
                 }}
                 transition={{
-                  scale: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
-                  opacity: { duration: 0.5, delay: i * 0.15, ease: "easeOut" },
                   y: isAnimating
-                    ? { duration: 1.8, delay: i * 0.12, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                    ? { duration: 1.8, delay: i * 0.03, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
+                    : { duration: 0.3 },
+                  opacity: isAnimating
+                    ? { duration: 1.8, delay: i * 0.03, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
                     : { duration: 0.3 },
                 }}
-              />
+              >
+                {char}
+              </motion.span>
             ))}
-          </div>
-          <motion.span
-            className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-normal cursor-pointer`}
+          </motion.div>
+
+          {/* CRAFT */}
+          <motion.div
+            className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-normal`}
             style={{ display: 'inline-flex' }}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            onMouseEnter={() => setTextHovered(true)}
-            onMouseLeave={() => setTextHovered(false)}
           >
             {'CRAFT'.split('').map((char, i) => (
               <motion.span
@@ -123,7 +130,7 @@ export default function LandingPage() {
                 {char}
               </motion.span>
             ))}
-          </motion.span>
+          </motion.div>
         </div>
 
         {/* Start Design Button */}
