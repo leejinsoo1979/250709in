@@ -271,7 +271,9 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       surroundType: info.surroundType,
       installType: info.installType,
       gapConfig: info.gapConfig,
-      baseConfig: info.baseConfig
+      baseConfig: info.baseConfig,
+      layoutMode: info.layoutMode,
+      layoutMode_incoming: 'layoutMode' in info ? info.layoutMode : '(not in info)'
     });
 
     // baseConfig.depth 업데이트 감지
@@ -379,7 +381,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         customColumnCount: newState.spaceInfo.customColumnCount,
         width: newState.spaceInfo.width,
         baseConfig: newState.spaceInfo.baseConfig,
-        'baseConfig.depth': newState.spaceInfo.baseConfig?.depth
+        'baseConfig.depth': newState.spaceInfo.baseConfig?.depth,
+        layoutMode: newState.spaceInfo.layoutMode
       });
       
       // wallConfig 업데이트 디버그

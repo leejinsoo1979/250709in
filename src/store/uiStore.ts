@@ -730,9 +730,30 @@ export const useUIStore = create<UIState>()(
       addTab: (tab) => {
         const id = `${tab.projectId}_${tab.designFileId}`;
         set((state) => {
-          // 중복 체크
-          if (state.openTabs.some(t => t.id === id)) {
+          // 중복 체크: id 기반 (projectId + designFileId 조합)
+          const existingById = state.openTabs.find(t => t.id === id);
+          if (existingById) {
+            // 기존 탭의 이름이 다르면 업데이트
+            if (existingById.designFileName !== tab.designFileName || existingById.projectName !== tab.projectName) {
+              return {
+                openTabs: state.openTabs.map(t => t.id === id ? { ...t, designFileName: tab.designFileName, projectName: tab.projectName } : t),
+                activeTabId: id,
+              };
+            }
             return { activeTabId: id };
+          }
+          // 중복 체크: designFileId 기반 (같은 파일이 다른 projectId로 열릴 때 방지)
+          if (tab.designFileId) {
+            const existingByDesignFile = state.openTabs.find(t => t.designFileId === tab.designFileId);
+            if (existingByDesignFile) {
+              // 기존 탭 활성화 (이름 업데이트 포함)
+              return {
+                openTabs: state.openTabs.map(t => t.designFileId === tab.designFileId
+                  ? { ...t, designFileName: tab.designFileName, projectName: tab.projectName }
+                  : t),
+                activeTabId: existingByDesignFile.id,
+              };
+            }
           }
           return {
             openTabs: [...state.openTabs, { ...tab, id, addedAt: Date.now() }],
