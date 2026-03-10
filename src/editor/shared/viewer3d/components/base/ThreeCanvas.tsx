@@ -237,7 +237,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       return;
     }
 
-    const cursorStyle = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="${cursorColor}" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="${cursorColor}" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="${cursorColor}" stroke-width="1"/></svg>') 10 10, crosshair`;
+    const cursorStyle = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="0" x2="16" y2="32" stroke="${cursorColor}" stroke-width="1.5"/><line x1="0" y1="16" x2="32" y2="16" stroke="${cursorColor}" stroke-width="1.5"/><circle cx="16" cy="16" r="3" fill="none" stroke="${cursorColor}" stroke-width="1.5"/></svg>') 16 16, crosshair`;
 
     // 초기 설정
     canvas.style.cursor = cursorStyle;
@@ -928,8 +928,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 : `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="black"><path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z"/></svg>') 12 12, pointer`)
               : (isMeasureMode && viewMode === '2D')
                 ? (view2DTheme === 'dark'
-                  ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="white" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="white" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="white" stroke-width="1"/></svg>') 10 10, crosshair`
-                  : `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="black" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="black" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="black" stroke-width="1"/></svg>') 10 10, crosshair`)
+                  ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="0" x2="16" y2="32" stroke="white" stroke-width="1.5"/><line x1="0" y1="16" x2="32" y2="16" stroke="white" stroke-width="1.5"/><circle cx="16" cy="16" r="3" fill="none" stroke="white" stroke-width="1.5"/></svg>') 16 16, crosshair`
+                  : `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="0" x2="16" y2="32" stroke="black" stroke-width="1.5"/><line x1="0" y1="16" x2="32" y2="16" stroke="black" stroke-width="1.5"/><circle cx="16" cy="16" r="3" fill="none" stroke="black" stroke-width="1.5"/></svg>') 16 16, crosshair`)
                 : 'default',
             touchAction: 'none'
           }}
