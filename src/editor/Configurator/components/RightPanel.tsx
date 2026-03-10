@@ -637,7 +637,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   frameType,
   onFrameTypeChange
 }) => {
-  const { spaceInfo, updateSpaceInfo } = useSpaceConfigStore();
+  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, clearAllModules } = useFurnitureStore();
   const { setActiveDroppedCeilingTab } = useUIStore();
   const { t, currentLanguage } = useTranslation();
@@ -865,7 +865,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         newWidth,
                         optimizedGap: indexing.optimizedGapConfig
                       });
-                      updateSpaceInfo({ gapConfig: indexing.optimizedGapConfig });
+                      setSpaceInfo({ gapConfig: indexing.optimizedGapConfig });
                     }
                   }
                 }}
@@ -942,7 +942,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       droppedCeilingDoorCount: droppedDoorCount // 계산된 도어 개수로 설정
                     };
                     // spaceConfigStore 업데이트 호출
-                    updateSpaceInfo(updates);
+                    setSpaceInfo(updates);
                   } else {
                     // 단내림 비활성화
                     const updates: any = {
@@ -953,7 +953,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       mainDoorCount: undefined,
                       droppedCeilingDoorCount: undefined
                     };
-                    updateSpaceInfo(updates);
+                    setSpaceInfo(updates);
                   }
                 }}
               />
@@ -976,7 +976,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             position: position as 'left' | 'right'
                           }
                         };
-                        updateSpaceInfo(updates);
+                        setSpaceInfo(updates);
                       }}
                     />
                   </div>
@@ -1072,7 +1072,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     if (!window.confirm(t('space.modeSwitchWarning'))) return;
                     clearAllModules();
                   }
-                  updateSpaceInfo({ layoutMode: newMode });
+                  setSpaceInfo({ layoutMode: newMode });
                 }}
               />
             </FormControl>
@@ -1159,7 +1159,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         top: value
                       }
                     };
-                    updateSpaceInfo(updates);
+                    setSpaceInfo(updates);
                   }}
                   min={10}
                   max={200}
@@ -1196,7 +1196,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           width: newWidth
                         }
                       };
-                      updateSpaceInfo(updates);
+                      setSpaceInfo(updates);
                     }}
                     width={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
                   />
@@ -1243,7 +1243,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       const updates: any = {
                         mainDoorCount: newValue
                       };
-                      updateSpaceInfo(updates);
+                      setSpaceInfo(updates);
                     }}
                     width={spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)}
                   />

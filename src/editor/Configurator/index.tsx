@@ -711,10 +711,6 @@ const Configurator: React.FC = () => {
         spaceConfig.droppedCeilingDoorCount = undefined;
         spaceConfig.customColumnCount = undefined;
         console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
-        console.log('🔴 [layoutMode DEBUG] 프로젝트 로드 - Firebase layoutMode:', {
-          value: project.spaceConfig?.layoutMode,
-          spaceConfigLayoutMode: spaceConfig.layoutMode
-        });
 
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
@@ -974,11 +970,6 @@ const Configurator: React.FC = () => {
               thumbnail: thumbnail
             };
 
-            console.log('🔴 [layoutMode DEBUG] 저장 시 layoutMode:', {
-              raw: spaceInfo.layoutMode,
-              afterClean: updatePayload.spaceConfig?.layoutMode,
-              type: typeof spaceInfo.layoutMode
-            });
             console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
               name: updatePayload.name,
               spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
@@ -1936,11 +1927,6 @@ const Configurator: React.FC = () => {
 
               // 공간 설정
               if (designFile.spaceConfig) {
-                console.log('🔴 [layoutMode DEBUG] Firebase에서 받은 layoutMode:', {
-                  value: designFile.spaceConfig.layoutMode,
-                  type: typeof designFile.spaceConfig.layoutMode,
-                  allKeys: Object.keys(designFile.spaceConfig)
-                });
                 // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
                 const spaceConfig = {
                   ...designFile.spaceConfig,
@@ -1948,13 +1934,7 @@ const Configurator: React.FC = () => {
                   droppedCeilingDoorCount: undefined,
                   customColumnCount: undefined
                 };
-                console.log('🔴 [layoutMode DEBUG] setSpaceInfo 직전 layoutMode:', spaceConfig.layoutMode);
                 setSpaceInfo(spaceConfig);
-                // setSpaceInfo 후 실제 store 확인
-                setTimeout(() => {
-                  const storeState = useSpaceConfigStore.getState();
-                  console.log('🔴 [layoutMode DEBUG] setSpaceInfo 후 store layoutMode:', storeState.spaceInfo.layoutMode);
-                }, 100);
                 console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
 

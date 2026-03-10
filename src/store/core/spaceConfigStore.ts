@@ -231,6 +231,8 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
       width: 900,
       dropHeight: 200
     },
+    // 배치 모드 기본값
+    layoutMode: 'equal-division' as const,  // 기본값: 슬롯배치 (균등분할)
     // 도어 개수 기본값 설정 - undefined로 설정하여 자동 모드
     mainDoorCount: undefined,  // 메인 구간 도어 개수 기본값 (undefined = 자동)
     droppedCeilingDoorCount: undefined  // 단내림 구간 도어 개수 기본값 (undefined = 자동)
@@ -273,11 +275,6 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       gapConfig: info.gapConfig,
       baseConfig: info.baseConfig
     });
-    console.log('🔴 [layoutMode DEBUG] setSpaceInfo 입력:', {
-      layoutMode_incoming: info.layoutMode,
-      type: typeof info.layoutMode
-    });
-
     // baseConfig.depth 업데이트 감지
     if (info.baseConfig?.depth !== undefined) {
       console.log('📏 [Store] baseConfig.depth 업데이트 감지:', {
@@ -334,13 +331,18 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
 
         if (adjustmentResult.adjustmentMade) {
-          // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount는 보존
+          // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount와 layoutMode는 보존
           const preservedCustomColumnCount = tempSpaceInfo.customColumnCount;
+          const preservedLayoutMode = tempSpaceInfo.layoutMode;
           tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
 
           // customColumnCount가 명시적으로 설정된 경우 보존
           if (preservedCustomColumnCount !== undefined) {
             tempSpaceInfo.customColumnCount = preservedCustomColumnCount;
+          }
+          // layoutMode 보존 (adjustForIntegerSlotWidth에서 누락 방지)
+          if (preservedLayoutMode !== undefined) {
+            tempSpaceInfo.layoutMode = preservedLayoutMode;
           }
 
           console.log('🎯 슬롯 정수화 자동 조정 완료:', {
@@ -385,12 +387,6 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         baseConfig: newState.spaceInfo.baseConfig,
         'baseConfig.depth': newState.spaceInfo.baseConfig?.depth
       });
-      console.log('🔴 [layoutMode DEBUG] 최종 store layoutMode:', {
-        이전: state.spaceInfo.layoutMode,
-        입력: info.layoutMode,
-        최종: newState.spaceInfo.layoutMode
-      });
-      
       // wallConfig 업데이트 디버그
       if (processedInfo.wallConfig) {
         console.log('🏪 SpaceConfigStore - wallConfig 업데이트:', {
