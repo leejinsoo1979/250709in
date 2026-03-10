@@ -37,13 +37,15 @@
 .paneCreateBtn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 28px;
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   background: transparent;
   color: var(--theme-text-secondary);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }

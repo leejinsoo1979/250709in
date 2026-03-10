@@ -586,7 +586,7 @@ const SimpleDashboard: React.FC = () => {
                 onSortChange={setSortBy}
                 onCreateProject={handleCreateProject}
                 onCreateFolder={handleCreateFolder}
-                onCreateDesign={nav.currentProjectId ? () => handleCreateDesign() : undefined}
+                onCreateDesign={() => handleCreateDesign()}
                 showCreateFolder={!!nav.currentProjectId}
               />
 
