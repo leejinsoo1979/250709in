@@ -75,17 +75,17 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
 
   return (
     <div className={styles.pane} style={{ width: paneWidth }}>
-      <div className={styles.content}>
-        {/* + 새 프로젝트 버튼 */}
-        {onCreateProject && (
-          <div className={styles.createProjectSection}>
-            <button className={styles.createProjectBtn} onClick={onCreateProject}>
-              <Plus size={16} />
-              <span>새 프로젝트</span>
-            </button>
-          </div>
-        )}
+      {/* 상단 툴바 (ContentToolbar와 동일 높이) */}
+      {onCreateProject && (
+        <div className={styles.paneToolbar}>
+          <button className={styles.paneCreateBtn} onClick={onCreateProject}>
+            <Plus size={16} />
+            <span>새 프로젝트</span>
+          </button>
+        </div>
+      )}
 
+      <div className={styles.content}>
         {/* 빠른 액세스 */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>빠른 액세스</div>
