@@ -86,7 +86,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6">
         <motion.div
-          className="w-full max-w-md border border-zinc-800 rounded-2xl bg-zinc-900/40 p-10"
+          className="w-full max-w-md border border-zinc-600 rounded-2xl bg-zinc-900/40 p-10"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
