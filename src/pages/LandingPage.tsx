@@ -1,84 +1,14 @@
-import { Box, Palette, Ruler, Download, Cloud, Zap } from 'lucide-react';
-import { Navbar1 } from '@/components/blocks/navbar1';
+import { useNavigate } from 'react-router-dom';
 import { ShimmerText } from '@/components/ui/shimmer-text';
 import { motion } from 'motion/react';
-
-const navbarData = {
-  logo: {
-    url: "/",
-    title: "FurnitureDesigner",
-  },
-  menu: [
-    { title: "Features", url: "#features" },
-    {
-      title: "Products",
-      url: "#",
-      items: [
-        {
-          title: "3D Editor",
-          description: "Design and visualize furniture in stunning 3D",
-          icon: <Box className="size-5 shrink-0" />,
-          url: "/configurator",
-        },
-        {
-          title: "Material Library",
-          description: "Hundreds of materials, colors, and textures",
-          icon: <Palette className="size-5 shrink-0" />,
-          url: "#features",
-        },
-        {
-          title: "Precision Tools",
-          description: "Accurate measurements for professional results",
-          icon: <Ruler className="size-5 shrink-0" />,
-          url: "#features",
-        },
-        {
-          title: "DXF Export",
-          description: "Export designs in DXF format for manufacturing",
-          icon: <Download className="size-5 shrink-0" />,
-          url: "#features",
-        },
-      ],
-    },
-    {
-      title: "Resources",
-      url: "#",
-      items: [
-        {
-          title: "Help Center",
-          description: "Get all the answers you need right here",
-          icon: <Zap className="size-5 shrink-0" />,
-          url: "#",
-        },
-        {
-          title: "Cloud Storage",
-          description: "Save and access your projects from anywhere",
-          icon: <Cloud className="size-5 shrink-0" />,
-          url: "#",
-        },
-      ],
-    },
-    { title: "Demo", url: "#demo" },
-    { title: "Pricing", url: "#pricing" },
-  ],
-  mobileExtraLinks: [
-    { name: "About", url: "#" },
-    { name: "Contact", url: "#" },
-    { name: "Privacy", url: "#" },
-    { name: "Terms", url: "#" },
-  ],
-  auth: {
-    login: { text: "Login", url: "/login" },
-    signup: { text: "Sign Up", url: "/signup" },
-  },
-};
+import { Button } from '@/components/ui/button';
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
-    <div className="bg-zinc-950 min-h-screen">
-      <Navbar1 {...navbarData} />
-      <div className="flex items-center justify-center px-8" style={{ minHeight: 'calc(100vh - 64px)' }}>
-        <div className="text-center">
+    <div className="bg-zinc-950 min-h-screen flex items-center justify-center px-8">
+      <div className="text-center">
         {/* Three Dots + think thing thank */}
         <div className="flex items-center justify-center gap-6 mb-10">
           <div className="flex items-center gap-3">
@@ -107,14 +37,28 @@ export default function LandingPage() {
 
         {/* craft */}
         <motion.h1
-          className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black text-white tracking-tighter leading-none"
+          className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black text-white tracking-tighter leading-none mb-12"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
         >
           craft
         </motion.h1>
-        </div>
+
+        {/* Start Designing Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+        >
+          <Button
+            size="lg"
+            className="bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-10 text-lg font-semibold"
+            onClick={() => navigate('/dashboard')}
+          >
+            Start Designing
+          </Button>
+        </motion.div>
       </div>
     </div>
   );
