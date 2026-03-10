@@ -16,6 +16,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SettingsIcon, EditIcon } from '@/components/common/Icons';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 import DimensionText from '../components/DimensionText';
+import EndPanelWithTexture from '../components/EndPanelWithTexture';
 import { Line } from '@react-three/drei';
 
 interface CustomizableBoxModuleProps {
@@ -38,6 +39,9 @@ interface CustomizableBoxModuleProps {
   lowerLeftSectionDepth?: number; // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
   backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
+  hasLeftEndPanel?: boolean; // 좌측 엔드패널 표시 여부
+  hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
+  endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -221,6 +225,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   lowerLeftSectionDepth,
   lowerRightSectionDepth,
   backPanelThickness: backPanelThicknessProp,
+  hasLeftEndPanel = false,
+  hasRightEndPanel = false,
+  endPanelThickness: endPanelThicknessProp,
   isEditable = true,
   onPointerDown,
   onPointerMove,
@@ -257,9 +264,16 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const H = mmToUnit(height);
   const D = mmToUnit(depth);
 
+  // 엔드패널(EP) 계산
+  const epThicknessMm = endPanelThicknessProp || 18;
+  const leftEP = hasLeftEndPanel ? mmToUnit(epThicknessMm) : 0;
+  const rightEP = hasRightEndPanel ? mmToUnit(epThicknessMm) : 0;
+  const effectiveW = W - leftEP - rightEP; // EP만큼 본체 축소
+  const bodyOffsetX = (leftEP - rightEP) / 2; // 비대칭 EP일 때 본체 X 보정
+
   // 내부 너비 (측판 두께 제외) - 기존 BaseFurnitureShell과 동일
-  const innerW = W - 2 * t;
-  const innerWidthMm = width - 2 * panelThickness;
+  const innerW = effectiveW - 2 * t;
+  const innerWidthMm = width - 2 * panelThickness - (hasLeftEndPanel ? epThicknessMm : 0) - (hasRightEndPanel ? epThicknessMm : 0);
 
   // 재질 설정
   const materialConfig = spaceInfo.materialConfig || {
@@ -649,9 +663,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         };
 
         if (section.horizontalSplit) {
-          // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (외경 W 기준)
+          // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (EP 적용된 effectiveW 기준)
           const hs = section.horizontalSplit;
-          const totalInnerWMm = (width - 2 * panelThickness);
+          const totalInnerWMm = innerWidthMm;
           const leftOuterWMm = hs.position + 2 * panelThickness;
           const is3Split = hs.secondPosition != null;
           const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
@@ -659,9 +673,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const extraPanels = is3Split ? 4 : 2;
           const rightInnerWMm = totalInnerWMm - hs.position - centerInnerWMm - extraPanels * panelThickness;
           const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
-          const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
-          const centerCX = is3Split ? -W / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
-          const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
+          const leftCX = -effectiveW / 2 + mmToUnit(leftOuterWMm) / 2;
+          const centerCX = is3Split ? -effectiveW / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
+          const rightCX = effectiveW / 2 - mmToUnit(rightOuterWMm) / 2;
           // 서브분할 고려 아이콘 렌더링 헬퍼
           const addHSplitAreaIcon = (areaKey: 'left' | 'center' | 'right', cx: number, elements: CustomElement[] | undefined) => {
             if (!elements) return;
@@ -699,8 +713,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         : ['lower', 'upper'];
       sections.forEach((section, sIdx) => {
         // 섹션별 너비/정렬 오프셋 반영
-        const sectionW = section.width ? mmToUnit(section.width) : W;
-        const iconAlignOffset = calculateAlignOffset(sectionW, W, section.align || 'center');
+        const sectionW = section.width ? mmToUnit(section.width) : effectiveW;
+        const iconAlignOffset = calculateAlignOffset(sectionW, effectiveW, section.align || 'center');
         const sectionInnerW = sectionW - 2 * t;
         addPartitionIcons(section, sectionCenterYs[sIdx], sectionLabels[sIdx], sIdx, sectionInnerW, iconAlignOffset);
       });
@@ -708,8 +722,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // 단일 섹션에서도 서브분할 고려
       const section = sections[0];
       // 섹션별 너비/정렬 오프셋 반영
-      const singleSectionW = section?.width ? mmToUnit(section.width) : W;
-      const singleAlignOffset = calculateAlignOffset(singleSectionW, W, section?.align || 'center');
+      const singleSectionW = section?.width ? mmToUnit(section.width) : effectiveW;
+      const singleAlignOffset = calculateAlignOffset(singleSectionW, effectiveW, section?.align || 'center');
       const singleInnerW = singleSectionW - 2 * t;
 
       const addSingleAreaIcon = (areaKey: 'full' | 'left' | 'right', cx: number, elements: CustomElement[] | undefined) => {
@@ -733,9 +747,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       };
 
       if (section?.horizontalSplit) {
-        // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (외경 W 기준)
+        // 좌우 섹션분할: 각 독립 박스 중심에 아이콘 (EP 적용된 effectiveW 기준)
         const hs = section.horizontalSplit;
-        const totalInnerWMm = (width - 2 * panelThickness);
+        const totalInnerWMm = innerWidthMm;
         const leftOuterWMm = hs.position + 2 * panelThickness;
         const is3Split = hs.secondPosition != null;
         const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
@@ -743,9 +757,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const extraPanels = is3Split ? 4 : 2;
         const rightInnerWMm = totalInnerWMm - hs.position - centerInnerWMm - extraPanels * panelThickness;
         const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
-        const leftCX = -W / 2 + mmToUnit(leftOuterWMm) / 2;
-        const centerCX = is3Split ? -W / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
-        const rightCX = W / 2 - mmToUnit(rightOuterWMm) / 2;
+        const leftCX = -effectiveW / 2 + mmToUnit(leftOuterWMm) / 2;
+        const centerCX = is3Split ? -effectiveW / 2 + mmToUnit(leftOuterWMm) + mmToUnit(centerOuterWMm) / 2 : 0;
+        const rightCX = effectiveW / 2 - mmToUnit(rightOuterWMm) / 2;
         // 서브분할 고려 아이콘 렌더링 헬퍼
         const addSingleHSplitIcon = (areaKey: 'left' | 'center' | 'right', cx: number, elements: CustomElement[] | undefined) => {
           if (!elements) return;
@@ -873,7 +887,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const rightOuterW = mmToUnit(rightOuterWMm);
       const rightInnerWVal = mmToUnit(rightInnerWMm);
 
-      const boxW = W;
+      const boxW = effectiveW;
       if (aSide === 'left') {
         centerX = -boxW / 2 + leftOuterW / 2;
         areaW = leftInnerWVal;
@@ -1852,6 +1866,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       onPointerOut={onPointerOut}
       onDoubleClick={onDoubleClick}
     >
+      {/* 엔드패널이 있으면 본체를 bodyOffsetX만큼 이동 */}
+      <group position={[bodyOffsetX, 0, 0]}>
       {isSplit ? (
         <>
           {/* 분할 모드: 각 섹션을 독립 박스로 렌더링 (2분할 또는 3분할) */}
@@ -1891,10 +1907,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                     const diff = D - sectionD;
                     depthZ = diff === 0 ? 0 : upperSectionDepthDirection === 'back' ? diff / 2 : -diff / 2;
                   }
-                  // 섹션별 개별 너비/정렬 적용
-                  const sectionW = section.width ? mmToUnit(section.width) : W;
-                  const alignOffset = calculateAlignOffset(sectionW, W, section.align || 'center');
-                  const needsGroup = sectionW !== W || depthZ !== 0;
+                  // 섹션별 개별 너비/정렬 적용 (EP 적용된 effectiveW 기준)
+                  const sectionW = section.width ? mmToUnit(section.width) : effectiveW;
+                  const alignOffset = calculateAlignOffset(sectionW, effectiveW, section.align || 'center');
+                  const needsGroup = sectionW !== effectiveW || depthZ !== 0;
                   const boxContent = renderBox(section, sIdx, sectionW, boxH, sectionD, centerY, 0);
                   return (
                     <React.Fragment key={`split-box-${sIdx}`}>
@@ -1913,7 +1929,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       ) : sections[0]?.horizontalSplit ? (
         <>
           {/* 1단 + 좌우 섹션분할: renderBox가 독립 박스 2개로 렌더링 */}
-          {sections[0].enabled !== false && renderBox(sections[0], 0, W, H, D, 0)}
+          {sections[0].enabled !== false && renderBox(sections[0], 0, effectiveW, H, D, 0)}
         </>
       ) : (
         <>
@@ -1921,9 +1937,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           {(() => {
             const section = sections[0];
             if (section?.enabled === false) return null;
-            const singleW = section?.width ? mmToUnit(section.width) : W;
-            const singleAlignOff = calculateAlignOffset(singleW, W, section?.align || 'center');
-            const needsGroup = singleW !== W;
+            const singleW = section?.width ? mmToUnit(section.width) : effectiveW;
+            const singleAlignOff = calculateAlignOffset(singleW, effectiveW, section?.align || 'center');
+            const needsGroup = singleW !== effectiveW;
             const content = renderBox(section, 0, singleW, H, D, 0);
             return needsGroup ? (
               <group position={[singleAlignOff, 0, 0]}>{content}</group>
@@ -2045,12 +2061,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 const ht = sec.showTopPanel !== false;
                 const innerH = sectionHeights[si] - (hb ? t : 0) - (ht ? t : 0);
                 const contentCenter = dimCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
-                return renderSectionDims(sec, si, contentCenter, innerH, W);
+                return renderSectionDims(sec, si, contentCenter, innerH, effectiveW);
               })}
             </>
           );
         } else {
-          return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, W)}</>;
+          return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, effectiveW)}</>;
         }
       })()}
 
@@ -2170,8 +2186,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {/* 조절발 (upper가 아닌 경우) — 하부(최하단) 섹션 너비/깊이/정렬 기준 */}
       {showFurniture && category !== 'upper' && (() => {
         const lowerSection = sections[0];
-        const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : W;
-        const footAlignOffset = calculateAlignOffset(footWidth, W, lowerSection?.align || 'center');
+        const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
+        const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
 
         // 좌우분할(horizontalSplit) + 좌/우 개별 깊이가 다른 경우 → 발판 분리
         const hs = lowerSection?.horizontalSplit;
@@ -2265,6 +2281,29 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           </group>
         );
       })()}
+      </group>
+
+      {/* 엔드패널(EP) 렌더링 — 본체 바깥, 원래 W 기준 위치 */}
+      {hasLeftEndPanel && (
+        <EndPanelWithTexture
+          width={epThicknessMm}
+          height={height}
+          depth={depth}
+          position={[-(W / 2) + leftEP / 2, 0, 0]}
+          spaceInfo={spaceInfo}
+          renderMode={renderMode}
+        />
+      )}
+      {hasRightEndPanel && (
+        <EndPanelWithTexture
+          width={epThicknessMm}
+          height={height}
+          depth={depth}
+          position={[(W / 2) - rightEP / 2, 0, 0]}
+          spaceInfo={spaceInfo}
+          renderMode={renderMode}
+        />
+      )}
     </group>
   );
 };
