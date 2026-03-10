@@ -742,8 +742,9 @@ export const updateDesignFile = async (
     furniture?: any;
     thumbnail?: string;
     updatedAt?: string;
-    projectData?: any;  // 추가
+    projectData?: any;
     isSpaceConfigured?: boolean;
+    folderId?: string | null;
   }
 ): Promise<{ error: string | null }> => {
   try {

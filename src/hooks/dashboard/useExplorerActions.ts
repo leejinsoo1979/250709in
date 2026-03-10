@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
-import { saveFolderData, createDesignFile, createProject, getDesignFileById, getProject, softDeleteDesignFile, softDeleteProject, restoreDesignFile, restoreProject, permanentDeleteDesignFile, permanentDeleteProject } from '@/firebase/projects';
+import { saveFolderData, createDesignFile, createProject, getDesignFileById, getProject, softDeleteDesignFile, softDeleteProject, restoreDesignFile, restoreProject, permanentDeleteDesignFile, permanentDeleteProject, updateDesignFile } from '@/firebase/projects';
 import { DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
 import type { DragState, ExplorerItem, ClipboardState, SelectItemOptions, UseExplorerDataReturn, UseExplorerNavigationReturn, UseExplorerActionsReturn } from './types';
 
@@ -433,7 +433,16 @@ export function useExplorerActions(
     });
 
     await saveFolderData(nav.currentProjectId, updated);
+
+    // 디자인 파일의 folderId를 Firebase에도 업데이트
+    await Promise.all(
+      itemsToDrop
+        .filter(item => item.type === 'design')
+        .map(item => updateDesignFile(item.id, { folderId: targetFolderId || null }))
+    );
+
     await data.refreshFolders(nav.currentProjectId);
+    await data.refreshDesignFiles(nav.currentProjectId);
 
     setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null });
   }, [nav.currentProjectId, data]);

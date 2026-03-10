@@ -26,6 +26,8 @@ export interface DesignFile {
   
   thumbnail?: string;
   isSpaceConfigured?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -90,6 +92,8 @@ export interface ProjectSummary {
   thumbnail?: string;
   folderId?: string;
   status?: 'in_progress' | 'completed'; // 프로젝트 상태 (기본: in_progress)
+  isDeleted?: boolean;
+  deletedAt?: Timestamp;
 
   // 협업 관련 필드
   isShared?: boolean;
@@ -234,9 +238,12 @@ export interface DesignFileSummary {
   };
   furnitureCount: number;
   thumbnail?: string;
+  isDeleted?: boolean;
+  deletedAt?: Timestamp;
   // 썸네일 생성을 위한 전체 데이터
   spaceConfig?: SpaceInfo;
   furniture?: {
     placedModules: PlacedModule[];
   };
+  userId?: string;
 } 
