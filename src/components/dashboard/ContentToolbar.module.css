@@ -85,9 +85,13 @@
 }
 
 .breadcrumbActive {
-  color: var(--theme-text);
+  color: white;
   font-weight: 600;
-  background: var(--theme-primary-light);
+  background: var(--theme-primary);
+}
+
+.breadcrumbActive .breadcrumbIcon {
+  color: white;
 }
 
 /* 생성 버튼 */
