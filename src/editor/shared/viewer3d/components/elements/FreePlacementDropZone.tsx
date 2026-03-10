@@ -139,7 +139,22 @@ const FreePlacementDropZone: React.FC = () => {
       };
     }
 
-    return getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+    // 표준 가구: 기본값 조회 후 마지막 사용 치수 적용
+    const baseModule = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+    if (!baseModule) return null;
+
+    const lastDims = lastCustomDimensions[selectedFurnitureId];
+    if (lastDims) {
+      return {
+        ...baseModule,
+        dimensions: {
+          width: lastDims.width,
+          height: lastDims.height,
+          depth: lastDims.depth,
+        },
+      };
+    }
+    return baseModule;
   }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement, lastCustomDimensions]);
 
   // 활성 가구 치수

@@ -1836,15 +1836,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeWidth: val, moduleWidth: val });
                           setFreeWidthInput(val.toString());
-                          // 커스터마이징 가구면 마지막 치수 기억
+                          // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
+                          const store = useFurnitureStore.getState();
+                          const dims = {
+                            width: val,
+                            height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
+                            depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
+                          };
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
-                            const store = useFurnitureStore.getState();
-                            const dims = {
-                              width: val,
-                              height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
-                              depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
-                            };
                             store.setLastCustomDimensions(key, dims);
                             // 듀얼↔싱글 너비 연동 (듀얼=싱글*2)
                             if (key === 'full-dual') {
@@ -1852,6 +1852,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             } else if (key === 'full-single') {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: val * 2 });
                             }
+                          } else {
+                            // 표준 가구도 마지막 치수 기억
+                            store.setLastCustomDimensions(currentPlacedModule.moduleId, dims);
                           }
                         }
                       }}
@@ -1880,15 +1883,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
                           setFreeHeightInput(val.toString());
-                          // 커스터마이징 가구면 마지막 치수 기억
+                          // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
+                          const store = useFurnitureStore.getState();
+                          const dims = {
+                            width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
+                            height: val,
+                            depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
+                          };
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
-                            const store = useFurnitureStore.getState();
-                            const dims = {
-                              width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
-                              height: val,
-                              depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
-                            };
                             store.setLastCustomDimensions(key, dims);
                             // 듀얼↔싱글 높이/깊이 연동
                             if (key === 'full-dual') {
@@ -1896,6 +1899,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             } else if (key === 'full-single') {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
                             }
+                          } else {
+                            store.setLastCustomDimensions(currentPlacedModule.moduleId, dims);
                           }
                         }
                       }}
@@ -1924,15 +1929,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 800 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeDepth: val });
                           setFreeDepthInput(val.toString());
-                          // 커스터마이징 가구면 마지막 치수 기억
+                          // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
+                          const store = useFurnitureStore.getState();
+                          const dims = {
+                            width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
+                            height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
+                            depth: val,
+                          };
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
-                            const store = useFurnitureStore.getState();
-                            const dims = {
-                              width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
-                              height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
-                              depth: val,
-                            };
                             store.setLastCustomDimensions(key, dims);
                             // 듀얼↔싱글 깊이 연동
                             if (key === 'full-dual') {
@@ -1940,6 +1945,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             } else if (key === 'full-single') {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
                             }
+                          } else {
+                            store.setLastCustomDimensions(currentPlacedModule.moduleId, dims);
                           }
                         }
                       }}
