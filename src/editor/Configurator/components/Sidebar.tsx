@@ -231,14 +231,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <button
           className={styles.actionButton}
-          onClick={() => onShare?.()}
-          data-tooltip={readOnly ? "읽기 전용 링크 복사" : "공유하기"}
-        >
-          <PiShareNetworkLight size={17} />
-        </button>
-
-        <button
-          className={styles.actionButton}
           onClick={() => window.dispatchEvent(new CustomEvent('openSettingsPanel'))}
           data-tooltip="설정"
         >
