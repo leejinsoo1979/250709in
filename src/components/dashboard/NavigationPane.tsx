@@ -90,9 +90,13 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects]);
 
-  // 현재 프로젝트 자동 확장
+  // 현재 프로젝트 자동 확장 (projects 로드 후에도 재시도)
   useEffect(() => {
-    if (autoExpandProjectId && !expandedProjects.has(autoExpandProjectId)) {
+    if (
+      autoExpandProjectId &&
+      projects.some(p => p.id === autoExpandProjectId) &&
+      !expandedProjects.has(autoExpandProjectId)
+    ) {
       setExpandedProjects(prev => {
         const next = new Set(prev);
         next.add(autoExpandProjectId);
@@ -100,7 +104,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
       });
       loadProjectData(autoExpandProjectId);
     }
-  }, [autoExpandProjectId, loadProjectData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoExpandProjectId, projects, loadProjectData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 프로젝트 확장/축소
   const toggleProject = useCallback((projectId: string) => {
