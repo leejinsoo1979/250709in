@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface LogoProps {
@@ -17,6 +17,22 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
   const { theme } = useTheme();
   const isDark = theme.mode === 'dark';
   const [hovered, setHovered] = useState(false);
+  const [autoAnimating, setAutoAnimating] = useState(false);
+  const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 3초마다 자동 애니메이션
+  useEffect(() => {
+    autoTimerRef.current = setInterval(() => {
+      setAutoAnimating(true);
+      setTimeout(() => setAutoAnimating(false), 700); // 애니메이션 지속시간
+    }, 3000);
+
+    return () => {
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    };
+  }, []);
+
+  const isAnimating = hovered || autoAnimating;
 
   const dotStyle = (index: number): React.CSSProperties => ({
     width: config.dot,
@@ -24,8 +40,8 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
     borderRadius: '50%',
     backgroundColor: 'var(--theme-primary, #667eea)',
     transition: 'transform 0.3s ease, opacity 0.3s ease',
-    transform: hovered ? `translateY(${Math.sin((index + 1) * 1.2) * -4}px) scale(1.15)` : 'translateY(0) scale(1)',
-    animationName: hovered ? 'logoDotBounce' : 'none',
+    transform: isAnimating ? `translateY(${Math.sin((index + 1) * 1.2) * -4}px) scale(1.15)` : 'translateY(0) scale(1)',
+    animationName: isAnimating ? 'logoDotBounce' : 'none',
     animationDuration: '0.6s',
     animationDelay: `${index * 0.08}s`,
     animationTimingFunction: 'ease',
@@ -72,7 +88,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             letterSpacing: '0.15em',
             transition: 'letter-spacing 0.4s ease, opacity 0.3s ease',
-            animation: hovered ? 'logoTextSlide 0.5s ease both' : 'none',
+            animation: isAnimating ? 'logoTextSlide 0.5s ease both' : 'none',
           }}
         >
           CRAFT
