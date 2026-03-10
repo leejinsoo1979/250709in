@@ -1043,23 +1043,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
 
-  // 🔴🔴🔴 키큰장 엔드패널 디버깅
-  if (actualModuleData?.category === 'full') {
-    console.log('🟢🟢🟢 [FurnitureItem] 키큰장 엔드패널 체크:', {
-      moduleId: placedModule.moduleId,
-      slotIndex: placedModule.slotIndex,
-      hasAdjacentUpperLower: adjacentCheck.hasAdjacentUpperLower,
-      adjacentSide: adjacentCheck.adjacentSide,
-      placedModulesCount: placedModules.length,
-      otherModules: placedModules.filter(m => m.id !== placedModule.id).map(m => ({
-        id: m.moduleId,
-        slotIndex: m.slotIndex,
-        category: getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo)?.category
-      }))
-    });
-  }
-
-
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
   // 단내림이 있으면 zone별 columnCount 사용
   const isLastSlot = normalizedSlotIndex !== undefined
@@ -1515,15 +1498,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const hasColumnInSlot = !!(slotInfo && slotInfo.hasColumn && slotInfo.column);
 
   if (needsEndPanelAdjustment && endPanelSide && !hasColumnInSlot) {
-    console.log('🔵🔵🔵 [FurnitureItem] 키큰장 폭 조정 시작:', {
-      moduleId: placedModule.moduleId,
-      originalWidth: originalFurnitureWidthMm,
-      endPanelSide,
-      isNoSurroundFirstSlot,
-      isNoSurroundLastSlot,
-      isNoSurroundDualLastSlot
-    });
-
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
     if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
       // 노서라운드에서는 바깥쪽 엔드패널 18mm + 안쪽 상하부장 엔드패널 18mm = 총 36mm 줄임
@@ -1560,14 +1534,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
 
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
-
-    console.log('🟡🟡🟡 [FurnitureItem] 키큰장 폭 조정 완료:', {
-      moduleId: placedModule.moduleId,
-      originalWidth: originalFurnitureWidthMm,
-      adjustedWidth: furnitureWidthMm,
-      widthReduction: originalFurnitureWidthMm - furnitureWidthMm,
-      positionAdjustment: positionAdjustmentForEndPanel
-    });
   }
 
   // 노서라운드 모드에서 엔드패널 처리
@@ -2198,13 +2164,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           x: originalSlotCenterX // 슬롯 중심
         };
 
-        console.log('🟢 [Column C front mode] 폭/깊이 조정:', {
-          slotWidth: indexing.columnWidth,
-          furnitureWidthMm,
-          adjustedDepthMm,
-          columnDepth,
-          position: adjustedPosition.x
-        });
       } else {
         // 일반 폭 조정 방식: 가구 크기와 위치 조정
         // 기둥 침범 시에는 항상 폭 조정
@@ -2321,21 +2280,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const slotWidth = indexing.columnWidth;
           const widthReduction = slotWidth - slotInfo.availableWidth;
           const halfReductionUnits = mmToThreeUnits(widthReduction / 2);
-
-          // 디버그: 기둥 위치와 침범 방향 확인
-          console.log('🔵 [Column C beside mode] 위치 계산:', {
-            columnPosition: slotInfo.column?.position,
-            columnWidth: slotInfo.column?.width,
-            intrusionDirection: slotInfo.intrusionDirection,
-            slotWidth,
-            availableWidth: slotInfo.availableWidth,
-            widthReduction,
-            halfReductionUnits,
-            originalSlotCenterX,
-            계산된위치: slotInfo.intrusionDirection === 'from-left'
-              ? originalSlotCenterX + halfReductionUnits
-              : originalSlotCenterX - halfReductionUnits
-          });
 
           if (slotInfo.intrusionDirection === 'from-left') {
             // 기둥이 왼쪽에서 침범 - 가구를 오른쪽으로 이동

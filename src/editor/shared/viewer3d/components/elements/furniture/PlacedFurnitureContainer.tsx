@@ -26,7 +26,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   view2DDirection,
   renderMode,
   placedModules: propPlacedModules,
-  activeZone,
+  activeZone: _activeZone, // eslint-disable-line @typescript-eslint/no-unused-vars
   showFurniture,
   readOnly = false,
   onFurnitureClick,
@@ -37,34 +37,11 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
-  // 섹션 깊이 변경 감지용 로그
-  React.useEffect(() => {
-    console.log('🔄 PlacedFurnitureContainer - storePlacedModules 변경 감지:', {
-      count: storePlacedModules.length,
-      modules: storePlacedModules.map(m => ({
-        id: m.id,
-        moduleId: m.moduleId,
-        lowerSectionDepth: m.lowerSectionDepth,
-        upperSectionDepth: m.upperSectionDepth
-      }))
-    });
-  }, [storePlacedModules]);
-
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
 
   // 측면뷰이고 selectedSlotIndex가 있는 경우 필터링
   const finalView2DDirection = view2DDirection || contextView2DDirection;
-
-  // 디버깅: 현재 뷰 상태 출력
-  console.log('👀 [PlacedFurnitureContainer] 뷰 상태:', {
-    viewMode,
-    view2DDirection,
-    contextView2DDirection,
-    finalView2DDirection,
-    selectedSlotIndex,
-    modulesCount: basePlacedModules.length
-  });
 
   if (
     viewMode === '2D' &&
@@ -74,22 +51,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     // 단내림 구간 정보 - derivedSpaceStore에서 가져옴
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
     const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
-
-    console.log('🔍🔍🔍 [PlacedFurnitureContainer] 슬롯 필터링 시작:', {
-      selectedSlotIndex,
-      hasDroppedCeiling,
-      normalSlotCount,
-      zonesNormal: zones?.normal?.columnCount,
-      zonesDropped: zones?.dropped?.columnCount,
-      totalModules: basePlacedModules.length,
-      modules: basePlacedModules.map(m => ({
-        id: m.id.slice(-8),
-        slotIndex: m.slotIndex,
-        zone: m.zone,
-        isDualSlot: m.isDualSlot
-      }))
-    });
-    console.log('🔍🔍🔍 viewMode:', viewMode, 'finalView2DDirection:', finalView2DDirection);
 
     basePlacedModules = basePlacedModules.filter(module => {
       if (module.slotIndex === undefined) return false;
@@ -101,8 +62,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
       // zone이 명시적으로 'dropped'이거나, zone이 없지만 X 위치로 단내림 구간으로 판별
       let isInDroppedZone = module.zone === 'dropped';
-
-      console.log(`  🔍 모듈 zone 체크: zone="${module.zone}", typeof=${typeof module.zone}, isDropped=${isInDroppedZone}`);
 
       // zone이 설정되지 않은 경우 X 위치로 판별
       if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
@@ -121,7 +80,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
           isInDroppedZone = moduleXMm >= normalWidth;
         }
 
-        console.log(`  🔎 zone 미설정 가구 판별: moduleX=${moduleXMm.toFixed(0)}mm, droppedPosition=${droppedPosition}, normalWidth=${normalWidth}, droppedWidth=${droppedWidth}, isDropped=${isInDroppedZone}`);
       }
 
       if (hasDroppedCeiling && isInDroppedZone) {
@@ -133,57 +91,13 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
         : (moduleGlobalSlotIndex === selectedSlotIndex);
 
-      console.log(`  📦 모듈 ${module.id.slice(-8)}: slotIndex=${module.slotIndex}, zone=${module.zone}, isInDroppedZone=${isInDroppedZone}, globalIndex=${moduleGlobalSlotIndex}, selected=${selectedSlotIndex}, match=${isMatch}`);
-
       return isMatch;
     });
 
-    console.log('🔍 [PlacedFurnitureContainer] 필터링 결과:', basePlacedModules.length, '개');
   }
 
   const placedModules = basePlacedModules;
-  
-  // activeZone 변경 감지
-  React.useEffect(() => {
-    console.log('🎯 PlacedFurnitureContainer - activeZone 변경:', {
-      activeZone,
-      placedModulesCount: placedModules.length,
-      placedModules: placedModules.map(m => ({
-        id: m.id,
-        moduleId: m.moduleId,
-        zone: m.zone,
-        customWidth: m.customWidth,
-        isDualSlot: m.isDualSlot
-      }))
-    });
-  }, [activeZone]);
-  
-  // placedModules 변경 감지
-  React.useEffect(() => {
-    console.log('📦 PlacedFurnitureContainer - placedModules 변경:', {
-      count: placedModules.length,
-      modules: placedModules.map(m => ({
-        id: m.id,
-        slotIndex: m.slotIndex,
-        position: m.position.x.toFixed(3)
-      }))
-    });
-  }, [placedModules]);
 
-  // baseConfig.depth 변경 감지
-  React.useEffect(() => {
-    console.log('📏 PlacedFurnitureContainer - baseConfig.depth 변경 감지:', {
-      depth: spaceInfo.baseConfig?.depth,
-      fullBaseConfig: spaceInfo.baseConfig
-    });
-  }, [spaceInfo.baseConfig?.depth]);
-
-  // showFurniture 변경 감지
-  React.useEffect(() => {
-    console.log('🎨 PlacedFurnitureContainer - showFurniture changed:', showFurniture);
-  }, [showFurniture]);
-  
-  
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -222,9 +136,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   // 키보드 이벤트 훅 - 항상 호출
   useFurnitureKeyboard({ spaceInfo });
   
-  // 드래그 중인 모듈 ID 추적 (중복 렌더링 방지용)
-  const [lastDraggedId, setLastDraggedId] = React.useState<string | null>(null);
-  
   // viewer 모드에 따라 실제 사용할 값 결정
   const selectionState = !isViewerOnly 
     ? selectionStateFromHook 
@@ -238,30 +149,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         handlePointerUp: () => {},
         draggingModuleId: null
       };
-
-  // 이전 렌더링 상태 추적하여 중복 방지
-  const prevModuleIdsRef = React.useRef<Set<string>>(new Set());
-  
-  React.useEffect(() => {
-    const currentIds = new Set(placedModules.map(m => m.id));
-    const prevIds = prevModuleIdsRef.current;
-    
-    // 추가된 가구
-    const addedIds = Array.from(currentIds).filter(id => !prevIds.has(id));
-    // 제거된 가구
-    const removedIds = Array.from(prevIds).filter(id => !currentIds.has(id));
-    
-    if (addedIds.length > 0 || removedIds.length > 0) {
-      console.log('🔄 PlacedFurnitureContainer - 가구 변경 감지:', {
-        추가: addedIds,
-        제거: removedIds,
-        현재개수: currentIds.size,
-        이전개수: prevIds.size
-      });
-    }
-    
-    prevModuleIdsRef.current = currentIds;
-  }, [placedModules]);
 
   // 좌/우측 뷰에서는 해당 측면에 가장 가까운 슬롯의 모든 가구 필터링
   // 단, selectedSlotIndex가 이미 설정되어 있으면 그 필터링을 우선함
@@ -297,22 +184,9 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     return placedModules;
   }, [placedModules, viewMode, view2DDirection, selectedSlotIndex]);
   
-  console.log('🔥🔥 PlacedFurnitureContainer 렌더링 시작:', {
-    가구개수: filteredModules.length,
-    가구IDs: filteredModules.map(m => m.id),
-    가구상세: filteredModules.map(m => ({
-      id: m.id,
-      slotIndex: m.slotIndex,
-      position: m.position?.x?.toFixed(3) ?? 'undefined'
-    })),
-    viewMode,
-    view2DDirection,
-    원본가구개수: placedModules.length
-  });
-
   return (
     <group name="FurnitureContainer">
-      {filteredModules.map((placedModule, index) => {
+      {filteredModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
@@ -321,14 +195,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         const adjustedModule = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
           ? { ...placedModule, position: { ...placedModule.position, x: 0 } }
           : placedModule;
-
-        console.log(`🎯 FurnitureItem ${index} 생성:`, {
-          id: placedModule.id,
-          key: placedModule.id,
-          slotIndex: placedModule.slotIndex,
-          originalX: placedModule.position.x,
-          adjustedX: adjustedModule.position.x
-        });
 
         return (
           <FurnitureItem
