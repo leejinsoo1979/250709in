@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { loadFolderData, getDesignFiles } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
-import type { QuickAccessMenu } from '@/hooks/dashboard/types';
+import type { QuickAccessMenu, ExplorerItem } from '@/hooks/dashboard/types';
 import styles from './NavigationPane.module.css';
 
 interface NavigationPaneProps {
@@ -19,6 +19,7 @@ interface NavigationPaneProps {
   onMenuChange: (menu: QuickAccessMenu) => void;
   onCreateProject?: () => void;
   menuCounts?: Partial<Record<QuickAccessMenu, number>>;
+  onItemContextMenu?: (e: React.MouseEvent, item: ExplorerItem) => void;
 }
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
@@ -31,6 +32,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   onMenuChange,
   onCreateProject,
   menuCounts,
+  onItemContextMenu,
 }) => {
   const { user } = useAuth();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -180,6 +182,18 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                     onNavigate(project.id, null, project.title);
                     if (!isExpanded) toggleProject(project.id);
                   }}
+                  onContextMenu={(e) => {
+                    if (onItemContextMenu) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onItemContextMenu(e, {
+                        id: project.id,
+                        name: project.title,
+                        type: 'project',
+                        updatedAt: project.updatedAt,
+                      });
+                    }
+                  }}
                 >
                   <span
                     className={styles.expandIcon}
@@ -214,6 +228,18 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                             isFolderSelected ? styles.treeItemActive : ''
                           }`}
                           onClick={() => onNavigate(project.id, folder.id, folder.name)}
+                          onContextMenu={(e) => {
+                            if (onItemContextMenu) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onItemContextMenu(e, {
+                                id: folder.id,
+                                name: folder.name,
+                                type: 'folder',
+                                projectId: project.id,
+                              });
+                            }
+                          }}
                         >
                           <span style={{ width: 14 }} />
                           <FcFolder size={14} className={styles.folderIcon} />

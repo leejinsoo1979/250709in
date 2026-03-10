@@ -670,6 +670,7 @@ const SimpleDashboard: React.FC = () => {
                     if (isMobile) setMobileNavOpen(false);
                   }}
                   onCreateProject={handleCreateProject}
+                  onItemContextMenu={handleItemContextMenu}
                   menuCounts={{
                     'in-progress': data.projects.filter(p => !p.status || p.status === 'in_progress').length,
                     'completed': data.projects.filter(p => p.status === 'completed').length,
