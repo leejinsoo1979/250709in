@@ -911,6 +911,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         <Canvas
           key={`${canvasKey}-shadow-${shadowEnabled}-rm-${renderMode}`}
           shadows={viewMode === '3D' && shadowEnabled}
+          onPointerMissed={() => {
+            useFurnitureStore.getState().setSelectedFurnitureId(null);
+            useUIStore.getState().setSelectedFurnitureId(null);
+          }}
           style={{
             ...style,
             background: '#ffffff',
