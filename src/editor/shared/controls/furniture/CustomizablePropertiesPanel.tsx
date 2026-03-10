@@ -2754,7 +2754,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         <div className={styles.section}>
         <div className={styles.sectionTitle}>내부 구조</div>
 
-        {/* 칸막이 토글 */}
+        {/* 칸막이 토글 (좌우분할이 없을 때만 표시) */}
+        {!section.horizontalSplit && (
         <div className={styles.row}>
           <span className={styles.label}>칸막이</span>
           <div className={styles.toggleGroup}>
@@ -2772,6 +2773,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </button>
           </div>
         </div>
+        )}
 
         {/* 칸막이 좌/우 거리 입력 */}
         {hasPartition && (
@@ -2853,8 +2855,116 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </>
         )}
 
+        {/* 좌우분할 토글 (독립 박스) */}
+        {!hasPartition && (() => {
+          const hasHSplit = !!section.horizontalSplit;
+          const is3Split = hasHSplit && section.horizontalSplit?.secondPosition != null;
+          return (
+            <div className={styles.row} style={{ marginTop: '8px' }}>
+              <span className={styles.label}>좌우분할</span>
+              <div className={styles.toggleGroup}>
+                <button
+                  className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
+                  onClick={() => { if (hasHSplit) handleHSplitMode(sIdx, 'none'); }}
+                >
+                  없음
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
+                  onClick={() => handleHSplitMode(sIdx, '2split')}
+                >
+                  2분할
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
+                  onClick={() => handleHSplitMode(sIdx, '3split')}
+                >
+                  3분할
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 좌우분할 너비 입력 */}
+        {section.horizontalSplit && (() => {
+          const hs = section.horizontalSplit;
+          const is3 = hs.secondPosition != null;
+          const pos = hs.position;
+          const centerWVal = hs.secondPosition || 0;
+          const extraPanels = is3 ? 4 : 2;
+          const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div className={styles.row}>
+                <span className={styles.label}>좌</span>
+                <input
+                  type="text" inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={hSplitInputs[`${sIdx}-left`] ?? pos.toString()}
+                  onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: e.target.value }))}
+                  onBlur={() => {
+                    const val = parseInt(hSplitInputs[`${sIdx}-left`] || '0');
+                    const clamped = Math.max(100, Math.min(innerW - 200, isNaN(val) ? pos : val));
+                    handleHSplitPosition(sIdx, clamped);
+                    setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: clamped.toString() }));
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  style={{ width: '60px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+              {is3 && (
+                <div className={styles.row}>
+                  <span className={styles.label}>중앙</span>
+                  <input
+                    type="text" inputMode="numeric"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    value={hSplitInputs[`${sIdx}-center`] ?? centerWVal.toString()}
+                    onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: e.target.value }))}
+                    onBlur={() => {
+                      const val = parseInt(hSplitInputs[`${sIdx}-center`] || '0');
+                      const clamped = Math.max(100, Math.min(innerW - pos - 200, isNaN(val) ? centerWVal : val));
+                      handleHSplitSecondPosition(sIdx, clamped);
+                      setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: clamped.toString() }));
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    style={{ width: '60px' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              )}
+              <div className={styles.row}>
+                <span className={styles.label}>우</span>
+                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '60px' }}>
+                  {Math.round(rightW)}
+                </span>
+                <span className={styles.unit}>mm</span>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* 내부 요소 편집 */}
-        {hasPartition ? (
+        {section.horizontalSplit ? (
+          /* 좌우분할 모드: 각 서브 박스별 요소 편집 */
+          <>
+            <div className={styles.areaCard}>
+              <div className={styles.areaTitle}>좌측 영역</div>
+              {renderElementEditor(sIdx, 'left', section.horizontalSplit.leftElements, section.height)}
+            </div>
+            {section.horizontalSplit.secondPosition != null && section.horizontalSplit.centerElements && (
+              <div className={styles.areaCard}>
+                <div className={styles.areaTitle}>중앙 영역</div>
+                {renderElementEditor(sIdx, 'center', section.horizontalSplit.centerElements, section.height)}
+              </div>
+            )}
+            <div className={styles.areaCard}>
+              <div className={styles.areaTitle}>우측 영역</div>
+              {renderElementEditor(sIdx, 'right', section.horizontalSplit.rightElements, section.height)}
+            </div>
+          </>
+        ) : hasPartition ? (
           <>
             <div className={styles.areaCard}>
               <div className={styles.areaTitle}>좌측 영역</div>
