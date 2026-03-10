@@ -2,10 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home, FileText } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
-import type { DesignFileSummary } from '@/firebase/types';
 import { useAuth } from '@/auth/AuthProvider';
 import { loadFolderData, getDesignFiles } from '@/firebase/projects';
-import type { ProjectSummary } from '@/firebase/types';
+import type { ProjectSummary, DesignFileSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
 import type { QuickAccessMenu, ExplorerItem } from '@/hooks/dashboard/types';
 import styles from './NavigationPane.module.css';
@@ -87,31 +86,17 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
     }
   }, [user, loadDesignFiles]);
 
-  // 프로젝트 목록 변경 시 디자인 파일 로드
+  // 프로젝트 목록 변경 시 모든 프로젝트 자동 확장 + 데이터 로드
   useEffect(() => {
+    if (projects.length === 0) return;
+    const newExpanded = new Set<string>();
     projects.forEach(project => {
-      loadDesignFiles(project.id);
+      newExpanded.add(project.id);
+      loadProjectData(project.id);
     });
+    setExpandedProjects(newExpanded);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects]);
-
-  // 현재 프로젝트 자동 확장 + 데이터 로드
-  const [autoExpandLoaded, setAutoExpandLoaded] = useState(false);
-  useEffect(() => {
-    if (
-      autoExpandProjectId &&
-      projects.some(p => p.id === autoExpandProjectId) &&
-      !autoExpandLoaded
-    ) {
-      setAutoExpandLoaded(true);
-      setExpandedProjects(prev => {
-        const next = new Set(prev);
-        next.add(autoExpandProjectId);
-        return next;
-      });
-      loadProjectData(autoExpandProjectId);
-    }
-  }, [autoExpandProjectId, projects, autoExpandLoaded, loadProjectData]);
 
   // 프로젝트 확장/축소
   const toggleProject = useCallback((projectId: string) => {
