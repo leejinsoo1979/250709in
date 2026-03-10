@@ -38,8 +38,6 @@ export function convertToConfig(
 ): CustomFurnitureConfig {
   const { width, height } = dimensions;
 
-  console.log('🔧 [convertToConfig] 입력:', { layout: JSON.stringify(layout), dimensions });
-
   // 가구 전체 내경 (단일 박스: 상/하판 2개 차감)
   const totalInnerHeight = height - 2 * PANEL_THICKNESS;
   // 가구 전체 내경 너비 (좌/우측판 2개 차감)
@@ -92,7 +90,6 @@ export function convertToConfig(
       return section;
     });
 
-    console.log('🔧 [convertToConfig] 결과 sections:', sections.map(s => ({ id: s.id, height: s.height })));
     return {
       sections,
       panelThickness: PANEL_THICKNESS,
