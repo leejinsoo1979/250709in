@@ -18,7 +18,7 @@ import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furnitur
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
-import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 
 // 키보드 이동 단위 (mm)
@@ -54,7 +54,7 @@ const DynamicLine: React.FC<{ points: number[]; color: string }> = ({ points, co
  */
 const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule } = useFurnitureStore();
+  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule, lastCustomDimensions } = useFurnitureStore();
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
@@ -108,14 +108,16 @@ const FreePlacementDropZone: React.FC = () => {
     // 커스터마이징 가구 ID 처리
     if (isCustomizableModuleId(selectedFurnitureId)) {
       const category = getCustomizableCategory(selectedFurnitureId);
+      const dimKey = getCustomDimensionKey(selectedFurnitureId);
       const defaults = CUSTOMIZABLE_DEFAULTS[category];
       const height = category === 'full' ? internalSpace.height : defaults.height;
+      const lastDims = lastCustomDimensions[dimKey];
 
-      // pendingPlacement가 있으면 저장된 치수 사용 (My캐비닛)
+      // 우선순위: pendingPlacement(My캐비넷) > lastCustomDimensions(마지막 치수) > CUSTOMIZABLE_DEFAULTS(기본값)
       const pp = pendingPlacement;
-      const useWidth = pp ? pp.width : defaults.width;
-      const useHeight = pp ? pp.height : height;
-      const useDepth = pp ? pp.depth : defaults.depth;
+      const useWidth = pp ? pp.width : (lastDims ? lastDims.width : defaults.width);
+      const useHeight = pp ? pp.height : (lastDims ? lastDims.height : height);
+      const useDepth = pp ? pp.depth : (lastDims ? lastDims.depth : defaults.depth);
 
       return {
         id: selectedFurnitureId,
@@ -138,7 +140,7 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     return getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
-  }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement]);
+  }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement, lastCustomDimensions]);
 
   // 활성 가구 치수
   const activeDimensions = useMemo(() => {

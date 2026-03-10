@@ -44,6 +44,18 @@ export function getCustomizableCategory(moduleId: string): 'full' | 'upper' | 'l
   return (parts[1] || 'full') as 'full' | 'upper' | 'lower';
 }
 
+// 커스터마이징 가구 모듈 ID에서 치수 기억용 키 추출
+// 듀얼은 듀얼끼리, 싱글은 싱글끼리, upper/lower는 별도 추적
+export function getCustomDimensionKey(moduleId: string): 'full-single' | 'full-dual' | 'upper' | 'lower' {
+  const category = getCustomizableCategory(moduleId);
+  if (category === 'upper') return 'upper';
+  if (category === 'lower') return 'lower';
+  // full 카테고리: 너비로 싱글/듀얼 구분 (500=싱글, 1000+=듀얼)
+  const parts = moduleId.split('-');
+  const width = parseInt(parts[2] || '1000', 10);
+  return width <= 500 ? 'full-single' : 'full-dual';
+}
+
 interface CustomizableFurnitureLibraryProps {
   filter?: 'full' | 'upper' | 'lower';
   showHeader?: boolean;

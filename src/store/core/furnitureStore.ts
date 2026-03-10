@@ -64,6 +64,10 @@ interface FurnitureDataState {
   // 레이아웃 빌더 팝업에서 확인한 커스텀 설정 (배치 전 임시 저장)
   pendingCustomConfig: CustomFurnitureConfig | null;
   setPendingCustomConfig: (config: CustomFurnitureConfig | null) => void;
+
+  // 커스터마이징 가구 마지막 치수 기억 (타입별 독립 추적)
+  lastCustomDimensions: Record<string, { width: number; height: number; depth: number }>;
+  setLastCustomDimensions: (key: string, dims: { width: number; height: number; depth: number }) => void;
 }
 
 // 가구 데이터 Store 생성
@@ -87,6 +91,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 레이아웃 빌더 pending 상태
   pendingCustomConfig: null,
   setPendingCustomConfig: (config) => set({ pendingCustomConfig: config }),
+
+  // 커스터마이징 가구 마지막 치수 기억
+  lastCustomDimensions: {},
+  setLastCustomDimensions: (key, dims) => set((state) => ({
+    lastCustomDimensions: { ...state.lastCustomDimensions, [key]: dims }
+  })),
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {

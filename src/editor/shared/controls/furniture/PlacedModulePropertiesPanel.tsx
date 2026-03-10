@@ -9,6 +9,7 @@ import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
+import { isCustomizableModuleId, getCustomDimensionKey } from './CustomizableFurnitureLibrary';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -1834,8 +1835,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         console.log('🔴 [freeWidth onBlur]', { freeWidthInput, val, hasModule: !!currentPlacedModule, moduleId: currentPlacedModule?.id, currentFreeWidth: currentPlacedModule?.freeWidth, currentModuleWidth: currentPlacedModule?.moduleWidth });
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeWidth: val, moduleWidth: val });
-                          // 입력값도 즉시 동기화
                           setFreeWidthInput(val.toString());
+                          // 커스터마이징 가구면 마지막 치수 기억
+                          if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
+                            const key = getCustomDimensionKey(currentPlacedModule.moduleId);
+                            useFurnitureStore.getState().setLastCustomDimensions(key, {
+                              width: val,
+                              height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
+                              depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
+                            });
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
@@ -1863,6 +1872,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
                           setFreeHeightInput(val.toString());
+                          // 커스터마이징 가구면 마지막 치수 기억
+                          if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
+                            const key = getCustomDimensionKey(currentPlacedModule.moduleId);
+                            useFurnitureStore.getState().setLastCustomDimensions(key, {
+                              width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
+                              height: val,
+                              depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
+                            });
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
@@ -1890,6 +1908,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 800 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeDepth: val });
                           setFreeDepthInput(val.toString());
+                          // 커스터마이징 가구면 마지막 치수 기억
+                          if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
+                            const key = getCustomDimensionKey(currentPlacedModule.moduleId);
+                            useFurnitureStore.getState().setLastCustomDimensions(key, {
+                              width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
+                              height: currentPlacedModule.freeHeight || moduleData.dimensions.height,
+                              depth: val,
+                            });
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
