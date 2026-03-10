@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Folder, FileText, MoreHorizontal } from 'lucide-react';
+import { FileText, MoreHorizontal } from 'lucide-react';
+import { FcFolder } from 'react-icons/fc';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
 import styles from './ContentPane.module.css';
@@ -86,7 +87,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
 
   const getItemIcon = (item: ExplorerItem, size: number, isCard?: boolean) => {
     if (item.type === 'folder' || item.type === 'project') {
-      return <Folder size={size} className={styles.itemIconFolder} />;
+      return <FcFolder size={size} className={styles.itemIconFolder} />;
     }
     // 카드 뷰에서는 디자인 아이콘에 배경 스타일 적용
     if (isCard) {
@@ -125,7 +126,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (filteredItems.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <Folder size={48} className={styles.emptyIcon} />
+        <FcFolder size={48} className={styles.emptyIcon} />
         <span>{searchTerm ? '검색 결과가 없습니다' : '항목이 없습니다'}</span>
       </div>
     );
