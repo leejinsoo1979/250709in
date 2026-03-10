@@ -9,7 +9,7 @@ interface SplitLoginFormProps {
 
 export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
