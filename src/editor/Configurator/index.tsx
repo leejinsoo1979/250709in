@@ -3661,7 +3661,7 @@ const Configurator: React.FC = () => {
         <LoadingSpinner
           message="에디터를 준비하는 중..."
           size="large"
-          type="spinner"
+          type="dots"
         />
       </div>
     );
