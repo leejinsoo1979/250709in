@@ -127,42 +127,38 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
           {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
           {category === 'full' && (
             <div style={{
-              display: 'flex', gap: '8px', marginBottom: '12px', padding: '0 4px',
+              display: 'flex', gap: '6px', marginBottom: '8px', padding: '0 4px',
             }}>
               <button
                 onClick={() => handleTypeChange('single')}
                 style={{
-                  flex: 1, padding: '10px 12px', borderRadius: '8px',
+                  flex: 1, padding: '5px 10px', borderRadius: '6px',
                   border: cabinetType === 'single' ? '2px solid #4A90D9' : '1px solid #ddd',
                   background: cabinetType === 'single' ? '#f0f7ff' : '#fff',
                   cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '10px', transition: 'all 0.2s',
+                  justifyContent: 'center', gap: '8px', transition: 'all 0.2s',
                 }}
               >
-                <div style={{ width: '16px', height: '28px', border: '2px solid #666', borderRadius: '2px' }} />
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600' }}>싱글</div>
-                  <div style={{ fontSize: '11px', color: '#888' }}>W 500mm</div>
-                </div>
+                <div style={{ width: '12px', height: '18px', border: '2px solid #666', borderRadius: '2px', flexShrink: 0 }} />
+                <span style={{ fontSize: '12px', fontWeight: '600' }}>싱글</span>
+                <span style={{ fontSize: '11px', color: '#888' }}>500mm</span>
               </button>
               <button
                 onClick={() => handleTypeChange('dual')}
                 style={{
-                  flex: 1, padding: '10px 12px', borderRadius: '8px',
+                  flex: 1, padding: '5px 10px', borderRadius: '6px',
                   border: cabinetType === 'dual' ? '2px solid #4A90D9' : '1px solid #ddd',
                   background: cabinetType === 'dual' ? '#f0f7ff' : '#fff',
                   cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '10px', transition: 'all 0.2s',
+                  justifyContent: 'center', gap: '8px', transition: 'all 0.2s',
                 }}
               >
-                <div style={{ display: 'flex', gap: '2px' }}>
-                  <div style={{ width: '14px', height: '28px', border: '2px solid #666', borderRadius: '2px' }} />
-                  <div style={{ width: '14px', height: '28px', border: '2px solid #666', borderRadius: '2px' }} />
+                <div style={{ display: 'flex', gap: '1px', flexShrink: 0 }}>
+                  <div style={{ width: '10px', height: '18px', border: '2px solid #666', borderRadius: '2px' }} />
+                  <div style={{ width: '10px', height: '18px', border: '2px solid #666', borderRadius: '2px' }} />
                 </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600' }}>듀얼</div>
-                  <div style={{ fontSize: '11px', color: '#888' }}>W 1000mm</div>
-                </div>
+                <span style={{ fontSize: '12px', fontWeight: '600' }}>듀얼</span>
+                <span style={{ fontSize: '11px', color: '#888' }}>1000mm</span>
               </button>
             </div>
           )}
