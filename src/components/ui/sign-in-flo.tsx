@@ -206,6 +206,19 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             <span className="text-zinc-300 text-sm font-medium">Google</span>
           </button>
 
+          {/* Enterprise Button */}
+          <button
+            type="button"
+            onClick={() => window.location.href = 'mailto:contact@thinkthingthanks.com?subject=기업계정 가입 문의'}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 transition-colors mt-3"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            </svg>
+            <span className="text-zinc-300 text-sm font-medium">기업계정 가입</span>
+          </button>
+
           {/* Toggle */}
           <p className="mt-8 text-center text-sm text-zinc-600">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
