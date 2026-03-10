@@ -66,6 +66,7 @@ const SimpleDashboard: React.FC = () => {
   const [isStep1ModalOpen, setIsStep1ModalOpen] = useState(false);
   const [modalProjectId, setModalProjectId] = useState<string | null>(null);
   const [modalProjectTitle, setModalProjectTitle] = useState<string | null>(null);
+  const [modalInitialStep, setModalInitialStep] = useState<1 | 2>(1);
 
   // SaaS 모드 디자인 생성 모달 (이름만 입력, 에디터 이동 없음)
   const [isSaasDesignModalOpen, setIsSaasDesignModalOpen] = useState(false);
@@ -340,6 +341,7 @@ const SimpleDashboard: React.FC = () => {
     setIsStep1ModalOpen(false);
     setModalProjectId(null);
     setModalProjectTitle(null);
+    setModalInitialStep(1);
     if (nav.currentProjectId) {
       await data.refreshDesignFiles(nav.currentProjectId);
     }
@@ -515,12 +517,13 @@ const SimpleDashboard: React.FC = () => {
             const project = data.projects.find(p => p.id === (item.projectId || nav.currentProjectId));
             const targetProjectId = item.projectId || nav.currentProjectId;
             if (targetProjectId) {
-              const { setProjectId, setProjectTitle, resetBasicInfo } = useProjectStore.getState();
+              const { setProjectId, setProjectTitle, setBasicInfo } = useProjectStore.getState();
               setProjectId(targetProjectId);
               setProjectTitle(project?.title || '새 프로젝트');
-              resetBasicInfo();
+              setBasicInfo({ title: item.name });
               setModalProjectId(targetProjectId);
               setModalProjectTitle(project?.title || '새 프로젝트');
+              setModalInitialStep(2);
               setIsStep1ModalOpen(true);
             }
           }}
@@ -747,6 +750,7 @@ const SimpleDashboard: React.FC = () => {
             onClose={handleCloseStep1Modal}
             projectId={modalProjectId}
             projectTitle={modalProjectTitle || undefined}
+            initialStep={modalInitialStep}
           />
         </div>
       )}

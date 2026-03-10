@@ -9,12 +9,13 @@ interface StepContainerProps {
   onClose?: () => void;
   projectId?: string;
   projectTitle?: string;
+  initialStep?: StepType;
 }
 
 export type StepType = 1 | 2;
 
-const StepContainer: React.FC<StepContainerProps> = ({ onClose, projectId: propsProjectId, projectTitle }) => {
-  const [currentStep, setCurrentStep] = useState<StepType>(1);
+const StepContainer: React.FC<StepContainerProps> = ({ onClose, projectId: propsProjectId, projectTitle, initialStep = 1 }) => {
+  const [currentStep, setCurrentStep] = useState<StepType>(initialStep);
   const [searchParams, setSearchParams] = useSearchParams();
   const { projectId } = useProjectStore();
 

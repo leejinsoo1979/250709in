@@ -13,9 +13,10 @@ interface Step1Props {
   onClose?: () => void;
   projectId?: string;
   projectTitle?: string;
+  initialStep?: 1 | 2;
 }
 
-const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
+const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initialStep }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -65,15 +66,19 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
 
   // Step1 컴포넌트 마운트 시 처리
   useEffect(() => {
-    // Step1은 항상 새 디자인을 생성하는 것이므로 store 초기화
-    console.log('🧹 Step1 마운트: 새 디자인 생성을 위해 store 초기화');
-    resetProject();
-    resetSpaceConfig();
-    clearAllModules();
-
-    // projectId와 projectTitle은 prop으로 전달되어 헤더에 표시됨
-    // basicInfo.title은 비워서 사용자가 디자인 제목을 직접 입력하도록 함
-    console.log('📝 Step1: 디자인 제목 입력 필드 초기화 (빈 상태)');
+    if (initialStep === 2) {
+      // Step2부터 시작 (이름은 이미 설정됨) - spaceConfig와 furniture만 초기화
+      console.log('🧹 Step1 마운트: Step2부터 시작 - spaceConfig/furniture 초기화');
+      resetSpaceConfig();
+      clearAllModules();
+    } else {
+      // Step1부터 시작 - 전체 초기화
+      console.log('🧹 Step1 마운트: 새 디자인 생성을 위해 store 초기화');
+      resetProject();
+      resetSpaceConfig();
+      clearAllModules();
+      console.log('📝 Step1: 디자인 제목 입력 필드 초기화 (빈 상태)');
+    }
   }, []);
 
   // 로딩 중일 때 표시할 UI
@@ -98,7 +103,7 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
 
   return (
     <div data-theme="light" style={{ colorScheme: 'light' }}>
-      <StepContainer onClose={handleClose} projectId={projectId} projectTitle={projectTitle} />
+      <StepContainer onClose={handleClose} projectId={projectId} projectTitle={projectTitle} initialStep={initialStep} />
     </div>
   );
 };
