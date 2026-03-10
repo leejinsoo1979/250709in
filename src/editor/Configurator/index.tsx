@@ -752,6 +752,11 @@ const Configurator: React.FC = () => {
         // 프로젝트 로드 후 derivedSpaceStore 명시적 재계산
         console.log('🔄 [프로젝트 로드 후] derivedSpaceStore 강제 재계산');
         derivedSpaceStore.recalculateFromSpaceInfo(project.spaceConfig);
+
+        // 프로젝트 로드 후 isDirty 초기화 (로드 시 설정된 dirty 플래그 리셋)
+        useProjectStore.getState().markAsSaved();
+        useSpaceConfigStore.getState().markAsSaved();
+        useFurnitureStore.getState().markAsSaved();
       }
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);
@@ -1010,6 +1015,9 @@ const Configurator: React.FC = () => {
               }
 
               setSaveStatus('success');
+              useProjectStore.getState().markAsSaved();
+              useSpaceConfigStore.getState().markAsSaved();
+              useFurnitureStore.getState().markAsSaved();
               console.log('✅ 디자인 파일 저장 성공');
 
               // URL에 프로젝트명과 디자인파일명 유지 (새로고침 시에도 유지)
@@ -1096,6 +1104,9 @@ const Configurator: React.FC = () => {
               setCurrentDesignFileId(designFileId);
               setCurrentDesignFileName('새 디자인');
               setSaveStatus('success');
+              useProjectStore.getState().markAsSaved();
+              useSpaceConfigStore.getState().markAsSaved();
+              useFurnitureStore.getState().markAsSaved();
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
 
               // BroadcastChannel로 디자인 파일 생성 알림 (readonly 모드에서는 전송하지 않음)
@@ -1439,6 +1450,9 @@ const Configurator: React.FC = () => {
             setCurrentDesignFileName(newTitle.trim());
             setBasicInfo({ ...basicInfo, title: newTitle.trim() });
             setSaveStatus('success');
+            useProjectStore.getState().markAsSaved();
+            useSpaceConfigStore.getState().markAsSaved();
+            useFurnitureStore.getState().markAsSaved();
 
             // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });

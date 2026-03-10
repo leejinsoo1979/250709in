@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload' | 'myCabinet';
@@ -23,7 +23,6 @@ interface SidebarProps {
   onTabClick: (tab: SidebarTab) => void;
   isOpen: boolean;
   onToggle: () => void;
-  onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>;
   onSave?: () => Promise<void>;
   readOnly?: boolean;
   owner?: { userId: string; name: string; photoURL?: string } | null;
@@ -38,7 +37,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   onTabClick,
   isOpen,
   onToggle,
-  onResetUnsavedChanges,
   onSave,
   readOnly = false,
   owner,
@@ -52,64 +50,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
 
-  const projectStore = useProjectStore();
-  const spaceConfigStore = useSpaceConfigStore();
-  const furnitureStore = useFurnitureStore();
-
-  const [initialState, setInitialState] = useState<any>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const saveCurrentStateAsInitial = useCallback(() => {
-    const currentProject = useProjectStore.getState();
-    const currentSpaceConfig = useSpaceConfigStore.getState();
-    const currentFurniture = useFurnitureStore.getState();
-
-    const state = {
-      project: {
-        basicInfo: currentProject.basicInfo
-      },
-      spaceConfig: {
-        spaceInfo: currentSpaceConfig.spaceInfo,
-        materialConfig: currentSpaceConfig.materialConfig,
-        columns: currentSpaceConfig.columns
-      },
-      furniture: {
-        placedModules: currentFurniture.placedModules
-      }
-    };
-    setInitialState(JSON.parse(JSON.stringify(state)));
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      saveCurrentStateAsInitial();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [saveCurrentStateAsInitial]);
-
-  useEffect(() => {
-    if (onResetUnsavedChanges && onResetUnsavedChanges.current !== undefined) {
-      onResetUnsavedChanges.current = saveCurrentStateAsInitial;
-    }
-  }, [onResetUnsavedChanges]);
-
   const hasUnsavedChanges = () => {
-    if (!initialState) return false;
-    const currentProject = useProjectStore.getState();
-    const currentSpaceConfig = useSpaceConfigStore.getState();
-    const currentFurniture = useFurnitureStore.getState();
-
-    const currentState = {
-      project: { basicInfo: currentProject.basicInfo },
-      spaceConfig: {
-        spaceInfo: currentSpaceConfig.spaceInfo,
-        materialConfig: currentSpaceConfig.materialConfig,
-        columns: currentSpaceConfig.columns
-      },
-      furniture: { placedModules: currentFurniture.placedModules }
-    };
-
-    return JSON.stringify(initialState) !== JSON.stringify(currentState);
+    const projectDirty = useProjectStore.getState().isDirty;
+    const spaceDirty = useSpaceConfigStore.getState().isDirty;
+    const furnitureDirty = useFurnitureStore.getState().hasUnsavedChanges;
+    return projectDirty || spaceDirty || !!furnitureDirty;
   };
 
   const handleExitClick = () => {

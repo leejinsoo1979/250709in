@@ -68,6 +68,10 @@ interface FurnitureDataState {
   // 커스터마이징 가구 마지막 치수 기억 (타입별 독립 추적)
   lastCustomDimensions: Record<string, { width: number; height: number; depth: number }>;
   setLastCustomDimensions: (key: string, dims: { width: number; height: number; depth: number }) => void;
+
+  // 저장 상태 관리
+  markAsSaved: () => void;
+  resetAll: () => void;
 }
 
 // 가구 데이터 Store 생성
@@ -516,6 +520,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set) => ({
   // Mark as saved
   markAsSaved: () => {
     set({ hasUnsavedChanges: false });
+  },
+
+  // 전체 상태 초기화
+  resetAll: () => {
+    set({ placedModules: [], hasUnsavedChanges: false });
   },
 
   // wallConfig/frameSize 변경 시 가구 너비 재계산
