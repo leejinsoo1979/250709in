@@ -24,6 +24,32 @@
   border-radius: 2px;
 }
 
+/* 새 프로젝트 버튼 */
+.createProjectSection {
+  padding: 8px 12px;
+}
+
+.createProjectBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px dashed var(--theme-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.createProjectBtn:hover {
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+}
+
 .section {
   margin-bottom: 8px;
 }
@@ -132,35 +158,6 @@
 
 .treeChildren {
   /* No extra padding needed, treeItemNested handles it */
-}
-
-/* 하단 액션 바 */
-.bottomActions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  border-top: 1px solid var(--theme-border);
-  flex-shrink: 0;
-}
-
-.bottomBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--theme-text-muted);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-
-.bottomBtn:hover {
-  background: var(--theme-background-secondary);
-  color: var(--theme-text);
 }
 
 /* 리사이즈 핸들 */

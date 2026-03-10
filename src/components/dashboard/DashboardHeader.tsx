@@ -1,5 +1,5 @@
 import React from 'react';
-import { User } from 'lucide-react';
+import { User, Settings } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import styles from './DashboardHeader.module.css';
@@ -7,11 +7,13 @@ import styles from './DashboardHeader.module.css';
 interface DashboardHeaderProps {
   onLogoClick?: () => void;
   onProfileClick?: () => void;
+  onOpenSettings?: () => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onLogoClick,
   onProfileClick,
+  onOpenSettings,
 }) => {
   const { user } = useAuth();
 
@@ -22,6 +24,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       </div>
 
       <div className={styles.right}>
+        {onOpenSettings && (
+          <button
+            className={styles.settingsBtn}
+            onClick={onOpenSettings}
+            title="설정"
+          >
+            <Settings size={18} />
+          </button>
+        )}
         <button
           className={styles.profileBtn}
           onClick={onProfileClick}

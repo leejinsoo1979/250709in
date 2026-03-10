@@ -440,6 +440,7 @@ const SimpleDashboard: React.FC = () => {
       <DashboardHeader
         onLogoClick={() => nav.navigateToRoot()}
         onProfileClick={() => setIsProfilePopupOpen(true)}
+        onOpenSettings={() => setIsSettingsPanelOpen(true)}
       />
 
       {/* 상단 탐색 툴바 */}
@@ -479,7 +480,7 @@ const SimpleDashboard: React.FC = () => {
                 nav.setActiveMenu(menu);
                 if (isMobile) setMobileNavOpen(false);
               }}
-              onOpenSettings={() => setIsSettingsPanelOpen(true)}
+              onCreateProject={handleCreateProject}
             />
             {isMobile && (
               <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />

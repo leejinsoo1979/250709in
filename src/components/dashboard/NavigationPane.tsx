@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Folder, Star, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Settings, Sun, Moon } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus } from 'lucide-react';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
 import type { QuickAccessMenu } from '@/hooks/dashboard/types';
@@ -14,7 +13,7 @@ interface NavigationPaneProps {
   activeMenu: QuickAccessMenu;
   onNavigate: (projectId: string | null, folderId?: string | null, label?: string) => void;
   onMenuChange: (menu: QuickAccessMenu) => void;
-  onOpenSettings?: () => void;
+  onCreateProject?: () => void;
 }
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
@@ -25,9 +24,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   activeMenu,
   onNavigate,
   onMenuChange,
-  onOpenSettings,
+  onCreateProject,
 }) => {
-  const { theme, toggleMode } = useTheme();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [paneWidth, setPaneWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
@@ -68,17 +66,26 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   }, [paneWidth]);
 
   const quickAccessItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
-    { key: 'in-progress', label: '진행 중', icon: <Clock size={16} /> },
-    { key: 'completed', label: '완료됨', icon: <Folder size={16} /> },
-    { key: 'bookmarks', label: '즐겨찾기', icon: <Star size={16} /> },
-    { key: 'shared-with-me', label: '공유받은 항목', icon: <Share2 size={16} /> },
-    { key: 'shared-by-me', label: '내가 공유', icon: <Users size={16} /> },
+    { key: 'in-progress', label: '진행중 프로젝트', icon: <Clock size={16} /> },
+    { key: 'completed', label: '완료된 프로젝트', icon: <Folder size={16} /> },
+    { key: 'shared-with-me', label: '공유받은 파일', icon: <Share2 size={16} /> },
+    { key: 'shared-by-me', label: '공유한 파일', icon: <Users size={16} /> },
     { key: 'trash', label: '휴지통', icon: <Trash2 size={16} /> },
   ];
 
   return (
     <div className={styles.pane} style={{ width: paneWidth }}>
       <div className={styles.content}>
+        {/* + 새 프로젝트 버튼 */}
+        {onCreateProject && (
+          <div className={styles.createProjectSection}>
+            <button className={styles.createProjectBtn} onClick={onCreateProject}>
+              <Plus size={16} />
+              <span>새 프로젝트</span>
+            </button>
+          </div>
+        )}
+
         {/* 빠른 액세스 */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>빠른 액세스</div>
@@ -164,22 +171,6 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             );
           })}
         </div>
-      </div>
-
-      {/* 하단 액션 바 */}
-      <div className={styles.bottomActions}>
-        {onOpenSettings && (
-          <button className={styles.bottomBtn} onClick={onOpenSettings} title="설정">
-            <Settings size={16} />
-          </button>
-        )}
-        <button
-          className={styles.bottomBtn}
-          onClick={toggleMode}
-          title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
-        >
-          {theme.mode === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
-        </button>
       </div>
 
       {/* 리사이즈 핸들 */}

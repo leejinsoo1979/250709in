@@ -18,6 +18,26 @@
 .right {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.settingsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.settingsBtn:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 .profileBtn {
@@ -26,28 +46,28 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: none;
+  border: 2px solid var(--theme-border);
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
   padding: 0;
-  transition: opacity 0.15s;
+  transition: border-color 0.15s;
 }
 
 .profileBtn:hover {
-  opacity: 0.8;
+  border-color: var(--theme-primary);
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .avatarFallback {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
