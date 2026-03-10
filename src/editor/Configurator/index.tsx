@@ -2113,6 +2113,30 @@ const Configurator: React.FC = () => {
     }
   }, [currentProjectId, currentDesignFileId, currentDesignFileName]);
 
+  // 폴더명 자동 조회 (디자인파일이 폴더에 속한 경우)
+  useEffect(() => {
+    if (!currentProjectId || !currentDesignFileId || !user) return;
+    // 이미 폴더명이 설정되어 있으면 스킵
+    if (currentFolderName) return;
+
+    const resolveFolderName = async () => {
+      try {
+        const folderResult = await loadFolderDataFn(currentProjectId);
+        if (folderResult.folders && folderResult.folders.length > 0) {
+          const foundFolder = folderResult.folders.find(f =>
+            f.children?.some(c => c.id === currentDesignFileId)
+          );
+          if (foundFolder) {
+            setCurrentFolderName(foundFolder.name);
+          }
+        }
+      } catch (e) {
+        // 폴더 조회 실패 시 무시
+      }
+    };
+    resolveFolderName();
+  }, [currentProjectId, currentDesignFileId, user]);
+
   // 폴더에서 실제 디자인파일명 찾기 (URL에 designFileId나 designFileName이 없을 때만)
   useEffect(() => {
     const loadActualDesignFileName = async () => {
