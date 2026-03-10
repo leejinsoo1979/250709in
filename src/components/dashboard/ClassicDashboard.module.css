@@ -1,4 +1,4 @@
-/* ClassicDashboard - SaaS 스타일 레이아웃 */
+/* ClassicDashboard - 이전 SaaS 스타일 레이아웃 복원 */
 
 .container {
   display: flex;
@@ -7,86 +7,153 @@
   height: 100%;
 }
 
-/* ── 좌측 탭 메뉴 ── */
+/* ══════════════ 좌측 사이드바 ══════════════ */
 .sidebar {
-  width: 220px;
-  min-width: 220px;
-  border-right: 1px solid var(--theme-border);
-  background: var(--theme-background-secondary);
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
+  background: var(--theme-surface, #ffffff);
+  border-right: 1px solid var(--theme-border, #e5e7eb);
   display: flex;
   flex-direction: column;
-  padding: 16px 0;
+  padding: 24px 16px;
+  box-sizing: border-box;
   overflow-y: auto;
 }
 
-.sidebarSection {
-  padding: 0 12px;
-  margin-bottom: 8px;
+/* 프로필 섹션 */
+.profileSection {
+  margin-bottom: 32px;
 }
 
-.sidebarLabel {
+.userImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--theme-background-secondary, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  overflow: hidden;
+}
+
+.userImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userIcon {
+  font-size: 32px;
+  color: var(--theme-text-muted, #6b7280);
+}
+
+.userInfo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.username {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+  margin-bottom: 4px;
+}
+
+.userEmail {
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.createProjectBtn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--theme-primary);
+  border-radius: 8px;
+  background: var(--theme-primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.createProjectBtn:hover {
+  background: var(--theme-primary-hover);
+  border-color: var(--theme-primary-hover);
+}
+
+/* 네비게이션 메뉴 */
+.navigation {
+  flex: 1;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--theme-text, #374151);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.menuItem:hover {
+  background: var(--theme-background-secondary, #f3f4f6);
+}
+
+.activeMenuItem {
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.08));
+  color: var(--theme-primary);
+}
+
+.menuIcon {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sectionDivider {
+  height: 1px;
+  background: var(--theme-border, #e5e7eb);
+  margin: 12px 0;
+}
+
+.sectionTitle {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--theme-text-muted, #9ca3af);
-  padding: 8px 12px 4px;
+  padding: 8px 16px 4px;
 }
 
-.tabItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--theme-text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-}
-
-.tabItem:hover {
-  background: var(--theme-surface);
-  color: var(--theme-text);
-}
-
-.tabItemActive {
-  background: var(--theme-primary-light, rgba(16, 185, 129, 0.1));
-  color: var(--theme-primary);
-  font-weight: 600;
-}
-
-.tabIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.tabCount {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--theme-text-muted, #9ca3af);
-  background: var(--theme-background-secondary, #f3f4f6);
-  padding: 1px 7px;
-  border-radius: 10px;
-  min-width: 20px;
-  text-align: center;
-}
-
-.tabItemActive .tabCount {
-  background: var(--theme-primary);
-  color: white;
-}
-
-/* ── 우측 메인 영역 ── */
-.main {
+/* ══════════════ 우측 메인 영역 ══════════════ */
+.mainArea {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -94,43 +161,63 @@
   min-width: 0;
 }
 
-/* 상단 툴바 */
-.toolbar {
+/* 상단 바 */
+.topBar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   padding: 16px 24px;
-  border-bottom: 1px solid var(--theme-border);
-  background: var(--theme-surface);
+  background: var(--theme-surface, #ffffff);
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  gap: 24px;
 }
 
-.searchBox {
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.breadcrumbText {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+.breadcrumbSep {
+  font-size: 16px;
+  color: var(--theme-text-muted, #6b7280);
+}
+
+.breadcrumbLink {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.breadcrumbLink:hover {
+  color: var(--theme-primary);
+}
+
+.searchSection {
   flex: 1;
-  max-width: 360px;
+  max-width: 400px;
+}
+
+.searchBar {
   position: relative;
-}
-
-.searchInput {
   width: 100%;
-  padding: 9px 14px 9px 36px;
-  border: 1px solid var(--theme-border);
-  border-radius: 8px;
-  background: var(--theme-background-secondary);
-  color: var(--theme-text);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box;
-}
-
-.searchInput:focus {
-  border-color: var(--theme-primary);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(16, 185, 129, 0.1));
 }
 
 .searchIcon {
   position: absolute;
-  left: 11px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--theme-text-muted, #9ca3af);
@@ -138,76 +225,152 @@
   align-items: center;
 }
 
-.toolbarActions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.createBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 18px;
-  border: 2px solid var(--theme-primary);
-  border-radius: 8px;
-  background: var(--theme-primary);
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.createBtn:hover {
-  background: var(--theme-primary-hover);
-  border-color: var(--theme-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-}
-
-/* ── 카드 그리드 ── */
-.cardArea {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-}
-
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.card {
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.card:hover {
-  border-color: var(--theme-primary);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.cardSelected {
-  border-color: var(--theme-primary);
-  box-shadow: 0 0 0 2px var(--theme-primary-light, rgba(16, 185, 129, 0.2));
-}
-
-.cardThumbnail {
+.searchInput {
   width: 100%;
-  height: 160px;
-  background: var(--theme-background-secondary);
+  padding: 10px 12px 10px 40px;
+  border: 1px solid var(--theme-border, #d1d5db);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--theme-background-secondary, #f9fafb);
+  color: var(--theme-text, #374151);
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.searchInput:focus {
+  border-color: var(--theme-primary);
+  background: var(--theme-surface, #ffffff);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(16, 185, 129, 0.1));
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.viewToggle {
+  display: flex;
+  border: 1px solid var(--theme-border, #d1d5db);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewBtn {
+  padding: 8px 12px;
+  border: none;
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-text-secondary, #6b7280);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-muted, #9ca3af);
+  transition: all 0.2s ease;
+  border-right: 1px solid var(--theme-border, #d1d5db);
+}
+
+.viewBtn:last-child {
+  border-right: none;
+}
+
+.viewBtn:hover {
+  background: var(--theme-background-secondary, #f9fafb);
+}
+
+.activeView {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+.sortBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--theme-border, #d1d5db);
+  border-radius: 6px;
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-text, #374151);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.sortBtn:hover {
+  background: var(--theme-background-secondary, #f9fafb);
+  border-color: var(--theme-text-muted, #9ca3af);
+}
+
+/* ══════════════ 디자인 그리드 ══════════════ */
+.gridArea {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.designGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding: 24px;
+}
+
+/* 디자인 카드 */
+.designCard {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* 체크무늬 패턴: 교차 큰/작은 썸네일 */
+.designCard:nth-child(8n+2),
+.designCard:nth-child(8n+4),
+.designCard:nth-child(8n+5),
+.designCard:nth-child(8n+7) {
+  grid-row: span 2;
+}
+
+.designCard:nth-child(8n+2) .cardThumbnail,
+.designCard:nth-child(8n+4) .cardThumbnail,
+.designCard:nth-child(8n+5) .cardThumbnail,
+.designCard:nth-child(8n+7) .cardThumbnail {
+  height: 400px;
+}
+
+.designCard:nth-child(8n+1),
+.designCard:nth-child(8n+3),
+.designCard:nth-child(8n+6),
+.designCard:nth-child(8n+8) {
+  grid-row: span 1;
+}
+
+.designCard:nth-child(8n+1) .cardThumbnail,
+.designCard:nth-child(8n+3) .cardThumbnail,
+.designCard:nth-child(8n+6) .cardThumbnail,
+.designCard:nth-child(8n+8) .cardThumbnail {
+  height: 200px;
+}
+
+.designCard:hover {
+  box-shadow: var(--theme-shadow, 0 10px 25px rgba(0, 0, 0, 0.15));
+  transform: translateY(-2px);
+  border: 2px solid var(--theme-primary, #10b981);
+}
+
+.cardThumbnail {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: var(--theme-background-secondary, #f9fafb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -217,61 +380,140 @@
   object-fit: cover;
 }
 
-.cardBody {
-  padding: 14px 16px;
+.placeholderThumbnail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-background-secondary, #f3f4f6);
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+/* 호버 시 액션 버튼 */
+.cardHoverActions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.designCard:hover .cardHoverActions {
+  opacity: 1;
+}
+
+.actionButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.actionButton:hover {
+  background: #ffffff;
+  transform: scale(1.05);
+  color: var(--theme-text, #374151);
+}
+
+/* View more 배지 */
+.viewBadge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.cardInfo {
+  padding: 16px;
 }
 
 .cardTitle {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--theme-text);
-  margin: 0 0 6px;
+  color: var(--theme-text, #1f2937);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .cardMeta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--theme-text-secondary);
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+  margin: 0 0 4px 0;
 }
 
-.cardBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: var(--theme-background-secondary);
-  color: var(--theme-text-secondary);
-}
-
-.cardActions {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-.moreBtn {
-  background: none;
-  border: none;
-  padding: 4px;
-  border-radius: 4px;
+.cardDate {
+  font-size: 13px;
   color: var(--theme-text-muted, #9ca3af);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: all 0.15s;
+  margin: 0;
 }
 
-.moreBtn:hover {
-  background: var(--theme-background-secondary);
-  color: var(--theme-text);
+/* 새 디자인 카드 */
+.createDesignCard {
+  background: var(--theme-surface, #ffffff);
+  border: 2px dashed var(--theme-border, #d1d5db);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  grid-row: span 1;
+  min-height: 200px;
+}
+
+.createDesignCard:hover {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.04));
+}
+
+.createIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  transition: transform 0.2s ease;
+  color: white;
+}
+
+.createDesignCard:hover .createIcon {
+  transform: scale(1.05);
+}
+
+.createText {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--theme-text, #374151);
+  margin: 0;
 }
 
 /* 빈 상태 */
@@ -280,13 +522,53 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  color: var(--theme-text-muted, #9ca3af);
-  gap: 12px;
+  padding: 80px 40px;
+  text-align: center;
+  color: var(--theme-text-secondary, #6b7280);
+  grid-column: 1 / -1;
 }
 
 .emptyIcon {
-  opacity: 0.4;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--theme-background-secondary, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+.emptyTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--theme-text, #374151);
+  margin: 0 0 8px 0;
+}
+
+.emptyDescription {
+  font-size: 16px;
+  color: var(--theme-text-secondary, #6b7280);
+  margin: 0 0 24px 0;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.emptyButton {
+  padding: 12px 24px;
+  background: var(--theme-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emptyButton:hover {
+  background: var(--theme-primary-hover);
 }
 
 .spinner {
@@ -302,26 +584,91 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── 반응형 ── */
+/* ══════════════ 반응형 ══════════════ */
+@media (max-width: 1600px) {
+  .designGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .designCard:nth-child(6n+2),
+  .designCard:nth-child(6n+4),
+  .designCard:nth-child(6n+6) {
+    grid-row: span 2;
+  }
+
+  .designCard:nth-child(6n+2) .cardThumbnail,
+  .designCard:nth-child(6n+4) .cardThumbnail,
+  .designCard:nth-child(6n+6) .cardThumbnail {
+    height: 400px;
+  }
+
+  .designCard:nth-child(6n+1),
+  .designCard:nth-child(6n+3),
+  .designCard:nth-child(6n+5) {
+    grid-row: span 1;
+  }
+
+  .designCard:nth-child(6n+1) .cardThumbnail,
+  .designCard:nth-child(6n+3) .cardThumbnail,
+  .designCard:nth-child(6n+5) .cardThumbnail {
+    height: 200px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .designGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .designCard:nth-child(4n+2),
+  .designCard:nth-child(4n+3) {
+    grid-row: span 2;
+  }
+
+  .designCard:nth-child(4n+2) .cardThumbnail,
+  .designCard:nth-child(4n+3) .cardThumbnail {
+    height: 400px;
+  }
+
+  .designCard:nth-child(4n+1),
+  .designCard:nth-child(4n+4) {
+    grid-row: span 1;
+  }
+
+  .designCard:nth-child(4n+1) .cardThumbnail,
+  .designCard:nth-child(4n+4) .cardThumbnail {
+    height: 200px;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     display: none;
   }
 
-  .toolbar {
+  .topBar {
+    flex-wrap: wrap;
     padding: 12px 16px;
   }
 
-  .cardArea {
+  .searchSection {
+    max-width: 100%;
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .designGrid {
+    grid-template-columns: 1fr;
     padding: 16px;
   }
 
-  .cardGrid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+  .designCard {
+    grid-row: span 1 !important;
   }
 
-  .cardThumbnail {
-    height: 120px;
+  .designCard .cardThumbnail {
+    height: 240px !important;
   }
 }
