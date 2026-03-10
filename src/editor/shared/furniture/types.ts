@@ -133,6 +133,11 @@ export interface PlacedModule {
   freeLeftGap?: number;      // 자유배치 노서라운드 좌측 이격거리 (mm)
   freeRightGap?: number;     // 자유배치 노서라운드 우측 이격거리 (mm)
 
+  // 엔드패널(EP) 설정
+  hasLeftEndPanel?: boolean;     // 좌측 EP 표시 여부
+  hasRightEndPanel?: boolean;    // 우측 EP 표시 여부
+  endPanelThickness?: number;    // EP 두께 (mm, 기본값: 18)
+
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
   isDualSlot?: boolean; // 듀얼 가구 여부 (2개 슬롯을 차지하는지)
