@@ -106,6 +106,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           ))}
         </div>
 
+        <hr className={styles.divider} />
+
         {/* 프로젝트 트리 */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>프로젝트</div>
