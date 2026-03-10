@@ -472,6 +472,7 @@ const SimpleDashboard: React.FC = () => {
                 nav.setActiveMenu(menu);
                 if (isMobile) setMobileNavOpen(false);
               }}
+              onOpenSettings={() => setIsSettingsPanelOpen(true)}
             />
             {isMobile && (
               <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />

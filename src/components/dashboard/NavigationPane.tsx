@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { Folder, Star, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users } from 'lucide-react';
+import { Folder, Star, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Settings, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
 import type { QuickAccessMenu } from '@/hooks/dashboard/types';
@@ -13,6 +14,7 @@ interface NavigationPaneProps {
   activeMenu: QuickAccessMenu;
   onNavigate: (projectId: string | null, folderId?: string | null, label?: string) => void;
   onMenuChange: (menu: QuickAccessMenu) => void;
+  onOpenSettings?: () => void;
 }
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
@@ -23,7 +25,9 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   activeMenu,
   onNavigate,
   onMenuChange,
+  onOpenSettings,
 }) => {
+  const { theme, toggleMode } = useTheme();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [paneWidth, setPaneWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
@@ -160,6 +164,22 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             );
           })}
         </div>
+      </div>
+
+      {/* 하단 액션 바 */}
+      <div className={styles.bottomActions}>
+        {onOpenSettings && (
+          <button className={styles.bottomBtn} onClick={onOpenSettings} title="설정">
+            <Settings size={16} />
+          </button>
+        )}
+        <button
+          className={styles.bottomBtn}
+          onClick={toggleMode}
+          title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
+        >
+          {theme.mode === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+        </button>
       </div>
 
       {/* 리사이즈 핸들 */}
