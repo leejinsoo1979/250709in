@@ -26,6 +26,7 @@ import ModeTabs from './components/ModeTabs';
 import AILoadingModal from './components/AILoadingModal';
 import ExitConfirmModal from './components/ExitConfirmModal';
 import SimulationStatsModal from './components/SimulationStatsModal';
+import PanelHighlight3DViewer from './components/PanelHighlight3DViewer';
 
 // Utils
 import { optimizePanelsMultiple } from './utils/optimizer';
@@ -208,7 +209,8 @@ function PageInner(){
     selectedCutId, selectCutId, setSelectedSheetId,
     sawStats, setSawStats,
     fullSimulating, setFullSimulating, fullSimCurrentSheet, setFullSimCurrentSheet,
-    fullSimTotalSheets, setFullSimTotalSheets
+    fullSimTotalSheets, setFullSimTotalSheets,
+    hoveredPanelName, hoveredFurnitureId
   } = useCNCStore();
 
   // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
@@ -1336,9 +1338,17 @@ function PageInner(){
           )}
         </div>
 
-        {/* Right Sidebar - Stats */}
+        {/* Right Sidebar - 3D Viewer + Stats */}
         <div className={styles.rightSidebar}>
           <div className={styles.rightSidebarContent}>
+            {/* 3D 패널 하이라이트 뷰어 */}
+            <div className={styles.viewer3dContainer}>
+              <PanelHighlight3DViewer
+                highlightedPanelName={hoveredPanelName}
+                highlightedFurnitureId={hoveredFurnitureId}
+              />
+            </div>
+
             <div className={styles.statsCard}>
               <div className={styles.statsCardTitle}>
                 <h3>{t('cnc.totalStats')}</h3>

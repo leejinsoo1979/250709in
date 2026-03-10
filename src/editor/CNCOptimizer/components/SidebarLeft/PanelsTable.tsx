@@ -1,17 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useCNCStore } from '../../store';
 import type { Panel } from '../../../../types/cutlist';
 import { Package, Plus, Trash2, Upload } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useLivePanelData } from '../../hooks/useLivePanelData';
 import styles from './SidebarLeft.module.css';
 
 export default function PanelsTable(){
   const { t } = useTranslation();
-  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings } = useCNCStore();
+  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel } = useCNCStore();
+  const { panels: livePanels } = useLivePanelData();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newlyAddedPanelId, setNewlyAddedPanelId] = useState<string | null>(null);
+
+  // 패널 ID → meshName/furnitureId 매핑 (3D 하이라이트용)
+  const panelHighlightMap = useMemo(() => {
+    const map = new Map<string, { meshName: string; furnitureId: string }>();
+    livePanels.forEach(lp => {
+      if ((lp as any).meshName && (lp as any).furnitureId) {
+        map.set(lp.id, { meshName: (lp as any).meshName, furnitureId: (lp as any).furnitureId });
+      }
+    });
+    return map;
+  }, [livePanels]);
 
   // Auto-scroll to selected panel
   useEffect(() => {
@@ -304,11 +317,20 @@ export default function PanelsTable(){
               {panels.map((p, i) => {
                 const isNewPanel = p.label === '' && p.width === 0 && p.length === 0;
                 return (
-                <tr 
-                  key={p.id} 
+                <tr
+                  key={p.id}
                   ref={selectedPanelId === p.id ? selectedRowRef : null}
                   className={`panel-clickable ${selectedPanelId === p.id ? styles.selected : ''} ${isNewPanel ? styles.newPanel : ''}`}
                   onClick={() => selectPanel(p.id)}
+                  onMouseEnter={() => {
+                    const info = panelHighlightMap.get(p.id);
+                    if (info) {
+                      setHoveredPanel(info.meshName, info.furnitureId);
+                    } else {
+                      setHoveredPanel(p.label, null);
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredPanel(null, null)}
                   data-panel-id={p.id}
                 >
                   <td>

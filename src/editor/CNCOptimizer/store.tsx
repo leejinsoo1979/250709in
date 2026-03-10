@@ -22,6 +22,9 @@ type Store = {
   fullSimulating: boolean;
   fullSimCurrentSheet: number;
   fullSimTotalSheets: number;
+  // 3D 패널 하이라이트
+  hoveredPanelName: string | null;
+  hoveredFurnitureId: string | null;
   // Actions
   setPanels: (p: Panel[], isUserModified?: boolean) => void;
   setStock: (s: StockSheet[]) => void;
@@ -44,6 +47,8 @@ type Store = {
   setFullSimulating: (v: boolean) => void;
   setFullSimCurrentSheet: (v: number) => void;
   setFullSimTotalSheets: (v: number) => void;
+  // 3D 하이라이트 액션
+  setHoveredPanel: (name: string | null, furnitureId: string | null) => void;
   metrics: () => { partsCount: number; partsArea: number; stockArea: number };
 };
 
@@ -132,6 +137,13 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
   const [fullSimulating, setFullSimulating] = useState(false);
   const [fullSimCurrentSheet, setFullSimCurrentSheet] = useState(0);
   const [fullSimTotalSheets, setFullSimTotalSheets] = useState(0);
+  // 3D 패널 하이라이트
+  const [hoveredPanelName, setHoveredPanelName] = useState<string | null>(null);
+  const [hoveredFurnitureId, setHoveredFurnitureId] = useState<string | null>(null);
+  const setHoveredPanel = (name: string | null, furnitureId: string | null) => {
+    setHoveredPanelName(name);
+    setHoveredFurnitureId(furnitureId);
+  };
 
   const setSettings = (k: Partial<CutSettings>) => {
     setSettingsState(s => {
@@ -212,10 +224,15 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     setFullSimulating,
     setFullSimCurrentSheet,
     setFullSimTotalSheets,
-    metrics 
+    // 3D 하이라이트
+    hoveredPanelName,
+    hoveredFurnitureId,
+    setHoveredPanel,
+    metrics
   }), [panels, stock, settings, selectedPanelId, currentSheetIndex, userHasModifiedPanels,
       placements, cuts, selectedSheetId, selectedCutIndex, selectedCutId, simulating, simSpeed, simProgress, sawStats,
-      fullSimulating, fullSimCurrentSheet, fullSimTotalSheets]);
+      fullSimulating, fullSimCurrentSheet, fullSimTotalSheets,
+      hoveredPanelName, hoveredFurnitureId]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
