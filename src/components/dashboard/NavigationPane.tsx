@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus } from 'lucide-react';
+import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
@@ -68,7 +68,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
 
   const quickAccessItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
     { key: 'in-progress', label: '진행중 프로젝트', icon: <Clock size={16} /> },
-    { key: 'completed', label: '완료된 프로젝트', icon: <FcFolder size={16} /> },
+    { key: 'completed', label: '완료된 프로젝트', icon: <Folder size={16} /> },
     { key: 'shared-with-me', label: '공유받은 파일', icon: <Share2 size={16} /> },
     { key: 'shared-by-me', label: '공유한 파일', icon: <Users size={16} /> },
     { key: 'trash', label: '휴지통', icon: <Trash2 size={16} /> },
@@ -139,7 +139,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                       <span style={{ width: 14 }} />
                     )}
                   </span>
-                  <FcFolder size={16} className={styles.folderIcon} />
+                  <Folder size={16} className={styles.folderIcon} />
                   <span className={styles.treeLabel} title={project.title}>
                     {project.title}
                   </span>

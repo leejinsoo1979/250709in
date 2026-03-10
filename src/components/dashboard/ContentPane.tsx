@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FileText, MoreHorizontal } from 'lucide-react';
+import { Folder, FileText, MoreHorizontal } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
@@ -86,7 +86,10 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   };
 
   const getItemIcon = (item: ExplorerItem, size: number, isCard?: boolean) => {
-    if (item.type === 'folder' || item.type === 'project') {
+    if (item.type === 'project') {
+      return <Folder size={size} className={styles.itemIconFolder} />;
+    }
+    if (item.type === 'folder') {
       return <FcFolder size={size} className={styles.itemIconFolder} />;
     }
     // 카드 뷰에서는 디자인 아이콘에 배경 스타일 적용
