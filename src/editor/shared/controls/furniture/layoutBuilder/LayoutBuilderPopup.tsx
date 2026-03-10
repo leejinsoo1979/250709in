@@ -109,6 +109,11 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   const handleConfirm = useCallback(() => {
     const dims = { ...dimensions, width: currentWidth };
     const config = convertToConfig(layout, dims);
+    // eslint-disable-next-line no-console
+    console.log('[LayoutBuilder] 레이아웃 확인:', {
+      layout: JSON.stringify(layout),
+      config: JSON.stringify(config, null, 2),
+    });
     onConfirm(config, currentWidth);
   }, [layout, dimensions, currentWidth, onConfirm]);
 
