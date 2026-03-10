@@ -1603,7 +1603,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       label: string,
       subBoxD: number,
       subDepthZ: number,
+      overrideBoxH?: number,
+      overrideCenterY?: number,
     ) => {
+      const sbBoxH = overrideBoxH ?? boxH;
+      const sbCenterY = overrideCenterY ?? centerY;
+      const sbInnerH = sbBoxH - 2 * t;
+      const sbHsCenterY = overrideCenterY ?? hsCenterY;
       const prefix = `box-${sIdx}-hsplit-${side}`;
       const hasContent = !!elements;
       const subMeshes: React.ReactNode[] = [];
@@ -1612,8 +1618,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-left-panel`}
-          args={[t, boxH, subBoxD]}
-          position={[subCenterX - subInnerW / 2 - t / 2, centerY, 0]}
+          args={[t, sbBoxH, subBoxD]}
+          position={[subCenterX - subInnerW / 2 - t / 2, sbCenterY, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1626,8 +1632,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-right-panel`}
-          args={[t, boxH, subBoxD]}
-          position={[subCenterX + subInnerW / 2 + t / 2, centerY, 0]}
+          args={[t, sbBoxH, subBoxD]}
+          position={[subCenterX + subInnerW / 2 + t / 2, sbCenterY, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1644,7 +1650,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <BoxWithEdges
           key={`${prefix}-top`}
           args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, centerY + boxH / 2 - t / 2, backReduction / 2]}
+          position={[subCenterX, sbCenterY + sbBoxH / 2 - t / 2, backReduction / 2]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1660,7 +1666,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <BoxWithEdges
           key={`${prefix}-bottom`}
           args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, centerY - boxH / 2 + t / 2, backReduction / 2]}
+          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2, backReduction / 2]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1674,14 +1680,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
       // 백패널
       if (section.showBackPanel !== false) {
-      const bpH = bInnerH + mmToUnit(backPanelHeightExtMm);
+      const bpH = sbInnerH + mmToUnit(backPanelHeightExtMm);
       const bpW = subInnerW + mmToUnit(backPanelWidthExtMm);
       const bpZ = -subBoxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-back`}
           args={[bpW, bpH, backPanelT]}
-          position={[subCenterX, hsCenterY, bpZ]}
+          position={[subCenterX, sbHsCenterY, bpZ]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1695,39 +1701,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
 
       // 내부 요소 (선반, 서랍 등 — 드래그 중에는 숨김)
-      const areaKey = side as 'left' | 'center' | 'right';
-      const subSplit = section.areaSubSplits?.[areaKey];
       if ((!isDragging || isEditMode)) {
-        if (subSplit?.enabled) {
-          // 서브분할 있음: 상/하부 요소 렌더링
-          const lowerH = mmToUnit(subSplit.lowerHeight);
-          const upperH = bInnerH - lowerH;
-          const lowerCenterY = hsCenterY - bInnerH / 2 + lowerH / 2;
-          const upperCenterY = hsCenterY + bInnerH / 2 - upperH / 2;
-
-          if (subSplit.lowerElements && subSplit.lowerElements.length > 0) {
-            subMeshes.push(
-              ...renderSectionElements(
-                subSplit.lowerElements, subInnerW, lowerH,
-                lowerCenterY, subCenterX, subBoxD,
-                `${label}하`, `s${sIdx}-hsplit-${side}-lower`
-              )
-            );
-          }
-          if (subSplit.upperElements && subSplit.upperElements.length > 0) {
-            subMeshes.push(
-              ...renderSectionElements(
-                subSplit.upperElements, subInnerW, upperH,
-                upperCenterY, subCenterX, subBoxD,
-                `${label}상`, `s${sIdx}-hsplit-${side}-upper`
-              )
-            );
-          }
-        } else if (hasContent) {
-          // 서브분할 없음: 기존 방식
+        if (hasContent) {
           subMeshes.push(
             ...renderSectionElements(
-              elements!, subInnerW, bInnerH, hsCenterY, subCenterX, subBoxD,
+              elements!, subInnerW, sbInnerH, sbHsCenterY, subCenterX, subBoxD,
               label, `s${sIdx}-hsplit-${side}`
             )
           );
@@ -1746,14 +1724,44 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
     };
 
+    // 서브분할 시 독립 박스 2개로 렌더링하는 헬퍼
+    const renderSubBoxWithSplit = (
+      side: 'left' | 'center' | 'right',
+      subInnerW: number,
+      subCenterX: number,
+      elements: CustomElement[] | undefined,
+      label: string,
+      subBoxD: number,
+      subDepthZ: number,
+    ) => {
+      const subSplit = section.areaSubSplits?.[side];
+      if (subSplit?.enabled) {
+        // 서브분할: 독립 박스 2개 (상부/하부)
+        const ratio = subSplit.lowerHeight / section.height;
+        const lowerTotalH = boxH * ratio;
+        const upperTotalH = boxH - lowerTotalH;
+        const lowerCY = centerY - boxH / 2 + lowerTotalH / 2;
+        const upperCY = centerY + boxH / 2 - upperTotalH / 2;
+
+        renderSubBox(`${side}-lower`, subInnerW, subCenterX,
+          subSplit.lowerElements, `${label}하`, subBoxD, subDepthZ,
+          lowerTotalH, lowerCY);
+        renderSubBox(`${side}-upper`, subInnerW, subCenterX,
+          subSplit.upperElements, `${label}상`, subBoxD, subDepthZ,
+          upperTotalH, upperCY);
+      } else {
+        renderSubBox(side, subInnerW, subCenterX, elements, label, subBoxD, subDepthZ);
+      }
+    };
+
     const { subD: leftD, subDepthZ: leftDZ } = getSubBoxDepth('left');
-    renderSubBox('left', leftInnerW, leftCenterX, hs.leftElements, `${sectionLabel}좌`, leftD, leftDZ);
+    renderSubBoxWithSplit('left', leftInnerW, leftCenterX, hs.leftElements, `${sectionLabel}좌`, leftD, leftDZ);
     if (is3Split) {
       const { subD: centerD, subDepthZ: centerDZ } = getSubBoxDepth('center');
-      renderSubBox('center', centerInnerW, centerCenterX, hs.centerElements, `${sectionLabel}중`, centerD, centerDZ);
+      renderSubBoxWithSplit('center', centerInnerW, centerCenterX, hs.centerElements, `${sectionLabel}중`, centerD, centerDZ);
     }
     const { subD: rightD, subDepthZ: rightDZ } = getSubBoxDepth('right');
-    renderSubBox('right', rightInnerW, rightCenterX, hs.rightElements, `${sectionLabel}우`, rightD, rightDZ);
+    renderSubBoxWithSplit('right', rightInnerW, rightCenterX, hs.rightElements, `${sectionLabel}우`, rightD, rightDZ);
 
     if (depthOffset !== 0) {
       return [
