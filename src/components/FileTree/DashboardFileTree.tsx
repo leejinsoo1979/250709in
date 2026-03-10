@@ -496,10 +496,7 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
                           </div>
                           <span>{folder.name}</span>
                           <span className={styles.treeItemCount}>
-                            {(folder.children || []).filter(child => {
-                              const allFiles = designFiles[project.id] || [];
-                              return !allFiles.find((df: any) => df.id === child.id && df.isDeleted);
-                            }).length}
+                            {(designFiles[project.id] || []).filter((df: any) => df.folderId === folder.id && !df.isDeleted).length}
                           </span>
                           <div className={styles.treeItemActions}>
                             <button 

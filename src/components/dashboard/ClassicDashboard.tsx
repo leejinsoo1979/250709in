@@ -460,9 +460,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                                       </div>
                                       <span>{folder.name}</span>
                                       {(() => {
-                                        const activeCount = (folder.children || []).filter(child =>
-                                          !designFiles.find((df: any) => df.id === child.id && df.isDeleted)
-                                        ).length;
+                                        const activeCount = designFiles.filter((df: any) => df.folderId === folder.id && !df.isDeleted).length;
                                         return activeCount > 0 ? (
                                           <span className={styles.treeItemCount}>{activeCount}</span>
                                         ) : null;
