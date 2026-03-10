@@ -83,6 +83,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const cursorColor = view2DTheme === 'dark' ? 'white' : 'black';
 
+  // 기본 커서 (큰 화살표) — 3D는 항상 검정, 2D는 테마에 따라 변경
+  const defaultCursor = (() => {
+    const color = viewMode === '2D' && view2DTheme === 'dark' ? 'white' : 'black';
+    const shadow = viewMode === '2D' && view2DTheme === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)';
+    return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><filter id="s"><feDropShadow dx="1" dy="1" stdDeviation="0.8" flood-color="${shadow}"/></filter><path d="M4 2 L4 22 L9.5 16.5 L15 25 L18 23.5 L12.5 15 L20 15 Z" fill="${color}" stroke="${color === 'white' ? 'black' : 'white'}" stroke-width="1.2" filter="url(%23s)"/></svg>') 4 2, default`;
+  })();
+
+
   // 지우개 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const eraserCursorColor = view2DTheme === 'dark' ? 'white' : 'black';
 
@@ -232,8 +240,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     if (!canvas) return;
 
     if (!isMeasureMode) {
-      // 측정 모드가 아니면 기본 커서로 복원
-      canvas.style.cursor = 'default';
+      // 측정 모드가 아니면 큰 화살표 커서로 복원
+      canvas.style.cursor = defaultCursor;
       return;
     }
 
@@ -264,10 +272,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => {
       observer.disconnect();
       clearInterval(interval);
-      // cleanup 시 기본 커서로 복원
-      canvas.style.cursor = 'default';
+      // cleanup 시 큰 화살표 커서로 복원
+      canvas.style.cursor = defaultCursor;
     };
-  }, [isMeasureMode, cursorColor]);
+  }, [isMeasureMode, cursorColor, defaultCursor]);
 
   // viewMode 및 cameraMode 변경 시 그림자 설정 업데이트
   useEffect(() => {
@@ -930,7 +938,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 ? (view2DTheme === 'dark'
                   ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="0" x2="16" y2="32" stroke="white" stroke-width="1.5"/><line x1="0" y1="16" x2="32" y2="16" stroke="white" stroke-width="1.5"/><circle cx="16" cy="16" r="3" fill="none" stroke="white" stroke-width="1.5"/></svg>') 16 16, crosshair`
                   : `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="0" x2="16" y2="32" stroke="black" stroke-width="1.5"/><line x1="0" y1="16" x2="32" y2="16" stroke="black" stroke-width="1.5"/><circle cx="16" cy="16" r="3" fill="none" stroke="black" stroke-width="1.5"/></svg>') 16 16, crosshair`)
-                : 'default',
+                : defaultCursor,
             touchAction: 'none'
           }}
           dpr={[1, 2]}
