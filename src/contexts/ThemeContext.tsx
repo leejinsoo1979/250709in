@@ -472,58 +472,5 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
     console.log('✅ 네비게이션 테마 적용 완료');
   }, 200);
   
-  // 동적 파비콘 생성 및 적용
-  generateAndSetFavicon(colors.primary, theme.mode);
 };
 
-// 동적 파비콘 생성 함수
-const generateAndSetFavicon = (color: string, mode: ThemeMode) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 32;
-  canvas.height = 32;
-  const ctx = canvas.getContext('2d');
-  
-  if (!ctx) return;
-  
-  // 파비콘 디자인 (둥근 사각형 배경)
-  ctx.fillStyle = color;
-  const x = 2, y = 2, width = 28, height = 28, radius = 4;
-  
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + width, y, x + width, y + height, radius);
-  ctx.arcTo(x + width, y + height, x, y + height, radius);
-  ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
-  ctx.closePath();
-  ctx.fill();
-  
-  // 다크모드일 때 약간 밝은 테두리 추가
-  if (mode === 'dark') {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-  
-  // 내부 텍스트 ('m' for 'module')
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 18px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('m', 16, 17);
-  
-  // 파비콘 설정
-  const existingLink = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-  const svgLink = document.querySelector("link[rel='icon'][type='image/svg+xml']") as HTMLLinkElement;
-  
-  // 기존 파비콘 제거
-  if (existingLink && existingLink.type === 'image/x-icon') existingLink.remove();
-  if (svgLink) svgLink.remove();
-  
-  // 새로운 파비콘 추가
-  const link = document.createElement('link');
-  link.type = 'image/x-icon';
-  link.rel = 'icon';
-  link.href = canvas.toDataURL();
-  document.head.appendChild(link);
-};
