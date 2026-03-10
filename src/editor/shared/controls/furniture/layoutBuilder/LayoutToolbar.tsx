@@ -15,6 +15,7 @@ interface LayoutToolbarProps {
   onMerge: (nodeId: string) => void;
   onReset: () => void;
   leafCount: number;
+  disableHorizontalSplit?: boolean;
 }
 
 const LayoutToolbar: React.FC<LayoutToolbarProps> = ({
@@ -25,6 +26,7 @@ const LayoutToolbar: React.FC<LayoutToolbarProps> = ({
   onMerge,
   onReset,
   leafCount,
+  disableHorizontalSplit,
 }) => {
   const splitAllowed = selectedNodeId ? canSplitFn(selectedNodeId) : false;
   const mergeAllowed = selectedNodeId ? canMergeFn(selectedNodeId) : false;
@@ -52,7 +54,7 @@ const LayoutToolbar: React.FC<LayoutToolbarProps> = ({
         </button>
         <button
           className={styles.actionBtn}
-          disabled={!splitAllowed}
+          disabled={!splitAllowed || disableHorizontalSplit}
           onClick={() => selectedNodeId && onSplit(selectedNodeId, 'horizontal')}
         >
           <span className={styles.actionBtnIcon}>┃</span>

@@ -32,6 +32,7 @@ interface LayoutCanvasProps {
   onResize: (parentId: string, childIndex: number, delta: number) => void;
   canSplit: (nodeId: string) => boolean;
   onSplit: (nodeId: string, direction: 'horizontal' | 'vertical') => void;
+  disableHorizontalSplit?: boolean;
 }
 
 // 캔버스 최대 영역 내에서 비율 유지하면서 가능한 크게 그림
@@ -50,6 +51,7 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
   onResize,
   canSplit,
   onSplit,
+  disableHorizontalSplit,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<{
@@ -188,13 +190,15 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
             >
               <span className={styles.cellActionLabel}>상하</span>
             </button>
-            <button
-              className={styles.cellActionBtn}
-              onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'horizontal'); }}
-              title="좌우 분할"
-            >
-              <span className={styles.cellActionLabel}>좌우</span>
-            </button>
+            {!disableHorizontalSplit && (
+              <button
+                className={styles.cellActionBtn}
+                onClick={(e) => { e.stopPropagation(); onSplit(rect.nodeId, 'horizontal'); }}
+                title="좌우 분할"
+              >
+                <span className={styles.cellActionLabel}>좌우</span>
+              </button>
+            )}
           </div>
         )}
       </div>

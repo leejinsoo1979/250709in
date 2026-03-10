@@ -98,6 +98,14 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
+  // 싱글 타입: 좌우 분할 차단
+  const isSingle = category === 'full' && cabinetType === 'single';
+
+  const wrappedSplitNode = useCallback((nodeId: string, direction: 'horizontal' | 'vertical') => {
+    if (isSingle && direction === 'horizontal') return;
+    splitNode(nodeId, direction);
+  }, [splitNode, isSingle]);
+
   const handleConfirm = useCallback(() => {
     const dims = { ...dimensions, width: currentWidth };
     const config = convertToConfig(layout, dims);
@@ -179,7 +187,8 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
             computeHandles={computeHandles}
             onResize={resizeNode}
             canSplit={canSplit}
-            onSplit={splitNode}
+            onSplit={wrappedSplitNode}
+            disableHorizontalSplit={isSingle}
           />
 
           {/* 액션 바 */}
@@ -187,10 +196,11 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
             selectedNodeId={selectedNodeId}
             canSplit={canSplit}
             canMerge={canMerge}
-            onSplit={splitNode}
+            onSplit={wrappedSplitNode}
             onMerge={mergeNode}
             onReset={resetLayout}
             leafCount={leafCount}
+            disableHorizontalSplit={isSingle}
           />
         </div>
 
