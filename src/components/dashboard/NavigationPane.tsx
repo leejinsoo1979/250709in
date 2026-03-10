@@ -40,6 +40,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   onGoHome,
 }) => {
   const { user } = useAuth();
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     if (autoExpandProjectId) initial.add(autoExpandProjectId);
@@ -269,6 +270,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                     {projectLocalFolders.map(folder => {
                       const isFolderSelected = currentProjectId === project.id && currentFolderId === folder.id;
                       const folderFiles = projectDesignFiles.filter(f => f.folderId === folder.id);
+                      const isFolderExpanded = expandedFolders.has(folder.id);
 
                       return (
                         <div key={folder.id}>
@@ -276,7 +278,15 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                             className={`${styles.treeItem} ${styles.treeItemNested} ${
                               isFolderSelected ? styles.treeItemActive : ''
                             }`}
-                            onClick={() => onNavigate(project.id, folder.id, folder.name)}
+                            onClick={() => {
+                              onNavigate(project.id, folder.id, folder.name);
+                              setExpandedFolders(prev => {
+                                const next = new Set(prev);
+                                if (next.has(folder.id)) next.delete(folder.id);
+                                else next.add(folder.id);
+                                return next;
+                              });
+                            }}
                             onContextMenu={(e) => {
                               if (onItemContextMenu) {
                                 e.preventDefault();
@@ -290,7 +300,9 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                               }
                             }}
                           >
-                            <span style={{ width: 14 }} />
+                            <span className={styles.expandIcon}>
+                              {isFolderExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                            </span>
                             <FcFolder size={14} className={styles.folderIcon} />
                             <span className={styles.treeLabel} title={folder.name}>
                               {folder.name}
@@ -299,8 +311,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                               <span className={styles.treeBadge}>{folderFiles.length}</span>
                             )}
                           </button>
-                          {/* 폴더 내 디자인 파일 */}
-                          {folderFiles.map(file => (
+                          {/* 폴더 내 디자인 파일 — 폴더 펼침 시에만 */}
+                          {isFolderExpanded && folderFiles.map(file => (
                             <button
                               key={file.id}
                               className={`${styles.treeItem} ${styles.treeItemDeep}`}
