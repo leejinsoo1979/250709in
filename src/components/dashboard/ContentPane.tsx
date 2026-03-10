@@ -228,10 +228,13 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             key={item.id}
             data-item-card
             data-item-id={item.id}
-            className={`${styles.listItem} ${selectedItems.has(item.id) ? styles.listItemSelected : ''}`}
+            className={`${styles.listItem} ${selectedItems.has(item.id) ? styles.listItemSelected : ''} ${
+              dragState.dragOverFolder === item.id ? styles.dragOver : ''
+            }`}
             onClick={e => handleItemClick(e, item.id)}
             onDoubleClick={() => onItemDoubleClick(item)}
             onContextMenu={e => onItemContextMenu(e, item)}
+            {...getDragProps(item)}
           >
             {renderCheckbox(item)}
             {getItemIcon(item, 16)}
