@@ -109,7 +109,8 @@ const FreePlacementDropZone: React.FC = () => {
     if (isCustomizableModuleId(selectedFurnitureId)) {
       const category = getCustomizableCategory(selectedFurnitureId);
       const dimKey = getCustomDimensionKey(selectedFurnitureId);
-      const defaults = CUSTOMIZABLE_DEFAULTS[category];
+      // dimKey별 기본값 우선 (full-single/full-dual 구분), 없으면 category 기본값
+      const defaults = CUSTOMIZABLE_DEFAULTS[dimKey] || CUSTOMIZABLE_DEFAULTS[category];
       const height = category === 'full' ? internalSpace.height : defaults.height;
       const lastDims = lastCustomDimensions[dimKey];
 
