@@ -164,31 +164,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('settings.shortcuts')}</h3>
-            <div className={styles.shortcutList}>
-              <div className={styles.shortcutItem}>
-                <span className={styles.shortcutAction}>{t('common.save')}</span>
-                <kbd className={styles.shortcutKey}>Ctrl + S</kbd>
-              </div>
-              <div className={styles.shortcutItem}>
-                <span className={styles.shortcutAction}>{t('common.undo')}</span>
-                <kbd className={styles.shortcutKey}>Ctrl + Z</kbd>
-              </div>
-              <div className={styles.shortcutItem}>
-                <span className={styles.shortcutAction}>{t('common.redo')}</span>
-                <kbd className={styles.shortcutKey}>Ctrl + Y</kbd>
-              </div>
-              <div className={styles.shortcutItem}>
-                <span className={styles.shortcutAction}>{t('common.copy')}</span>
-                <kbd className={styles.shortcutKey}>Ctrl + C</kbd>
-              </div>
-              <div className={styles.shortcutItem}>
-                <span className={styles.shortcutAction}>{t('common.paste')}</span>
-                <kbd className={styles.shortcutKey}>Ctrl + V</kbd>
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>
