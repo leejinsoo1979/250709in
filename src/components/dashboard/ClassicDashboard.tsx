@@ -1,11 +1,24 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Search, Plus, FileText, MoreHorizontal, LayoutGrid, List } from 'lucide-react';
 import { MdOutlinePending, MdCheckCircleOutline } from 'react-icons/md';
 import { TfiShare, TfiShareAlt } from 'react-icons/tfi';
-import { TrashIcon } from '@/components/common/Icons';
+import { IoFileTrayStackedOutline } from 'react-icons/io5';
+import { PiFolderFill } from 'react-icons/pi';
+import { VscServerProcess } from 'react-icons/vsc';
+import {
+  TrashIcon, PlusIcon, SettingsIcon, LogOutIcon, UserIcon, SearchIcon,
+} from '@/components/common/Icons';
 import { useAuth } from '@/auth/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useNavigate } from 'react-router-dom';
+import { signOutUser } from '@/firebase/auth';
+import Logo from '@/components/common/Logo';
+import SimpleProjectDropdown from '@/components/common/SimpleProjectDropdown';
+import ThumbnailImage from '@/components/common/ThumbnailImage';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import SettingsPanel from '@/components/common/SettingsPanel';
 import type { ExplorerItem, QuickAccessMenu } from '@/hooks/dashboard/types';
 import type { UseExplorerNavigationReturn, UseExplorerDataReturn, UseExplorerActionsReturn } from '@/hooks/dashboard/types';
+import type { ProjectSummary } from '@/firebase/types';
 import styles from './ClassicDashboard.module.css';
 
 interface ClassicDashboardProps {
@@ -21,8 +34,8 @@ interface ClassicDashboardProps {
 const menuItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
   { key: 'in-progress', label: '진행중 프로젝트', icon: <MdOutlinePending size={20} /> },
   { key: 'completed', label: '완료된 프로젝트', icon: <MdCheckCircleOutline size={20} /> },
-  { key: 'shared-with-me', label: '공유받은 파일', icon: <TfiShareAlt size={18} /> },
   { key: 'shared-by-me', label: '공유한 파일', icon: <TfiShare size={18} /> },
+  { key: 'shared-with-me', label: '공유받은 파일', icon: <TfiShareAlt size={18} /> },
   { key: 'trash', label: '휴지통', icon: <TrashIcon size={20} /> },
 ];
 
@@ -36,66 +49,145 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
   onCreateDesign,
 }) => {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin(user);
+  const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
+  const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+
+  // 프로젝트 목록 (메뉴별 필터링)
+  const treeProjects = useMemo(() => {
+    if (nav.activeMenu === 'in-progress') {
+      return data.projects.filter(p => !p.status || p.status === 'in_progress');
+    }
+    if (nav.activeMenu === 'completed') {
+      return data.projects.filter(p => p.status === 'completed');
+    }
+    if (nav.activeMenu === 'shared-by-me') return data.sharedByMeProjects;
+    if (nav.activeMenu === 'shared-with-me') return data.sharedWithMeProjects;
+    return data.projects;
+  }, [nav.activeMenu, data.projects, data.sharedByMeProjects, data.sharedWithMeProjects]);
+
+  // 현재 선택된 프로젝트
+  const selectedProject = useMemo(() => {
+    if (!nav.currentProjectId) return null;
+    return [...data.projects, ...data.sharedByMeProjects, ...data.sharedWithMeProjects]
+      .find(p => p.id === nav.currentProjectId) || null;
+  }, [nav.currentProjectId, data.projects, data.sharedByMeProjects, data.sharedWithMeProjects]);
+
+  // 메뉴별 카운트
+  const menuCounts = useMemo(() => ({
+    'in-progress': data.projects.filter(p => !p.status || p.status === 'in_progress').length,
+    'completed': data.projects.filter(p => p.status === 'completed').length,
+    'shared-by-me': data.sharedByMeProjects.length,
+    'shared-with-me': data.sharedWithMeProjects.length,
+    'trash': 0,
+  }), [data.projects, data.sharedByMeProjects, data.sharedWithMeProjects]);
 
   // 검색 + 정렬
   const filteredItems = useMemo(() => {
     let result = data.currentItems;
-
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter(item => item.name.toLowerCase().includes(term));
     }
-
     result = [...result].sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name, 'ko');
       const aTime = a.updatedAt?.toMillis?.() || 0;
       const bTime = b.updatedAt?.toMillis?.() || 0;
       return bTime - aTime;
     });
-
     return result;
   }, [data.currentItems, searchTerm, sortBy]);
 
   const formatDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    if (!timestamp) return '날짜 정보 없음';
+    const date = timestamp.toDate ? timestamp.toDate() : (timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp));
     return new Intl.DateTimeFormat('ko-KR', {
       year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     }).format(date);
   };
 
-  // 브레드크럼 텍스트
-  const breadcrumbLabel = nav.currentProjectId
-    ? nav.breadcrumbPath[nav.breadcrumbPath.length - 1]?.label || '프로젝트'
-    : '전체 프로젝트';
+  const toggleProjectExpansion = (projectId: string) => {
+    setExpandedProjects(prev => {
+      const next = new Set(prev);
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
+      return next;
+    });
+  };
+
+  const handleProjectSelect = (projectId: string) => {
+    const project = [...data.projects, ...data.sharedByMeProjects, ...data.sharedWithMeProjects]
+      .find(p => p.id === projectId);
+    if (project) {
+      nav.navigateTo(project.id, null, project.title);
+      if (!expandedProjects.has(projectId)) {
+        setExpandedProjects(prev => new Set(prev).add(projectId));
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOutUser();
+    navigate('/auth');
+  };
+
+  // 프로젝트 트리 표시 여부
+  const showProjectTree = (nav.activeMenu === 'all' || nav.activeMenu === 'in-progress' || nav.activeMenu === 'completed') && treeProjects.length > 0;
+
+  // 브레드크럼
+  const breadcrumbPath = useMemo(() => {
+    const path: string[] = [];
+    if (nav.activeMenu === 'in-progress') path.push('진행중 프로젝트');
+    else if (nav.activeMenu === 'completed') path.push('완료된 프로젝트');
+    else if (nav.activeMenu === 'shared-by-me') path.push('공유한 프로젝트');
+    else if (nav.activeMenu === 'shared-with-me') path.push('공유받은 프로젝트');
+    else if (nav.activeMenu === 'trash') path.push('휴지통');
+    else path.push('전체 프로젝트');
+
+    if (selectedProject) path.push(selectedProject.title);
+    if (nav.currentFolderId) {
+      const folders = data.folders[nav.currentProjectId!] || [];
+      const folder = folders.find(f => f.id === nav.currentFolderId);
+      if (folder) path.push(folder.name);
+    }
+    return path;
+  }, [nav.activeMenu, selectedProject, nav.currentFolderId, nav.currentProjectId, data.folders]);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.dashboard} data-menu={nav.activeMenu}>
       {/* ══════ 좌측 사이드바 ══════ */}
       <aside className={styles.sidebar}>
-        {/* 프로필 */}
-        <div className={styles.profileSection}>
-          <div className={styles.userAvatar}>
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="프로필" referrerPolicy="no-referrer" />
-            ) : (
-              <span className={styles.avatarFallback}>👤</span>
-            )}
+        {/* 로고 영역 */}
+        <div className={styles.logoSection}>
+          <div
+            className={styles.logo}
+            onClick={() => {
+              nav.setActiveMenu('in-progress');
+              nav.navigateToRoot();
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <Logo size="medium" />
           </div>
-          <div className={styles.userName}>{user?.displayName || '사용자'}</div>
-          <div className={styles.userEmail}>{user?.email || ''}</div>
         </div>
 
-        {/* 프로젝트 생성 버튼 */}
-        <button className={styles.createProjectBtn} onClick={onCreateProject}>
-          <Plus size={16} />
-          새 프로젝트
-        </button>
+        {/* 사이드바 서브헤더 - 프로젝트 생성 버튼 */}
+        <div className={styles.sidebarSubHeader}>
+          <button className={styles.createBtn} onClick={onCreateProject}>
+            <PlusIcon size={14} />
+            프로젝트 생성
+          </button>
+        </div>
 
         {/* 네비게이션 메뉴 */}
         <nav className={styles.navSection}>
@@ -112,189 +204,542 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
             >
               <div className={styles.navItemIcon}>{item.icon}</div>
               <span>{item.label}</span>
+              <span className={styles.navItemCount}>
+                {menuCounts[item.key as keyof typeof menuCounts] ?? 0}
+              </span>
             </div>
           ))}
         </nav>
 
-        {/* 프로젝트 리스트 */}
-        <div className={styles.projectListSection}>
-          <div className={styles.projectListTitle}>프로젝트</div>
-          {data.projects.map(project => (
-            <div
-              key={project.id}
-              className={`${styles.navItem} ${
-                nav.currentProjectId === project.id ? styles.active : ''
-              }`}
-              onClick={() => nav.navigateTo(project.id, null, project.title)}
-            >
+        {/* 설정 섹션 */}
+        <div className={styles.settingsSection}>
+          <div
+            className={styles.settingsItem}
+            onClick={() => setIsSettingsPanelOpen(true)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className={styles.navItemIcon}>
+              <SettingsIcon size={20} />
+            </div>
+            <span>설정</span>
+          </div>
+          {user ? (
+            <div className={styles.settingsItem} onClick={handleLogout}>
               <div className={styles.navItemIcon}>
-                <Folder size={18} />
+                <LogOutIcon size={20} />
               </div>
-              <span className={styles.navItemLabel}>{project.title}</span>
-            </div>
-          ))}
-        </div>
-      </aside>
-
-      {/* ══════ 우측 메인 영역 ══════ */}
-      <main className={styles.mainArea}>
-        {/* 서브헤더 (브레드크럼 + 검색 + 보기 토글 + 정렬) */}
-        <div className={styles.subHeader}>
-          <div className={styles.breadcrumb}>
-            {nav.currentProjectId ? (
-              <>
-                <button className={styles.breadcrumbLink} onClick={() => nav.navigateToRoot()}>
-                  전체 프로젝트
-                </button>
-                <span className={styles.breadcrumbSep}>›</span>
-                <span className={styles.breadcrumbCurrent}>{breadcrumbLabel}</span>
-              </>
-            ) : (
-              <span className={styles.breadcrumbCurrent}>{breadcrumbLabel}</span>
-            )}
-          </div>
-
-          <div className={styles.searchSection}>
-            <div className={styles.searchBar}>
-              <Search size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="프로젝트 이름으로 검색"
-                className={styles.searchInput}
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className={styles.subHeaderActions}>
-            <div className={styles.viewToggle}>
-              <button
-                className={`${styles.viewBtn} ${viewMode === 'list' ? styles.activeView : ''}`}
-                onClick={() => setViewMode('list')}
-                title="목록 보기"
-              >
-                <List size={16} />
-              </button>
-              <button
-                className={`${styles.viewBtn} ${viewMode === 'grid' ? styles.activeView : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="그리드 보기"
-              >
-                <LayoutGrid size={16} />
-              </button>
-            </div>
-
-            <button className={styles.sortBtn} onClick={() => setSortBy(prev => prev === 'date' ? 'name' : 'date')}>
-              ⇅ {sortBy === 'date' ? '날짜순' : '이름순'}
-            </button>
-          </div>
-        </div>
-
-        {/* 디자인 그리드 */}
-        <div className={styles.gridArea}>
-          {data.isLoading ? (
-            <div className={styles.emptyState}>
-              <div className={styles.spinner} />
-              <span>로딩 중...</span>
-            </div>
-          ) : filteredItems.length === 0 && !nav.currentProjectId ? (
-            <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>
-                <Folder size={48} />
-              </div>
-              <h3 className={styles.emptyTitle}>프로젝트가 없습니다</h3>
-              <p className={styles.emptyDescription}>
-                새로운 프로젝트를 만들어 시작하세요
-              </p>
-              <button className={styles.emptyButton} onClick={onCreateProject}>
-                프로젝트 만들기
-              </button>
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>
-                <FileText size={48} />
-              </div>
-              <h3 className={styles.emptyTitle}>디자인이 없습니다</h3>
-              <p className={styles.emptyDescription}>
-                새로운 디자인을 만들거나 프로젝트를 선택하세요
-              </p>
-              <button className={styles.emptyButton} onClick={onCreateDesign}>
-                디자인 만들기
-              </button>
-            </div>
-          ) : viewMode === 'list' ? (
-            <div className={styles.listView}>
-              {filteredItems.map(item => (
-                <div
-                  key={item.id}
-                  className={styles.listItem}
-                  onClick={e => actions.selectItem(item.id, e.ctrlKey || e.metaKey)}
-                  onDoubleClick={() => onItemDoubleClick(item)}
-                  onContextMenu={e => onItemContextMenu(e, item)}
-                >
-                  {item.type === 'folder' || item.type === 'project'
-                    ? <Folder size={18} className={styles.listItemIcon} />
-                    : <FileText size={18} className={styles.listItemIcon} />}
-                  <span className={styles.listItemName}>{item.name}</span>
-                  <span className={styles.listItemDate}>{formatDate(item.updatedAt)}</span>
-                </div>
-              ))}
+              <span>로그아웃</span>
             </div>
           ) : (
-            <div className={styles.designGrid}>
-              {/* 새 디자인 카드 - 프로젝트 내부일 때만 */}
-              {nav.currentProjectId && (
-                <div className={styles.createDesignCard} onClick={onCreateDesign}>
-                  <div className={styles.createIcon}>
-                    <Plus size={28} />
-                  </div>
-                  <p className={styles.createText}>새로운 디자인</p>
-                </div>
-              )}
-
-              {filteredItems.map(item => (
-                <div
-                  key={item.id}
-                  className={styles.designCard}
-                  onClick={e => actions.selectItem(item.id, e.ctrlKey || e.metaKey)}
-                  onDoubleClick={() => onItemDoubleClick(item)}
-                  onContextMenu={e => onItemContextMenu(e, item)}
-                >
-                  <div className={styles.cardThumbnail}>
-                    {item.thumbnail ? (
-                      <img src={item.thumbnail} alt={item.name} />
-                    ) : (
-                      <div className={styles.placeholderThumbnail}>
-                        {item.type === 'folder' || item.type === 'project'
-                          ? <Folder size={40} />
-                          : <FileText size={40} />}
-                      </div>
-                    )}
-
-                    {/* 호버 액션 */}
-                    <div className={styles.cardHoverActions}>
-                      <button
-                        className={styles.actionButton}
-                        onClick={e => { e.stopPropagation(); onItemContextMenu(e, item); }}
-                        title="더보기"
-                      >
-                        <MoreHorizontal size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className={styles.cardInfo}>
-                    <h3 className={styles.cardTitle}>{item.name}</h3>
-                    <p className={styles.cardDate}>{formatDate(item.updatedAt)}</p>
-                  </div>
-                </div>
-              ))}
+            <div className={styles.settingsItem} onClick={() => navigate('/auth')}>
+              <div className={styles.navItemIcon}>
+                <UserIcon size={20} />
+              </div>
+              <span>로그인</span>
             </div>
           )}
         </div>
+      </aside>
+
+      {/* ══════ 메인 콘텐츠 ══════ */}
+      <main className={styles.main}>
+        {/* 상단 헤더 */}
+        <header className={styles.header}>
+          <div className={styles.headerLeft} />
+          <div className={styles.headerRight}>
+            <div className={styles.headerActions}>
+              {isAdmin && (
+                <button
+                  className={styles.adminButton}
+                  onClick={() => navigate('/admin')}
+                  title="관리자 페이지"
+                >
+                  <VscServerProcess size={20} />
+                  <span>관리자</span>
+                </button>
+              )}
+              <NotificationCenter />
+            </div>
+            <div className={styles.userProfile}>
+              <div className={styles.userProfileAvatar}>
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="프로필"
+                    referrerPolicy="no-referrer"
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <UserIcon size={14} />
+                )}
+              </div>
+              <span className={styles.userProfileName}>
+                {user ? (user.displayName || user.email?.split('@')[0] || '사용자') : '게스트'}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* 서브헤더 */}
+        <div className={styles.subHeader}>
+          <div className={styles.subHeaderContent}>
+            <div className={styles.subHeaderLeft}>
+              {(nav.activeMenu === 'in-progress' || nav.activeMenu === 'all') && nav.currentProjectId && (
+                <button
+                  className={styles.createDesignHeaderBtn}
+                  onClick={onCreateDesign}
+                >
+                  <PlusIcon size={14} />
+                  디자인 생성
+                </button>
+              )}
+              {nav.activeMenu === 'completed' && !nav.currentProjectId && (
+                <h1 className={styles.subHeaderTitle}>완료된 프로젝트</h1>
+              )}
+              {nav.activeMenu === 'trash' && (
+                <h1 className={styles.subHeaderTitle}>휴지통</h1>
+              )}
+            </div>
+
+            <div className={styles.subHeaderActions}>
+              {/* 검색 */}
+              <div className={styles.searchContainer}>
+                <div className={styles.searchIconWrap}>
+                  <SearchIcon size={16} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="프로젝트 검색..."
+                  className={styles.searchInput}
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    className={styles.searchClearButton}
+                    onClick={() => setSearchTerm('')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* 정렬 */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  className={styles.sortButton}
+                  onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M3 6h10M5 10h6M7 14h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </svg>
+                  <span>{sortBy === 'date' ? '최신순' : '이름순'}</span>
+                </button>
+                {sortDropdownOpen && (
+                  <div className={styles.sortDropdownMenu}>
+                    <button
+                      className={`${styles.sortOption} ${sortBy === 'date' ? styles.active : ''}`}
+                      onClick={() => { setSortBy('date'); setSortDropdownOpen(false); }}
+                    >
+                      최신순
+                    </button>
+                    <button
+                      className={`${styles.sortOption} ${sortBy === 'name' ? styles.active : ''}`}
+                      onClick={() => { setSortBy('name'); setSortDropdownOpen(false); }}
+                    >
+                      이름순
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 콘텐츠 영역 (프로젝트 트리 + 디자인 그리드) */}
+        <div className={styles.content}>
+          {/* 프로젝트 트리 */}
+          {showProjectTree && (
+            <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
+              <div className={styles.treeHeader}>
+                <button
+                  className={styles.treeToggleButton}
+                  onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
+                >
+                  <span className={`${styles.toggleIcon} ${isFileTreeCollapsed ? styles.collapsedIcon : ''}`}>
+                    ◀
+                  </span>
+                </button>
+                <div className={styles.projectSelectorContainer}>
+                  <SimpleProjectDropdown
+                    projects={treeProjects as ProjectSummary[]}
+                    currentProject={selectedProject as ProjectSummary | null}
+                    onProjectSelect={(project) => handleProjectSelect(project.id)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.treeContent}>
+                {treeProjects.length > 0 ? (
+                  <div>
+                    {treeProjects
+                      .filter(project => !nav.currentProjectId || project.id === nav.currentProjectId)
+                      .map(project => {
+                        const isExpanded = expandedProjects.has(project.id);
+                        const isSelected = nav.currentProjectId === project.id;
+                        const projectFolders = data.folders[project.id] || [];
+                        const designFiles = data.projectDesignFiles[project.id] || [];
+                        const hasContent = projectFolders.length > 0 || designFiles.length > 0;
+
+                        return (
+                          <div key={project.id}>
+                            <div
+                              className={`${styles.treeItem} ${isSelected ? styles.active : ''}`}
+                              onClick={() => {
+                                handleProjectSelect(project.id);
+                              }}
+                            >
+                              {hasContent && (
+                                <div
+                                  className={`${styles.treeToggleArrow} ${isExpanded ? styles.expanded : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleProjectExpansion(project.id);
+                                  }}
+                                >
+                                  ▶
+                                </div>
+                              )}
+                              <div className={styles.treeItemIcon}>
+                                <IoFileTrayStackedOutline size={16} />
+                              </div>
+                              <span>{project.title}</span>
+                              {designFiles.length > 0 && (
+                                <span className={styles.treeItemCount}>{designFiles.length}</span>
+                              )}
+                              <div className={styles.treeItemActions}>
+                                <button
+                                  className={styles.treeItemActionBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const item: ExplorerItem = {
+                                      id: project.id,
+                                      name: project.title,
+                                      type: 'project',
+                                      projectId: project.id,
+                                    };
+                                    onItemContextMenu(e, item);
+                                  }}
+                                >
+                                  ⋯
+                                </button>
+                              </div>
+                            </div>
+
+                            {isExpanded && (
+                              <div className={styles.projectChildren}>
+                                {/* 폴더 목록 */}
+                                {projectFolders.map(folder => (
+                                  <div key={folder.id}>
+                                    <div
+                                      className={styles.treeItem}
+                                      onClick={() => nav.navigateTo(project.id, folder.id, folder.name)}
+                                    >
+                                      <div className={styles.treeItemIcon}>
+                                        <PiFolderFill size={16} style={{ color: 'var(--theme-primary, #10b981)' }} />
+                                      </div>
+                                      <span>{folder.name}</span>
+                                      {folder.children && folder.children.length > 0 && (
+                                        <span className={styles.treeItemCount}>{folder.children.length}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* 디자인 파일 목록 */}
+                                {designFiles
+                                  .filter(df => {
+                                    // 폴더에 속한 파일 제외
+                                    const filesInFolders = new Set(
+                                      projectFolders.flatMap(f => f.children?.map((c: any) => c.id) || [])
+                                    );
+                                    return !filesInFolders.has(df.id);
+                                  })
+                                  .map(df => (
+                                    <div
+                                      key={df.id}
+                                      className={styles.treeItem}
+                                      onClick={() => {
+                                        const item: ExplorerItem = {
+                                          id: df.id,
+                                          name: df.name,
+                                          type: 'design',
+                                          projectId: project.id,
+                                        };
+                                        onItemDoubleClick(item);
+                                      }}
+                                    >
+                                      <div className={styles.treeItemIcon}>
+                                        <div className={styles.designIcon}>D</div>
+                                      </div>
+                                      <span>{df.name}</span>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <div className={styles.treeItem}>
+                    <span style={{ color: '#999', fontSize: '14px' }}>
+                      {user ? '프로젝트가 없습니다' : '로그인이 필요합니다'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </aside>
+          )}
+
+          {/* 디자인 영역 */}
+          <section className={styles.designArea}>
+            {/* 브레드크럼 */}
+            <div className={styles.breadcrumb}>
+              {breadcrumbPath.map((item, index) => (
+                <React.Fragment key={index}>
+                  <span
+                    className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.activeBreadcrumb : ''}`}
+                    onClick={() => {
+                      if (index === 0) {
+                        nav.navigateToRoot();
+                      } else if (index === 1 && selectedProject) {
+                        nav.navigateTo(selectedProject.id, null, selectedProject.title);
+                      }
+                    }}
+                  >
+                    {item}
+                  </span>
+                  {index < breadcrumbPath.length - 1 && (
+                    <span className={styles.breadcrumbSeparator}>/</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* 디자인 그리드 */}
+            <div className={styles.designGrid}>
+              {data.isLoading ? (
+                <>
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={`skeleton-${i}`} className={styles.designCard} style={{ opacity: 0.3, pointerEvents: 'none' }}>
+                      <div className={styles.cardThumbnail}>
+                        <div style={{
+                          width: '100%', height: '100%',
+                          background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                        }} />
+                      </div>
+                      <div className={styles.cardInfo}>
+                        <div style={{ width: '60%', height: '16px', background: '#f0f0f0', borderRadius: '4px' }} />
+                        <div style={{ width: '30%', height: '12px', background: '#f0f0f0', borderRadius: '4px', marginTop: '4px' }} />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : filteredItems.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14,2 14,8 20,8" />
+                    </svg>
+                  </div>
+                  <h3 className={styles.emptyTitle}>
+                    {nav.currentProjectId ? '디자인이 없습니다' : '프로젝트가 없습니다'}
+                  </h3>
+                  <p className={styles.emptyDescription}>
+                    {nav.currentProjectId
+                      ? '새로운 디자인을 만들어 시작하세요'
+                      : '새로운 프로젝트를 만들어 시작하세요'}
+                  </p>
+                  <button
+                    className={styles.emptyButton}
+                    onClick={nav.currentProjectId ? onCreateDesign : onCreateProject}
+                  >
+                    {nav.currentProjectId ? '디자인 만들기' : '프로젝트 만들기'}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* 새 디자인 카드 - 프로젝트 내부일 때 */}
+                  {nav.currentProjectId && (
+                    <div className={`${styles.designCard} ${styles.newDesignCard}`} onClick={onCreateDesign}>
+                      <div className={`${styles.cardThumbnail} ${styles.newDesignThumbnail}`}>
+                        <div className={styles.newDesignContent}>
+                          <PlusIcon size={32} />
+                          <span>새로운 디자인</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 폴더 카드 */}
+                  {filteredItems.filter(item => item.type === 'folder').map(item => (
+                    <div
+                      key={item.id}
+                      className={`${styles.designCard} ${styles.folderCard}`}
+                      onClick={() => onItemDoubleClick(item)}
+                      onContextMenu={e => onItemContextMenu(e, item)}
+                    >
+                      <div className={styles.cardThumbnail}>
+                        <div className={styles.folderIconLarge}>
+                          <PiFolderFill size={144} style={{ color: 'var(--theme-primary, #10b981)' }} />
+                        </div>
+                      </div>
+                      <div className={styles.cardInfo}>
+                        <div className={styles.cardTitle}>{item.name}</div>
+                        <div className={styles.cardMeta}>
+                          <div className={styles.cardDate}>{formatDate(item.updatedAt)}</div>
+                        </div>
+                      </div>
+                      <button
+                        className={styles.cardActionButton}
+                        onClick={e => { e.stopPropagation(); onItemContextMenu(e, item); }}
+                      >
+                        ⋯
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* 프로젝트/디자인 카드 */}
+                  {filteredItems.filter(item => item.type !== 'folder').map(item => (
+                    <div
+                      key={item.id}
+                      className={styles.designCard}
+                      onClick={e => actions.selectItem(item.id, e.ctrlKey || e.metaKey)}
+                      onDoubleClick={() => onItemDoubleClick(item)}
+                      onContextMenu={e => onItemContextMenu(e, item)}
+                    >
+                      <div className={styles.cardThumbnail}>
+                        {item.type === 'design' && item.thumbnail ? (
+                          <img src={item.thumbnail} alt={item.name} className={styles.thumbnailImage} />
+                        ) : item.type === 'project' ? (
+                          <div className={styles.projectThumbnailGrid}>
+                            {(() => {
+                              const designFiles = data.projectDesignFiles[item.id] || [];
+                              if (designFiles.length === 0) {
+                                return (
+                                  <div className={styles.emptyThumbnailState}>
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                      <polyline points="14,2 14,8 20,8" />
+                                    </svg>
+                                    <span>생성된 파일이 없습니다</span>
+                                  </div>
+                                );
+                              }
+                              const displayItems = designFiles.slice(0, 4);
+                              return (
+                                <div className={styles.thumbnailGrid}>
+                                  {displayItems.map(df => (
+                                    <div key={df.id} className={styles.thumbnailItem}>
+                                      <ThumbnailImage
+                                        project={{ id: item.id, title: item.name } as any}
+                                        designFile={{
+                                          thumbnail: df.thumbnail,
+                                          updatedAt: df.updatedAt,
+                                          spaceConfig: df.spaceConfig,
+                                          furniture: df.furniture,
+                                        }}
+                                        className={styles.thumbnailImg}
+                                        alt={df.name}
+                                      />
+                                    </div>
+                                  ))}
+                                  {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
+                                    <div key={`empty-${i}`} className={styles.thumbnailEmpty} />
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <div className={styles.placeholderThumbnail}>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14,2 14,8 20,8" />
+                            </svg>
+                          </div>
+                        )}
+
+                        {/* 디자인 카드 호버 오버레이 */}
+                        {item.type === 'design' && (
+                          <div className={styles.designCardOverlay}>
+                            <button
+                              className={styles.overlayButton}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onItemDoubleClick(item);
+                              }}
+                            >
+                              에디터로 이동
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.cardInfo}>
+                        <div className={styles.cardTitle}>
+                          {item.type === 'design' && nav.currentProjectId
+                            ? `${selectedProject?.title || ''} > ${item.name}`
+                            : item.name}
+                        </div>
+                        <div className={styles.cardMeta}>
+                          <div className={styles.cardDate}>{formatDate(item.updatedAt)}</div>
+                        </div>
+                        <div className={styles.cardFooter}>
+                          <div className={styles.cardUser}>
+                            <div className={styles.cardUserAvatar}>
+                              {(() => {
+                                const photoURL = item.ownerPhotoURL || user?.photoURL;
+                                return photoURL ? (
+                                  <img
+                                    src={photoURL}
+                                    alt="프로필"
+                                    referrerPolicy="no-referrer"
+                                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                  />
+                                ) : (
+                                  <UserIcon size={12} />
+                                );
+                              })()}
+                            </div>
+                            <span className={styles.cardUserName}>
+                              {item.ownerName || user?.displayName || user?.email?.split('@')[0] || ''}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        className={styles.cardActionButton}
+                        onClick={e => { e.stopPropagation(); onItemContextMenu(e, item); }}
+                      >
+                        ⋯
+                      </button>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </section>
+        </div>
       </main>
+
+      {/* 설정 패널 */}
+      {isSettingsPanelOpen && (
+        <SettingsPanel isOpen={isSettingsPanelOpen} onClose={() => setIsSettingsPanelOpen(false)} />
+      )}
     </div>
   );
 };
