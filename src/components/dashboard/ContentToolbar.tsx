@@ -9,9 +9,9 @@ interface ContentToolbarProps {
   onViewModeChange: (mode: ViewMode) => void;
   onSortChange: (sort: SortBy) => void;
   onCreateProject: () => void;
-  onCreateFolder: () => void;
+  onCreateFolder?: () => void;
   onCreateDesign?: () => void;
-  showCreateFolder: boolean;
+  showCreateFolder?: boolean;
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -59,10 +59,12 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
             <span>새 디자인</span>
           </button>
         )}
-        <button className={styles.createBtn} onClick={onCreateFolder}>
-          <FolderPlus size={16} />
-          <span>새 폴더</span>
-        </button>
+        {onCreateFolder && (
+          <button className={styles.createBtn} onClick={onCreateFolder}>
+            <FolderPlus size={16} />
+            <span>새 폴더</span>
+          </button>
+        )}
       </div>
 
       <div className={styles.spacer} />
