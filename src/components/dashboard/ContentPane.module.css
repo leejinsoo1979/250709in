@@ -71,6 +71,59 @@
   opacity: 0.7;
 }
 
+/* ── 아이템 체크박스 ── */
+.itemCheckbox {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 2;
+  accent-color: var(--theme-primary);
+}
+
+.itemCheckboxVisible {
+  opacity: 1;
+}
+
+/* 테이블/리스트 뷰에서는 인라인 배치 */
+.tableRow .itemCheckbox,
+.listItem .itemCheckbox {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex-shrink: 0;
+}
+
+/* hover 시 체크박스 표시 */
+.iconCard:hover .itemCheckbox,
+.tileCard:hover .itemCheckbox,
+.tableRow:hover .itemCheckbox,
+.listItem:hover .itemCheckbox {
+  opacity: 1;
+}
+
+/* 선택된 아이템은 항상 체크박스 표시 */
+.iconCardSelected .itemCheckbox,
+.tileCardSelected .itemCheckbox,
+.tableRowSelected .itemCheckbox,
+.listItemSelected .itemCheckbox {
+  opacity: 1;
+}
+
+/* 마키 선택 오버레이 */
+.marqueeOverlay {
+  position: absolute;
+  border: 1px solid var(--theme-primary);
+  background: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
 /* ── 아이콘 뷰 (extra-large / large / medium / small) ── */
 .iconGrid {
   display: grid;
@@ -80,6 +133,7 @@
 }
 
 .iconCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -136,6 +190,7 @@
 }
 
 .tileCard {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -220,6 +275,7 @@
 }
 
 .tableRow {
+  position: relative;
   display: flex;
   align-items: center;
   height: 36px;

@@ -8,6 +8,25 @@
   flex-shrink: 0;
 }
 
+/* 전체선택 체크박스 */
+.selectAllCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.selectAllCheckbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--theme-primary);
+}
+
 /* 네비게이션 그룹: 화살표 + 브레드크럼 */
 .navGroup {
   display: flex;

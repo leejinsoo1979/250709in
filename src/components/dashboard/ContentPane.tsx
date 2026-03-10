@@ -4,7 +4,7 @@ import { FcFolder } from 'react-icons/fc';
 import { LuFileBox } from 'react-icons/lu';
 import { RxDashboard } from 'react-icons/rx';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
-import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState } from '@/hooks/dashboard/types';
+import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState, SelectItemOptions } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
 import styles from './ContentPane.module.css';
 
@@ -16,7 +16,7 @@ interface ContentPaneProps {
   searchTerm: string;
   selectedItems: Set<string>;
   dragState: DragState;
-  onItemClick: (id: string, multi?: boolean) => void;
+  onItemClick: (id: string, optionsOrMulti?: boolean | SelectItemOptions) => void;
   onItemDoubleClick: (item: ExplorerItem) => void;
   onItemContextMenu: (e: React.MouseEvent, item: ExplorerItem) => void;
   onSortDirectionToggle: () => void;
@@ -78,6 +78,22 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return result;
   }, [items, searchTerm, sortBy, sortDirection]);
 
+  // 정렬된 아이템 ID 목록 (Shift 선택용)
+  const filteredItemIds = useMemo(() => filteredItems.map(i => i.id), [filteredItems]);
+
+  const handleItemClick = (e: React.MouseEvent, id: string) => {
+    onItemClick(id, {
+      multi: e.ctrlKey || e.metaKey,
+      shift: e.shiftKey,
+      orderedIds: filteredItemIds,
+    });
+  };
+
+  const handleCheckboxClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    onItemClick(id, { multi: true });
+  };
+
   const formatDate = (timestamp: any) => {
     if (!timestamp) return '-';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -97,7 +113,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     if (item.type === 'folder') {
       return <FcFolder size={size} className={styles.itemIconFolder} />;
     }
-    // 카드 뷰에서는 디자인 아이콘에 배경 스타일 적용
     if (isCard) {
       return (
         <div className={styles.designPlaceholder}>
@@ -107,6 +122,21 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       );
     }
     return <FileText size={size} className={styles.itemIconDesign} />;
+  };
+
+  // 체크박스 렌더링
+  const renderCheckbox = (item: ExplorerItem) => {
+    const isSelected = selectedItems.has(item.id);
+    return (
+      <input
+        type="checkbox"
+        className={`${styles.itemCheckbox} ${isSelected ? styles.itemCheckboxVisible : ''}`}
+        checked={isSelected}
+        onChange={() => {}}
+        onClick={(e) => handleCheckboxClick(e, item.id)}
+        tabIndex={-1}
+      />
+    );
   };
 
   // 드래그 속성 생성 헬퍼
@@ -159,15 +189,17 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           <div
             key={item.id}
             data-item-card
+            data-item-id={item.id}
             className={`${styles.tableRow} ${selectedItems.has(item.id) ? styles.tableRowSelected : ''} ${
               dragState.dragOverFolder === item.id ? styles.dragOver : ''
             }`}
-            onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
+            onClick={e => handleItemClick(e, item.id)}
             onDoubleClick={() => onItemDoubleClick(item)}
             onContextMenu={e => onItemContextMenu(e, item)}
             {...getDragProps(item)}
           >
             <div className={styles.colName}>
+              {renderCheckbox(item)}
               {getItemIcon(item, 16)}
               <span className={styles.rowName}>{item.name}</span>
             </div>
@@ -195,11 +227,13 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           <div
             key={item.id}
             data-item-card
+            data-item-id={item.id}
             className={`${styles.listItem} ${selectedItems.has(item.id) ? styles.listItemSelected : ''}`}
-            onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
+            onClick={e => handleItemClick(e, item.id)}
             onDoubleClick={() => onItemDoubleClick(item)}
             onContextMenu={e => onItemContextMenu(e, item)}
           >
+            {renderCheckbox(item)}
             {getItemIcon(item, 16)}
             <span className={styles.listName}>{item.name}</span>
             <span className={styles.listDate}>{formatDate(item.updatedAt)}</span>
@@ -217,14 +251,16 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           <div
             key={item.id}
             data-item-card
+            data-item-id={item.id}
             className={`${styles.tileCard} ${selectedItems.has(item.id) ? styles.tileCardSelected : ''} ${
               dragState.dragOverFolder === item.id ? styles.dragOver : ''
             }`}
-            onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
+            onClick={e => handleItemClick(e, item.id)}
             onDoubleClick={() => onItemDoubleClick(item)}
             onContextMenu={e => onItemContextMenu(e, item)}
             {...getDragProps(item)}
           >
+            {renderCheckbox(item)}
             <div className={styles.tileThumbnail}>
               {item.thumbnail ? (
                 <img src={item.thumbnail} alt={item.name} />
@@ -247,7 +283,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   }
 
   // ── 아이콘 뷰 (extra-large / large / medium / small) ──
-  // 크기에 따라 그리드 컬럼 & 썸네일 크기 조정
   const gridMinWidth = viewMode === 'extra-large' ? 280 : viewMode === 'large' ? 160 : viewMode === 'medium' ? 120 : 90;
   const thumbSize = iconSize;
 
@@ -260,14 +295,16 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         <div
           key={item.id}
           data-item-card
+          data-item-id={item.id}
           className={`${styles.iconCard} ${selectedItems.has(item.id) ? styles.iconCardSelected : ''} ${
             dragState.dragOverFolder === item.id ? styles.dragOver : ''
           }`}
-          onClick={e => onItemClick(item.id, e.ctrlKey || e.metaKey)}
+          onClick={e => handleItemClick(e, item.id)}
           onDoubleClick={() => onItemDoubleClick(item)}
           onContextMenu={e => onItemContextMenu(e, item)}
           {...getDragProps(item)}
         >
+          {renderCheckbox(item)}
           <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
             {(viewMode === 'extra-large' || viewMode === 'large') && item.type === 'project' && projectDesignFiles ? (
               (() => {

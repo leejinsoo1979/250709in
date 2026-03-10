@@ -13,6 +13,10 @@ interface ContentToolbarProps {
   onCreateFolder?: () => void;
   onCreateDesign?: () => void;
   nav?: UseExplorerNavigationReturn;
+  totalItemCount?: number;
+  selectedCount?: number;
+  onSelectAll?: () => void;
+  onClearSelection?: () => void;
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -32,6 +36,10 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onCreateFolder,
   onCreateDesign,
   nav,
+  totalItemCount = 0,
+  selectedCount = 0,
+  onSelectAll,
+  onClearSelection,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
@@ -68,8 +76,34 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     }
   };
 
+  // 전체선택 체크박스 상태
+  const isAllSelected = totalItemCount > 0 && selectedCount === totalItemCount;
+  const isPartiallySelected = selectedCount > 0 && selectedCount < totalItemCount;
+
+  const handleSelectAllToggle = () => {
+    if (isAllSelected || isPartiallySelected) {
+      onClearSelection?.();
+    } else {
+      onSelectAll?.();
+    }
+  };
+
   return (
     <div className={styles.toolbar}>
+      {/* 전체선택 체크박스 */}
+      {onSelectAll && totalItemCount > 0 && (
+        <label className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
+          <input
+            type="checkbox"
+            checked={isAllSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = isPartiallySelected;
+            }}
+            onChange={handleSelectAllToggle}
+          />
+        </label>
+      )}
+
       {/* 네비게이션 버튼 + 브레드크럼 */}
       {nav && (
         <div className={styles.navGroup}>
