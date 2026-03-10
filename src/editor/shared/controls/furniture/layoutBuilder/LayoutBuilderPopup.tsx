@@ -30,7 +30,7 @@ interface LayoutBuilderPopupProps {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  full: '커스텀 캐비닛',
+  full: '캐비닛만들기',
   upper: '커스텀 상부장',
   lower: '커스텀 하부장',
 };
