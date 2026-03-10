@@ -45,6 +45,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 }) => {
   // 싱글/듀얼 타입 (full 카테고리에서만 사용)
   const [cabinetType, setCabinetType] = useState<'single' | 'dual'>('dual');
+  const [typeConfirmed, setTypeConfirmed] = useState(true); // 기본 듀얼 확정
   const currentWidth = category === 'full' ? (cabinetType === 'single' ? 500 : 1000) : dimensions.width;
 
   const {
@@ -72,6 +73,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   // 타입 변경 시 레이아웃 리셋
   const handleTypeChange = useCallback((type: 'single' | 'dual') => {
     setCabinetType(type);
+    setTypeConfirmed(true);
     resetLayout();
   }, [resetLayout]);
 
@@ -125,40 +127,62 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
         {/* 바디 */}
         <div className={styles.body}>
           {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
-          {category === 'full' && (
+          {category === 'full' && !typeConfirmed && (
             <div style={{
-              display: 'flex', gap: '6px', marginBottom: '8px', padding: '0 4px',
+              display: 'flex', gap: '6px', padding: '0 4px',
             }}>
               <button
                 onClick={() => handleTypeChange('single')}
                 style={{
-                  flex: 1, padding: '5px 10px', borderRadius: '6px',
-                  border: cabinetType === 'single' ? '2px solid #4A90D9' : '1px solid #ddd',
-                  background: cabinetType === 'single' ? '#f0f7ff' : '#fff',
+                  flex: 1, padding: '6px 12px', borderRadius: '6px',
+                  border: '1px solid #ddd', background: '#fff',
                   cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '8px', transition: 'all 0.2s',
+                  justifyContent: 'center', gap: '8px', whiteSpace: 'nowrap',
                 }}
               >
-                <div style={{ width: '12px', height: '18px', border: '2px solid #666', borderRadius: '2px', flexShrink: 0 }} />
+                <div style={{ width: '12px', height: '16px', border: '2px solid #666', borderRadius: '2px', flexShrink: 0 }} />
                 <span style={{ fontSize: '12px', fontWeight: '600' }}>싱글</span>
                 <span style={{ fontSize: '11px', color: '#888' }}>500mm</span>
               </button>
               <button
                 onClick={() => handleTypeChange('dual')}
                 style={{
-                  flex: 1, padding: '5px 10px', borderRadius: '6px',
-                  border: cabinetType === 'dual' ? '2px solid #4A90D9' : '1px solid #ddd',
-                  background: cabinetType === 'dual' ? '#f0f7ff' : '#fff',
+                  flex: 1, padding: '6px 12px', borderRadius: '6px',
+                  border: '1px solid #ddd', background: '#fff',
                   cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '8px', transition: 'all 0.2s',
+                  justifyContent: 'center', gap: '8px', whiteSpace: 'nowrap',
                 }}
               >
                 <div style={{ display: 'flex', gap: '1px', flexShrink: 0 }}>
-                  <div style={{ width: '10px', height: '18px', border: '2px solid #666', borderRadius: '2px' }} />
-                  <div style={{ width: '10px', height: '18px', border: '2px solid #666', borderRadius: '2px' }} />
+                  <div style={{ width: '10px', height: '16px', border: '2px solid #666', borderRadius: '2px' }} />
+                  <div style={{ width: '10px', height: '16px', border: '2px solid #666', borderRadius: '2px' }} />
                 </div>
                 <span style={{ fontSize: '12px', fontWeight: '600' }}>듀얼</span>
                 <span style={{ fontSize: '11px', color: '#888' }}>1000mm</span>
+              </button>
+            </div>
+          )}
+          {category === 'full' && typeConfirmed && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px',
+            }}>
+              <span style={{ fontSize: '12px', color: '#666' }}>타입:</span>
+              <span style={{
+                fontSize: '12px', fontWeight: '600', padding: '2px 8px',
+                background: '#f0f7ff', border: '1px solid #4A90D9',
+                borderRadius: '4px', color: '#4A90D9',
+              }}>
+                {cabinetType === 'single' ? '싱글 500mm' : '듀얼 1000mm'}
+              </span>
+              <button
+                onClick={() => setTypeConfirmed(false)}
+                style={{
+                  fontSize: '11px', color: '#888', background: 'none',
+                  border: 'none', cursor: 'pointer', textDecoration: 'underline',
+                  padding: 0,
+                }}
+              >
+                변경
               </button>
             </div>
           )}
