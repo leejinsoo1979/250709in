@@ -142,11 +142,12 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.12s;
-  border: 2px solid transparent;
+  border: 1px solid var(--theme-border);
 }
 
 .iconCard:hover {
   background: var(--theme-background-secondary);
+  border-color: var(--theme-text-muted);
 }
 
 .iconCardSelected {
