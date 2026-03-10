@@ -2100,9 +2100,19 @@ const Configurator: React.FC = () => {
     }
   }, [currentProjectId, currentDesignFileId, isReadOnly]);
 
-  // 에디터 탭 동기화: 디자인 파일 로드 성공 후 탭 추가/활성화
+  // 에디터 탭 동기화: 최초 로드 시에만 탭 추가 (탭 닫기 후 재생성 방지)
+  const tabSyncedRef = useRef<string | null>(null);
   useEffect(() => {
     if (currentProjectId && currentDesignFileId) {
+      const tabId = `${currentProjectId}_${currentDesignFileId}`;
+      // 이미 동기화한 탭이면 이름만 업데이트
+      if (tabSyncedRef.current === tabId) {
+        const designName = currentDesignFileName || urlDesignFileName || '새 디자인';
+        const projectName = basicInfo.title || urlProjectName || '프로젝트';
+        useUIStore.getState().updateTab(tabId, { designFileName: designName, projectName });
+        return;
+      }
+      // 새 디자인 파일 로드 시에만 탭 추가
       const designName = currentDesignFileName || urlDesignFileName || '새 디자인';
       const projectName = basicInfo.title || urlProjectName || '프로젝트';
       useUIStore.getState().addTab({
@@ -2111,6 +2121,7 @@ const Configurator: React.FC = () => {
         designFileId: currentDesignFileId,
         designFileName: designName,
       });
+      tabSyncedRef.current = tabId;
     }
   }, [currentProjectId, currentDesignFileId, currentDesignFileName, basicInfo.title]);
 
@@ -2791,6 +2802,10 @@ const Configurator: React.FC = () => {
       }
     }
     const nextTabId = useUIStore.getState().removeTab(tab.id);
+    // 닫힌 탭의 동기화 기록 초기화 (재생성 방지)
+    if (tabSyncedRef.current === tab.id) {
+      tabSyncedRef.current = null;
+    }
     if (nextTabId) {
       const nextTab = useUIStore.getState().openTabs.find(t => t.id === nextTabId);
       if (nextTab) {
