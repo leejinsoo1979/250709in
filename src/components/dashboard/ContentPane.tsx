@@ -303,6 +303,8 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                   </div>
                 );
               })()
+            ) : item.type === 'project' ? (
+              getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
             ) : item.thumbnail ? (
               <img src={item.thumbnail} alt={item.name} />
             ) : (
