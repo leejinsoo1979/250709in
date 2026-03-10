@@ -2,8 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=3" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -23,13 +28,22 @@
             // 즉시 body에 클래스 추가
             document.documentElement.classList.add(`theme-${theme.mode}-${theme.color}`);
             // 기본 스타일 적용 (가장 중요한 배경색)
-            if (theme.mode === 'dark') {
+            var isDarkMode = theme.mode === 'dark';
+            if (isDarkMode) {
               document.documentElement.style.backgroundColor = '#000000';
               document.documentElement.style.color = '#ffffff';
             } else {
               document.documentElement.style.backgroundColor = '#ffffff';
               document.documentElement.style.color = '#111827';
             }
+            // 테마별 theme-color 업데이트
+            var tc = document.querySelector('meta[name="theme-color"]:not([media])');
+            if (!tc) {
+              tc = document.createElement('meta');
+              tc.setAttribute('name', 'theme-color');
+              document.head.appendChild(tc);
+            }
+            tc.setAttribute('content', isDarkMode ? '#09090b' : '#ffffff');
           }
         } catch (e) {
           // 에러 무시
