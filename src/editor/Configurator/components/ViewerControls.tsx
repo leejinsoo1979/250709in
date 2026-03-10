@@ -123,11 +123,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     { id: 'left' as ViewDirection, label: t('viewer.left') }
   ];
 
-  const renderModes = [
-    { id: 'solid' as RenderMode, label: t('viewer.solid') },
-    { id: 'wireframe' as RenderMode, label: t('viewer.wireframe') }
-  ];
-
   const handleViewDirectionChange = (direction: ViewDirection) => {
     setView2DDirection(direction);
     onViewDirectionChange(direction);
@@ -310,18 +305,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
       <div className={styles.centerAbsolute}>
-        {viewMode === '3D' && (
-          <div className={styles.segmentedControl}>
-            {renderModes.map((mode) => (
-              <button
-                key={mode.id}
-                className={`${styles.segmentButton} ${renderMode === mode.id ? styles.segmentActive : ''}`}
-                onClick={() => onRenderModeChange(mode.id)}
-              >{mode.label}</button>
-            ))}
-          </div>
-        )}
-
         <div className={styles.segmentedControl}>
           {viewModes.map((mode) => (
             <button

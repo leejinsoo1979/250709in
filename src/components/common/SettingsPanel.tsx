@@ -11,7 +11,7 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
-  const { viewMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
+  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
   
   useEffect(() => {
     // 언어 변경 시 컴포넌트 리렌더링을 위한 이벤트 리스너
@@ -81,6 +81,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
                       onClick={() => setCameraMode('orthographic')}
                     >
                       Orthographic
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.settingItem}>
+                  <div className={styles.settingInfo}>
+                    <span className={styles.settingLabel}>렌더링 모드</span>
+                    <span className={styles.settingDescription}>솔리드 또는 은선 표시</span>
+                  </div>
+                  <div className={styles.segmentedControl}>
+                    <button
+                      className={`${styles.segmentButton} ${renderMode === 'solid' ? styles.segmentActive : ''}`}
+                      onClick={() => setRenderMode('solid')}
+                    >
+                      솔리드
+                    </button>
+                    <button
+                      className={`${styles.segmentButton} ${renderMode === 'wireframe' ? styles.segmentActive : ''}`}
+                      onClick={() => setRenderMode('wireframe')}
+                    >
+                      은선
                     </button>
                   </div>
                 </div>
