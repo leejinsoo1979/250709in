@@ -9,6 +9,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { checkCredits } from '@/firebase/userProfiles';
 import SettingsPanel from '@/components/common/SettingsPanel';
+import { useUIStore } from '@/store/uiStore';
 import Step1 from '../editor/Step1';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
@@ -26,6 +27,7 @@ import NavigationPane from '@/components/dashboard/NavigationPane';
 import ContentToolbar from '@/components/dashboard/ContentToolbar';
 import ContentPane from '@/components/dashboard/ContentPane';
 import StatusBar from '@/components/dashboard/StatusBar';
+import ClassicDashboard from '@/components/dashboard/ClassicDashboard';
 
 // Explorer 훅
 import { useExplorerNavigation } from '@/hooks/dashboard/useExplorerNavigation';
@@ -39,6 +41,7 @@ const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { isMobile } = useResponsive();
+  const { dashboardLayout } = useUIStore();
 
   // --- Explorer 훅 ---
   const nav = useExplorerNavigation();
@@ -443,87 +446,102 @@ const SimpleDashboard: React.FC = () => {
         onOpenSettings={() => setIsSettingsPanelOpen(true)}
       />
 
-      {/* 상단 탐색 툴바 */}
-      <ExplorerToolbar
-        nav={nav}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-      />
-
-      {/* 메인 바디: 좌측 트리 + 우측 컨텐츠 */}
-      <div className={styles.explorerBody}>
-        {/* 모바일 햄버거 버튼 */}
-        {isMobile && (
-          <button
-            className={styles.mobileNavToggle}
-            onClick={() => setMobileNavOpen(prev => !prev)}
-            aria-label="네비게이션 토글"
-          >
-            {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        )}
-
-        {/* 좌측 네비게이션 */}
-        {(!isMobile || mobileNavOpen) && (
-          <div className={isMobile ? styles.mobileNavOverlay : undefined}>
-            <NavigationPane
-              projects={data.projects}
-              folders={data.folders}
-              currentProjectId={nav.currentProjectId}
-              currentFolderId={nav.currentFolderId}
-              activeMenu={nav.activeMenu}
-              onNavigate={(projectId, folderId, label) => {
-                nav.navigateTo(projectId, folderId, label);
-                if (isMobile) setMobileNavOpen(false);
-              }}
-              onMenuChange={(menu) => {
-                nav.setActiveMenu(menu);
-                if (isMobile) setMobileNavOpen(false);
-              }}
-              onCreateProject={handleCreateProject}
-            />
-            {isMobile && (
-              <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />
-            )}
-          </div>
-        )}
-
-        {/* 우측 컨텐츠 영역 */}
-        <div className={styles.explorerContent}>
-          <ContentToolbar
-            viewMode={viewMode}
-            sortBy={sortBy}
-            onViewModeChange={setViewMode}
-            onSortChange={setSortBy}
-            onCreateProject={handleCreateProject}
-            onCreateFolder={handleCreateFolder}
-            onCreateDesign={nav.currentProjectId ? () => handleCreateDesign() : undefined}
-            showCreateFolder={!!nav.currentProjectId}
-          />
-
-          <ContentPane
-            items={data.currentItems}
-            viewMode={viewMode}
-            sortBy={sortBy}
-            sortDirection={sortDirection}
+      {/* 레이아웃 분기: SaaS vs 윈도우 */}
+      {dashboardLayout === 'saas' ? (
+        <ClassicDashboard
+          nav={nav}
+          data={data}
+          actions={actions}
+          onItemDoubleClick={handleItemDoubleClick}
+          onItemContextMenu={handleItemContextMenu}
+          onCreateProject={handleCreateProject}
+          onCreateDesign={() => handleCreateDesign()}
+        />
+      ) : (
+        <>
+          {/* 상단 탐색 툴바 */}
+          <ExplorerToolbar
+            nav={nav}
             searchTerm={searchTerm}
-            selectedItems={actions.selectedItems}
-            dragState={actions.dragState}
-            onItemClick={actions.selectItem}
-            onItemDoubleClick={handleItemDoubleClick}
-            onItemContextMenu={handleItemContextMenu}
-            onSortDirectionToggle={handleSortDirectionToggle}
-            dragHandlers={actions.dragHandlers}
-            isLoading={data.isLoading}
+            onSearchChange={setSearchTerm}
           />
-        </div>
-      </div>
 
-      {/* 하단 상태바 */}
-      <StatusBar
-        itemCount={data.currentItems.length}
-        selectedCount={actions.selectedItems.size}
-      />
+          {/* 메인 바디: 좌측 트리 + 우측 컨텐츠 */}
+          <div className={styles.explorerBody}>
+            {/* 모바일 햄버거 버튼 */}
+            {isMobile && (
+              <button
+                className={styles.mobileNavToggle}
+                onClick={() => setMobileNavOpen(prev => !prev)}
+                aria-label="네비게이션 토글"
+              >
+                {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            )}
+
+            {/* 좌측 네비게이션 */}
+            {(!isMobile || mobileNavOpen) && (
+              <div className={isMobile ? styles.mobileNavOverlay : undefined}>
+                <NavigationPane
+                  projects={data.projects}
+                  folders={data.folders}
+                  currentProjectId={nav.currentProjectId}
+                  currentFolderId={nav.currentFolderId}
+                  activeMenu={nav.activeMenu}
+                  onNavigate={(projectId, folderId, label) => {
+                    nav.navigateTo(projectId, folderId, label);
+                    if (isMobile) setMobileNavOpen(false);
+                  }}
+                  onMenuChange={(menu) => {
+                    nav.setActiveMenu(menu);
+                    if (isMobile) setMobileNavOpen(false);
+                  }}
+                  onCreateProject={handleCreateProject}
+                />
+                {isMobile && (
+                  <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />
+                )}
+              </div>
+            )}
+
+            {/* 우측 컨텐츠 영역 */}
+            <div className={styles.explorerContent}>
+              <ContentToolbar
+                viewMode={viewMode}
+                sortBy={sortBy}
+                onViewModeChange={setViewMode}
+                onSortChange={setSortBy}
+                onCreateProject={handleCreateProject}
+                onCreateFolder={handleCreateFolder}
+                onCreateDesign={nav.currentProjectId ? () => handleCreateDesign() : undefined}
+                showCreateFolder={!!nav.currentProjectId}
+              />
+
+              <ContentPane
+                items={data.currentItems}
+                viewMode={viewMode}
+                sortBy={sortBy}
+                sortDirection={sortDirection}
+                searchTerm={searchTerm}
+                selectedItems={actions.selectedItems}
+                dragState={actions.dragState}
+                onItemClick={actions.selectItem}
+                onItemDoubleClick={handleItemDoubleClick}
+                onItemContextMenu={handleItemContextMenu}
+                onSortDirectionToggle={handleSortDirectionToggle}
+                dragHandlers={actions.dragHandlers}
+                isLoading={data.isLoading}
+              />
+            </div>
+          </div>
+
+          {/* 하단 상태바 */}
+          <StatusBar
+            itemCount={data.currentItems.length}
+            selectedCount={actions.selectedItems.size}
+          />
+        </>
+      )}
 
       {/* ===== 모달들 ===== */}
 
