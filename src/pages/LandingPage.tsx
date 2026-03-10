@@ -56,11 +56,11 @@ export default function LandingPage() {
                 key={i}
                 style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
                 animate={{
-                  y: isAnimating ? [0, -8, 0] : 0,
+                  y: isAnimating ? [0, -8, 0, 0] : 0,
                 }}
                 transition={{
                   y: isAnimating
-                    ? { duration: 0.8, delay: i * 0.04, repeat: Infinity, ease: "easeInOut" }
+                    ? { duration: 1.8, delay: i * 0.04, repeat: Infinity, times: [0, 0.15, 0.3, 1], ease: "easeInOut" }
                     : { duration: 0.3 },
                 }}
               >
