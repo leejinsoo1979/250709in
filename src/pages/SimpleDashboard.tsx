@@ -439,14 +439,16 @@ const SimpleDashboard: React.FC = () => {
   // --- 렌더 ---
   return (
     <div className={styles.explorerLayout}>
-      {/* 헤더: 로고 + 프로필 */}
-      <DashboardHeader
-        onLogoClick={() => nav.navigateToRoot()}
-        onProfileClick={() => setIsProfilePopupOpen(true)}
-        onOpenSettings={() => setIsSettingsPanelOpen(true)}
-        searchTerm={dashboardLayout === 'windows' ? searchTerm : undefined}
-        onSearchChange={dashboardLayout === 'windows' ? setSearchTerm : undefined}
-      />
+      {/* 헤더: 윈도우 모드에서만 표시 (SaaS는 자체 헤더 사용) */}
+      {dashboardLayout === 'windows' && (
+        <DashboardHeader
+          onLogoClick={() => nav.navigateToRoot()}
+          onProfileClick={() => setIsProfilePopupOpen(true)}
+          onOpenSettings={() => setIsSettingsPanelOpen(true)}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+        />
+      )}
 
       {/* 레이아웃 분기: SaaS vs 윈도우 */}
       {dashboardLayout === 'saas' ? (
