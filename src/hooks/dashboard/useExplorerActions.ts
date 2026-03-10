@@ -20,6 +20,8 @@ export function useExplorerActions(
     draggedItems: [],
     dragOverFolder: null,
   });
+  const dragStateRef = useRef<DragState>(dragState);
+  dragStateRef.current = dragState;
 
   // 클립보드 상태
   const clipboardRef = useRef<ClipboardState | null>(null);
@@ -340,7 +342,22 @@ export function useExplorerActions(
     e.preventDefault();
     if (!nav.currentProjectId) return;
 
-    const itemsToDrop = dragState.draggedItems.length > 0 ? dragState.draggedItems : (dragState.draggedItem ? [dragState.draggedItem] : []);
+    // ref에서 최신 드래그 상태 읽기 (stale closure 방지)
+    const currentDrag = dragStateRef.current;
+    const itemsToDrop = currentDrag.draggedItems.length > 0 ? currentDrag.draggedItems : (currentDrag.draggedItem ? [currentDrag.draggedItem] : []);
+
+    // dataTransfer에서도 폴백으로 읽기
+    if (itemsToDrop.length === 0) {
+      try {
+        const raw = e.dataTransfer.getData('text/plain');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            itemsToDrop.push(...parsed);
+          }
+        }
+      } catch { /* ignore */ }
+    }
     if (itemsToDrop.length === 0) return;
 
     const projectFolders = data.folders[nav.currentProjectId] || [];
@@ -349,14 +366,14 @@ export function useExplorerActions(
     const dropIds = new Set(itemsToDrop.map(i => i.id));
     const cleaned = projectFolders.map(folder => ({
       ...folder,
-      children: folder.children.filter(c => !dropIds.has(c.id)),
+      children: (folder.children || []).filter(c => !dropIds.has(c.id)),
     }));
 
     const updated = cleaned.map(folder => {
       if (folder.id === targetFolderId) {
         return {
           ...folder,
-          children: [...folder.children, ...itemsToDrop],
+          children: [...(folder.children || []), ...itemsToDrop],
         };
       }
       return folder;
@@ -366,7 +383,7 @@ export function useExplorerActions(
     await data.refreshFolders(nav.currentProjectId);
 
     setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null });
-  }, [dragState.draggedItem, dragState.draggedItems, nav.currentProjectId, data]);
+  }, [nav.currentProjectId, data]);
 
   const onDragEnd = useCallback(() => {
     setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null });
