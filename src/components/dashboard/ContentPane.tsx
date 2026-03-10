@@ -269,7 +269,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           {...getDragProps(item)}
         >
           <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
-            {(viewMode === 'extra-large' || viewMode === 'large' || viewMode === 'medium') && item.type === 'project' && projectDesignFiles ? (
+            {(viewMode === 'extra-large' || viewMode === 'large') && item.type === 'project' && projectDesignFiles ? (
               (() => {
                 const designFiles = projectDesignFiles[item.id] || [];
                 if (designFiles.length === 0) {
