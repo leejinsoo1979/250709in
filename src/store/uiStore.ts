@@ -4,6 +4,16 @@ import { persist } from 'zustand/middleware';
 // 2D 뷰 방향 타입 정의
 export type View2DDirection = 'front' | 'left' | 'right' | 'top' | 'all';
 
+// 에디터 탭 타입 정의
+export interface EditorTab {
+  id: string; // `${projectId}_${designFileId}` 형태의 고유 키
+  projectId: string;
+  projectName: string;
+  designFileId: string;
+  designFileName: string;
+  addedAt: number; // timestamp
+}
+
 // 프레임 강조 타입 정의
 export type HighlightedFrame = 'left' | 'right' | 'top' | 'base' | null;
 
@@ -166,6 +176,16 @@ interface UIState {
   dashboardLayout: 'saas' | 'windows';
   setDashboardLayout: (layout: 'saas' | 'windows') => void;
 
+  // 에디터 탭 상태
+  openTabs: EditorTab[];
+  activeTabId: string | null;
+
+  // 에디터 탭 액션
+  addTab: (tab: Omit<EditorTab, 'id' | 'addedAt'>) => void;
+  removeTab: (tabId: string) => string | null; // 다음 활성 탭 ID 반환
+  setActiveTab: (tabId: string) => void;
+  updateTab: (tabId: string, updates: Partial<Pick<EditorTab, 'designFileName' | 'designFileId' | 'projectName'>>) => void;
+
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -307,6 +327,8 @@ const initialUIState = {
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   dashboardLayout: 'windows' as const,  // 기본값: 윈도우 스타일
+  openTabs: [] as EditorTab[],
+  activeTabId: null as string | null,
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -704,6 +726,51 @@ export const useUIStore = create<UIState>()(
       setDashboardLayout: (layout) =>
         set({ dashboardLayout: layout }),
 
+      // 에디터 탭 액션들
+      addTab: (tab) => {
+        const id = `${tab.projectId}_${tab.designFileId}`;
+        set((state) => {
+          // 중복 체크
+          if (state.openTabs.some(t => t.id === id)) {
+            return { activeTabId: id };
+          }
+          return {
+            openTabs: [...state.openTabs, { ...tab, id, addedAt: Date.now() }],
+            activeTabId: id,
+          };
+        });
+      },
+
+      removeTab: (tabId) => {
+        const state = get();
+        const idx = state.openTabs.findIndex(t => t.id === tabId);
+        if (idx === -1) return null;
+
+        const newTabs = state.openTabs.filter(t => t.id !== tabId);
+        let nextActiveId: string | null = null;
+
+        if (state.activeTabId === tabId && newTabs.length > 0) {
+          // 인접 탭 선택: 우선 오른쪽, 없으면 왼쪽
+          const nextIdx = Math.min(idx, newTabs.length - 1);
+          nextActiveId = newTabs[nextIdx].id;
+        } else if (newTabs.length > 0) {
+          nextActiveId = state.activeTabId;
+        }
+
+        set({ openTabs: newTabs, activeTabId: nextActiveId });
+        return nextActiveId;
+      },
+
+      setActiveTab: (tabId) =>
+        set({ activeTabId: tabId }),
+
+      updateTab: (tabId, updates) =>
+        set((state) => ({
+          openTabs: state.openTabs.map(t =>
+            t.id === tabId ? { ...t, ...updates } : t
+          ),
+        })),
+
       resetUI: () =>
         set(initialUIState),
       };
@@ -717,6 +784,8 @@ export const useUIStore = create<UIState>()(
         shadowEnabled: state.shadowEnabled,  // 그래픽 설정 유지
         edgeOutlineEnabled: state.edgeOutlineEnabled,  // 그래픽 설정 유지
         dashboardLayout: state.dashboardLayout,  // 대시보드 레이아웃 유지
+        openTabs: state.openTabs,  // 에디터 탭 유지
+        activeTabId: state.activeTabId,  // 활성 탭 유지
         // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
         // doorsOpen과 activePopup은 세션별로 초기화
       }),
