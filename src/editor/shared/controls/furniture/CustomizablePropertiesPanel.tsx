@@ -1020,7 +1020,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sectionHeight = sec.height;
 
     // 현재 서랍 단수 가져오기
-    const currentElements = side === 'full' ? sec.elements : side === 'left' ? sec.leftElements : sec.rightElements;
+    let currentElements: CustomElement[] | undefined;
+    if (side === 'full') {
+      currentElements = sec.elements;
+    } else if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      currentElements = sec.horizontalSplit[hsKey];
+    } else if (side === 'left') {
+      currentElements = sec.leftElements;
+    } else {
+      currentElements = sec.rightElements;
+    }
     const currentDrawer = currentElements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
     const currentCount = currentDrawer?.heights?.length;
 
@@ -1030,6 +1040,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     if (side === 'full') {
       sec.elements = [newElement];
+    } else if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: [newElement] };
     } else if (side === 'left') {
       sec.leftElements = [newElement];
     } else {
@@ -1054,7 +1067,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sec = { ...sections[sIdx] };
 
     // 현재 서랍 단수 가져오기
-    const currentElements = side === 'full' ? sec.elements : side === 'left' ? sec.leftElements : sec.rightElements;
+    let currentElements: CustomElement[] | undefined;
+    if (side === 'full') {
+      currentElements = sec.elements;
+    } else if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      currentElements = sec.horizontalSplit[hsKey];
+    } else if (side === 'left') {
+      currentElements = sec.leftElements;
+    } else {
+      currentElements = sec.rightElements;
+    }
     const currentDrawer = currentElements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
     const currentCount = currentDrawer?.heights?.length || 1;
 
@@ -1066,6 +1089,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     if (side === 'full') {
       sec.elements = [newElement];
+    } else if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: [newElement] };
     } else if (side === 'left') {
       sec.leftElements = [newElement];
     } else {
