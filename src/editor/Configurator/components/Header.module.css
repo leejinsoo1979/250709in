@@ -155,7 +155,7 @@
   gap: 10px;
   position: absolute;
   left: 50%;
-  transform: translateX(-55%);
+  transform: translateX(-50%);
   flex: 0 0 auto;
 }
 
@@ -595,14 +595,12 @@
 @media (max-width: 1440px) {
   .centerActions {
     gap: 5px;
-    transform: translateX(-52%);
   }
 }
 
 @media (max-width: 1200px) {
   .centerActions {
     gap: 4px;
-    transform: translateX(-50%);
   }
 }
 

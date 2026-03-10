@@ -383,113 +383,7 @@ const Header: React.FC<HeaderProps> = ({
           <Logo size="medium" onClick={() => navigate('/')} />
         </div>
 
-        {/* 프로젝트/디자인 경로 — 로고와 분리 */}
-        <div className={styles.logoSection}>
-          <div className={styles.projectInfo}>
-            <div className={styles.designFileName}>
-              {projectName && designFileName ? (
-                <>
-                  <span
-                    style={{ cursor: 'pointer' }}
-                    onClick={handleNavigateToDashboard}
-                    title="대시보드로 이동 (자동저장)"
-                  >
-                    {projectName}
-                  </span> <span className={styles.separator}>›</span>{' '}
-                  {isEditingDesignName ? (
-                    <input
-                      ref={designNameInputRef}
-                      type="text"
-                      value={editingDesignName}
-                      onChange={(e) => setEditingDesignName(e.target.value)}
-                      onKeyDown={handleDesignNameKeyDown}
-                      onBlur={handleDesignNameSave}
-                      className={styles.designNameInput}
-                      style={{
-                        color: 'var(--theme-primary)',
-                        background: 'transparent',
-                        border: '1px solid var(--theme-primary)',
-                        borderRadius: '4px',
-                        padding: '2px 6px',
-                        fontSize: 'inherit',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        minWidth: '100px'
-                      }}
-                    />
-                  ) : (
-                    <span
-                      style={{
-                        color: 'var(--theme-primary)',
-                        cursor: (onDesignFileNameChange && !readOnly) ? 'pointer' : 'default',
-                        textDecoration: (onDesignFileNameChange && !readOnly) ? 'underline' : 'none',
-                        textDecorationStyle: 'dotted',
-                        textUnderlineOffset: '3px'
-                      }}
-                      onClick={handleDesignNameClick}
-                      title={(onDesignFileNameChange && !readOnly) ? '클릭하여 디자인명 변경' : undefined}
-                    >
-                      {designFileName}
-                    </span>
-                  )}
-                </>
-              ) : projectName ? (
-                <span
-                  style={{ cursor: 'pointer' }}
-                  onClick={handleNavigateToDashboard}
-                  title="대시보드로 이동 (자동저장)"
-                >
-                  {projectName}
-                </span>
-              ) : designFileName ? (
-                <>
-                  {isEditingDesignName ? (
-                    <input
-                      ref={designNameInputRef}
-                      type="text"
-                      value={editingDesignName}
-                      onChange={(e) => setEditingDesignName(e.target.value)}
-                      onKeyDown={handleDesignNameKeyDown}
-                      onBlur={handleDesignNameSave}
-                      className={styles.designNameInput}
-                      style={{
-                        color: 'var(--theme-primary)',
-                        background: 'transparent',
-                        border: '1px solid var(--theme-primary)',
-                        borderRadius: '4px',
-                        padding: '2px 6px',
-                        fontSize: 'inherit',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        minWidth: '100px'
-                      }}
-                    />
-                  ) : (
-                    <span
-                      style={{
-                        color: 'var(--theme-primary)',
-                        cursor: (onDesignFileNameChange && !readOnly) ? 'pointer' : 'default',
-                        textDecoration: (onDesignFileNameChange && !readOnly) ? 'underline' : 'none',
-                        textDecorationStyle: 'dotted',
-                        textUnderlineOffset: '3px'
-                      }}
-                      onClick={handleDesignNameClick}
-                      title={(onDesignFileNameChange && !readOnly) ? '클릭하여 디자인명 변경' : undefined}
-                    >
-                      {designFileName}
-                    </span>
-                  )}
-                </>
-              ) : (
-                '새로운 디자인'
-              )}
-            </div>
-          </div>
-
-          {/* 소유자/협업자 섹션은 좌측 사이드바 하단으로 이동됨 */}
-        </div>
-
-        {/* 파일 메뉴 + 저장 버튼 - 로고/경로와 분리 */}
+        {/* 파일 메뉴 + 저장 버튼 */}
         {!isMobile && !readOnly && (
           <div className={styles.fileActionGroup}>
             <div
@@ -661,9 +555,108 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* 중앙 액션 버튼들 - 모바일에서는 숨김 */}
+        {/* 중앙: 프로젝트명 › 디자인명 - 모바일에서는 숨김 */}
         {!isMobile && (
           <div className={styles.centerActions}>
+            <div className={styles.designFileName}>
+              {projectName && designFileName ? (
+                <>
+                  <span
+                    style={{ cursor: 'pointer' }}
+                    onClick={handleNavigateToDashboard}
+                    title="대시보드로 이동 (자동저장)"
+                  >
+                    {projectName}
+                  </span> <span className={styles.separator}>›</span>{' '}
+                  {isEditingDesignName ? (
+                    <input
+                      ref={designNameInputRef}
+                      type="text"
+                      value={editingDesignName}
+                      onChange={(e) => setEditingDesignName(e.target.value)}
+                      onKeyDown={handleDesignNameKeyDown}
+                      onBlur={handleDesignNameSave}
+                      className={styles.designNameInput}
+                      style={{
+                        color: 'var(--theme-primary)',
+                        background: 'transparent',
+                        border: '1px solid var(--theme-primary)',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        fontSize: 'inherit',
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        minWidth: '100px'
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        color: 'var(--theme-primary)',
+                        cursor: (onDesignFileNameChange && !readOnly) ? 'pointer' : 'default',
+                        textDecoration: (onDesignFileNameChange && !readOnly) ? 'underline' : 'none',
+                        textDecorationStyle: 'dotted',
+                        textUnderlineOffset: '3px'
+                      }}
+                      onClick={handleDesignNameClick}
+                      title={(onDesignFileNameChange && !readOnly) ? '클릭하여 디자인명 변경' : undefined}
+                    >
+                      {designFileName}
+                    </span>
+                  )}
+                </>
+              ) : projectName ? (
+                <span
+                  style={{ cursor: 'pointer' }}
+                  onClick={handleNavigateToDashboard}
+                  title="대시보드로 이동 (자동저장)"
+                >
+                  {projectName}
+                </span>
+              ) : designFileName ? (
+                <>
+                  {isEditingDesignName ? (
+                    <input
+                      ref={designNameInputRef}
+                      type="text"
+                      value={editingDesignName}
+                      onChange={(e) => setEditingDesignName(e.target.value)}
+                      onKeyDown={handleDesignNameKeyDown}
+                      onBlur={handleDesignNameSave}
+                      className={styles.designNameInput}
+                      style={{
+                        color: 'var(--theme-primary)',
+                        background: 'transparent',
+                        border: '1px solid var(--theme-primary)',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        fontSize: 'inherit',
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        minWidth: '100px'
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        color: 'var(--theme-primary)',
+                        cursor: (onDesignFileNameChange && !readOnly) ? 'pointer' : 'default',
+                        textDecoration: (onDesignFileNameChange && !readOnly) ? 'underline' : 'none',
+                        textDecorationStyle: 'dotted',
+                        textUnderlineOffset: '3px'
+                      }}
+                      onClick={handleDesignNameClick}
+                      title={(onDesignFileNameChange && !readOnly) ? '클릭하여 디자인명 변경' : undefined}
+                    >
+                      {designFileName}
+                    </span>
+                  )}
+                </>
+              ) : (
+                '새로운 디자인'
+              )}
+            </div>
+
             {/* 읽기 전용 모드 표시 */}
             {readOnly && (
               <div style={{
