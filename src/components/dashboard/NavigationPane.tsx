@@ -165,7 +165,9 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
 
         {/* 프로젝트 트리 (파일트리 스타일) */}
         <div className={styles.section}>
-          <div className={styles.sectionTitle}>프로젝트</div>
+          <div className={styles.sectionTitle}>
+            {quickAccessItems.find(item => item.key === activeMenu)?.label || '프로젝트'}
+          </div>
           {projects.map(project => {
             const isExpanded = expandedProjects.has(project.id);
             const isSelected = currentProjectId === project.id && !currentFolderId;
