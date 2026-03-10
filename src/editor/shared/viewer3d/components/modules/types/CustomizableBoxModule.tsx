@@ -903,29 +903,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const lowerCenterY = sectionCenterY - areaInnerHeight / 2 + lowerH / 2;
       const upperCenterY = sectionCenterY + areaInnerHeight / 2 - upperH / 2;
 
-      // 서브분할 수평 패널 (구분판)
-      const dividerY = sectionCenterY - areaInnerHeight / 2 + lowerH;
-      nodes.push(
-        <BoxWithEdges
-          key={`${keyPrefix}-subsplit-divider`}
-          position={[offsetX, dividerY, 0]}
-          args={[areaInnerWidth, t, sectionDepth - t]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isHighlighted={isHighlighted}
-          panelName={`${sectionLabel}서브분할판`}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={placedFurnitureId}
-        />
-      );
-
       // 하부 요소
       if (subSplit.lowerElements && subSplit.lowerElements.length > 0) {
         nodes.push(
           ...renderSectionElements(
-            subSplit.lowerElements, areaInnerWidth, lowerH - t / 2,
-            lowerCenterY - t / 4, offsetX, sectionDepth,
+            subSplit.lowerElements, areaInnerWidth, lowerH,
+            lowerCenterY, offsetX, sectionDepth,
             `${sectionLabel}하`, `${keyPrefix}-lower`
           )
         );
@@ -935,8 +918,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       if (subSplit.upperElements && subSplit.upperElements.length > 0) {
         nodes.push(
           ...renderSectionElements(
-            subSplit.upperElements, areaInnerWidth, upperH - t / 2,
-            upperCenterY + t / 4, offsetX, sectionDepth,
+            subSplit.upperElements, areaInnerWidth, upperH,
+            upperCenterY, offsetX, sectionDepth,
             `${sectionLabel}상`, `${keyPrefix}-upper`
           )
         );
@@ -1711,32 +1694,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
       }
 
-      // 서브분할 구분판 (구조 패널로 취급 → isDragging 상태에서도 항상 렌더링)
+      // 내부 요소 (선반, 서랍 등 — 드래그 중에는 숨김)
       const areaKey = side as 'left' | 'center' | 'right';
       const subSplit = section.areaSubSplits?.[areaKey];
-      if (subSplit?.enabled) {
-        const lowerH = mmToUnit(subSplit.lowerHeight);
-        const dividerY = hsCenterY - bInnerH / 2 + lowerH;
-        subMeshes.push(
-          <BoxWithEdges
-            key={`${prefix}-subsplit-divider`}
-            position={[subCenterX, dividerY, 0]}
-            args={[subInnerW, t, subBoxD - t]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isHighlighted={isHighlighted}
-            panelName={`${label}서브분할판`}
-            panelGrainDirections={panelGrainDirections}
-            furnitureId={placedFurnitureId}
-          />
-        );
-      }
-
-      // 내부 요소 (선반, 서랍 등 — 드래그 중에는 숨김)
       if ((!isDragging || isEditMode)) {
         if (subSplit?.enabled) {
-          // 서브분할 있음: 상/하부 요소 렌더링 (구분판은 위에서 이미 렌더링됨)
+          // 서브분할 있음: 상/하부 요소 렌더링
           const lowerH = mmToUnit(subSplit.lowerHeight);
           const upperH = bInnerH - lowerH;
           const lowerCenterY = hsCenterY - bInnerH / 2 + lowerH / 2;
@@ -1745,8 +1708,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           if (subSplit.lowerElements && subSplit.lowerElements.length > 0) {
             subMeshes.push(
               ...renderSectionElements(
-                subSplit.lowerElements, subInnerW, lowerH - t / 2,
-                lowerCenterY - t / 4, subCenterX, subBoxD,
+                subSplit.lowerElements, subInnerW, lowerH,
+                lowerCenterY, subCenterX, subBoxD,
                 `${label}하`, `s${sIdx}-hsplit-${side}-lower`
               )
             );
@@ -1754,8 +1717,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           if (subSplit.upperElements && subSplit.upperElements.length > 0) {
             subMeshes.push(
               ...renderSectionElements(
-                subSplit.upperElements, subInnerW, upperH - t / 2,
-                upperCenterY + t / 4, subCenterX, subBoxD,
+                subSplit.upperElements, subInnerW, upperH,
+                upperCenterY, subCenterX, subBoxD,
                 `${label}상`, `s${sIdx}-hsplit-${side}-upper`
               )
             );

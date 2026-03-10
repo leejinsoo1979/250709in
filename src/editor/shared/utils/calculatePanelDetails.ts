@@ -807,14 +807,6 @@ export const calculatePanelDetails = (
       const processAreaSubSplits = (areaKey: string, areaWidth: number) => {
         const split = section.areaSubSplits?.[areaKey];
         if (!split?.enabled) return;
-        // 수평 분할판 (상하 분할)
-        targetPanel.push({
-          name: `${sectionPrefix}${areaKey === 'full' ? '' : areaKey + ' '}분할판`,
-          width: areaWidth - 1,
-          depth: customDepth - 26,
-          thickness: basicThicknessCC,
-          material: 'PB'
-        });
         // 상/하 영역 요소
         processElements(split.upperElements, `${areaKey === 'full' ? '' : areaKey + ' '}상부 `, areaWidth);
         processElements(split.lowerElements, `${areaKey === 'full' ? '' : areaKey + ' '}하부 `, areaWidth);
