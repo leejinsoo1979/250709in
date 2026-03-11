@@ -146,7 +146,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
         {/* Animated Content */}
         <div className="relative z-10 flex flex-col justify-center items-center flex-1">
           {/* Back Button - 도트 바로 위, 좌측 정렬 */}
-          <div className="w-full px-8 sm:px-12 mb-4">
+          <div className="w-full max-w-md mb-4">
             <button
               type="button"
               onClick={onNavigateHome}
