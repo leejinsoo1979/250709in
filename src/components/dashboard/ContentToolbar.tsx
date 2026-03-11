@@ -91,7 +91,17 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     projectId?: string;
     folderId?: string;
     hasChildren: boolean;
+    date?: string;
   }
+
+  const formatDate = (ts: any): string => {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}.${m}.${day}`;
+  };
 
   // 트리 열 때 현재 경로의 프로젝트/폴더를 자동 펼침
   useEffect(() => {
@@ -137,7 +147,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       const rootDesigns = getDesignFilesForProject(project.id);
       const hasChildren = projectFolders.length > 0 || rootDesigns.length > 0;
 
-      tree.push({ id: project.id, label: project.title, type: 'project', depth: 0, hasChildren });
+      tree.push({ id: project.id, label: project.title, type: 'project', depth: 0, hasChildren, date: formatDate(project.updatedAt) });
 
       if (expandedNodes.has(project.id)) {
         // 폴더들
@@ -145,19 +155,19 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
           const folderDesigns = getDesignFilesForProject(project.id, folder.id);
           const folderHasChildren = folderDesigns.length > 0;
 
-          tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id, hasChildren: folderHasChildren });
+          tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id, hasChildren: folderHasChildren, date: formatDate(folder.createdAt) });
 
           // 폴더 펼침 → 하위 디자인
           if (expandedNodes.has(folder.id)) {
             for (const design of folderDesigns) {
-              tree.push({ id: design.id, label: design.title || design.name || '무제', type: 'design', depth: 2, projectId: project.id, folderId: folder.id, hasChildren: false });
+              tree.push({ id: design.id, label: design.title || design.name || '무제', type: 'design', depth: 2, projectId: project.id, folderId: folder.id, hasChildren: false, date: formatDate(design.updatedAt) });
             }
           }
         }
 
         // 루트 레벨 디자인 (폴더에 속하지 않은)
         for (const design of rootDesigns) {
-          tree.push({ id: design.id, label: design.title || design.name || '무제', type: 'design', depth: 1, projectId: project.id, hasChildren: false });
+          tree.push({ id: design.id, label: design.title || design.name || '무제', type: 'design', depth: 1, projectId: project.id, hasChildren: false, date: formatDate(design.updatedAt) });
         }
       }
     }
@@ -317,6 +327,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                         {node.type === 'design' && <FileText size={14} />}
                         <span>{node.label}</span>
                       </button>
+                      {node.date && <span className={styles.treeItemDate}>{node.date}</span>}
                     </div>
                   ))}
                 </div>

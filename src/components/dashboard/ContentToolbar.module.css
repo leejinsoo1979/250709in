@@ -112,13 +112,15 @@
   color: var(--theme-text);
 }
 
-.breadcrumbActive {
+.breadcrumbActive,
+.breadcrumbActive:hover {
   color: var(--theme-primary);
   font-weight: 600;
   background: none;
 }
 
-.breadcrumbActive .breadcrumbIcon {
+.breadcrumbActive .breadcrumbIcon,
+.breadcrumbActive:hover .breadcrumbIcon {
   color: var(--theme-primary);
 }
 
@@ -237,6 +239,20 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 트리 항목 날짜 */
+.treeItemDate {
+  margin-left: auto;
+  padding-right: 12px;
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.breadcrumbDropdownItem:hover .treeItemDate {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* 생성 버튼 */
