@@ -216,8 +216,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
   const isSelectedSlotInDroppedZone = hasDroppedCeiling && selectedSlotIndex !== null && selectedSlotIndex >= normalSlotCount;
 
-  // 표시할 높이 (단내림 구간이면 단내림 높이, 아니면 전체 높이)
-  const displaySpaceHeightMm = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+  // 바닥마감재 높이
+  const floorFinishHeightMmGlobal = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  // 표시할 높이 (단내림 구간이면 단내림 높이, 아니면 전체 높이) - 바닥마감재 두께 반영
+  const displaySpaceHeightMm = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm - floorFinishHeightMmGlobal) : (spaceInfo.height - floorFinishHeightMmGlobal);
 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
@@ -2205,7 +2207,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
-                  {spaceInfo.height}
+                  {spaceInfo.height - floorFinishHeightMmGlobal}
                 </Text>
               </>
             )}
@@ -2239,7 +2241,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={100000}
               depthTest={false}
             />
-            
+
             {/* 전체 높이 치수 텍스트 - Text 3D 사용 */}
             <Text
                   renderOrder={1000}
@@ -2253,7 +2255,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               outlineColor={textOutlineColor}
               rotation={[0, 0, -Math.PI / 2]}
             >
-              {spaceInfo.height}
+              {spaceInfo.height - floorFinishHeightMmGlobal}
             </Text>
           </>
         )}
@@ -2290,7 +2292,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
           const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
-          const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (띄움 높이 제외)
+          const cabinetPlacementHeight = Math.max(spaceInfo.height - floorFinishHeightMmGlobal - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (바닥마감재 + 띄움 높이 제외)
 
           const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
           const bottomFrameTopY = mmToThreeUnits(floatHeight + bottomFrameHeight); // 하부 프레임 상단
@@ -4231,7 +4233,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       outlineColor={textOutlineColor}
                       rotation={[0, 0, -Math.PI / 2]}
                     >
-                      {spaceInfo.height}
+                      {spaceInfo.height - floorFinishHeightMmGlobal}
                     </Text>
                   )}
                 </>
@@ -4246,21 +4248,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor}
                 lineWidth={1}
               />
-              
+
               {/* 하단 화살표 */}
               <Line
                 points={createArrowHead([rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, 0.05, spaceZOffset - mmToThreeUnits(200)])}
                 color={dimensionColor}
                 lineWidth={1}
               />
-              
+
               {/* 상단 화살표 */}
               <Line
                 points={createArrowHead([rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
                 color={dimensionColor}
                 lineWidth={1}
               />
-              
+
               {/* 전체 높이 치수 텍스트 */}
               {(showDimensionsText || isStep2) && (
                 <Text
@@ -4275,7 +4277,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineColor={textOutlineColor}
                   rotation={[0, 0, -Math.PI / 2]}
                 >
-                  {spaceInfo.height}
+                  {spaceInfo.height - floorFinishHeightMmGlobal}
                 </Text>
               )}
             </>
