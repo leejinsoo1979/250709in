@@ -3575,12 +3575,6 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
-        {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
-        <GapControls
-          spaceInfo={spaceInfo}
-          onUpdate={handleSpaceInfoUpdate}
-        />
-
         {/* 프레임 설정 - 슬롯배치 모드에서만 표시 */}
         {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (<>
         <div className={styles.configSection}>
@@ -3801,8 +3795,93 @@ const Configurator: React.FC = () => {
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
-                {/* 상부 프레임만 표시 - frameConfig.top이 true일 때만 */}
-                {inferFrameConfig(spaceInfo).top && (
+                {/* 좌측 이격거리 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>좌이격</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const cur = spaceInfo.gapConfig?.left ?? 1.5;
+                        const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={spaceInfo.gapConfig?.left ?? 1.5}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const cur = spaceInfo.gapConfig?.left ?? 1.5;
+                        const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 우측 이격거리 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>우이격</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const cur = spaceInfo.gapConfig?.right ?? 1.5;
+                        const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={spaceInfo.gapConfig?.right ?? 1.5}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const cur = spaceInfo.gapConfig?.right ?? 1.5;
+                        const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 상부 프레임 */}
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부</label>
                   <div className={styles.frameItemInput}>
@@ -3839,7 +3918,6 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                )}
               </div>
 
                           </div>
