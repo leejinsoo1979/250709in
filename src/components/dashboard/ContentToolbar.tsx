@@ -160,7 +160,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       {/* 검색바 */}
       {onSearchChange !== undefined && (
         <div className={styles.searchBox}>
-          <Search size={14} className={styles.searchIcon} />
+          <Search size={16} className={styles.searchIcon} />
           <input
             type="text"
             className={styles.searchInput}

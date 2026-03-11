@@ -248,27 +248,27 @@
 
 .searchIcon {
   position: absolute;
-  left: 8px;
+  left: 10px;
   color: var(--theme-text-muted);
   pointer-events: none;
 }
 
 .searchInput {
-  height: 28px;
-  width: 180px;
-  padding: 0 10px 0 28px;
+  height: 36px;
+  width: 260px;
+  padding: 0 12px 0 32px;
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--theme-text);
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
   transition: all 0.15s;
 }
 
 .searchInput:focus {
   border-color: var(--theme-primary);
-  width: 240px;
+  width: 320px;
 }
 
 .searchInput::placeholder {
