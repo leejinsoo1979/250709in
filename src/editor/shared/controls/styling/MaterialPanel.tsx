@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './MaterialPanel.module.css';
 
@@ -68,10 +67,7 @@ const MaterialPanel: React.FC = () => {
   
   // UI Store에서 도어 상태 가져오기
   const { doorsOpen, toggleDoors } = useUIStore();
-  
-  // 가구 스토어에서 도어가 있는 가구 확인
-  const placedModules = useFurnitureStore(state => state.placedModules);
-  const hasAnyDoor = placedModules.some(module => module.hasDoor);
+
 
   // 현재 스토어의 색상
   const currentStoreColor = materialTab === 'interior'
@@ -445,8 +441,8 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'interior' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('interior');
-            // 도어가 있는 가구가 있고, 내부 탭을 선택하면 도어 열기
-            if (hasAnyDoor && !doorsOpen) {
+            // 내부면 탭 선택 시 도어 열기
+            if (!doorsOpen) {
               toggleDoors();
             }
           }}
@@ -457,8 +453,8 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'door' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('door');
-            // 도어가 있는 가구가 있고, 도어 탭을 선택하면 도어 닫기
-            if (hasAnyDoor && doorsOpen) {
+            // 도어 탭 선택 시 도어 닫기
+            if (doorsOpen) {
               toggleDoors();
             }
           }}
