@@ -3550,8 +3550,6 @@ const Configurator: React.FC = () => {
           {/* 프레임 속성 설정 */}
           {(spaceInfo.surroundType || 'surround') === 'surround' ? (
             <div className={styles.subSetting}>
-              <label className={styles.subLabel}>프레임 폭 설정</label>
-
               <div className={styles.frameGrid}>
                 {/* 좌측 */}
                 <div className={styles.frameItem}>
@@ -3702,12 +3700,9 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-              <div className={styles.frameUnit}>단위: mm</div>
-            </div>
+                          </div>
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>
-              <label className={styles.subLabel}>상부 프레임 설정</label>
-
               <div className={styles.frameGrid}>
                 {/* 상부 프레임만 표시 */}
                 <div className={styles.frameItem}>
@@ -3748,8 +3743,7 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-              <div className={styles.frameUnit}>단위: mm</div>
-            </div>
+                          </div>
           ) : null}
 
         </div>

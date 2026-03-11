@@ -1802,25 +1802,25 @@
 
 /* 서브 설정 */
 .subSetting {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--theme-border-light);
+  margin-top: 4px;
+  padding-top: 0;
+  border-top: none;
 }
 
 .subLabel {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--theme-text);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 /* 프레임 그리드 */
 .frameGrid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 0;
 }
 
 .frameItem {
@@ -1832,7 +1832,7 @@
 .frameItemLabel {
   font-size: 10px;
   color: var(--theme-text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   font-weight: 500;
   text-align: center;
 }
