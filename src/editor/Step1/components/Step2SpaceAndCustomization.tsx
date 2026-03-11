@@ -842,18 +842,38 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                 <div className={styles.toggleButtonsWide}>
                   <button
                     className={`${styles.toggleButton} ${spaceInfo.hasFloorFinish ? styles.active : ''}`}
-                    onClick={() => handleUpdate({ 
-                      hasFloorFinish: true,
-                      floorFinish: spaceInfo.floorFinish || { height: 10 }
-                    })}
+                    onClick={() => {
+                      const finishHeight = spaceInfo.floorFinish?.height || 10;
+                      const currentBaseHeight = spaceInfo.baseConfig?.height || 65;
+                      // 마감재 켤 때: 받침대 높이에서 마감재 두께 차감
+                      const newBaseHeight = Math.max(0, currentBaseHeight - finishHeight);
+                      handleUpdate({
+                        hasFloorFinish: true,
+                        floorFinish: spaceInfo.floorFinish || { height: 10 },
+                        baseConfig: {
+                          ...spaceInfo.baseConfig,
+                          height: newBaseHeight
+                        }
+                      });
+                    }}
                   >
                     {t('common.enabled')}
                   </button>
                   <button
                     className={`${styles.toggleButton} ${!spaceInfo.hasFloorFinish ? styles.active : ''}`}
-                    onClick={() => handleUpdate({ 
-                      hasFloorFinish: false 
-                    })}
+                    onClick={() => {
+                      const finishHeight = spaceInfo.floorFinish?.height || 0;
+                      const currentBaseHeight = spaceInfo.baseConfig?.height || 65;
+                      // 마감재 끌 때: 받침대 높이에 마감재 두께 복원
+                      const newBaseHeight = finishHeight > 0 ? currentBaseHeight + finishHeight : currentBaseHeight;
+                      handleUpdate({
+                        hasFloorFinish: false,
+                        baseConfig: {
+                          ...spaceInfo.baseConfig,
+                          height: newBaseHeight
+                        }
+                      });
+                    }}
                   >
                     {t('common.none')}
                   </button>
@@ -869,11 +889,21 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       type="number"
                       className={styles.wideInputField}
                       value={spaceInfo.floorFinish?.height || 10}
-                      onChange={(e) => handleUpdate({
-                        floorFinish: {
-                          height: parseInt(e.target.value) || 10
-                        }
-                      })}
+                      onChange={(e) => {
+                        const newFinishHeight = parseInt(e.target.value) || 10;
+                        const oldFinishHeight = spaceInfo.floorFinish?.height || 10;
+                        const currentBaseHeight = spaceInfo.baseConfig?.height ?? 65;
+                        // 마감재 두께 변경분만큼 받침대 높이 조정
+                        const diff = newFinishHeight - oldFinishHeight;
+                        const newBaseHeight = Math.max(0, currentBaseHeight - diff);
+                        handleUpdate({
+                          floorFinish: { height: newFinishHeight },
+                          baseConfig: {
+                            ...spaceInfo.baseConfig,
+                            height: newBaseHeight
+                          }
+                        });
+                      }}
                       min="5"
                       max="50"
                     />
