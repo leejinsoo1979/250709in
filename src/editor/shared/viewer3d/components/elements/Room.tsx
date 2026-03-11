@@ -286,7 +286,7 @@ const Room: React.FC<RoomProps> = ({
   const cameraMode = cameraModeOverride || cameraModeFromStore;
 
   // Three.js hooks for camera tracking
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
 
   // 벽 재질 refs - ShaderMaterial로 타입 변경
   const leftWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
@@ -874,6 +874,7 @@ const Room: React.FC<RoomProps> = ({
 
           material.map = texture;
           material.needsUpdate = true;
+          invalidate(); // 텍스처 로딩 후 즉시 리렌더링
         },
         undefined,
         (error) => {
@@ -883,7 +884,7 @@ const Room: React.FC<RoomProps> = ({
     }
 
     return material;
-  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color]);
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color, invalidate]);
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
