@@ -1138,7 +1138,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
-          leftText = `이격 ${Math.round(leftValue)}`;
+          leftText = `이격 ${Number.isInteger(leftValue) ? leftValue : leftValue.toFixed(1)}`;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
@@ -1253,7 +1253,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
-          rightText = `이격 ${Math.round(rightValue)}`;
+          rightText = `이격 ${Number.isInteger(rightValue) ? rightValue : rightValue.toFixed(1)}`;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
