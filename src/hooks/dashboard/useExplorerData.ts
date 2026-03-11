@@ -22,7 +22,8 @@ import type { ExplorerItem, QuickAccessMenu, UseExplorerDataReturn } from './typ
 export function useExplorerData(
   currentProjectId: string | null,
   currentFolderId: string | null,
-  activeMenu: QuickAccessMenu
+  activeMenu: QuickAccessMenu,
+  searchTerm?: string
 ): UseExplorerDataReturn {
   const { user } = useAuth();
 
@@ -275,6 +276,59 @@ export function useExplorerData(
   const deletedProjects = projects.filter(p => p.isDeleted);
 
   const currentItems: ExplorerItem[] = (() => {
+    // 글로벌 검색: searchTerm이 있으면 모든 프로젝트 + 모든 디자인 파일에서 검색
+    if (searchTerm && searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const items: ExplorerItem[] = [];
+
+      // 프로젝트 검색
+      activeProjects.forEach(p => {
+        if (p.title.toLowerCase().includes(term)) {
+          items.push({
+            id: p.id, name: p.title, type: 'project',
+            updatedAt: p.updatedAt, thumbnail: p.thumbnail,
+            spaceSize: p.spaceSize, furnitureCount: p.furnitureCount,
+            status: p.status, isShared: p.isShared,
+          });
+        }
+      });
+
+      // 모든 디자인 파일 검색
+      Object.entries(projectDesignFiles).forEach(([projectId, files]) => {
+        (files || []).filter((df: any) => !df.isDeleted).forEach((df: any) => {
+          if (df.name && df.name.toLowerCase().includes(term)) {
+            const owner = projectOwners[df.userId];
+            items.push({
+              id: df.id, name: df.name, type: 'design',
+              projectId, folderId: df.folderId,
+              updatedAt: df.updatedAt, thumbnail: df.thumbnail,
+              spaceSize: df.spaceSize, furnitureCount: df.furnitureCount,
+              userId: df.userId,
+              ownerName: owner?.displayName,
+              ownerPhotoURL: owner?.photoURL || undefined,
+            });
+          }
+        });
+      });
+
+      // 폴더 검색
+      Object.entries(folders).forEach(([projectId, projectFolders]) => {
+        projectFolders.forEach(folder => {
+          if (folder.name.toLowerCase().includes(term)) {
+            const folderTimestamp = folder.createdAt
+              || (folder.id.startsWith('folder_') ? parseInt(folder.id.split('_')[1], 10) : undefined);
+            items.push({
+              id: folder.id, name: folder.name, type: 'folder',
+              projectId,
+              updatedAt: folderTimestamp ? Timestamp.fromMillis(folderTimestamp) : undefined,
+            });
+          }
+        });
+      });
+
+      return items;
+    }
+
     // 휴지통 메뉴
     if (activeMenu === 'trash') {
       const items: ExplorerItem[] = [];
