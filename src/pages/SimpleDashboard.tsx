@@ -730,6 +730,8 @@ const SimpleDashboard: React.FC = () => {
                 onSearchChange={setSearchTerm}
                 projects={data.projects}
                 folders={data.folders}
+                currentItems={data.currentItems}
+                onItemNavigate={handleItemDoubleClick}
               />
 
               <ContentPane

@@ -143,6 +143,15 @@
   color: var(--theme-text);
 }
 
+.breadcrumbChevronActive {
+  color: white;
+}
+
+.breadcrumbChevronActive:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
 /* 브레드크럼 드롭다운 메뉴 */
 .breadcrumbDropdown {
   position: absolute;
