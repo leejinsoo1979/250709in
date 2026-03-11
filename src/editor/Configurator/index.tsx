@@ -163,6 +163,7 @@ const Configurator: React.FC = () => {
   // 모바일/태블릿 반응형 상태
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [isSlotGuideOpen, setIsSlotGuideOpen] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -4330,6 +4331,81 @@ const Configurator: React.FC = () => {
               readOnly={isReadOnly} // 읽기 전용 모드
               sceneRef={sceneRef} // GLB 내보내기용 씬 참조
             />
+
+            {/* 슬롯 분할 가이드 도움말 ? 아이콘 */}
+            <button
+              className={`${styles.slotGuideHelpButton} ${isSlotGuideOpen ? styles.active : ''}`}
+              onClick={() => setIsSlotGuideOpen(!isSlotGuideOpen)}
+              title="슬롯 분할 가이드"
+            >
+              ?
+            </button>
+
+            {/* 슬롯 분할 가이드 설명 팝업 */}
+            {isSlotGuideOpen && <div style={{ position: 'fixed', inset: 0, zIndex: 150 }} onClick={() => setIsSlotGuideOpen(false)} />}
+            {isSlotGuideOpen && (() => {
+              const totalW = spaceInfo.width;
+              const gapL = spaceInfo.gapDistance?.left || 0;
+              const gapR = spaceInfo.gapDistance?.right || 0;
+              const internalW = totalW - gapL - gapR;
+              const cols = spaceInfo.columns?.length || spaceInfo.mainDoorCount || 1;
+              const rawSlot = internalW / cols;
+              const singleW = Math.floor(rawSlot);
+              const dualW = Math.floor(rawSlot * 2 * 2) / 2;
+              return (
+                <div className={styles.slotGuidePopup}>
+                  <div className={styles.slotGuidePopupTitle}>
+                    📐 슬롯 분할 가이드
+                  </div>
+
+                  <div className={styles.slotGuidePopupSection}>
+                    <div className={styles.slotGuidePopupLabel}>내경 계산</div>
+                    <p className={styles.slotGuidePopupDesc}>
+                      전체 너비에서 좌우 이격거리를 빼서 <strong>내경(실제 사용 가능 너비)</strong>을 구합니다.
+                    </p>
+                    <p className={styles.slotGuidePopupDesc}>
+                      <span className={styles.slotGuidePopupFormula}>
+                        {totalW} − {gapL} − {gapR} = {internalW}mm
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className={styles.slotGuidePopupDivider} />
+
+                  <div className={styles.slotGuidePopupSection}>
+                    <div className={styles.slotGuidePopupLabel}>슬롯 분할</div>
+                    <p className={styles.slotGuidePopupDesc}>
+                      내경을 컬럼 수({cols}개)로 나누어 각 슬롯 너비를 결정합니다.
+                    </p>
+                    <p className={styles.slotGuidePopupDesc}>
+                      <span className={styles.slotGuidePopupFormula}>
+                        {internalW} ÷ {cols} = {(internalW / cols).toFixed(1)}mm
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className={styles.slotGuidePopupDivider} />
+
+                  <div className={styles.slotGuidePopupSection}>
+                    <div className={styles.slotGuidePopupLabel}>가구 너비 결정 (내림 규칙)</div>
+                    <p className={styles.slotGuidePopupDesc}>
+                      가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.
+                    </p>
+                  </div>
+
+                  <div className={styles.slotGuidePopupExample}>
+                    <div className={styles.slotGuidePopupExampleRow}>
+                      <span>싱글 가구 (1칸)</span>
+                      <span>{singleW}mm (정수 내림)</span>
+                    </div>
+                    <div className={styles.slotGuidePopupExampleRow}>
+                      <span>듀얼 가구 (2칸)</span>
+                      <span>{dualW % 1 === 0 ? dualW : dualW.toFixed(1)}mm (0.5 단위 내림)</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 측면뷰용 슬롯 선택 버튼 */}
             <SlotSelector />

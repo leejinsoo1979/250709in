@@ -780,6 +780,130 @@
   border-color: var(--theme-primary);
 }
 
+/* 슬롯 가이드 도움말 ? 아이콘 */
+.slotGuideHelpButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: rgba(255, 255, 255, 0.92);
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(6px);
+  line-height: 1;
+}
+
+.slotGuideHelpButton:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  background: #ffffff;
+}
+
+.slotGuideHelpButton.active {
+  border-color: var(--theme-primary);
+  color: #ffffff;
+  background: var(--theme-primary);
+}
+
+/* 슬롯 분할 가이드 설명 팝업 */
+.slotGuidePopup {
+  position: absolute;
+  top: 48px;
+  right: 12px;
+  z-index: 200;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  animation: slotGuidePopupIn 0.15s ease-out;
+}
+
+@keyframes slotGuidePopupIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slotGuidePopupTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slotGuidePopupSection {
+  margin-bottom: 12px;
+}
+
+.slotGuidePopupSection:last-child {
+  margin-bottom: 0;
+}
+
+.slotGuidePopupLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.slotGuidePopupDesc {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.slotGuidePopupFormula {
+  display: inline-block;
+  background: #f3f4f6;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.slotGuidePopupExample {
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+.slotGuidePopupExampleRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.8;
+}
+
+.slotGuidePopupExampleRow span:last-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+.slotGuidePopupDivider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 12px 0;
+}
+
 .viewerDoorButton.active:hover {
   background: var(--theme-primary-hover);
   border-color: var(--theme-primary-hover);
