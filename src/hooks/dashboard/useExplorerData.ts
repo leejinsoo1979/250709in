@@ -178,6 +178,8 @@ export function useExplorerData(
       return;
     }
 
+    setProjectsLoading(true);
+
     const timeoutId = setTimeout(() => {
       const unsubscribe = subscribeToUserProjects(user.uid, (loadedProjects) => {
         setProjects(loadedProjects);
