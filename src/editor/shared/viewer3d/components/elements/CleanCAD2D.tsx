@@ -1528,13 +1528,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
 
-                {/* 경계면 이격거리 치수선 */}
+                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
                 {(() => {
                   // ColumnIndexer에서 계산된 boundaryGap 사용
                   const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                   const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
 
-                  const boundaryGapY = subDimensionY - mmToThreeUnits(60); // 구간 치수선 아래
+                  const boundaryGapY = topDimensionY - mmToThreeUnits(120); // 좌우 이격과 동일한 Y 레벨
                   let boundaryLeftX: number;
                   let boundaryRightX: number;
 
@@ -1553,34 +1553,31 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       <Line
                         points={[[boundaryLeftX, boundaryGapY, 0.003], [boundaryRightX, boundaryGapY, 0.003]]}
                         color={dimensionColor}
-                        lineWidth={0.5}
-                        dashed
+                        lineWidth={1}
                       />
                       <Line
-                        points={createArrowHead([boundaryLeftX, boundaryGapY, 0.003], [boundaryLeftX + 0.03, boundaryGapY, 0.003])}
+                        points={createArrowHead([boundaryLeftX, boundaryGapY, 0.003], [boundaryLeftX + 0.02, boundaryGapY, 0.003])}
                         color={dimensionColor}
-                        lineWidth={0.5}
+                        lineWidth={1}
                       />
                       <Line
-                        points={createArrowHead([boundaryRightX, boundaryGapY, 0.003], [boundaryRightX - 0.03, boundaryGapY, 0.003])}
+                        points={createArrowHead([boundaryRightX, boundaryGapY, 0.003], [boundaryRightX - 0.02, boundaryGapY, 0.003])}
                         color={dimensionColor}
-                        lineWidth={0.5}
+                        lineWidth={1}
                       />
-                      {(showDimensionsText || isStep2) && (
-                        <Text
-                          renderOrder={1000}
-                          depthTest={false}
-                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY + mmToThreeUnits(20), 0.01]}
-                          fontSize={smallFontSize * 0.8}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          outlineWidth={textOutlineWidth}
-                          outlineColor={textOutlineColor}
-                        >
-                          {Math.round(boundaryGapMm)}
-                        </Text>
-                      )}
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY - mmToThreeUnits(30), 0.01]}
+                        fontSize={smallFontSize * 0.85}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                      >
+                        {`이격 ${boundaryGapMm}`}
+                      </Text>
                     </>
                   );
                 })()}
@@ -3102,16 +3099,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                   const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
 
-                  const boundaryGapZ = subDimensionZ - mmToThreeUnits(60); // 구간 치수선 아래
+                  const boundaryGapZ = subDimensionZ - mmToThreeUnits(60);
                   let boundaryLeftX: number;
                   let boundaryRightX: number;
 
                   if (spaceInfo.droppedCeiling.position === 'left') {
-                    // 왼쪽 단내림: 단내림 끝 ~ 메인 시작
                     boundaryLeftX = droppedEndX;
                     boundaryRightX = mainStartX;
                   } else {
-                    // 오른쪽 단내림: 메인 끝 ~ 단내림 시작
                     boundaryLeftX = mainEndX;
                     boundaryRightX = droppedStartX;
                   }
@@ -3121,35 +3116,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       <Line
                         points={[[boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryRightX, spaceHeight, boundaryGapZ]]}
                         color={dimensionColor}
-                        lineWidth={0.5}
-                        dashed
+                        lineWidth={1}
                       />
                       <Line
-                        points={createArrowHead([boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryLeftX + 0.03, spaceHeight, boundaryGapZ])}
+                        points={createArrowHead([boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryLeftX + 0.02, spaceHeight, boundaryGapZ])}
                         color={dimensionColor}
-                        lineWidth={0.5}
+                        lineWidth={1}
                       />
                       <Line
-                        points={createArrowHead([boundaryRightX, spaceHeight, boundaryGapZ], [boundaryRightX - 0.03, spaceHeight, boundaryGapZ])}
+                        points={createArrowHead([boundaryRightX, spaceHeight, boundaryGapZ], [boundaryRightX - 0.02, spaceHeight, boundaryGapZ])}
                         color={dimensionColor}
-                        lineWidth={0.5}
+                        lineWidth={1}
                       />
-                      {(showDimensionsText || isStep2) && (
-                        <Text
-                          renderOrder={1000}
-                          depthTest={false}
-                          position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
-                          fontSize={smallFontSize * 0.8}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          outlineWidth={textOutlineWidth}
-                          outlineColor={textOutlineColor}
-                          rotation={[-Math.PI / 2, 0, 0]}
-                        >
-                          {Math.round(boundaryGapMm)}
-                        </Text>
-                      )}
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
+                        fontSize={smallFontSize * 0.85}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[-Math.PI / 2, 0, 0]}
+                      >
+                        {`이격 ${boundaryGapMm}`}
+                      </Text>
                     </>
                   );
                 })()}
