@@ -3795,7 +3795,7 @@ const Configurator: React.FC = () => {
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
-                {/* 좌측 이격거리 */}
+                {/* 좌측 이격거리 - 벽없음이면 비활성화 */}
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>좌이격</label>
                   <div className={styles.frameItemInput}>
@@ -3806,13 +3806,14 @@ const Configurator: React.FC = () => {
                         const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
                       }}
+                      disabled={!spaceInfo.wallConfig?.left}
                     >
                       −
                     </button>
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={spaceInfo.gapConfig?.left ?? 1.5}
+                      value={spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left ?? 1.5) : 0}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
@@ -3824,6 +3825,7 @@ const Configurator: React.FC = () => {
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
                       }}
                       className={styles.frameNumberInput}
+                      disabled={!spaceInfo.wallConfig?.left}
                     />
                     <button
                       className={styles.frameButton}
@@ -3832,13 +3834,14 @@ const Configurator: React.FC = () => {
                         const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
                       }}
+                      disabled={!spaceInfo.wallConfig?.left}
                     >
                       +
                     </button>
                   </div>
                 </div>
 
-                {/* 우측 이격거리 */}
+                {/* 우측 이격거리 - 벽없음이면 비활성화 */}
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>우이격</label>
                   <div className={styles.frameItemInput}>
@@ -3849,13 +3852,14 @@ const Configurator: React.FC = () => {
                         const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
                       }}
+                      disabled={!spaceInfo.wallConfig?.right}
                     >
                       −
                     </button>
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={spaceInfo.gapConfig?.right ?? 1.5}
+                      value={spaceInfo.wallConfig?.right ? (spaceInfo.gapConfig?.right ?? 1.5) : 0}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
@@ -3867,6 +3871,7 @@ const Configurator: React.FC = () => {
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
                       }}
                       className={styles.frameNumberInput}
+                      disabled={!spaceInfo.wallConfig?.right}
                     />
                     <button
                       className={styles.frameButton}
@@ -3875,6 +3880,7 @@ const Configurator: React.FC = () => {
                         const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
                       }}
+                      disabled={!spaceInfo.wallConfig?.right}
                     >
                       +
                     </button>
