@@ -2355,8 +2355,8 @@ const Configurator: React.FC = () => {
       finalUpdates.installType = 'builtin';
     }
 
-    // 서라운드 타입 변경 시 프레임 설정 초기화
-    if (updates.surroundType) {
+    // 서라운드 타입 변경 시 프레임 설정 초기화 (실제로 surroundType이 변경된 경우에만)
+    if (updates.surroundType && updates.surroundType !== spaceInfo.surroundType) {
       const currentInstallType = finalUpdates.installType || spaceInfo.installType;
       const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
       const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 10 };

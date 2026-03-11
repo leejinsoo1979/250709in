@@ -3760,6 +3760,9 @@ export default React.memo(Room, (prevProps, nextProps) => {
   // surroundType 비교 (노서라운드 설정 변경 시 프레임 업데이트)
   if (prevSpace.surroundType !== nextSpace.surroundType) return false;
 
+  // frameConfig 비교 (전체서라운드 ↔ 양쪽서라운드 전환 시 업데이트)
+  if (JSON.stringify(prevSpace.frameConfig) !== JSON.stringify(nextSpace.frameConfig)) return false;
+
   // frameSize 비교 (프레임 크기 변경 시 업데이트)
   if (JSON.stringify(prevSpace.frameSize) !== JSON.stringify(nextSpace.frameSize)) return false;
 
