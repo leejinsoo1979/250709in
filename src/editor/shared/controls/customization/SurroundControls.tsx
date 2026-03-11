@@ -110,26 +110,11 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       onUpdate(updates);
     } else if (mode === 'sides-only') {
-      // 양쪽서라운드 = 기존 서라운드와 100% 동일
-      const updates: Partial<SpaceInfo> = { surroundType: 'surround' };
-      const installType = spaceInfo.installType;
-
-      if (installType === 'builtin' || installType === 'built-in') {
-        updates.frameSize = { left: 50, right: 50, top: spaceInfo.frameSize?.top || 10 };
-      } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        updates.frameSize = {
-          left: hasLeftWall ? 50 : END_PANEL_WIDTH,
-          right: hasRightWall ? 50 : END_PANEL_WIDTH,
-          top: spaceInfo.frameSize?.top || 10,
-        };
-      } else if (installType === 'freestanding') {
-        updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: spaceInfo.frameSize?.top || 10 };
-      }
-
-      updates.gapConfig = { left: 2, right: 2 };
-      updates.frameConfig = { left: true, right: true, top: false, bottom: false };
-
-      onUpdate(updates);
+      // 양쪽서라운드 = 기존 서라운드 그대로, frameConfig만 구분용으로 변경
+      onUpdate({
+        surroundType: 'surround',
+        frameConfig: { ...frameConfig, top: false, bottom: false },
+      });
     } else {
       // 노서라운드
       const updates: Partial<SpaceInfo> = { surroundType: 'no-surround' };
