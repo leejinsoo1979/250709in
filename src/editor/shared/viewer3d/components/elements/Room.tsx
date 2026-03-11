@@ -278,6 +278,10 @@ const Room: React.FC<RoomProps> = ({
   // 자유배치 모드에서는 프레임 숨김 (사용자가 직접 추가)
   const effectiveShowFrame = isFreePlacement ? false : showFrame;
 
+  // 전체서라운드 여부: surround + top/bottom 모두 활성화 → 상부 프레임이 좌우와 같은 Z축
+  const isFullSurround = spaceInfo.surroundType === 'surround' &&
+    spaceInfo.frameConfig?.top !== false && spaceInfo.frameConfig?.bottom !== false;
+
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
 
@@ -885,6 +889,7 @@ const Room: React.FC<RoomProps> = ({
 
   // useEffect+useState로 material을 관리
   const [baseFrameMaterial, setBaseFrameMaterial] = useState<THREE.Material>();
+  const [baseDroppedFrameMaterial, setBaseDroppedFrameMaterial] = useState<THREE.Material>();
   const [leftFrameMaterial, setLeftFrameMaterial] = useState<THREE.Material>();
   const [leftSubFrameMaterial, setLeftSubFrameMaterial] = useState<THREE.Material>();
   const [rightFrameMaterial, setRightFrameMaterial] = useState<THREE.Material>();
@@ -897,6 +902,11 @@ const Room: React.FC<RoomProps> = ({
   useEffect(() => {
     const mat = createFrameMaterial('base');
     setBaseFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  useEffect(() => {
+    const mat = createFrameMaterial('base');
+    setBaseDroppedFrameMaterial(mat);
     return () => mat.dispose();
   }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
@@ -2639,9 +2649,11 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     frameX, // 이미 엔드패널이 조정된 위치
                     topElementsY,
-                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                    furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                    // 전체서라운드: 좌우 프레임과 같은 Z축, 그 외: 뒤쪽
+                    isFullSurround
+                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -2786,8 +2798,10 @@ const Room: React.FC<RoomProps> = ({
                       position={[
                         droppedX,
                         panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight / 2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
-                        furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                        isFullSurround
+                          ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                          : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
                       material={topDroppedFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
@@ -2807,8 +2821,10 @@ const Room: React.FC<RoomProps> = ({
                       position={[
                         normalX,
                         topElementsY,
-                        furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                        isFullSurround
+                          ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                          : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
                       material={topFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
@@ -2885,9 +2901,10 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
                     topElementsY,
-                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                    furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                    isFullSurround
+                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -2923,9 +2940,10 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     segment.x, // 분절된 위치
                     topElementsY,
-                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                    furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                    isFullSurround
+                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -3406,6 +3424,10 @@ const Room: React.FC<RoomProps> = ({
 
               // 각 영역에 대해 하부프레임 렌더링
               return renderZones.map((renderZone, zoneIndex) => {
+                // 단내림 구간은 별도 material 인스턴스 사용 (R3F primitive attach 이슈 방지)
+                const zoneMaterial = renderZone.zone === 'dropped'
+                  ? (baseDroppedFrameMaterial ?? createFrameMaterial('base'))
+                  : (baseFrameMaterial ?? createFrameMaterial('base'));
                 // mm 단위를 Three.js 단위로 변환 - 노서라운드에서 엔드패널 제외
                 let frameStartX = mmToThreeUnits(renderZone.startX);
                 let frameEndX = mmToThreeUnits(renderZone.endX);
@@ -3467,7 +3489,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
                         mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                       ]}
-                      material={baseFrameMaterial ?? createFrameMaterial('base')}
+                      material={zoneMaterial}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
@@ -3549,7 +3571,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
                         mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                       ]}
-                      material={baseFrameMaterial ?? createFrameMaterial('base')}
+                      material={zoneMaterial}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
@@ -3590,7 +3612,7 @@ const Room: React.FC<RoomProps> = ({
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(END_PANEL_THICKNESS) -
                         mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                       ]}
-                      material={baseFrameMaterial ?? createFrameMaterial('base')}
+                      material={zoneMaterial}
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
