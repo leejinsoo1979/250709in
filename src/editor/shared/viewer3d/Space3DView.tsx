@@ -2056,8 +2056,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               style={{
                 position: 'absolute',
                 bottom: '16px',
-                left: '50%',
-                transform: 'translateX(-50%)',
+                right: '10px',
                 zIndex: 20,
                 display: 'flex',
                 alignItems: 'center',
