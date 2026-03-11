@@ -49,32 +49,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
           
-          {/* 추후 다른 설정들 추가 가능 */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('settings.general')}</h3>
-            <div className={styles.settingItem}>
-              <span>{t('settings.language')}</span>
-              <select 
-                value={currentLanguage} 
-                onChange={handleLanguageChange}
-                className={styles.languageSelect}
-              >
-                {availableLanguages.map(lang => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.settingItem}>
-              <span>{t('settings.notifications')}</span>
-              <input type="checkbox" defaultChecked />
-            </div>
-            <div className={styles.settingItem}>
-              <span>{t('settings.autoSave')}</span>
-              <input type="checkbox" defaultChecked />
-            </div>
-          </div>
+          {/* 언어 설정: 현재 한국어 고정, 추후 다국어 지원 시 활성화 */}
         </div>
       </div>
     </>
