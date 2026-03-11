@@ -18,12 +18,17 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
 
   const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left ?? 1.5);
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right ?? 1.5);
+  const [middleGap, setMiddleGap] = useState(spaceInfo?.gapConfig?.middle ?? 2);
+
+  // 단내림 활성화 여부
+  const hasDroppedCeiling = spaceInfo?.droppedCeiling?.enabled === true;
 
   // spaceInfo 변경 시 상태 업데이트
   useEffect(() => {
     setLeftGap(spaceInfo?.gapConfig?.left ?? 1.5);
     setRightGap(spaceInfo?.gapConfig?.right ?? 1.5);
-  }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right]);
+    setMiddleGap(spaceInfo?.gapConfig?.middle ?? 2);
+  }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right, spaceInfo?.gapConfig?.middle]);
 
   if (!forceShow) {
     // 기존 로직: 노서라운드가 아니면 숨김
@@ -85,11 +90,12 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
     }
   }
 
-  const updateGap = (side: 'left' | 'right', value: number) => {
+  const updateGap = (side: 'left' | 'right' | 'middle', value: number) => {
     const newGapConfig = {
       left: spaceInfo.gapConfig?.left ?? 1.5,
       right: spaceInfo.gapConfig?.right ?? 1.5,
       top: spaceInfo.gapConfig?.top ?? 0,
+      middle: spaceInfo.gapConfig?.middle ?? 2,
       [side]: value
     };
 
@@ -98,23 +104,27 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
     });
   };
 
-  const handleInputChange = (side: 'left' | 'right', value: string) => {
+  const handleInputChange = (side: 'left' | 'right' | 'middle', value: string) => {
     const numValue = parseFloat(value) || 0;
     if (side === 'left') {
       setLeftGap(numValue);
-    } else {
+    } else if (side === 'right') {
       setRightGap(numValue);
+    } else {
+      setMiddleGap(numValue);
     }
   };
 
-  const handleInputBlur = (side: 'left' | 'right') => {
-    const value = side === 'left' ? leftGap : rightGap;
+  const handleInputBlur = (side: 'left' | 'right' | 'middle') => {
+    const value = side === 'left' ? leftGap : side === 'right' ? rightGap : middleGap;
     const clampedValue = Math.max(0, Math.min(5, Math.round(value * 2) / 2)); // 0-5mm 범위, 0.5 단위
 
     if (side === 'left') {
       setLeftGap(clampedValue);
-    } else {
+    } else if (side === 'right') {
       setRightGap(clampedValue);
+    } else {
+      setMiddleGap(clampedValue);
     }
 
     updateGap(side, clampedValue);
@@ -174,6 +184,47 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
           </div>
           )}
 
+          {/* 중간 이격거리 - 단내림 활성 시에만 표시 */}
+          {hasDroppedCeiling && (
+          <div className={styles.gapItem}>
+            <label className={styles.gapLabel}>
+              중간
+            </label>
+            <div className={styles.gapControl}>
+              <button
+                className={styles.controlButton}
+                onClick={() => {
+                  const newValue = Math.max(0, Math.round((middleGap - 0.5) * 10) / 10);
+                  setMiddleGap(newValue);
+                  updateGap('middle', newValue);
+                }}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={middleGap}
+                onChange={(e) => handleInputChange('middle', e.target.value)}
+                onBlur={() => handleInputBlur('middle')}
+                className={styles.gapInput}
+                min="0"
+                max="5"
+                step="0.5"
+              />
+              <button
+                className={styles.controlButton}
+                onClick={() => {
+                  const newValue = Math.min(5, Math.round((middleGap + 0.5) * 10) / 10);
+                  setMiddleGap(newValue);
+                  updateGap('middle', newValue);
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          )}
+
           {/* 우측 이격거리 */}
           {showRight && (
           <div className={styles.gapItem}>
@@ -215,7 +266,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
           </div>
           )}
         </div>
-        {((showLeft && leftGap < 1.5) || (showRight && rightGap < 1.5)) && (
+        {((showLeft && leftGap < 1.5) || (showRight && rightGap < 1.5) || (hasDroppedCeiling && middleGap < 1.5)) && (
           <p style={{ color: '#e53e3e', fontSize: '11px', margin: '6px 0 0', fontWeight: 500 }}>
             이격거리 1.5mm 이상을 권장
           </p>
