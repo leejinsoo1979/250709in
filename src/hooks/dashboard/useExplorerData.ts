@@ -190,16 +190,19 @@ export function useExplorerData(
     return () => clearTimeout(timeoutId);
   }, [user]);
 
-  // 프로젝트 로드 시 디자인 파일 로드
+  // 프로젝트 로드 시 디자인 파일 + 폴더 로드
   useEffect(() => {
     if (projects.length > 0 && user) {
       projects.forEach(project => {
         if (!projectDesignFiles[project.id] && !designFilesLoading[project.id]) {
           loadDesignFilesForProject(project.id);
         }
+        if (!folders[project.id]) {
+          loadFolderDataForProject(project.id);
+        }
       });
     }
-  }, [projects, user, loadDesignFilesForProject]);
+  }, [projects, user, loadDesignFilesForProject, loadFolderDataForProject]);
 
   // 공유 프로젝트 로드
   useEffect(() => {
