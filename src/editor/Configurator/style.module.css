@@ -477,7 +477,7 @@
 
 /* 모듈 패널 스타일 */
 .modulePanelContent {
-  padding: var(--spacing-md, 12px);
+  padding: 4px var(--spacing-md, 12px) var(--spacing-md, 12px);
   height: 100%;
   display: flex;
   flex-direction: column;
