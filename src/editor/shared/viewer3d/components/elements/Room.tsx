@@ -1857,7 +1857,7 @@ const Room: React.FC<RoomProps> = ({
           isOuterFrame
           args={[width, floorFinishHeight, extendedPanelDepth]}
           position={[xOffset + width / 2, yOffset + floorFinishHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
-          material={new THREE.MeshLambertMaterial({ color: floorColor, transparent: true, opacity: 0.3 })}
+          material={new THREE.MeshLambertMaterial({ color: floorColor })}
           renderMode={renderMode}
           viewMode={viewMode}
           shadowEnabled={shadowEnabled}
