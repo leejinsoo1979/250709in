@@ -932,8 +932,8 @@ export class ColumnIndexer {
         droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.left;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 일반구간(우): 우측 프레임만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
+        // 일반구간(우): 우측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
         console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
@@ -993,8 +993,8 @@ export class ColumnIndexer {
         droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - leftReduction;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 일반구간(우): 우측 이격거리만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
+        // 일반구간(우): 우측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
@@ -1018,8 +1018,8 @@ export class ColumnIndexer {
         // 서라운드: 중간 경계면 이격거리 적용
         const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 2;
 
-        // 일반구간(좌): 좌측 프레임만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
+        // 일반구간(좌): 좌측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
 
         // 단내림구간(우): 우측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
@@ -1079,8 +1079,8 @@ export class ColumnIndexer {
           }
         }
 
-        // 일반구간(좌): 좌측 이격거리만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
+        // 일반구간(좌): 좌측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
 
         // 단내림구간(우): 우측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)

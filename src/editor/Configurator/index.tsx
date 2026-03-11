@@ -4452,8 +4452,8 @@ const Configurator: React.FC = () => {
               const droppedW = spaceInfo.droppedCeiling?.width || 900;
               const droppedPos = spaceInfo.droppedCeiling?.position || 'right';
 
-              // 단내림 구간별 슬롯 영역 계산
-              // 메인구간: 외벽쪽 이격만 차감
+              // 단내림 구간별 슬롯 영역 계산 (B안)
+              // 메인구간: 외벽쪽 이격 + 중간이격 차감
               // 단내림구간: 중간이격 흡수(+) + 외벽쪽 이격 차감(-)
               const mainOuterW = totalW - droppedW; // 메인구간 외부 너비
               let mainSlotW: number;
@@ -4462,12 +4462,12 @@ const Configurator: React.FC = () => {
               if (hasDropped) {
                 if (droppedPos === 'right') {
                   // 메인(좌), 단내림(우)
-                  mainSlotW = mainOuterW - leftReduction;
+                  mainSlotW = mainOuterW - leftReduction - gapM;
                   droppedSlotW = droppedW + gapM - rightReduction;
                 } else {
                   // 단내림(좌), 메인(우)
                   droppedSlotW = droppedW + gapM - leftReduction;
-                  mainSlotW = mainOuterW - rightReduction;
+                  mainSlotW = mainOuterW - rightReduction - gapM;
                 }
               } else {
                 mainSlotW = internalW;
@@ -4524,11 +4524,11 @@ const Configurator: React.FC = () => {
                       <div className={styles.slotGuidePopupSection}>
                         <div className={styles.slotGuidePopupLabel}>메인 구간 ({droppedPos === 'right' ? '좌' : '우'})</div>
                         <p className={styles.slotGuidePopupDesc}>
-                          메인 {mainOuterW}mm에서 {droppedPos === 'right' ? leftLabel : rightLabel}를 빼서 <strong>슬롯 영역 {fmtSlot(normalW)}mm</strong>
+                          메인 {mainOuterW}mm에서 {droppedPos === 'right' ? leftLabel : rightLabel} + 중간이격 {gapM}mm를 빼서 <strong>슬롯 영역 {fmtSlot(normalW)}mm</strong>
                         </p>
                         <p className={styles.slotGuidePopupDesc}>
                           <span className={styles.slotGuidePopupFormula}>
-                            ({mainOuterW} − {droppedPos === 'right' ? leftReduction : rightReduction}) ÷ {normalCols} = {fmtSlot(normalRawSlot)}mm
+                            ({mainOuterW} − {droppedPos === 'right' ? leftReduction : rightReduction} − {gapM}) ÷ {normalCols} = {fmtSlot(normalRawSlot)}mm
                           </span>
                         </p>
                       </div>
