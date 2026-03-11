@@ -3490,6 +3490,12 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
+        {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
+        <GapControls
+          spaceInfo={spaceInfo}
+          onUpdate={handleSpaceInfoUpdate}
+        />
+
         {/* 컬럼수 표시 */}
         {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
         <div className={styles.configSection}>
@@ -3772,11 +3778,6 @@ const Configurator: React.FC = () => {
 
         </div>
 
-        {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
-        <GapControls
-          spaceInfo={spaceInfo}
-          onUpdate={handleSpaceInfoUpdate}
-        />
         </>)}
 
         {/* 받침대 - 양쪽 탭에서 모두 표시 */}
