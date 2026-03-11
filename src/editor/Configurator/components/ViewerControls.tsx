@@ -342,18 +342,20 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       <div className={styles.spacer} />
 
-      {/* ─── Right: View direction ─── */}
-      <div className={styles.segmentedControl} style={{ marginRight: '80px' }}>
-        {viewDirections.map((direction) => (
-          <button
-            key={direction.id}
-            data-view-direction={direction.id}
-            className={`${styles.segmentButton} ${view2DDirection === direction.id ? styles.segmentActive : ''}`}
-            style={{ padding: '0 16px', height: '30px', fontSize: '12px' }}
-            onClick={() => handleViewDirectionChange(direction.id)}
-          >{direction.label}</button>
-        ))}
-      </div>
+      {/* ─── Right: View direction (2D 모드에서만 표시) ─── */}
+      {viewMode === '2D' && (
+        <div className={styles.segmentedControl} style={{ marginRight: '80px' }}>
+          {viewDirections.map((direction) => (
+            <button
+              key={direction.id}
+              data-view-direction={direction.id}
+              className={`${styles.segmentButton} ${view2DDirection === direction.id ? styles.segmentActive : ''}`}
+              style={{ padding: '0 16px', height: '30px', fontSize: '12px' }}
+              onClick={() => handleViewDirectionChange(direction.id)}
+            >{direction.label}</button>
+          ))}
+        </div>
+      )}
 
       {showQRGenerator && (
         <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />

@@ -16,7 +16,7 @@ interface PreviewViewerProps {
  */
 const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode, setViewMode, setView2DDirection, setSelectedSlotIndex } = useUIStore();
+  const { viewMode, setViewMode, view2DDirection, setView2DDirection, setSelectedSlotIndex } = useUIStore();
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
 
@@ -62,6 +62,25 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
             </svg>
           </button>
         </div>
+        {/* 2D 미리보기일 때 뷰 방향 버튼 */}
+        {!isCollapsed && previewMode === '2D' && (
+          <div className={styles.viewDirectionBar}>
+            {([
+              { id: 'front' as const, label: '입면' },
+              { id: 'top' as const, label: '평면' },
+              { id: 'left' as const, label: '측면' },
+            ]).map((dir) => (
+              <button
+                key={dir.id}
+                className={`${styles.directionButton} ${view2DDirection === dir.id ? styles.active : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setView2DDirection(dir.id);
+                }}
+              >{dir.label}</button>
+            ))}
+          </div>
+        )}
         {/* CSS로 숨김 처리 - 조건부 렌더링 대신 (WebGL 컨텍스트 충돌 방지) */}
         <div
           className={styles.previewContent}

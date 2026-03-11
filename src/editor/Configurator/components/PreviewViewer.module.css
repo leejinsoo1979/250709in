@@ -87,6 +87,40 @@
   height: 100% !important;
 }
 
+/* 뷰 방향 버튼 바 */
+.viewDirectionBar {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--theme-background-secondary);
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.directionButton {
+  padding: 2px 14px;
+  height: 24px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  background: transparent;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.directionButton:hover {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+}
+
+.directionButton.active {
+  background: var(--theme-primary, #10b981);
+  color: #fff;
+  border-color: var(--theme-primary, #10b981);
+}
+
 /* 다크 테마에서 배경색 조정 */
 :global([data-theme="dark"]) .previewContent {
   background: #0d0d15;
