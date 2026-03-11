@@ -150,6 +150,11 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
       ctx.textAlign = 'center';
       ctx.fillText(`${Math.round(spaceWidth)} × ${Math.round(spaceHeight)} × ${Math.round(spaceDepth)}mm`, thumbnailSize / 2, floorY - 25);
 
+      // 가구가 없으면 썸네일 생성하지 않음 (ThumbnailImage에서 아이콘 표시)
+      if (!project.placedModules || project.placedModules.length === 0) {
+        return null;
+      }
+
       // 가구 그리기
       if (project.placedModules && project.placedModules.length > 0) {
         console.log(`🪑 ${project.placedModules.length}개의 가구를 썸네일에 렌더링합니다`);
@@ -178,14 +183,10 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
             console.error('가구 렌더링 오류:', error, module);
           }
         });
-      } else {
-        // 가구가 없는 경우: 테마 색상 기반 통일 썸네일
-        const sizeText = `${Math.round(spaceWidth)} × ${Math.round(spaceDepth)} × ${Math.round(spaceHeight)}mm`;
-        drawEmptyDesignThumbnail(ctx, thumbnailSize, thumbnailSize, sizeText);
       }
     } else {
-      // 공간 정보가 없는 경우: 테마 색상 기반 통일 썸네일
-      drawEmptyDesignThumbnail(ctx, thumbnailSize, thumbnailSize);
+      // 공간 정보도 없으면 썸네일 생성하지 않음
+      return null;
     }
 
     // Canvas를 Data URL로 변환

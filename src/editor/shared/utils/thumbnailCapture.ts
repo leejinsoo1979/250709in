@@ -323,27 +323,8 @@ export const generateDefaultThumbnail = (
   const fontMain = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
   if (furnitureCount === 0) {
-    // 가구 없음: 테마 색상 그라데이션 배경 + 흰색 텍스트
-    const themeColor = getThemeColor();
-    const gradient = ctx.createLinearGradient(0, 0, W, H);
-    gradient.addColorStop(0, themeColor);
-    gradient.addColorStop(1, adjustBrightness(themeColor, -30));
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, W, H);
-
-    // 공간 크기 (흰색 볼드)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.font = `700 16px ${fontMain}`;
-    ctx.textAlign = 'center';
-    const widthMm = Math.round(spaceInfo.width);
-    const heightMm = Math.round(spaceInfo.height);
-    const depthMm = Math.round(spaceInfo.depth);
-    ctx.fillText(`${widthMm} × ${depthMm} × ${heightMm}mm`, W / 2, H / 2 - 10);
-
-    // 안내 텍스트 (흰색 라이트)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.font = `400 12px ${fontMain}`;
-    ctx.fillText('현재 배치된 가구가 없습니다.', W / 2, H / 2 + 15);
+    // 가구 없음: 빈 문자열 반환 (ThumbnailImage에서 아이콘 표시)
+    return '';
   } else {
     // 가구 있음: 기존 스타일 유지
     const gradient = ctx.createLinearGradient(0, 0, 0, H);
