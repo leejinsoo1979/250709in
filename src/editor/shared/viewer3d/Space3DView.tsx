@@ -78,6 +78,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 3D 줌 애니메이션용
   const zoomAnimationRef = useRef<number | null>(null);
   const targetCameraDistRef = useRef<number | null>(null);
+  // 슬라이더 쓰로틀링용 (성능 최적화)
+  const zoomSliderValueRef = useRef(50);
+  const sliderRafRef = useRef<number | null>(null);
 
   // 읽기 전용 모드 체크를 포함한 placeFurniture wrapper
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
@@ -483,43 +486,61 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const minZ = 0.5, maxZ = 10;
       const logMin = Math.log(minZ), logMax = Math.log(maxZ);
       const logVal = Math.log(Math.max(minZ, Math.min(maxZ, cam.zoom)));
-      setZoomSliderValue(((logVal - logMin) / (logMax - logMin)) * 100);
+      const val = ((logVal - logMin) / (logMax - logMin)) * 100;
+      zoomSliderValueRef.current = val;
+      setZoomSliderValue(val);
     } else {
       // 3D: 카메라 거리 → slider (근거리=100, 원거리=0), 초기 거리 기준 동적 범위
       const dist = cam.position.distanceTo(controls.target);
       const { minD, maxD } = getDistanceRange();
       const clamped = Math.max(minD, Math.min(maxD, dist));
-      setZoomSliderValue(100 - ((clamped - minD) / (maxD - minD)) * 100);
+      const val = 100 - ((clamped - minD) / (maxD - minD)) * 100;
+      zoomSliderValueRef.current = val;
+      setZoomSliderValue(val);
     }
   }, [getDistanceRange]);
 
   // 슬라이더 값 변경 → 카메라 줌 즉시 적용 (피드백 루프만 차단)
   const handleZoomSliderChange = useCallback((value: number) => {
     isSliderDraggingRef.current = true;
-    setZoomSliderValue(value);
-    const controls = orbitControlsRef.current;
-    if (!controls?.object) return;
-    const cam = controls.object;
+    zoomSliderValueRef.current = value;
 
-    if (cam.isOrthographicCamera) {
-      // 2D: slider 0~100 → zoom 0.5~10 (로그 스케일)
-      const minZ = 0.5, maxZ = 10;
-      const logMin = Math.log(minZ), logMax = Math.log(maxZ);
-      const logVal = logMin + (value / 100) * (logMax - logMin);
-      cam.zoom = Math.exp(logVal);
-      cam.updateProjectionMatrix();
-    } else {
-      // 3D: slider 0~100 → 카메라 거리 즉시 적용
-      const { minD, maxD } = getDistanceRange();
-      const targetDist = maxD - (value / 100) * (maxD - minD);
-      const direction = cam.position.clone().sub(controls.target).normalize();
-      cam.position.copy(controls.target.clone().add(direction.multiplyScalar(targetDist)));
+    // 카메라는 즉시 업데이트 (지연 없이)
+    const controls = orbitControlsRef.current;
+    if (controls?.object) {
+      const cam = controls.object;
+      if (cam.isOrthographicCamera) {
+        const minZ = 0.5, maxZ = 10;
+        const logMin = Math.log(minZ), logMax = Math.log(maxZ);
+        const logVal = logMin + (value / 100) * (logMax - logMin);
+        cam.zoom = Math.exp(logVal);
+        cam.updateProjectionMatrix();
+      } else {
+        const { minD, maxD } = getDistanceRange();
+        const targetDist = maxD - (value / 100) * (maxD - minD);
+        const direction = cam.position.clone().sub(controls.target).normalize();
+        cam.position.copy(controls.target.clone().add(direction.multiplyScalar(targetDist)));
+      }
+      controls.update();
     }
-    controls.update();
+
+    // React 상태 업데이트는 RAF로 쓰로틀링 (리렌더 최소화)
+    if (!sliderRafRef.current) {
+      sliderRafRef.current = requestAnimationFrame(() => {
+        setZoomSliderValue(zoomSliderValueRef.current);
+        sliderRafRef.current = null;
+      });
+    }
   }, [getDistanceRange]);
 
   // 슬라이더 드래그 종료 시 플래그 해제
   const handleZoomSliderEnd = useCallback(() => {
+    // 드래그 종료 시 최종 값 동기화
+    if (sliderRafRef.current) {
+      cancelAnimationFrame(sliderRafRef.current);
+      sliderRafRef.current = null;
+    }
+    setZoomSliderValue(zoomSliderValueRef.current);
     setTimeout(() => { isSliderDraggingRef.current = false; }, 50);
   }, []);
 
@@ -542,6 +563,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const eased = 1 - Math.pow(1 - progress, 3);
       const currentValue = startValue + (endValue - startValue) * eased;
 
+      zoomSliderValueRef.current = currentValue;
       setZoomSliderValue(currentValue);
       const controls = orbitControlsRef.current;
       if (controls?.object) {
