@@ -677,8 +677,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const width = panel.rotated ? panel.height : panel.width;
       const height = panel.rotated ? panel.width : panel.height;
 
-      const isHighlighted = highlightedPanelId && panel.id === highlightedPanelId;
-      const isHovered = hoveredPanelId === panel.id;
+      const basePanelId = panel.id.replace(/-\d+$/, '');
+      const isHighlighted = highlightedPanelId && (panel.id === highlightedPanelId || basePanelId === highlightedPanelId);
+      const isHovered = hoveredPanelId === panel.id || (hoveredPanelId && basePanelId === hoveredPanelId);
       const colors = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
 
       // Draw panel background
@@ -2248,11 +2249,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // Check which panel was clicked
     if (onPanelClick) {
-      let clickedPanelId = null;
+      let clickedPanelId: string | null = null;
       for (const panel of result.panels) {
-        if (sheetX >= panel.x && sheetX <= panel.x + panel.width &&
-            sheetY >= panel.y && sheetY <= panel.y + panel.height) {
-          clickedPanelId = panel.id;
+        const pw = panel.rotated ? panel.height : panel.width;
+        const ph = panel.rotated ? panel.width : panel.height;
+        if (sheetX >= panel.x && sheetX <= panel.x + pw &&
+            sheetY >= panel.y && sheetY <= panel.y + ph) {
+          // base ID로 반환하여 좌측 패널 목록과 연동
+          clickedPanelId = panel.id.replace(/-\d+$/, '');
           break;
         }
       }
