@@ -18,7 +18,7 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { viewMode, setViewMode, setView2DDirection, setSelectedSlotIndex } = useUIStore();
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   // 미리보기는 현재 모드의 반대
   const previewMode = viewMode === '2D' ? '3D' : '2D';
