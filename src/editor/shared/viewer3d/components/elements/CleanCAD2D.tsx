@@ -2833,7 +2833,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
 
-            {/* 가구 치수 텍스트 */}
+            {/* 가구 치수 텍스트 — 듀얼: 0.5 단위 내림, 싱글: 정수 내림 */}
             <Text
               position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
@@ -2843,7 +2843,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {(() => { const w = Math.round(actualWidth * 10) / 10; return w % 1 === 0 ? w : w.toFixed(1); })()}
+              {(() => {
+                const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+                if (isDual) {
+                  const w = Math.floor(actualWidth * 2) / 2;
+                  return w % 1 === 0 ? w : w.toFixed(1);
+                }
+                return Math.floor(actualWidth);
+              })()}
             </Text>
 
             {/* 연장선 끝 세리프 (가로 틱 마크) */}
@@ -5887,7 +5894,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 lineWidth={0.5}
               />
 
-              {/* 캐비넷 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
+              {/* 캐비넷 폭 치수 텍스트 - 상단뷰용, 듀얼: 0.5 단위 내림, 싱글: 정수 내림 */}
               <Text
                   renderOrder={1000}
                   depthTest={false}
@@ -5898,7 +5905,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {(() => { const w = Math.round(actualWidth * 10) / 10; return w % 1 === 0 ? w : w.toFixed(1); })()}
+                {(() => {
+                  const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+                  if (isDual) {
+                    const w = Math.floor(actualWidth * 2) / 2;
+                    return w % 1 === 0 ? w : w.toFixed(1);
+                  }
+                  return Math.floor(actualWidth);
+                })()}
               </Text>
 
               {/* 연장선들 - 가구 앞단에서 치수선까지 */}
