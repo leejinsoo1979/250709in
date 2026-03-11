@@ -4370,7 +4370,7 @@ const Configurator: React.FC = () => {
               const gapR = spaceInfo.gapConfig?.right || 0;
               const hasGap = gapL > 0 || gapR > 0;
               const internalW = totalW - gapL - gapR;
-              const cols = spaceInfo.columns?.length || spaceInfo.mainDoorCount || 1;
+              const cols = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || Math.max(1, Math.round(internalW / 600));
               const rawSlot = internalW / cols;
               const singleW = Math.floor(rawSlot);
               const dualW = Math.floor(rawSlot * 2 * 2) / 2;
