@@ -154,7 +154,7 @@ export default function EnterpriseSignUpPage() {
 
             {/* 로그인 계정 정보 */}
             <section className="mb-10">
-              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">로그인 계정 정보</h2>
+              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-white/30">로그인 계정 정보</h2>
               <div className="space-y-5">
                 <Field label="로그인 이메일" required>
                   <Input type="email" value={form.loginEmail} onChange={(v) => update('loginEmail', v)} placeholder="login@company.com" required />
@@ -202,7 +202,7 @@ export default function EnterpriseSignUpPage() {
 
             {/* 회사 정보 */}
             <section className="mb-10">
-              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">회사 정보</h2>
+              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-white/30">회사 정보</h2>
               <div className="space-y-5">
                 <Field label="회사명" required>
                   <Input value={form.companyName} onChange={(v) => update('companyName', v)} placeholder="주식회사 예시" required />
@@ -233,7 +233,7 @@ export default function EnterpriseSignUpPage() {
 
             {/* 담당자 정보 */}
             <section className="mb-10">
-              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-zinc-800">담당자 정보</h2>
+              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-white/30">담당자 정보</h2>
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-6">
                   <Field label="담당자명" required>
