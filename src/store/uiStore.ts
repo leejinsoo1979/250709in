@@ -378,8 +378,15 @@ export const useUIStore = create<UIState>()(
       toggleDoors: () =>
         set((state) => ({ doorsOpen: !state.doorsOpen })),
 
-      setDoorsOpen: (open: boolean) =>
-        set({ doorsOpen: open }),
+      setDoorsOpen: (open: boolean) => {
+        // 전역 도어 상태 + 개별 도어 상태 모두 설정
+        const state = get();
+        const updatedIndividual: Record<string, boolean> = {};
+        for (const key of Object.keys(state.individualDoorsOpen)) {
+          updatedIndividual[key] = open;
+        }
+        set({ doorsOpen: open, individualDoorsOpen: updatedIndividual });
+      },
 
       toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => {
         const key = `${furnitureId}-${sectionIndex}`;
