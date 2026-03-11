@@ -2843,7 +2843,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {Math.round(actualWidth)}
+              {(() => { const w = Math.round(actualWidth * 10) / 10; return w % 1 === 0 ? w : w.toFixed(1); })()}
             </Text>
 
             {/* 연장선 끝 세리프 (가로 틱 마크) */}
@@ -5898,7 +5898,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {Math.round(actualWidth)}
+                {(() => { const w = Math.round(actualWidth * 10) / 10; return w % 1 === 0 ? w : w.toFixed(1); })()}
               </Text>
 
               {/* 연장선들 - 가구 앞단에서 치수선까지 */}
