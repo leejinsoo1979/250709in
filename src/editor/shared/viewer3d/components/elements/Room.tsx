@@ -242,7 +242,7 @@ const PlaneOutline: React.FC<{
 
 const Room: React.FC<RoomProps> = ({
   spaceInfo,
-  floorColor = '#FF9966',
+  floorColor = '#FFCC99',
   viewMode = '3D',
   view2DDirection,
   materialConfig,
