@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { FileText, MoreHorizontal, Sparkles, Search } from 'lucide-react';
 import { LuFileBox } from 'react-icons/lu';
+import { IoBanOutline } from 'react-icons/io5';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
@@ -377,7 +378,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           >
             {renderCheckbox(item)}
             <div className={styles.tileThumbnail}>
-              {item.thumbnail ? (
+              {(item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
+                  <IoBanOutline size={Math.max(iconSize * 0.4, 24)} />
+                </div>
+              ) : item.thumbnail ? (
                 <img src={item.thumbnail} alt={item.name} />
               ) : (
                 getItemIcon(item, iconSize, true)
@@ -462,6 +467,10 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                       </div>
                     );
                   })()
+                ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
+                  <div className={styles.projectGridEmpty} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
+                    <IoBanOutline size={40} />
+                  </div>
                 ) : item.thumbnail ? (
                   <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
                 ) : (
@@ -553,6 +562,10 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               })()
             ) : item.type === 'project' ? (
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
+            ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
+                <IoBanOutline size={Math.max(thumbSize * 0.3, 24)} />
+              </div>
             ) : item.thumbnail ? (
               <img src={item.thumbnail} alt={item.name} />
             ) : (

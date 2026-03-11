@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { MdOutlinePending, MdCheckCircleOutline } from 'react-icons/md';
 import { TfiShare, TfiShareAlt } from 'react-icons/tfi';
-import { IoFileTrayStackedOutline } from 'react-icons/io5';
+import { IoFileTrayStackedOutline, IoBanOutline } from 'react-icons/io5';
 import { PiFolderFill } from 'react-icons/pi';
 import { VscServerProcess } from 'react-icons/vsc';
 import { LuFileBox } from 'react-icons/lu';
@@ -600,7 +600,11 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                       onContextMenu={e => onItemContextMenu(e, item)}
                     >
                       <div className={styles.cardThumbnail}>
-                        {item.type === 'design' && item.thumbnail ? (
+                        {item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0) ? (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
+                            <IoBanOutline size={48} />
+                          </div>
+                        ) : item.type === 'design' && item.thumbnail ? (
                           <img src={item.thumbnail} alt={item.name} className={styles.thumbnailImage} />
                         ) : item.type === 'project' ? (
                           <div className={styles.projectThumbnailGrid}>
