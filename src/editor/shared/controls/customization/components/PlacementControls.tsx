@@ -74,7 +74,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 받침대 있음 - 높이/깊이 설정 (인라인) */}
       {isFloor && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>{t('frame.baseHeight')}</span>
+          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>높이</span>
           <div style={{
             display: 'flex', alignItems: 'center',
             background: 'var(--theme-background-secondary, #f9fafb)',
@@ -97,7 +97,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               disabled={disabled}
             />
           </div>
-          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>{t('frame.baseDepth')}</span>
+          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>깊이</span>
           <div style={{
             display: 'flex', alignItems: 'center',
             background: 'var(--theme-background-secondary, #f9fafb)',
