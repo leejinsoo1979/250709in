@@ -21,7 +21,7 @@ import styles from './LayoutBuilderPopup.module.css';
 interface LayoutBuilderPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (config: CustomFurnitureConfig, width: number) => void;
+  onConfirm: (config: CustomFurnitureConfig, width: number, height: number, depth: number) => void;
   category: 'full' | 'upper' | 'lower';
   dimensions: {
     width: number;
@@ -45,9 +45,13 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 }) => {
   // 싱글/듀얼 타입 (full 카테고리에서만 사용)
   const [cabinetType, setCabinetType] = useState<'single' | 'dual'>('dual');
-  const [typeConfirmed, setTypeConfirmed] = useState(false); // 팝업 열릴 때 선택 표시
+  const [typeConfirmed, setTypeConfirmed] = useState(false);
   const [customWidth, setCustomWidth] = useState<number>(1000);
+  const [customHeight, setCustomHeight] = useState<number>(dimensions.height);
+  const [customDepth, setCustomDepth] = useState<number>(dimensions.depth);
   const currentWidth = category === 'full' ? customWidth : dimensions.width;
+  const currentHeight = customHeight;
+  const currentDepth = customDepth;
 
   const {
     layout,
@@ -62,16 +66,18 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
     canSplit,
     canMerge,
     leafCount,
-  } = useLayoutBuilder(currentWidth, dimensions.height);
+  } = useLayoutBuilder(currentWidth, currentHeight);
 
   // 팝업 열릴 때 초기화
   useEffect(() => {
     if (isOpen) {
       setCabinetType('dual');
       setCustomWidth(1000);
+      setCustomHeight(dimensions.height);
+      setCustomDepth(dimensions.depth);
       setTypeConfirmed(false);
     }
-  }, [isOpen]);
+  }, [isOpen, dimensions.height, dimensions.depth]);
 
   // 타입 변경 시 레이아웃 리셋
   const handleTypeChange = useCallback((type: 'single' | 'dual') => {
@@ -121,10 +127,10 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   }, [splitNode, isSingle]);
 
   const handleConfirm = useCallback(() => {
-    const dims = { ...dimensions, width: currentWidth };
+    const dims = { width: currentWidth, height: currentHeight, depth: currentDepth };
     const config = convertToConfig(layout, dims);
-    onConfirm(config, currentWidth);
-  }, [layout, dimensions, currentWidth, onConfirm]);
+    onConfirm(config, currentWidth, currentHeight, currentDepth);
+  }, [layout, currentWidth, currentHeight, currentDepth, onConfirm]);
 
   if (!isOpen) return null;
 
@@ -140,7 +146,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
                 {CATEGORY_LABELS[category]} 레이아웃
               </h2>
               <div className={styles.headerDimensions}>
-                {currentWidth} × {Math.round(dimensions.height)} × {dimensions.depth} mm
+                {currentWidth} × {Math.round(currentHeight)} × {currentDepth} mm
               </div>
             </div>
           </div>
@@ -149,7 +155,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 
         {/* 바디 */}
         <div className={styles.body}>
-          {/* 싱글/듀얼 타입 선택 + 너비 입력 (full 카테고리만) */}
+          {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
           {category === 'full' && (
             <div className={styles.typeSelector}>
               <button
@@ -179,30 +185,86 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
                   <span className={styles.typeBtnSize}>1000mm</span>
                 </div>
               </button>
-              <div className={styles.widthInputWrap}>
-                <label className={styles.widthInputLabel}>너비</label>
-                <div className={styles.widthInputRow}>
-                  <input
-                    type="number"
-                    className={styles.widthInput}
-                    value={customWidth}
-                    min={200}
-                    max={2400}
-                    step={10}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      if (!isNaN(v)) handleWidthChange(v);
-                    }}
-                    onBlur={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      if (isNaN(v)) handleWidthChange(1000);
-                    }}
-                  />
-                  <span className={styles.widthInputUnit}>mm</span>
-                </div>
-              </div>
             </div>
           )}
+
+          {/* 치수 입력 (폭 × 높이 × 깊이) */}
+          <div className={styles.dimRow}>
+            <div className={styles.dimField}>
+              <label className={styles.dimLabel}>폭 (W)</label>
+              <div className={styles.dimInputRow}>
+                <input
+                  type="number"
+                  className={styles.dimInput}
+                  value={customWidth}
+                  min={200}
+                  max={2400}
+                  step={10}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v)) handleWidthChange(v);
+                  }}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (isNaN(v)) handleWidthChange(1000);
+                  }}
+                />
+                <span className={styles.dimUnit}>mm</span>
+              </div>
+            </div>
+            <span className={styles.dimSeparator}>×</span>
+            <div className={styles.dimField}>
+              <label className={styles.dimLabel}>높이 (H)</label>
+              <div className={styles.dimInputRow}>
+                <input
+                  type="number"
+                  className={styles.dimInput}
+                  value={Math.round(customHeight)}
+                  min={200}
+                  max={3000}
+                  step={10}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v)) {
+                      setCustomHeight(Math.max(200, Math.min(3000, v)));
+                      resetLayout();
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (isNaN(v)) {
+                      setCustomHeight(dimensions.height);
+                      resetLayout();
+                    }
+                  }}
+                />
+                <span className={styles.dimUnit}>mm</span>
+              </div>
+            </div>
+            <span className={styles.dimSeparator}>×</span>
+            <div className={styles.dimField}>
+              <label className={styles.dimLabel}>깊이 (D)</label>
+              <div className={styles.dimInputRow}>
+                <input
+                  type="number"
+                  className={styles.dimInput}
+                  value={customDepth}
+                  min={200}
+                  max={800}
+                  step={10}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v)) setCustomDepth(Math.max(200, Math.min(800, v)));
+                  }}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (isNaN(v)) setCustomDepth(dimensions.depth);
+                  }}
+                />
+                <span className={styles.dimUnit}>mm</span>
+              </div>
+            </div>
+          </div>
 
           {/* 가이드 */}
           <div className={styles.guide}>
@@ -218,7 +280,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
             totalWidthMM={currentWidth}
-            totalHeightMM={dimensions.height}
+            totalHeightMM={currentHeight}
             computeRects={computeRects}
             computeHandles={computeHandles}
             onResize={resizeNode}

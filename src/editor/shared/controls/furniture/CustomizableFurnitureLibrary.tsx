@@ -67,7 +67,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
   filter = 'full',
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig } = useFurnitureStore();
+  const { setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig, setLastCustomDimensions } = useFurnitureStore();
 
   // 레이아웃 빌더 팝업 상태
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -82,11 +82,12 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
   }, []);
 
   // 레이아웃 빌더 확인 → pendingCustomConfig 저장 → 배치 모드 활성화
-  // width는 팝업 내부에서 싱글/듀얼 선택에 따라 결정됨
-  const handlePopupConfirm = useCallback((config: CustomFurnitureConfig, width: number) => {
+  const handlePopupConfirm = useCallback((config: CustomFurnitureConfig, width: number, height: number, depth: number) => {
     const moduleId = createCustomizableModuleId(selectedCategory, width);
+    const dimKey = width <= 500 ? 'full-single' : 'full-dual';
 
     setPendingCustomConfig(config);
+    setLastCustomDimensions(dimKey, { width, height, depth });
     setIsPopupOpen(false);
 
     // 자유배치 모드로 전환 후 Click & Place 활성화
@@ -95,7 +96,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     }
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [selectedCategory, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig]);
+  }, [selectedCategory, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig, setLastCustomDimensions]);
 
   const handlePopupClose = useCallback(() => {
     setIsPopupOpen(false);
