@@ -750,9 +750,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     // baseConfig.type === 'floor'일 때 actualBaseHeight에 이미 바닥마감재 포함
     const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
-    // 띄움설치 시 듀얼 가구(2단옷장)는 doorBottomGap 기본값(25)이 바닥배치 기준이므로 무시
-    // 싱글 키큰장은 기존 로직 유지 (doorBottomGap이 있으면 사용)
-    const inputBottomGap = (placementType === 'float' && isDualFurniture) ? baselineBottomGap : (doorBottomGap ?? baselineBottomGap);
+    const inputBottomGap = doorBottomGap ?? baselineBottomGap;
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
 
