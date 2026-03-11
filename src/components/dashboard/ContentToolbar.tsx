@@ -251,7 +251,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                     </button>
                     {showChevron && (
                       <button
-                        className={`${styles.breadcrumbChevron} ${isLast ? styles.breadcrumbChevronActive : ''}`}
+                        className={styles.breadcrumbChevron}
                         onClick={(e) => {
                           e.stopPropagation();
                           setDropdownOpenId(prev => prev === item.id ? null : item.id);
