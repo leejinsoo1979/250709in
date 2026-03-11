@@ -143,21 +143,21 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           </div>
         </header>
 
-        {/* Back Button - 좌측 정렬 */}
-        <div className="relative z-10 px-8 sm:px-12 pt-2">
-          <button
-            type="button"
-            onClick={onNavigateHome}
-            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
-            style={{ color: isDark ? '#a1a1aa' : '#6b7280' }}
-          >
-            <span>←</span>
-            <span>Back</span>
-          </button>
-        </div>
-
         {/* Animated Content */}
         <div className="relative z-10 flex flex-col justify-center items-center flex-1">
+          {/* Back Button - 도트 바로 위, 좌측 정렬 */}
+          <div className="w-full px-8 sm:px-12 mb-4">
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
+              style={{ color: isDark ? '#a1a1aa' : '#6b7280' }}
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+          </div>
+
           {/* think thing thank */}
           <div
             className="flex items-center justify-center gap-3 sm:gap-4 mb-6 cursor-pointer"
