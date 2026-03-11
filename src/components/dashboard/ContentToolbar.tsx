@@ -176,6 +176,22 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
 
   return (
     <div className={styles.toolbar}>
+      {/* 생성 버튼 (맨 좌측) */}
+      <div className={styles.actions}>
+        {onCreateDesign && (
+          <button className={styles.createBtn} onClick={onCreateDesign}>
+            <Plus size={16} />
+            <span>새 디자인</span>
+          </button>
+        )}
+        {onCreateFolder && (
+          <button className={styles.createBtn} onClick={onCreateFolder}>
+            <FolderPlus size={16} />
+            <span>새 폴더</span>
+          </button>
+        )}
+      </div>
+
       {/* 전체선택 체크박스 */}
       {onSelectAll && totalItemCount > 0 && (
         <div className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
@@ -268,22 +284,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
           </div>
         </div>
       )}
-
-      {/* 생성 버튼 */}
-      <div className={styles.actions}>
-        {onCreateDesign && (
-          <button className={styles.createBtn} onClick={onCreateDesign}>
-            <Plus size={16} />
-            <span>새 디자인</span>
-          </button>
-        )}
-        {onCreateFolder && (
-          <button className={styles.createBtn} onClick={onCreateFolder}>
-            <FolderPlus size={16} />
-            <span>새 폴더</span>
-          </button>
-        )}
-      </div>
 
       <div className={styles.spacer} />
 
