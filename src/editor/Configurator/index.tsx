@@ -89,6 +89,7 @@ const Configurator: React.FC = () => {
   const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode); // 새 디자인이나 readonly 모드인 경우 로딩 건너뛰기
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const saveInProgressRef = useRef(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
@@ -835,10 +836,18 @@ const Configurator: React.FC = () => {
   const saveProject = async () => {
     console.log('💾 [DEBUG] saveProject 함수 시작');
 
+    // 중복 저장 방지
+    if (saveInProgressRef.current) {
+      console.log('⚠️ 저장이 이미 진행 중 - 중복 호출 무시');
+      return;
+    }
+    saveInProgressRef.current = true;
+
     // 읽기 전용 모드에서는 저장 불가
     if (isReadOnly) {
       console.log('🚫 읽기 전용 모드 - 저장 차단');
       alert('읽기 전용 모드에서는 저장할 수 없습니다.');
+      saveInProgressRef.current = false;
       return;
     }
 
@@ -890,6 +899,7 @@ const Configurator: React.FC = () => {
     if (!effectiveProjectId) {
       console.error('💾 [ERROR] 프로젝트 ID가 없습니다');
       alert('저장할 프로젝트가 없습니다. 새 프로젝트를 먼저 생성해주세요.');
+      saveInProgressRef.current = false;
       return;
     }
 
@@ -1205,6 +1215,7 @@ const Configurator: React.FC = () => {
     } finally {
       console.log('💾 [DEBUG] saveProject 완료, 저장 상태 해제');
       setSaving(false);
+      saveInProgressRef.current = false;
     }
   };
 
