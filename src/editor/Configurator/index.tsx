@@ -3768,11 +3768,11 @@ const Configurator: React.FC = () => {
           />
         </div>
 
-        {/* 걸래받이(바닥마감재) */}
+        {/* 바닥마감재 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>걸래받이</h3>
+            <h3 className={styles.sectionTitle}>바닥마감재</h3>
           </div>
           <FloorFinishControls
             spaceInfo={spaceInfo}
