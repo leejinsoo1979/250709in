@@ -64,6 +64,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const { viewMode: contextViewMode } = useSpace3DView();
   const { view2DDirection: view2DDirectionStore } = useUIStore();
 
+  // 슬롯 바닥 클릭 시 선택 해제 및 팝업 닫기 핸들러
+  const handleSlotFloorClick = useCallback((e: any) => {
+    // 드래그 중이면 무시
+    if (useFurnitureStore.getState().currentDragData) return;
+    e.stopPropagation();
+    useFurnitureStore.getState().setSelectedFurnitureId(null);
+    useUIStore.getState().setSelectedFurnitureId(null);
+    useUIStore.getState().closeAllPopups();
+  }, []);
+
   // prop으로 받은 값을 우선 사용, 없으면 store/context 값 사용
   const viewMode = viewModeProp || contextViewMode;
   const view2DDirection = view2DDirectionProp || view2DDirectionStore;
@@ -2723,6 +2733,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     floorY,
                     slotFloorZ
                   ]}
+                  onClick={handleSlotFloorClick}
                 >
                   <boxGeometry args={[
                     mmToThreeUnits(zoneSlotInfo.normal.width),
@@ -2781,6 +2792,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     floorY,
                     slotFloorZ
                   ]}
+                  onClick={handleSlotFloorClick}
                 >
                   <boxGeometry args={[
                     mmToThreeUnits(zoneSlotInfo.dropped.width),
@@ -2853,6 +2865,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               {/* 바닥 슬롯 메쉬 */}
               <mesh
                 position={[centerX, floorY, slotFloorZ]}
+                onClick={handleSlotFloorClick}
               >
                 <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
                 <meshBasicMaterial
@@ -3684,7 +3697,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
 
         return (
-          <group key={`furniture-preview-${slotIndex}-${moduleData.id}`} position={[previewX, furnitureY, furnitureZ]}>
+          <group key={`furniture-preview-${slotIndex}-${moduleData.id}`} position={[previewX, furnitureY, furnitureZ]} onClick={handleSlotFloorClick}>
             <BoxModule
               moduleData={moduleData}
               color={theme.color}
