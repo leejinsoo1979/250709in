@@ -473,6 +473,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         storedTarget: initial.target2D?.toArray(),
       });
 
+      // damping 임시 비활성화 — update() 시 panOffset이 즉시 0으로 리셋되도록
+      const prevDamping = controls.enableDamping;
+      controls.enableDamping = false;
+
       controls.target.copy(targetVec);
       controls.object.position.copy(positionVec);
       controls.object.up.copy(upVec);
@@ -487,6 +491,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
       controls.object.lookAt(controls.target);
       controls.update();
+
+      // damping 복원
+      controls.enableDamping = prevDamping;
       return;
     }
 
