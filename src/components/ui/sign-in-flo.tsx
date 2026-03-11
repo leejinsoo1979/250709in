@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useAnimation } from "motion/react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 /* ── Exported Props ── */
@@ -42,10 +42,64 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const [isSignUp, setIsSignUp] = useState(defaultSignUp);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Animation states (from LandingPage)
+  const [tttAnimating, setTttAnimating] = useState(false);
+  const [craftAnimating, setCraftAnimating] = useState(false);
+  const [tttHovered, setTttHovered] = useState(false);
+  const [craftHovered, setCraftHovered] = useState(false);
+  const craftControls = useAnimation();
+
   const nav = useNavigate();
   const { theme } = useTheme();
   const isDark = theme.mode === 'dark';
   const loading = externalLoading || isSubmitting;
+
+  // think thing thank: 3초 간격 자동 애니메이션
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTttAnimating(true);
+      setTimeout(() => setTttAnimating(false), 1600);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // CRAFT: 4초 간격 자동 애니메이션 (ttt와 엇갈리게)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        setCraftAnimating(true);
+        setTimeout(() => setCraftAnimating(false), 2000);
+      }, 4000);
+      return () => clearInterval(interval);
+    }, 1500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const handleCraftHover = useCallback(() => {
+    setCraftHovered(true);
+    setCraftAnimating(true);
+    craftControls.start({
+      scale: [1, 1.03, 1],
+      transition: { duration: 0.5, ease: 'easeOut' },
+    });
+  }, [craftControls]);
+
+  const handleCraftLeave = useCallback(() => {
+    setCraftHovered(false);
+    setTimeout(() => setCraftAnimating(false), 800);
+  }, []);
+
+  const handleTttHover = () => {
+    setTttHovered(true);
+    setTttAnimating(true);
+  };
+  const handleTttLeave = () => {
+    setTttHovered(false);
+    setTimeout(() => setTttAnimating(false), 800);
+  };
+
+  const isTttActive = tttAnimating || tttHovered;
+  const isCraftActive = craftAnimating || craftHovered;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,29 +122,13 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
 
   return (
     <div className="min-h-screen flex flex-row" style={{ background: isDark ? '#000000' : '#ffffff' }}>
-      {/* Left Panel - Branding */}
+      {/* Left Panel - Animated Branding (from LandingPage) */}
       <div className="w-1/2 relative overflow-hidden flex flex-col"
         style={{
           background: isDark ? '#000000' : '#ffffff',
         }}
       >
-        {/* Subtle grid */}
-        {isDark && (
-          <>
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-                backgroundSize: '80px 80px',
-              }}
-            />
-            {/* Glow orbs */}
-            <div className="absolute" style={{ top: '15%', left: '20%', width: 300, height: 300, background: 'radial-gradient(circle, rgba(107,94,255,0.12) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
-            <div className="absolute" style={{ bottom: '20%', right: '15%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
-          </>
-        )}
-
-        {/* Logo - 랜딩페이지와 동일 위치 */}
+        {/* Logo */}
         <header className="relative z-10 flex items-center px-8 sm:px-12 py-5">
           <div
             className="flex items-center gap-1.5 cursor-pointer"
@@ -105,15 +143,108 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           </div>
         </header>
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center flex-1 px-16">
-          <h1 className="text-4xl font-bold leading-tight mb-4" style={{ color: isDark ? '#fff' : '#111' }}>
-            Start designing your<br />furniture
-          </h1>
-          <p className="text-base leading-relaxed" style={{ color: isDark ? '#71717a' : '#6b7280' }}>
-            맞춤 가구 설계부터 CNC 커팅 최적화까지,<br />
-            원스톱 가구 제작 플랫폼
-          </p>
+        {/* Animated Content */}
+        <div className="relative z-10 flex flex-col justify-center items-center flex-1">
+          {/* think thing thank */}
+          <div
+            className="flex items-center justify-center gap-2 sm:gap-3 mb-4 cursor-pointer"
+            onMouseEnter={handleTttHover}
+            onMouseLeave={handleTttLeave}
+          >
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={`dot-${i}`}
+                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full"
+                style={{ background: isDark ? '#fff' : '#000' }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: isTttActive ? [1, 1.3, 0.9, 1] : 1,
+                  opacity: 1,
+                }}
+                transition={{
+                  scale: isTttActive
+                    ? { duration: 0.8, delay: i * 0.12, times: [0, 0.3, 0.6, 1], ease: 'easeOut' }
+                    : { duration: 0.5, delay: i * 0.1, ease: 'easeOut' },
+                  opacity: { duration: 0.4, delay: i * 0.1 },
+                }}
+                whileHover={{ scale: 1.4, transition: { duration: 0.15 } }}
+              />
+            ))}
+            <motion.span
+              className="font-black text-lg sm:text-xl md:text-2xl lg:text-3xl tracking-wide ml-1"
+              style={{ display: 'inline-flex', color: isDark ? '#fff' : '#000' }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+            >
+              {'think thing thank'.split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
+                  animate={{
+                    y: isTttActive ? [0, -6, 2, 0] : 0,
+                    opacity: isTttActive ? [1, 1, 0.7, 1] : 1,
+                  }}
+                  transition={{
+                    y: isTttActive
+                      ? { duration: 1.2, delay: 0.3 + i * 0.035, times: [0, 0.25, 0.5, 1], ease: 'easeInOut' }
+                      : { duration: 0.3 },
+                    opacity: isTttActive
+                      ? { duration: 1.2, delay: 0.3 + i * 0.035, times: [0, 0.25, 0.5, 1] }
+                      : { duration: 0.3 },
+                  }}
+                  whileHover={{ y: -4, scale: 1.15, transition: { duration: 0.12 } }}
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </motion.span>
+          </div>
+
+          {/* CRAFT */}
+          <motion.div
+            className="cursor-pointer"
+            onMouseEnter={handleCraftHover}
+            onMouseLeave={handleCraftLeave}
+            animate={craftControls}
+          >
+            <motion.div
+              className="font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight"
+              style={{ display: 'inline-flex', gap: '0.02em', color: isDark ? '#fff' : '#000' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+            >
+              {'CRAFT'.split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  style={{
+                    display: 'inline-block',
+                    textShadow: isCraftActive
+                      ? isDark
+                        ? '0 0 20px rgba(255,255,255,0.3), 0 0 60px rgba(255,255,255,0.1)'
+                        : '0 0 20px rgba(0,0,0,0.12), 0 0 60px rgba(0,0,0,0.05)'
+                      : 'none',
+                    transition: 'text-shadow 0.4s ease',
+                  }}
+                  animate={{
+                    y: isCraftActive ? [0, -8, 0] : 0,
+                  }}
+                  transition={{
+                    y: isCraftActive
+                      ? { duration: 1.4, delay: i * 0.07, times: [0, 0.3, 1], ease: 'easeInOut' }
+                      : { duration: 0.3 },
+                  }}
+                  whileHover={{
+                    y: -6,
+                    transition: { duration: 0.2, ease: 'easeOut' },
+                  }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
