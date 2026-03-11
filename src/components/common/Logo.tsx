@@ -5,6 +5,7 @@ interface LogoProps {
   size?: 'small' | 'medium' | 'large';
   onClick?: () => void;
   loading?: boolean;
+  noAnimation?: boolean;
 }
 
 const sizeConfig = {
@@ -13,7 +14,7 @@ const sizeConfig = {
   large: { dot: 13, gap: 8, fontSize: 20, dotGap: 4 },
 };
 
-const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false }) => {
+const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, noAnimation = false }) => {
   const config = sizeConfig[size];
   const { theme } = useTheme();
   const isDark = theme.mode === 'dark';
@@ -21,9 +22,9 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false }
   const [autoAnimating, setAutoAnimating] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 3초마다 자동 애니메이션 (loading 모드가 아닐 때만)
+  // 3초마다 자동 애니메이션 (loading 모드가 아니고 noAnimation이 아닐 때만)
   useEffect(() => {
-    if (loading) return;
+    if (loading || noAnimation) return;
     autoTimerRef.current = setInterval(() => {
       setAutoAnimating(true);
       setTimeout(() => setAutoAnimating(false), 700);
@@ -32,9 +33,9 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false }
     return () => {
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     };
-  }, [loading]);
+  }, [loading, noAnimation]);
 
-  const isAnimating = loading || hovered || autoAnimating;
+  const isAnimating = noAnimation ? false : (loading || hovered || autoAnimating);
 
   const dotStyle = (index: number): React.CSSProperties => {
     if (loading) {

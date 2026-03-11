@@ -387,7 +387,7 @@ const Header: React.FC<HeaderProps> = ({
       <div className={styles.container}>
         {/* 로고 영역 — 고정 너비, 애니메이션 격리 */}
         <div className={styles.logo}>
-          <Logo size="medium" onClick={() => navigate('/')} />
+          <Logo size="medium" onClick={() => navigate('/')} noAnimation />
         </div>
 
         {/* 파일 메뉴 + 저장 버튼 */}
