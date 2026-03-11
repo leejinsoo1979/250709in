@@ -1019,6 +1019,62 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
+      {/* 바닥마감재 해치 표시 - 2D 모드에서만 */}
+      {floorFinishHeightMmGlobal > 0 && currentViewDirection !== '3D' && (() => {
+        const floorFinishH = mmToThreeUnits(floorFinishHeightMmGlobal);
+        const floorStartX = leftOffset;
+        const floorEndX = leftOffset + mmToThreeUnits(spaceInfo.width);
+        const floorWidth = mmToThreeUnits(spaceInfo.width);
+
+        // 해칭 대각선
+        const floorHatchLines: JSX.Element[] = [];
+        const hatchSpacing = mmToThreeUnits(40);
+        const startOff = -floorFinishH;
+        const endOff = floorWidth;
+        const count = Math.ceil((endOff - startOff) / hatchSpacing) + 1;
+
+        for (let i = 0; i <= count; i++) {
+          const off = startOff + i * hatchSpacing;
+          const sx = floorStartX + off;
+          const sy = 0;
+          const ex = sx + floorFinishH;
+          const ey = floorFinishH;
+
+          let cx0 = sx, cy0 = sy, cx1 = ex, cy1 = ey;
+          if (sx < floorStartX) { const d = floorStartX - sx; cx0 = floorStartX; cy0 = sy + d; }
+          if (ex > floorEndX) { const d = ex - floorEndX; cx1 = floorEndX; cy1 = ey - d; }
+
+          if (cx0 < floorEndX && cx1 > floorStartX && cy0 < floorFinishH && cy1 > 0) {
+            floorHatchLines.push(
+              <Line
+                key={`floor-hatch-${i}`}
+                points={[[cx0, cy0, 0.001], [cx1, cy1, 0.001]]}
+                color={theme === 'dark' ? '#FFCC99' : '#CC8844'}
+                lineWidth={0.5}
+                opacity={0.6}
+              />
+            );
+          }
+        }
+
+        return (
+          <group>
+            {/* 바닥마감재 배경 */}
+            <mesh position={[(floorStartX + floorEndX) / 2, floorFinishH / 2, 0.0005]}>
+              <planeGeometry args={[floorWidth, floorFinishH]} />
+              <meshBasicMaterial color="#FFCC99" transparent opacity={0.2} depthTest={false} />
+            </mesh>
+            {/* 바닥마감재 상단 경계선 */}
+            <Line
+              points={[[floorStartX, floorFinishH, 0.002], [floorEndX, floorFinishH, 0.002]]}
+              color={theme === 'dark' ? '#FFCC99' : '#CC8844'}
+              lineWidth={1}
+            />
+            {floorHatchLines}
+          </group>
+        );
+      })()}
+
       {/* 정면도 치수선들 */}
       {showDimensions && (
         <>
