@@ -2150,15 +2150,17 @@
 .toggleButtonGroup {
   display: flex;
   background: var(--theme-background-secondary);
-  border-radius: 6px;
+  border-radius: 5px;
   padding: 2px;
   gap: 1px;
   margin-bottom: 0;
+  overflow: hidden;
+  border: none;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 4px 6px;
+  padding: 3px 4px;
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
@@ -2168,7 +2170,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 4px;
-  min-height: 24px;
+  min-height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;

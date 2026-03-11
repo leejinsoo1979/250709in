@@ -403,10 +403,14 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
     return 0;
   }
   
-  // 받침대가 있는 경우에만 높이 반환
+  // 받침대가 있는 경우 높이 반환
   if (spaceInfo.baseConfig?.type === 'floor') {
     const height = spaceInfo.baseConfig.height || 65;
     return height;
+  }
+  // 띄움배치: floatHeight를 받침대 높이처럼 취급 (내경 높이 계산에 반영)
+  if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+    return spaceInfo.baseConfig.floatHeight || 0;
   }
   return 0;
 };
