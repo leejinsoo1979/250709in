@@ -164,9 +164,26 @@ const Configurator: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [isSlotGuideOpen, setIsSlotGuideOpen] = useState(false);
+  const slotGuideRef = useRef<HTMLDivElement>(null);
+  const slotGuideBtnRef = useRef<HTMLButtonElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // 슬롯 가이드 팝업 외부 클릭 닫기
+  useEffect(() => {
+    if (!isSlotGuideOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        slotGuideRef.current && !slotGuideRef.current.contains(e.target as Node) &&
+        slotGuideBtnRef.current && !slotGuideBtnRef.current.contains(e.target as Node)
+      ) {
+        setIsSlotGuideOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isSlotGuideOpen]);
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -4334,6 +4351,7 @@ const Configurator: React.FC = () => {
 
             {/* 슬롯 분할 가이드 도움말 ? 아이콘 */}
             <button
+              ref={slotGuideBtnRef}
               className={`${styles.slotGuideHelpButton} ${isSlotGuideOpen ? styles.active : ''}`}
               onClick={() => setIsSlotGuideOpen(!isSlotGuideOpen)}
               title="슬롯 분할 가이드"
@@ -4342,7 +4360,6 @@ const Configurator: React.FC = () => {
             </button>
 
             {/* 슬롯 분할 가이드 설명 팝업 */}
-            {isSlotGuideOpen && <div style={{ position: 'fixed', inset: 0, zIndex: 150 }} onClick={() => setIsSlotGuideOpen(false)} />}
             {isSlotGuideOpen && (() => {
               const totalW = spaceInfo.width;
               const gapL = spaceInfo.gapDistance?.left || 0;
@@ -4353,7 +4370,7 @@ const Configurator: React.FC = () => {
               const singleW = Math.floor(rawSlot);
               const dualW = Math.floor(rawSlot * 2 * 2) / 2;
               return (
-                <div className={styles.slotGuidePopup}>
+                <div ref={slotGuideRef} className={styles.slotGuidePopup}>
                   <div className={styles.slotGuidePopupTitle}>
                     📐 슬롯 분할 가이드
                   </div>
