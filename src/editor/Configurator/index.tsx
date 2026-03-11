@@ -4452,16 +4452,38 @@ const Configurator: React.FC = () => {
               const droppedW = spaceInfo.droppedCeiling?.width || 900;
               const droppedPos = spaceInfo.droppedCeiling?.position || 'right';
 
+              // 단내림 구간별 슬롯 영역 계산
+              // 메인구간: 외벽쪽 이격만 차감
+              // 단내림구간: 중간이격 흡수(+) + 외벽쪽 이격 차감(-)
+              const mainOuterW = totalW - droppedW; // 메인구간 외부 너비
+              let mainSlotW: number;
+              let droppedSlotW: number;
+
+              if (hasDropped) {
+                if (droppedPos === 'right') {
+                  // 메인(좌), 단내림(우)
+                  mainSlotW = mainOuterW - leftReduction;
+                  droppedSlotW = droppedW + gapM - rightReduction;
+                } else {
+                  // 단내림(좌), 메인(우)
+                  droppedSlotW = droppedW + gapM - leftReduction;
+                  mainSlotW = mainOuterW - rightReduction;
+                }
+              } else {
+                mainSlotW = internalW;
+                droppedSlotW = 0;
+              }
+
               // 일반 구간 계산
-              const normalW = hasDropped ? (internalW - droppedW - gapM) : internalW;
+              const normalW = hasDropped ? mainSlotW : internalW;
               const normalCols = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || Math.max(1, Math.round(normalW / 600));
               const normalRawSlot = normalW / normalCols;
               const normalSingleW = Math.floor(normalRawSlot);
               const normalDualW = Math.floor(normalRawSlot * 2 * 2) / 2;
 
               // 단내림 구간 계산
-              const droppedCols = spaceInfo.droppedCeilingDoorCount || Math.max(1, Math.round(droppedW / 600));
-              const droppedRawSlot = droppedW / droppedCols;
+              const droppedCols = spaceInfo.droppedCeilingDoorCount || Math.max(1, Math.round((hasDropped ? droppedSlotW : droppedW) / 600));
+              const droppedRawSlot = hasDropped ? droppedSlotW / droppedCols : droppedW / droppedCols;
               const droppedSingleW = Math.floor(droppedRawSlot);
               const droppedDualW = Math.floor(droppedRawSlot * 2 * 2) / 2;
 
@@ -4498,37 +4520,30 @@ const Configurator: React.FC = () => {
 
                   {hasDropped ? (
                     <>
-                      {/* 단내림 — 구간 분리 설명 */}
+                      {/* 단내림 — 구간별 슬롯 계산 */}
                       <div className={styles.slotGuidePopupSection}>
-                        <div className={styles.slotGuidePopupLabel}>구간 분리 (단내림 {droppedPos === 'left' ? '좌측' : '우측'})</div>
+                        <div className={styles.slotGuidePopupLabel}>메인 구간 ({droppedPos === 'right' ? '좌' : '우'})</div>
                         <p className={styles.slotGuidePopupDesc}>
-                          내경 {internalW}mm에서 단내림 {droppedW}mm + 경계 이격 {gapM}mm를 빼서 <strong>일반 구간 {normalW}mm</strong>를 구합니다.
+                          메인 {mainOuterW}mm에서 {droppedPos === 'right' ? leftLabel : rightLabel}를 빼서 <strong>슬롯 영역 {fmtSlot(normalW)}mm</strong>
                         </p>
                         <p className={styles.slotGuidePopupDesc}>
                           <span className={styles.slotGuidePopupFormula}>
-                            {internalW} − {droppedW} − {gapM} = {normalW}mm
+                            ({mainOuterW} − {droppedPos === 'right' ? leftReduction : rightReduction}) ÷ {normalCols} = {fmtSlot(normalRawSlot)}mm
                           </span>
                         </p>
                       </div>
 
                       <div className={styles.slotGuidePopupDivider} />
 
-                      {/* 일반 구간 슬롯 */}
-                      <div className={styles.slotGuidePopupSection}>
-                        <div className={styles.slotGuidePopupLabel}>일반 구간 ({normalW}mm × {normalCols}칸)</div>
-                        <p className={styles.slotGuidePopupDesc}>
-                          <span className={styles.slotGuidePopupFormula}>
-                            {normalW} ÷ {normalCols} = {fmtSlot(normalRawSlot)}mm
-                          </span>
-                        </p>
-                      </div>
-
                       {/* 단내림 구간 슬롯 */}
                       <div className={styles.slotGuidePopupSection}>
-                        <div className={styles.slotGuidePopupLabel}>단내림 구간 ({droppedW}mm × {droppedCols}칸)</div>
+                        <div className={styles.slotGuidePopupLabel}>단내림 구간 ({droppedPos === 'left' ? '좌' : '우'})</div>
+                        <p className={styles.slotGuidePopupDesc}>
+                          단내림 {droppedW}mm + 중간이격 {gapM}mm − {droppedPos === 'right' ? rightLabel : leftLabel}로 <strong>슬롯 영역 {fmtSlot(droppedSlotW)}mm</strong>
+                        </p>
                         <p className={styles.slotGuidePopupDesc}>
                           <span className={styles.slotGuidePopupFormula}>
-                            {droppedW} ÷ {droppedCols} = {fmtSlot(droppedRawSlot)}mm
+                            ({droppedW} + {gapM} − {droppedPos === 'right' ? rightReduction : leftReduction}) ÷ {droppedCols} = {fmtSlot(droppedRawSlot)}mm
                           </span>
                         </p>
                       </div>

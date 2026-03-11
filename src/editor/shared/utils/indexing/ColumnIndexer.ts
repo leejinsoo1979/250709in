@@ -928,19 +928,16 @@ export class ColumnIndexer {
         // 서라운드: 중간 경계면 이격거리 적용
         const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 2;
 
-        // 단내림구간(좌): 좌측 프레임만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
+        // 단내림구간(좌): 좌측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.left;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 일반구간(우): 우측 프레임 + BOUNDARY_GAP 빼기 (경계 이격을 메인구간에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // GAP 후 메인구간 시작
+        // 일반구간(우): 우측 프레임만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
+        normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
         console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
-          '단내림 끝': droppedStartX + droppedAreaInternalWidth,
-          '메인 시작': normalStartX,
-          '갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
-          '중간경계이격거리': BOUNDARY_GAP,
+          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
           '프레임 두께': frameThickness,
           '단내림 내경': droppedAreaInternalWidth,
           '메인 내경': normalAreaInternalWidth,
@@ -992,30 +989,18 @@ export class ColumnIndexer {
           }
         }
 
-        // 단내림구간(좌): 좌측 이격거리만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
+        // 단내림구간(좌): 좌측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - leftReduction;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        console.log('🔴🔴 단내림 좌측 + 노서라운드 단내림구간 계산:', {
-          droppedAreaOuterWidth,
-          leftReduction,
-          BOUNDARY_GAP,
-          droppedAreaInternalWidth,
-          internalStartX,
-          droppedStartX,
-          '좌측벽유무': spaceInfo.wallConfig?.left,
-          '엔드패널있음': !spaceInfo.wallConfig?.left,
-          totalWidth: spaceInfo.width
-        });
-
-        // 일반구간(우): 우측 이격거리 + BOUNDARY_GAP 빼기 (경계 이격을 메인구간에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // GAP 후 메인구간 시작
+        // 일반구간(우): 우측 이격거리만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
+        normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
           '단내림구간 외부너비': droppedAreaOuterWidth,
           '좌측이격거리': leftReduction,
-          '중간경계이격거리': BOUNDARY_GAP,
+          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
           '단내림구간 내경': droppedAreaInternalWidth,
           '일반구간 외부너비': normalAreaOuterWidth,
           '우측이격거리': rightReduction,
@@ -1023,8 +1008,7 @@ export class ColumnIndexer {
           '단내림 시작X': droppedStartX,
           '단내림 끝X': droppedStartX + droppedAreaInternalWidth,
           '메인 시작X': normalStartX,
-          '경계 갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
-          '검증 총합': droppedAreaInternalWidth + normalAreaInternalWidth + leftReduction + rightReduction + BOUNDARY_GAP,
+          '검증 총합': droppedAreaInternalWidth + normalAreaInternalWidth + leftReduction + rightReduction,
           '전체너비': totalWidth
         });
       }
@@ -1034,19 +1018,16 @@ export class ColumnIndexer {
         // 서라운드: 중간 경계면 이격거리 적용
         const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 2;
 
-        // 일반구간: 좌측 프레임 + BOUNDARY_GAP 빼기 (경계 이격을 메인구간에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
+        // 일반구간(좌): 좌측 프레임만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 단내림구간: 우측 프레임만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
-        droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // GAP 후 단내림구간 시작
+        // 단내림구간(우): 우측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.right;
+        droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
 
         console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
-          '메인 끝': normalStartX + normalAreaInternalWidth,
-          '단내림 시작': droppedStartX,
-          '갭': droppedStartX - (normalStartX + normalAreaInternalWidth),
-          '중간경계이격거리': BOUNDARY_GAP,
+          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
           '프레임 두께': frameThickness,
           '메인 내경': normalAreaInternalWidth,
           '단내림 내경': droppedAreaInternalWidth,
@@ -1098,39 +1079,26 @@ export class ColumnIndexer {
           }
         }
 
-        // 일반구간: 좌측 이격거리 + BOUNDARY_GAP 빼기 (경계 이격을 메인구간에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
+        // 일반구간(좌): 좌측 이격거리만 빼기 (중간이격은 단내림 쪽 배치사이즈에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
 
-        console.log('🔴🔴 단내림 우측 + 노서라운드 메인구간 계산:', {
-          normalAreaOuterWidth,
-          leftReduction,
-          BOUNDARY_GAP,
-          normalAreaInternalWidth,
-          internalStartX,
-          normalStartX,
-          '좌측벽유무': spaceInfo.wallConfig?.left,
-          '엔드패널있음': !spaceInfo.wallConfig?.left,
-          totalWidth: spaceInfo.width
-        });
-
-        // 단내림구간: 우측 이격거리만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
-        droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // GAP 후 단내림구간 시작
+        // 단내림구간(우): 우측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - rightReduction;
+        droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
 
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           '일반구간 외부너비': normalAreaOuterWidth,
           '좌측이격거리': leftReduction,
-          '중간경계이격거리': BOUNDARY_GAP,
           '일반구간 내경': normalAreaInternalWidth,
           '단내림구간 외부너비': droppedAreaOuterWidth,
+          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
           '우측이격거리': rightReduction,
           '단내림구간 내경': droppedAreaInternalWidth,
           '메인 시작X': normalStartX,
           '메인 끝X': normalStartX + normalAreaInternalWidth,
           '단내림 시작X': droppedStartX,
-          '경계 갭': droppedStartX - (normalStartX + normalAreaInternalWidth),
-          '검증 총합': normalAreaInternalWidth + droppedAreaInternalWidth + leftReduction + rightReduction + BOUNDARY_GAP,
+          '검증 총합': normalAreaInternalWidth + droppedAreaInternalWidth + leftReduction + rightReduction,
           '전체너비': totalWidth
         });
       }
