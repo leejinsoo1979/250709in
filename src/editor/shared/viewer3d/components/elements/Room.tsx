@@ -2609,12 +2609,18 @@ const Room: React.FC<RoomProps> = ({
             if (spaceInfo.surroundType === 'no-surround' &&
               (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' ||
                 spaceInfo.installType === 'freestanding')) {
-              // 엔드패널이 있는 쪽은 프레임 범위에서 제외
-              if (endPanelPositions.left) {
+              if (spaceInfo.installType === 'freestanding') {
+                // 프리스탠딩(벽없음)+노서라운드: 양쪽 모두 항상 18mm 감소 (엔드패널 공간)
                 frameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
-              }
-              if (endPanelPositions.right) {
                 frameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+              } else {
+                // 세미스탠딩: 엔드패널이 있는 쪽만 프레임 범위에서 제외
+                if (endPanelPositions.left) {
+                  frameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
+                }
+                if (endPanelPositions.right) {
+                  frameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+                }
               }
             }
 
@@ -2693,9 +2699,9 @@ const Room: React.FC<RoomProps> = ({
                   leftReduction = endPanelPositions.left ? END_PANEL_THICKNESS : 0;
                   rightReduction = endPanelPositions.right ? END_PANEL_THICKNESS : 0;
                 } else if (spaceInfo.installType === 'freestanding') {
-                  // 프리스탠딩: 엔드패널이 생성된 위치만 조정
-                  leftReduction = endPanelPositions.left ? END_PANEL_THICKNESS : 0;
-                  rightReduction = endPanelPositions.right ? END_PANEL_THICKNESS : 0;
+                  // 프리스탠딩(벽없음)+노서라운드: 양쪽 항상 18mm 감소
+                  leftReduction = END_PANEL_THICKNESS;
+                  rightReduction = END_PANEL_THICKNESS;
                 } else {
                   leftReduction = endPanelPositions.left ? END_PANEL_THICKNESS : 0;
                   rightReduction = endPanelPositions.right ? END_PANEL_THICKNESS : 0;
@@ -2977,8 +2983,9 @@ const Room: React.FC<RoomProps> = ({
 
               if (spaceInfo.surroundType === 'no-surround') {
                 // 엔드패널이 있는 쪽의 서브프레임을 18mm씩 안쪽으로 조정
-                const leftAdjustment = endPanelPositions.left ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
-                const rightAdjustment = endPanelPositions.right ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
+                const isFreestanding = spaceInfo.installType === 'freestanding';
+                const leftAdjustment = (isFreestanding || endPanelPositions.left) ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
+                const rightAdjustment = (isFreestanding || endPanelPositions.right) ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
 
                 adjustedSubFrameWidth = finalPanelWidth - leftAdjustment - rightAdjustment;
                 adjustedSubFrameX = topBottomPanelX + (leftAdjustment - rightAdjustment) / 2;
@@ -3436,12 +3443,18 @@ const Room: React.FC<RoomProps> = ({
                 if (spaceInfo.surroundType === 'no-surround' &&
                   (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' ||
                     spaceInfo.installType === 'freestanding')) {
-                  // 엔드패널이 있는 쪽은 프레임 범위에서 제외
-                  if (endPanelPositions.left) {
+                  if (spaceInfo.installType === 'freestanding') {
+                    // 프리스탠딩(벽없음)+노서라운드: 양쪽 모두 항상 18mm 감소 (엔드패널 공간)
                     frameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
-                  }
-                  if (endPanelPositions.right) {
                     frameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+                  } else {
+                    // 세미스탠딩: 엔드패널이 있는 쪽만 프레임 범위에서 제외
+                    if (endPanelPositions.left) {
+                      frameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
+                    }
+                    if (endPanelPositions.right) {
+                      frameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+                    }
                   }
                 }
 
