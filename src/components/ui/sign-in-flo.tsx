@@ -143,22 +143,24 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           </div>
         </header>
 
-        {/* Animated Content */}
-        <div className="relative z-10 flex flex-col justify-center items-center flex-1">
-          {/* Back Button */}
+        {/* Back Button - 좌측 정렬 */}
+        <div className="relative z-10 px-8 sm:px-12 pt-2">
           <button
             type="button"
             onClick={onNavigateHome}
-            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70 mb-6"
+            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
             style={{ color: isDark ? '#a1a1aa' : '#6b7280' }}
           >
             <span>←</span>
             <span>Back</span>
           </button>
+        </div>
 
+        {/* Animated Content */}
+        <div className="relative z-10 flex flex-col justify-center items-center flex-1">
           {/* think thing thank */}
           <div
-            className="flex items-center justify-center gap-2 sm:gap-3 mb-4 cursor-pointer"
+            className="flex items-center justify-center gap-3 sm:gap-4 mb-6 cursor-pointer"
             onMouseEnter={handleTttHover}
             onMouseLeave={handleTttLeave}
           >
@@ -182,7 +184,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               />
             ))}
             <motion.span
-              className="font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide ml-2"
+              className="font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide ml-4"
               style={{ display: 'inline-flex', color: isDark ? '#fff' : '#000' }}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
