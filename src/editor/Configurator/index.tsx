@@ -3495,8 +3495,8 @@ const Configurator: React.FC = () => {
               />
             </div>
           ) : (
-            // 단내림이 있을 때 - 도어 개수 입력 숨김
-            <div>
+            // 단내림이 있을 때
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div className={styles.inputGroup}>
                 <DoorSlider
                   value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
@@ -3504,17 +3504,19 @@ const Configurator: React.FC = () => {
                     handleSpaceInfoUpdate({ mainDoorCount: value });
                   }}
                   width={spaceInfo.width || 4800}
+                  label="메인"
                 />
               </div>
 
               {/* 단내림구간 도어 개수 */}
-              <div className={styles.inputGroup} style={{ marginTop: '8px' }}>
+              <div className={styles.inputGroup}>
                 <DoorSlider
                   value={spaceInfo.droppedCeilingDoorCount || 1}
                   onChange={(value) => {
                     handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
                   }}
                   width={spaceInfo.droppedCeiling?.width || 900}
+                  label="단내림"
                 />
               </div>
             </div>

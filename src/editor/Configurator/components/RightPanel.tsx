@@ -175,9 +175,10 @@ interface DoorSliderProps {
   value: number;
   onChange: (value: number) => void;
   width: number; // 공간 넓이
+  label?: string; // 좌측 라벨 (메인구간, 단내림구간 등)
 }
 
-const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
+const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }) => {
   const [isDragging, setIsDragging] = useState(false);
   const sliderTrackRef = React.useRef<HTMLDivElement>(null);
   const { spaceInfo } = useSpaceConfigStore();
@@ -452,39 +453,17 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   });
   
   return (
-    <div className={styles.doorSlider}>
-      <div 
-        ref={sliderTrackRef}
-        className={styles.sliderTrack}
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const position = ((e.clientX - rect.left) / rect.width) * 100;
-          const newDoorCount = getDoorCountFromPosition(position);
-          onChange(newDoorCount);
-        }}
-      >
-        {/* 활성 트랙 */}
-        <div 
-          className={styles.sliderActiveTrack}
-          style={{ width: `${sliderPosition}%`, pointerEvents: 'none' }}
-        />
-        
-        {/* 슬라이더 핸들 */}
-        <div 
-          className={styles.sliderHandle}
-          style={{ left: `${sliderPosition}%` }}
-          onMouseDown={(e) => {
-            e.stopPropagation(); // 트랙 클릭 이벤트 방지
-            handleMouseDown(e);
-          }}
-        />
-      </div>
-      
-      {/* 슬라이더 라벨 */}
-      <div className={styles.sliderLabels}>
+    <div className={styles.doorSlider} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {label && (
+        <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)', fontWeight: 500, flexShrink: 0, minWidth: '40px' }}>
+          {label}
+        </span>
+      )}
+      {/* 컬럼 수 버튼 */}
+      <div className={styles.sliderLabels} style={{ flex: 1 }}>
         {labels.map((num) => (
-          <span 
-            key={num} 
+          <span
+            key={num}
             className={num === clampedValue ? styles.active : ''}
             onClick={() => onChange(num)}
           >
