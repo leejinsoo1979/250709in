@@ -365,29 +365,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       >
         {renderSelectionBar()}
         {filteredItems.map(item => {
-          // 폴더는 일반 아이콘 스타일로 표시
-          if (item.type === 'folder') {
-            return (
-              <div
-                key={item.id}
-                data-item-card
-                data-item-id={item.id}
-                className={`${styles.saasfolderCard} ${selectedItems.has(item.id) ? styles.iconCardSelected : ''} ${
-                  dragState.dragOverFolder === item.id ? styles.dragOver : ''
-                }`}
-                onClick={e => handleItemClick(e, item.id)}
-                onDoubleClick={() => onItemDoubleClick(item)}
-                onContextMenu={e => onItemContextMenu(e, item)}
-                {...getDragProps(item)}
-              >
-                {renderCheckbox(item)}
-                <FcFolder size={200} />
-                <div className={styles.iconName} title={item.name}>{item.name}</div>
-              </div>
-            );
-          }
-
-          // 프로젝트/디자인 → SaaS 카드
+          // 프로젝트/디자인/폴더 → SaaS 카드
           return (
             <div
               key={item.id}
@@ -403,7 +381,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             >
               {renderCheckbox(item)}
               <div className={styles.saasThumbnailArea}>
-                {item.type === 'project' && projectDesignFiles ? (
+                {item.type === 'folder' ? (
+                  <div className={styles.saasFolderIcon}>
+                    <FcFolder size={120} />
+                  </div>
+                ) : item.type === 'project' && projectDesignFiles ? (
                   (() => {
                     const designFiles = projectDesignFiles[item.id] || [];
                     if (designFiles.length === 0) {
