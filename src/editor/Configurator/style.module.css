@@ -1818,8 +1818,8 @@
 /* 프레임 그리드 */
 .frameGrid {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  gap: 6px;
   margin-bottom: 0;
 }
 
@@ -1827,16 +1827,17 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .frameItemLabel {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--theme-text-muted);
   margin-bottom: 0;
   font-weight: 500;
   text-align: left;
-  min-width: 24px;
   flex-shrink: 0;
 }
 
