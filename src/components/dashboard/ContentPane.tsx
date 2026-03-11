@@ -364,81 +364,106 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         className={styles.saasGrid}
       >
         {renderSelectionBar()}
-        {filteredItems.map(item => (
-          <div
-            key={item.id}
-            data-item-card
-            data-item-id={item.id}
-            className={`${styles.saasCard} ${selectedItems.has(item.id) ? styles.saasCardSelected : ''} ${
-              dragState.dragOverFolder === item.id ? styles.dragOver : ''
-            }`}
-            onClick={e => handleItemClick(e, item.id)}
-            onDoubleClick={() => onItemDoubleClick(item)}
-            onContextMenu={e => onItemContextMenu(e, item)}
-            {...getDragProps(item)}
-          >
-            {renderCheckbox(item)}
-            <div className={styles.saasThumbnailArea}>
-              {item.type === 'project' && projectDesignFiles ? (
-                (() => {
-                  const designFiles = projectDesignFiles[item.id] || [];
-                  if (designFiles.length === 0) {
+        {filteredItems.map(item => {
+          // 폴더는 일반 아이콘 스타일로 표시
+          if (item.type === 'folder') {
+            return (
+              <div
+                key={item.id}
+                data-item-card
+                data-item-id={item.id}
+                className={`${styles.saasfolderCard} ${selectedItems.has(item.id) ? styles.iconCardSelected : ''} ${
+                  dragState.dragOverFolder === item.id ? styles.dragOver : ''
+                }`}
+                onClick={e => handleItemClick(e, item.id)}
+                onDoubleClick={() => onItemDoubleClick(item)}
+                onContextMenu={e => onItemContextMenu(e, item)}
+                {...getDragProps(item)}
+              >
+                {renderCheckbox(item)}
+                <FcFolder size={80} />
+                <div className={styles.iconName} title={item.name}>{item.name}</div>
+              </div>
+            );
+          }
+
+          // 프로젝트/디자인 → SaaS 카드
+          return (
+            <div
+              key={item.id}
+              data-item-card
+              data-item-id={item.id}
+              className={`${styles.saasCard} ${selectedItems.has(item.id) ? styles.saasCardSelected : ''} ${
+                dragState.dragOverFolder === item.id ? styles.dragOver : ''
+              }`}
+              onClick={e => handleItemClick(e, item.id)}
+              onDoubleClick={() => onItemDoubleClick(item)}
+              onContextMenu={e => onItemContextMenu(e, item)}
+              {...getDragProps(item)}
+            >
+              {renderCheckbox(item)}
+              <div className={styles.saasThumbnailArea}>
+                {item.type === 'project' && projectDesignFiles ? (
+                  (() => {
+                    const designFiles = projectDesignFiles[item.id] || [];
+                    if (designFiles.length === 0) {
+                      return (
+                        <div className={styles.projectGridEmpty}>
+                          <LuFileBox size={40} strokeWidth={1} />
+                        </div>
+                      );
+                    }
+                    const displayItems = designFiles.slice(0, 4);
                     return (
-                      <div className={styles.projectGridEmpty}>
-                        <LuFileBox size={40} strokeWidth={1} />
+                      <div className={styles.saasProjectGrid}>
+                        {displayItems.map((df: any) => (
+                          <div key={df.id} className={styles.saasProjectGridItem}>
+                            <ThumbnailImage
+                              project={{ id: item.id, title: item.name } as any}
+                              designFile={{
+                                thumbnail: df.thumbnail,
+                                updatedAt: df.updatedAt,
+                                spaceConfig: df.spaceConfig,
+                                furniture: df.furniture,
+                              }}
+                              className={styles.projectGridImg}
+                              alt={df.name}
+                            />
+                          </div>
+                        ))}
+                        {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
+                          <div key={`empty-${i}`} className={styles.saasProjectGridItemEmpty}>
+                            <LuFileBox size={24} strokeWidth={1} />
+                          </div>
+                        ))}
                       </div>
                     );
-                  }
-                  const displayItems = designFiles.slice(0, 4);
-                  return (
-                    <div className={styles.saasProjectGrid}>
-                      {displayItems.map((df: any) => (
-                        <div key={df.id} className={styles.saasProjectGridItem}>
-                          <ThumbnailImage
-                            project={{ id: item.id, title: item.name } as any}
-                            designFile={{
-                              thumbnail: df.thumbnail,
-                              updatedAt: df.updatedAt,
-                              spaceConfig: df.spaceConfig,
-                              furniture: df.furniture,
-                            }}
-                            className={styles.projectGridImg}
-                            alt={df.name}
-                          />
-                        </div>
-                      ))}
-                      {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
-                        <div key={`empty-${i}`} className={styles.saasProjectGridItemEmpty}>
-                          <LuFileBox size={24} strokeWidth={1} />
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()
-              ) : item.thumbnail ? (
-                <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
-              ) : (
-                <div className={styles.projectGridEmpty}>
-                  {getItemIcon(item, 40, true)}
-                </div>
-              )}
+                  })()
+                ) : item.thumbnail ? (
+                  <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
+                ) : (
+                  <div className={styles.projectGridEmpty}>
+                    {getItemIcon(item, 40, true)}
+                  </div>
+                )}
+              </div>
+              <div className={styles.saasInfoArea}>
+                <div className={styles.saasName} title={item.name}>{item.name}</div>
+                <div className={styles.saasDate}>{formatDateFull(item.updatedAt)}</div>
+                {item.ownerName && (
+                  <div className={styles.saasOwner}>
+                    {item.ownerPhotoURL ? (
+                      <img src={item.ownerPhotoURL} alt={item.ownerName} className={styles.saasAvatar} />
+                    ) : (
+                      <div className={styles.saasAvatarFallback}>{item.ownerName.charAt(0)}</div>
+                    )}
+                    <span className={styles.saasOwnerName}>{item.ownerName}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className={styles.saasInfoArea}>
-              <div className={styles.saasName} title={item.name}>{item.name}</div>
-              <div className={styles.saasDate}>{formatDateFull(item.updatedAt)}</div>
-              {item.ownerName && (
-                <div className={styles.saasOwner}>
-                  {item.ownerPhotoURL ? (
-                    <img src={item.ownerPhotoURL} alt={item.ownerName} className={styles.saasAvatar} />
-                  ) : (
-                    <div className={styles.saasAvatarFallback}>{item.ownerName.charAt(0)}</div>
-                  )}
-                  <span className={styles.saasOwnerName}>{item.ownerName}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
