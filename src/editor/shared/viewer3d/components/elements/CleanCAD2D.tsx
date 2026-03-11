@@ -1095,7 +1095,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
                 >
-                  {displayWidth}
+                  {Math.round(displayWidth)}
                 </Text>
               )}
               
@@ -3040,7 +3040,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return zoneSlotInfo.normal.width;
+                      return Math.round(zoneSlotInfo.normal.width);
                     })()}
                   </Text>
                 )}
@@ -3101,7 +3101,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width;
+                      return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
                     })()}
                   </Text>
                 )}
@@ -5178,7 +5178,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return zoneSlotInfo.normal.width;
+                      return Math.round(zoneSlotInfo.normal.width);
                     })()}
                   </Text>
                   
@@ -5237,7 +5237,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width;
+                      return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
                     })()}
                   </Text>
                   
