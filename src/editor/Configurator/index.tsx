@@ -4342,7 +4342,7 @@ const Configurator: React.FC = () => {
             padding: '0 40px', /* 좌우 치수 및 가이드가 잘리지 않도록 여백 확보 */
           } : {
             position: 'absolute',
-            left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 64px)', /* CSS 변수 사용 - 반응형 */
+            left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 56px)', /* CSS 변수 사용 - 반응형 */
             right: isReadOnly ? '0' : (isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0'), /* CSS 변수 사용 - 반응형 */
             top: 0,
             bottom: 0,

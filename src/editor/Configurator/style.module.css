@@ -245,7 +245,7 @@
 /* 좌측 패널 토글 버튼 */
 .leftPanelToggle {
   position: fixed;
-  left: var(--sidebar-icon-width, 64px);
+  left: var(--sidebar-icon-width, 56px);
   top: 50%;
   transform: translateY(-50%);
   width: 20px;
@@ -389,7 +389,7 @@
 /* 사이드바 컨텐츠 패널 */
 .sidebarContent {
   position: fixed;
-  left: var(--sidebar-icon-width, 64px); /* 사이드바 너비 - CSS 변수 사용 */
+  left: var(--sidebar-icon-width, 56px); /* 사이드바 너비 - CSS 변수 사용 */
   top: var(--configurator-top-offset, 88px); /* 헤더 + 탭 바 높이 */
   bottom: 0;
   width: var(--sidebar-content-width, 240px); /* CSS 변수 사용 */

@@ -121,8 +121,8 @@
   /* 좌측 사이드바 컨텐츠 패널 너비 - 뷰포트 15% 기반 */
   --sidebar-content-width: clamp(180px, 15vw, 280px);
 
-  /* 좌측 사이드바 전체 너비 (아이콘 + 컨텐츠) */
-  --sidebar-total-width: clamp(228px, 19vw, 344px);
+  /* 좌측 사이드바 전체 너비 (아이콘 + 컨텐츠) - 항상 정확히 일치 */
+  --sidebar-total-width: calc(var(--sidebar-icon-width) + var(--sidebar-content-width));
 
   /* 우측 패널 너비 - 뷰포트 18% 기반 */
   --right-panel-width: clamp(220px, 18vw, 380px);
