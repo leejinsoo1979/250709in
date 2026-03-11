@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LuFileBox } from 'react-icons/lu';
+import { IoBanOutline } from 'react-icons/io5';
 import { ProjectSummary } from '../../firebase/types';
 import { generateProjectThumbnail } from '../../utils/thumbnailGenerator';
 
@@ -55,7 +55,7 @@ const EmptyDesignThumbnail: React.FC<{
       height: '100%',
       boxSizing: 'border-box',
     }}>
-      <LuFileBox className="thumbnail-empty-icon" size={48} strokeWidth={1} />
+      <IoBanOutline size={48} />
     </div>
   );
 };
