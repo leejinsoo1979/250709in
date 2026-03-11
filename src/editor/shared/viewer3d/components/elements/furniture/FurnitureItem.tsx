@@ -1112,7 +1112,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
       // 상부프레임 높이
-      const topFrameHeightMm = spaceInfo.frameSize?.top || 30; // 기본값 30mm
+      const topFrameHeightMm = spaceInfo.frameSize?.top || 10; // 기본값 10mm
 
       // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
       const isInDroppedZone = placedModule.zone === 'dropped';
@@ -1146,7 +1146,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       (spaceInfo.baseConfig?.floatHeight || 0) > 0;
     if (isFloatMode) {
       const ffMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-      const topFrMM = spaceInfo.frameSize?.top || 30;
+      const topFrMM = spaceInfo.frameSize?.top || 10;
       const floatMM = spaceInfo.baseConfig?.floatHeight || 0;
       const availMM = spaceInfo.height - ffMM - topFrMM - floatMM;
       if (furnitureHeightMm > availMM) {

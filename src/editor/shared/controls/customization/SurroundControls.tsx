@@ -103,6 +103,10 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       updates.gapConfig = { left: 2, right: 2 };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
+      // 전체서라운드는 하부 프레임도 활성 (기존 배치 타입 유지)
+      updates.baseConfig = {
+        ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }),
+      };
 
       onUpdate(updates);
     } else if (mode === 'sides-only') {
@@ -148,7 +152,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
     // 유효하지 않은 숫자라면 기본값 사용
     if (isNaN(numValue)) {
-      numValue = dimension === 'top' ? 30 : 50;
+      numValue = dimension === 'top' ? 10 : 50;
     }
 
     // 범위 검증
@@ -183,7 +187,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       let value = parseInt(input.value, 10);
 
       if (isNaN(value)) {
-        value = dimension === 'top' ? 30 : 50;
+        value = dimension === 'top' ? 10 : 50;
       }
 
       if (dimension === 'left' || dimension === 'right') {

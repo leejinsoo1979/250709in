@@ -159,7 +159,7 @@ export const DEFAULT_SPACE_VALUES = {
 export const DEFAULT_FRAME_VALUES = {
   LEFT: 50,
   RIGHT: 50,
-  TOP: 30,
+  TOP: 10,
 } as const;
 
 export const DEFAULT_BASE_VALUES = {
@@ -219,7 +219,7 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
     frameSize: {
       left: 50,  // 서라운드 기본 프레임 크기
       right: 50,
-      top: 30
+      top: 10
     },
     gapConfig: {
       left: 1.5, // 기본 이격거리 1.5mm

@@ -142,7 +142,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const calculateYPosition = (zone: 'normal' | 'dropped'): number => {
       if (selectedCategory === 'upper') {
         // 상부장: 천장 근처
-        const topFrameHeightMm = spaceInfo.frameSize?.top || 30;
+        const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
 
         // 천장 높이 결정 (단내림 영역이면 단내림 천장 높이 사용)
         const ceilingHeight = (spaceInfo.droppedCeiling?.enabled && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight !== undefined)

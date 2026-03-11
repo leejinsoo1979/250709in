@@ -293,7 +293,7 @@ const Configurator: React.FC = () => {
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
   const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
-  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top || 30));
+  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top || 10));
   const isEditingFrameRef = useRef<{ left: boolean; right: boolean; top: boolean }>({ left: false, right: false, top: false });
 
   // 외부 spaceInfo.frameSize가 변경되면 로컬 상태 동기화 (편집 중이 아닐 때만)
@@ -305,7 +305,7 @@ const Configurator: React.FC = () => {
       setFrameInputRight(String(spaceInfo.frameSize?.right || 50));
     }
     if (!isEditingFrameRef.current.top) {
-      setFrameInputTop(String(spaceInfo.frameSize?.top || 30));
+      setFrameInputTop(String(spaceInfo.frameSize?.top || 10));
     }
   }, [spaceInfo.frameSize?.left, spaceInfo.frameSize?.right, spaceInfo.frameSize?.top]);
 
@@ -2359,7 +2359,7 @@ const Configurator: React.FC = () => {
     if (updates.surroundType && updates.surroundType !== spaceInfo.surroundType) {
       const currentInstallType = finalUpdates.installType || spaceInfo.installType;
       const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
-      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 10 };
 
       if (updates.surroundType === 'surround') {
         // 서라운드 모드
@@ -3603,7 +3603,7 @@ const Configurator: React.FC = () => {
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: true, bottom: true },
                   frameSize: {
-                    ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                    ...(spaceInfo.frameSize || { left: 50, right: 50, top: 10 }),
                   },
                   baseConfig: {
                     ...(spaceInfo.baseConfig || { type: 'floor' as const, height: 65 }),
@@ -3784,8 +3784,8 @@ const Configurator: React.FC = () => {
                       value={frameInputTop}
                       onChange={(e) => handleFrameInputChange('top', e.target.value)}
                       onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
+                      onBlur={() => handleFrameInputBlur('top', 10, 100, 50)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 100, 50)}
                       className={styles.frameNumberInput}
                     />
                     <button
@@ -3815,7 +3815,7 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const currentTop = spaceInfo.frameSize?.top || 10;
                         const newTop = Math.max(10, currentTop - 1);
                         updateFrameSize('top', newTop);
                       }}
@@ -3829,14 +3829,14 @@ const Configurator: React.FC = () => {
                       value={frameInputTop}
                       onChange={(e) => handleFrameInputChange('top', e.target.value)}
                       onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
+                      onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 10)}
                       className={styles.frameNumberInput}
                     />
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const currentTop = spaceInfo.frameSize?.top || 10;
                         const newTop = Math.min(200, currentTop + 1);
                         updateFrameSize('top', newTop);
                       }}

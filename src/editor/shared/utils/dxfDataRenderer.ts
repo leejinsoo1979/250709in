@@ -2056,8 +2056,8 @@ export const generateExternalDimensions = (
     }
 
     // 우측 치수선: 상부프레임 | 가구영역 | 받침대
-    const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 30 };
-    const topFrameThick = frameSize.top || 30;
+    const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 10 };
+    const topFrameThick = frameSize.top || 10;
     const rightDimX = halfWidth + dimensionOffset;
     const rightDimX2 = rightDimX + 40;
 
@@ -2600,7 +2600,7 @@ export const generateExternalDimensions = (
     // ========================================
     // 1. spaceInfo에서 실제 값 가져오기
     // ========================================
-    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
+    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
     const topFrameHeightMm = frameSize.top || 0;
 
     // 띄워서 배치 확인
@@ -3242,8 +3242,8 @@ export const generateDxfFromData = (
 
       // spaceInfo에서 프레임 정보 가져오기
       // 기본값을 명시적으로 처리하여 0과 undefined를 구분
-      const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
-      const topFrameHeightMm = frameSize.top !== undefined ? frameSize.top : 30; // 기본 상부 프레임 30mm
+      const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
+      const topFrameHeightMm = frameSize.top !== undefined ? frameSize.top : 10; // 기본 상부 프레임 10mm
       const baseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65, depth: 0 };
       const isFloating = baseConfig.type === 'stand' && baseConfig.placementType === 'float';
       const isStandType = baseConfig.type === 'stand';

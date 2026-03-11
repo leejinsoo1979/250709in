@@ -34,9 +34,9 @@ export const TOTAL_DEPTH = 598;
 export const INNER_DEPTH = 580;
 
 /**
- * 서라운드 상부 프레임 두께 기본값 (30mm)
+ * 서라운드 프레임 두께 (10mm)
  */
-export const SURROUND_FRAME_THICKNESS = 30;
+export const SURROUND_FRAME_THICKNESS = 10;
 
 /**
  * 엔드 패널 두께 (18mm)
@@ -413,13 +413,13 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
 
 /**
  * 상단/하단 프레임 높이 계산 (mm 단위)
- * 기본값은 30mm이고, frameSize 설정이 있으면 그 값을 사용
+ * 기본값은 10mm이고, frameSize 설정이 있으면 그 값을 사용
  */
 export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
     return SURROUND_FRAME_THICKNESS;
   }
   
-  // frameSize.top이 설정되어 있으면 그 값을 사용 (0도 유효), 없으면 기본값 30mm
+  // frameSize.top이 설정되어 있으면 그 값을 사용 (0도 유효), 없으면 기본값 10mm
   return spaceInfo.frameSize?.top ?? SURROUND_FRAME_THICKNESS;
 }; 

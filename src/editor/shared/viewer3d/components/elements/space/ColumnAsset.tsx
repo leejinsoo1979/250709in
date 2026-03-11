@@ -498,7 +498,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
           {/* 전면 패널 윤곽선 (18mm 두께) - 2D */}
           {(() => {
-            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 30;
+            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 10;
             const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
             const panelHeight = height - topFrameHeight - baseHeight;
             const panelCenterY = baseHeight + panelHeight / 2 - height / 2; // group 중심 기준 오프셋
@@ -558,7 +558,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
           {/* 전면 패널 윤곽선 (18mm 두께) */}
           {(() => {
-            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 30;
+            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 10;
             const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
             const panelHeight = height - topFrameHeight - baseHeight;
             const panelCenterY = baseHeight + panelHeight / 2 - height / 2; // group 중심 기준 오프셋
@@ -614,7 +614,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
           {/* 전면 패널 (기둥과 같은 폭, 18mm 두께) - 프레임 재질 */}
           {(() => {
-            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 30;
+            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 10;
             const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
             const panelHeight = height - topFrameHeight - baseHeight;
             const panelCenterY = baseHeight + panelHeight / 2;
