@@ -47,6 +47,37 @@ googleProvider.setCustomParameters({
 googleProvider.addScope('profile');
 googleProvider.addScope('email');
 
+// Firebase 에러 코드 → 한국어 메시지 변환
+function getKoreanAuthError(error: FirebaseError): string {
+  switch (error.code) {
+    // 회원가입 에러
+    case 'auth/email-already-in-use':
+      return '이미 사용 중인 이메일 주소입니다.';
+    case 'auth/invalid-email':
+      return '유효하지 않은 이메일 형식입니다.';
+    case 'auth/weak-password':
+      return '비밀번호는 6자 이상이어야 합니다.';
+    case 'auth/operation-not-allowed':
+      return '이메일/비밀번호 로그인이 비활성화되어 있습니다. 관리자에게 문의하세요.';
+    // 로그인 에러
+    case 'auth/user-not-found':
+      return '등록되지 않은 이메일 주소입니다.';
+    case 'auth/wrong-password':
+      return '비밀번호가 올바르지 않습니다.';
+    case 'auth/invalid-credential':
+      return '이메일 또는 비밀번호가 올바르지 않습니다.';
+    case 'auth/user-disabled':
+      return '비활성화된 계정입니다. 관리자에게 문의하세요.';
+    case 'auth/too-many-requests':
+      return '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+    case 'auth/network-request-failed':
+      return '네트워크 연결을 확인해주세요.';
+    default:
+      console.error('Unhandled auth error:', error.code, error.message);
+      return '인증 중 오류가 발생했습니다. 다시 시도해주세요.';
+  }
+}
+
 // 이메일/비밀번호로 로그인
 export const signInWithEmail = async (email: string, password: string) => {
   try {
@@ -63,7 +94,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
-    return { user: null, error: firebaseError.message };
+    return { user: null, error: getKoreanAuthError(firebaseError) };
   }
 };
 
@@ -170,7 +201,7 @@ export const signUpWithEmail = async (email: string, password: string, displayNa
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
-    return { user: null, error: firebaseError.message };
+    return { user: null, error: getKoreanAuthError(firebaseError) };
   }
 };
 
@@ -239,6 +270,21 @@ async function ensurePersonalTeam(user: User) {
     // 이미 팀이 있는지 확인
     const teamDoc = await getDoc(teamRef);
     if (teamDoc.exists()) {
+      // 팀은 있지만 members 서브컬렉션 문서가 없을 수 있음 (기존 사용자 마이그레이션)
+      const memberRef = doc(db, 'teams', teamId, 'members', user.uid);
+      const memberDoc = await getDoc(memberRef);
+      if (!memberDoc.exists()) {
+        await setDoc(memberRef, {
+          userId: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          role: 'owner',
+          joinedAt: Timestamp.now(),
+          status: 'active'
+        });
+        console.log('✅ Member subcollection document created for existing team:', teamId);
+      }
       return;
     }
 
@@ -268,12 +314,24 @@ async function ensurePersonalTeam(user: User) {
 
     await setDoc(teamRef, team);
 
+    // members 서브컬렉션에도 문서 생성 (Firestore 보안 규칙의 isTeamMember 체크용)
+    const memberRef = doc(db, 'teams', teamId, 'members', user.uid);
+    await setDoc(memberRef, {
+      userId: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      role: 'owner',
+      joinedAt: Timestamp.now(),
+      status: 'active'
+    });
+
     // localStorage에 email 저장 (나중에 팀 생성 시 사용)
     if (user.email) {
       localStorage.setItem('userEmail', user.email);
     }
 
-    console.log('✅ Personal team created:', teamId);
+    console.log('✅ Personal team created with member subcollection:', teamId);
   } catch (error) {
     console.error('Failed to create personal team:', error);
   }
