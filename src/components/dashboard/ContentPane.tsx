@@ -256,9 +256,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     if (isNewUser) {
       return (
         <div className={styles.welcomeState}>
-          <div className={styles.welcomeIcon}>
-            <Sparkles size={48} />
-          </div>
           <h2 className={styles.welcomeTitle}>
             {userName ? `${userName}님, 환영합니다!` : '환영합니다!'}
           </h2>
