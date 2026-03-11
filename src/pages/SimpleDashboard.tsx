@@ -45,9 +45,15 @@ const SimpleDashboard: React.FC = () => {
   const { isMobile } = useResponsive();
   const { dashboardLayout } = useUIStore();
 
+  // --- 로컬 UI 상태 ---
+  const [viewMode, setViewMode] = useState<ViewMode>('medium');
+  const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [searchTerm, setSearchTerm] = useState('');
+
   // --- Explorer 훅 ---
   const nav = useExplorerNavigation();
-  const data = useExplorerData(nav.currentProjectId, nav.currentFolderId, nav.activeMenu);
+  const data = useExplorerData(nav.currentProjectId, nav.currentFolderId, nav.activeMenu, searchTerm);
   const actions = useExplorerActions(data, nav);
 
   // 마키(올가미) 선택
@@ -58,12 +64,6 @@ const SimpleDashboard: React.FC = () => {
     existingSelection: actions.selectedItems,
     enabled: dashboardLayout === 'windows',
   });
-
-  // --- 로컬 UI 상태 ---
-  const [viewMode, setViewMode] = useState<ViewMode>('medium');
-  const [sortBy, setSortBy] = useState<SortBy>('date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [searchTerm, setSearchTerm] = useState('');
 
   // 모달 상태들
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -677,7 +677,11 @@ const SimpleDashboard: React.FC = () => {
                         ? data.projects.filter(p => !p.isDeleted && p.status === 'completed')
                         : nav.activeMenu === 'trash'
                           ? data.projects.filter(p => p.isDeleted)
-                          : data.projects.filter(p => !p.isDeleted)
+                          : nav.activeMenu === 'shared-with-me'
+                            ? data.sharedWithMeProjects
+                            : nav.activeMenu === 'shared-by-me'
+                              ? data.sharedByMeProjects
+                              : data.projects.filter(p => !p.isDeleted)
                   }
                   folders={data.folders}
                   currentProjectId={nav.currentProjectId}
@@ -981,7 +985,7 @@ const SimpleDashboard: React.FC = () => {
       />
 
       {/* 공유 링크 모달 */}
-      {shareModalOpen && shareProjectId && shareProjectName && (
+      {shareModalOpen && shareProjectId && (
         <ShareLinkModal
           projectId={shareProjectId}
           projectName={shareProjectName}
@@ -1227,7 +1231,10 @@ const SimpleDashboard: React.FC = () => {
                   } else {
                     const projectId = item.projectId || nav.currentProjectId || '';
                     setShareProjectId(projectId);
-                    setShareProjectName('');
+                    const project = data.projects.find(p => p.id === projectId)
+                      || data.sharedWithMeProjects.find(p => p.id === projectId)
+                      || data.sharedByMeProjects.find(p => p.id === projectId);
+                    setShareProjectName(project?.title || '');
                     setShareDesignFileId(item.id);
                     setShareDesignFileName(item.name);
                   }
