@@ -23,6 +23,7 @@ interface ContentToolbarProps {
   onSearchChange?: (value: string) => void;
   projects?: ProjectSummary[];
   folders?: { [projectId: string]: FolderData[] };
+  projectDesignFiles?: { [projectId: string]: any[] };
   currentItems?: ExplorerItem[];
   onItemNavigate?: (item: ExplorerItem) => void;
 }
@@ -48,6 +49,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onSearchChange,
   projects,
   folders,
+  projectDesignFiles,
   currentItems,
   onItemNavigate,
 }) => {
@@ -87,19 +89,23 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     type: 'project' | 'folder' | 'design';
     depth: number;
     projectId?: string;
+    folderId?: string;
     hasChildren: boolean;
   }
 
-  // 트리 열 때 현재 경로의 프로젝트를 자동 펼침
+  // 트리 열 때 현재 경로의 프로젝트/폴더를 자동 펼침
   useEffect(() => {
     if (treeOpen && nav?.currentProjectId) {
       setExpandedNodes(prev => {
         const next = new Set(prev);
         next.add(nav.currentProjectId!);
+        if (nav.currentFolderId) {
+          next.add(nav.currentFolderId);
+        }
         return next;
       });
     }
-  }, [treeOpen, nav?.currentProjectId]);
+  }, [treeOpen, nav?.currentProjectId, nav?.currentFolderId]);
 
   const toggleExpand = (nodeId: string) => {
     setExpandedNodes(prev => {
@@ -107,6 +113,16 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       if (next.has(nodeId)) next.delete(nodeId);
       else next.add(nodeId);
       return next;
+    });
+  };
+
+  // 프로젝트의 디자인 파일 가져오기 (폴더별 필터링)
+  const getDesignFilesForProject = (projectId: string, folderId?: string): any[] => {
+    const files = projectDesignFiles?.[projectId] || [];
+    return files.filter((df: any) => {
+      if (df.isDeleted) return false;
+      if (folderId) return df.folderId === folderId;
+      return !df.folderId; // 루트 레벨 디자인 (폴더에 속하지 않은)
     });
   };
 
@@ -118,21 +134,30 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     const activeProjects = projects.filter(p => !p.isDeleted);
     for (const project of activeProjects) {
       const projectFolders = folders?.[project.id] || [];
-      const hasChildren = projectFolders.length > 0;
+      const rootDesigns = getDesignFilesForProject(project.id);
+      const hasChildren = projectFolders.length > 0 || rootDesigns.length > 0;
 
       tree.push({ id: project.id, label: project.title, type: 'project', depth: 0, hasChildren });
 
-      // 펼침 상태일 때만 하위 표시
       if (expandedNodes.has(project.id)) {
+        // 폴더들
         for (const folder of projectFolders) {
-          tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id, hasChildren: false });
-        }
-        // 현재 프로젝트의 디자인 파일
-        if (nav?.currentProjectId === project.id && currentItems) {
-          const designs = currentItems.filter(ci => ci.type === 'design');
-          for (const design of designs) {
-            tree.push({ id: design.id, label: design.name, type: 'design', depth: 1, projectId: project.id, hasChildren: false });
+          const folderDesigns = getDesignFilesForProject(project.id, folder.id);
+          const folderHasChildren = folderDesigns.length > 0;
+
+          tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id, hasChildren: folderHasChildren });
+
+          // 폴더 펼침 → 하위 디자인
+          if (expandedNodes.has(folder.id)) {
+            for (const design of folderDesigns) {
+              tree.push({ id: design.id, label: design.title || design.name || '무제', type: 'design', depth: 2, projectId: project.id, folderId: folder.id, hasChildren: false });
+            }
           }
+        }
+
+        // 루트 레벨 디자인 (폴더에 속하지 않은)
+        for (const design of rootDesigns) {
+          tree.push({ id: design.id, label: design.title || design.name || '무제', type: 'design', depth: 1, projectId: project.id, hasChildren: false });
         }
       }
     }

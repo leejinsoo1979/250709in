@@ -730,6 +730,7 @@ const SimpleDashboard: React.FC = () => {
                 onSearchChange={setSearchTerm}
                 projects={data.projects}
                 folders={data.folders}
+                projectDesignFiles={data.projectDesignFiles}
                 currentItems={data.currentItems}
                 onItemNavigate={handleItemDoubleClick}
               />
