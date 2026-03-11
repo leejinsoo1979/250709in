@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder, Search, FileText } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
+import { ProjectIcon } from '@/components/common/Icons';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
 import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn, ExplorerItem } from '@/hooks/dashboard/types';
@@ -328,7 +329,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                         className={styles.treeItemLabel}
                         onClick={() => handleTreeItemClick(node)}
                       >
-                        {node.type === 'project' && <Folder size={14} />}
+                        {node.type === 'project' && <ProjectIcon size={14} />}
                         {node.type === 'folder' && <FcFolder size={15} />}
                         {node.type === 'design' && <FileText size={14} />}
                         <span>{node.label}</span>
