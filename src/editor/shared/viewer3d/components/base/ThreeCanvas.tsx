@@ -461,23 +461,24 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     const isOrthographicCamera = controls.object.type === 'OrthographicCamera';
 
     // 2D 모드 또는 Orthographic 카메라 리셋
+    // 무조건 useCameraManager가 계산한 최초 화면 값으로 완전 복원
     if (viewMode === '2D' || isOrthographicCamera) {
-      const initial = initialCameraSetup.current;
-      const targetVec = initial.target2D?.clone() ?? new THREE.Vector3(...camera.target);
-      const positionVec = initial.position2D?.clone() ?? new THREE.Vector3(...camera.position);
-      const upVec = initial.up2D?.clone() ?? new THREE.Vector3(0, 1, 0);
-      const initialZoom = initial.zoom2D ?? camera.zoom;
+      const targetVec = new THREE.Vector3(...camera.target);
+      const positionVec = new THREE.Vector3(...camera.position);
+      const upVec = new THREE.Vector3(...(camera.up || [0, 1, 0]));
+      const initialZoom = camera.zoom;
 
-      canvasLog('🎯 2D 카메라 완전 리셋', {
+      canvasLog('🎯 2D 카메라 최초 화면으로 완전 리셋', {
         initialZoom,
-        storedTarget: initial.target2D?.toArray(),
+        target: camera.target,
+        position: camera.position,
       });
 
       controls.target.copy(targetVec);
       controls.object.position.copy(positionVec);
       controls.object.up.copy(upVec);
 
-      // 줌도 초기값으로 리셋
+      // 줌도 최초값으로 리셋
       if ('zoom' in controls.object) {
         controls.object.zoom = initialZoom;
         if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
