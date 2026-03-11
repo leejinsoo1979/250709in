@@ -241,24 +241,16 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
       };
     }
     
-    // 단내림이 비활성화된 경우 기존 로직
-    const FRAME_MARGIN = 100; // 양쪽 50mm씩
-    const usableWidth = spaceWidth - FRAME_MARGIN;
-    
-    // 슬롯 크기 제약 조건 (400mm ~ 600mm)
-    const MIN_SLOT_WIDTH = 400;
-    const MAX_SLOT_WIDTH = 600;
-    
-    // 실제 설치 가능한 최소/최대 도어 개수 계산
-    const minPossible = Math.max(1, Math.ceil(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm
-    const maxPossible = Math.min(20, Math.floor(usableWidth / MIN_SLOT_WIDTH)); // 슬롯 최소 400mm
-    
-    // 이상적인 도어 개수 (588mm 기준)
-    const idealDoorCount = Math.round(usableWidth / DOOR_WIDTH);
-    
+    // 단내림이 비활성화된 경우: SpaceCalculator 기반으로 실제 내부 너비 사용
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+    const limits = SpaceCalculator.getColumnCountLimits(internalWidth);
+
+    // 이상적인 도어 개수 (500mm 기준)
+    const idealDoorCount = Math.max(limits.minColumns, Math.round(internalWidth / 500));
+
     return {
-      min: minPossible,
-      max: maxPossible,
+      min: limits.minColumns,
+      max: limits.maxColumns,
       ideal: idealDoorCount
     };
   };
@@ -650,25 +642,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
     return width;
   };
   
-  const calculateDoorRange = (spaceWidth: number) => {
-    // 양쪽 여백 고려 (프레임 등)
-    const FRAME_MARGIN = 100; // 양쪽 50mm씩
-    const usableWidth = spaceWidth - FRAME_MARGIN;
-    
-    // 슬롯 크기 제약 조건 (400mm ~ 600mm)
-    const MIN_SLOT_WIDTH = 400;
-    const MAX_SLOT_WIDTH = 600;
-    
-    // 실제 설치 가능한 최소/최대 도어 개수 계산
-    const minPossible = Math.max(1, Math.ceil(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm
-    const maxPossible = Math.min(20, Math.floor(usableWidth / MIN_SLOT_WIDTH)); // 슬롯 최소 400mm
-    
-    // 이상적인 도어 개수 (588mm 기준)
-    const idealDoorCount = Math.round(usableWidth / DOOR_WIDTH);
-    
+  const calculateDoorRange = (_spaceWidth: number) => {
+    // SpaceCalculator 기반으로 실제 내부 너비 사용
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+    const limits = SpaceCalculator.getColumnCountLimits(internalWidth);
+
+    const idealDoorCount = Math.max(limits.minColumns, Math.round(internalWidth / 500));
+
     return {
-      min: minPossible,
-      max: maxPossible,
+      min: limits.minColumns,
+      max: limits.maxColumns,
       ideal: idealDoorCount
     };
   };
