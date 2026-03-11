@@ -3758,15 +3758,14 @@ const Configurator: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 상부 - frameConfig.top이 true일 때만 */}
-                {inferFrameConfig(spaceInfo).top && (
+                {/* 상부 - 항상 표시 */}
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 50;
+                        const currentTop = spaceInfo.frameSize?.top || 30;
                         const newTop = Math.max(10, currentTop - 1);
                         updateFrameSize('top', newTop);
                       }}
@@ -3787,8 +3786,8 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 50;
-                        const newTop = Math.min(100, currentTop + 1);
+                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const newTop = Math.min(200, currentTop + 1);
                         updateFrameSize('top', newTop);
                       }}
                     >
@@ -3796,7 +3795,6 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                )}
               </div>
 
                           </div>

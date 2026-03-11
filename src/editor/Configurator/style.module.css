@@ -1961,17 +1961,16 @@
 .frameGrid {
   display: flex;
   flex-direction: row;
-  gap: 6px;
+  gap: 4px;
   margin-bottom: 0;
-  justify-content: flex-start;
 }
 
 .frameItem {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
-  flex: none;
+  gap: 2px;
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -1982,6 +1981,7 @@
   font-weight: 500;
   text-align: left;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .frameItemInput {
@@ -1991,8 +1991,8 @@
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   overflow: hidden;
-  width: 100%;
-  max-width: 80px;
+  flex: 1;
+  min-width: 0;
 }
 
 .frameButton {
