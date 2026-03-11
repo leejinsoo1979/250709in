@@ -203,7 +203,7 @@ const BoxWithEdges: React.FC<{
                   viewMode === '2D' && isEndPanel
                     ? "#00FF00" // 연두색 (도어 색상)
                     : renderMode === 'wireframe'
-                      ? (theme?.mode === 'dark' ? "#ffffff" : "#333333")
+                      ? (theme?.mode === 'dark' ? "#ffffff" : "#000000")
                       : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
             }
             linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
