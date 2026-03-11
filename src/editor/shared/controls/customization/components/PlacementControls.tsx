@@ -74,8 +74,13 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 받침대 있음 - 높이/깊이 설정 (인라인) */}
       {isFloor && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span className={styles.label} style={{ minWidth: '32px', flexShrink: 0, margin: 0 }}>{t('frame.baseHeight')}</span>
-          <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>{t('frame.baseHeight')}</span>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            background: 'var(--theme-background-secondary, #f9fafb)',
+            border: '1px solid var(--theme-border)',
+            borderRadius: '6px', overflow: 'hidden', flex: 1
+          }}>
             <input
               type="text"
               value={baseHeight}
@@ -83,13 +88,22 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               onKeyDown={onKeyDown}
-              className={`${styles.input} ${styles.inputWithUnitField}`}
+              style={{
+                border: 'none', background: 'transparent', textAlign: 'center',
+                fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
+                padding: 0, width: '100%', height: '24px', outline: 'none'
+              }}
               placeholder="65"
               disabled={disabled}
             />
           </div>
-          <span className={styles.label} style={{ minWidth: '24px', flexShrink: 0, margin: 0 }}>{t('frame.baseDepth')}</span>
-          <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>{t('frame.baseDepth')}</span>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            background: 'var(--theme-background-secondary, #f9fafb)',
+            border: '1px solid var(--theme-border)',
+            borderRadius: '6px', overflow: 'hidden', flex: 1
+          }}>
             <input
               type="text"
               value={baseDepth}
@@ -97,7 +111,11 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               onFocus={handleInputFocus}
               onBlur={handleDepthInputBlur}
               onKeyDown={onDepthKeyDown}
-              className={`${styles.input} ${styles.inputWithUnitField}`}
+              style={{
+                border: 'none', background: 'transparent', textAlign: 'center',
+                fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
+                padding: 0, width: '100%', height: '24px', outline: 'none'
+              }}
               placeholder="0"
               disabled={disabled}
             />
@@ -108,8 +126,13 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 띄워서 배치 - 띄움 높이 설정 (인라인) */}
       {isStand && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span className={styles.label} style={{ minWidth: '48px', flexShrink: 0, margin: 0 }}>{t('frame.floatHeight')}</span>
-          <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+          <span className={styles.label} style={{ flexShrink: 0, margin: 0 }}>{t('frame.floatHeight')}</span>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            background: 'var(--theme-background-secondary, #f9fafb)',
+            border: '1px solid var(--theme-border)',
+            borderRadius: '6px', overflow: 'hidden', flex: 1
+          }}>
             <input
               type="text"
               value={floatHeight}
@@ -117,7 +140,11 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               onFocus={handleInputFocus}
               onBlur={handleFloatInputBlur}
               onKeyDown={onFloatKeyDown}
-              className={`${styles.input} ${styles.inputWithUnitField}`}
+              style={{
+                border: 'none', background: 'transparent', textAlign: 'center',
+                fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
+                padding: 0, width: '100%', height: '24px', outline: 'none'
+              }}
               placeholder="60"
               disabled={disabled}
             />
