@@ -64,22 +64,66 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between px-8 sm:px-12 py-5">
+    <div className="min-h-screen bg-zinc-950 flex flex-row">
+      {/* Left Panel - Branding */}
+      <div className="w-1/2 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(107,94,255,0.15) 0%, #09090b 50%, rgba(99,102,241,0.08) 100%)',
+        }}
+      >
+        {/* Subtle grid */}
         <div
-          className="flex items-center gap-1.5 cursor-pointer"
-          onClick={onNavigateHome}
-        >
-          <div className="flex items-center gap-1">
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            backgroundSize: '80px 80px',
+          }}
+        />
+        {/* Glow orbs */}
+        <div className="absolute" style={{ top: '15%', left: '20%', width: 300, height: 300, background: 'radial-gradient(circle, rgba(107,94,255,0.12) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
+        <div className="absolute" style={{ bottom: '20%', right: '15%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center h-full px-16">
+          {/* Logo */}
+          <div
+            className="flex items-center gap-1.5 cursor-pointer mb-12"
+            onClick={onNavigateHome}
+          >
+            <div className="flex items-center gap-1">
+              <div className="w-3.5 h-3.5 rounded-full bg-white" />
+              <div className="w-3.5 h-3.5 rounded-full bg-white" />
+              <div className="w-3.5 h-3.5 rounded-full bg-white" />
+            </div>
+            <span className="text-white font-black text-lg ml-1">CRAFT</span>
           </div>
-          <span className="text-white font-black text-lg ml-1">CRAFT</span>
+          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+            Start designing your<br />furniture
+          </h1>
+          <p className="text-zinc-500 text-base leading-relaxed">
+            맞춤 가구 설계부터 CNC 커팅 최적화까지,<br />
+            원스톱 가구 제작 플랫폼
+          </p>
         </div>
-        <div className="w-20" />
-      </header>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="w-full flex flex-col" style={{ width: '50%' }}>
+        {/* Header (mobile only - hidden on desktop via media query) */}
+        <header className="flex items-center justify-between px-8 sm:px-12 py-5" style={{ display: 'none' }}>
+          <div
+            className="flex items-center gap-1.5 cursor-pointer"
+            onClick={onNavigateHome}
+          >
+            <div className="flex items-center gap-1">
+              <div className="w-3.5 h-3.5 rounded-full bg-white" />
+              <div className="w-3.5 h-3.5 rounded-full bg-white" />
+              <div className="w-3.5 h-3.5 rounded-full bg-white" />
+            </div>
+            <span className="text-white font-black text-lg ml-1">CRAFT</span>
+          </div>
+          <div className="w-20" />
+        </header>
 
       {/* Google Loading Overlay */}
       {googleLoading && (
@@ -236,6 +280,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             </button>
           </p>
         </motion.div>
+      </div>
       </div>
     </div>
   );
