@@ -1131,18 +1131,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </Text>
               )}
 
-              {/* 연장선 (좌측 프레임) */}
+              {/* 연장선 (좌측 프레임) — 상부프레임 상단부터 치수선까지 */}
               <NativeLine name="dimension_line"
-                points={[[actualLeftEdge, 0, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                points={[[actualLeftEdge, spaceHeight, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
                 color={dimensionColor}
                 lineWidth={1}
                 renderOrder={100000}
                 depthTest={false}
               />
 
-              {/* 연장선 (우측 프레임) */}
+              {/* 연장선 (우측 프레임) — 상부프레임 상단부터 치수선까지 */}
               <NativeLine name="dimension_line"
-                points={[[actualRightEdge, 0, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                points={[[actualRightEdge, spaceHeight, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
                 color={dimensionColor}
                 lineWidth={1}
                 renderOrder={100000}
