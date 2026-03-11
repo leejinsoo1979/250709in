@@ -355,7 +355,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
       return "#3a3a3a"; // 3D 솔리드 모드에서는 진한 회색 엣지
     } else if (renderMode === 'wireframe') {
-      return view2DTheme === 'dark' ? "#FF4500" : "#000000"; // 2D 와이어프레임 다크모드는 붉은 주황색, 라이트모드는 검정색
+      return view2DTheme === 'dark' ? "#FF6030" : "#000000"; // 2D 와이어프레임 다크모드는 밝은 주황색, 라이트모드는 검정색
     } else {
       // 2D 솔리드 모드
       if (view2DDirection === 'front') {
