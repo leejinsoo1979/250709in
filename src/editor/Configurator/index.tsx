@@ -3605,8 +3605,8 @@ const Configurator: React.FC = () => {
             </button>
           </div>
 
-          {/* 상/하 프레임 토글 */}
-          {(() => {
+          {/* 상/하 프레임 토글 - 서라운드일 때만 표시 */}
+          {(spaceInfo.surroundType || 'surround') === 'surround' && (() => {
             const currentFrameConfig = inferFrameConfig(spaceInfo);
             const handleTopBottomToggle = (key: 'top' | 'bottom') => {
               const newVal = !currentFrameConfig[key];

@@ -40,8 +40,8 @@ const SurroundTypeSelector: React.FC<SurroundTypeSelectorProps> = ({
         </button>
       </div>
 
-      {/* 상/하 프레임 체크박스 */}
-      {frameConfig && onFrameConfigChange && (
+      {/* 상/하 프레임 체크박스 - 서라운드일 때만 표시 */}
+      {isSurround && frameConfig && onFrameConfigChange && (
         <div className={styles.toggleButtonGroup} style={{ marginTop: '6px' }}>
           <button
             className={`${styles.toggleButton} ${frameConfig.top ? styles.toggleButtonActive : ''}`}
