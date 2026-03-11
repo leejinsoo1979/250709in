@@ -151,7 +151,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               type="button"
               onClick={onNavigateHome}
               className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
-              style={{ color: isDark ? '#a1a1aa' : '#6b7280' }}
+              style={{ color: isDark ? '#a1a1aa' : '#111' }}
             >
               <span>←</span>
               <span>Back</span>
@@ -292,7 +292,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             <h1 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: isDark ? '#fff' : '#111' }}>
               {title ?? (isSignUp ? "Create Account" : "Start designing your furniture")}
             </h1>
-            <p className="text-sm" style={{ color: isDark ? '#71717a' : '#6b7280' }}>
+            <p className="text-sm" style={{ color: isDark ? '#71717a' : '#333' }}>
               {subtitle ?? (isSignUp ? "Sign up to get started" : "Sign in to continue")}
             </p>
           </div>
@@ -301,7 +301,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="relative">
-                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#9ca3af' }} />
+                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
                 <input
                   type="text"
                   value={name}
@@ -319,7 +319,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             )}
 
             <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#9ca3af' }} />
+              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
               <input
                 type="email"
                 value={email}
@@ -336,7 +336,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             </div>
 
             <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#9ca3af' }} />
+              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -354,7 +354,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: isDark ? '#71717a' : '#9ca3af' }}
+                style={{ color: isDark ? '#71717a' : '#555' }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -365,7 +365,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                 <button
                   type="button"
                   className="text-xs transition-colors"
-                  style={{ color: isDark ? '#71717a' : '#6b7280' }}
+                  style={{ color: isDark ? '#71717a' : '#333' }}
                 >
                   Forgot password?
                 </button>
@@ -401,7 +401,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               <div className="w-full" style={{ borderTop: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}` }} />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 text-xs uppercase tracking-wider" style={{ background: isDark ? '#000000' : '#ffffff', color: isDark ? '#52525b' : '#9ca3af' }}>
+              <span className="px-3 text-xs uppercase tracking-wider" style={{ background: isDark ? '#000000' : '#ffffff', color: isDark ? '#52525b' : '#555' }}>
                 Or continue with
               </span>
             </div>
@@ -424,7 +424,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
-            <span className="text-sm font-medium" style={{ color: isDark ? '#d4d4d8' : '#374151' }}>Google</span>
+            <span className="text-sm font-medium" style={{ color: isDark ? '#d4d4d8' : '#111' }}>Google</span>
           </button>
 
           {/* Enterprise Button */}
@@ -437,11 +437,11 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               background: isDark ? '#18181b' : '#fff',
             }}
           >
-            <span className="text-sm font-medium" style={{ color: isDark ? '#d4d4d8' : '#374151' }}>기업계정 가입</span>
+            <span className="text-sm font-medium" style={{ color: isDark ? '#d4d4d8' : '#111' }}>기업계정 가입</span>
           </button>
 
           {/* Toggle */}
-          <p className="mt-8 text-center text-sm" style={{ color: isDark ? '#52525b' : '#9ca3af' }}>
+          <p className="mt-8 text-center text-sm" style={{ color: isDark ? '#52525b' : '#555' }}>
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               type="button"
