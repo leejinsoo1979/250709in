@@ -589,7 +589,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             whiteSpace: 'nowrap',
             border: `1px solid ${themeColor}`,
           }}>
-            내경 {sectionInnerWidthMm}mm
+            내경 {Math.round(sectionInnerWidthMm)}mm
           </div>
         </Html>
 
@@ -611,7 +611,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
           }}>
-            내경 {sectionInnerHeightMm}mm
+            내경 {Math.round(sectionInnerHeightMm)}mm
           </div>
         </Html>
       </group>

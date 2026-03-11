@@ -830,9 +830,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setLowerTopOffsetInput(lowerOffset.toString());
       setOriginalLowerTopOffset(lowerOffset);
       // customWidth도 동일하게 처리
-      if (customWidth !== initialWidth) {
-        setCustomWidth(initialWidth);
-        setWidthInputValue(initialWidth.toString());
+      const roundedWidth = Math.round(initialWidth);
+      if (customWidth !== roundedWidth) {
+        setCustomWidth(roundedWidth);
+        setWidthInputValue(roundedWidth.toString());
         setOriginalCustomWidth(initialWidth); // 원래 값 저장
       }
       const hingePos = currentPlacedModule.hingePosition || 'right';
@@ -861,9 +862,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 자유배치 모드 치수 초기화
       if (currentPlacedModule.isFreePlacement) {
-        setFreeWidthInput((currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
-        setFreeHeightInput((currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
-        setFreeDepthInput((currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
+        setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
+        setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
+        setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
       }
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)

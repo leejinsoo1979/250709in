@@ -584,7 +584,7 @@ const FreePlacementDropZone: React.FC = () => {
   // 이격거리 편집 시작
   const handleGapLabelClick = useCallback((index: number, currentWidth: number) => {
     setEditingGapIndex(index);
-    setEditingGapValue(currentWidth.toString());
+    setEditingGapValue(Math.round(currentWidth).toString());
     setTimeout(() => {
       gapInputRef.current?.focus();
       gapInputRef.current?.select();

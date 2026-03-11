@@ -571,7 +571,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             anchorY="middle"
             rotation={textRotation}
           >
-            {actualWidth}mm
+            {Math.round(actualWidth)}mm
           </Text>
         );
       });
@@ -634,7 +634,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             anchorX="center"
             anchorY="middle"
           >
-            {actualWidth}mm
+            {Math.round(actualWidth)}mm
           </Text>
         );
       });
