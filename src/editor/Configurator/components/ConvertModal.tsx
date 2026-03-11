@@ -110,12 +110,13 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     const originalShowDimensions = showDimensions;
     const originalShowAll = showAll;
     
-    // 캡처를 위해 그리드, 축, 컬럼 끄기
+    // 캡처를 위해 그리드, 축 끄기 (치수선은 유지)
     console.log('캡처 전 상태:', { showGuides, showAxis, showDimensions, showAll });
-    
+
     if (showGuides) setShowGuides(false);
     if (showAxis) setShowAxis(false);
-    if (showDimensions) setShowDimensions(false);
+    // 치수선은 PDF에 포함되어야 하므로 켠 상태 유지
+    if (!showDimensions) setShowDimensions(true);
     
     // showAll 확인 및 설정
     if (setShowAll) {
@@ -209,11 +210,11 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
       setRenderMode(originalRenderMode);
-      if (originalShowGuides) setShowGuides(true);
-      if (originalShowAxis) setShowAxis(true);
-      if (originalShowDimensions) setShowDimensions(true);
-      if (originalShowAll && setShowAll) setShowAll(true);
-      
+      setShowGuides(originalShowGuides);
+      setShowAxis(originalShowAxis);
+      setShowDimensions(originalShowDimensions);
+      if (setShowAll) setShowAll(originalShowAll);
+
       setIsCapturing(false);
       setShowPDFPreview(true);
     } catch (error) {
@@ -222,10 +223,10 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
       setRenderMode(originalRenderMode);
-      if (originalShowGuides) setShowGuides(true);
-      if (originalShowAxis) setShowAxis(true);
-      if (originalShowDimensions) setShowDimensions(true);
-      if (originalShowAll && setShowAll) setShowAll(true);
+      setShowGuides(originalShowGuides);
+      setShowAxis(originalShowAxis);
+      setShowDimensions(originalShowDimensions);
+      if (setShowAll) setShowAll(originalShowAll);
       setIsCapturing(false);
       alert(t('messages.captureFailure'));
     }
