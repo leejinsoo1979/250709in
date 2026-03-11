@@ -474,22 +474,22 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         position: camera.position,
       });
 
+      // 1) 초기값 설정
       controls.target.copy(targetVec);
       controls.object.position.copy(positionVec);
       controls.object.up.copy(upVec);
-
-      // 줌도 최초값으로 리셋
-      if ('zoom' in controls.object) {
-        controls.object.zoom = initialZoom;
-        if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
-          (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
-        }
-      }
-
+      controls.object.zoom = initialZoom;
+      controls.object.updateProjectionMatrix();
       controls.object.lookAt(controls.target);
-      // saveState → reset으로 OrbitControls 내부 팬 오프셋까지 완전 초기화
+
+      // 2) OrbitControls 내부 상태 완전 초기화
+      //    saveState로 현재(초기) 값을 내부 position0/target0/zoom0에 저장
       controls.saveState();
+      //    damping 임시 비활성화 후 reset → panOffset/spherical 등 내부 상태 완전 클리어
+      const prevDamping = controls.enableDamping;
+      controls.enableDamping = false;
       controls.reset();
+      controls.enableDamping = prevDamping;
       return;
     }
 
@@ -516,9 +516,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     controls.object.up.set(0, 1, 0);
     controls.object.lookAt(controls.target);
-    // saveState → reset으로 OrbitControls 내부 팬 오프셋까지 완전 초기화
+
+    // OrbitControls 내부 상태 완전 초기화
     controls.saveState();
+    const prevDamping = controls.enableDamping;
+    controls.enableDamping = false;
     controls.reset();
+    controls.enableDamping = prevDamping;
 
     canvasLog('🎯 3D 카메라 리셋 완료:', {
       newPosition: controls.object.position.toArray(),
