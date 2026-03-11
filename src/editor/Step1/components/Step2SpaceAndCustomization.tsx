@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -21,6 +21,51 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 import styles from './Step2SpaceAndCustomization.module.css';
+
+/** 숫자 입력 헬퍼: 로컬 문자열 state로 자유 입력 후 blur 시 store 반영 */
+const NumInput: React.FC<{
+  value: number | undefined;
+  defaultValue: number;
+  onChange: (v: number) => void;
+  className?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  disabled?: boolean;
+  float?: boolean;
+}> = ({ value, defaultValue, onChange, className, min, max, step, disabled, float }) => {
+  const [local, setLocal] = useState(String(value ?? defaultValue));
+  // 외부 value 변경 시 로컬 동기화
+  useEffect(() => {
+    setLocal(String(value ?? defaultValue));
+  }, [value, defaultValue]);
+
+  return (
+    <input
+      type="number"
+      className={className}
+      value={local}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        const parsed = float ? parseFloat(e.target.value) : parseInt(e.target.value);
+        if (!isNaN(parsed)) {
+          onChange(parsed);
+        }
+      }}
+      onBlur={() => {
+        const parsed = float ? parseFloat(local) : parseInt(local);
+        if (isNaN(parsed) || local.trim() === '') {
+          setLocal(String(defaultValue));
+          onChange(defaultValue);
+        }
+      }}
+      min={min}
+      max={max}
+      step={step}
+      disabled={disabled}
+    />
+  );
+};
 
 interface Step2SpaceAndCustomizationProps {
   onPrevious: () => void;
@@ -658,46 +703,37 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                   <div className={styles.sizeInputs}>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <span className={styles.labelText}>좌</span>
-                      <input
-                        type="number"
+                      <NumInput
                         className={styles.numberInput}
-                        value={spaceInfo.frameSize?.left || 50}
-                        onChange={(e) => handleUpdate({
-                          frameSize: {
-                            ...spaceInfo.frameSize,
-                            left: parseInt(e.target.value) || 50
-                          }
+                        value={spaceInfo.frameSize?.left}
+                        defaultValue={50}
+                        onChange={(v) => handleUpdate({
+                          frameSize: { ...spaceInfo.frameSize, left: v }
                         })}
-                        min="40"
-                        max="100"
+                        min={40}
+                        max={100}
                       />
                       <span className={styles.labelText}>우</span>
-                      <input
-                        type="number"
+                      <NumInput
                         className={styles.numberInput}
-                        value={spaceInfo.frameSize?.right || 50}
-                        onChange={(e) => handleUpdate({
-                          frameSize: {
-                            ...spaceInfo.frameSize,
-                            right: parseInt(e.target.value) || 50
-                          }
+                        value={spaceInfo.frameSize?.right}
+                        defaultValue={50}
+                        onChange={(v) => handleUpdate({
+                          frameSize: { ...spaceInfo.frameSize, right: v }
                         })}
-                        min="40"
-                        max="100"
+                        min={40}
+                        max={100}
                       />
                       <span className={styles.labelText}>상</span>
-                      <input
-                        type="number"
+                      <NumInput
                         className={styles.numberInput}
-                        value={spaceInfo.frameSize?.top || 10}
-                        onChange={(e) => handleUpdate({
-                          frameSize: {
-                            ...spaceInfo.frameSize,
-                            top: parseInt(e.target.value) || 10
-                          }
+                        value={spaceInfo.frameSize?.top}
+                        defaultValue={10}
+                        onChange={(v) => handleUpdate({
+                          frameSize: { ...spaceInfo.frameSize, top: v }
                         })}
-                        min="10"
-                        max="200"
+                        min={10}
+                        max={200}
                       />
                       <span className={styles.unitText}>mm</span>
                     </div>
@@ -712,35 +748,31 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                   <div className={styles.sizeInputs}>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <span className={styles.labelText}>좌</span>
-                      <input
-                        type="number"
+                      <NumInput
                         className={styles.inputField}
-                        value={spaceInfo.gapConfig?.left ?? 1.5}
-                        onChange={(e) => handleUpdate({
-                          gapConfig: {
-                            ...spaceInfo.gapConfig,
-                            left: parseFloat(e.target.value) || 0
-                          }
+                        value={spaceInfo.gapConfig?.left}
+                        defaultValue={1.5}
+                        onChange={(v) => handleUpdate({
+                          gapConfig: { ...spaceInfo.gapConfig, left: v }
                         })}
-                        min="0"
-                        max="5"
-                        step="0.5"
+                        min={0}
+                        max={5}
+                        step={0.5}
+                        float
                         disabled={spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left}
                       />
                       <span className={styles.labelText}>우</span>
-                      <input
-                        type="number"
+                      <NumInput
                         className={styles.inputField}
-                        value={spaceInfo.gapConfig?.right ?? 1.5}
-                        onChange={(e) => handleUpdate({
-                          gapConfig: {
-                            ...spaceInfo.gapConfig,
-                            right: parseFloat(e.target.value) || 0
-                          }
+                        value={spaceInfo.gapConfig?.right}
+                        defaultValue={1.5}
+                        onChange={(v) => handleUpdate({
+                          gapConfig: { ...spaceInfo.gapConfig, right: v }
                         })}
-                        min="0"
-                        max="5"
-                        step="0.5"
+                        min={0}
+                        max={5}
+                        step={0.5}
+                        float
                         disabled={spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right}
                       />
                       <span className={styles.unitText}>mm</span>
@@ -792,19 +824,15 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                 <div className={styles.compactSection}>
                   <label className={styles.compactLabel}>높이</label>
                   <div className={styles.sizeInputs}>
-                    <input
-                      type="number"
+                    <NumInput
                       className={styles.wideInputField}
-                      value={spaceInfo.baseConfig?.height || 65}
-                      onChange={(e) => handleUpdate({
-                        baseConfig: {
-                          ...spaceInfo.baseConfig,
-                          type: 'floor',
-                          height: parseInt(e.target.value) || 65
-                        }
+                      value={spaceInfo.baseConfig?.height}
+                      defaultValue={65}
+                      onChange={(v) => handleUpdate({
+                        baseConfig: { ...spaceInfo.baseConfig, type: 'floor', height: v }
                       })}
-                      min="50"
-                      max="500"
+                      min={50}
+                      max={500}
                     />
                     <span className={styles.unitText}>mm</span>
                   </div>
@@ -816,20 +844,15 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                 <div className={styles.compactSection}>
                   <label className={styles.compactLabel}>높이</label>
                   <div className={styles.sizeInputs}>
-                    <input
-                      type="number"
+                    <NumInput
                       className={styles.wideInputField}
-                      value={spaceInfo.baseConfig?.floatHeight || 200}
-                      onChange={(e) => handleUpdate({
-                        baseConfig: {
-                          ...spaceInfo.baseConfig,
-                          type: 'stand',
-                          placementType: 'float',
-                          floatHeight: parseInt(e.target.value) || 200
-                        }
+                      value={spaceInfo.baseConfig?.floatHeight}
+                      defaultValue={200}
+                      onChange={(v) => handleUpdate({
+                        baseConfig: { ...spaceInfo.baseConfig, type: 'stand', placementType: 'float', floatHeight: v }
                       })}
-                      min="100"
-                      max="500"
+                      min={100}
+                      max={500}
                     />
                     <span className={styles.unitText}>mm</span>
                   </div>
@@ -895,27 +918,22 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                 <div className={styles.compactSection}>
                   <label className={styles.compactLabel}>마감재 두께</label>
                   <div className={styles.sizeInputs}>
-                    <input
-                      type="number"
+                    <NumInput
                       className={styles.wideInputField}
-                      value={spaceInfo.floorFinish?.height || 10}
-                      onChange={(e) => {
-                        const newFinishHeight = parseInt(e.target.value) || 10;
+                      value={spaceInfo.floorFinish?.height}
+                      defaultValue={10}
+                      onChange={(v) => {
                         const oldFinishHeight = spaceInfo.floorFinish?.height || 10;
                         const currentBaseHeight = spaceInfo.baseConfig?.height ?? 65;
-                        // 마감재 두께 변경분만큼 받침대 높이 조정
-                        const diff = newFinishHeight - oldFinishHeight;
+                        const diff = v - oldFinishHeight;
                         const newBaseHeight = Math.max(0, currentBaseHeight - diff);
                         handleUpdate({
-                          floorFinish: { height: newFinishHeight },
-                          baseConfig: {
-                            ...spaceInfo.baseConfig,
-                            height: newBaseHeight
-                          }
+                          floorFinish: { height: v },
+                          baseConfig: { ...spaceInfo.baseConfig, height: newBaseHeight }
                         });
                       }}
-                      min="5"
-                      max="50"
+                      min={5}
+                      max={50}
                     />
                     <span className={styles.unitText}>mm</span>
                   </div>
