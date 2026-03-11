@@ -652,10 +652,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const custDefaults = CUSTOMIZABLE_DEFAULTS[custCategory];
     const custWidth = placedModule.customWidth || placedModule.adjustedWidth || placedModule.freeWidth || custDefaults.width;
 
-    // 띄움설치 시 floatHeight만큼 높이 차감
-    const isFloatForCustom = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-    const floatHeightForCustom = isFloatForCustom ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    let custHeight = placedModule.freeHeight || (custCategory === 'full' ? internalSpace.height - floatHeightForCustom : custDefaults.height);
+    // internalSpace.height는 이미 띄움 높이/받침대 높이가 차감된 내경 높이
+    const maxCustHeight = custCategory === 'full' ? internalSpace.height : custDefaults.height;
+    let custHeight = placedModule.freeHeight ? Math.min(placedModule.freeHeight, maxCustHeight) : maxCustHeight;
     const custDepth = placedModule.freeDepth || custDefaults.depth;
     moduleData = {
       id: placedModule.moduleId,
@@ -1215,11 +1214,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
         const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
         const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-        // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
-        const furnitureHeightForY = (placedModule.isFreePlacement && placedModule.freeHeight)
-          ? placedModule.freeHeight
-          : (actualModuleData?.dimensions.height || 0);
-        const furnitureHeight = furnitureHeightForY * 0.01; // mm to Three.js units
+        // 클램핑된 furnitureHeightMm 사용 (띄움배치 시 높이 축소 반영)
+        const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
         if (isLowerCabinetForY) {
           // 하부장은 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
