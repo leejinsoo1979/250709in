@@ -747,7 +747,9 @@ const Header: React.FC<HeaderProps> = ({
             <div className={styles.convertButtonContainer} ref={convertMenuRef}>
               <button
                 className={styles.convertButton}
-                onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
+                onClick={() => {
+                  alert('🚧 공사중입니다.');
+                }}
               >
                 <SiConvertio size={20} />
                 {t('common.converting')}
