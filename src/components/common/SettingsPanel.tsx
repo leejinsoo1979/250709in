@@ -155,29 +155,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('settings.general')}</h3>
-            <div className={styles.settingGroup}>
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>{t('settings.language')}</span>
-                  <span className={styles.settingDescription}>{t('settings.languageDesc')}</span>
-                </div>
-                <select 
-                  value={currentLanguage} 
-                  onChange={handleLanguageChange}
-                  className={styles.languageSelect}
-                >
-                  {availableLanguages.map(lang => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-            </div>
-          </div>
+          {/* 언어 설정: 현재 한국어 고정, 추후 다국어 지원 시 활성화 */}
 
 
         </div>
