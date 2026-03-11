@@ -392,9 +392,7 @@
   left: var(--sidebar-icon-width, 56px); /* 사이드바 너비 - CSS 변수 사용 */
   top: var(--configurator-top-offset, 88px); /* 헤더 + 탭 바 높이 */
   bottom: 0;
-  width: var(--sidebar-content-width, 240px); /* CSS 변수 사용 */
-  min-width: 200px;
-  max-width: 320px;
+  width: var(--sidebar-content-width, 240px); /* CSS 변수 사용 - clamp()가 min/max 역할 */
   background: var(--theme-surface, white);
   border-right: 1px solid var(--theme-border);
   box-shadow: 2px 0 8px var(--theme-shadow, rgba(0, 0, 0, 0.08));
