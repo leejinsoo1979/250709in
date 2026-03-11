@@ -3182,6 +3182,7 @@ const Configurator: React.FC = () => {
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   // 단내림 활성화
