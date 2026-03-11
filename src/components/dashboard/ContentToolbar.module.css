@@ -122,29 +122,19 @@
   color: var(--theme-primary);
 }
 
-/* 브레드크럼 세그먼트 (아이템 + 드롭다운 컨테이너) */
+/* 브레드크럼 세그먼트 */
 .breadcrumbSegment {
-  position: relative;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-/* 마지막 세그먼트: 남은 공간 차지, chevron을 우측 끝에 고정 */
-.breadcrumbSegment:last-child {
-  flex: 1;
-}
-
-.breadcrumbSegment:last-child .breadcrumbChevron {
-  margin-left: auto;
-}
-
-/* 브레드크럼 드롭다운 chevron */
+/* 파일트리 드롭다운 chevron (우측 끝 고정) */
 .breadcrumbChevron {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
+  width: 20px;
   height: 20px;
   border: none;
   border-radius: 3px;
@@ -152,7 +142,7 @@
   color: var(--theme-text-muted);
   cursor: pointer;
   padding: 0;
-  margin-left: 1px;
+  margin-left: auto;
   transition: all 0.12s;
   flex-shrink: 0;
 }
@@ -207,6 +197,12 @@
 
 .breadcrumbDropdownItem:hover svg {
   color: white;
+}
+
+.breadcrumbDropdownItemActive {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  font-weight: 600;
 }
 
 .breadcrumbDropdownEmpty {

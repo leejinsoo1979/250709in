@@ -67,74 +67,67 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [viewMenuOpen]);
 
-  // 브레드크럼 드롭다운 외부 클릭 닫기
+  // 파일트리 드롭다운 외부 클릭 닫기
   useEffect(() => {
-    if (!dropdownOpenId) return;
+    if (!treeOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpenId(null);
+        setTreeOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dropdownOpenId]);
+  }, [treeOpen]);
 
-  // 각 브레드크럼 세그먼트의 "하위 항목" 드롭다운 데이터
-  const getDropdownItems = (item: BreadcrumbItem, isLast: boolean): { id: string; label: string; type: 'project' | 'folder' | 'design'; icon: 'project' | 'folder' | 'design' }[] => {
-    if (item.type === 'root') {
-      // root → 프로젝트 목록
-      if (projects) {
-        return projects.filter(p => !p.isDeleted).map(p => ({
-          id: p.id, label: p.title, type: 'project' as const, icon: 'project' as const,
-        }));
+  // 전체 파일 트리 데이터 생성 (프로젝트 → 폴더 → 디자인)
+  interface TreeNode {
+    id: string;
+    label: string;
+    type: 'project' | 'folder' | 'design';
+    depth: number;
+    projectId?: string;
+  }
+
+  const buildFileTree = (): TreeNode[] => {
+    const tree: TreeNode[] = [];
+    if (!projects) return tree;
+
+    const activeProjects = projects.filter(p => !p.isDeleted);
+    for (const project of activeProjects) {
+      tree.push({ id: project.id, label: project.title, type: 'project', depth: 0 });
+
+      // 프로젝트 하위 폴더
+      const projectFolders = folders?.[project.id] || [];
+      for (const folder of projectFolders) {
+        tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id });
       }
-    } else if (item.type === 'project') {
-      // project → 현재 보이는 항목 (폴더 + 디자인)
-      if (isLast && currentItems) {
-        return currentItems.map(ci => ({
-          id: ci.id,
-          label: ci.name,
-          type: ci.type as 'folder' | 'design',
-          icon: ci.type === 'folder' ? 'folder' as const : 'design' as const,
-        }));
-      }
-      // project (중간) → 폴더 목록
-      if (folders && nav?.currentProjectId) {
-        const projectFolders = folders[item.id] || [];
-        return projectFolders.map(f => ({
-          id: f.id, label: f.name, type: 'folder' as const, icon: 'folder' as const,
-        }));
-      }
-    } else if (item.type === 'folder') {
-      // folder (마지막) → 현재 보이는 항목 (디자인)
-      if (isLast && currentItems) {
-        return currentItems.map(ci => ({
-          id: ci.id,
-          label: ci.name,
-          type: ci.type as 'folder' | 'design',
-          icon: ci.type === 'folder' ? 'folder' as const : 'design' as const,
-        }));
+
+      // 현재 프로젝트의 현재 항목 (폴더가 아닌 디자인)
+      if (nav?.currentProjectId === project.id && currentItems) {
+        const designs = currentItems.filter(ci => ci.type === 'design');
+        for (const design of designs) {
+          tree.push({ id: design.id, label: design.name, type: 'design', depth: 1, projectId: project.id });
+        }
       }
     }
-    return [];
+    return tree;
   };
 
-  const handleDropdownItemClick = (dropdownItem: { id: string; type: 'project' | 'folder' | 'design' }) => {
+  const handleTreeItemClick = (node: TreeNode) => {
     if (!nav) return;
-    if (dropdownItem.type === 'project') {
-      const project = projects?.find(p => p.id === dropdownItem.id);
-      nav.navigateTo(dropdownItem.id, null, project?.title || dropdownItem.id);
-    } else if (dropdownItem.type === 'folder') {
-      const folder = folders?.[nav.currentProjectId!]?.find(f => f.id === dropdownItem.id);
-      nav.navigateTo(nav.currentProjectId, dropdownItem.id, folder?.name || dropdownItem.id);
-    } else if (dropdownItem.type === 'design') {
-      // 디자인 클릭 → onItemNavigate 콜백
-      const item = currentItems?.find(ci => ci.id === dropdownItem.id);
+    if (node.type === 'project') {
+      const project = projects?.find(p => p.id === node.id);
+      nav.navigateTo(node.id, null, project?.title || node.id);
+    } else if (node.type === 'folder') {
+      const folder = folders?.[node.projectId!]?.find(f => f.id === node.id);
+      nav.navigateTo(node.projectId!, node.id, folder?.name || node.id);
+    } else if (node.type === 'design') {
+      const item = currentItems?.find(ci => ci.id === node.id);
       if (item && onItemNavigate) {
         onItemNavigate(item);
       }
     }
-    setDropdownOpenId(null);
+    setTreeOpen(false);
   };
 
   const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
@@ -204,11 +197,9 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
             <ArrowUp size={16} />
           </button>
 
-          <div className={styles.breadcrumb} ref={dropdownOpenId ? dropdownRef : undefined}>
+          <div className={styles.breadcrumb} ref={treeOpen ? dropdownRef : undefined}>
             {nav.breadcrumbPath.map((item, i) => {
               const isLast = i === nav.breadcrumbPath.length - 1;
-              const dropdownItems = getDropdownItems(item, isLast);
-              const showChevron = dropdownItems.length > 0;
               return (
                 <React.Fragment key={item.id}>
                   {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
@@ -220,42 +211,41 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                       <span className={styles.breadcrumbIcon}>{getBreadcrumbIcon(item)}</span>
                       {item.label}
                     </button>
-                    {showChevron && (
-                      <button
-                        className={styles.breadcrumbChevron}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDropdownOpenId(prev => prev === item.id ? null : item.id);
-                        }}
-                      >
-                        <ChevronDown size={10} />
-                      </button>
-                    )}
                   </div>
                 </React.Fragment>
               );
             })}
-            {/* 드롭다운: breadcrumb 전체 너비로 펼침 */}
-            {dropdownOpenId && (() => {
-              const openItem = nav.breadcrumbPath.find(b => b.id === dropdownOpenId);
-              if (!openItem) return null;
-              const isLast = nav.breadcrumbPath[nav.breadcrumbPath.length - 1]?.id === dropdownOpenId;
-              const dropdownItems = getDropdownItems(openItem, isLast);
-              if (dropdownItems.length === 0) return null;
-
-              // 파일 트리 구조: 현재 경로의 형제 + 하위 항목
+            {/* 단일 chevron: 우측 끝 고정 */}
+            <button
+              className={styles.breadcrumbChevron}
+              onClick={(e) => {
+                e.stopPropagation();
+                setTreeOpen(prev => !prev);
+              }}
+            >
+              <ChevronDown size={10} />
+            </button>
+            {/* 통합 파일트리 드롭다운 */}
+            {treeOpen && (() => {
+              const tree = buildFileTree();
+              if (tree.length === 0) return null;
               return (
                 <div className={styles.breadcrumbDropdown}>
-                  {dropdownItems.map(di => (
+                  {tree.map(node => (
                     <button
-                      key={di.id}
-                      className={styles.breadcrumbDropdownItem}
-                      onClick={() => handleDropdownItemClick(di)}
+                      key={`${node.type}-${node.id}`}
+                      className={`${styles.breadcrumbDropdownItem} ${
+                        (node.type === 'project' && nav.currentProjectId === node.id && !nav.currentFolderId) ||
+                        (node.type === 'folder' && nav.currentFolderId === node.id)
+                          ? styles.breadcrumbDropdownItemActive : ''
+                      }`}
+                      style={{ paddingLeft: `${12 + node.depth * 16}px` }}
+                      onClick={() => handleTreeItemClick(node)}
                     >
-                      {di.icon === 'folder' && <FcFolder size={15} />}
-                      {di.icon === 'project' && <Folder size={14} />}
-                      {di.icon === 'design' && <FileText size={14} />}
-                      <span>{di.label}</span>
+                      {node.type === 'project' && <Folder size={14} />}
+                      {node.type === 'folder' && <FcFolder size={15} />}
+                      {node.type === 'design' && <FileText size={14} />}
+                      <span>{node.label}</span>
                     </button>
                   ))}
                 </div>
