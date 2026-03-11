@@ -1138,11 +1138,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
-          leftText = `이격 ${Number.isInteger(leftValue) ? leftValue : leftValue.toFixed(1)}`;
+          leftText = `이격 ${leftValue}`;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-          leftText = `${Math.round(leftValue)}`;
+          leftText = `${leftValue}`;
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -1253,11 +1253,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
-          rightText = `이격 ${Number.isInteger(rightValue) ? rightValue : rightValue.toFixed(1)}`;
+          rightText = `이격 ${rightValue}`;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-          rightText = `${Math.round(rightValue)}`;
+          rightText = `${rightValue}`;
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -1657,7 +1657,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left ?? 1.5;
               if (leftValue === 0) return null;
-              leftText = `이격 ${Math.round(leftValue)}`;
+              leftText = `이격 ${leftValue}`;
             } else if (leftmostFurnitureX !== null) {
               // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
@@ -1863,7 +1863,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right ?? 1.5;
               if (rightValue === 0) return null;
-              rightText = `이격 ${Math.round(rightValue)}`;
+              rightText = `이격 ${rightValue}`;
             } else if (rightmostFurnitureX !== null) {
               // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
@@ -2797,56 +2797,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         return (
           <group key={`module-guide-${index}`} renderOrder={1000000}>
-
-            {/* 가구 치수선 */}
-            <NativeLine name="dimension_line"
-              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={1000000}
-              depthTest={false}
-            />
-
-            {/* 좌측 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={1000000}
-              depthTest={false}
-            />
-
-            {/* 우측 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={1000000}
-              depthTest={false}
-            />
-
-            {/* 가구 치수 텍스트 */}
-            <Text
-              position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000000}
-              depthTest={false}
-            >
-              {Math.round(actualWidth)}
-            </Text>
-
-            {/* 연장선 끝 세리프 (가로 틱 마크) */}
-            {[leftX, rightX].map((x, ti) => (
-              <React.Fragment key={`tick-${ti}`}>
-                <NativeLine name="dimension_line"
-                  points={[[x - mmToThreeUnits(5), dimY, 0.001], [x + mmToThreeUnits(5), dimY, 0.001]]}
-                  color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
-                />
-              </React.Fragment>
-            ))}
 
             {/* 연장선 - 가구 상단에서 내부너비 치수선(columnDimensionY)까지 */}
             <NativeLine name="dimension_line"
@@ -4880,13 +4830,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 왼쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left ?? 1.5;
                 if (leftValue === 0) return null;
-                leftText = `이격 ${Math.round(leftValue)}`;
+                leftText = `이격 ${leftValue}`;
               } else {
                 // 왼쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-                leftText = `${Math.round(leftValue)}`;
+                leftText = `${leftValue}`;
               }
               
               return (
@@ -4993,13 +4943,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 오른쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right ?? 1.5;
                 if (rightValue === 0) return null;
-                rightText = `이격 ${Math.round(rightValue)}`;
+                rightText = `이격 ${rightValue}`;
               } else {
                 // 오른쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
                 rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-                rightText = `${Math.round(rightValue)}`;
+                rightText = `${rightValue}`;
               }
               
               return (
