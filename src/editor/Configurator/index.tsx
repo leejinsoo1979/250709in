@@ -3968,12 +3968,18 @@ const Configurator: React.FC = () => {
 
         </>)}
 
-        {/* 받침대 - 타입 선택만 (바닥배치/띄워서배치) */}
+        {/* 받침대 - 걸레받이 높이/깊이 먼저, 그 다음 타입 선택 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>받침대</h3>
           </div>
+          <BaseControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+            disabled={hasSpecialDualFurniture}
+            renderMode="placement-only"
+          />
           <BaseControls
             spaceInfo={spaceInfo}
             onUpdate={handleSpaceInfoUpdate}
@@ -3991,16 +3997,6 @@ const Configurator: React.FC = () => {
           <FloorFinishControls
             spaceInfo={spaceInfo}
             onUpdate={handleSpaceInfoUpdate}
-          />
-        </div>
-
-        {/* 걸레받이 높이/깊이 또는 띄움 높이 */}
-        <div className={styles.configSection}>
-          <BaseControls
-            spaceInfo={spaceInfo}
-            onUpdate={handleSpaceInfoUpdate}
-            disabled={hasSpecialDualFurniture}
-            renderMode="placement-only"
           />
         </div>
 
