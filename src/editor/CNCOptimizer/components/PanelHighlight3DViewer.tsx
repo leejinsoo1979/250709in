@@ -51,9 +51,9 @@ const CameraFitter: React.FC<{ targetSize: THREE.Vector3 }> = ({ targetSize }) =
     hasAdjusted.current = true;
 
     const maxDim = Math.max(targetSize.x, targetSize.y, targetSize.z);
-    const distance = maxDim * 2.2;
-    camera.position.set(distance * 0.6, distance * 0.7, distance * 0.8);
-    camera.lookAt(0, targetSize.y / 2, 0);
+    const distance = maxDim * 1.4;
+    camera.position.set(distance * 0.7, distance * 0.5, distance * 0.9);
+    camera.lookAt(0, targetSize.y * 0.45, 0);
     camera.updateProjectionMatrix();
   }, [targetSize, camera]);
 
@@ -230,11 +230,11 @@ const Scene3D: React.FC<{
           {/* 궤도 컨트롤 */}
           <OrbitControls
             {...{
-              enablePan: false,
+              enablePan: true,
               enableZoom: true,
               enableRotate: true,
-              minDistance: 0.5,
-              maxDistance: 8,
+              minDistance: 0.3,
+              maxDistance: 10,
               target: [0, targetSize.y / 2, 0],
             } as any}
           />
