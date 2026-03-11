@@ -733,7 +733,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // fullSpaceHeight는 zone prop에 따라 단내림 구간 높이 또는 일반 구간 높이 사용
 
     const floorHeightValue = originalSpaceInfo.hasFloorFinish ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
-    const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 10;
+    const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 30;
     const baseHeightValue = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
 
     // baseConfig.type === 'floor'일 때 baseConfig.height에는 이미 바닥마감재 높이가 포함됨

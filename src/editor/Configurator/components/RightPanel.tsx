@@ -1132,7 +1132,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               >
                 <NumberInput
                   label={t('space.frameHeight')}
-                  value={spaceInfo.frameSize?.top || 10}
+                  value={spaceInfo.frameSize?.top || 30}
                   onChange={(value) => {
                     const updates = {
                       frameSize: {

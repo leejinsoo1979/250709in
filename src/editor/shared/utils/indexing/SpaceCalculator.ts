@@ -354,7 +354,7 @@ export class SpaceCalculator {
       // 서라운드 모드: 프레임 크기 조정 (엔드패널 제외)
       const hasLeftWall = spaceInfo.wallConfig?.left;
       const hasRightWall = spaceInfo.wallConfig?.right;
-      const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
+      const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
       
       // 엔드패널이 아닌 경우만 조정 가능
       const canAdjustLeft = hasLeftWall && currentFrameSize.left !== END_PANEL_THICKNESS;
