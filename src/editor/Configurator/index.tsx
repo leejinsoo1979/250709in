@@ -2888,9 +2888,34 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
 
+              {/* 전체/싱글/듀얼 탭 - 스크롤 영역 밖에 고정 */}
+              <div className={styles.moduleCategoryTabs}>
+                <button
+                  className={`${styles.moduleCategoryTab} ${moduleType === 'all' ? styles.active : ''}`}
+                  onClick={() => setModuleType('all')}
+                >
+                  전체
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${moduleType === 'single' ? styles.active : ''}`}
+                  onClick={() => setModuleType('single')}
+                >
+                  싱글
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${moduleType === 'dual' ? styles.active : ''}`}
+                  onClick={() => setModuleType('dual')}
+                >
+                  듀얼
+                </button>
+              </div>
+
               <div className={styles.moduleSection}>
                 <ModuleGallery
                   moduleCategory={moduleCategory}
+                  selectedType={moduleType}
+                  onSelectedTypeChange={setModuleType}
+                  hideTabMenu
                 />
               </div>
 

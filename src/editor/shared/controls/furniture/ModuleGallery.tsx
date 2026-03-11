@@ -50,7 +50,7 @@ const FURNITURE_ICONS: Record<string, string> = {
 };
 
 // 모듈 타입 정의
-type ModuleType = 'all' | 'single' | 'dual';
+export type ModuleType = 'all' | 'single' | 'dual';
 
 // 썸네일 아이템 컴포넌트
 interface ThumbnailItemProps {
@@ -819,12 +819,17 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
 interface ModuleGalleryProps {
   moduleCategory?: 'tall' | 'upper' | 'lower';
+  selectedType?: ModuleType;
+  onSelectedTypeChange?: (type: ModuleType) => void;
+  hideTabMenu?: boolean;
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', selectedType: externalSelectedType, onSelectedTypeChange, hideTabMenu = false }) => {
   const { t } = useTranslation();
   // 선택된 탭 상태 (전체/싱글/듀얼/커스텀)
-  const [selectedType, setSelectedType] = useState<ModuleType>('all');
+  const [internalSelectedType, setInternalSelectedType] = useState<ModuleType>('all');
+  const selectedType = externalSelectedType ?? internalSelectedType;
+  const setSelectedType = onSelectedTypeChange ?? setInternalSelectedType;
 
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
@@ -961,27 +966,29 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
 
   return (
     <div className={styles.container}>
-      {/* 탭 메뉴 - 키큰장과 상하부장 모두에서 표시 */}
-      <div className={styles.tabMenu}>
-        <button
-          className={cn(styles.tab, selectedType === 'all' && styles.activeTab)}
-          onClick={() => setSelectedType('all')}
-        >
-          {t('furniture.all')} ({singleModules.length + dualModules.length})
-        </button>
-        <button
-          className={cn(styles.tab, selectedType === 'single' && styles.activeTab)}
-          onClick={() => setSelectedType('single')}
-        >
-          {t('furniture.single')} ({singleModules.length})
-        </button>
-        <button
-          className={cn(styles.tab, selectedType === 'dual' && styles.activeTab)}
-          onClick={() => setSelectedType('dual')}
-        >
-          {t('furniture.dual')} ({dualModules.length})
-        </button>
-      </div>
+      {/* 탭 메뉴 - hideTabMenu가 false일 때만 표시 (부모에서 별도 렌더링 시 숨김) */}
+      {!hideTabMenu && (
+        <div className={styles.tabMenu}>
+          <button
+            className={cn(styles.tab, selectedType === 'all' && styles.activeTab)}
+            onClick={() => setSelectedType('all')}
+          >
+            {t('furniture.all')} ({singleModules.length + dualModules.length})
+          </button>
+          <button
+            className={cn(styles.tab, selectedType === 'single' && styles.activeTab)}
+            onClick={() => setSelectedType('single')}
+          >
+            {t('furniture.single')} ({singleModules.length})
+          </button>
+          <button
+            className={cn(styles.tab, selectedType === 'dual' && styles.activeTab)}
+            onClick={() => setSelectedType('dual')}
+          >
+            {t('furniture.dual')} ({dualModules.length})
+          </button>
+        </div>
+      )}
 
       {/* 썸네일 그리드 (2열) */}
       <div className={styles.thumbnailGrid}>

@@ -12,9 +12,6 @@
   border-radius: 5px;
   padding: 2px;
   gap: 1px;
-  position: sticky;
-  top: 0;
-  z-index: 5;
 }
 
 .tabButton {
