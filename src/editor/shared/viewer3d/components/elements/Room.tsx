@@ -744,7 +744,7 @@ const Room: React.FC<RoomProps> = ({
 
 
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
-  const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
+  const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base', onTextureLoaded?: () => void) => {
     // 2D 모드에서 모든 프레임(상부/하부/좌우)을 형광 녹색으로 직접 반환
     const isNeonFrame = viewMode === '2D' && (frameType === 'top' || frameType === 'base' || frameType === 'left' || frameType === 'right');
     if (isNeonFrame) {
@@ -875,6 +875,7 @@ const Room: React.FC<RoomProps> = ({
           material.map = texture;
           material.needsUpdate = true;
           invalidate(); // 텍스처 로딩 후 즉시 리렌더링
+          onTextureLoaded?.(); // 콜백으로 state 갱신 트리거
         },
         undefined,
         (error) => {
@@ -900,51 +901,57 @@ const Room: React.FC<RoomProps> = ({
   const [topSubFrameMaterial, setTopSubFrameMaterial] = useState<THREE.Material>();
   // const [baseSubFrameMaterial, setBaseSubFrameMaterial] = useState<THREE.Material>(); // 하단 서브프레임 제거됨
 
+  // 텍스처 로딩 완료 시 리렌더링 트리거용
+  const [, forceUpdate] = useState(0);
+  const triggerRerender = useCallback(() => forceUpdate(v => v + 1), []);
+
+  const frameDeps = [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame] as const;
+
   useEffect(() => {
-    const mat = createFrameMaterial('base');
+    const mat = createFrameMaterial('base', triggerRerender);
     setBaseFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('base');
+    const mat = createFrameMaterial('base', triggerRerender);
     setBaseDroppedFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('left');
+    const mat = createFrameMaterial('left', triggerRerender);
     setLeftFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('left');
+    const mat = createFrameMaterial('left', triggerRerender);
     setLeftSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('right');
+    const mat = createFrameMaterial('right', triggerRerender);
     setRightFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('right');
+    const mat = createFrameMaterial('right', triggerRerender);
     setRightSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('top');
+    const mat = createFrameMaterial('top', triggerRerender);
     setTopFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('top');
+    const mat = createFrameMaterial('top', triggerRerender);
     setTopDroppedFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   useEffect(() => {
-    const mat = createFrameMaterial('top');
+    const mat = createFrameMaterial('top', triggerRerender);
     setTopSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  }, [...frameDeps]);
   // 하단 서브프레임 제거됨
   // useEffect(() => {
   //   const mat = createFrameMaterial('base');
