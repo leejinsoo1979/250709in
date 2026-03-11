@@ -176,9 +176,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const upperSectionHeight = internalHeight / 2;
   const lowerSectionHeight = internalHeight / 2;
 
+  // 바닥마감재 높이
+  const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+
   // 하위 호환성을 위한 변수 (기존 코드에서 사용)
   // 띄움 배치에서는 띄움 높이를 받침대 높이 변수에 설정 (치수 표시용)
   const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
+  const baseFrameDisplayMm = Math.max(0, baseFrameHeightMm - (isFloating ? 0 : floorFinishHeightMm)); // 치수 표시용 (바닥마감재 차감)
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
 
   // 가구 및 치수선 시작 Y 위치
@@ -722,7 +726,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
               rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
-              {baseFrameHeightMm}
+              {baseFrameDisplayMm}
             </Text>
         </group>
         )}
@@ -1507,7 +1511,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
               rotation={[0, Math.PI / 2, Math.PI / 2]}
             >
-              {baseFrameHeightMm}
+              {baseFrameDisplayMm}
             </Text>
         </group>
         )}
