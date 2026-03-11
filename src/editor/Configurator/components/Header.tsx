@@ -959,7 +959,7 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* 도어 설치 토글 */}
           <div className={styles.mobileShadowToggle}>
-            <span className={styles.shadowLabel}>도어설치</span>
+            <span className={styles.shadowLabel}>{hasDoorsInstalled ? '도어제거' : '도어설치'}</span>
             <div
               onClick={onDoorInstallationToggle}
               className={`${styles.toggleSwitch} ${hasDoorsInstalled ? styles.active : ''}`}

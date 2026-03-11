@@ -331,7 +331,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               onClick={onDoorInstallationToggle}
             >
               <BiDoorOpen size={13} />
-              {t('viewer.doorInstallation')}
+              {hasDoorsInstalled ? '도어제거' : '도어설치'}
             </button>
           </div>
         )}
