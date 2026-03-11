@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { SpaceInfo, SurroundType } from '@/store/core/spaceConfigStore';
+import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSurroundCalculations } from './hooks/useSurroundCalculations';
@@ -79,15 +79,39 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     }
   }, [isSurround, hasLeftWall, hasRightWall, spaceInfo.frameSize, onUpdate]);
 
-  // 서라운드 타입 변경 처리
-  const handleSurroundTypeChange = (type: SurroundType) => {
-    console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
-    const updates: Partial<SpaceInfo> = {
-      surroundType: type,
-    };
+  // 서라운드 모드 변경 처리
+  const handleModeChange = (mode: 'full-surround' | 'sides-only' | 'no-surround') => {
+    console.log('🔧 SurroundControls - handleModeChange called:', mode);
 
-    if (type === 'surround') {
-      // 서라운드 모드: 설치 타입에 따라 프레임 크기 결정
+    if (mode === 'full-surround') {
+      // 전체서라운드: 기존 서라운드 + frameConfig top/bottom 활성
+      const updates: Partial<SpaceInfo> = { surroundType: 'surround' };
+      const installType = spaceInfo.installType;
+
+      if (installType === 'builtin' || installType === 'built-in') {
+        updates.frameSize = { left: 50, right: 50, top: 10 };
+      } else if (installType === 'semistanding' || installType === 'semi-standing') {
+        updates.frameSize = {
+          left: hasLeftWall ? 50 : END_PANEL_WIDTH,
+          right: hasRightWall ? 50 : END_PANEL_WIDTH,
+          top: 10,
+        };
+      } else if (installType === 'freestanding') {
+        updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: 10 };
+      }
+
+      updates.gapConfig = { left: 2, right: 2 };
+      updates.frameConfig = { left: true, right: true, top: true, bottom: true };
+      // 전체서라운드는 하부 프레임도 활성
+      updates.baseConfig = {
+        ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }),
+        type: 'floor',
+      };
+
+      onUpdate(updates);
+    } else if (mode === 'sides-only') {
+      // 양쪽서라운드 = 기존 서라운드와 100% 동일
+      const updates: Partial<SpaceInfo> = { surroundType: 'surround' };
       const installType = spaceInfo.installType;
 
       if (installType === 'builtin' || installType === 'built-in') {
@@ -103,8 +127,12 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       }
 
       updates.gapConfig = { left: 2, right: 2 };
+      updates.frameConfig = { left: true, right: true, top: false, bottom: false };
+
+      onUpdate(updates);
     } else {
-      // 노서라운드(타이트) 설정
+      // 노서라운드
+      const updates: Partial<SpaceInfo> = { surroundType: 'no-surround' };
       updates.frameSize = {
         left: 0,
         right: 0,
@@ -112,45 +140,15 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       };
 
       if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
-        const gapSizeValue = 2;
         updates.gapConfig = {
-          left: hasLeftWall ? gapSizeValue : 0,
-          right: hasRightWall ? gapSizeValue : 0,
+          left: hasLeftWall ? 2 : 0,
+          right: hasRightWall ? 2 : 0,
         };
       }
+
+      updates.frameConfig = { left: false, right: false, top: false, bottom: false };
+      onUpdate(updates);
     }
-
-    // frameConfig도 동기화
-    updates.frameConfig = {
-      ...frameConfig,
-      left: type === 'surround',
-      right: type === 'surround',
-    };
-
-    onUpdate(updates);
-  };
-
-  // 상/하 프레임 토글 처리 (SurroundTypeSelector에서 전체/양쪽 전환 시 호출)
-  const handleTopBottomToggle = (key: 'top' | 'bottom', value: boolean) => {
-    const updates: Partial<SpaceInfo> = {
-      frameConfig: { ...frameConfig, [key]: value },
-    };
-
-    if (key === 'top') {
-      updates.frameSize = {
-        ...frameSize,
-        top: value ? 10 : 0,
-      };
-    } else if (key === 'bottom') {
-      const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
-      updates.baseConfig = {
-        ...currentBaseConfig,
-        type: value ? 'floor' : 'stand',
-        placementType: value ? currentBaseConfig.placementType : 'ground',
-      };
-    }
-
-    onUpdate(updates);
   };
 
   // 프레임 크기 변경 핸들러 (FrameSizeControls가 자체 문자열 상태 관리, 여기서는 사용 안함)
@@ -260,12 +258,11 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   return (
     <div className={styles.container}>
-      {/* 서라운드 타입 선택 + 상/하 토글 */}
+      {/* 서라운드 모드 선택 */}
       <SurroundTypeSelector
         surroundType={spaceInfo.surroundType || 'surround'}
-        onSurroundTypeChange={handleSurroundTypeChange}
         frameConfig={frameConfig}
-        onFrameConfigChange={handleTopBottomToggle}
+        onModeChange={handleModeChange}
         disabled={disabled}
       />
 
