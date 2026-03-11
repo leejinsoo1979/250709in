@@ -391,11 +391,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       >
         <boxGeometry args={args} />
         {renderMode === 'wireframe' ? (
-          // 와이어프레임 모드: 완전히 투명한 재질
+          // 와이어프레임 모드: 메시는 반투명, 엣지만 진하게
           <meshBasicMaterial
             transparent={true}
-            opacity={0}
+            opacity={viewMode === '3D' ? 0.08 : 0}
             depthWrite={false}
+            color={view2DTheme === 'dark' ? '#333333' : '#cccccc'}
           />
         ) : (
           // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
