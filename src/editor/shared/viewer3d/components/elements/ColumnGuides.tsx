@@ -540,9 +540,9 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
     if (showDimensions) {
       positions.forEach((xPos, index) => {
-        // 실제 슬롯 너비 계산 — 싱글 슬롯은 정수 내림
+        // 실제 슬롯 너비 계산 — 소수점 1자리까지 표시
         const rawWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
-        const actualWidth = Math.floor(rawWidth);
+        const actualWidth = Math.round(rawWidth * 10) / 10;
         
         // 탑뷰와 다른 뷰에 따라 텍스트 위치와 회전 조정
         let textPosition: [number, number, number];
@@ -571,7 +571,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             anchorY="middle"
             rotation={textRotation}
           >
-            {actualWidth}mm
+            {actualWidth % 1 === 0 ? actualWidth : actualWidth.toFixed(1)}mm
           </Text>
         );
       });
@@ -622,8 +622,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           rawWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
         }
         
-        // 싱글 슬롯은 정수 내림
-        const actualWidth = Math.floor(rawWidth);
+        // 소수점 1자리까지 표시
+        const actualWidth = Math.round(rawWidth * 10) / 10;
         
         guides.push(
           <Text
@@ -634,7 +634,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             anchorX="center"
             anchorY="middle"
           >
-            {actualWidth}mm
+            {actualWidth % 1 === 0 ? actualWidth : actualWidth.toFixed(1)}mm
           </Text>
         );
       });
