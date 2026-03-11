@@ -416,15 +416,9 @@
   border-radius: 5px;
   padding: 2px;
   gap: 1px;
-  margin: 4px 12px 1px 12px;
-  flex-shrink: 0;
-}
-
-.sidebarDivider {
-  width: 100%;
-  height: 1px;
-  background: var(--theme-border-color, rgba(0, 0, 0, 0.08));
-  margin: 4px 0 0 0;
+  margin: 4px 12px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--theme-border-color, rgba(0, 0, 0, 0.08));
   flex-shrink: 0;
 }
 

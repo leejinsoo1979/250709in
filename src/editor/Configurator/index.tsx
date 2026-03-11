@@ -4323,7 +4323,6 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
             )}
-            <div className={styles.sidebarDivider} />
             {renderSidebarContent()}
           </div>
         </>
