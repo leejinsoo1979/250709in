@@ -451,7 +451,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [camera, cameraPosition, cameraTarget, viewMode]);
 
-  // 카메라 리셋 함수 - 위치, 타겟, 줌 모두 초기값으로 완전 리셋
+  // 카메라 리셋 함수 - 줌(거리)은 유지하고 화면 중앙만 리셋
   const resetCamera = useCallback(() => {
     const controls = controlsRef.current;
     if (!controls) {
@@ -461,54 +461,64 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     const isOrthographicCamera = controls.object.type === 'OrthographicCamera';
 
     // 2D 모드 또는 Orthographic 카메라 리셋
-    // 무조건 useCameraManager가 계산한 최초 화면 값으로 완전 복원
     if (viewMode === '2D' || isOrthographicCamera) {
-      const targetVec = new THREE.Vector3(...camera.target);
-      const positionVec = new THREE.Vector3(...camera.position);
-      const upVec = new THREE.Vector3(...(camera.up || [0, 1, 0]));
-      const initialZoom = camera.zoom;
+      const initial = initialCameraSetup.current;
+      const targetVec = initial.target2D?.clone() ?? new THREE.Vector3(...camera.target);
+      const positionVec = initial.position2D?.clone() ?? new THREE.Vector3(...camera.position);
+      const upVec = initial.up2D?.clone() ?? new THREE.Vector3(0, 1, 0);
 
-      canvasLog('🎯 2D 카메라 최초 화면으로 완전 리셋', {
-        initialZoom,
-        target: camera.target,
-        position: camera.position,
+      // 현재 줌 값 보존
+      const currentZoom = controls.object.zoom;
+
+      canvasLog('🎯 2D 카메라 리셋 실행 (줌 유지)', {
+        currentZoom,
+        storedTarget: initial.target2D?.toArray(),
       });
 
-      // 1) 초기값 설정
       controls.target.copy(targetVec);
       controls.object.position.copy(positionVec);
       controls.object.up.copy(upVec);
-      controls.object.zoom = initialZoom;
-      controls.object.updateProjectionMatrix();
-      controls.object.lookAt(controls.target);
 
-      // 2) OrbitControls 내부 상태 완전 초기화
-      //    saveState로 현재(초기) 값을 내부 position0/target0/zoom0에 저장
-      controls.saveState();
-      //    damping 임시 비활성화 후 reset → panOffset/spherical 등 내부 상태 완전 클리어
-      const prevDamping = controls.enableDamping;
-      controls.enableDamping = false;
-      controls.reset();
-      controls.enableDamping = prevDamping;
+      // 줌은 현재 값 유지 (리셋하지 않음)
+      if ('zoom' in controls.object) {
+        controls.object.zoom = currentZoom;
+        if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
+          (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
+        }
+      }
+
+      controls.object.lookAt(controls.target);
+      controls.update();
       return;
     }
 
     // 3D 퍼스펙티브/Orthographic (cameraMode=orthographic) 리셋
     const isOrthographic = controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic';
 
-    canvasLog('🎯 3D 카메라 완전 리셋 시작');
+    // 현재 카메라 거리(줌 레벨) 보존
+    const currentDistance = controls.object.position.distanceTo(controls.target);
+    const currentZoom3D = (controls.object as any).zoom;
+
+    canvasLog('🎯 3D 카메라 리셋 시작 (거리 유지):', {
+      type: controls.object.type,
+      cameraMode,
+      currentDistance,
+      currentZoom3D
+    });
 
     const initialPos = initialCameraSetup.current.position0?.clone() ?? new THREE.Vector3(...camera.position);
     const initialTarget = initialCameraSetup.current.target0?.clone() ?? new THREE.Vector3(...camera.target);
-    const initialZoom3D = initialCameraSetup.current.zoom0 ?? camera.zoom;
 
-    // 초기 위치와 타겟 완전 복원
+    // 초기 방향 벡터 계산 후, 현재 거리만큼 적용
+    const direction = initialPos.clone().sub(initialTarget).normalize();
+    const newPosition = initialTarget.clone().add(direction.multiplyScalar(currentDistance));
+
     controls.target.copy(initialTarget);
-    controls.object.position.copy(initialPos);
+    controls.object.position.copy(newPosition);
 
-    // orthographic 줌도 초기값으로 복원
+    // orthographic 줌도 현재 값 유지
     if (isOrthographic && 'zoom' in controls.object) {
-      controls.object.zoom = initialZoom3D;
+      controls.object.zoom = currentZoom3D;
       if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
         (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
       }
@@ -516,15 +526,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     controls.object.up.set(0, 1, 0);
     controls.object.lookAt(controls.target);
+    controls.update();
 
-    // OrbitControls 내부 상태 완전 초기화
-    controls.saveState();
-    const prevDamping = controls.enableDamping;
-    controls.enableDamping = false;
-    controls.reset();
-    controls.enableDamping = prevDamping;
-
-    canvasLog('🎯 3D 카메라 리셋 완료:', {
+    canvasLog('🎯 3D 카메라 리셋 완료 (거리 유지):', {
       newPosition: controls.object.position.toArray(),
       newTarget: controls.target.toArray(),
       distance: currentDistance

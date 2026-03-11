@@ -71,8 +71,8 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   const bottomExtent = height / 2 + bottomMargin; // 타겟에서 하단까지
   const effectiveHeight = (Math.max(topExtent, bottomExtent)) * 2; // 양쪽 대칭으로 전체 높이
 
-  // 정면 뷰 기준: 폭과 높이만으로 거리 계산 (depth는 3D 여백으로만 소량 반영)
-  const frontDiagonal = Math.sqrt(width * width + effectiveHeight * effectiveHeight);
+  // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
+  const diagonal = Math.sqrt(width * width + effectiveHeight * effectiveHeight + depth * depth);
 
   // 적절한 여백으로 조정
   const furnitureMargin = 0.85;
@@ -81,11 +81,16 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   const fov = 50;
   const fovRad = (fov * Math.PI) / 180;
 
-  // 정면 대각선 기준 거리 계산 (depth는 카메라 거리에 영향 미미)
-  const baseDistance = (frontDiagonal / 2) / Math.tan(fovRad / 2);
+  // 가장 큰 차원을 기준으로 기본 거리 계산
+  const maxDimension = Math.max(width, effectiveHeight, depth);
+  const baseDistance = (maxDimension / 2) / Math.tan(fovRad / 2);
+
+  // 대각선 길이도 고려해서 더 안전한 거리 계산
+  const diagonalDistance = (diagonal / 2) / Math.tan(fovRad / 2);
+  const safeDistance = Math.max(baseDistance, diagonalDistance);
 
   // Three.js 단위로 변환하고 여백 적용
-  const distance = mmToThreeUnits(baseDistance * furnitureMargin);
+  const distance = mmToThreeUnits(safeDistance * furnitureMargin);
 
   // 큰 공간에서도 전체가 보이도록 최대 거리 제한 대폭 증가
   return Math.max(7, Math.min(150, distance));
