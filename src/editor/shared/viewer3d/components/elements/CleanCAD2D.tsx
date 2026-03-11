@@ -2694,6 +2694,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key={`module-guide-${index}`} renderOrder={1000000}>
 
+            {/* 가구 치수선 */}
+            <NativeLine name="dimension_line"
+              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={1000000}
+              depthTest={false}
+            />
+
+            {/* 좌측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={1000000}
+              depthTest={false}
+            />
+
+            {/* 우측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={1000000}
+              depthTest={false}
+            />
+
+            {/* 가구 치수 텍스트 */}
+            <Text
+              position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={1000000}
+              depthTest={false}
+            >
+              {Math.round(actualWidth)}
+            </Text>
+
+            {/* 연장선 끝 세리프 (가로 틱 마크) */}
+            {[leftX, rightX].map((x, ti) => (
+              <React.Fragment key={`tick-${ti}`}>
+                <NativeLine name="dimension_line"
+                  points={[[x - mmToThreeUnits(5), dimY, 0.001], [x + mmToThreeUnits(5), dimY, 0.001]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                />
+              </React.Fragment>
+            ))}
+
             {/* 연장선 - 가구 상단에서 내부너비 치수선(columnDimensionY)까지 */}
             <NativeLine name="dimension_line"
               points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY, 0.001]]}
