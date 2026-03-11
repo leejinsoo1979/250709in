@@ -193,9 +193,9 @@ const BoxWithEdges: React.FC<{
         <lineSegments name={name || "space-frame"} geometry={edgesGeometry}>
           <lineBasicMaterial
             color={
-              // 3D solid 모드에서 외곽 프레임은 배경색으로 숨김 (은선모드에서는 일반 색상 사용)
+              // 3D solid 모드에서 외곽 프레임 엣지도 표시
               isOuterFrame && renderMode === 'solid' && viewMode === '3D'
-                ? (theme?.mode === 'dark' ? "#1a1a2e" : "#f5f5f5")
+                ? (theme?.mode === 'dark' ? "#555555" : "#aaaaaa")
                 : // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
                 material instanceof THREE.MeshBasicMaterial
                   ? "#" + material.color.getHexString()
