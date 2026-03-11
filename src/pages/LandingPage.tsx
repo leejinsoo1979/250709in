@@ -34,6 +34,9 @@ export default function LandingPage() {
     const handleMouseMove = (e: MouseEvent) => {
       cursor.style.left = `${e.clientX}px`;
       cursor.style.top = `${e.clientY}px`;
+      if (cursor.style.opacity !== '1') {
+        cursor.style.opacity = '1';
+      }
     };
 
     const handleMouseOver = (e: MouseEvent) => {
