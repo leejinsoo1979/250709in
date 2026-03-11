@@ -127,7 +127,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
   const canProceed = spaceInfo.width > 0 && spaceInfo.height > 0;
 
   const handleUpdate = (updates: Partial<typeof spaceInfo>) => {
-    setSpaceInfo({ ...spaceInfo, ...updates });
+    setSpaceInfo(updates);
     setViewerKey(prev => prev + 1);
   };
 
