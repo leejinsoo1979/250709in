@@ -30,7 +30,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
   // frameSize는 spaceInfo에서 직접 가져옴 (FrameSizeControls가 자체 문자열 상태 관리)
-  const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
+  const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
 
   // 계산 로직을 커스텀 훅으로 분리
   const { noSurroundFrameWidth, surroundFrameWidth, columnInfo } = useSurroundCalculations(
@@ -87,7 +87,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       // 전체서라운드: 기존 서라운드 + frameConfig top/bottom 활성
       const updates: Partial<SpaceInfo> = { surroundType: 'surround' };
       const installType = spaceInfo.installType;
-      const currentTop = spaceInfo.frameSize?.top || 10;
+      const currentTop = spaceInfo.frameSize?.top || 30;
 
       if (installType === 'builtin' || installType === 'built-in') {
         updates.frameSize = { left: 50, right: 50, top: currentTop };
@@ -103,10 +103,9 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       updates.gapConfig = { left: 2, right: 2 };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
-      // 전체서라운드는 하부 프레임도 활성
+      // 전체서라운드는 하부 프레임도 활성 (기존 배치 타입 유지)
       updates.baseConfig = {
         ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }),
-        type: 'floor',
       };
 
       onUpdate(updates);
@@ -122,7 +121,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       updates.frameSize = {
         left: 0,
         right: 0,
-        top: spaceInfo.frameSize?.top || 10
+        top: spaceInfo.frameSize?.top || 30
       };
 
       if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
