@@ -1696,6 +1696,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+            // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
+            if (spaceInfo.installType === 'freestanding') return null;
+
             // 왼쪽 벽이 있는지 확인
             const hasLeftWall = spaceInfo.wallConfig?.left;
 
@@ -1902,6 +1905,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
       {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+            // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
+            if (spaceInfo.installType === 'freestanding') return null;
+
             // 오른쪽 벽이 있는지 확인
             const hasRightWall = spaceInfo.wallConfig?.right;
 
