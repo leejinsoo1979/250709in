@@ -380,7 +380,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             <div className={styles.tileThumbnail}>
               {(item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                  <IoBanOutline size={Math.max(iconSize * 0.4, 24)} />
+                  <IoBanOutline size={20} />
                 </div>
               ) : item.thumbnail ? (
                 <img src={item.thumbnail} alt={item.name} />
@@ -469,7 +469,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                   })()
                 ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
                   <div className={styles.projectGridEmpty} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                    <IoBanOutline size={40} />
+                    <IoBanOutline size={20} />
                   </div>
                 ) : item.thumbnail ? (
                   <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
@@ -564,7 +564,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
             ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                <IoBanOutline size={Math.max(thumbSize * 0.3, 24)} />
+                <IoBanOutline size={20} />
               </div>
             ) : item.thumbnail ? (
               <img src={item.thumbnail} alt={item.name} />

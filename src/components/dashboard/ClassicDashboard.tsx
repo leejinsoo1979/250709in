@@ -602,7 +602,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                       <div className={styles.cardThumbnail}>
                         {item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0) ? (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                            <IoBanOutline size={48} />
+                            <IoBanOutline size={20} />
                           </div>
                         ) : item.type === 'design' && item.thumbnail ? (
                           <img src={item.thumbnail} alt={item.name} className={styles.thumbnailImage} />

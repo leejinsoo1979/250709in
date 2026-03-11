@@ -55,7 +55,7 @@ const EmptyDesignThumbnail: React.FC<{
       height: '100%',
       boxSizing: 'border-box',
     }}>
-      <IoBanOutline size={48} />
+      <IoBanOutline size={20} />
     </div>
   );
 };
