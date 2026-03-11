@@ -754,11 +754,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
 
+    // 전체서라운드 판별: 상부프레임이 앞으로 나와 도어 위를 덮음
+    const isFullSurround = originalSpaceInfo.surroundType === 'surround' &&
+      originalSpaceInfo.frameConfig?.top === true && originalSpaceInfo.frameConfig?.bottom === true;
+
     // doorTopGap은 천장에서 도어 상단까지의 절대 거리
     // 가구 상단은 천장에서 topFrameHeight만큼 아래에 있음
-    // 따라서 가구 상단에서 도어 상단까지의 거리는 (doorTopGap - topFrameHeight)
-    const absoluteTopGap = doorTopGap !== undefined ? doorTopGap : (topFrameHeightValue + 5);
-    const extraTopGap = absoluteTopGap - topFrameHeightValue;
+    // 전체서라운드: 도어가 상부프레임 하단에서 1.5mm 떨어짐 (가구 상단 기준 extraTopGap = 1.5)
+    // 그 외: 기존 로직 (doorTopGap - topFrameHeight)
+    let extraTopGap: number;
+    if (isFullSurround) {
+      extraTopGap = 1.5; // 상부프레임 하단에서 1.5mm 갭
+    } else {
+      const absoluteTopGap = doorTopGap !== undefined ? doorTopGap : (topFrameHeightValue + 5);
+      extraTopGap = absoluteTopGap - topFrameHeightValue;
+    }
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
