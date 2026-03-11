@@ -3618,7 +3618,10 @@ const Configurator: React.FC = () => {
                   frameConfig: { ...currentFrameConfig, top: false, bottom: false },
                 });
               } else {
-                handleSpaceInfoUpdate({ surroundType: 'no-surround' });
+                handleSpaceInfoUpdate({
+                  surroundType: 'no-surround',
+                  frameConfig: { left: false, right: false, top: true, bottom: false },
+                });
               }
             };
 

@@ -110,7 +110,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   // frameConfig가 있으면 개별 프레임 기반, 없으면 기존 isSurround 로직
   const showLeft = frameConfig ? frameConfig.left : isSurround;
   const showRight = frameConfig ? frameConfig.right : isSurround;
-  const showTop = frameConfig ? frameConfig.top : true; // 상단은 항상 표시 (기존 동작)
+  const showTop = true; // 상단 프레임은 항상 표시 (노서라운드에서도 상부 프레임 존재)
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>, frame: HighlightedFrame) => {
     setHighlightedFrame(frame);

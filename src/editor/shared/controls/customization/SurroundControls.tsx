@@ -131,7 +131,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         };
       }
 
-      updates.frameConfig = { left: false, right: false, top: false, bottom: false };
+      updates.frameConfig = { left: false, right: false, top: true, bottom: false };
       onUpdate(updates);
     }
   };
