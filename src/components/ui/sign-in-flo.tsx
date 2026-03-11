@@ -145,6 +145,17 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
 
         {/* Animated Content */}
         <div className="relative z-10 flex flex-col justify-center items-center flex-1">
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={onNavigateHome}
+            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70 mb-6"
+            style={{ color: isDark ? '#a1a1aa' : '#6b7280' }}
+          >
+            <span>←</span>
+            <span>Back</span>
+          </button>
+
           {/* think thing thank */}
           <div
             className="flex items-center justify-center gap-2 sm:gap-3 mb-4 cursor-pointer"
@@ -250,18 +261,6 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
 
       {/* Right Panel - Login Form */}
       <div className="w-full flex flex-col" style={{ width: '50%' }}>
-        {/* Back Button */}
-        <div className="flex items-center px-8 sm:px-12 py-5">
-          <button
-            type="button"
-            onClick={onNavigateHome}
-            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
-            style={{ color: isDark ? '#a1a1aa' : '#6b7280' }}
-          >
-            <span>←</span>
-            <span>Back</span>
-          </button>
-        </div>
 
       {/* Google Loading Overlay */}
       {googleLoading && (
