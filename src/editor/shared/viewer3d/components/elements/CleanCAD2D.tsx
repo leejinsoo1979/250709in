@@ -2798,47 +2798,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key={`module-guide-${index}`} renderOrder={1000000}>
 
-            {/* 가구 치수선 */}
-            <NativeLine name="dimension_line"
-              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={1000000}
-              depthTest={false}
-            />
-
-            {/* 좌측 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={1000000}
-              depthTest={false}
-            />
-
-            {/* 우측 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={1000000}
-              depthTest={false}
-            />
-            
-            {/* 가구 치수 텍스트 - Text 사용 (치수선 위에 표시) */}
-            <Text
-              position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000000}
-              depthTest={false}
-            >
-              {Math.round(actualWidth)}
-            </Text>
-
-
             {/* 연장선 - 가구 상단에서 내부너비 치수선(columnDimensionY)까지 */}
             <NativeLine name="dimension_line"
               points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY, 0.001]]}
@@ -2858,17 +2817,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthWrite={false}
               transparent={true}
             />
-
-            {/* 연장선 끝 세리프 (가로 틱 마크) */}
-            {[leftX, rightX].map((x, ti) => (
-              <React.Fragment key={`tick-${ti}`}>
-                <NativeLine name="dimension_line"
-                  points={[[x - mmToThreeUnits(5), dimY, 0.001], [x + mmToThreeUnits(5), dimY, 0.001]]}
-                  color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
-                />
-              </React.Fragment>
-            ))}
-
 
           </group>
         );
@@ -5806,134 +5754,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             })()}
           </group>
         )}
-
-        {/* 캐비넷별 폭 치수선 - 외부로 이동하고 정면처럼 표시 */}
-        {showDimensions && placedModules.length > 0 && placedModules.map((module, index) => {
-          const moduleData = getModuleById(
-            module.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-            spaceInfo
-          );
-          
-          if (!moduleData) return null;
-          
-          // 기둥에 의해 조정된 너비와 위치 사용 (customWidth 우선)
-          const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
-          const moduleWidth = mmToThreeUnits(actualWidth);
-          // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
-          const actualPositionX = module.adjustedPosition?.x || module.position.x;
-          const leftX = actualPositionX - moduleWidth / 2;
-          const rightX = actualPositionX + moduleWidth / 2;
-          
-          // 캐비넷 외부로 치수선 이동 (가이드라인보다 안쪽으로)
-          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
-          
-          return (
-            <group key={`top-module-dim-${index}`}>
-              {/* 캐비넷 폭 치수선 */}
-              <Line
-                points={[[leftX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
-              
-              {/* 화살표들 */}
-              <Line
-                points={createArrowHead([leftX, spaceHeight, dimZ], [leftX + 0.02, spaceHeight, dimZ], 0.01)}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
-              <Line
-                points={createArrowHead([rightX, spaceHeight, dimZ], [rightX - 0.02, spaceHeight, dimZ], 0.01)}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
-              
-              {/* 캐비넷 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
-              <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                position={[actualPositionX, spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
-                fontSize={baseFontSize}
-                color={dimensionColor}
-                anchorX="center"
-                anchorY="middle"
-                rotation={[-Math.PI / 2, 0, 0]}
-              >
-                {Math.round(actualWidth)}
-              </Text>
-
-              {/* 연장선들 - 가구 앞단에서 치수선까지 */}
-              {(() => {
-                // 좌우 깊이가 다른 가구인지 확인
-                const isDualModule = moduleData?.id.includes('dual') || false;
-                const rightAbsoluteDepth = moduleData?.modelConfig?.rightAbsoluteDepth;
-                const hasAsymmetricDepth = isDualModule && rightAbsoluteDepth;
-                
-                const panelDepthMm = spaceInfo.depth || 600;
-                const furnitureDepthMm = Math.min(panelDepthMm, 600);
-                const doorThicknessMm = 20;
-                const actualDepthMm = module.customDepth || moduleData?.dimensions?.depth || 580;
-                
-                const panelDepth = mmToThreeUnits(panelDepthMm);
-                const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
-                const doorThickness = mmToThreeUnits(doorThicknessMm);
-                
-                const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
-                
-                if (hasAsymmetricDepth) {
-                  // 좌우 깊이가 다른 경우: 각각 다른 깊이로 계산
-                  const leftDepthMm = actualDepthMm; // 좌측은 기본 깊이
-                  const rightDepthMm = rightAbsoluteDepth; // 우측은 절대 깊이
-                  
-                  const leftDepth = mmToThreeUnits(leftDepthMm);
-                  const rightDepth = mmToThreeUnits(rightDepthMm);
-                  
-                  // 좌측 앞면 (기본 깊이)
-                  const leftFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - leftDepth/2 + leftDepth/2;
-                  // 우측 앞면 (절대 깊이) - 깊이 차이만큼 앞쪽으로 이동
-                  const rightFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - rightDepth/2 + rightDepth/2 + (leftDepth - rightDepth) / 2;
-                  
-                  return (
-                    <>
-                      {/* 좌측 연장선 */}
-                      <Line
-                        points={[[leftX, spaceHeight, leftFrontZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
-                      />
-                      {/* 우측 연장선 */}
-                      <Line
-                        points={[[rightX, spaceHeight, rightFrontZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
-                      />
-                    </>
-                  );
-                } else {
-                  // 좌우 깊이가 동일한 경우: 기존 로직
-                  const moduleDepth = mmToThreeUnits(actualDepthMm);
-                  const furnitureFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2 + moduleDepth/2;
-                  
-                  return (
-                    <>
-                      <Line
-                        points={[[leftX, spaceHeight, furnitureFrontZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
-                      />
-                      <Line
-                        points={[[rightX, spaceHeight, furnitureFrontZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
-                      />
-                    </>
-                  );
-                }
-              })()}
-            </group>
-          );
-        })}
 
         {/* 기둥별 치수 - 상부뷰 (기둥 내부에 텍스트만 표시) */}
         {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
