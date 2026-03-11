@@ -54,7 +54,8 @@ export const useCameraManager = (
     const fov = calculateDynamicFOV(spaceInfo.width);
 
     // 3D와 완전히 동일한 방식: calculateOptimalDistance로 자동 거리 계산
-    const distance = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length);
+    const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled === true;
+    const distance = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length, hasDroppedCeiling);
 
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
     // 2D 모드에서는 거리가 2배이므로 zoom을 0.7배로 조정
@@ -98,7 +99,7 @@ export const useCameraManager = (
       canvasAspectRatio,
       zoom,
     };
-  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode, zoomMultiplierOverride]);
+  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, spaceInfo.droppedCeiling?.enabled, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode, zoomMultiplierOverride]);
 
   return cameraConfig;
 }; 

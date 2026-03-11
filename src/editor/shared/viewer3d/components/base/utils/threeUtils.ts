@@ -58,13 +58,18 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
 /**
  * 최적화된 카메라 거리 계산 (3D 모드에서 충분히 멀리, 큰 공간도 전체 표시)
  */
-export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
-  // 상단 치수 라벨(전체폭, 내경, 구간별, 이격거리 등)이 잘리지 않도록
-  // H<3000: 카메라 타겟이 height/2 중앙이므로 상단 라벨 영역까지 여백 필요
-  // H>=3000: 기존 높이 그대로 사용 (충분히 안정적)
-  const effectiveHeight = height < 3000
-    ? height + Math.max(1200, height * 0.5)
-    : height;
+export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0, hasDroppedCeiling: boolean = false) => {
+  // 실제 화면에 보여야 할 전체 영역을 동적으로 계산
+  // 상단: 치수 라벨 영역 (DIM_GAP=120mm × dimLevels + 텍스트 여백 80mm)
+  // 하단: 발판대/바닥 치수 여백 (약 100mm)
+  const dimLevels = hasDroppedCeiling ? 4 : 3;
+  const topLabelArea = 120 * dimLevels + 80; // 치수 라벨 총 높이 (mm)
+  const bottomMargin = 100; // 하단 여백 (mm)
+
+  // 카메라 타겟이 height/2이므로, 상단/하단 중 더 먼 쪽을 기준으로 전체 높이 결정
+  const topExtent = height / 2 + topLabelArea;  // 타겟에서 상단까지
+  const bottomExtent = height / 2 + bottomMargin; // 타겟에서 하단까지
+  const effectiveHeight = (Math.max(topExtent, bottomExtent)) * 2; // 양쪽 대칭으로 전체 높이
 
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
   const diagonal = Math.sqrt(width * width + effectiveHeight * effectiveHeight + depth * depth);
