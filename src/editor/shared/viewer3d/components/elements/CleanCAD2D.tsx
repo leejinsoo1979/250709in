@@ -706,9 +706,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const indexing = calculateSpaceIndexing(spaceInfo);
       
       // 기본 너비 설정 - 자유배치 가구는 freeWidth 우선, 그 외 customWidth 우선
+      // slotInfo.availableWidth는 이격거리가 반영된 실제 슬롯 너비
+      const slotAvailableWidth = slotInfo?.availableWidth;
       let actualWidth = (module.isFreePlacement && module.freeWidth)
         ? module.freeWidth
-        : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+        : (module.customWidth || module.adjustedWidth || slotAvailableWidth || moduleData.dimensions.width);
       let actualPositionX = module.position.x;
       
       // 커스텀 깊이가 있는 경우 전용 가구로 취급
