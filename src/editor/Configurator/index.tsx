@@ -3589,58 +3589,66 @@ const Configurator: React.FC = () => {
             <h3 className={styles.sectionTitle}>프레임 설정</h3>
           </div>
 
-          {/* 프레임 타입 */}
-          <div className={styles.toggleButtonGroup}>
-            <button
-              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.toggleButtonActive : ''}`}
-              onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
-            >
-              서라운드
-            </button>
-            <button
-              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.toggleButtonActive : ''}`}
-              onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
-            >
-              노서라운드
-            </button>
-          </div>
-
-          {/* 상/하 프레임 토글 - 서라운드일 때만 표시 */}
-          {(spaceInfo.surroundType || 'surround') === 'surround' && (() => {
+          {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 */}
+          {(() => {
             const currentFrameConfig = inferFrameConfig(spaceInfo);
-            const handleTopBottomToggle = (key: 'top' | 'bottom') => {
-              const newVal = !currentFrameConfig[key];
-              const updates: Partial<typeof spaceInfo> = {
-                frameConfig: { ...currentFrameConfig, [key]: newVal },
-              };
-              if (key === 'top') {
-                updates.frameSize = {
-                  ...(spaceInfo.frameSize || { left: 50, right: 50, top: 10 }),
-                  top: newVal ? 10 : 0,
-                };
-              } else if (key === 'bottom') {
-                const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor' as const, height: 65 };
-                updates.baseConfig = {
-                  ...currentBaseConfig,
-                  type: newVal ? 'floor' : 'stand',
-                  placementType: newVal ? currentBaseConfig.placementType : 'ground',
-                };
+            const st = spaceInfo.surroundType || 'surround';
+            const mode = st === 'no-surround' ? 'no-surround'
+              : (!currentFrameConfig.top && !currentFrameConfig.bottom) ? 'sides-only'
+              : 'full-surround';
+
+            const handleModeChange = (newMode: string) => {
+              if (newMode === 'full-surround') {
+                handleSpaceInfoUpdate({
+                  surroundType: 'surround',
+                  frameConfig: { ...currentFrameConfig, top: true, bottom: true },
+                  frameSize: {
+                    ...(spaceInfo.frameSize || { left: 50, right: 50, top: 10 }),
+                    top: 10,
+                  },
+                  baseConfig: {
+                    ...(spaceInfo.baseConfig || { type: 'floor' as const, height: 65 }),
+                    type: 'floor',
+                  },
+                });
+              } else if (newMode === 'sides-only') {
+                handleSpaceInfoUpdate({
+                  surroundType: 'surround',
+                  frameConfig: { ...currentFrameConfig, top: false, bottom: false },
+                  frameSize: {
+                    ...(spaceInfo.frameSize || { left: 50, right: 50, top: 10 }),
+                    top: 0,
+                  },
+                  baseConfig: {
+                    ...(spaceInfo.baseConfig || { type: 'floor' as const, height: 65 }),
+                    type: 'stand',
+                    placementType: 'ground',
+                  },
+                });
+              } else {
+                handleSpaceInfoUpdate({ surroundType: 'no-surround' });
               }
-              handleSpaceInfoUpdate(updates);
             };
+
             return (
-              <div className={styles.toggleButtonGroup} style={{ marginTop: '6px' }}>
+              <div className={styles.toggleButtonGroup}>
                 <button
-                  className={`${styles.toggleButton} ${currentFrameConfig.top ? styles.toggleButtonActive : ''}`}
-                  onClick={() => handleTopBottomToggle('top')}
+                  className={`${styles.toggleButton} ${mode === 'full-surround' ? styles.toggleButtonActive : ''}`}
+                  onClick={() => handleModeChange('full-surround')}
                 >
-                  상
+                  전체서라운드
                 </button>
                 <button
-                  className={`${styles.toggleButton} ${currentFrameConfig.bottom ? styles.toggleButtonActive : ''}`}
-                  onClick={() => handleTopBottomToggle('bottom')}
+                  className={`${styles.toggleButton} ${mode === 'sides-only' ? styles.toggleButtonActive : ''}`}
+                  onClick={() => handleModeChange('sides-only')}
                 >
-                  하
+                  양쪽서라운드
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${mode === 'no-surround' ? styles.toggleButtonActive : ''}`}
+                  onClick={() => handleModeChange('no-surround')}
+                >
+                  노서라운드
                 </button>
               </div>
             );

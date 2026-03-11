@@ -79,7 +79,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     }
   }, [isSurround, hasLeftWall, hasRightWall, spaceInfo.frameSize, onUpdate]);
 
-  // 서라운드 타입 변경 처리 (기존 로직 유지)
+  // 서라운드 타입 변경 처리
   const handleSurroundTypeChange = (type: SurroundType) => {
     console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
     const updates: Partial<SpaceInfo> = {
@@ -130,20 +130,18 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     onUpdate(updates);
   };
 
-  // 상/하 프레임 토글 처리
+  // 상/하 프레임 토글 처리 (SurroundTypeSelector에서 전체/양쪽 전환 시 호출)
   const handleTopBottomToggle = (key: 'top' | 'bottom', value: boolean) => {
     const updates: Partial<SpaceInfo> = {
       frameConfig: { ...frameConfig, [key]: value },
     };
 
     if (key === 'top') {
-      // 상 프레임 토글: frameSize.top을 0 또는 기존값으로 변경
       updates.frameSize = {
         ...frameSize,
         top: value ? 10 : 0,
       };
     } else if (key === 'bottom') {
-      // 하 프레임 토글: baseConfig.type을 floor/stand로 변경
       const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
       updates.baseConfig = {
         ...currentBaseConfig,
