@@ -94,6 +94,7 @@ const Configurator: React.FC = () => {
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
   const [currentFolderName, setCurrentFolderName] = useState<string>('');
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [showSpaceConfigPopup, setShowSpaceConfigPopup] = useState(false);
 
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
@@ -1257,12 +1258,17 @@ const Configurator: React.FC = () => {
         panelBs: []
       };
 
-      const result = await createDesignFile({
+      const createData: any = {
         name: newDesignName.trim(),
         projectId: newDesignProjectId,
         spaceConfig: defaultSpaceConfig,
         furniture: { placedModules: [] }
-      });
+      };
+      // 같은 프로젝트 내에서 생성 시 현재 폴더 유지
+      if (currentFolderId && newDesignProjectId === currentProjectId) {
+        createData.folderId = currentFolderId;
+      }
+      const result = await createDesignFile(createData);
 
       if (result.error) {
         alert('새 디자인 생성에 실패했습니다: ' + result.error);
@@ -2031,15 +2037,19 @@ const Configurator: React.FC = () => {
                       );
                     }
                     setCurrentFolderName(foundFolder ? foundFolder.name : '');
+                    setCurrentFolderId(designFile.folderId || (foundFolder ? foundFolder.id : null));
                   } else {
                     setCurrentFolderName('');
+                    setCurrentFolderId(designFile.folderId || null);
                   }
                 } catch (e) {
                   console.error('폴더명 조회 실패:', e);
                   setCurrentFolderName('');
+                  setCurrentFolderId(designFile.folderId || null);
                 }
               } else {
                 setCurrentFolderName('');
+                setCurrentFolderId(designFile.folderId || null);
               }
               // 공간 설정 미완료 감지 → 팝업 표시
               if ((designFile as any).isSpaceConfigured === false && mode !== 'readonly') {
