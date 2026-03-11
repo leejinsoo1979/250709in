@@ -2923,7 +2923,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {column.width}
+              {Math.round(column.width)}
             </Text>
 
             {/* 연장선 - 치수선에서 아래로 15mm만 */}
@@ -4827,7 +4827,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
                 >
-                  {spaceInfo.width}
+                  {Math.round(spaceInfo.width)}
                 </Text>
                 
                 {/* 연장선 - 좌우 프레임 앞쪽으로 더 연장 */}
@@ -5954,7 +5954,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {column.width}
+                {Math.round(column.width)}
               </Text>
             </group>
           );
