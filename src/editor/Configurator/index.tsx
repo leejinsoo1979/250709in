@@ -3605,10 +3605,6 @@ const Configurator: React.FC = () => {
                   frameSize: {
                     ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
                   },
-                  baseConfig: {
-                    ...(spaceInfo.baseConfig || { type: 'floor' as const, height: 65 }),
-                    type: 'floor',
-                  },
                 });
               } else if (newMode === 'sides-only') {
                 // 양쪽서라운드 = 기존 서라운드와 100% 동일, frameConfig만 구분용
