@@ -737,7 +737,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           furnitureId={placedFurnitureId}
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
-              floatHeight={lowerSectionTopOffset || 0}
+              floatHeight={spaceInfo?.baseConfig?.placementType === 'float' ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0}
               zone={zone}
             />
           ) : (
@@ -765,7 +765,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
                 doorTopGap={upperDoorTopGap ?? doorTopGap}
                 doorBottomGap={upperDoorBottomGap ?? 0}
-                floatHeight={lowerSectionTopOffset || 0}
+                floatHeight={spaceInfo?.baseConfig?.placementType === 'float' ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0}
                 zone={zone}
               />
 
@@ -791,7 +791,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
                 doorTopGap={lowerDoorTopGap ?? 0}
                 doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
-                floatHeight={lowerSectionTopOffset || 0}
+                floatHeight={spaceInfo?.baseConfig?.placementType === 'float' ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0}
                 zone={zone}
               />
             </>
