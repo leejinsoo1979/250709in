@@ -14,12 +14,12 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
 }) => {
   const { t } = useTranslation();
   const [floorThickness, setFloorThickness] = useState<string>(
-    spaceInfo.floorFinish?.height?.toString() || '9'
+    spaceInfo.floorFinish?.height?.toString() || '15'
   );
 
   // spaceInfo 변경 시 로컬 상태 업데이트
   useEffect(() => {
-    setFloorThickness(spaceInfo.floorFinish?.height?.toString() || '9');
+    setFloorThickness(spaceInfo.floorFinish?.height?.toString() || '15');
   }, [spaceInfo.floorFinish?.height]);
 
   const handleFloorStatusChange = (isFinished: boolean) => {
@@ -31,7 +31,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       });
     } else {
       // 바닥설치예정 - hasFloorFinish = true
-      const thickness = parseInt(floorThickness) || 9;
+      const thickness = parseInt(floorThickness) || 15;
       onUpdate({
         hasFloorFinish: true,
         floorFinish: {
@@ -51,7 +51,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
   const handleThicknessBlur = () => {
     const value = floorThickness;
     if (value === '') {
-      setFloorThickness('9');
+      setFloorThickness('15');
       return;
     }
     
@@ -67,11 +67,11 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       });
     } else {
       // 범위를 벗어나면 기본값으로 되돌림
-      setFloorThickness('9');
+      setFloorThickness('15');
       onUpdate({
         hasFloorFinish: true,
         floorFinish: {
-          height: 9
+          height: 15
         }
       });
     }
