@@ -14,6 +14,59 @@
   opacity: 0.3;
 }
 
+/* 최초 가입자 환영 화면 */
+.welcomeState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 40px 20px;
+}
+
+.welcomeIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-primary, #3b82f6) 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.welcomeTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--theme-text-primary);
+  margin: 0;
+}
+
+.welcomeSubtitle {
+  font-size: 14px;
+  color: var(--theme-text-muted);
+  margin: 0 0 16px 0;
+}
+
+.welcomeButton {
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: none;
+  background: var(--theme-primary, #3b82f6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.welcomeButton:hover {
+  background: var(--theme-primary-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
 .spinner {
   width: 32px;
   height: 32px;

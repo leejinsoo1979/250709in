@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { FileText, MoreHorizontal } from 'lucide-react';
-import { FcFolder } from 'react-icons/fc';
+import { FileText, MoreHorizontal, Sparkles, Search } from 'lucide-react';
 import { LuFileBox } from 'react-icons/lu';
 import { RxDashboard } from 'react-icons/rx';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
@@ -30,6 +29,9 @@ interface ContentPaneProps {
   isLoading?: boolean;
   onSelectAll?: () => void;
   onClearSelection?: () => void;
+  isNewUser?: boolean;
+  userName?: string;
+  onCreateProject?: () => void;
 }
 
 const ContentPane: React.FC<ContentPaneProps> = ({
@@ -49,6 +51,9 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   isLoading,
   onSelectAll,
   onClearSelection,
+  isNewUser,
+  userName,
+  onCreateProject,
 }) => {
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
 
@@ -237,10 +242,41 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   }
 
   if (filteredItems.length === 0) {
+    // 검색 결과 없음
+    if (searchTerm) {
+      return (
+        <div className={styles.emptyState}>
+          <Search size={48} className={styles.emptyIcon} />
+          <span>검색 결과가 없습니다</span>
+        </div>
+      );
+    }
+
+    // 최초 가입자 환영 화면
+    if (isNewUser) {
+      return (
+        <div className={styles.welcomeState}>
+          <div className={styles.welcomeIcon}>
+            <Sparkles size={48} />
+          </div>
+          <h2 className={styles.welcomeTitle}>
+            {userName ? `${userName}님, 환영합니다!` : '환영합니다!'}
+          </h2>
+          <p className={styles.welcomeSubtitle}>
+            나만의 가구를 디자인해보세요
+          </p>
+          <button className={styles.welcomeButton} onClick={onCreateProject}>
+            + 첫 프로젝트 만들기
+          </button>
+        </div>
+      );
+    }
+
+    // 일반 빈 상태
     return (
       <div className={styles.emptyState}>
-        <FcFolder size={48} className={styles.emptyIcon} />
-        <span>{searchTerm ? '검색 결과가 없습니다' : '항목이 없습니다'}</span>
+        <RxDashboard size={40} className={styles.emptyIcon} />
+        <span>항목이 없습니다</span>
       </div>
     );
   }
