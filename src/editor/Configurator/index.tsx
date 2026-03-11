@@ -3095,6 +3095,56 @@ const Configurator: React.FC = () => {
           />
         </div>
 
+        {/* 컬럼수 표시 - 공간유형 바로 아래 */}
+        {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>컬럼수</h3>
+          </div>
+
+          {!spaceInfo.droppedCeiling?.enabled ? (
+            // 단내림이 없을 때 - 컬럼 개수만 표시
+            <div className={styles.inputGroup}>
+              <DoorSlider
+                value={getCurrentColumnCount()}
+                onChange={(value) => {
+                  handleSpaceInfoUpdate({ customColumnCount: value });
+                }}
+                width={spaceInfo.width || 4800}
+              />
+            </div>
+          ) : (
+            // 단내림이 있을 때
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div className={styles.inputGroup}>
+                <DoorSlider
+                  value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ mainDoorCount: value });
+                  }}
+                  width={spaceInfo.width || 4800}
+                  label="메인"
+                />
+              </div>
+
+              {/* 단내림구간 도어 개수 */}
+              <div className={styles.inputGroup}>
+                <DoorSlider
+                  value={spaceInfo.droppedCeilingDoorCount || 1}
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                  }}
+                  width={spaceInfo.droppedCeiling?.width || 900}
+                  label="단내림"
+                />
+              </div>
+            </div>
+          )}
+
+        </div>
+        )}
+
         {/* 자유배치 모드: 공간유형 아래에 이격거리 표시 */}
         {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
           <GapControls
@@ -3530,63 +3580,6 @@ const Configurator: React.FC = () => {
           spaceInfo={spaceInfo}
           onUpdate={handleSpaceInfoUpdate}
         />
-
-        {/* 컬럼수 표시 */}
-        {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
-        <div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>컬럼수</h3>
-          </div>
-          {console.log('🔍 레이아웃 섹션 렌더링:', {
-            activeTab: activeRightPanelTab,
-            단내림활성화: spaceInfo.droppedCeiling?.enabled,
-            mainDoorCount: spaceInfo.mainDoorCount,
-            customColumnCount: spaceInfo.customColumnCount
-          })}
-
-          {/* 도어 개수 입력 - 제거 */}
-          {!spaceInfo.droppedCeiling?.enabled ? (
-            // 단내림이 없을 때 - 컬럼 개수만 표시
-            <div className={styles.inputGroup}>
-              <DoorSlider
-                value={getCurrentColumnCount()}
-                onChange={(value) => {
-                  handleSpaceInfoUpdate({ customColumnCount: value });
-                }}
-                width={spaceInfo.width || 4800}
-              />
-            </div>
-          ) : (
-            // 단내림이 있을 때
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div className={styles.inputGroup}>
-                <DoorSlider
-                  value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
-                  onChange={(value) => {
-                    handleSpaceInfoUpdate({ mainDoorCount: value });
-                  }}
-                  width={spaceInfo.width || 4800}
-                  label="메인"
-                />
-              </div>
-
-              {/* 단내림구간 도어 개수 */}
-              <div className={styles.inputGroup}>
-                <DoorSlider
-                  value={spaceInfo.droppedCeilingDoorCount || 1}
-                  onChange={(value) => {
-                    handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                  }}
-                  width={spaceInfo.droppedCeiling?.width || 900}
-                  label="단내림"
-                />
-              </div>
-            </div>
-          )}
-
-        </div>
-        )}
 
         {/* 프레임 설정 - 슬롯배치 모드에서만 표시 */}
         {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (<>
