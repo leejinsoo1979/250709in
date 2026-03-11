@@ -3016,25 +3016,7 @@ const Configurator: React.FC = () => {
   const renderRightPanelContent = () => {
     return (
       <div className={styles.spaceControls}>
-        {/* 탭 헤더 */}
-        <div className={styles.rightPanelTabs}>
-          <div className={styles.tabGroup}>
-            <button
-              className={`${styles.rightPanelTab} ${activeRightPanelTab === 'placement' ? styles.active : ''}`}
-              onClick={() => setActiveRightPanelTab('placement')}
-            >
-              배치속성
-            </button>
-            <button
-              className={`${styles.rightPanelTab} ${activeRightPanelTab === 'module' ? styles.active : ''}`}
-              onClick={() => setActiveRightPanelTab('module')}
-            >
-              배치모듈
-            </button>
-          </div>
-        </div>
-
-        {activeRightPanelTab === 'placement' && (<>
+        <
         {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
@@ -3804,15 +3786,6 @@ const Configurator: React.FC = () => {
             onUpdate={handleSpaceInfoUpdate}
           />
         </div>
-        </>)}
-
-        {activeRightPanelTab === 'module' && (
-          <div className={styles.configSection}>
-            <div style={{ padding: '16px 0', color: 'var(--theme-text-secondary)', fontSize: '13px', textAlign: 'center' }}>
-              가구를 선택하면 배치모듈 정보가 표시됩니다.
-            </div>
-          </div>
-        )}
 
       </div>
     );
