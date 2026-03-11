@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { getModulesByCategory, ModuleData } from '@/data/modules';
+import { getModulesByCategory, getModuleById, ModuleData } from '@/data/modules';
 import { useSpaceConfigStore, SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
@@ -7,6 +7,8 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
+import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
+import { getInternalSpaceBoundsX, checkFreeCollision, FurnitureBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -461,6 +463,71 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setSelectedFurnitureId(null);
     setFurniturePlacementMode(false);
     setCurrentDragData(null);
+
+    // ★ 자유배치 모드: placeFurnitureFree 사용
+    if (spaceInfo.layoutMode === 'free-placement') {
+      try {
+        const internalSpace = calculateInternalSpace(spaceInfo);
+        const moduleData = getModuleById(module.id, internalSpace, spaceInfo);
+        if (!moduleData) {
+          console.warn('❌ [자유배치 더블클릭] 모듈 데이터 없음:', module.id);
+          return;
+        }
+
+        const dims = module.dimensions;
+        const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+
+        // 중앙부터 시작해 빈 자리 찾기
+        const centerX = (startX + endX) / 2;
+        const step = dims.width;
+        let targetX: number | null = null;
+
+        // 중앙 → 좌우 교대로 탐색
+        for (let offset = 0; offset <= (endX - startX); offset += step) {
+          for (const sign of [0, 1, -1]) {
+            const tryX = centerX + offset * sign;
+            if (tryX - dims.width / 2 < startX || tryX + dims.width / 2 > endX) continue;
+            const bounds: FurnitureBoundsX = {
+              left: tryX - dims.width / 2,
+              right: tryX + dims.width / 2,
+              category: moduleData.category as 'full' | 'upper' | 'lower',
+            };
+            if (!checkFreeCollision(placedModules, bounds)) {
+              targetX = tryX;
+              break;
+            }
+          }
+          if (targetX !== null) break;
+        }
+
+        if (targetX === null) {
+          showAlert('배치할 공간이 부족합니다', { title: '배치 불가' });
+          return;
+        }
+
+        const result = placeFurnitureFree({
+          moduleId: module.id,
+          xPositionMM: targetX,
+          spaceInfo,
+          dimensions: dims,
+          existingModules: placedModules,
+          moduleData,
+        });
+
+        if (result.success && result.module) {
+          addModule(result.module);
+          const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
+          setSelectedPlacedModuleId(result.module.id);
+        } else {
+          console.warn('❌ [자유배치 더블클릭] 배치 실패:', result.error);
+        }
+      } catch (error) {
+        console.error('🚨 [자유배치 더블클릭] 오류:', error);
+      } finally {
+        setTimeout(() => { isDoubleClickRef.current = false; }, 100);
+      }
+      return;
+    }
 
     try {
       // 노서라운드 모드에서 frameSize 확인 및 수정
