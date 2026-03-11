@@ -86,13 +86,19 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   const filteredItemIds = useMemo(() => filteredItems.map(i => i.id), [filteredItems]);
 
   const handleItemClick = (e: React.MouseEvent, id: string) => {
-    // 단순 클릭은 체크하지 않음 — Ctrl/Cmd/Shift 클릭만 선택
-    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) return;
     onItemClick(id, {
       multi: e.ctrlKey || e.metaKey,
       shift: e.shiftKey,
       orderedIds: filteredItemIds,
     });
+  };
+
+  // 빈 영역 클릭 시 선택 해제
+  const handleGridClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-item-card]')) {
+      onClearSelection?.();
+    }
   };
 
   const handleCheckboxClick = (e: React.MouseEvent, id: string) => {
@@ -242,7 +248,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 자세히 뷰 (테이블) ──
   if (viewMode === 'details') {
     return (
-      <div className={styles.detailsTable}>
+      <div className={styles.detailsTable} onClick={handleGridClick}>
         {renderSelectionBar()}
         <div className={styles.tableHeader}>
           <div className={styles.colName} onClick={onSortDirectionToggle}>
@@ -292,7 +298,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 목록 뷰 ──
   if (viewMode === 'list') {
     return (
-      <div className={styles.listView}>
+      <div className={styles.listView} onClick={handleGridClick}>
         {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
@@ -320,7 +326,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   // ── 타일 뷰 ──
   if (viewMode === 'tiles') {
     return (
-      <div className={styles.tileGrid}>
+      <div className={styles.tileGrid} onClick={handleGridClick}>
         {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
@@ -362,6 +368,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return (
       <div
         className={styles.saasGrid}
+        onClick={handleGridClick}
       >
         {renderSelectionBar()}
         {filteredItems.map(item => {
@@ -458,6 +465,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     <div
       className={styles.iconGrid}
       style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
+      onClick={handleGridClick}
     >
       {renderSelectionBar()}
       {filteredItems.map(item => (
