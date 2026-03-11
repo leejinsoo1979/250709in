@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder, Search } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
@@ -17,6 +17,8 @@ interface ContentToolbarProps {
   selectedCount?: number;
   onSelectAll?: () => void;
   onClearSelection?: () => void;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -40,6 +42,8 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   selectedCount = 0,
   onSelectAll,
   onClearSelection,
+  searchTerm,
+  onSearchChange,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
@@ -151,25 +155,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         </div>
       )}
 
-      {/* 생성 버튼 */}
-      <div className={styles.actions}>
-        {onCreateDesign && (
-          <button className={styles.createBtn} onClick={onCreateDesign}>
-            <Plus size={16} />
-            <span>새 디자인</span>
-          </button>
-        )}
-        {onCreateFolder && (
-          <button className={styles.createBtn} onClick={onCreateFolder}>
-            <FolderPlus size={16} />
-            <span>새 폴더</span>
-          </button>
-        )}
-      </div>
-
-      <div className={styles.spacer} />
-
-      {/* 보기 모드 드롭다운 */}
+      {/* 보기 모드 드롭다운 (좌측) */}
       <div className={styles.viewDropdown} ref={viewMenuRef}>
         <button
           className={styles.viewDropdownBtn}
@@ -209,6 +195,38 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         <option value="name">이름순</option>
         <option value="type">종류순</option>
       </select>
+
+      <div className={styles.spacer} />
+
+      {/* 검색바 */}
+      {onSearchChange !== undefined && (
+        <div className={styles.searchBox}>
+          <Search size={14} className={styles.searchIcon} />
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="검색..."
+            value={searchTerm || ''}
+            onChange={e => onSearchChange(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* 생성 버튼 */}
+      <div className={styles.actions}>
+        {onCreateDesign && (
+          <button className={styles.createBtn} onClick={onCreateDesign}>
+            <Plus size={16} />
+            <span>새 디자인</span>
+          </button>
+        )}
+        {onCreateFolder && (
+          <button className={styles.createBtn} onClick={onCreateFolder}>
+            <FolderPlus size={16} />
+            <span>새 폴더</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };

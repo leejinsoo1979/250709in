@@ -192,11 +192,12 @@ const SimpleDashboard: React.FC = () => {
   // --- 핸들러들 ---
 
   // 디자인 에디터 열기
-  const handleDesignOpen = useCallback((projectId: string, designFileName?: string) => {
-    const url = designFileName
-      ? `/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`
-      : `/configurator?projectId=${projectId}`;
-    navigate(url);
+  const handleDesignOpen = useCallback((projectId: string, designFileId?: string, designFileName?: string) => {
+    const params = new URLSearchParams();
+    params.set('projectId', projectId);
+    if (designFileId) params.set('designFileId', designFileId);
+    if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
+    navigate(`/configurator?${params.toString()}`);
   }, [navigate]);
 
   // 3D 뷰어 모달
@@ -216,7 +217,7 @@ const SimpleDashboard: React.FC = () => {
       // 디자인 에디터 열기
       const projectId = item.projectId || nav.currentProjectId;
       if (projectId) {
-        handleDesignOpen(projectId, item.name);
+        handleDesignOpen(projectId, item.id, item.name);
       }
     }
   }, [nav, handleDesignOpen]);
@@ -603,8 +604,6 @@ const SimpleDashboard: React.FC = () => {
           onLogoClick={() => nav.navigateToRoot()}
           onProfileClick={() => setIsProfilePopupOpen(true)}
           onOpenSettings={() => setIsSettingsPanelOpen(true)}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
         />
       )}
 
@@ -727,6 +726,8 @@ const SimpleDashboard: React.FC = () => {
                 selectedCount={actions.selectedItems.size}
                 onSelectAll={actions.selectAll}
                 onClearSelection={actions.clearSelection}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
               />
 
               <ContentPane
@@ -1131,7 +1132,7 @@ const SimpleDashboard: React.FC = () => {
                   const item = contextMenu.item;
                   const projectId = item.projectId || nav.currentProjectId;
                   if (projectId) {
-                    navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(item.name)}`);
+                    handleDesignOpen(projectId, item.id, item.name);
                   }
                   setContextMenu(null);
                 }}
