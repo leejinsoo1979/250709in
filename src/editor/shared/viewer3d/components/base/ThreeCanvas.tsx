@@ -451,7 +451,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [camera, cameraPosition, cameraTarget, viewMode]);
 
-  // 카메라 리셋 함수 - 줌(거리)은 유지하고 화면 중앙만 리셋
+  // 카메라 리셋 함수 - 위치, 타겟, 줌 모두 초기값으로 완전 리셋
   const resetCamera = useCallback(() => {
     const controls = controlsRef.current;
     if (!controls) {
@@ -466,12 +466,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const targetVec = initial.target2D?.clone() ?? new THREE.Vector3(...camera.target);
       const positionVec = initial.position2D?.clone() ?? new THREE.Vector3(...camera.position);
       const upVec = initial.up2D?.clone() ?? new THREE.Vector3(0, 1, 0);
+      const initialZoom = initial.zoom2D ?? camera.zoom;
 
-      // 현재 줌 값 보존
-      const currentZoom = controls.object.zoom;
-
-      canvasLog('🎯 2D 카메라 리셋 실행 (줌 유지)', {
-        currentZoom,
+      canvasLog('🎯 2D 카메라 완전 리셋', {
+        initialZoom,
         storedTarget: initial.target2D?.toArray(),
       });
 
@@ -479,9 +477,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       controls.object.position.copy(positionVec);
       controls.object.up.copy(upVec);
 
-      // 줌은 현재 값 유지 (리셋하지 않음)
+      // 줌도 초기값으로 리셋
       if ('zoom' in controls.object) {
-        controls.object.zoom = currentZoom;
+        controls.object.zoom = initialZoom;
         if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
           (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
         }
@@ -495,30 +493,19 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     // 3D 퍼스펙티브/Orthographic (cameraMode=orthographic) 리셋
     const isOrthographic = controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic';
 
-    // 현재 카메라 거리(줌 레벨) 보존
-    const currentDistance = controls.object.position.distanceTo(controls.target);
-    const currentZoom3D = (controls.object as any).zoom;
-
-    canvasLog('🎯 3D 카메라 리셋 시작 (거리 유지):', {
-      type: controls.object.type,
-      cameraMode,
-      currentDistance,
-      currentZoom3D
-    });
+    canvasLog('🎯 3D 카메라 완전 리셋 시작');
 
     const initialPos = initialCameraSetup.current.position0?.clone() ?? new THREE.Vector3(...camera.position);
     const initialTarget = initialCameraSetup.current.target0?.clone() ?? new THREE.Vector3(...camera.target);
+    const initialZoom3D = initialCameraSetup.current.zoom0 ?? camera.zoom;
 
-    // 초기 방향 벡터 계산 후, 현재 거리만큼 적용
-    const direction = initialPos.clone().sub(initialTarget).normalize();
-    const newPosition = initialTarget.clone().add(direction.multiplyScalar(currentDistance));
-
+    // 초기 위치와 타겟 완전 복원
     controls.target.copy(initialTarget);
-    controls.object.position.copy(newPosition);
+    controls.object.position.copy(initialPos);
 
-    // orthographic 줌도 현재 값 유지
+    // orthographic 줌도 초기값으로 복원
     if (isOrthographic && 'zoom' in controls.object) {
-      controls.object.zoom = currentZoom3D;
+      controls.object.zoom = initialZoom3D;
       if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
         (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
       }
@@ -528,10 +515,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     controls.object.lookAt(controls.target);
     controls.update();
 
-    canvasLog('🎯 3D 카메라 리셋 완료 (거리 유지):', {
+    canvasLog('🎯 3D 카메라 리셋 완료:', {
       newPosition: controls.object.position.toArray(),
       newTarget: controls.target.toArray(),
-      distance: currentDistance
     });
   }, [camera, viewMode, cameraMode]);
 
