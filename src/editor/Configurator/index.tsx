@@ -281,6 +281,14 @@ const Configurator: React.FC = () => {
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
 
+  // 슬롯배치 모드 진입 시 컬럼 가이드 자동 켜기
+  const isFurniturePlacementMode = useFurnitureStore(state => state.isFurniturePlacementMode);
+  useEffect(() => {
+    if (isFurniturePlacementMode && viewMode === '3D') {
+      setShowAll(true);
+    }
+  }, [isFurniturePlacementMode, viewMode]);
+
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
   const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
