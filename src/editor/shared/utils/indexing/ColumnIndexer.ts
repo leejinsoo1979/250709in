@@ -928,13 +928,13 @@ export class ColumnIndexer {
         // 서라운드: 중간 경계면 이격거리 3mm 적용
         const BOUNDARY_GAP = 3;
 
-        // 단내림구간(좌): 좌측 프레임 빼고, 중간 경계 이격거리는 더하기
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left + BOUNDARY_GAP;
+        // 단내림구간(좌): 좌측 프레임만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 일반구간(우): 우측 프레임 + 중간 경계 이격거리 빼기
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
+        // 일반구간(우): 우측 프레임만 빼기 (BOUNDARY_GAP 3mm은 메인구간 내부에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
+        normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // 3mm 갭 후 메인구간 시작
 
         console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
@@ -992,8 +992,8 @@ export class ColumnIndexer {
           }
         }
 
-        // 단내림구간(좌): 좌측 이격거리 빼고, 중간 경계 이격거리는 더하기 (단내림 우측과 대칭)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction + BOUNDARY_GAP;
+        // 단내림구간(좌): 좌측 이격거리만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
         console.log('🔴🔴 단내림 좌측 + 노서라운드 단내림구간 계산:', {
@@ -1008,9 +1008,9 @@ export class ColumnIndexer {
           totalWidth: spaceInfo.width
         });
 
-        // 일반구간(우): 우측 이격거리 + 중간 경계 이격거리 빼기 (단내림 우측과 대칭)
-        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
+        // 일반구간(우): 우측 이격거리만 빼기 (BOUNDARY_GAP 3mm은 메인구간 내부에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
+        normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // 3mm 갭 후 메인구간 시작
 
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
           '단내림구간 외부너비': droppedAreaOuterWidth,
@@ -1034,13 +1034,13 @@ export class ColumnIndexer {
         // 서라운드: 중간 경계면 이격거리 3mm 적용
         const BOUNDARY_GAP = 3;
 
-        // 일반구간: 좌측 프레임 + 중간 경계 이격거리 빼기
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
+        // 일반구간: 좌측 프레임만 빼기 (BOUNDARY_GAP 3mm은 메인구간 내부에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 단내림구간: 우측 프레임 빼고, 중간 경계 이격거리는 더하기 (일반구간에서 뺀 만큼 확보)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right + BOUNDARY_GAP;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
+        // 단내림구간: 우측 프레임만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
+        droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 3mm 갭 후 단내림구간 시작
 
         console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
           '메인 끝': normalStartX + normalAreaInternalWidth,
@@ -1098,8 +1098,8 @@ export class ColumnIndexer {
           }
         }
 
-        // 일반구간: 좌측 이격거리 + 중간 경계 이격거리 빼기
-        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
+        // 일반구간: 좌측 이격거리만 빼기 (BOUNDARY_GAP 3mm은 메인구간 내부에 포함)
+        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
 
         console.log('🔴🔴 단내림 우측 + 노서라운드 메인구간 계산:', {
@@ -1114,9 +1114,9 @@ export class ColumnIndexer {
           totalWidth: spaceInfo.width
         });
 
-        // 단내림구간: 우측 이격거리 빼고, 중간 경계 이격거리는 더하기 (일반구간에서 뺀 만큼 확보)
-        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction + BOUNDARY_GAP;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
+        // 단내림구간: 우측 이격거리만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
+        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
+        droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 3mm 갭 후 단내림구간 시작
 
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           '일반구간 외부너비': normalAreaOuterWidth,
