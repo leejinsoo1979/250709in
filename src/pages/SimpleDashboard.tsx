@@ -215,13 +215,27 @@ const SimpleDashboard: React.FC = () => {
       // 폴더 진입
       nav.navigateTo(nav.currentProjectId, item.id, item.name);
     } else if (item.type === 'design') {
-      // 디자인 에디터 열기
       const projectId = item.projectId || nav.currentProjectId;
-      if (projectId) {
+      if (!projectId) return;
+
+      // 공간설정 완료된 디자인은 바로 에디터로 이동
+      if (item.thumbnail || item.spaceSize) {
         handleDesignOpen(projectId, item.id, item.name);
+        return;
       }
+
+      // 공간설정 안 된 디자인은 Step2(공간설정) 팝업
+      const project = data.projects.find(p => p.id === projectId);
+      const { setProjectId, setProjectTitle, setBasicInfo } = useProjectStore.getState();
+      setProjectId(projectId);
+      setProjectTitle(project?.title || '새 프로젝트');
+      setBasicInfo({ title: item.name, location: project?.title || '기본 위치' });
+      setModalProjectId(projectId);
+      setModalProjectTitle(project?.title || '새 프로젝트');
+      setModalInitialStep(2);
+      setIsStep1ModalOpen(true);
     }
-  }, [nav, handleDesignOpen]);
+  }, [nav, handleDesignOpen, data.projects]);
 
   // 아이템 컨텍스트 메뉴 (우클릭 / 더보기 버튼)
   const handleItemContextMenu = useCallback((e: React.MouseEvent, item: ExplorerItem) => {
