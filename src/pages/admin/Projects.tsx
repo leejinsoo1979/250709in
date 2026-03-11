@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import {
   Folder, FolderOpen, FileText, Users, Share2,
-  Calendar, HardDrive, Search, User, Package
+  Calendar, HardDrive, Search, User, Package, ExternalLink
 } from 'lucide-react';
 import styles from './Projects.module.css';
 
@@ -34,6 +35,7 @@ interface DesignFile {
 
 const Projects = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -373,6 +375,7 @@ const Projects = () => {
                       <th>크기</th>
                       <th>생성일</th>
                       <th>수정일</th>
+                      <th>작업</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -398,6 +401,16 @@ const Projects = () => {
                           {file.updatedAt
                             ? file.updatedAt.toLocaleDateString('ko-KR')
                             : '-'}
+                        </td>
+                        <td>
+                          <button
+                            className={styles.openButton}
+                            onClick={() => navigate(`/configurator?projectId=${file.projectId}&designFileId=${file.id}&designFileName=${encodeURIComponent(file.fileName)}`)}
+                            title="에디터에서 열기"
+                          >
+                            <ExternalLink size={16} />
+                            열기
+                          </button>
                         </td>
                       </tr>
                     ))}

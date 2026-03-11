@@ -17,7 +17,6 @@ import {
   getMySharedLinks,
 } from '@/firebase/shareLinks';
 import { useAuth } from '@/auth/AuthProvider';
-import { isSuperAdmin } from '@/firebase/admins';
 import type { ExplorerItem, QuickAccessMenu, UseExplorerDataReturn } from './types';
 
 export function useExplorerData(
@@ -181,13 +180,12 @@ export function useExplorerData(
 
     setProjectsLoading(true);
 
-    const showAll = isSuperAdmin(user.email);
     const timeoutId = setTimeout(() => {
       const unsubscribe = subscribeToUserProjects(user.uid, (loadedProjects) => {
         setProjects(loadedProjects);
         setProjectsLoading(false);
         setInitialLoadComplete(true);
-      }, showAll);
+      });
       return () => unsubscribe();
     }, 500);
 

@@ -59,16 +59,10 @@ export async function listProjects(
       throw error;
     }
     
-    // 슈퍼어드민 체크 (전체 프로젝트 조회)
-    const { isSuperAdmin } = await import('@/firebase/admins');
-    const { getCurrentUserAsync } = await import('@/firebase/auth');
-    const currentUser = await getCurrentUserAsync();
-    const showAll = currentUser ? isSuperAdmin(currentUser.email) : false;
-
     legacySnapshot.forEach((doc) => {
       const data = doc.data();
-      // 슈퍼어드민이면 전체 프로젝트, 아니면 본인 프로젝트만
-      if (showAll || data.userId === userId) {
+      // 클라이언트 측에서 userId 필터링
+      if (data.userId === userId) {
         projects.push({
           id: doc.id,
           title: data.title,
