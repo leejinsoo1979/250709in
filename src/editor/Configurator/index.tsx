@@ -148,6 +148,13 @@ const Configurator: React.FC = () => {
   const [showCustomUploadModal, setShowCustomUploadModal] = useState(false); // 커스텀 가구 업로드 모달
   const [showBoringExportDialog, setShowBoringExportDialog] = useState(false); // 보링 내보내기 대화상자
 
+  // 새 디자인 모달 상태
+  const [isNewDesignModalOpen, setIsNewDesignModalOpen] = useState(false);
+  const [newDesignName, setNewDesignName] = useState('');
+  const [newDesignProjects, setNewDesignProjects] = useState<ProjectSummary[]>([]);
+  const [newDesignProjectId, setNewDesignProjectId] = useState<string | null>(null);
+  const [isCreatingNewDesign, setIsCreatingNewDesign] = useState(false);
+
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
 
@@ -1202,106 +1209,75 @@ const Configurator: React.FC = () => {
   };
 
   // 새 디자인 생성 함수 (현재 프로젝트 내에)
+  // 새 디자인 모달 열기
   const handleNewDesign = async () => {
-    console.log('🎨 [DEBUG] handleNewDesign 함수 시작');
+    // 현재 작업 자동 저장
+    try { await saveProject(); } catch { /* ignore */ }
 
-    if (!currentProjectId) {
-      alert('프로젝트가 선택되지 않았습니다.');
-      return;
+    // 프로젝트 목록 로드
+    if (user) {
+      try {
+        const result = await getUserProjects(user.uid);
+        if (result.projects) {
+          setNewDesignProjects(result.projects.filter(p => !p.isDeleted));
+        }
+      } catch { /* ignore */ }
     }
+    setNewDesignProjectId(currentProjectId);
+    setNewDesignName('');
+    setIsNewDesignModalOpen(true);
+  };
 
+  // 새 디자인 생성 실행
+  const handleNewDesignSubmit = async () => {
+    if (!newDesignName.trim() || !newDesignProjectId || isCreatingNewDesign) return;
+
+    setIsCreatingNewDesign(true);
     try {
-      const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
-      console.log('🎨 [DEBUG] 사용자 확인 응답:', confirmed);
-
-      if (!confirmed) {
-        console.log('🎨 [DEBUG] 사용자가 취소함');
-        return;
-      }
-
-      // 기본 설정으로 새 디자인 생성 (DEFAULT_SPACE_VALUES 사용)
       const defaultSpaceConfig = {
         width: DEFAULT_SPACE_VALUES.WIDTH,
         height: DEFAULT_SPACE_VALUES.HEIGHT,
         depth: DEFAULT_SPACE_VALUES.DEPTH,
         installType: 'builtin' as const,
-        wallConfig: {
-          left: true,
-          right: true,
-        },
+        wallConfig: { left: true, right: true },
         hasFloorFinish: false,
-        columns: [], // 빈 배열로 초기화하여 spaceInfo.columns?.map() 오류 방지
+        columns: [],
         walls: [],
         panelBs: []
       };
 
-      if (isFirebaseConfigured() && user) {
-        // 현재 프로젝트의 기존 디자인 파일 목록 가져오기
-        console.log('🔍 기존 디자인 파일 목록 조회 중...');
-        const { designFiles } = await getDesignFiles(currentProjectId);
+      const result = await createDesignFile({
+        name: newDesignName.trim(),
+        projectId: newDesignProjectId,
+        spaceConfig: defaultSpaceConfig,
+        furniture: { placedModules: [] }
+      });
 
-        // "untitle" 패턴의 이름 찾기 및 자동 증가 번호 계산
-        const untitlePattern = /^untitle(?:\((\d+)\))?$/;
-        const existingNumbers: number[] = [];
+      if (result.error) {
+        alert('새 디자인 생성에 실패했습니다: ' + result.error);
+        return;
+      }
 
-        designFiles.forEach(file => {
-          const match = file.name.match(untitlePattern);
-          if (match) {
-            const num = match[1] ? parseInt(match[1], 10) : 0;
-            existingNumbers.push(num);
-          }
+      if (result.id) {
+        setIsNewDesignModalOpen(false);
+
+        // 탭 추가
+        const project = newDesignProjects.find(p => p.id === newDesignProjectId);
+        useUIStore.getState().addTab({
+          projectId: newDesignProjectId,
+          projectName: project?.title || newDesignProjectId,
+          designFileId: result.id,
+          designFileName: newDesignName.trim(),
         });
 
-        // 다음 사용 가능한 번호 찾기
-        let nextNumber = 0;
-        if (existingNumbers.length > 0) {
-          existingNumbers.sort((a, b) => a - b);
-          nextNumber = existingNumbers[existingNumbers.length - 1] + 1;
-        }
-
-        // 디자인명 생성
-        const designName = nextNumber === 0 ? 'untitle' : `untitle(${nextNumber})`;
-        console.log('📝 생성될 디자인명:', designName, '(기존 untitle 개수:', existingNumbers.length, ')');
-
-        // Firebase에 새 디자인파일 생성
-        const result = await createDesignFile({
-          name: designName,
-          projectId: currentProjectId,
-          spaceConfig: defaultSpaceConfig,
-          furniture: { placedModules: [] }
-        });
-
-        if (result.error) {
-          console.error('🎨 [ERROR] 새 디자인 생성 실패:', result.error);
-          alert('새 디자인 생성에 실패했습니다: ' + result.error);
-          return;
-        }
-
-        if (result.id) {
-          console.log('🎨 [DEBUG] 새 디자인 생성 성공:', result.id);
-
-          // 상태 업데이트 (프로젝트는 그대로, 디자인만 초기화)
-          setSpaceInfo(defaultSpaceConfig);
-          setPlacedModules([]);
-          setCurrentDesignFileId(result.id);
-          setCurrentDesignFileName(designName);
-
-          // derivedSpaceStore 재계산
-          derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
-
-          console.log('✅ 새 디자인파일 생성 완료:', result.id);
-          alert(`새 디자인 "${designName}"이(가) 생성되었습니다!`);
-        }
-      } else {
-        // 데모 모드에서는 단순히 상태만 초기화
-        setSpaceInfo(defaultSpaceConfig);
-        setPlacedModules([]);
-        derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
-        alert('새 디자인이 생성되었습니다!');
+        // 새 디자인으로 이동
+        navigate(`/configurator?projectId=${newDesignProjectId}&designFileId=${result.id}`, { replace: true });
       }
     } catch (error) {
-      console.error('🎨 [ERROR] 새 디자인 생성 중 오류:', error);
+      console.error('새 디자인 생성 중 오류:', error);
       alert('새 디자인 생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsCreatingNewDesign(false);
     }
   };
 
@@ -4452,6 +4428,78 @@ const Configurator: React.FC = () => {
         onClose={() => setShowBoringExportDialog(false)}
         panels={boringPanels}
       />
+
+      {/* 새 디자인 생성 모달 */}
+      {isNewDesignModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsNewDesignModalOpen(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ padding: '24px', maxWidth: '420px' }}>
+            <button className={styles.modalCloseButton} onClick={() => setIsNewDesignModalOpen(false)}>×</button>
+            <h3 style={{ margin: '0 0 20px', fontSize: '16px', fontWeight: 700, color: 'var(--theme-text)' }}>새 디자인</h3>
+
+            {/* 프로젝트 선택 */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>프로젝트</label>
+              <select
+                value={newDesignProjectId || ''}
+                onChange={e => setNewDesignProjectId(e.target.value || null)}
+                style={{
+                  width: '100%', padding: '8px 12px', border: '1px solid var(--theme-border)',
+                  borderRadius: '6px', background: 'var(--theme-surface)', color: 'var(--theme-text)',
+                  fontSize: '13px', outline: 'none',
+                }}
+              >
+                <option value="">프로젝트를 선택하세요</option>
+                {newDesignProjects.map(p => (
+                  <option key={p.id} value={p.id}>{p.title}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 디자인 이름 */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>디자인 이름</label>
+              <input
+                type="text"
+                value={newDesignName}
+                onChange={e => setNewDesignName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !isCreatingNewDesign && handleNewDesignSubmit()}
+                placeholder="디자인 이름을 입력하세요"
+                autoFocus
+                style={{
+                  width: '100%', padding: '8px 12px', border: '1px solid var(--theme-border)',
+                  borderRadius: '6px', background: 'var(--theme-surface)', color: 'var(--theme-text)',
+                  fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            {/* 버튼 */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                onClick={() => setIsNewDesignModalOpen(false)}
+                style={{
+                  padding: '8px 20px', border: '1px solid var(--theme-border)', borderRadius: '6px',
+                  background: 'var(--theme-surface)', color: 'var(--theme-text)', fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleNewDesignSubmit}
+                disabled={!newDesignName.trim() || !newDesignProjectId || isCreatingNewDesign}
+                style={{
+                  padding: '8px 20px', border: 'none', borderRadius: '6px',
+                  background: !newDesignName.trim() || !newDesignProjectId || isCreatingNewDesign ? '#ccc' : 'var(--theme-primary)',
+                  color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                {isCreatingNewDesign ? '생성 중...' : '생성'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 공간 설정 팝업 (isSpaceConfigured === false 일 때) */}
       {showSpaceConfigPopup && (
