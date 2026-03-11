@@ -242,11 +242,19 @@ const Scene3D: React.FC<{
 
           {/* 가구 렌더링 */}
           {placedModules.map((pm) => (
-            <FurnitureRenderer
+            <group
               key={pm.id}
-              placedModule={pm}
-              spaceInfo={spaceInfo}
-            />
+              position={[
+                pm.position?.x || 0,
+                pm.position?.y || 0,
+                pm.position?.z || 0,
+              ]}
+            >
+              <FurnitureRenderer
+                placedModule={pm}
+                spaceInfo={spaceInfo}
+              />
+            </group>
           ))}
 
           {/* 반투명 처리 (UIStore 하이라이트 보완) */}
@@ -301,12 +309,22 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     let minZ = Infinity, maxZ = -Infinity;
     let maxH = 0;
 
+    const internalSpace = calculateInternalSpace(spaceInfo);
+
     placedModules.forEach((pm: any) => {
-      const w = ((pm.width || 600) as number) / 1000;
-      const h = ((pm.customHeight || spaceInfo.height || 2400) as number) / 1000;
-      const d = ((pm.depth || spaceInfo.depth || 600) as number) / 1000;
-      const posX = ((pm.position?.x || 0) as number) / 1000;
-      const posZ = ((pm.position?.z || 0) as number) / 1000;
+      // width/height/depth는 mm → Three.js 단위로 변환 (* 0.01)
+      const moduleData = getModuleById(pm.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(pm);
+      const wMm = pm.freeWidth || pm.moduleWidth || moduleData?.dimensions?.width || 600;
+      const hMm = pm.freeHeight || moduleData?.dimensions?.height || spaceInfo.height || 2400;
+      const dMm = pm.freeDepth || moduleData?.dimensions?.depth || spaceInfo.depth || 600;
+
+      const w = wMm * 0.01;
+      const h = hMm * 0.01;
+      const d = dMm * 0.01;
+
+      // position은 이미 Three.js 단위 (mm * 0.01)
+      const posX = pm.position?.x || 0;
+      const posZ = pm.position?.z || 0;
 
       minX = Math.min(minX, posX);
       maxX = Math.max(maxX, posX + w);
