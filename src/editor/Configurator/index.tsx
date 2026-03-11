@@ -331,7 +331,7 @@ const Configurator: React.FC = () => {
   });
 
   // History Store
-  const { saveState } = useHistoryStore();
+  const { saveState, undo: historyUndo, redo: historyRedo } = useHistoryStore();
 
   // 히스토리 트래킹 활성화
   useHistoryTracking();
@@ -359,8 +359,12 @@ const Configurator: React.FC = () => {
       // Ctrl+Z / Cmd+Z로 Undo
       if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
         event.preventDefault();
-        const headerUndo = document.querySelector('[title="실행 취소 (Ctrl+Z)"]') as HTMLButtonElement;
-        headerUndo?.click();
+        const previousState = historyUndo();
+        if (previousState) {
+          setSpaceInfo(previousState.spaceInfo);
+          setPlacedModules(previousState.placedModules);
+          setBasicInfo(previousState.basicInfo);
+        }
         return;
       }
 
@@ -368,8 +372,12 @@ const Configurator: React.FC = () => {
       if (((event.ctrlKey || event.metaKey) && event.key === 'y') ||
         ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')) {
         event.preventDefault();
-        const headerRedo = document.querySelector('[title="다시 실행 (Ctrl+Y)"]') as HTMLButtonElement;
-        headerRedo?.click();
+        const nextState = historyRedo();
+        if (nextState) {
+          setSpaceInfo(nextState.spaceInfo);
+          setPlacedModules(nextState.placedModules);
+          setBasicInfo(nextState.basicInfo);
+        }
         return;
       }
 

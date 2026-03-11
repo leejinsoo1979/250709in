@@ -7,6 +7,8 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useHistoryStore } from '@/store/historyStore';
+import { useProjectStore } from '@/store/core/projectStore';
 import { sceneHolder } from '../../sceneHolder';
 
 // 클린 아키텍처: 의존성 방향 관리
@@ -551,8 +553,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         if (!uiStateSnapshot.isMeasureMode) {
           e.preventDefault();
           e.stopPropagation();
-          const undoButton = document.querySelector('[title="실행 취소 (Ctrl+Z)"]') as HTMLButtonElement | null;
-          undoButton?.click();
+          const previousState = useHistoryStore.getState().undo();
+          if (previousState) {
+            useSpaceConfigStore.getState().setSpaceInfo(previousState.spaceInfo);
+            useFurnitureStore.getState().setPlacedModules(previousState.placedModules);
+            useProjectStore.getState().setBasicInfo(previousState.basicInfo);
+          }
         }
         return;
       }
@@ -563,8 +569,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         if (!uiStateSnapshot.isMeasureMode) {
           e.preventDefault();
           e.stopPropagation();
-          const redoButton = document.querySelector('[title="다시 실행 (Ctrl+Y)"]') as HTMLButtonElement | null;
-          redoButton?.click();
+          const nextState = useHistoryStore.getState().redo();
+          if (nextState) {
+            useSpaceConfigStore.getState().setSpaceInfo(nextState.spaceInfo);
+            useFurnitureStore.getState().setPlacedModules(nextState.placedModules);
+            useProjectStore.getState().setBasicInfo(nextState.basicInfo);
+          }
         }
         return;
       }
