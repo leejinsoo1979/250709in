@@ -750,7 +750,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     // baseConfig.type === 'floor'일 때 actualBaseHeight에 이미 바닥마감재 포함
     const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
-    const inputBottomGap = doorBottomGap ?? baselineBottomGap;
+    // 띄움배치 시 doorBottomGap(기본 25mm)이 baselineBottomGap(floatHeight=200mm)보다 작으면
+    // 도어가 캐비넷 아래로 확장되는 문제 발생 → baselineBottomGap을 최소값으로 사용
+    const rawInputBottomGap = doorBottomGap ?? baselineBottomGap;
+    const inputBottomGap = placementType === 'float'
+      ? Math.max(rawInputBottomGap, baselineBottomGap)
+      : rawInputBottomGap;
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
 
