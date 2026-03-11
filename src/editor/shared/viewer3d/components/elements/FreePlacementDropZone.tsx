@@ -370,15 +370,32 @@ const FreePlacementDropZone: React.FC = () => {
 
   const ghostEffectiveHeight = useMemo(() => {
     if (!activeDimensions) return 0;
+    let h = activeDimensions.height;
+
     // full 카테고리만 단내림 높이 적용 (placeFurnitureFree와 동일 로직)
     if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined
       && activeCategory === 'full') {
-      console.log('👻 [ghostEffectiveHeight] 단내림 적용:', ghostDroppedZone.droppedInternalHeight, 'from', activeDimensions.height);
-      return ghostDroppedZone.droppedInternalHeight;
+      h = ghostDroppedZone.droppedInternalHeight;
     }
-    console.log('👻 [ghostEffectiveHeight] 기본 높이:', activeDimensions.height, 'zone:', ghostDroppedZone.zone, 'category:', activeCategory);
-    return activeDimensions.height;
-  }, [activeDimensions, ghostDroppedZone, activeCategory]);
+
+    // 띄움배치 시 가구 높이를 가용 공간에 맞춰 축소 (full/lower만, placeFurnitureFree와 동일)
+    if (activeCategory !== 'upper') {
+      const isFloat =
+        spaceInfo.baseConfig?.placementType === 'float' &&
+        (spaceInfo.baseConfig?.floatHeight || 0) > 0;
+      if (isFloat) {
+        const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        const topFrameMM = spaceInfo.frameSize?.top || 30;
+        const floatHeightMM = spaceInfo.baseConfig?.floatHeight || 0;
+        const availableHeightMM = spaceInfo.height - floorFinishMM - topFrameMM - floatHeightMM;
+        if (h > availableHeightMM) {
+          h = Math.max(availableHeightMM, 0);
+        }
+      }
+    }
+
+    return h;
+  }, [activeDimensions, ghostDroppedZone, activeCategory, spaceInfo]);
 
   // 고스트 Y 위치 계산 — calculateYPosition과 동일 로직 사용
   const ghostYThree = useMemo(() => {
