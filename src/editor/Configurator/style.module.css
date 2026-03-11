@@ -820,7 +820,7 @@
   position: fixed;
   inset: 0;
   z-index: 10002;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.6);
   animation: slotGuideDimIn 0.15s ease-out;
   pointer-events: none;
 }
