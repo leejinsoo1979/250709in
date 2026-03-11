@@ -284,8 +284,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         </div>
       )}
 
-      <div className={styles.spacer} />
-
       {/* 검색바 */}
       {onSearchChange !== undefined && (
         <div className={styles.searchBox}>
