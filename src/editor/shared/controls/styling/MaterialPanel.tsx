@@ -94,11 +94,13 @@ const MaterialPanel: React.FC = () => {
   // 스토어 업데이트 함수
   const updateStoreColor = (color: string) => {
     const propertyKey = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
+    const textureKey = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
     const newMaterialConfig = {
       ...materialConfig,
-      [propertyKey]: color
+      [propertyKey]: color,
+      [textureKey]: undefined  // 색상 직접 변경 시 텍스처 해제
     };
-    
+
     setSpaceInfo({
       materialConfig: newMaterialConfig
     });
