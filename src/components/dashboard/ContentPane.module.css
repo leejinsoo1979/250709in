@@ -129,41 +129,6 @@
   opacity: 0.7;
 }
 
-/* ── 전체선택 바 (선택 시 표시) ── */
-.selectionBar {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 12px;
-  background: var(--theme-primary-light, rgba(59, 130, 246, 0.08));
-  border-radius: 6px;
-  margin-bottom: 4px;
-}
-
-.selectionBarLabel {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--theme-text);
-  user-select: none;
-}
-
-.selectionBarLabel input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: var(--theme-primary);
-}
-
-.selectionBarCount {
-  font-size: 12px;
-  color: var(--theme-text-muted);
-}
-
 /* ── 아이템 체크박스 ── */
 .itemCheckbox {
   position: absolute;

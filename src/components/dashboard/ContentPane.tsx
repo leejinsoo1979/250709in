@@ -169,34 +169,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     );
   };
 
-  // 전체선택 바 렌더링 (선택된 항목이 있을 때만 표시)
-  const isAllSelected = filteredItems.length > 0 && selectedItems.size === filteredItems.length;
-  const renderSelectionBar = () => {
-    if (!hasSelection || !onSelectAll) return null;
-    return (
-      <div className={styles.selectionBar}>
-        <label className={styles.selectionBarLabel}>
-          <input
-            type="checkbox"
-            checked={isAllSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = !isAllSelected && hasSelection;
-            }}
-            onChange={() => {
-              if (isAllSelected) {
-                onClearSelection?.();
-              } else {
-                onSelectAll();
-              }
-            }}
-          />
-          <span>전체선택</span>
-        </label>
-        <span className={styles.selectionBarCount}>{selectedItems.size}개 선택됨</span>
-      </div>
-    );
-  };
-
   // 드래그 속성 생성 헬퍼
   const getDragProps = (item: ExplorerItem) => {
     const isFolder = item.type === 'folder';
@@ -284,7 +256,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (viewMode === 'details') {
     return (
       <div className={styles.detailsTable} onClick={handleGridClick}>
-        {renderSelectionBar()}
         <div className={styles.tableHeader}>
           <div className={styles.colName} onClick={onSortDirectionToggle}>
             이름 {sortBy === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
@@ -334,7 +305,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (viewMode === 'list') {
     return (
       <div className={styles.listView} onClick={handleGridClick}>
-        {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -362,7 +332,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (viewMode === 'tiles') {
     return (
       <div className={styles.tileGrid} onClick={handleGridClick}>
-        {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -409,7 +378,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         className={styles.saasGrid}
         onClick={handleGridClick}
       >
-        {renderSelectionBar()}
         {filteredItems.map(item => {
           // 프로젝트/디자인/폴더 → SaaS 카드
           return (
@@ -510,7 +478,6 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
       onClick={handleGridClick}
     >
-      {renderSelectionBar()}
       {filteredItems.map(item => (
         <div
           key={item.id}

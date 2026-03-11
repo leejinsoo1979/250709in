@@ -50,6 +50,10 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onCreateFolder,
   onCreateDesign,
   nav,
+  totalItemCount = 0,
+  selectedCount = 0,
+  onSelectAll,
+  onClearSelection,
   searchTerm,
   onSearchChange,
   projects,
@@ -229,11 +233,35 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     }
   };
 
+  const hasSelection = selectedCount > 0;
+  const isAllSelected = totalItemCount > 0 && selectedCount === totalItemCount;
+
   return (
     <div className={styles.toolbar}>
-      {/* 좌측 액션 버튼 */}
+      {/* 좌측: 선택 바 또는 액션 버튼 */}
       <div className={styles.actions}>
-        {isTrash ? (
+        {hasSelection ? (
+          <div className={styles.selectionBar}>
+            <label className={styles.selectionBarLabel}>
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                ref={(el) => {
+                  if (el) el.indeterminate = !isAllSelected && hasSelection;
+                }}
+                onChange={() => {
+                  if (isAllSelected) {
+                    onClearSelection?.();
+                  } else {
+                    onSelectAll?.();
+                  }
+                }}
+              />
+              <span>전체선택</span>
+            </label>
+            <span className={styles.selectionBarCount}>{selectedCount}개 선택됨</span>
+          </div>
+        ) : isTrash ? (
           <>
             {onRestore && (
               <button className={styles.createBtn} onClick={onRestore}>

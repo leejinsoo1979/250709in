@@ -258,6 +258,40 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* 선택 바 */
+.selectionBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: var(--theme-primary);
+  color: white;
+  font-size: 12px;
+  height: 28px;
+}
+
+.selectionBarLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.selectionBarLabel input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: white;
+}
+
+.selectionBarCount {
+  opacity: 0.85;
+  font-size: 12px;
+}
+
 /* 생성 버튼 */
 .actions {
   display: flex;
