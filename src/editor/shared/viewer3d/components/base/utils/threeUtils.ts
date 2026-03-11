@@ -59,10 +59,9 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
  * 최적화된 카메라 거리 계산 (3D 모드에서 충분히 멀리, 큰 공간도 전체 표시)
  */
 export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
-  // H<=2400 && W=1200~2300: 상단 치수 라벨이 잘리므로 패딩 추가
-  // 그 외: 기존 로직 유지
-  const needsLabelPadding = height <= 2400 && width >= 1200 && width <= 2300;
-  const effectiveHeight = needsLabelPadding ? height + 400 : height;
+  // H<2400: 상단 치수 라벨(전체폭, 내경, 구간별, 이격거리 등)이 잘리므로
+  // 최소 유효 높이를 2400으로 보장하여 카메라가 충분한 영역을 포함하도록 함
+  const effectiveHeight = height < 2400 ? Math.max(height + 600, 2400) : height;
 
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
   const diagonal = Math.sqrt(width * width + effectiveHeight * effectiveHeight + depth * depth);
