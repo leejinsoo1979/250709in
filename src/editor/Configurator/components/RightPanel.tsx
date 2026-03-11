@@ -77,14 +77,14 @@ const FormControl: React.FC<FormControlProps> = ({
       <div className={styles.formIndicator}></div>
       <h3 className={styles.formLabel}>{label}</h3>
       {onToggle && (
-        <svg 
-          width="18" 
-          height="18" 
-          viewBox="0 0 24 24" 
-          fill="none" 
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
           className={`${styles.expandIcon} ${expanded ? styles.expanded : ''}`}
         >
-          <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2"/>
+          <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2.5"/>
         </svg>
       )}
     </div>

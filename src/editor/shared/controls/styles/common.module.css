@@ -226,32 +226,32 @@
 .toggleButtonGroup {
   display: flex;
   background: var(--theme-background-secondary);
-  border-radius: 6px;
+  border-radius: 5px;
   padding: 2px;
   overflow: hidden;
   border: none;
-  gap: 2px;
+  gap: 1px;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
   border-right: none;
-  min-height: 28px;
+  min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
   min-width: 0;
-  border-radius: 5px;
+  border-radius: 4px;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
 }
