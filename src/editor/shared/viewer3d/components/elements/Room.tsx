@@ -195,7 +195,7 @@ const BoxWithEdges: React.FC<{
             color={
               // 3D solid 모드에서 외곽 프레임 엣지도 표시
               isOuterFrame && renderMode === 'solid' && viewMode === '3D'
-                ? (theme?.mode === 'dark' ? "#555555" : "#aaaaaa")
+                ? "#3a3a3a"
                 : // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
                 material instanceof THREE.MeshBasicMaterial
                   ? "#" + material.color.getHexString()
