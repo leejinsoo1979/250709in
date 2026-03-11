@@ -184,7 +184,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               />
             ))}
             <motion.span
-              className="font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide ml-4"
+              className="font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide ml-6"
               style={{ display: 'inline-flex', color: isDark ? '#fff' : '#000' }}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
