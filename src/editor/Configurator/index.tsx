@@ -2594,22 +2594,9 @@ const Configurator: React.FC = () => {
     }
 
     // 노서라운드 빌트인 모드에서 컬럼 수 변경 시 자동 이격거리 계산
-    if (spaceInfo.surroundType === 'no-surround' &&
-      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') &&
-      (finalUpdates.customColumnCount !== undefined || finalUpdates.mainDoorCount !== undefined)) {
-
-      const tempSpaceInfo = { ...spaceInfo, ...finalUpdates };
-      const indexing = calculateSpaceIndexing(tempSpaceInfo);
-
-      if (indexing.optimizedGapConfig) {
-        console.log('📏 컬럼 수 변경 - 자동 이격거리 적용:', {
-          customColumnCount: finalUpdates.customColumnCount,
-          mainDoorCount: finalUpdates.mainDoorCount,
-          optimizedGap: indexing.optimizedGapConfig
-        });
-        finalUpdates.gapConfig = indexing.optimizedGapConfig;
-      }
-    }
+    // 최적화 로직이 비활성화(if false)되어 있어 optimizedGapConfig가 기존 gapConfig를 그대로 반환하므로
+    // gapConfig를 덮어쓰면 middle/top 등 추가 필드가 유실됨 → 비활성화
+    // if (spaceInfo.surroundType === 'no-surround' && ...) { ... }
 
     console.log('🔧 최종 업데이트 적용:', {
       updates: finalUpdates,
