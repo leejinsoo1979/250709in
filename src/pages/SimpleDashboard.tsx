@@ -728,6 +728,8 @@ const SimpleDashboard: React.FC = () => {
                 onClearSelection={actions.clearSelection}
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
+                projects={data.projects}
+                folders={data.folders}
               />
 
               <ContentPane

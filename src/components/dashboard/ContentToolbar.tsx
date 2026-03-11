@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder, Search } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
+import type { ProjectSummary } from '@/firebase/types';
+import type { FolderData } from '@/firebase/projects';
 import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
@@ -19,6 +21,8 @@ interface ContentToolbarProps {
   onClearSelection?: () => void;
   searchTerm?: string;
   onSearchChange?: (value: string) => void;
+  projects?: ProjectSummary[];
+  folders?: { [projectId: string]: FolderData[] };
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -44,9 +48,13 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onClearSelection,
   searchTerm,
   onSearchChange,
+  projects,
+  folders,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
   const viewMenuRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!viewMenuOpen) return;
@@ -58,6 +66,49 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [viewMenuOpen]);
+
+  // 브레드크럼 드롭다운 외부 클릭 닫기
+  useEffect(() => {
+    if (!dropdownOpenId) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpenId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpenId]);
+
+  const getDropdownItems = (item: BreadcrumbItem) => {
+    if (item.type === 'root' && projects) {
+      return projects.filter(p => !p.isDeleted).map(p => ({
+        id: p.id,
+        label: p.title,
+        type: 'project' as const,
+      }));
+    }
+    if (item.type === 'project' && folders && nav?.currentProjectId) {
+      const projectFolders = folders[nav.currentProjectId] || [];
+      return projectFolders.map(f => ({
+        id: f.id,
+        label: f.name,
+        type: 'folder' as const,
+      }));
+    }
+    return [];
+  };
+
+  const handleDropdownItemClick = (dropdownItem: { id: string; type: 'project' | 'folder' }) => {
+    if (!nav) return;
+    if (dropdownItem.type === 'project') {
+      const project = projects?.find(p => p.id === dropdownItem.id);
+      nav.navigateTo(dropdownItem.id, null, project?.title || dropdownItem.id);
+    } else if (dropdownItem.type === 'folder') {
+      const folder = folders?.[nav.currentProjectId!]?.find(f => f.id === dropdownItem.id);
+      nav.navigateTo(nav.currentProjectId, dropdownItem.id, folder?.name || dropdownItem.id);
+    }
+    setDropdownOpenId(null);
+  };
 
   const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
 
@@ -137,20 +188,53 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
           </button>
 
           <div className={styles.breadcrumb}>
-            {nav.breadcrumbPath.map((item, i) => (
-              <React.Fragment key={item.id}>
-                {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
-                <button
-                  className={`${styles.breadcrumbItem} ${
-                    i === nav.breadcrumbPath.length - 1 ? styles.breadcrumbActive : ''
-                  }`}
-                  onClick={() => handleBreadcrumbClick(item)}
-                >
-                  <span className={styles.breadcrumbIcon}>{getBreadcrumbIcon(item)}</span>
-                  {item.label}
-                </button>
-              </React.Fragment>
-            ))}
+            {nav.breadcrumbPath.map((item, i) => {
+              const isLast = i === nav.breadcrumbPath.length - 1;
+              const dropdownItems = getDropdownItems(item);
+              const showChevron = !isLast && dropdownItems.length > 0;
+              return (
+                <React.Fragment key={item.id}>
+                  {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
+                  <div className={styles.breadcrumbSegment} ref={dropdownOpenId === item.id ? dropdownRef : undefined}>
+                    <button
+                      className={`${styles.breadcrumbItem} ${isLast ? styles.breadcrumbActive : ''}`}
+                      onClick={() => handleBreadcrumbClick(item)}
+                    >
+                      <span className={styles.breadcrumbIcon}>{getBreadcrumbIcon(item)}</span>
+                      {item.label}
+                    </button>
+                    {showChevron && (
+                      <button
+                        className={styles.breadcrumbChevron}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDropdownOpenId(prev => prev === item.id ? null : item.id);
+                        }}
+                      >
+                        <ChevronDown size={10} />
+                      </button>
+                    )}
+                    {dropdownOpenId === item.id && (
+                      <div className={styles.breadcrumbDropdown}>
+                        {dropdownItems.map(di => (
+                          <button
+                            key={di.id}
+                            className={styles.breadcrumbDropdownItem}
+                            onClick={() => handleDropdownItemClick(di)}
+                          >
+                            {di.type === 'project' ? <Folder size={13} /> : <FcFolder size={13} />}
+                            <span>{di.label}</span>
+                          </button>
+                        ))}
+                        {dropdownItems.length === 0 && (
+                          <div className={styles.breadcrumbDropdownEmpty}>항목 없음</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </React.Fragment>
+              );
+            })}
           </div>
         </div>
       )}
