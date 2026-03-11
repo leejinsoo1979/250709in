@@ -1,61 +1,64 @@
 import React from 'react';
-import { FrameConfig } from '@/store/core/spaceConfigStore';
+import { SurroundType, FrameConfig } from '@/store/core/spaceConfigStore';
 import styles from '../../styles/common.module.css';
-import { useTranslation } from '@/i18n/useTranslation';
 
 interface SurroundTypeSelectorProps {
-  frameConfig: FrameConfig;
-  onFrameConfigChange: (config: FrameConfig) => void;
+  surroundType: SurroundType;
+  onSurroundTypeChange: (type: SurroundType) => void;
+  frameConfig?: FrameConfig;
+  onFrameConfigChange?: (key: 'top' | 'bottom', value: boolean) => void;
   disabled?: boolean;
 }
 
 const SurroundTypeSelector: React.FC<SurroundTypeSelectorProps> = ({
+  surroundType,
+  onSurroundTypeChange,
   frameConfig,
   onFrameConfigChange,
   disabled = false
 }) => {
-  const { t } = useTranslation();
-
-  const toggleFrame = (key: keyof FrameConfig) => {
-    if (disabled) return;
-    onFrameConfigChange({
-      ...frameConfig,
-      [key]: !frameConfig[key],
-    });
-  };
+  const isSurround = surroundType === 'surround';
+  const isNoSurround = surroundType === 'no-surround';
 
   return (
     <div className={styles.section}>
+      {/* 서라운드/노서라운드 선택 */}
       <div className={styles.toggleButtonGroup}>
         <button
-          className={`${styles.toggleButton} ${frameConfig.left ? styles.toggleButtonActive : ''}`}
-          onClick={() => toggleFrame('left')}
+          className={`${styles.toggleButton} ${isSurround ? styles.toggleButtonActive : ''}`}
+          onClick={() => !disabled && onSurroundTypeChange('surround')}
           disabled={disabled}
         >
-          {t('space.frameLeft') || '좌'}
+          서라운드(일반)
         </button>
         <button
-          className={`${styles.toggleButton} ${frameConfig.right ? styles.toggleButtonActive : ''}`}
-          onClick={() => toggleFrame('right')}
+          className={`${styles.toggleButton} ${isNoSurround ? styles.toggleButtonActive : ''}`}
+          onClick={() => !disabled && onSurroundTypeChange('no-surround')}
           disabled={disabled}
         >
-          {t('space.frameRight') || '우'}
-        </button>
-        <button
-          className={`${styles.toggleButton} ${frameConfig.top ? styles.toggleButtonActive : ''}`}
-          onClick={() => toggleFrame('top')}
-          disabled={disabled}
-        >
-          {t('space.frameTop') || '상'}
-        </button>
-        <button
-          className={`${styles.toggleButton} ${frameConfig.bottom ? styles.toggleButtonActive : ''}`}
-          onClick={() => toggleFrame('bottom')}
-          disabled={disabled}
-        >
-          {t('space.frameBottom') || '하'}
+          노서라운드(타이트)
         </button>
       </div>
+
+      {/* 상/하 프레임 체크박스 */}
+      {frameConfig && onFrameConfigChange && (
+        <div className={styles.toggleButtonGroup} style={{ marginTop: '6px' }}>
+          <button
+            className={`${styles.toggleButton} ${frameConfig.top ? styles.toggleButtonActive : ''}`}
+            onClick={() => !disabled && onFrameConfigChange('top', !frameConfig.top)}
+            disabled={disabled}
+          >
+            상
+          </button>
+          <button
+            className={`${styles.toggleButton} ${frameConfig.bottom ? styles.toggleButtonActive : ''}`}
+            onClick={() => !disabled && onFrameConfigChange('bottom', !frameConfig.bottom)}
+            disabled={disabled}
+          >
+            하
+          </button>
+        </div>
+      )}
     </div>
   );
 };

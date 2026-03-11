@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { SpaceInfo, FrameConfig } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, SurroundType } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSurroundCalculations } from './hooks/useSurroundCalculations';
 import SurroundTypeSelector from './components/SurroundTypeSelector';
 import GapControls from './components/GapControls';
 import FrameSizeControls from './components/FrameSizeControls';
-import { deriveFromFrameConfig, inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
+import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 
 interface SurroundControlsProps {
   spaceInfo: SpaceInfo;
@@ -43,7 +43,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   useEffect(() => {
     const prev = prevSpaceInfoRef.current;
     const current = spaceInfo;
-    
+
     // 실제로 중요한 값들이 변경되었을 때만 재계산
     if (
       prev.width !== current.width ||
@@ -62,75 +62,94 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     if (isSurround && spaceInfo.frameSize) {
       let needsUpdate = false;
       const updates = { ...spaceInfo.frameSize };
-      
+
       if (!hasLeftWall && updates.left !== END_PANEL_WIDTH) {
         updates.left = END_PANEL_WIDTH;
         needsUpdate = true;
       }
-      
+
       if (!hasRightWall && updates.right !== END_PANEL_WIDTH) {
         updates.right = END_PANEL_WIDTH;
         needsUpdate = true;
       }
-      
+
       if (needsUpdate) {
         onUpdate({ frameSize: updates });
       }
     }
   }, [isSurround, hasLeftWall, hasRightWall, spaceInfo.frameSize, onUpdate]);
 
-  // 프레임 설정 변경 처리 (4 체크박스)
-  const handleFrameConfigChange = (newFrameConfig: FrameConfig) => {
-    console.log('🔧 SurroundControls - handleFrameConfigChange called:', newFrameConfig);
-
-    // 브릿지로 기존 타입 도출
-    const derived = deriveFromFrameConfig(newFrameConfig, spaceInfo);
-
+  // 서라운드 타입 변경 처리 (기존 로직 유지)
+  const handleSurroundTypeChange = (type: SurroundType) => {
+    console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
     const updates: Partial<SpaceInfo> = {
-      frameConfig: newFrameConfig,
-      surroundType: derived.surroundType,
-      frameSize: derived.frameSize,
-      baseConfig: derived.baseConfig,
+      surroundType: type,
     };
 
-    // 설치 타입에 따라 프레임 크기 보정
-    const installType = spaceInfo.installType;
-    if (newFrameConfig.left || newFrameConfig.right) {
+    if (type === 'surround') {
+      // 서라운드 모드: 설치 타입에 따라 프레임 크기 결정
+      const installType = spaceInfo.installType;
+
       if (installType === 'builtin' || installType === 'built-in') {
-        if (newFrameConfig.left && derived.frameSize.left === 0) updates.frameSize!.left = 50;
-        if (newFrameConfig.right && derived.frameSize.right === 0) updates.frameSize!.right = 50;
+        updates.frameSize = { left: 50, right: 50, top: spaceInfo.frameSize?.top || 10 };
       } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        if (newFrameConfig.left && derived.frameSize.left === 0) {
-          updates.frameSize!.left = hasLeftWall ? 50 : END_PANEL_WIDTH;
-        }
-        if (newFrameConfig.right && derived.frameSize.right === 0) {
-          updates.frameSize!.right = hasRightWall ? 50 : END_PANEL_WIDTH;
-        }
+        updates.frameSize = {
+          left: hasLeftWall ? 50 : END_PANEL_WIDTH,
+          right: hasRightWall ? 50 : END_PANEL_WIDTH,
+          top: spaceInfo.frameSize?.top || 10,
+        };
       } else if (installType === 'freestanding') {
-        if (newFrameConfig.left && derived.frameSize.left === 0) updates.frameSize!.left = END_PANEL_WIDTH;
-        if (newFrameConfig.right && derived.frameSize.right === 0) updates.frameSize!.right = END_PANEL_WIDTH;
+        updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: spaceInfo.frameSize?.top || 10 };
       }
-    }
 
-    // top이 새로 켜질 때 기본값 보정
-    if (newFrameConfig.top && derived.frameSize.top === 0) {
-      updates.frameSize!.top = 10;
-    }
-
-    // 이격거리 설정
-    if (derived.surroundType === 'surround') {
-      updates.gapConfig = {
-        left: 2,
-        right: 2
-      };
+      updates.gapConfig = { left: 2, right: 2 };
     } else {
-      if (installType !== 'builtin' && installType !== 'built-in') {
+      // 노서라운드(타이트) 설정
+      updates.frameSize = {
+        left: 0,
+        right: 0,
+        top: spaceInfo.frameSize?.top || 10
+      };
+
+      if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
         const gapSizeValue = 2;
         updates.gapConfig = {
           left: hasLeftWall ? gapSizeValue : 0,
           right: hasRightWall ? gapSizeValue : 0,
         };
       }
+    }
+
+    // frameConfig도 동기화
+    updates.frameConfig = {
+      ...frameConfig,
+      left: type === 'surround',
+      right: type === 'surround',
+    };
+
+    onUpdate(updates);
+  };
+
+  // 상/하 프레임 토글 처리
+  const handleTopBottomToggle = (key: 'top' | 'bottom', value: boolean) => {
+    const updates: Partial<SpaceInfo> = {
+      frameConfig: { ...frameConfig, [key]: value },
+    };
+
+    if (key === 'top') {
+      // 상 프레임 토글: frameSize.top을 0 또는 기존값으로 변경
+      updates.frameSize = {
+        ...frameSize,
+        top: value ? 10 : 0,
+      };
+    } else if (key === 'bottom') {
+      // 하 프레임 토글: baseConfig.type을 floor/stand로 변경
+      const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+      updates.baseConfig = {
+        ...currentBaseConfig,
+        type: value ? 'floor' : 'stand',
+        placementType: value ? currentBaseConfig.placementType : 'ground',
+      };
     }
 
     onUpdate(updates);
@@ -183,16 +202,13 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     }
 
     if (e.key === 'Enter') {
-      // Enter 키: 현재 input 값을 가져와서 store 업데이트
       const input = e.target as HTMLInputElement;
       let value = parseInt(input.value, 10);
 
-      // 유효하지 않은 숫자라면 기본값 사용
       if (isNaN(value)) {
         value = dimension === 'top' ? 10 : 50;
       }
 
-      // 범위 검증
       if (dimension === 'left' || dimension === 'right') {
         if (value < 40) value = 40;
         if (value > 100) value = 100;
@@ -201,7 +217,6 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         if (value > 200) value = 200;
       }
 
-      // store 업데이트
       if (spaceInfo.frameSize) {
         onUpdate({
           frameSize: {
@@ -211,13 +226,12 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         });
       }
 
-      // blur 처리
       input.blur();
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
 
       const currentValue = frameSize[dimension];
-      
+
       let minValue, maxValue;
       if (dimension === 'left' || dimension === 'right') {
         minValue = 40;
@@ -226,7 +240,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         minValue = 10;
         maxValue = 200;
       }
-      
+
       let newValue;
       if (e.key === 'ArrowUp') {
         newValue = Math.min(currentValue + 1, maxValue);
@@ -248,10 +262,12 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   return (
     <div className={styles.container}>
-      {/* 프레임 선택 (좌/우/상/하) */}
+      {/* 서라운드 타입 선택 + 상/하 토글 */}
       <SurroundTypeSelector
+        surroundType={spaceInfo.surroundType || 'surround'}
+        onSurroundTypeChange={handleSurroundTypeChange}
         frameConfig={frameConfig}
-        onFrameConfigChange={handleFrameConfigChange}
+        onFrameConfigChange={handleTopBottomToggle}
         disabled={disabled}
       />
 
@@ -283,4 +299,4 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   );
 };
 
-export default SurroundControls; 
+export default SurroundControls;
