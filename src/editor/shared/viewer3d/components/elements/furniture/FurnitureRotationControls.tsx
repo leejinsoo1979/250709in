@@ -74,7 +74,7 @@ export const FurnitureRotationControls: React.FC<FurnitureRotationControlsProps>
         background: 'transparent'
       }}
     >
-      <div className={styles.furnitureRotationControls}>
+      <div className={styles.furnitureRotationControls} onPointerDown={() => { (window as any).__r3fClickHandled = true; }}>
         {/* 회전 컨트롤 패널 */}
         <div className={styles.rotationPanel}>
           <div className={styles.rotationDisplay}>

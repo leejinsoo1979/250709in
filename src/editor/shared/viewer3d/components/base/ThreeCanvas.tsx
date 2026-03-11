@@ -915,6 +915,42 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     >
       <div
         ref={containerRef}
+        onPointerDown={(e) => {
+          // HTML UI 요소(input, button, select) 클릭은 무시
+          const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+          if (tag === 'input' || tag === 'button' || tag === 'select' || tag === 'textarea') return;
+
+          // 허공 클릭 시 팝업 닫기/고스트 해제를 위한 플래그 설정
+          (window as any).__canvasPointerDownTime = Date.now();
+          (window as any).__canvasPointerDownPos = { x: e.clientX, y: e.clientY };
+          (window as any).__r3fClickHandled = false;
+        }}
+        onPointerUp={(e) => {
+          const downTime = (window as any).__canvasPointerDownTime;
+          const downPos = (window as any).__canvasPointerDownPos;
+          if (!downTime || !downPos) return;
+
+          // 드래그가 아닌 클릭인지 확인 (이동 거리 5px 이내, 시간 300ms 이내)
+          const dx = e.clientX - downPos.x;
+          const dy = e.clientY - downPos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const elapsed = Date.now() - downTime;
+
+          if (dist < 5 && elapsed < 300) {
+            // R3F 이벤트 처리 후 실행되도록 다음 프레임에서 확인
+            requestAnimationFrame(() => {
+              if (!(window as any).__r3fClickHandled) {
+                useFurnitureStore.getState().setSelectedFurnitureId(null);
+                useUIStore.getState().setSelectedFurnitureId(null);
+                useUIStore.getState().closeAllPopups();
+              }
+              (window as any).__r3fClickHandled = false;
+            });
+          }
+
+          (window as any).__canvasPointerDownTime = null;
+          (window as any).__canvasPointerDownPos = null;
+        }}
         style={{
           width: '100%',
           height: '100%',

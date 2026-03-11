@@ -69,6 +69,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 드래그 중이면 무시
     if (useFurnitureStore.getState().currentDragData) return;
     e.stopPropagation();
+    (window as any).__r3fClickHandled = true; // 허공 클릭 deselect 중복 방지
     useFurnitureStore.getState().setSelectedFurnitureId(null);
     useUIStore.getState().setSelectedFurnitureId(null);
     useUIStore.getState().closeAllPopups();

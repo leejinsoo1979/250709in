@@ -325,11 +325,18 @@ const FreePlacementDropZone: React.FC = () => {
     setIsColliding(false);
   }, []);
 
-  // R3F onClick - 클릭하면 즉시 배치
+  // R3F onClick - 클릭하면 즉시 배치, 배치 모드가 아니면 선택 해제
   const handleClick = useCallback(
     (e: any) => {
-      if (!activeModuleId || !activeModuleData || !activeDimensions || hoverXmm === null || isColliding)
+      if (!activeModuleId || !activeModuleData || !activeDimensions || hoverXmm === null || isColliding) {
+        // 배치 모드가 아닌 경우: 허공 클릭 시 선택 해제 및 팝업 닫기
+        e.stopPropagation();
+        (window as any).__r3fClickHandled = true; // HTML레벨 deselect 중복 방지
+        useFurnitureStore.getState().setSelectedFurnitureId(null);
+        useUIStore.getState().setSelectedFurnitureId(null);
+        useUIStore.getState().closeAllPopups();
         return;
+      }
       e.stopPropagation();
       const placed = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData, isSnapped);
       if (placed) {

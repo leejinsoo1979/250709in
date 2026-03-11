@@ -2711,6 +2711,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
         onClick={(e) => {
+          // 가구 클릭 → 허공 클릭 deselect 방지 플래그 설정
+          (window as any).__r3fClickHandled = true;
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
@@ -2791,6 +2793,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      (window as any).__r3fClickHandled = true;
                       const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
                       const newLockedState = !placedModule.isLocked;
                       updatePlacedModule(placedModule.id, { isLocked: newLockedState });
@@ -2831,6 +2834,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      (window as any).__r3fClickHandled = true;
                       if (placedModule.isLocked) {
                         return;
                       }
@@ -2866,6 +2870,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      (window as any).__r3fClickHandled = true;
                       if (placedModule.isLocked) {
                         return;
                       }
@@ -3429,6 +3434,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               }}
               onClick={(e) => {
                 e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
                 // 이미 편집 모드라면 팝업 닫기
                 if (isEditMode) {
                   const closeAllPopups = useUIStore.getState().closeAllPopups;

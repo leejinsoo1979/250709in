@@ -256,6 +256,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           <div
             onClick={(e) => {
               e.stopPropagation();
+              (window as any).__r3fClickHandled = true;
               console.log('🔵 [SlotIndicators] + 아이콘 클릭:', { slotIndex: slot.slotIndex, zone: slot.zone });
               console.log('🔵 [SlotIndicators] onSlotClick 함수:', onSlotClick);
               console.log('🔵 [SlotIndicators] onSlotClick 호출 시작');
