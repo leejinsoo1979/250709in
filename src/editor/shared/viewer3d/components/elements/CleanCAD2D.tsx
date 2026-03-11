@@ -1883,7 +1883,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY + mmToThreeUnits(40), 0.001]]}
+              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), slotDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
@@ -1893,7 +1893,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
       </group>
       )}
-      
+
       {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 오른쪽 벽이 있는지 확인
@@ -2082,7 +2082,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 - topDimensionY(3600선)까지 연장 */}
             <NativeLine name="dimension_line"
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY + mmToThreeUnits(40), 0.001]]}
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), slotDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
