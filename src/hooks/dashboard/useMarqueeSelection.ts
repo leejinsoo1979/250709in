@@ -22,8 +22,9 @@ export function useMarqueeSelection({
 }: UseMarqueeSelectionOptions) {
   const [marqueeRect, setMarqueeRect] = useState<MarqueeRect | null>(null);
   const isDrawingRef = useRef(false);
+  const didDrawRef = useRef(false); // 실제 마키 드래그가 발생했는지
   const startPointRef = useRef({ x: 0, y: 0 });
-  const addModeRef = useRef(false); // Ctrl 누른 채 마키 → 기존 선택에 추가
+  const addModeRef = useRef(false);
 
   const getItemElements = useCallback(() => {
     if (!containerRef.current) return [];
@@ -36,7 +37,6 @@ export function useMarqueeSelection({
 
     for (const el of items) {
       const elRect = el.getBoundingClientRect();
-      // 겹침 판정
       if (
         rect.x < elRect.right &&
         rect.x + rect.width > elRect.left &&
@@ -53,25 +53,30 @@ export function useMarqueeSelection({
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!enabled) return;
-    // 아이템 위에서 시작하면 무시 (아이템 드래그용)
     const target = e.target as HTMLElement;
     if (target.closest('[data-item-card]')) return;
-    // INPUT, TEXTAREA, SELECT, BUTTON 등 인터랙티브 요소에서는 마키 무시
-    if (target.closest('input, textarea, select, button')) return;
-    // 좌클릭만
+    if (target.closest('input, textarea, select, button, [data-no-marquee]')) return;
     if (e.button !== 0) return;
 
     isDrawingRef.current = true;
+    didDrawRef.current = false;
     addModeRef.current = e.ctrlKey || e.metaKey;
     startPointRef.current = { x: e.clientX, y: e.clientY };
 
-    // Ctrl 안 누르면 기존 선택 초기화
     if (!addModeRef.current) {
       onSelectionChange(new Set());
     }
 
     e.preventDefault();
   }, [enabled, onSelectionChange]);
+
+  // 마키 드래그 직후 click 이벤트가 선택을 초기화하는 것을 방지
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (didDrawRef.current) {
+      e.stopPropagation();
+      didDrawRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
@@ -84,13 +89,12 @@ export function useMarqueeSelection({
       const width = Math.abs(e.clientX - startPointRef.current.x);
       const height = Math.abs(e.clientY - startPointRef.current.y);
 
-      // 최소 5px 이동해야 마키 시작
       if (width < 5 && height < 5) return;
 
+      didDrawRef.current = true;
       const rect: MarqueeRect = { x, y, width, height };
       setMarqueeRect(rect);
 
-      // 실시간 선택 업데이트
       const intersecting = getIntersectingIds(rect);
       if (addModeRef.current && existingSelection) {
         const merged = new Set(existingSelection);
@@ -121,6 +125,7 @@ export function useMarqueeSelection({
     marqueeRect,
     marqueeHandlers: {
       onMouseDown: handleMouseDown,
+      onClickCapture: handleClick,
     },
   };
 }
