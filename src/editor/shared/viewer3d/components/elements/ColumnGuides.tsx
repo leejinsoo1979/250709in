@@ -183,9 +183,47 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     });
   }, [spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount, spaceInfo.droppedCeiling, zoneSlotInfo]);
   
+  // 모든 슬롯이 가구로 채워졌는지 확인 — 다 차면 컬럼 가이드 숨김
+  const allSlotsFilled = React.useMemo(() => {
+    if (hasDroppedCeiling && zoneSlotInfo.dropped) {
+      // 단내림 있는 경우: 각 영역별로 확인
+      const normalOccupied = new Set<number>();
+      const droppedOccupied = new Set<number>();
+
+      placedModules.forEach(m => {
+        if (m.slotIndex === undefined) return;
+        const isDual = m.isDualSlot || m.moduleId.includes('dual-');
+        if (m.zone === 'dropped') {
+          droppedOccupied.add(m.slotIndex);
+          if (isDual) droppedOccupied.add(m.slotIndex + 1);
+        } else {
+          normalOccupied.add(m.slotIndex);
+          if (isDual) normalOccupied.add(m.slotIndex + 1);
+        }
+      });
+
+      const normalFilled = normalOccupied.size >= zoneSlotInfo.normal.columnCount;
+      const droppedFilled = droppedOccupied.size >= zoneSlotInfo.dropped.columnCount;
+      return normalFilled && droppedFilled;
+    } else {
+      // 단내림 없는 경우
+      const occupied = new Set<number>();
+      placedModules.forEach(m => {
+        if (m.slotIndex === undefined) return;
+        const isDual = m.isDualSlot || m.moduleId.includes('dual-');
+        occupied.add(m.slotIndex);
+        if (isDual) occupied.add(m.slotIndex + 1);
+      });
+      return occupied.size >= columnCount;
+    }
+  }, [placedModules, hasDroppedCeiling, zoneSlotInfo, columnCount]);
+
   // 1개 컬럼인 경우 가이드 표시 불필요 (단내림 활성화 시에는 표시)
   if (columnCount <= 1 && !hasDroppedCeiling) return null;
-  
+
+  // 모든 슬롯이 가구로 채워지면 컬럼 가이드 숨김
+  if (allSlotsFilled) return null;
+
   // 2D 측면뷰(좌/우)에서는 슬롯 가이드 숨김
   if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
     return null;
