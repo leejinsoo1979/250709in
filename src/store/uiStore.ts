@@ -191,6 +191,7 @@ interface UIState {
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
   setView2DDirection: (direction: View2DDirection) => void;
   toggleDoors: () => void;
+  setDoorsOpen: (open: boolean) => void;
   toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => void;
   isIndividualDoorOpen: (furnitureId: string, sectionIndex: number) => boolean;
   toggleDimensions: () => void;
@@ -376,6 +377,9 @@ export const useUIStore = create<UIState>()(
       
       toggleDoors: () =>
         set((state) => ({ doorsOpen: !state.doorsOpen })),
+
+      setDoorsOpen: (open: boolean) =>
+        set({ doorsOpen: open }),
 
       toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => {
         const key = `${furnitureId}-${sectionIndex}`;

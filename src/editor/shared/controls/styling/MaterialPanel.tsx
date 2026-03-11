@@ -66,14 +66,14 @@ const MaterialPanel: React.FC = () => {
   const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0', frameColor: '#E0E0E0' };
   
   // UI Store에서 도어 상태 가져오기
-  const { doorsOpen, toggleDoors } = useUIStore();
+  const { doorsOpen, setDoorsOpen } = useUIStore();
 
-  // materialTab 변경 시 도어 자동 열기/닫기
+  // materialTab 변경 시 도어 자동 열기/닫기 (마운트 시점 포함)
   useEffect(() => {
-    if (materialTab === 'interior' && !doorsOpen) {
-      toggleDoors();
-    } else if (materialTab === 'door' && doorsOpen) {
-      toggleDoors();
+    if (materialTab === 'interior') {
+      setDoorsOpen(true);
+    } else if (materialTab === 'door') {
+      setDoorsOpen(false);
     }
   }, [materialTab]);
 
@@ -450,10 +450,6 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'interior' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('interior');
-            // 내부면 탭 선택 시 도어 열기
-            if (!doorsOpen) {
-              toggleDoors();
-            }
           }}
         >
           <span className={styles.tabLabel}>{t('material.interior')}</span>
@@ -462,10 +458,6 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'door' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('door');
-            // 도어 탭 선택 시 도어 닫기
-            if (doorsOpen) {
-              toggleDoors();
-            }
           }}
         >
           <span className={styles.tabLabel}>{t('material.door')}</span>
@@ -474,7 +466,6 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'frame' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('frame');
-            // 프레임 탭에서는 도어 상태 변경 없음
           }}
         >
           <span className={styles.tabLabel}>프레임</span>
