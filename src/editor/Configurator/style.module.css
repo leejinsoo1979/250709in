@@ -948,6 +948,7 @@
 .configSection {
   border-bottom: none;
   padding: 0;
+  margin-bottom: 14px;
 }
 
 .configSection:last-child {
