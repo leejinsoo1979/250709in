@@ -60,10 +60,11 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
  */
 export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
   // 상단 치수 라벨(전체폭, 내경, 구간별, 이격거리 등)이 잘리지 않도록
-  // 카메라 타겟이 height/2 중앙이므로, 상단 라벨 영역까지 포함하려면
-  // 높이에 충분한 여백을 추가해야 함 (좁은 폭일수록 더 많은 여백 필요)
-  const labelPadding = Math.max(1200, height * 0.5); // 최소 1200mm 또는 높이의 50%
-  const effectiveHeight = height + labelPadding;
+  // H<3000: 카메라 타겟이 height/2 중앙이므로 상단 라벨 영역까지 여백 필요
+  // H>=3000: 기존 높이 그대로 사용 (충분히 안정적)
+  const effectiveHeight = height < 3000
+    ? height + Math.max(1200, height * 0.5)
+    : height;
 
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
   const diagonal = Math.sqrt(width * width + effectiveHeight * effectiveHeight + depth * depth);
