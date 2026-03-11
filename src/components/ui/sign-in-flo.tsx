@@ -280,7 +280,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
         <motion.div
           className="w-full max-w-md rounded-2xl p-10"
           style={{
-            border: `1.5px solid ${isDark ? '#71717a' : '#d1d5db'}`,
+            border: `1.5px solid ${isDark ? '#71717a' : '#000000'}`,
             background: isDark ? 'rgba(24,24,27,0.4)' : '#ffffff',
           }}
           initial={{ opacity: 0, y: 24 }}
