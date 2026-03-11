@@ -39,7 +39,7 @@ import SlotSelector from './components/SlotSelector';
 
 // 기존 작동하는 컴포넌트들
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
-import ModuleGallery from '@/editor/shared/controls/furniture/ModuleGallery';
+import ModuleGallery, { type ModuleType } from '@/editor/shared/controls/furniture/ModuleGallery';
 import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModulePropertiesPanel';
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
 import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFurnitureLibrary';
@@ -146,6 +146,7 @@ const Configurator: React.FC = () => {
   const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+  const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
   const [myCabinetEditMode, setMyCabinetEditMode] = useState(false); // My캐비닛 편집 모드
@@ -4297,6 +4298,7 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
             )}
+            <div className={styles.sidebarDivider} />
             {renderSidebarContent()}
           </div>
         </>
