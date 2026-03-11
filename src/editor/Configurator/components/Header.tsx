@@ -748,7 +748,7 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 className={styles.convertButton}
                 onClick={() => {
-                  alert('🚧 공사중입니다.');
+                  alert('공사중입니다.');
                 }}
               >
                 <SiConvertio size={20} />
