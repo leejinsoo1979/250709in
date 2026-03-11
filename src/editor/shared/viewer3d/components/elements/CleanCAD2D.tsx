@@ -1138,11 +1138,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
-          leftText = `이격 ${leftValue}`;
+          leftText = `이격 ${Math.round(leftValue)}`;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-          leftText = `${leftValue}`;
+          leftText = `${Math.round(leftValue)}`;
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -1253,11 +1253,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
-          rightText = `이격 ${rightValue}`;
+          rightText = `이격 ${Math.round(rightValue)}`;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-          rightText = `${rightValue}`;
+          rightText = `${Math.round(rightValue)}`;
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -1447,11 +1447,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return zoneSlotInfo.normal.width;
+                      return Math.round(zoneSlotInfo.normal.width);
                     })()}
                   </Text>
                 )}
-                
+
                 {/* 단내림 구간 치수선 */}
                 <Line
                   points={[[droppedStartX, subDimensionY, 0.002], [droppedEndX, subDimensionY, 0.002]]}
@@ -1484,7 +1484,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
                       let rightReduction = frameThickness.right;
-                      
+
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
@@ -1507,7 +1507,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width;
+                      return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
                     })()}
                   </Text>
                 )}
@@ -1657,11 +1657,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left ?? 1.5;
               if (leftValue === 0) return null;
-              leftText = `이격 ${leftValue}`;
+              leftText = `이격 ${Math.round(leftValue)}`;
             } else if (leftmostFurnitureX !== null) {
               // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
-              leftValue = Math.abs(distanceFromLeft);
+              leftValue = Math.round(Math.abs(distanceFromLeft));
               leftText = `${leftValue}`;
             }
             
@@ -1863,12 +1863,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right ?? 1.5;
               if (rightValue === 0) return null;
-              rightText = `이격 ${rightValue}`;
+              rightText = `이격 ${Math.round(rightValue)}`;
             } else if (rightmostFurnitureX !== null) {
               // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
               const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100; // mm 단위로 변환
-              rightValue = Math.abs(distanceFromRight);
+              rightValue = Math.round(Math.abs(distanceFromRight));
               rightText = `${rightValue}`;
             }
             
@@ -4880,13 +4880,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 왼쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left ?? 1.5;
                 if (leftValue === 0) return null;
-                leftText = `이격 ${leftValue}`;
+                leftText = `이격 ${Math.round(leftValue)}`;
               } else {
                 // 왼쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-                leftText = `${leftValue}`;
+                leftText = `${Math.round(leftValue)}`;
               }
               
               return (
@@ -4993,13 +4993,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 오른쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right ?? 1.5;
                 if (rightValue === 0) return null;
-                rightText = `이격 ${rightValue}`;
+                rightText = `이격 ${Math.round(rightValue)}`;
               } else {
                 // 오른쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
                 rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-                rightText = `${rightValue}`;
+                rightText = `${Math.round(rightValue)}`;
               }
               
               return (
@@ -5804,6 +5804,134 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             })()}
           </group>
         )}
+
+        {/* 캐비넷별 폭 치수선 - 외부로 이동하고 정면처럼 표시 */}
+        {showDimensions && placedModules.length > 0 && placedModules.map((module, index) => {
+          const moduleData = getModuleById(
+            module.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          );
+
+          if (!moduleData) return null;
+
+          // 기둥에 의해 조정된 너비와 위치 사용 (customWidth 우선)
+          const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
+          const moduleWidth = mmToThreeUnits(actualWidth);
+          // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
+          const actualPositionX = module.adjustedPosition?.x || module.position.x;
+          const leftX = actualPositionX - moduleWidth / 2;
+          const rightX = actualPositionX + moduleWidth / 2;
+
+          // 캐비넷 외부로 치수선 이동 (가이드라인보다 안쪽으로)
+          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
+
+          return (
+            <group key={`top-module-dim-${index}`}>
+              {/* 캐비넷 폭 치수선 */}
+              <Line
+                points={[[leftX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+
+              {/* 화살표들 */}
+              <Line
+                points={createArrowHead([leftX, spaceHeight, dimZ], [leftX + 0.02, spaceHeight, dimZ], 0.01)}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              <Line
+                points={createArrowHead([rightX, spaceHeight, dimZ], [rightX - 0.02, spaceHeight, dimZ], 0.01)}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+
+              {/* 캐비넷 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
+              <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                position={[actualPositionX, spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
+                fontSize={baseFontSize}
+                color={dimensionColor}
+                anchorX="center"
+                anchorY="middle"
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                {Math.round(actualWidth)}
+              </Text>
+
+              {/* 연장선들 - 가구 앞단에서 치수선까지 */}
+              {(() => {
+                // 좌우 깊이가 다른 가구인지 확인
+                const isDualModule = moduleData?.id.includes('dual') || false;
+                const rightAbsoluteDepth = moduleData?.modelConfig?.rightAbsoluteDepth;
+                const hasAsymmetricDepth = isDualModule && rightAbsoluteDepth;
+
+                const panelDepthMm = spaceInfo.depth || 600;
+                const furnitureDepthMm = Math.min(panelDepthMm, 600);
+                const doorThicknessMm = 20;
+                const actualDepthMm = module.customDepth || moduleData?.dimensions?.depth || 580;
+
+                const panelDepth = mmToThreeUnits(panelDepthMm);
+                const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+                const doorThickness = mmToThreeUnits(doorThicknessMm);
+
+                const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
+
+                if (hasAsymmetricDepth) {
+                  // 좌우 깊이가 다른 경우: 각각 다른 깊이로 계산
+                  const leftDepthMm = actualDepthMm; // 좌측은 기본 깊이
+                  const rightDepthMm = rightAbsoluteDepth; // 우측은 절대 깊이
+
+                  const leftDepth = mmToThreeUnits(leftDepthMm);
+                  const rightDepth = mmToThreeUnits(rightDepthMm);
+
+                  // 좌측 앞면 (기본 깊이)
+                  const leftFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - leftDepth/2 + leftDepth/2;
+                  // 우측 앞면 (절대 깊이) - 깊이 차이만큼 앞쪽으로 이동
+                  const rightFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - rightDepth/2 + rightDepth/2 + (leftDepth - rightDepth) / 2;
+
+                  return (
+                    <>
+                      {/* 좌측 연장선 */}
+                      <Line
+                        points={[[leftX, spaceHeight, leftFrontZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                      {/* 우측 연장선 */}
+                      <Line
+                        points={[[rightX, spaceHeight, rightFrontZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                    </>
+                  );
+                } else {
+                  // 좌우 깊이가 동일한 경우: 기존 로직
+                  const moduleDepth = mmToThreeUnits(actualDepthMm);
+                  const furnitureFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2 + moduleDepth/2;
+
+                  return (
+                    <>
+                      <Line
+                        points={[[leftX, spaceHeight, furnitureFrontZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                      <Line
+                        points={[[rightX, spaceHeight, furnitureFrontZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                    </>
+                  );
+                }
+              })()}
+            </group>
+          );
+        })}
 
         {/* 기둥별 치수 - 상부뷰 (기둥 내부에 텍스트만 표시) - 불필요하므로 비활성화 */}
         {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
