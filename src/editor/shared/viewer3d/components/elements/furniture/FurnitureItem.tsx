@@ -1288,8 +1288,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
       furnitureWidthMm = furnitureBounds.renderWidth;
 
+    } else if (placedModule.slotIndex !== undefined && indexing.slotWidths?.[placedModule.slotIndex]) {
+      // 기둥이 없으면 슬롯 너비 사용 (이격거리가 반영된 실제 슬롯 너비)
+      const slotWidth = indexing.slotWidths[placedModule.slotIndex];
+      const isDual = placedModule.isDualSlot || placedModule.moduleId.startsWith('dual-');
+      furnitureWidthMm = isDual ? slotWidth * 2 : slotWidth;
     }
-    // 기둥이 없으면 기본값 그대로 사용 (이미 위에서 설정됨)
+    // slotIndex도 없으면 기본값 그대로 사용 (이미 위에서 설정됨)
   }
 
   // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장
