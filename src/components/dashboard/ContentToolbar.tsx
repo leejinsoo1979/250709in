@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder, Search } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder, Search, FileText } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
-import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn } from '@/hooks/dashboard/types';
+import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn, ExplorerItem } from '@/hooks/dashboard/types';
 import styles from './ContentToolbar.module.css';
 
 interface ContentToolbarProps {
@@ -23,6 +23,8 @@ interface ContentToolbarProps {
   onSearchChange?: (value: string) => void;
   projects?: ProjectSummary[];
   folders?: { [projectId: string]: FolderData[] };
+  currentItems?: ExplorerItem[];
+  onItemNavigate?: (item: ExplorerItem) => void;
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -50,6 +52,8 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onSearchChange,
   projects,
   folders,
+  currentItems,
+  onItemNavigate,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
@@ -79,26 +83,47 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpenId]);
 
-  const getDropdownItems = (item: BreadcrumbItem) => {
-    if (item.type === 'root' && projects) {
-      return projects.filter(p => !p.isDeleted).map(p => ({
-        id: p.id,
-        label: p.title,
-        type: 'project' as const,
-      }));
-    }
-    if (item.type === 'project' && folders && nav?.currentProjectId) {
-      const projectFolders = folders[nav.currentProjectId] || [];
-      return projectFolders.map(f => ({
-        id: f.id,
-        label: f.name,
-        type: 'folder' as const,
-      }));
+  // 각 브레드크럼 세그먼트의 "하위 항목" 드롭다운 데이터
+  const getDropdownItems = (item: BreadcrumbItem, isLast: boolean): { id: string; label: string; type: 'project' | 'folder' | 'design'; icon: 'project' | 'folder' | 'design' }[] => {
+    if (item.type === 'root') {
+      // root → 프로젝트 목록
+      if (projects) {
+        return projects.filter(p => !p.isDeleted).map(p => ({
+          id: p.id, label: p.title, type: 'project' as const, icon: 'project' as const,
+        }));
+      }
+    } else if (item.type === 'project') {
+      // project → 현재 보이는 항목 (폴더 + 디자인)
+      if (isLast && currentItems) {
+        return currentItems.map(ci => ({
+          id: ci.id,
+          label: ci.name,
+          type: ci.type as 'folder' | 'design',
+          icon: ci.type === 'folder' ? 'folder' as const : 'design' as const,
+        }));
+      }
+      // project (중간) → 폴더 목록
+      if (folders && nav?.currentProjectId) {
+        const projectFolders = folders[item.id] || [];
+        return projectFolders.map(f => ({
+          id: f.id, label: f.name, type: 'folder' as const, icon: 'folder' as const,
+        }));
+      }
+    } else if (item.type === 'folder') {
+      // folder (마지막) → 현재 보이는 항목 (디자인)
+      if (isLast && currentItems) {
+        return currentItems.map(ci => ({
+          id: ci.id,
+          label: ci.name,
+          type: ci.type as 'folder' | 'design',
+          icon: ci.type === 'folder' ? 'folder' as const : 'design' as const,
+        }));
+      }
     }
     return [];
   };
 
-  const handleDropdownItemClick = (dropdownItem: { id: string; type: 'project' | 'folder' }) => {
+  const handleDropdownItemClick = (dropdownItem: { id: string; type: 'project' | 'folder' | 'design' }) => {
     if (!nav) return;
     if (dropdownItem.type === 'project') {
       const project = projects?.find(p => p.id === dropdownItem.id);
@@ -106,6 +131,12 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     } else if (dropdownItem.type === 'folder') {
       const folder = folders?.[nav.currentProjectId!]?.find(f => f.id === dropdownItem.id);
       nav.navigateTo(nav.currentProjectId, dropdownItem.id, folder?.name || dropdownItem.id);
+    } else if (dropdownItem.type === 'design') {
+      // 디자인 클릭 → onItemNavigate 콜백
+      const item = currentItems?.find(ci => ci.id === dropdownItem.id);
+      if (item && onItemNavigate) {
+        onItemNavigate(item);
+      }
     }
     setDropdownOpenId(null);
   };
@@ -190,8 +221,8 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
           <div className={styles.breadcrumb}>
             {nav.breadcrumbPath.map((item, i) => {
               const isLast = i === nav.breadcrumbPath.length - 1;
-              const dropdownItems = getDropdownItems(item);
-              const showChevron = !isLast && dropdownItems.length > 0;
+              const dropdownItems = getDropdownItems(item, isLast);
+              const showChevron = dropdownItems.length > 0;
               return (
                 <React.Fragment key={item.id}>
                   {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
@@ -205,7 +236,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                     </button>
                     {showChevron && (
                       <button
-                        className={styles.breadcrumbChevron}
+                        className={`${styles.breadcrumbChevron} ${isLast ? styles.breadcrumbChevronActive : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setDropdownOpenId(prev => prev === item.id ? null : item.id);
@@ -214,7 +245,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                         <ChevronDown size={10} />
                       </button>
                     )}
-                    {dropdownOpenId === item.id && (
+                    {dropdownOpenId === item.id && dropdownItems.length > 0 && (
                       <div className={styles.breadcrumbDropdown}>
                         {dropdownItems.map(di => (
                           <button
@@ -222,13 +253,12 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                             className={styles.breadcrumbDropdownItem}
                             onClick={() => handleDropdownItemClick(di)}
                           >
-                            {di.type === 'project' ? <Folder size={13} /> : <FcFolder size={13} />}
+                            {di.icon === 'project' && <Folder size={13} />}
+                            {di.icon === 'folder' && <FcFolder size={13} />}
+                            {di.icon === 'design' && <FileText size={13} />}
                             <span>{di.label}</span>
                           </button>
                         ))}
-                        {dropdownItems.length === 0 && (
-                          <div className={styles.breadcrumbDropdownEmpty}>항목 없음</div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -236,22 +266,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
               );
             })}
           </div>
-        </div>
-      )}
-
-      <div className={styles.spacer} />
-
-      {/* 검색바 */}
-      {onSearchChange !== undefined && (
-        <div className={styles.searchBox}>
-          <Search size={16} className={styles.searchIcon} />
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="검색..."
-            value={searchTerm || ''}
-            onChange={e => onSearchChange(e.target.value)}
-          />
         </div>
       )}
 
@@ -270,6 +284,22 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
           </button>
         )}
       </div>
+
+      <div className={styles.spacer} />
+
+      {/* 검색바 */}
+      {onSearchChange !== undefined && (
+        <div className={styles.searchBox}>
+          <Search size={16} className={styles.searchIcon} />
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="검색..."
+            value={searchTerm || ''}
+            onChange={e => onSearchChange(e.target.value)}
+          />
+        </div>
+      )}
 
       {/* 보기 모드 드롭다운 */}
       <div className={styles.viewDropdown} ref={viewMenuRef}>
