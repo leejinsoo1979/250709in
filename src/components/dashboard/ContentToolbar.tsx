@@ -53,6 +53,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [treeOpen, setTreeOpen] = useState(false);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -79,34 +80,59 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [treeOpen]);
 
-  // 전체 파일 트리 데이터 생성 (프로젝트 → 폴더 → 디자인)
+  // 트리 노드 타입
   interface TreeNode {
     id: string;
     label: string;
     type: 'project' | 'folder' | 'design';
     depth: number;
     projectId?: string;
+    hasChildren: boolean;
   }
 
+  // 트리 열 때 현재 경로의 프로젝트를 자동 펼침
+  useEffect(() => {
+    if (treeOpen && nav?.currentProjectId) {
+      setExpandedNodes(prev => {
+        const next = new Set(prev);
+        next.add(nav.currentProjectId!);
+        return next;
+      });
+    }
+  }, [treeOpen, nav?.currentProjectId]);
+
+  const toggleExpand = (nodeId: string) => {
+    setExpandedNodes(prev => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return next;
+    });
+  };
+
+  // 전체 파일 트리 (펼침 상태 반영)
   const buildFileTree = (): TreeNode[] => {
     const tree: TreeNode[] = [];
     if (!projects) return tree;
 
     const activeProjects = projects.filter(p => !p.isDeleted);
     for (const project of activeProjects) {
-      tree.push({ id: project.id, label: project.title, type: 'project', depth: 0 });
-
-      // 프로젝트 하위 폴더
       const projectFolders = folders?.[project.id] || [];
-      for (const folder of projectFolders) {
-        tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id });
-      }
+      const hasChildren = projectFolders.length > 0;
 
-      // 현재 프로젝트의 현재 항목 (폴더가 아닌 디자인)
-      if (nav?.currentProjectId === project.id && currentItems) {
-        const designs = currentItems.filter(ci => ci.type === 'design');
-        for (const design of designs) {
-          tree.push({ id: design.id, label: design.name, type: 'design', depth: 1, projectId: project.id });
+      tree.push({ id: project.id, label: project.title, type: 'project', depth: 0, hasChildren });
+
+      // 펼침 상태일 때만 하위 표시
+      if (expandedNodes.has(project.id)) {
+        for (const folder of projectFolders) {
+          tree.push({ id: folder.id, label: folder.name, type: 'folder', depth: 1, projectId: project.id, hasChildren: false });
+        }
+        // 현재 프로젝트의 디자인 파일
+        if (nav?.currentProjectId === project.id && currentItems) {
+          const designs = currentItems.filter(ci => ci.type === 'design');
+          for (const design of designs) {
+            tree.push({ id: design.id, label: design.name, type: 'design', depth: 1, projectId: project.id, hasChildren: false });
+          }
         }
       }
     }
@@ -118,16 +144,18 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     if (node.type === 'project') {
       const project = projects?.find(p => p.id === node.id);
       nav.navigateTo(node.id, null, project?.title || node.id);
+      setTreeOpen(false);
     } else if (node.type === 'folder') {
       const folder = folders?.[node.projectId!]?.find(f => f.id === node.id);
       nav.navigateTo(node.projectId!, node.id, folder?.name || node.id);
+      setTreeOpen(false);
     } else if (node.type === 'design') {
       const item = currentItems?.find(ci => ci.id === node.id);
       if (item && onItemNavigate) {
         onItemNavigate(item);
       }
+      setTreeOpen(false);
     }
-    setTreeOpen(false);
   };
 
   const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
@@ -232,21 +260,39 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
               return (
                 <div className={styles.breadcrumbDropdown}>
                   {tree.map(node => (
-                    <button
+                    <div
                       key={`${node.type}-${node.id}`}
                       className={`${styles.breadcrumbDropdownItem} ${
                         (node.type === 'project' && nav.currentProjectId === node.id && !nav.currentFolderId) ||
                         (node.type === 'folder' && nav.currentFolderId === node.id)
                           ? styles.breadcrumbDropdownItemActive : ''
                       }`}
-                      style={{ paddingLeft: `${12 + node.depth * 16}px` }}
-                      onClick={() => handleTreeItemClick(node)}
+                      style={{ paddingLeft: `${8 + node.depth * 20}px` }}
                     >
-                      {node.type === 'project' && <Folder size={14} />}
-                      {node.type === 'folder' && <FcFolder size={15} />}
-                      {node.type === 'design' && <FileText size={14} />}
-                      <span>{node.label}</span>
-                    </button>
+                      {/* 펼침/접힘 토글 */}
+                      {node.hasChildren ? (
+                        <button
+                          className={styles.treeToggle}
+                          onClick={(e) => { e.stopPropagation(); toggleExpand(node.id); }}
+                        >
+                          <ChevronRight
+                            size={12}
+                            style={{ transform: expandedNodes.has(node.id) ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
+                          />
+                        </button>
+                      ) : (
+                        <span className={styles.treeToggleSpacer} />
+                      )}
+                      <button
+                        className={styles.treeItemLabel}
+                        onClick={() => handleTreeItemClick(node)}
+                      >
+                        {node.type === 'project' && <Folder size={14} />}
+                        {node.type === 'folder' && <FcFolder size={15} />}
+                        {node.type === 'design' && <FileText size={14} />}
+                        <span>{node.label}</span>
+                      </button>
+                    </div>
                   ))}
                 </div>
               );
