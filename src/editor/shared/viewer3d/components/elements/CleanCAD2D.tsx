@@ -2169,101 +2169,118 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ) : (
               <>
                 {/* 우측 단내림 - 좌측 외부 치수선에 전체 높이 표시 */}
-                <NativeLine name="dimension_line"
-                  points={[[leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
+                {(() => {
+                  const leftBottomYDrop = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
+                  const leftMidYDrop = leftBottomYDrop + (spaceHeight - leftBottomYDrop) / 2;
+                  return (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[leftDimensionX + leftOffset, leftBottomYDrop, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
 
-                {/* 하단 화살표 */}
-                <NativeLine name="dimension_line"
-                  points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
+                      {/* 하단 화살표 */}
+                      <NativeLine name="dimension_line"
+                        points={createArrowHead([leftDimensionX + leftOffset, leftBottomYDrop, 0.002], [leftDimensionX + leftOffset, leftBottomYDrop + 0.05, 0.002])}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
 
-                {/* 상단 화살표 */}
-                <NativeLine name="dimension_line"
-                  points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
-                
-                {/* 전체 높이 텍스트 */}
-                <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                  position={[leftDimensionX + leftOffset - mmToThreeUnits(60), spaceHeight / 2, 0.01]}
-                  fontSize={largeFontSize}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  outlineWidth={textOutlineWidth}
-                  outlineColor={textOutlineColor}
-                  rotation={[0, 0, -Math.PI / 2]}
-                >
-                  {spaceInfo.height - floorFinishHeightMmGlobal}
-                </Text>
+                      {/* 상단 화살표 */}
+                      <NativeLine name="dimension_line"
+                        points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+
+                      {/* 전체 높이 텍스트 */}
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), leftMidYDrop, 0.01]}
+                        fontSize={largeFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, 0, -Math.PI / 2]}
+                      >
+                        {spaceInfo.height - floorFinishHeightMmGlobal}
+                      </Text>
+                    </>
+                  );
+                })()}
               </>
             )}
           </>
         ) : (
           <>
             {/* 단내림이 없는 경우 기존 전체 높이 치수선 */}
-            {/* 치수선 */}
-            <NativeLine name="dimension_line"
-              points={[[leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+            {/* 바닥마감재가 있으면 마감재 상단부터, 없으면 바닥부터 */}
+            {(() => {
+              const leftBottomY = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
+              const leftMidY = leftBottomY + (spaceHeight - leftBottomY) / 2;
+              return (
+                <>
+                  {/* 치수선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[leftDimensionX + leftOffset, leftBottomY, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
 
-            {/* 하단 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+                  {/* 하단 화살표 */}
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftDimensionX + leftOffset, leftBottomY, 0.002], [leftDimensionX + leftOffset, leftBottomY + 0.05, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
 
-            {/* 상단 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+                  {/* 상단 화살표 */}
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
 
-            {/* 전체 높이 치수 텍스트 - Text 3D 사용 */}
-            <Text
-                  renderOrder={1000}
-                  depthTest={false}
-              position={[leftDimensionX + leftOffset - mmToThreeUnits(60), spaceHeight / 2, 0.01]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={textOutlineWidth}
-              outlineColor={textOutlineColor}
-              rotation={[0, 0, -Math.PI / 2]}
-            >
-              {spaceInfo.height - floorFinishHeightMmGlobal}
-            </Text>
+                  {/* 전체 높이 치수 텍스트 */}
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[leftDimensionX + leftOffset - mmToThreeUnits(60), leftMidY, 0.01]}
+                    fontSize={largeFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {spaceInfo.height - floorFinishHeightMmGlobal}
+                  </Text>
+                </>
+              );
+            })()}
           </>
         )}
         
         {/* 연장선 (하단) */}
         <NativeLine name="dimension_line"
-          points={[[leftOffset, 0, 0.001], [leftDimensionX + leftOffset - mmToThreeUnits(20), 0, 0.001]]}
+          points={[[leftOffset, floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0, 0.001], [leftDimensionX + leftOffset - mmToThreeUnits(20), floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0, 0.001]]}
           color={dimensionColor}
           lineWidth={1}
           renderOrder={100000}
