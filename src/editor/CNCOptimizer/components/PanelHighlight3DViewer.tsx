@@ -41,21 +41,21 @@ class WebGLErrorBoundary extends Component<
   }
 }
 
-/** 카메라 자동 위치 조정 컴포넌트 */
-const CameraFitter: React.FC<{ targetSize: THREE.Vector3 }> = ({ targetSize }) => {
+/** 카메라 자동 위치 조정 컴포넌트 — 전체 가구가 화면에 들어오도록 */
+const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 }> = ({ targetSize, center }) => {
   const { camera } = useThree();
-  const hasAdjusted = useRef(false);
 
   useEffect(() => {
-    if (hasAdjusted.current) return;
-    hasAdjusted.current = true;
-
     const maxDim = Math.max(targetSize.x, targetSize.y, targetSize.z);
-    const distance = maxDim * 1.4;
-    camera.position.set(distance * 0.7, distance * 0.5, distance * 0.9);
-    camera.lookAt(0, targetSize.y * 0.45, 0);
+    const distance = maxDim * 2.0;
+    camera.position.set(
+      center.x + distance * 0.7,
+      center.y + distance * 0.45,
+      center.z + distance * 0.9
+    );
+    camera.lookAt(center.x, center.y, center.z);
     camera.updateProjectionMatrix();
-  }, [targetSize, camera]);
+  }, [targetSize, center, camera]);
 
   return null;
 };
@@ -208,14 +208,15 @@ const Scene3D: React.FC<{
   spaceInfo: SpaceInfo;
   placedModules: PlacedModule[];
   targetSize: THREE.Vector3;
+  targetCenter: THREE.Vector3;
   highlightedPanelId: string | null;
-}> = ({ spaceInfo, placedModules, targetSize, highlightedPanelId }) => {
+}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedPanelId }) => {
   return (
     <Suspense fallback={null}>
       <ViewerThemeProvider viewMode="3D">
         <Space3DViewProvider
           spaceInfo={spaceInfo}
-          svgSize={{ width: 400, height: 280 }}
+          svgSize={{ width: 400, height: 225 }}
           renderMode="solid"
           viewMode="3D"
         >
@@ -225,7 +226,7 @@ const Scene3D: React.FC<{
           <directionalLight position={[-3, 5, -5]} intensity={0.4} />
 
           {/* 카메라 자동 맞춤 */}
-          <CameraFitter targetSize={targetSize} />
+          <CameraFitter targetSize={targetSize} center={targetCenter} />
 
           {/* 궤도 컨트롤 */}
           <OrbitControls
@@ -234,8 +235,8 @@ const Scene3D: React.FC<{
               enableZoom: true,
               enableRotate: true,
               minDistance: 0.3,
-              maxDistance: 10,
-              target: [0, targetSize.y / 2, 0],
+              maxDistance: 15,
+              target: [targetCenter.x, targetCenter.y, targetCenter.z],
             } as any}
           />
 
@@ -287,14 +288,39 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     return `${highlightedFurnitureId}-${highlightedPanelName}`;
   }, [highlightedPanelName, highlightedFurnitureId]);
 
-  // 가구 전체 크기 추산 (카메라 위치용)
-  const targetSize = useMemo(() => {
-    if (!placedModules.length || !spaceInfo) return new THREE.Vector3(1, 2, 0.6);
-    const first = placedModules[0] as any;
-    const w = ((first.width || 600) as number) / 1000;
-    const h = ((first.customHeight || spaceInfo.height || 2400) as number) / 1000;
-    const d = ((first.depth || spaceInfo.depth || 600) as number) / 1000;
-    return new THREE.Vector3(w, h, d);
+  // 전체 가구 바운딩 박스 계산 (카메라 위치용)
+  const { targetSize, targetCenter } = useMemo(() => {
+    if (!placedModules.length || !spaceInfo) {
+      return {
+        targetSize: new THREE.Vector3(1, 2, 0.6),
+        targetCenter: new THREE.Vector3(0, 1, 0),
+      };
+    }
+
+    let minX = Infinity, maxX = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+    let maxH = 0;
+
+    placedModules.forEach((pm: any) => {
+      const w = ((pm.width || 600) as number) / 1000;
+      const h = ((pm.customHeight || spaceInfo.height || 2400) as number) / 1000;
+      const d = ((pm.depth || spaceInfo.depth || 600) as number) / 1000;
+      const posX = ((pm.position?.x || 0) as number) / 1000;
+      const posZ = ((pm.position?.z || 0) as number) / 1000;
+
+      minX = Math.min(minX, posX);
+      maxX = Math.max(maxX, posX + w);
+      minZ = Math.min(minZ, posZ);
+      maxZ = Math.max(maxZ, posZ + d);
+      maxH = Math.max(maxH, h);
+    });
+
+    const totalW = maxX - minX;
+    const totalD = maxZ - minZ;
+    return {
+      targetSize: new THREE.Vector3(totalW, maxH, totalD),
+      targetCenter: new THREE.Vector3((minX + maxX) / 2, maxH / 2, (minZ + maxZ) / 2),
+    };
   }, [placedModules, spaceInfo]);
 
   if (!spaceInfo || placedModules.length === 0) {
@@ -347,6 +373,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
             spaceInfo={spaceInfo}
             placedModules={placedModules}
             targetSize={targetSize}
+            targetCenter={targetCenter}
             highlightedPanelId={highlightedPanelId}
           />
         </Canvas>
