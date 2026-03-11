@@ -73,6 +73,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const [zoomSliderValue, setZoomSliderValue] = useState(50);
   // 초기 카메라 거리 저장 (슬라이더 범위 기준으로 사용)
   const initialCameraDistRef = useRef<number | null>(null);
+  // 슬라이더 드래그 중 피드백 루프 방지 플래그
+  const isSliderDraggingRef = useRef(false);
+  // 3D 줌 애니메이션용
+  const zoomAnimationRef = useRef<number | null>(null);
+  const targetCameraDistRef = useRef<number | null>(null);
 
   // 읽기 전용 모드 체크를 포함한 placeFurniture wrapper
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
@@ -447,15 +452,30 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
     // 초기 슬라이더 값 설정
     updateSliderFromCamera(controls);
-    // change 이벤트로 휠/트랙패드 줌 시 슬라이더 동기화
-    const onChange = () => updateSliderFromCamera(controls);
+    // change 이벤트로 휠/트랙패드 줌 시 슬라이더 동기화 (throttle로 성능 최적화)
+    let rafPending = false;
+    const onChange = () => {
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => {
+        updateSliderFromCamera(controls);
+        rafPending = false;
+      });
+    };
     controls.addEventListener('change', onChange);
     // cleanup은 컴포넌트 unmount 시
-    return () => controls.removeEventListener('change', onChange);
+    return () => {
+      controls.removeEventListener('change', onChange);
+      if (zoomAnimationRef.current) {
+        cancelAnimationFrame(zoomAnimationRef.current);
+      }
+    };
   }, [viewMode]);
 
   // 카메라 상태에서 슬라이더 값 계산
   const updateSliderFromCamera = useCallback((controls: any) => {
+    // 슬라이더 드래그 중이면 피드백 루프 방지
+    if (isSliderDraggingRef.current) return;
     if (!controls?.object) return;
     const cam = controls.object;
     if (cam.isOrthographicCamera) {
@@ -473,15 +493,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
   }, [getDistanceRange]);
 
-  // 슬라이더 값 변경 → 카메라 줌 적용
+  // 슬라이더 값 변경 → 카메라 줌 적용 (부드러운 보간)
   const handleZoomSliderChange = useCallback((value: number) => {
+    isSliderDraggingRef.current = true;
     setZoomSliderValue(value);
     const controls = orbitControlsRef.current;
     if (!controls?.object) return;
     const cam = controls.object;
 
     if (cam.isOrthographicCamera) {
-      // 2D: slider 0~100 → zoom 0.5~10 (로그 스케일)
+      // 2D: slider 0~100 → zoom 0.5~10 (로그 스케일) - 즉시 적용
       const minZ = 0.5, maxZ = 10;
       const logMin = Math.log(minZ), logMax = Math.log(maxZ);
       const logVal = logMin + (value / 100) * (logMax - logMin);
@@ -489,18 +510,59 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       cam.updateProjectionMatrix();
       controls.update();
     } else {
-      // 3D: slider 0~100 → 카메라 거리, 초기 거리 기준 동적 범위
+      // 3D: 부드러운 카메라 이동 (lerp)
       const { minD, maxD } = getDistanceRange();
       const targetDist = maxD - (value / 100) * (maxD - minD);
-      const direction = cam.position.clone().sub(controls.target).normalize();
-      cam.position.copy(controls.target.clone().add(direction.multiplyScalar(targetDist)));
-      controls.update();
+      targetCameraDistRef.current = targetDist;
+
+      // 기존 애니메이션 취소
+      if (zoomAnimationRef.current) {
+        cancelAnimationFrame(zoomAnimationRef.current);
+      }
+
+      const animate = () => {
+        const ctrl = orbitControlsRef.current;
+        if (!ctrl?.object || targetCameraDistRef.current === null) return;
+        const c = ctrl.object;
+        const currentDist = c.position.distanceTo(ctrl.target);
+        const target = targetCameraDistRef.current;
+        // lerp factor: 높을수록 빠르게 도달 (0.25 = 부드러운 추종)
+        const newDist = currentDist + (target - currentDist) * 0.3;
+
+        if (Math.abs(newDist - target) < 0.01) {
+          // 목표 도달 - 정확한 위치로 설정
+          const dir = c.position.clone().sub(ctrl.target).normalize();
+          c.position.copy(ctrl.target.clone().add(dir.multiplyScalar(target)));
+          ctrl.update();
+          zoomAnimationRef.current = null;
+          targetCameraDistRef.current = null;
+          return;
+        }
+
+        const dir = c.position.clone().sub(ctrl.target).normalize();
+        c.position.copy(ctrl.target.clone().add(dir.multiplyScalar(newDist)));
+        ctrl.update();
+        zoomAnimationRef.current = requestAnimationFrame(animate);
+      };
+
+      zoomAnimationRef.current = requestAnimationFrame(animate);
     }
   }, [getDistanceRange]);
 
+  // 슬라이더 드래그 종료 시 플래그 해제
+  const handleZoomSliderEnd = useCallback(() => {
+    // 약간의 딜레이로 마지막 change 이벤트가 처리된 후 해제
+    setTimeout(() => {
+      isSliderDraggingRef.current = false;
+    }, 50);
+  }, []);
+
   // +/- 버튼용 줌 스텝 함수
   const handleZoomStep = useCallback((delta: number) => {
-    handleZoomSliderChange(Math.max(0, Math.min(100, zoomSliderValue + delta)));
+    const newValue = Math.max(0, Math.min(100, zoomSliderValue + delta));
+    handleZoomSliderChange(newValue);
+    // 버튼 클릭은 즉시 드래그 해제
+    setTimeout(() => { isSliderDraggingRef.current = false; }, 100);
   }, [zoomSliderValue, handleZoomSliderChange]);
 
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
@@ -2129,6 +2191,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 max={100}
                 value={zoomSliderValue}
                 onChange={(e) => handleZoomSliderChange(Number(e.target.value))}
+                onPointerDown={() => { isSliderDraggingRef.current = true; }}
+                onPointerUp={handleZoomSliderEnd}
+                onPointerLeave={handleZoomSliderEnd}
                 className="zoom-slider"
                 style={{
                   width: '120px',
