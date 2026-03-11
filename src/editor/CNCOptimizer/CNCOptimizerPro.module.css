@@ -378,7 +378,7 @@
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 420px minmax(600px, 1fr) 320px;
+  grid-template-columns: 420px minmax(600px, 1fr) 380px;
   grid-template-rows: 1fr;
   gap: 12px;
   padding: 12px;
@@ -853,8 +853,8 @@
 
 /* 3D 패널 하이라이트 뷰어 */
 .viewer3dContainer {
-  height: 220px;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 350px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -1019,7 +1019,7 @@
   flex-direction: column;
   gap: 8px;
   height: 100%;
-  overflow-y: visible;
+  overflow-y: auto;
   padding-right: 4px;
 }
 
