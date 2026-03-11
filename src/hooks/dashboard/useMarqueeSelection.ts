@@ -56,6 +56,8 @@ export function useMarqueeSelection({
     // 아이템 위에서 시작하면 무시 (아이템 드래그용)
     const target = e.target as HTMLElement;
     if (target.closest('[data-item-card]')) return;
+    // INPUT, TEXTAREA, SELECT, BUTTON 등 인터랙티브 요소에서는 마키 무시
+    if (target.closest('input, textarea, select, button')) return;
     // 좌클릭만
     if (e.button !== 0) return;
 
