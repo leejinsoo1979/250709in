@@ -278,9 +278,9 @@ const Room: React.FC<RoomProps> = ({
   // 자유배치 모드에서는 프레임 숨김 (사용자가 직접 추가)
   const effectiveShowFrame = isFreePlacement ? false : showFrame;
 
-  // 전체서라운드 여부: surround + top/bottom 모두 활성화 → 상부 프레임이 좌우와 같은 Z축
+  // 전체서라운드 여부: surround + frameConfig.top/bottom 모두 명시적 true → 상부 프레임이 좌우와 같은 Z축
   const isFullSurround = spaceInfo.surroundType === 'surround' &&
-    spaceInfo.frameConfig?.top !== false && spaceInfo.frameConfig?.bottom !== false;
+    spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
