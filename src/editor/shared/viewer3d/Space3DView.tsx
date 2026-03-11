@@ -71,6 +71,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 줌 슬라이더용 OrbitControls 참조
   const orbitControlsRef = useRef<any>(null);
   const [zoomSliderValue, setZoomSliderValue] = useState(50);
+  // 초기 카메라 거리 저장 (슬라이더 범위 기준으로 사용)
+  const initialCameraDistRef = useRef<number | null>(null);
 
   // 읽기 전용 모드 체크를 포함한 placeFurniture wrapper
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
@@ -427,9 +429,22 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return mmToThreeUnits(height * ratio);
   }, [spaceInfo?.height, isMobile]);
 
+  // 3D 슬라이더 거리 범위 계산 (초기 카메라 거리 기준)
+  const getDistanceRange = useCallback(() => {
+    const initDist = initialCameraDistRef.current || 30;
+    // 슬라이더 50 = 초기 거리, 0 = 2배 멀리, 100 = 최대 줌인
+    const minD = Math.max(2, initDist * 0.15); // 줌인 한계
+    const maxD = initDist * 2;                   // 줌아웃 한계
+    return { minD, maxD };
+  }, []);
+
   // OrbitControls 준비 콜백 - 줌 슬라이더 동기화를 위해 change 이벤트 리스닝
   const handleControlsReady = useCallback((controls: any) => {
     orbitControlsRef.current = controls;
+    // 초기 카메라 거리 저장
+    if (controls?.object && !controls.object.isOrthographicCamera) {
+      initialCameraDistRef.current = controls.object.position.distanceTo(controls.target);
+    }
     // 초기 슬라이더 값 설정
     updateSliderFromCamera(controls);
     // change 이벤트로 휠/트랙패드 줌 시 슬라이더 동기화
@@ -450,13 +465,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const logVal = Math.log(Math.max(minZ, Math.min(maxZ, cam.zoom)));
       setZoomSliderValue(((logVal - logMin) / (logMax - logMin)) * 100);
     } else {
-      // 3D: 카메라 거리 → slider (근거리=100, 원거리=0)
+      // 3D: 카메라 거리 → slider (근거리=100, 원거리=0), 초기 거리 기준 동적 범위
       const dist = cam.position.distanceTo(controls.target);
-      const minD = 3, maxD = 120;
+      const { minD, maxD } = getDistanceRange();
       const clamped = Math.max(minD, Math.min(maxD, dist));
       setZoomSliderValue(100 - ((clamped - minD) / (maxD - minD)) * 100);
     }
-  }, []);
+  }, [getDistanceRange]);
 
   // 슬라이더 값 변경 → 카메라 줌 적용
   const handleZoomSliderChange = useCallback((value: number) => {
@@ -474,14 +489,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       cam.updateProjectionMatrix();
       controls.update();
     } else {
-      // 3D: slider 0~100 → 카메라 거리 (0=far, 100=close)
-      const minD = 3, maxD = 120;
+      // 3D: slider 0~100 → 카메라 거리, 초기 거리 기준 동적 범위
+      const { minD, maxD } = getDistanceRange();
       const targetDist = maxD - (value / 100) * (maxD - minD);
       const direction = cam.position.clone().sub(controls.target).normalize();
       cam.position.copy(controls.target.clone().add(direction.multiplyScalar(targetDist)));
       controls.update();
     }
-  }, []);
+  }, [getDistanceRange]);
 
   // +/- 버튼용 줌 스텝 함수
   const handleZoomStep = useCallback((delta: number) => {
