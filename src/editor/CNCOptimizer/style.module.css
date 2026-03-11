@@ -403,9 +403,10 @@
   gap: 16px;
 }
 
-/* 3D 패널 하이라이트 뷰어 */
+/* 3D 패널 하이라이트 뷰어 (16:9 비율) */
 .viewer3dContainer {
-  height: 280px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   flex-shrink: 0;
   border-radius: 12px;
   border: 1px solid var(--theme-border);
