@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { TbRulerMeasure } from 'react-icons/tb';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -4362,8 +4363,9 @@ const Configurator: React.FC = () => {
             {/* 슬롯 분할 가이드 설명 팝업 */}
             {isSlotGuideOpen && (() => {
               const totalW = spaceInfo.width;
-              const gapL = spaceInfo.gapDistance?.left || 0;
-              const gapR = spaceInfo.gapDistance?.right || 0;
+              const gapL = spaceInfo.gapConfig?.left || 0;
+              const gapR = spaceInfo.gapConfig?.right || 0;
+              const hasGap = gapL > 0 || gapR > 0;
               const internalW = totalW - gapL - gapR;
               const cols = spaceInfo.columns?.length || spaceInfo.mainDoorCount || 1;
               const rawSlot = internalW / cols;
@@ -4372,13 +4374,13 @@ const Configurator: React.FC = () => {
               return (
                 <div ref={slotGuideRef} className={styles.slotGuidePopup}>
                   <div className={styles.slotGuidePopupTitle}>
-                    📐 슬롯 분할 가이드
+                    <TbRulerMeasure size={18} /> 슬롯 분할 가이드
                   </div>
 
                   <div className={styles.slotGuidePopupSection}>
                     <div className={styles.slotGuidePopupLabel}>내경 계산</div>
                     <p className={styles.slotGuidePopupDesc}>
-                      전체 너비에서 좌우 이격거리를 빼서 <strong>내경(실제 사용 가능 너비)</strong>을 구합니다.
+                      전체 너비({totalW}mm)에서 {hasGap ? (<>좌측 이격 {gapL}mm + 우측 이격 {gapR}mm를 빼서</>) : '이격거리가 없어'} <strong>내경 {internalW}mm</strong>{hasGap ? '를 구합니다.' : '가 전체 너비와 동일합니다.'}
                     </p>
                     <p className={styles.slotGuidePopupDesc}>
                       <span className={styles.slotGuidePopupFormula}>
@@ -4392,11 +4394,11 @@ const Configurator: React.FC = () => {
                   <div className={styles.slotGuidePopupSection}>
                     <div className={styles.slotGuidePopupLabel}>슬롯 분할</div>
                     <p className={styles.slotGuidePopupDesc}>
-                      내경을 컬럼 수({cols}개)로 나누어 각 슬롯 너비를 결정합니다.
+                      내경 {internalW}mm를 {cols}개 컬럼으로 나누면 각 슬롯은 <strong>{rawSlot % 1 === 0 ? rawSlot : rawSlot.toFixed(1)}mm</strong>입니다.
                     </p>
                     <p className={styles.slotGuidePopupDesc}>
                       <span className={styles.slotGuidePopupFormula}>
-                        {internalW} ÷ {cols} = {(internalW / cols).toFixed(1)}mm
+                        {internalW} ÷ {cols} = {rawSlot % 1 === 0 ? rawSlot : rawSlot.toFixed(1)}mm
                       </span>
                     </p>
                   </div>
@@ -4406,7 +4408,9 @@ const Configurator: React.FC = () => {
                   <div className={styles.slotGuidePopupSection}>
                     <div className={styles.slotGuidePopupLabel}>가구 너비 결정 (내림 규칙)</div>
                     <p className={styles.slotGuidePopupDesc}>
-                      가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.
+                      {hasGap
+                        ? <>이격거리로 인해 슬롯이 {rawSlot % 1 === 0 ? '정수' : '소수점'}이므로, 가구 제작 오차를 고려해 내림 처리합니다.</>
+                        : '가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.'}
                     </p>
                   </div>
 
