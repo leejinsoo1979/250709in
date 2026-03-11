@@ -167,7 +167,7 @@ export default function EnterpriseSignUpPage() {
                       onChange={(e) => update('password', e.target.value)}
                       placeholder="6자 이상 입력"
                       required
-                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
+                      className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
                     />
                     <button
                       type="button"
@@ -186,7 +186,7 @@ export default function EnterpriseSignUpPage() {
                       onChange={(e) => update('passwordConfirm', e.target.value)}
                       placeholder="비밀번호 재입력"
                       required
-                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
+                      className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
                     />
                     <button
                       type="button"
@@ -260,7 +260,7 @@ export default function EnterpriseSignUpPage() {
                   onChange={(e) => update('message', e.target.value)}
                   placeholder="추가 요청사항이나 문의사항을 입력해주세요"
                   rows={4}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                  className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
                 />
               </Field>
             </section>
@@ -314,7 +314,7 @@ function Input({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       required={required}
-      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+      className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
     />
   );
 }
