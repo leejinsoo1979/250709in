@@ -66,7 +66,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-row">
       {/* Left Panel - Branding */}
-      <div className="w-1/2 relative overflow-hidden"
+      <div className="w-1/2 relative overflow-hidden flex flex-col"
         style={{
           background: 'linear-gradient(135deg, rgba(107,94,255,0.15) 0%, #09090b 50%, rgba(99,102,241,0.08) 100%)',
         }}
@@ -83,11 +83,10 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
         <div className="absolute" style={{ top: '15%', left: '20%', width: 300, height: 300, background: 'radial-gradient(circle, rgba(107,94,255,0.12) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
         <div className="absolute" style={{ bottom: '20%', right: '15%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(80px)' }} />
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center h-full px-16">
-          {/* Logo */}
+        {/* Logo - 랜딩페이지와 동일 위치 */}
+        <header className="relative z-10 flex items-center px-8 sm:px-12 py-5">
           <div
-            className="flex items-center gap-1.5 cursor-pointer mb-12"
+            className="flex items-center gap-1.5 cursor-pointer"
             onClick={onNavigateHome}
           >
             <div className="flex items-center gap-1">
@@ -97,6 +96,10 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             </div>
             <span className="text-white font-black text-lg ml-1">CRAFT</span>
           </div>
+        </header>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center flex-1 px-16">
           <h1 className="text-4xl font-bold text-white leading-tight mb-4">
             Start designing your<br />furniture
           </h1>
