@@ -383,7 +383,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               <div className={styles.saasThumbnailArea}>
                 {item.type === 'folder' ? (
                   <div className={styles.saasFolderIcon}>
-                    <FcFolder size={120} />
+                    <FcFolder size={200} />
                   </div>
                 ) : item.type === 'project' && projectDesignFiles ? (
                   (() => {
