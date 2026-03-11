@@ -218,13 +218,13 @@ const SimpleDashboard: React.FC = () => {
       const projectId = item.projectId || nav.currentProjectId;
       if (!projectId) return;
 
-      // 공간설정 완료된 디자인은 바로 에디터로 이동
-      if (item.thumbnail || item.spaceSize) {
+      // 썸네일 또는 가구가 있으면 이미 작업한 디자인 → 바로 에디터
+      if (item.thumbnail || (item.furnitureCount && item.furnitureCount > 0)) {
         handleDesignOpen(projectId, item.id, item.name);
         return;
       }
 
-      // 공간설정 안 된 디자인은 Step2(공간설정) 팝업
+      // 빈 디자인(새로 생성됨) → Step2(공간설정) 팝업
       const project = data.projects.find(p => p.id === projectId);
       const { setProjectId, setProjectTitle, setBasicInfo } = useProjectStore.getState();
       setProjectId(projectId);
@@ -655,9 +655,9 @@ const SimpleDashboard: React.FC = () => {
             setBlankContextMenu({ x: e.clientX, y: e.clientY });
           }}
           onOpenEditor={(item) => {
-            // 이미 공간설정 완료된 디자인은 바로 에디터로 이동
-            if (item.thumbnail || item.spaceSize) {
-              handleItemDoubleClick(item);
+            // 썸네일 또는 가구가 있으면 이미 작업한 디자인 → 바로 에디터
+            if (item.thumbnail || (item.furnitureCount && item.furnitureCount > 0)) {
+              handleDesignOpen(item.projectId || nav.currentProjectId!, item.id, item.name);
               return;
             }
             // 공간설정 안 된 디자인은 Step2(공간설정) 팝업
