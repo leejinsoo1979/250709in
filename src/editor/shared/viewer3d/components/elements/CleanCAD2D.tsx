@@ -1015,15 +1015,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 정면도 치수선들 */}
       {showDimensions && (
         <>
-          {/* 상단 전체 프레임 포함 폭 치수선 */}
+          {/* 상단 전체 프레임 포함 폭 치수선 - 항상 공간 너비 표시 */}
           <group>
         {(() => {
-          // 슬롯배치 + 가구 배치됨 → 아래 개별 가구 치수와 중복이므로 숨김
-          if (!isFreePlacement && placedModules.length > 0) {
-            return null;
-          }
-
-          // 자유배치 모드 또는 가구 미배치 시 → 공간 너비 표시
           const actualLeftEdge = leftOffset;
           const actualRightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
           const displayWidth = spaceInfo.width;
