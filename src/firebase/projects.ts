@@ -559,9 +559,11 @@ export const updateProject = async (
     }
 
     const isOwner = docSnap.data().userId === user.uid;
+    const { isSuperAdmin } = await import('./admins');
+    const isSuper = isSuperAdmin(user.email || '');
 
-    if (!isOwner) {
-      // 소유자가 아니면 공유 접근 권한 확인 (editor 권한만 수정 가능)
+    if (!isOwner && !isSuper) {
+      // 소유자나 슈퍼어드민이 아니면 공유 접근 권한 확인 (editor 권한만 수정 가능)
       const sharedAccessQuery = query(
         collection(db, 'sharedProjectAccess'),
         where('userId', '==', user.uid),
@@ -697,8 +699,9 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
       return { error: '프로젝트를 찾을 수 없습니다.' };
     }
     
-    // 소유자 확인
-    if (projectData.userId !== user.uid) {
+    // 소유자 또는 슈퍼어드민 확인
+    const { isSuperAdmin: isSuperAdminCheck } = await import('./admins');
+    if (projectData.userId !== user.uid && !isSuperAdminCheck(user.email || '')) {
       console.error('프로젝트 삭제 권한 없음:', {
         projectUserId: projectData.userId,
         currentUserId: user.uid,
@@ -816,29 +819,34 @@ export const updateDesignFile = async (
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
-    // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
-    // userId가 없거나 현재 사용자와 일치하지 않는 경우
-    if (designData.userId && user.uid !== designData.userId) {
-      // sharedProjectAccess에서 편집 권한 확인
-      const accessId = `${projectId}_${user.uid}`;
-      const accessRef = doc(db, 'sharedProjectAccess', accessId);
-      const accessSnap = await getDocFromServer(accessRef);
+    // ✅ 권한 확인: 파일 소유자, 슈퍼어드민, 또는 프로젝트 편집 권한이 있어야 함
+    const { isSuperAdmin: isSuperCheck } = await import('./admins');
+    const isSuperUser = isSuperCheck(user.email || '');
 
-      if (!accessSnap.exists()) {
-        return { error: '이 디자인 파일을 수정할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
-      }
+    if (!isSuperUser) {
+      // userId가 없거나 현재 사용자와 일치하지 않는 경우
+      if (designData.userId && user.uid !== designData.userId) {
+        // sharedProjectAccess에서 편집 권한 확인
+        const accessId = `${projectId}_${user.uid}`;
+        const accessRef = doc(db, 'sharedProjectAccess', accessId);
+        const accessSnap = await getDocFromServer(accessRef);
 
-      const accessData = accessSnap.data();
-      if (accessData.permission !== 'editor') {
-        return { error: '이 디자인 파일을 수정할 권한이 없습니다. 편집 권한이 필요합니다.' };
-      }
-    } else if (!designData.userId) {
-      // userId가 없는 경우 프로젝트 소유자 확인
-      const projectRef = doc(db, 'projects', projectId);
-      const projectSnap = await getDocFromServer(projectRef);
+        if (!accessSnap.exists()) {
+          return { error: '이 디자인 파일을 수정할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
+        }
 
-      if (projectSnap.exists() && projectSnap.data().userId !== user.uid) {
-        return { error: '이 디자인 파일을 수정할 권한이 없습니다.' };
+        const accessData = accessSnap.data();
+        if (accessData.permission !== 'editor') {
+          return { error: '이 디자인 파일을 수정할 권한이 없습니다. 편집 권한이 필요합니다.' };
+        }
+      } else if (!designData.userId) {
+        // userId가 없는 경우 프로젝트 소유자 확인
+        const projectRef = doc(db, 'projects', projectId);
+        const projectSnap = await getDocFromServer(projectRef);
+
+        if (projectSnap.exists() && projectSnap.data().userId !== user.uid) {
+          return { error: '이 디자인 파일을 수정할 권한이 없습니다.' };
+        }
       }
     }
 
@@ -971,33 +979,37 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
       userIdExists: !!designData.userId
     });
 
-    // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
-    // userId가 없거나 현재 사용자와 일치하지 않는 경우
-    if (designData.userId && user.uid !== designData.userId) {
-      // sharedProjectAccess에서 편집 권한 확인
-      const accessId = `${projectId}_${user.uid}`;
-      const accessRef = doc(db, 'sharedProjectAccess', accessId);
-      const accessSnap = await getDocFromServer(accessRef);
+    // ✅ 권한 확인: 파일 소유자, 슈퍼어드민, 또는 프로젝트 편집 권한이 있어야 함
+    const { isSuperAdmin: isDeleteSuperCheck } = await import('./admins');
+    const isDeleteSuper = isDeleteSuperCheck(user.email || '');
 
-      if (!accessSnap.exists()) {
-        console.error('🚫 [deleteDesignFile] 공유 접근 권한 없음');
-        return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
-      }
+    if (!isDeleteSuper) {
+      if (designData.userId && user.uid !== designData.userId) {
+        // sharedProjectAccess에서 편집 권한 확인
+        const accessId = `${projectId}_${user.uid}`;
+        const accessRef = doc(db, 'sharedProjectAccess', accessId);
+        const accessSnap = await getDocFromServer(accessRef);
 
-      const accessData = accessSnap.data();
-      if (accessData.permission !== 'editor') {
-        console.error('🚫 [deleteDesignFile] 편집 권한 없음');
-        return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 편집 권한이 필요합니다.' };
-      }
-    } else if (!designData.userId) {
-      // userId가 없는 경우 프로젝트 소유자 확인
-      console.warn('⚠️ [deleteDesignFile] 디자인 파일에 userId 없음, 프로젝트 소유자 확인');
-      const projectRef = doc(db, 'projects', projectId);
-      const projectSnap = await getDocFromServer(projectRef);
+        if (!accessSnap.exists()) {
+          console.error('🚫 [deleteDesignFile] 공유 접근 권한 없음');
+          return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
+        }
 
-      if (projectSnap.exists() && projectSnap.data().userId !== user.uid) {
-        console.error('🚫 [deleteDesignFile] 프로젝트 소유자 아님');
-        return { error: '이 디자인 파일을 삭제할 권한이 없습니다.' };
+        const accessData = accessSnap.data();
+        if (accessData.permission !== 'editor') {
+          console.error('🚫 [deleteDesignFile] 편집 권한 없음');
+          return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 편집 권한이 필요합니다.' };
+        }
+      } else if (!designData.userId) {
+        // userId가 없는 경우 프로젝트 소유자 확인
+        console.warn('⚠️ [deleteDesignFile] 디자인 파일에 userId 없음, 프로젝트 소유자 확인');
+        const projectRef = doc(db, 'projects', projectId);
+        const projectSnap = await getDocFromServer(projectRef);
+
+        if (projectSnap.exists() && projectSnap.data().userId !== user.uid) {
+          console.error('🚫 [deleteDesignFile] 프로젝트 소유자 아님');
+          return { error: '이 디자인 파일을 삭제할 권한이 없습니다.' };
+        }
       }
     }
 
@@ -1133,13 +1145,20 @@ export const getUserProjects = async (userId?: string): Promise<{ projects: Proj
  */
 export function subscribeToUserProjects(
   userId: string,
-  callback: (projects: ProjectSummary[]) => void
+  callback: (projects: ProjectSummary[]) => void,
+  showAll: boolean = false
 ): () => void {
-  const q = query(
-    collection(db, PROJECTS_COLLECTION),
-    where('userId', '==', userId),
-    orderBy('updatedAt', 'desc')
-  );
+  // 슈퍼어드민(showAll=true)이면 userId 필터 없이 전체 프로젝트 구독
+  const q = showAll
+    ? query(
+        collection(db, PROJECTS_COLLECTION),
+        orderBy('updatedAt', 'desc')
+      )
+    : query(
+        collection(db, PROJECTS_COLLECTION),
+        where('userId', '==', userId),
+        orderBy('updatedAt', 'desc')
+      );
 
   const unsubscribe = onSnapshot(
     q,
