@@ -890,6 +890,7 @@ const Room: React.FC<RoomProps> = ({
   const [rightFrameMaterial, setRightFrameMaterial] = useState<THREE.Material>();
   const [rightSubFrameMaterial, setRightSubFrameMaterial] = useState<THREE.Material>();
   const [topFrameMaterial, setTopFrameMaterial] = useState<THREE.Material>();
+  const [topDroppedFrameMaterial, setTopDroppedFrameMaterial] = useState<THREE.Material>();
   const [topSubFrameMaterial, setTopSubFrameMaterial] = useState<THREE.Material>();
   // const [baseSubFrameMaterial, setBaseSubFrameMaterial] = useState<THREE.Material>(); // 하단 서브프레임 제거됨
 
@@ -921,6 +922,11 @@ const Room: React.FC<RoomProps> = ({
   useEffect(() => {
     const mat = createFrameMaterial('top');
     setTopFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
+  useEffect(() => {
+    const mat = createFrameMaterial('top');
+    setTopDroppedFrameMaterial(mat);
     return () => mat.dispose();
   }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
@@ -2783,7 +2789,7 @@ const Room: React.FC<RoomProps> = ({
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
-                      material={topFrameMaterial ?? createFrameMaterial('top')}
+                      material={topDroppedFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
