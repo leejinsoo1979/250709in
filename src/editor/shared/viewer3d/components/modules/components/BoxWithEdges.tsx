@@ -395,6 +395,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           <meshBasicMaterial
             transparent={true}
             opacity={0}
+            depthWrite={false}
           />
         ) : (
           // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
