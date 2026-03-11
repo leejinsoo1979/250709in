@@ -4368,18 +4368,36 @@ const Configurator: React.FC = () => {
               const totalW = spaceInfo.width;
               const gapL = spaceInfo.gapConfig?.left || 0;
               const gapR = spaceInfo.gapConfig?.right || 0;
+              const gapM = spaceInfo.gapConfig?.middle ?? 2;
               const hasGap = gapL > 0 || gapR > 0;
               const internalW = totalW - gapL - gapR;
-              const cols = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || Math.max(1, Math.round(internalW / 600));
-              const rawSlot = internalW / cols;
-              const singleW = Math.floor(rawSlot);
-              const dualW = Math.floor(rawSlot * 2 * 2) / 2;
+              const hasDropped = spaceInfo.droppedCeiling?.enabled === true;
+              const droppedW = spaceInfo.droppedCeiling?.width || 900;
+              const droppedPos = spaceInfo.droppedCeiling?.position || 'right';
+
+              // 일반 구간 계산
+              const normalW = hasDropped ? (internalW - droppedW - gapM) : internalW;
+              const normalCols = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || Math.max(1, Math.round(normalW / 600));
+              const normalRawSlot = normalW / normalCols;
+              const normalSingleW = Math.floor(normalRawSlot);
+              const normalDualW = Math.floor(normalRawSlot * 2 * 2) / 2;
+
+              // 단내림 구간 계산
+              const droppedCols = spaceInfo.droppedCeilingDoorCount || Math.max(1, Math.round(droppedW / 600));
+              const droppedRawSlot = droppedW / droppedCols;
+              const droppedSingleW = Math.floor(droppedRawSlot);
+              const droppedDualW = Math.floor(droppedRawSlot * 2 * 2) / 2;
+
+              const fmtSlot = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(1);
+              const fmtDual = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(1);
+
               return (
                 <div ref={slotGuideRef} className={styles.slotGuidePopup}>
                   <div className={styles.slotGuidePopupTitle}>
                     <TbRulerMeasure size={18} /> 슬롯 분할 가이드
                   </div>
 
+                  {/* 내경 계산 */}
                   <div className={styles.slotGuidePopupSection}>
                     <div className={styles.slotGuidePopupLabel}>내경 계산</div>
                     <p className={styles.slotGuidePopupDesc}>
@@ -4394,39 +4412,112 @@ const Configurator: React.FC = () => {
 
                   <div className={styles.slotGuidePopupDivider} />
 
-                  <div className={styles.slotGuidePopupSection}>
-                    <div className={styles.slotGuidePopupLabel}>슬롯 분할</div>
-                    <p className={styles.slotGuidePopupDesc}>
-                      내경 {internalW}mm를 {cols}개 컬럼으로 나누면 각 슬롯은 <strong>{rawSlot % 1 === 0 ? rawSlot : rawSlot.toFixed(1)}mm</strong>입니다.
-                    </p>
-                    <p className={styles.slotGuidePopupDesc}>
-                      <span className={styles.slotGuidePopupFormula}>
-                        {internalW} ÷ {cols} = {rawSlot % 1 === 0 ? rawSlot : rawSlot.toFixed(1)}mm
-                      </span>
-                    </p>
-                  </div>
+                  {hasDropped ? (
+                    <>
+                      {/* 단내림 — 구간 분리 설명 */}
+                      <div className={styles.slotGuidePopupSection}>
+                        <div className={styles.slotGuidePopupLabel}>구간 분리 (단내림 {droppedPos === 'left' ? '좌측' : '우측'})</div>
+                        <p className={styles.slotGuidePopupDesc}>
+                          내경 {internalW}mm에서 단내림 {droppedW}mm + 경계 이격 {gapM}mm를 빼서 <strong>일반 구간 {normalW}mm</strong>를 구합니다.
+                        </p>
+                        <p className={styles.slotGuidePopupDesc}>
+                          <span className={styles.slotGuidePopupFormula}>
+                            {internalW} − {droppedW} − {gapM} = {normalW}mm
+                          </span>
+                        </p>
+                      </div>
 
-                  <div className={styles.slotGuidePopupDivider} />
+                      <div className={styles.slotGuidePopupDivider} />
 
-                  <div className={styles.slotGuidePopupSection}>
-                    <div className={styles.slotGuidePopupLabel}>가구 너비 결정 (내림 규칙)</div>
-                    <p className={styles.slotGuidePopupDesc}>
-                      {hasGap
-                        ? <>이격거리로 인해 슬롯이 {rawSlot % 1 === 0 ? '정수' : '소수점'}이므로, 가구 제작 오차를 고려해 내림 처리합니다.</>
-                        : '가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.'}
-                    </p>
-                  </div>
+                      {/* 일반 구간 슬롯 */}
+                      <div className={styles.slotGuidePopupSection}>
+                        <div className={styles.slotGuidePopupLabel}>일반 구간 ({normalW}mm × {normalCols}칸)</div>
+                        <p className={styles.slotGuidePopupDesc}>
+                          <span className={styles.slotGuidePopupFormula}>
+                            {normalW} ÷ {normalCols} = {fmtSlot(normalRawSlot)}mm
+                          </span>
+                        </p>
+                      </div>
 
-                  <div className={styles.slotGuidePopupExample}>
-                    <div className={styles.slotGuidePopupExampleRow}>
-                      <span>싱글 가구 (1칸)</span>
-                      <span>{singleW}mm (정수 내림)</span>
-                    </div>
-                    <div className={styles.slotGuidePopupExampleRow}>
-                      <span>듀얼 가구 (2칸)</span>
-                      <span>{dualW % 1 === 0 ? dualW : dualW.toFixed(1)}mm (0.5 단위 내림)</span>
-                    </div>
-                  </div>
+                      {/* 단내림 구간 슬롯 */}
+                      <div className={styles.slotGuidePopupSection}>
+                        <div className={styles.slotGuidePopupLabel}>단내림 구간 ({droppedW}mm × {droppedCols}칸)</div>
+                        <p className={styles.slotGuidePopupDesc}>
+                          <span className={styles.slotGuidePopupFormula}>
+                            {droppedW} ÷ {droppedCols} = {fmtSlot(droppedRawSlot)}mm
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className={styles.slotGuidePopupDivider} />
+
+                      {/* 내림 규칙 — 구간별 */}
+                      <div className={styles.slotGuidePopupSection}>
+                        <div className={styles.slotGuidePopupLabel}>가구 너비 결정 (내림 규칙)</div>
+                        <p className={styles.slotGuidePopupDesc}>가구 제작 오차를 고려해 내림 처리합니다.</p>
+                      </div>
+
+                      <div className={styles.slotGuidePopupExample}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>일반 구간</div>
+                        <div className={styles.slotGuidePopupExampleRow}>
+                          <span>싱글 (1칸)</span>
+                          <span>{normalSingleW}mm</span>
+                        </div>
+                        <div className={styles.slotGuidePopupExampleRow}>
+                          <span>듀얼 (2칸)</span>
+                          <span>{fmtDual(normalDualW)}mm</span>
+                        </div>
+                      </div>
+                      <div className={styles.slotGuidePopupExample} style={{ marginTop: '6px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>단내림 구간</div>
+                        <div className={styles.slotGuidePopupExampleRow}>
+                          <span>싱글 (1칸)</span>
+                          <span>{droppedSingleW}mm</span>
+                        </div>
+                        <div className={styles.slotGuidePopupExampleRow}>
+                          <span>듀얼 (2칸)</span>
+                          <span>{fmtDual(droppedDualW)}mm</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* 단내림 없음 — 기존 로직 */}
+                      <div className={styles.slotGuidePopupSection}>
+                        <div className={styles.slotGuidePopupLabel}>슬롯 분할</div>
+                        <p className={styles.slotGuidePopupDesc}>
+                          내경 {internalW}mm를 {normalCols}개 컬럼으로 나누면 각 슬롯은 <strong>{fmtSlot(normalRawSlot)}mm</strong>입니다.
+                        </p>
+                        <p className={styles.slotGuidePopupDesc}>
+                          <span className={styles.slotGuidePopupFormula}>
+                            {internalW} ÷ {normalCols} = {fmtSlot(normalRawSlot)}mm
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className={styles.slotGuidePopupDivider} />
+
+                      <div className={styles.slotGuidePopupSection}>
+                        <div className={styles.slotGuidePopupLabel}>가구 너비 결정 (내림 규칙)</div>
+                        <p className={styles.slotGuidePopupDesc}>
+                          {hasGap
+                            ? <>이격거리로 인해 슬롯이 {normalRawSlot % 1 === 0 ? '정수' : '소수점'}이므로, 가구 제작 오차를 고려해 내림 처리합니다.</>
+                            : '가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.'}
+                        </p>
+                      </div>
+
+                      <div className={styles.slotGuidePopupExample}>
+                        <div className={styles.slotGuidePopupExampleRow}>
+                          <span>싱글 가구 (1칸)</span>
+                          <span>{normalSingleW}mm (정수 내림)</span>
+                        </div>
+                        <div className={styles.slotGuidePopupExampleRow}>
+                          <span>듀얼 가구 (2칸)</span>
+                          <span>{fmtDual(normalDualW)}mm (0.5 단위 내림)</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             })()}
