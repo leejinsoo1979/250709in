@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Search, FileText } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Search, FileText, Trash2, RotateCcw } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
 import type { ProjectSummary } from '@/firebase/types';
@@ -27,6 +27,10 @@ interface ContentToolbarProps {
   projectDesignFiles?: { [projectId: string]: any[] };
   currentItems?: ExplorerItem[];
   onItemNavigate?: (item: ExplorerItem) => void;
+  isTrash?: boolean;
+  onPermanentDelete?: () => void;
+  onRestore?: () => void;
+  onEmptyTrash?: () => void;
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -53,6 +57,10 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   projectDesignFiles,
   currentItems,
   onItemNavigate,
+  isTrash,
+  onPermanentDelete,
+  onRestore,
+  onEmptyTrash,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [treeOpen, setTreeOpen] = useState(false);
@@ -223,19 +231,44 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
 
   return (
     <div className={styles.toolbar}>
-      {/* 생성 버튼 (맨 좌측) */}
+      {/* 좌측 액션 버튼 */}
       <div className={styles.actions}>
-        {onCreateDesign && (
-          <button className={`${styles.createBtn} ${styles.createBtnPrimary}`} onClick={onCreateDesign}>
-            <Plus size={16} />
-            <span>새 디자인</span>
-          </button>
-        )}
-        {onCreateFolder && (
-          <button className={styles.createBtn} onClick={onCreateFolder}>
-            <FolderPlus size={16} />
-            <span>새 폴더</span>
-          </button>
+        {isTrash ? (
+          <>
+            {onRestore && (
+              <button className={styles.createBtn} onClick={onRestore}>
+                <RotateCcw size={16} />
+                <span>복원</span>
+              </button>
+            )}
+            {onPermanentDelete && (
+              <button className={`${styles.createBtn} ${styles.dangerBtn}`} onClick={onPermanentDelete}>
+                <Trash2 size={16} />
+                <span>영구 삭제</span>
+              </button>
+            )}
+            {onEmptyTrash && (
+              <button className={`${styles.createBtn} ${styles.dangerBtn}`} onClick={onEmptyTrash}>
+                <Trash2 size={16} />
+                <span>휴지통 비우기</span>
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            {onCreateDesign && (
+              <button className={`${styles.createBtn} ${styles.createBtnPrimary}`} onClick={onCreateDesign}>
+                <Plus size={16} />
+                <span>새 디자인</span>
+              </button>
+            )}
+            {onCreateFolder && (
+              <button className={styles.createBtn} onClick={onCreateFolder}>
+                <FolderPlus size={16} />
+                <span>새 폴더</span>
+              </button>
+            )}
+          </>
         )}
       </div>
 

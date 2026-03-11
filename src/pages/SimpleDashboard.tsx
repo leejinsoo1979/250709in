@@ -540,14 +540,21 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
 
-      // Delete: 삭제
+      // Delete: 삭제 (휴지통에서는 영구 삭제)
       if (e.key === 'Delete' && actions.selectedItems.size > 0) {
         e.preventDefault();
         const itemsToDelete = data.currentItems
           .filter(item => actions.selectedItems.has(item.id))
           .map(item => ({ id: item.id, type: item.type, projectId: item.projectId || nav.currentProjectId || undefined }));
-        if (itemsToDelete.length > 0 && confirm(`${itemsToDelete.length}개 항목을 삭제하시겠습니까?`)) {
-          actions.deleteItems(itemsToDelete);
+        if (itemsToDelete.length === 0) return;
+        if (nav.activeMenu === 'trash') {
+          if (confirm(`${itemsToDelete.length}개 항목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
+            actions.permanentDeleteItems(itemsToDelete);
+          }
+        } else {
+          if (confirm(`${itemsToDelete.length}개 항목을 삭제하시겠습니까?`)) {
+            actions.deleteItems(itemsToDelete);
+          }
         }
         return;
       }
@@ -734,6 +741,29 @@ const SimpleDashboard: React.FC = () => {
                 projectDesignFiles={data.projectDesignFiles}
                 currentItems={data.currentItems}
                 onItemNavigate={handleItemDoubleClick}
+                isTrash={nav.activeMenu === 'trash'}
+                onRestore={nav.activeMenu === 'trash' && actions.selectedItems.size > 0 ? () => {
+                  const itemsToRestore = data.currentItems
+                    .filter(i => actions.selectedItems.has(i.id))
+                    .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
+                  if (itemsToRestore.length > 0) actions.restoreItems(itemsToRestore);
+                } : undefined}
+                onPermanentDelete={nav.activeMenu === 'trash' && actions.selectedItems.size > 0 ? () => {
+                  const itemsToDelete = data.currentItems
+                    .filter(i => actions.selectedItems.has(i.id))
+                    .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
+                  if (itemsToDelete.length > 0 && confirm(`${itemsToDelete.length}개 항목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
+                    actions.permanentDeleteItems(itemsToDelete);
+                  }
+                } : undefined}
+                onEmptyTrash={nav.activeMenu === 'trash' && data.currentItems.length > 0 && actions.selectedItems.size === 0 ? () => {
+                  const allItems = data.currentItems.map(i => ({
+                    id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined,
+                  }));
+                  if (confirm(`휴지통의 ${allItems.length}개 항목을 모두 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+                    actions.permanentDeleteItems(allItems);
+                  }
+                } : undefined}
               />
 
               <ContentPane

@@ -286,6 +286,17 @@
   border-color: var(--theme-primary);
 }
 
+.dangerBtn {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.dangerBtn:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
 .createBtnPrimary {
   background: var(--theme-primary);
   color: white;
