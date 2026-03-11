@@ -2491,7 +2491,8 @@ const Room: React.FC<RoomProps> = ({
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
               frameThickness.right,
-              adjustedPanelHeight,
+              // 전체서라운드: 상부 프레임 두께만큼 높이 줄여 겹침 방지
+              isFullSurround ? adjustedPanelHeight - topBottomFrameHeight : adjustedPanelHeight,
               // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.right
@@ -2512,7 +2513,8 @@ const Room: React.FC<RoomProps> = ({
                 : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
                   ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
                   : xOffset + width - frameThickness.right / 2),
-              sideFrameCenterY,
+              // 전체서라운드: 상부 프레임 두께만큼 중심 아래로 이동
+              isFullSurround ? sideFrameCenterY - topBottomFrameHeight / 2 : sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.right
