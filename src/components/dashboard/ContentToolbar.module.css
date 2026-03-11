@@ -112,15 +112,17 @@
   color: var(--theme-text);
 }
 
-.breadcrumbActive,
-.breadcrumbActive:hover {
+.breadcrumbItem.breadcrumbActive,
+.breadcrumbItem.breadcrumbActive:hover {
   color: var(--theme-primary);
   font-weight: 600;
-  background: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-.breadcrumbActive .breadcrumbIcon,
-.breadcrumbActive:hover .breadcrumbIcon {
+.breadcrumbItem.breadcrumbActive .breadcrumbIcon,
+.breadcrumbItem.breadcrumbActive:hover .breadcrumbIcon {
   color: var(--theme-primary);
 }
 
