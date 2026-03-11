@@ -351,7 +351,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     if (viewMode === '3D') {
       if (renderMode === 'wireframe') {
-        return view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 3D 은선모드에서는 진한 색상
+        return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
       return "#3a3a3a"; // 3D 솔리드 모드에서는 진한 회색 엣지
     } else if (renderMode === 'wireframe') {
@@ -468,7 +468,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                           : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
                             ? 0.1
                             : viewMode === '3D'
-                              ? 0.65
+                              ? (renderMode === 'wireframe' ? 1.0 : 0.65)
                               : 1
                     }
                     depthTest={viewMode === '3D'}
@@ -502,7 +502,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                         : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
                           ? 0.1
                           : viewMode === '3D'
-                            ? 0.65
+                            ? (renderMode === 'wireframe' ? 1.0 : 0.65)
                             : 1
                   }
                   depthTest={viewMode === '3D'}
