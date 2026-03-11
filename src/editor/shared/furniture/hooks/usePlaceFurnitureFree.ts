@@ -67,24 +67,6 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     }
   }
 
-  // 띄움배치 시 가구 높이를 가용 공간에 맞춰 축소 (full/lower만)
-  if (moduleData.category !== 'upper') {
-    const isFloat =
-      spaceInfo.baseConfig?.placementType === 'float' &&
-      (spaceInfo.baseConfig?.floatHeight || 0) > 0;
-
-    if (isFloat) {
-      const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-      const topFrameMM = spaceInfo.frameSize?.top || 30;
-      const floatHeightMM = spaceInfo.baseConfig?.floatHeight || 0;
-      const availableHeightMM = spaceInfo.height - floorFinishMM - topFrameMM - floatHeightMM;
-
-      if (effectiveHeight > availableHeightMM) {
-        effectiveHeight = Math.max(availableHeightMM, 0);
-      }
-    }
-  }
-
   // Y좌표 계산 (카테고리별)
   const yPositionThree = calculateYPosition(moduleData.category, effectiveHeight, spaceInfo);
 

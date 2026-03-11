@@ -1138,22 +1138,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.freeHeight
     : (actualModuleData?.dimensions.height || 0);
 
-  // 자유배치 띄움배치: 가구 높이를 가용 공간에 맞춰 클램핑 (천장 뚫림 방지)
-  if (placedModule.isFreePlacement && !isUpperCabinetForY) {
-    const isFloatMode = spaceInfo.baseConfig?.type === 'stand' &&
-      spaceInfo.baseConfig?.placementType === 'float' &&
-      (spaceInfo.baseConfig?.floatHeight || 0) > 0;
-    if (isFloatMode) {
-      const ffMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-      const topFrMM = spaceInfo.frameSize?.top || 30;
-      const floatMM = spaceInfo.baseConfig?.floatHeight || 0;
-      const availMM = spaceInfo.height - ffMM - topFrMM - floatMM;
-      if (furnitureHeightMm > availMM) {
-        furnitureHeightMm = Math.max(availMM, 0);
-      }
-    }
-  }
-
   let adjustedCustomSections = placedModule.customSections;
 
   // 섹션 높이 조정 (actualModuleData.dimensions.height가 이미 조정된 경우를 대비)
@@ -1174,25 +1158,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         shelfPositions: section.shelfPositions?.map(pos => Math.round(pos * heightRatio))
       }));
 
-    }
-  }
-
-  // 커스텀 가구 띄움설치: 상부섹션에서만 높이 차감
-  let adjustedCustomConfig = placedModule.customConfig;
-  if (isCustomFurniture && adjustedCustomConfig?.sections && adjustedCustomConfig.sections.length > 0) {
-    const isFloatForCustSection = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-    const floatForSection = isFloatForCustSection ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    if (floatForSection > 0) {
-      // 마지막 섹션(상부)에서 floatHeight 차감
-      const lastIdx = adjustedCustomConfig.sections.length - 1;
-      const adjustedSections = adjustedCustomConfig.sections.map((s, i) => {
-        if (i === lastIdx) {
-          const newHeight = Math.max(s.height - floatForSection, 100); // 최소 100mm
-          return { ...s, height: newHeight };
-        }
-        return s;
-      });
-      adjustedCustomConfig = { ...adjustedCustomConfig, sections: adjustedSections };
     }
   }
 
@@ -3070,7 +3035,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
                   isCustomizable={placedModule.isCustomizable}
-                  customConfig={adjustedCustomConfig}
+                  customConfig={placedModule.customConfig}
                 />
               );
             })()}
