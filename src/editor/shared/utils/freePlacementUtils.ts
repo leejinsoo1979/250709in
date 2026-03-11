@@ -143,7 +143,7 @@ export function detectDroppedZone(
 
   // 단내림 구간의 내경 높이 = 전체 높이 - dropHeight - topFrame - floorFinish - base
   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 0;
-  const topFrameMM = spaceInfo.frameSize?.top || 10;
+  const topFrameMM = spaceInfo.frameSize?.top || 30;
   const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
   const baseHeightMM = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
   const floatHeightMM = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;

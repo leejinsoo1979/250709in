@@ -55,21 +55,21 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         updates.frameSize = {
           left: 50,
           right: 50,
-          top: spaceInfo.frameSize?.top || 10,
+          top: spaceInfo.frameSize?.top || 30,
         };
       } else if (type === 'semistanding') {
         // 한쪽벽: 벽 있는 쪽은 50mm, 없는 쪽은 20mm
         updates.frameSize = {
           left: wallConfig.left ? 50 : 20,
           right: wallConfig.right ? 50 : 20,
-          top: spaceInfo.frameSize?.top || 10,
+          top: spaceInfo.frameSize?.top || 30,
         };
       } else if (type === 'freestanding') {
         // 벽없음: 서라운드에서는 양쪽 20mm
         updates.frameSize = {
           left: 20,
           right: 20,
-          top: spaceInfo.frameSize?.top || 10,
+          top: spaceInfo.frameSize?.top || 30,
         };
       }
     }
@@ -137,7 +137,7 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       updates.frameSize = {
         left: newWallConfig.left ? 50 : 20,
         right: newWallConfig.right ? 50 : 20,
-        top: spaceInfo.frameSize?.top || 10,
+        top: spaceInfo.frameSize?.top || 30,
       };
 
       console.log('🚨🚨 서라운드 모드 벽 위치 변경 시 frameSize:', {
