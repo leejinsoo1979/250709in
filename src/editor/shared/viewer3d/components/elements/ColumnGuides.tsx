@@ -202,10 +202,13 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 띄워서 배치인지 확인
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   
-  // 내경 공간의 시작 높이 계산 (바닥 마감재 + 하단 프레임 높이)
+  // 내경 공간의 시작 높이 계산
+  // baseConfig.height는 바닥마감재 높이를 이미 포함하므로 별도 가산하면 이중 계산됨
   const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
   const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
-  const furnitureStartY = (floorFinishHeightMm + baseFrameHeightMm) * 0.01; // mm → Three.js 단위 변환
+  const furnitureStartY = (spaceInfo.baseConfig?.type === 'floor' || !spaceInfo.baseConfig
+    ? baseFrameHeightMm
+    : floorFinishHeightMm + baseFrameHeightMm) * 0.01;
   
   // CSS 변수에서 실제 테마 색상 가져오기
   const getThemeColorFromCSS = (variableName: string, fallback: string) => {

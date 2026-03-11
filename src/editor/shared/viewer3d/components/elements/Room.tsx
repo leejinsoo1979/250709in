@@ -629,6 +629,14 @@ const Room: React.FC<RoomProps> = ({
     widthMm, heightMm, panelDepthMm, furnitureDepthMm, floorFinishHeightMm, frameThicknessMm, baseFrameMm, topBottomFrameHeightMm, baseFrameHeightMm
   } = dimensions;
 
+  // 받침대 시각적 높이: baseConfig.height는 바닥마감재 포함 값이므로 실제 렌더링 시 바닥마감재를 빼야 함
+  const visualBaseFrameHeight = spaceInfo.baseConfig?.type === 'floor' && spaceInfo.hasFloorFinish && floorFinishHeight > 0
+    ? Math.max(0, baseFrameHeight - floorFinishHeight)
+    : baseFrameHeight;
+  const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && spaceInfo.hasFloorFinish && floorFinishHeightMm > 0
+    ? Math.max(0, baseFrameHeightMm - floorFinishHeightMm)
+    : baseFrameHeightMm;
+
   // 디버깅을 위한 로그
   console.log('🎯 Room - dimensions 디버깅:', {
     frameThicknessMm,
@@ -3331,12 +3339,12 @@ const Room: React.FC<RoomProps> = ({
                     name="base-frame"
                     args={[
                       mmToThreeUnits(widthMM),
-                      baseFrameHeight,
+                      visualBaseFrameHeight,
                       mmToThreeUnits(END_PANEL_THICKNESS)
                     ]}
                     position={[
                       mmToThreeUnits(centerXmm),
-                      panelStartY + floatHeight + baseFrameHeight / 2,
+                      panelStartY + floatHeight + visualBaseFrameHeight / 2,
                       baseZPosition
                     ]}
                     material={baseFrameMaterial ?? createFrameMaterial('base')}
@@ -3441,12 +3449,12 @@ const Room: React.FC<RoomProps> = ({
                       name="base-frame"
                       args={[
                         frameWidth, // 이미 엔드패널이 조정된 너비
-                        baseFrameHeight,
+                        visualBaseFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                       ]}
                       position={[
                         frameX, // 이미 엔드패널이 조정된 위치
-                        panelStartY + floatHeight + baseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
+                        panelStartY + floatHeight + visualBaseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
                         // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                         // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
@@ -3523,12 +3531,12 @@ const Room: React.FC<RoomProps> = ({
                       key={`base-frame-zone-${zoneIndex}`}
                       args={[
                         frameWidth,
-                        baseFrameHeight,
+                        visualBaseFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                       ]}
                       position={[
                         frameX, // 중앙 정렬
-                        panelStartY + floatHeight + baseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
+                        panelStartY + floatHeight + visualBaseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
                         // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                         // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
@@ -3565,12 +3573,12 @@ const Room: React.FC<RoomProps> = ({
                       key={`base-frame-zone-${zoneIndex}-segment-${segmentIndex}`}
                       args={[
                         segment.width,
-                        baseFrameHeight,
+                        visualBaseFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                       ]}
                       position={[
                         segment.x, // 분절된 위치
-                        panelStartY + floatHeight + baseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
+                        panelStartY + floatHeight + visualBaseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
                         // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
                         // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(END_PANEL_THICKNESS) -

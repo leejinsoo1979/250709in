@@ -36,7 +36,8 @@ export const useRaycastSlotDetection = (spaceInfo: SpaceInfo) => {
     let slotStartY: number;
     
     if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-      slotStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+      // baseConfig.height는 바닥마감재 높이를 이미 포함
+      slotStartY = mmToThreeUnits(baseFrameHeightMm);
     } else if (spaceInfo.baseConfig.type === 'stand') {
       if (spaceInfo.baseConfig.placementType === 'float') {
         const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;

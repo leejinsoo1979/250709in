@@ -41,6 +41,9 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   // Store에서 직접 baseDepth 읽기 (실시간 반영 보장)
   const storeBaseDepth = useSpaceConfigStore(state => state.spaceInfo.baseConfig?.depth ?? 0);
   const storeBaseHeight = useSpaceConfigStore(state => state.spaceInfo.baseConfig?.height ?? 65);
+  const storeFloorFinishHeight = useSpaceConfigStore(state =>
+    state.spaceInfo.hasFloorFinish && state.spaceInfo.floorFinish ? state.spaceInfo.floorFinish.height : 0
+  );
   const storeIsFloating = useSpaceConfigStore(state =>
     state.spaceInfo.baseConfig?.type === 'stand' &&
     state.spaceInfo.baseConfig?.placementType === 'float'
@@ -48,7 +51,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
 
   // Store 값 우선, prop은 폴백
   const effectiveBaseDepth = storeBaseDepth;
-  const effectiveBaseHeight = storeBaseHeight;
+  // baseConfig.height는 바닥마감재 높이를 포함하므로 시각적 발통 높이에서 차감
+  const effectiveBaseHeight = Math.max(0, storeBaseHeight - storeFloorFinishHeight);
   const effectiveIsFloating = storeIsFloating || isFloating;
 
   const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';

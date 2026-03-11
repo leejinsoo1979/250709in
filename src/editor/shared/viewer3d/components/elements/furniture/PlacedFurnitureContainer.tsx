@@ -109,8 +109,9 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   let furnitureStartY: number;
   
   if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-    // 받침대 있음: 바닥재 + 받침대 높이
-    furnitureStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+    // 받침대 있음: baseConfig.height가 이미 바닥마감재 높이를 포함하므로
+    // floorFinishHeight를 별도로 더하면 이중 가산됨
+    furnitureStartY = mmToThreeUnits(baseFrameHeightMm);
   } else if (spaceInfo.baseConfig.type === 'stand') {
     // 받침대 없음
     if (spaceInfo.baseConfig.placementType === 'float') {

@@ -249,7 +249,8 @@ export const calculateSlotStartY = (spaceInfo: SpaceInfo): number => {
   const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
   
   if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-    return mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+    // baseConfig.height는 바닥마감재 높이를 이미 포함하므로 별도 가산하면 이중 계산됨
+    return mmToThreeUnits(baseFrameHeightMm);
   } else if (spaceInfo.baseConfig.type === 'stand') {
     if (spaceInfo.baseConfig.placementType === 'float') {
       const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;

@@ -34,8 +34,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   let planeY: number;
   
   if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-    // 받침대 있음: 바닥재 + 받침대 높이
-    planeY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+    // 받침대 있음: baseConfig.height가 바닥마감재 높이를 이미 포함
+    planeY = mmToThreeUnits(baseFrameHeightMm);
   } else if (spaceInfo.baseConfig.type === 'stand') {
     // 받침대 없음
     if (spaceInfo.baseConfig.placementType === 'float') {
