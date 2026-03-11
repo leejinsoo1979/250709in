@@ -493,7 +493,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
   }, [getDistanceRange]);
 
-  // 슬라이더 값 변경 → 카메라 줌 적용 (부드러운 보간)
+  // 슬라이더 값 변경 → 카메라 줌 즉시 적용 (피드백 루프만 차단)
   const handleZoomSliderChange = useCallback((value: number) => {
     isSliderDraggingRef.current = true;
     setZoomSliderValue(value);
@@ -502,68 +502,74 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const cam = controls.object;
 
     if (cam.isOrthographicCamera) {
-      // 2D: slider 0~100 → zoom 0.5~10 (로그 스케일) - 즉시 적용
+      // 2D: slider 0~100 → zoom 0.5~10 (로그 스케일)
       const minZ = 0.5, maxZ = 10;
       const logMin = Math.log(minZ), logMax = Math.log(maxZ);
       const logVal = logMin + (value / 100) * (logMax - logMin);
       cam.zoom = Math.exp(logVal);
       cam.updateProjectionMatrix();
-      controls.update();
     } else {
-      // 3D: 부드러운 카메라 이동 (lerp)
+      // 3D: slider 0~100 → 카메라 거리 즉시 적용
       const { minD, maxD } = getDistanceRange();
       const targetDist = maxD - (value / 100) * (maxD - minD);
-      targetCameraDistRef.current = targetDist;
-
-      // 기존 애니메이션 취소
-      if (zoomAnimationRef.current) {
-        cancelAnimationFrame(zoomAnimationRef.current);
-      }
-
-      const animate = () => {
-        const ctrl = orbitControlsRef.current;
-        if (!ctrl?.object || targetCameraDistRef.current === null) return;
-        const c = ctrl.object;
-        const currentDist = c.position.distanceTo(ctrl.target);
-        const target = targetCameraDistRef.current;
-        // lerp factor: 높을수록 빠르게 도달 (0.25 = 부드러운 추종)
-        const newDist = currentDist + (target - currentDist) * 0.3;
-
-        if (Math.abs(newDist - target) < 0.01) {
-          // 목표 도달 - 정확한 위치로 설정
-          const dir = c.position.clone().sub(ctrl.target).normalize();
-          c.position.copy(ctrl.target.clone().add(dir.multiplyScalar(target)));
-          ctrl.update();
-          zoomAnimationRef.current = null;
-          targetCameraDistRef.current = null;
-          return;
-        }
-
-        const dir = c.position.clone().sub(ctrl.target).normalize();
-        c.position.copy(ctrl.target.clone().add(dir.multiplyScalar(newDist)));
-        ctrl.update();
-        zoomAnimationRef.current = requestAnimationFrame(animate);
-      };
-
-      zoomAnimationRef.current = requestAnimationFrame(animate);
+      const direction = cam.position.clone().sub(controls.target).normalize();
+      cam.position.copy(controls.target.clone().add(direction.multiplyScalar(targetDist)));
     }
+    controls.update();
   }, [getDistanceRange]);
 
   // 슬라이더 드래그 종료 시 플래그 해제
   const handleZoomSliderEnd = useCallback(() => {
-    // 약간의 딜레이로 마지막 change 이벤트가 처리된 후 해제
-    setTimeout(() => {
-      isSliderDraggingRef.current = false;
-    }, 50);
+    setTimeout(() => { isSliderDraggingRef.current = false; }, 50);
   }, []);
 
-  // +/- 버튼용 줌 스텝 함수
+  // +/- 버튼용 줌 스텝 함수 (부드러운 애니메이션)
   const handleZoomStep = useCallback((delta: number) => {
-    const newValue = Math.max(0, Math.min(100, zoomSliderValue + delta));
-    handleZoomSliderChange(newValue);
-    // 버튼 클릭은 즉시 드래그 해제
-    setTimeout(() => { isSliderDraggingRef.current = false; }, 100);
-  }, [zoomSliderValue, handleZoomSliderChange]);
+    const startValue = zoomSliderValue;
+    const endValue = Math.max(0, Math.min(100, startValue + delta));
+    if (startValue === endValue) return;
+
+    isSliderDraggingRef.current = true;
+    if (zoomAnimationRef.current) cancelAnimationFrame(zoomAnimationRef.current);
+
+    const duration = 200; // ms
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentValue = startValue + (endValue - startValue) * eased;
+
+      setZoomSliderValue(currentValue);
+      const controls = orbitControlsRef.current;
+      if (controls?.object) {
+        const cam = controls.object;
+        if (cam.isOrthographicCamera) {
+          const minZ = 0.5, maxZ = 10;
+          const logMin = Math.log(minZ), logMax = Math.log(maxZ);
+          cam.zoom = Math.exp(logMin + (currentValue / 100) * (logMax - logMin));
+          cam.updateProjectionMatrix();
+        } else {
+          const { minD, maxD } = getDistanceRange();
+          const dist = maxD - (currentValue / 100) * (maxD - minD);
+          const dir = cam.position.clone().sub(controls.target).normalize();
+          cam.position.copy(controls.target.clone().add(dir.multiplyScalar(dist)));
+        }
+        controls.update();
+      }
+
+      if (progress < 1) {
+        zoomAnimationRef.current = requestAnimationFrame(animate);
+      } else {
+        zoomAnimationRef.current = null;
+        setTimeout(() => { isSliderDraggingRef.current = false; }, 50);
+      }
+    };
+
+    zoomAnimationRef.current = requestAnimationFrame(animate);
+  }, [zoomSliderValue, getDistanceRange]);
 
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
