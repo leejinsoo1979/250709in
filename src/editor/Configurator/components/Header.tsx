@@ -776,11 +776,7 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 className={styles.convertButton}
                 onClick={() => {
-                  if (user?.email === 'sbbc212@gmail.com') {
-                    setIsConvertMenuOpen(!isConvertMenuOpen);
-                  } else {
-                    alert('공사중입니다.');
-                  }
+                  setIsConvertMenuOpen(!isConvertMenuOpen);
                 }}
               >
                 <SiConvertio size={20} />
