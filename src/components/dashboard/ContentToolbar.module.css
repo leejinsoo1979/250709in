@@ -244,7 +244,7 @@
 /* 트리 항목 날짜 */
 .treeItemDate {
   margin-left: auto;
-  padding-right: 12px;
+  padding-right: 20px;
   font-size: 11px;
   color: var(--theme-text-muted);
   white-space: nowrap;
