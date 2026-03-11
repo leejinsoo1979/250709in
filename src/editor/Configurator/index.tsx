@@ -3968,7 +3968,7 @@ const Configurator: React.FC = () => {
 
         </>)}
 
-        {/* 받침대 - 걸레받이 높이/깊이 먼저, 그 다음 타입 선택 */}
+        {/* 걸레받이 높이/깊이 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -3980,7 +3980,11 @@ const Configurator: React.FC = () => {
             disabled={hasSpecialDualFurniture}
             renderMode="placement-only"
           />
-          <div className={styles.sectionHeader} style={{ marginTop: '8px' }}>
+        </div>
+
+        {/* 배치방식 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>배치방식</h3>
           </div>
