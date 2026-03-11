@@ -3972,7 +3972,7 @@ const Configurator: React.FC = () => {
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>받침대</h3>
+            <h3 className={styles.sectionTitle}>걸레받이</h3>
           </div>
           <BaseControls
             spaceInfo={spaceInfo}
