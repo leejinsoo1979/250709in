@@ -1155,6 +1155,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
       {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasLeftFurniture) && (() => {
+        // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
+        if (spaceInfo.installType === 'freestanding') return null;
+
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
         // 왼쪽 벽이 있는지 확인
@@ -1270,6 +1273,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasRightFurniture) && (() => {
+        // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
+        if (spaceInfo.installType === 'freestanding') return null;
+
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
         // 오른쪽 벽이 있는지 확인
@@ -2497,32 +2503,36 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 0. 띄움 높이 - 띄워서 배치인 경우에만 표시 (우측) */}
               {isFloating && floatHeight > 0 && (
                 <group>
+                  {/* 수직 치수선 */}
                   <NativeLine name="dimension_line"
-                    points={[[rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002]]}
-                    color={textColor}
+                    points={[[rightDimensionX, 0, 0.002], [rightDimensionX, mmToThreeUnits(floatHeight), 0.002]]}
+                    color={dimensionColor}
                     lineWidth={1}
                     renderOrder={100000}
                     depthTest={false}
                   />
+                  {/* 하단 화살표 */}
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), -0.03, 0.002])}
-                    color={textColor}
+                    points={createArrowHead([rightDimensionX, 0, 0.002], [rightDimensionX, -0.03, 0.002])}
+                    color={dimensionColor}
                     lineWidth={1}
                     renderOrder={100000}
                     depthTest={false}
                   />
+                  {/* 상단 화살표 */}
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight) + 0.03, 0.002])}
-                    color={textColor}
+                    points={createArrowHead([rightDimensionX, mmToThreeUnits(floatHeight), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight) + 0.03, 0.002])}
+                    color={dimensionColor}
                     lineWidth={1}
                     renderOrder={100000}
                     depthTest={false}
                   />
+                  {/* 치수 텍스트 */}
                   <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[rightDimensionX + mmToThreeUnits(100) + mmToThreeUnits(30), mmToThreeUnits(floatHeight / 2), 0.01]}
-                    fontSize={baseFontSize * 0.9}
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight / 2), 0.01]}
+                    fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
@@ -2532,23 +2542,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     띄움 {floatHeight}
                   </Text>
-                  {/* 연장선들 - 좌측으로 1800mm 이동 */}
-                  <Line
-                    points={[[-mmToThreeUnits(1800), 0, 0.002], [mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(1800), 0, 0.002]]}
-                    color={textColor}
-                    lineWidth={0.5}
-                    dashed
-                    dashSize={0.01}
-                    gapSize={0.005}
-                  />
-                  <Line
-                    points={[[-mmToThreeUnits(1800), mmToThreeUnits(floatHeight), 0.002], [mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(1800), mmToThreeUnits(floatHeight), 0.002]]}
-                    color={textColor}
-                    lineWidth={0.5}
-                    dashed
-                    dashSize={0.01}
-                    gapSize={0.005}
-                  />
                 </group>
               )}
               
@@ -2826,6 +2819,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               )}
               
               {/* 연장선들 */}
+              {/* 띄움 배치: 바닥(Y=0) 연장선 추가 */}
+              {isFloating && floatHeight > 0 && (
+              <Line
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), 0, 0.001]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              )}
+              {/* 띄움 상단 또는 받침대 하단 연장선 */}
               <Line
                 points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, bottomY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), bottomY, 0.001]]}
                 color={dimensionColor}
