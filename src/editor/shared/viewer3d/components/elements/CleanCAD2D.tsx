@@ -455,7 +455,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     setTimeout(() => {
       setEditingColumnId(columnId);
       setEditingSide(side);
-      setEditingValue(currentValue.toString());
+      setEditingValue(Math.round(currentValue).toString());
     }, 50);
   };
 
@@ -1609,7 +1609,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           outlineWidth={textOutlineWidth}
                           outlineColor={textOutlineColor}
                         >
-                          {boundaryGapMm.toFixed(1)}
+                          {Math.round(boundaryGapMm)}
                         </Text>
                       )}
                     </>
@@ -2835,7 +2835,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {Number.isInteger(actualWidth) ? actualWidth : Math.round(actualWidth * 10) / 10}
+              {Math.round(actualWidth)}
             </Text>
 
 
@@ -3180,7 +3180,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           outlineColor={textOutlineColor}
                           rotation={[-Math.PI / 2, 0, 0]}
                         >
-                          {boundaryGapMm.toFixed(1)}
+                          {Math.round(boundaryGapMm)}
                         </Text>
                       )}
                     </>
@@ -5860,7 +5860,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {Number.isInteger(actualWidth) ? actualWidth : Math.round(actualWidth * 10) / 10}
+                {Math.round(actualWidth)}
               </Text>
 
               {/* 연장선들 - 가구 앞단에서 치수선까지 */}

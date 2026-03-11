@@ -145,7 +145,7 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
                   cursor: 'pointer'
                 }}
               >
-                {parseFloat(internalWidth.toFixed(2))}mm
+                {Math.round(internalWidth)}mm
               </div>
             </Html>
           </>

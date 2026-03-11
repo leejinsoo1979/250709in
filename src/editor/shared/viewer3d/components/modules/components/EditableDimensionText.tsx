@@ -46,7 +46,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   onHoverChange
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(String(parseFloat(value.toFixed(2))));
+  const [editValue, setEditValue] = useState(String(Math.round(value)));
   const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const meshRef = useRef<THREE.Mesh>(null);
@@ -57,7 +57,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   // 편집 모드 진입 (클릭으로 변경)
   const handleClick = useCallback((e: any) => {
     e.stopPropagation();
-    setEditValue(String(parseFloat(value.toFixed(2))));
+    setEditValue(String(Math.round(value)));
     setIsEditing(true);
   }, [value]);
 
@@ -88,8 +88,8 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
     console.log('✅ 치수 변경 확정:', {
       furnitureId,
       sectionIndex,
-      oldValue: parseFloat(value.toFixed(2)),
-      newValue: parseFloat(newValue.toFixed(2))
+      oldValue: Math.round(value),
+      newValue: Math.round(newValue)
     });
 
     onValueChange(newValue);
@@ -99,7 +99,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   // 취소
   const handleCancel = useCallback(() => {
     console.log('❌ 치수 변경 취소');
-    setEditValue(String(parseFloat(value.toFixed(2))));
+    setEditValue(String(Math.round(value)));
     setIsEditing(false);
   }, [value]);
 
@@ -197,7 +197,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             renderOrder={renderOrder}
             depthTest={depthTest}
           >
-            {parseFloat(value.toFixed(2))}
+            {Math.round(value)}
           </Text>
 
           {/* 클릭 영역 - 투명 메시 */}
