@@ -938,13 +938,13 @@
 .spaceControls {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 6px;
 }
 
 /* 설정 섹션 */
 .configSection {
-  border-bottom: 1px solid var(--theme-border);
-  padding: 4px 0;
+  border-bottom: none;
+  padding: 0;
 }
 
 .configSection:last-child {
@@ -956,7 +956,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .sectionDot {
@@ -1531,7 +1531,7 @@
   }
 
   .configSection {
-    padding: 16px 0;
+    padding: 0;
   }
 
   .inputRow {
@@ -1737,7 +1737,7 @@
   }
   
   .configSection {
-    padding: 8px 0;
+    padding: 0;
   }
 }
 
@@ -2050,7 +2050,7 @@
 
 .stepDownSettings {
   animation: fadeIn 0.3s ease-out;
-  padding: 4px 0;
+  padding: 0;
 }
 
 .stepDownDescription {
