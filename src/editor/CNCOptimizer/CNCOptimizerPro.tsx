@@ -210,7 +210,7 @@ function PageInner(){
     sawStats, setSawStats,
     fullSimulating, setFullSimulating, fullSimCurrentSheet, setFullSimCurrentSheet,
     fullSimTotalSheets, setFullSimTotalSheets,
-    hoveredPanelName, hoveredFurnitureId
+    hoveredPanelName, hoveredFurnitureId, setHoveredPanel
   } = useCNCStore();
 
   // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
@@ -263,6 +263,7 @@ function PageInner(){
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectedPanelId(null);
+        setHoveredPanel(null, null);
       }
       
       // Arrow key navigation for sheets
@@ -282,6 +283,7 @@ function PageInner(){
       const target = e.target as HTMLElement;
       if (!target.closest('.panel-clickable')) {
         setSelectedPanelId(null);
+        setHoveredPanel(null, null);
       }
     };
 
@@ -1278,7 +1280,24 @@ function PageInner(){
                   result={optimizationResults[currentSheetIndex]}
                   highlightedPanelId={selectedPanelId}
                   showLabels={settings.labelsOnPanels}
-                  onPanelClick={(id) => setSelectedPanelId(id)}
+                  onPanelClick={(id) => {
+                    setSelectedPanelId(id);
+                    // 현재 시트의 배치된 패널에서 meshName/furnitureId 찾기
+                    const currentResult = optimizationResults[currentSheetIndex];
+                    const placedPanel = currentResult?.panels.find(p => p.id === id);
+                    if (placedPanel?.meshName && placedPanel?.furnitureId) {
+                      setHoveredPanel(placedPanel.meshName, placedPanel.furnitureId);
+                    } else {
+                      // 원본 패널에서 찾기 (id가 suffix 포함된 경우)
+                      const baseId = id?.replace(/-\d+$/, '');
+                      const origPanel = panels.find(p => p.id === baseId || p.id === id);
+                      if (origPanel?.meshName && origPanel?.furnitureId) {
+                        setHoveredPanel(origPanel.meshName, origPanel.furnitureId);
+                      } else {
+                        setHoveredPanel(null, null);
+                      }
+                    }
+                  }}
                   allowRotation={!settings.considerGrain}
                   // 뷰어 상태 동기화
                   scale={viewerScale}
@@ -1628,6 +1647,12 @@ function PageInner(){
                                     const panelId = panel.id;
                                     setSelectedPanelId(panelId);
                                     setCurrentSheetIndex(index);
+                                    // 3D 뷰어 하이라이트
+                                    if (panel.meshName && panel.furnitureId) {
+                                      setHoveredPanel(panel.meshName, panel.furnitureId);
+                                    } else {
+                                      setHoveredPanel(null, null);
+                                    }
                                   }}
                                 >
                                   <span className={styles.panelName}>{panel.name || `Panel ${panel.id}`}</span>

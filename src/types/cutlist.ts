@@ -30,6 +30,9 @@ export interface Panel {
   bracketBoringPositions?: number[];
   bracketBoringDepthPositions?: number[];
   isBracketSide?: boolean;
+  // 3D 뷰어 패널 하이라이트용
+  meshName?: string;
+  furnitureId?: string;
 }
 
 export interface StockSheet {

@@ -7,13 +7,16 @@ interface CuttingLayoutPreviewProps {
   highlightedPanelId?: string | null;
   zoom?: number;
   showLabels?: boolean;
+  onPanelClick?: (panelId: string | null) => void;
+  [key: string]: any; // 하위 호환성
 }
 
-const CuttingLayoutPreview: React.FC<CuttingLayoutPreviewProps> = ({ 
+const CuttingLayoutPreview: React.FC<CuttingLayoutPreviewProps> = ({
   result,
   highlightedPanelId,
   zoom = 100,
-  showLabels = true 
+  showLabels = true,
+  onPanelClick,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -240,9 +243,38 @@ const CuttingLayoutPreview: React.FC<CuttingLayoutPreviewProps> = ({
 
   }, [result, highlightedPanelId, zoom, showLabels]);
 
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!result || !canvasRef.current || !onPanelClick) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scale = zoom / 100;
+    const padding = 40;
+    const displayWidth = result.stockPanel.width * 0.3 * scale;
+    const displayHeight = result.stockPanel.height * 0.3 * scale;
+
+    const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+    for (const panel of result.panels) {
+      const px = padding + (panel.x * displayWidth / result.stockPanel.width);
+      const py = padding + (panel.y * displayHeight / result.stockPanel.height);
+      const pw = panel.width * displayWidth / result.stockPanel.width;
+      const ph = panel.height * displayHeight / result.stockPanel.height;
+      if (clickX >= px && clickX <= px + pw && clickY >= py && clickY <= py + ph) {
+        onPanelClick(panel.id);
+        return;
+      }
+    }
+    onPanelClick(null);
+  };
+
   return (
     <div className={styles.previewContainer}>
-      <canvas ref={canvasRef} />
+      <canvas
+        ref={canvasRef}
+        onClick={handleCanvasClick}
+        style={{ cursor: onPanelClick ? 'pointer' : 'default' }}
+      />
     </div>
   );
 };
