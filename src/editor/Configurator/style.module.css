@@ -417,8 +417,6 @@
   padding: 2px;
   gap: 1px;
   margin: 4px 12px 0 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--theme-border-color, rgba(0, 0, 0, 0.08));
   flex-shrink: 0;
 }
 
@@ -471,7 +469,7 @@
 
 /* 모듈 패널 스타일 */
 .modulePanelContent {
-  padding: 4px var(--spacing-md, 12px) var(--spacing-md, 12px);
+  padding: 0 var(--spacing-md, 12px) var(--spacing-md, 12px);
   height: 100%;
   display: flex;
   flex-direction: column;
