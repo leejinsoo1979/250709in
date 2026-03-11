@@ -28,6 +28,14 @@ export interface BaseConfig {
   floatHeight?: number; // 띄워서 배치 시 띄우는 높이
 }
 
+// 개별 프레임 선택 설정
+export interface FrameConfig {
+  left: boolean;   // 좌 프레임
+  right: boolean;  // 우 프레임
+  top: boolean;    // 상 프레임
+  bottom: boolean; // 하 프레임 (= 받침대/걸레받이)
+}
+
 // 재질 설정 타입
 export interface MaterialConfig {
   interiorColor: string;
@@ -91,6 +99,9 @@ export interface SpaceInfo {
   
   // 임시 슬롯 너비 (getModuleById에서 특정 너비로 검색할 때 사용)
   _tempSlotWidths?: number[];
+
+  // 개별 프레임 선택 설정
+  frameConfig?: FrameConfig;
 }
 
 // 단내림 설정 인터페이스
@@ -231,6 +242,13 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
       position: 'right',
       width: 900,
       dropHeight: 200
+    },
+    // 개별 프레임 선택 기본값 (전체 서라운드)
+    frameConfig: {
+      left: true,
+      right: true,
+      top: true,
+      bottom: true,
     },
     // 배치 모드 기본값
     layoutMode: 'equal-division' as const,  // 기본값: 슬롯배치 (균등분할)

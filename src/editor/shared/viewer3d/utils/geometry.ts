@@ -420,6 +420,6 @@ export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
     return SURROUND_FRAME_THICKNESS;
   }
   
-  // frameSize.top이 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
-  return spaceInfo.frameSize?.top || SURROUND_FRAME_THICKNESS;
+  // frameSize.top이 설정되어 있으면 그 값을 사용 (0도 유효), 없으면 기본값 10mm
+  return spaceInfo.frameSize?.top ?? SURROUND_FRAME_THICKNESS;
 }; 

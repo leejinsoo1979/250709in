@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { SpaceInfo, SurroundType } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, FrameConfig } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSurroundCalculations } from './hooks/useSurroundCalculations';
 import SurroundTypeSelector from './components/SurroundTypeSelector';
 import GapControls from './components/GapControls';
 import FrameSizeControls from './components/FrameSizeControls';
+import { deriveFromFrameConfig, inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 
 interface SurroundControlsProps {
   spaceInfo: SpaceInfo;
@@ -21,6 +22,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const prevSpaceInfoRef = useRef(spaceInfo);
 
   // 기존 로컬 상태들
+  const frameConfig = inferFrameConfig(spaceInfo);
   const isSurround = spaceInfo.surroundType === 'surround';
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
   const hasLeftWall = spaceInfo.wallConfig.left;
@@ -77,66 +79,58 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     }
   }, [isSurround, hasLeftWall, hasRightWall, spaceInfo.frameSize, onUpdate]);
 
-  // 서라운드 타입 변경 처리
-  const handleSurroundTypeChange = (type: SurroundType) => {
-    console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
+  // 프레임 설정 변경 처리 (4 체크박스)
+  const handleFrameConfigChange = (newFrameConfig: FrameConfig) => {
+    console.log('🔧 SurroundControls - handleFrameConfigChange called:', newFrameConfig);
+
+    // 브릿지로 기존 타입 도출
+    const derived = deriveFromFrameConfig(newFrameConfig, spaceInfo);
+
     const updates: Partial<SpaceInfo> = {
-      surroundType: type,
+      frameConfig: newFrameConfig,
+      surroundType: derived.surroundType,
+      frameSize: derived.frameSize,
+      baseConfig: derived.baseConfig,
     };
 
-    if (type === 'surround') {
-      // 서라운드 모드: 설치 타입에 따라 프레임 크기 결정
-      const installType = spaceInfo.installType;
-      
+    // 설치 타입에 따라 프레임 크기 보정
+    const installType = spaceInfo.installType;
+    if (newFrameConfig.left || newFrameConfig.right) {
       if (installType === 'builtin' || installType === 'built-in') {
-        // 양쪽벽: 기본 프레임 50mm
-        updates.frameSize = {
-          left: 50,
-          right: 50,
-          top: 10,
-        };
+        if (newFrameConfig.left && derived.frameSize.left === 0) updates.frameSize!.left = 50;
+        if (newFrameConfig.right && derived.frameSize.right === 0) updates.frameSize!.right = 50;
       } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        // 한쪽벽: 벽 있는 쪽은 50mm, 없는 쪽은 20mm
-        updates.frameSize = {
-          left: hasLeftWall ? 50 : END_PANEL_WIDTH,
-          right: hasRightWall ? 50 : END_PANEL_WIDTH,
-          top: 10,
-        };
+        if (newFrameConfig.left && derived.frameSize.left === 0) {
+          updates.frameSize!.left = hasLeftWall ? 50 : END_PANEL_WIDTH;
+        }
+        if (newFrameConfig.right && derived.frameSize.right === 0) {
+          updates.frameSize!.right = hasRightWall ? 50 : END_PANEL_WIDTH;
+        }
       } else if (installType === 'freestanding') {
-        // 벽없음: 양쪽 모두 20mm 엔드패널 (서라운드에서는 frameSize로 관리)
-        updates.frameSize = {
-          left: END_PANEL_WIDTH,
-          right: END_PANEL_WIDTH,
-          top: 10,
-        };
+        if (newFrameConfig.left && derived.frameSize.left === 0) updates.frameSize!.left = END_PANEL_WIDTH;
+        if (newFrameConfig.right && derived.frameSize.right === 0) updates.frameSize!.right = END_PANEL_WIDTH;
       }
-      
-      // 서라운드 모드에서도 gapConfig 기본값 유지
+    }
+
+    // top이 새로 켜질 때 기본값 보정
+    if (newFrameConfig.top && derived.frameSize.top === 0) {
+      updates.frameSize!.top = 10;
+    }
+
+    // 이격거리 설정
+    if (derived.surroundType === 'surround') {
       updates.gapConfig = {
         left: 2,
         right: 2
       };
     } else {
-      // 노서라운드(타이트) 설정
-      
-      // 노서라운드에서도 상부프레임은 필요하므로 기존 값 유지 또는 기본값 설정
-      // (Firebase는 undefined를 허용하지 않음)
-      updates.frameSize = { 
-        left: 0, 
-        right: 0, 
-        top: spaceInfo.frameSize?.top || 10  // 상부프레임은 유지 (기본값 10mm)
-      };
-      
-      // 빌트인 모드에서는 스토어가 자동으로 최적 이격거리를 계산함
-      // 세미스탠딩/프리스탠딩일 때만 수동 설정
-      if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
-        const gapSizeValue = 2; // 기본 이격거리
+      if (installType !== 'builtin' && installType !== 'built-in') {
+        const gapSizeValue = 2;
         updates.gapConfig = {
           left: hasLeftWall ? gapSizeValue : 0,
           right: hasRightWall ? gapSizeValue : 0,
         };
       }
-      // builtin의 경우 gapConfig를 설정하지 않아 스토어가 자동 계산하도록 함
     }
 
     onUpdate(updates);
@@ -254,10 +248,10 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   return (
     <div className={styles.container}>
-      {/* 서라운드 타입 선택 */}
+      {/* 프레임 선택 (좌/우/상/하) */}
       <SurroundTypeSelector
-        surroundType={spaceInfo.surroundType || 'surround'}
-        onSurroundTypeChange={handleSurroundTypeChange}
+        frameConfig={frameConfig}
+        onFrameConfigChange={handleFrameConfigChange}
         disabled={disabled}
       />
 
@@ -275,6 +269,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         hasLeftWall={hasLeftWall}
         hasRightWall={hasRightWall}
         isSurround={isSurround}
+        frameConfig={frameConfig}
         surroundFrameWidth={surroundFrameWidth}
         noSurroundFrameWidth={noSurroundFrameWidth}
         gapSize={2}

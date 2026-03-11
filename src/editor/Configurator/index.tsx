@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { TbRulerMeasure } from 'react-icons/tb';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, FrameConfig } from '@/store/core/spaceConfigStore';
+import { deriveFromFrameConfig, inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore, type EditorTab } from '@/store/uiStore';
@@ -2355,7 +2356,8 @@ const Configurator: React.FC = () => {
     }
 
     // 서라운드 타입 변경 시 프레임 설정 초기화
-    if (updates.surroundType) {
+    // frameConfig가 함께 전달되면 브릿지에서 이미 frameSize를 계산했으므로 건너뜀
+    if (updates.surroundType && !updates.frameConfig) {
       const currentInstallType = finalUpdates.installType || spaceInfo.installType;
       const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
       const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 10 };
@@ -3595,220 +3597,204 @@ const Configurator: React.FC = () => {
             <h3 className={styles.sectionTitle}>프레임 설정</h3>
           </div>
 
-          {/* 프레임 타입 */}
-          <div className={styles.toggleButtonGroup}>
-            <button
-              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.toggleButtonActive : ''}`}
-              onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
-            >
-              서라운드
-            </button>
-            <button
-              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.toggleButtonActive : ''}`}
-              onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
-            >
-              노서라운드
-            </button>
-          </div>
-
-          {/* 프레임 속성 설정 */}
-          {(spaceInfo.surroundType || 'surround') === 'surround' ? (
-            <div className={styles.subSetting}>
-              <div className={styles.frameGrid}>
-                {/* 좌측 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>
-                    {spaceInfo.installType === 'builtin' ? '좌측' :
-                      spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
-                        spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
-                          spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
-                  </label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentLeft = spaceInfo.frameSize?.left || 50;
-                        const newLeft = Math.max(10, currentLeft - 1);
-                        updateFrameSize('left', newLeft);
-                      }}
-                      disabled={
-                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
-                        spaceInfo.installType === 'freestanding'
-                      }
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={frameInputLeft}
-                      onChange={(e) => handleFrameInputChange('left', e.target.value)}
-                      onFocus={() => handleFrameInputFocus('left')}
-                      onBlur={() => handleFrameInputBlur('left', 10, 100, 50)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'left', 10, 100, 50)}
-                      className={styles.frameNumberInput}
-                      disabled={
-                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
-                        spaceInfo.installType === 'freestanding'
-                      }
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentLeft = spaceInfo.frameSize?.left || 50;
-                        const newLeft = Math.min(100, currentLeft + 1);
-                        updateFrameSize('left', newLeft);
-                      }}
-                      disabled={
-                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
-                        spaceInfo.installType === 'freestanding'
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
+          {/* 프레임 선택 (좌/우/상/하) */}
+          {(() => {
+            const currentFrameConfig = inferFrameConfig(spaceInfo);
+            const handleInlineFrameConfigToggle = (key: keyof FrameConfig) => {
+              const newConfig = { ...currentFrameConfig, [key]: !currentFrameConfig[key] };
+              const derived = deriveFromFrameConfig(newConfig, spaceInfo);
+              handleSpaceInfoUpdate({
+                frameConfig: newConfig,
+                surroundType: derived.surroundType,
+                frameSize: derived.frameSize,
+                baseConfig: derived.baseConfig,
+              });
+            };
+            return (
+              <>
+                <div className={styles.toggleButtonGroup}>
+                  <button
+                    className={`${styles.toggleButton} ${currentFrameConfig.left ? styles.toggleButtonActive : ''}`}
+                    onClick={() => handleInlineFrameConfigToggle('left')}
+                  >
+                    좌
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${currentFrameConfig.right ? styles.toggleButtonActive : ''}`}
+                    onClick={() => handleInlineFrameConfigToggle('right')}
+                  >
+                    우
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${currentFrameConfig.top ? styles.toggleButtonActive : ''}`}
+                    onClick={() => handleInlineFrameConfigToggle('top')}
+                  >
+                    상
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${currentFrameConfig.bottom ? styles.toggleButtonActive : ''}`}
+                    onClick={() => handleInlineFrameConfigToggle('bottom')}
+                  >
+                    하
+                  </button>
                 </div>
 
-                {/* 우측 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>
-                    {spaceInfo.installType === 'builtin' ? '우측' :
-                      spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
-                        spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
-                          spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
-                  </label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentRight = spaceInfo.frameSize?.right || 50;
-                        const newRight = Math.max(10, currentRight - 1);
-                        updateFrameSize('right', newRight);
-                      }}
-                      disabled={
-                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
-                        spaceInfo.installType === 'freestanding'
-                      }
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={frameInputRight}
-                      onChange={(e) => handleFrameInputChange('right', e.target.value)}
-                      onFocus={() => handleFrameInputFocus('right')}
-                      onBlur={() => handleFrameInputBlur('right', 10, 100, 50)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'right', 10, 100, 50)}
-                      className={styles.frameNumberInput}
-                      disabled={
-                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
-                        spaceInfo.installType === 'freestanding'
-                      }
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentRight = spaceInfo.frameSize?.right || 50;
-                        const newRight = Math.min(100, currentRight + 1);
-                        updateFrameSize('right', newRight);
-                      }}
-                      disabled={
-                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
-                        spaceInfo.installType === 'freestanding'
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* 상부 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>상부</label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 50;
-                        const newTop = Math.max(10, currentTop - 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={frameInputTop}
-                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
-                      onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 100, 50)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 100, 50)}
-                      className={styles.frameNumberInput}
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 50;
-                        const newTop = Math.min(100, currentTop + 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-
+                {/* 프레임 크기 설정 - 활성화된 프레임만 표시 */}
+                {(currentFrameConfig.left || currentFrameConfig.right || currentFrameConfig.top) && (
+                  <div className={styles.subSetting}>
+                    <div className={styles.frameGrid}>
+                      {currentFrameConfig.left && (
+                        <div className={styles.frameItem}>
+                          <label className={styles.frameItemLabel}>
+                            {spaceInfo.installType === 'builtin' ? '좌측' :
+                              !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' : '좌측'}
+                          </label>
+                          <div className={styles.frameItemInput}>
+                            <button
+                              className={styles.frameButton}
+                              onClick={() => {
+                                const currentLeft = spaceInfo.frameSize?.left || 50;
+                                const newLeft = Math.max(10, currentLeft - 1);
+                                updateFrameSize('left', newLeft);
+                              }}
+                              disabled={
+                                (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
+                                spaceInfo.installType === 'freestanding'
+                              }
+                            >
+                              −
+                            </button>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={frameInputLeft}
+                              onChange={(e) => handleFrameInputChange('left', e.target.value)}
+                              onFocus={() => handleFrameInputFocus('left')}
+                              onBlur={() => handleFrameInputBlur('left', 10, 100, 50)}
+                              onKeyDown={(e) => handleFrameInputKeyDown(e, 'left', 10, 100, 50)}
+                              className={styles.frameNumberInput}
+                              disabled={
+                                (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
+                                spaceInfo.installType === 'freestanding'
+                              }
+                            />
+                            <button
+                              className={styles.frameButton}
+                              onClick={() => {
+                                const currentLeft = spaceInfo.frameSize?.left || 50;
+                                const newLeft = Math.min(100, currentLeft + 1);
+                                updateFrameSize('left', newLeft);
+                              }}
+                              disabled={
+                                (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
+                                spaceInfo.installType === 'freestanding'
+                              }
+                            >
+                              +
+                            </button>
                           </div>
-          ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
-            <div className={styles.subSetting}>
-              <div className={styles.frameGrid}>
-                {/* 상부 프레임만 표시 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>상부</label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 10;
-                        const newTop = Math.max(10, currentTop - 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={frameInputTop}
-                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
-                      onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 10)}
-                      className={styles.frameNumberInput}
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 10;
-                        const newTop = Math.min(200, currentTop + 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
+                        </div>
+                      )}
 
+                      {currentFrameConfig.right && (
+                        <div className={styles.frameItem}>
+                          <label className={styles.frameItemLabel}>
+                            {spaceInfo.installType === 'builtin' ? '우측' :
+                              !spaceInfo.wallConfig?.right ? '우측(엔드패널)' : '우측'}
+                          </label>
+                          <div className={styles.frameItemInput}>
+                            <button
+                              className={styles.frameButton}
+                              onClick={() => {
+                                const currentRight = spaceInfo.frameSize?.right || 50;
+                                const newRight = Math.max(10, currentRight - 1);
+                                updateFrameSize('right', newRight);
+                              }}
+                              disabled={
+                                (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
+                                spaceInfo.installType === 'freestanding'
+                              }
+                            >
+                              −
+                            </button>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={frameInputRight}
+                              onChange={(e) => handleFrameInputChange('right', e.target.value)}
+                              onFocus={() => handleFrameInputFocus('right')}
+                              onBlur={() => handleFrameInputBlur('right', 10, 100, 50)}
+                              onKeyDown={(e) => handleFrameInputKeyDown(e, 'right', 10, 100, 50)}
+                              className={styles.frameNumberInput}
+                              disabled={
+                                (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
+                                spaceInfo.installType === 'freestanding'
+                              }
+                            />
+                            <button
+                              className={styles.frameButton}
+                              onClick={() => {
+                                const currentRight = spaceInfo.frameSize?.right || 50;
+                                const newRight = Math.min(100, currentRight + 1);
+                                updateFrameSize('right', newRight);
+                              }}
+                              disabled={
+                                (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
+                                spaceInfo.installType === 'freestanding'
+                              }
+                            >
+                              +
+                            </button>
                           </div>
-          ) : null}
+                        </div>
+                      )}
+
+                      {currentFrameConfig.top && (
+                        <div className={styles.frameItem}>
+                          <label className={styles.frameItemLabel}>상부</label>
+                          <div className={styles.frameItemInput}>
+                            <button
+                              className={styles.frameButton}
+                              onClick={() => {
+                                const currentTop = spaceInfo.frameSize?.top || 10;
+                                const newTop = Math.max(10, currentTop - 1);
+                                updateFrameSize('top', newTop);
+                              }}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={frameInputTop}
+                              onChange={(e) => handleFrameInputChange('top', e.target.value)}
+                              onFocus={() => handleFrameInputFocus('top')}
+                              onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
+                              onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 10)}
+                              className={styles.frameNumberInput}
+                            />
+                            <button
+                              className={styles.frameButton}
+                              onClick={() => {
+                                const currentTop = spaceInfo.frameSize?.top || 10;
+                                const newTop = Math.min(200, currentTop + 1);
+                                updateFrameSize('top', newTop);
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
         </div>
 

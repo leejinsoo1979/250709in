@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUIStore, HighlightedFrame } from '@/store/uiStore';
+import { FrameConfig } from '@/store/core/spaceConfigStore';
 import styles from '../../styles/common.module.css';
 
 interface FrameSizeControlsProps {
@@ -11,6 +12,7 @@ interface FrameSizeControlsProps {
   hasLeftWall: boolean;
   hasRightWall: boolean;
   isSurround: boolean;
+  frameConfig?: FrameConfig;
   surroundFrameWidth?: number | null;
   noSurroundFrameWidth?: number | null;
   gapSize?: 2 | 3;
@@ -97,12 +99,18 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   hasLeftWall,
   hasRightWall,
   isSurround,
+  frameConfig,
   onFrameSizeChange,
   onFrameSizeBlur,
   onKeyDown
 }) => {
   const END_PANEL_WIDTH = 18;
   const { setHighlightedFrame } = useUIStore();
+
+  // frameConfig가 있으면 개별 프레임 기반, 없으면 기존 isSurround 로직
+  const showLeft = frameConfig ? frameConfig.left : isSurround;
+  const showRight = frameConfig ? frameConfig.right : isSurround;
+  const showTop = frameConfig ? frameConfig.top : true; // 상단은 항상 표시 (기존 동작)
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>, frame: HighlightedFrame) => {
     setHighlightedFrame(frame);
@@ -123,11 +131,20 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
     return val;
   };
 
-  if (isSurround) {
-    return (
-      <div className={styles.section}>
-        <span className={styles.label}>프레임 설정</span>
-        <div className={styles.inputGroup} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+  // 표시할 입력 필드 개수 계산
+  const visibleInputs = [showLeft, showRight, showTop].filter(Boolean).length;
+
+  if (visibleInputs === 0) {
+    return null; // 선택된 프레임이 없으면 크기 설정 불필요
+  }
+
+  const gridColumns = visibleInputs === 1 ? '1fr' : visibleInputs === 2 ? '1fr 1fr' : '1fr 1fr 1fr';
+
+  return (
+    <div className={styles.section}>
+      <span className={styles.label}>프레임 설정</span>
+      <div className={styles.inputGroup} style={{ gridTemplateColumns: gridColumns }}>
+        {showLeft && (
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>좌측 (40~100)</label>
             <NumberInput
@@ -141,7 +158,9 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
               disabled={!hasLeftWall}
             />
           </div>
+        )}
 
+        {showRight && (
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>우측 (40~100)</label>
             <NumberInput
@@ -155,7 +174,9 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
               disabled={!hasRightWall}
             />
           </div>
+        )}
 
+        {showTop && (
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>상단 (10~200)</label>
             <NumberInput
@@ -168,31 +189,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
               placeholder="10"
             />
           </div>
-        </div>
-        <div className={styles.hint} style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
-          (키보드 상,하 커서키로 숫자를 변경하세요)
-        </div>
-      </div>
-    );
-  }
-
-  // 노서라운드 모드
-  return (
-    <div className={styles.section}>
-      <span className={styles.label}>프레임 설정</span>
-      <div className={styles.inputGroup}>
-        <div className={styles.inputWrapper}>
-          <label className={styles.inputLabel}>상단 (10~200)</label>
-          <NumberInput
-            value={getNumericValue(frameSize.top)}
-            onChange={(val) => onFrameSizeChange('top', val)}
-            onFocus={(e) => handleInputFocus(e, 'top')}
-            onBlur={handleInputBlur('top')}
-            onKeyDown={(e) => onKeyDown(e, 'top')}
-            className={styles.input}
-            placeholder="50"
-          />
-        </div>
+        )}
       </div>
       <div className={styles.hint} style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
         (키보드 상,하 커서키로 숫자를 변경하세요)
