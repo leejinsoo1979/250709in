@@ -75,7 +75,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
     if (isFloat) {
       const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-      const topFrameMM = spaceInfo.frameSize?.top || 30;
+      const topFrameMM = spaceInfo.frameSize?.top || 10;
       const floatHeightMM = spaceInfo.baseConfig?.floatHeight || 0;
       const availableHeightMM = spaceInfo.height - floorFinishMM - topFrameMM - floatHeightMM;
 
@@ -181,7 +181,7 @@ export function calculateYPosition(
 
   if (category === 'upper') {
     // 상부장: 천장에서 아래로 배치
-    const topFrameMM = spaceInfo.frameSize?.top || 30;
+    const topFrameMM = spaceInfo.frameSize?.top || 10;
     const internalHeightMM = spaceInfo.height - topFrameMM - floorFinishMM;
     return (floorFinishMM + internalHeightMM - heightMM / 2) * 0.01;
   }

@@ -293,7 +293,7 @@ const Configurator: React.FC = () => {
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
   const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
-  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top || 30));
+  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top || 10));
   const isEditingFrameRef = useRef<{ left: boolean; right: boolean; top: boolean }>({ left: false, right: false, top: false });
 
   // 외부 spaceInfo.frameSize가 변경되면 로컬 상태 동기화 (편집 중이 아닐 때만)
@@ -305,7 +305,7 @@ const Configurator: React.FC = () => {
       setFrameInputRight(String(spaceInfo.frameSize?.right || 50));
     }
     if (!isEditingFrameRef.current.top) {
-      setFrameInputTop(String(spaceInfo.frameSize?.top || 30));
+      setFrameInputTop(String(spaceInfo.frameSize?.top || 10));
     }
   }, [spaceInfo.frameSize?.left, spaceInfo.frameSize?.right, spaceInfo.frameSize?.top]);
 
@@ -2359,7 +2359,7 @@ const Configurator: React.FC = () => {
     if (updates.surroundType && updates.surroundType !== spaceInfo.surroundType) {
       const currentInstallType = finalUpdates.installType || spaceInfo.installType;
       const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
-      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 10 };
 
       if (updates.surroundType === 'surround') {
         // 서라운드 모드
@@ -3182,7 +3182,6 @@ const Configurator: React.FC = () => {
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
-              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   // 단내림 활성화
@@ -3576,6 +3575,12 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
+        {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
+        <GapControls
+          spaceInfo={spaceInfo}
+          onUpdate={handleSpaceInfoUpdate}
+        />
+
         {/* 프레임 설정 - 슬롯배치 모드에서만 표시 */}
         {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (<>
         <div className={styles.configSection}>
@@ -3598,7 +3603,11 @@ const Configurator: React.FC = () => {
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: true, bottom: true },
                   frameSize: {
-                    ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                    ...(spaceInfo.frameSize || { left: 50, right: 50, top: 10 }),
+                  },
+                  baseConfig: {
+                    ...(spaceInfo.baseConfig || { type: 'floor' as const, height: 65 }),
+                    type: 'floor',
                   },
                 });
               } else if (newMode === 'sides-only') {
@@ -3753,14 +3762,15 @@ const Configurator: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 상부 - 항상 표시 */}
+                {/* 상부 - frameConfig.top이 true일 때만 */}
+                {inferFrameConfig(spaceInfo).top && (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const currentTop = spaceInfo.frameSize?.top || 50;
                         const newTop = Math.max(10, currentTop - 1);
                         updateFrameSize('top', newTop);
                       }}
@@ -3774,15 +3784,15 @@ const Configurator: React.FC = () => {
                       value={frameInputTop}
                       onChange={(e) => handleFrameInputChange('top', e.target.value)}
                       onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
+                      onBlur={() => handleFrameInputBlur('top', 10, 100, 50)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 100, 50)}
                       className={styles.frameNumberInput}
                     />
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
-                        const newTop = Math.min(200, currentTop + 1);
+                        const currentTop = spaceInfo.frameSize?.top || 50;
+                        const newTop = Math.min(100, currentTop + 1);
                         updateFrameSize('top', newTop);
                       }}
                     >
@@ -3790,112 +3800,22 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
 
                           </div>
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
-                {/* 좌측 이격거리 - 벽없음이면 비활성화 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>좌이격</label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const cur = spaceInfo.gapConfig?.left ?? 1.5;
-                        const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
-                      }}
-                      disabled={!spaceInfo.wallConfig?.left}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left ?? 1.5) : 0}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) {
-                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
-                      }}
-                      className={styles.frameNumberInput}
-                      disabled={!spaceInfo.wallConfig?.left}
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const cur = spaceInfo.gapConfig?.left ?? 1.5;
-                        const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
-                      }}
-                      disabled={!spaceInfo.wallConfig?.left}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* 우측 이격거리 - 벽없음이면 비활성화 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>우이격</label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const cur = spaceInfo.gapConfig?.right ?? 1.5;
-                        const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
-                      }}
-                      disabled={!spaceInfo.wallConfig?.right}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={spaceInfo.wallConfig?.right ? (spaceInfo.gapConfig?.right ?? 1.5) : 0}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) {
-                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
-                      }}
-                      className={styles.frameNumberInput}
-                      disabled={!spaceInfo.wallConfig?.right}
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const cur = spaceInfo.gapConfig?.right ?? 1.5;
-                        const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
-                      }}
-                      disabled={!spaceInfo.wallConfig?.right}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* 상부 프레임 */}
+                {/* 상부 프레임만 표시 - frameConfig.top이 true일 때만 */}
+                {inferFrameConfig(spaceInfo).top && (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const currentTop = spaceInfo.frameSize?.top || 10;
                         const newTop = Math.max(10, currentTop - 1);
                         updateFrameSize('top', newTop);
                       }}
@@ -3909,14 +3829,14 @@ const Configurator: React.FC = () => {
                       value={frameInputTop}
                       onChange={(e) => handleFrameInputChange('top', e.target.value)}
                       onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
+                      onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 10)}
                       className={styles.frameNumberInput}
                     />
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const currentTop = spaceInfo.frameSize?.top || 10;
                         const newTop = Math.min(200, currentTop + 1);
                         updateFrameSize('top', newTop);
                       }}
@@ -3925,6 +3845,7 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
 
                           </div>

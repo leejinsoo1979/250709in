@@ -651,10 +651,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const custCategory = getCustomizableCategory(placedModule.moduleId);
     const custDefaults = CUSTOMIZABLE_DEFAULTS[custCategory];
     const custWidth = placedModule.customWidth || placedModule.adjustedWidth || placedModule.freeWidth || custDefaults.width;
-
-    // internalSpace.height는 이미 띄움 높이/받침대 높이가 차감된 내경 높이
-    const maxCustHeight = custCategory === 'full' ? internalSpace.height : custDefaults.height;
-    let custHeight = placedModule.freeHeight ? Math.min(placedModule.freeHeight, maxCustHeight) : maxCustHeight;
+    const custHeight = placedModule.freeHeight || (custCategory === 'full' ? internalSpace.height : custDefaults.height);
     const custDepth = placedModule.freeDepth || custDefaults.depth;
     moduleData = {
       id: placedModule.moduleId,
@@ -1111,7 +1108,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
       // 상부프레임 높이
-      const topFrameHeightMm = spaceInfo.frameSize?.top || 30; // 기본값 30mm
+      const topFrameHeightMm = spaceInfo.frameSize?.top || 10; // 기본값 10mm
 
       // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
       const isInDroppedZone = placedModule.zone === 'dropped';
@@ -1145,7 +1142,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       (spaceInfo.baseConfig?.floatHeight || 0) > 0;
     if (isFloatMode) {
       const ffMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-      const topFrMM = spaceInfo.frameSize?.top || 30;
+      const topFrMM = spaceInfo.frameSize?.top || 10;
       const floatMM = spaceInfo.baseConfig?.floatHeight || 0;
       const availMM = spaceInfo.height - ffMM - topFrMM - floatMM;
       if (furnitureHeightMm > availMM) {
@@ -1177,25 +1174,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 커스텀 가구 띄움설치: 상부섹션에서만 높이 차감
-  let adjustedCustomConfig = placedModule.customConfig;
-  if (isCustomFurniture && adjustedCustomConfig?.sections && adjustedCustomConfig.sections.length > 0) {
-    const isFloatForCustSection = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-    const floatForSection = isFloatForCustSection ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    if (floatForSection > 0) {
-      // 마지막 섹션(상부)에서 floatHeight 차감
-      const lastIdx = adjustedCustomConfig.sections.length - 1;
-      const adjustedSections = adjustedCustomConfig.sections.map((s, i) => {
-        if (i === lastIdx) {
-          const newHeight = Math.max(s.height - floatForSection, 100); // 최소 100mm
-          return { ...s, height: newHeight };
-        }
-        return s;
-      });
-      adjustedCustomConfig = { ...adjustedCustomConfig, sections: adjustedSections };
-    }
-  }
-
   // 하부장과 키큰장의 띄워서 배치 처리
   if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
     // 드래그 중일 때는 position.y 그대로 사용
@@ -1214,8 +1192,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
         const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
         const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-        // 클램핑된 furnitureHeightMm 사용 (띄움배치 시 높이 축소 반영)
-        const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
+        // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
+        const furnitureHeightForY = (placedModule.isFreePlacement && placedModule.freeHeight)
+          ? placedModule.freeHeight
+          : (actualModuleData?.dimensions.height || 0);
+        const furnitureHeight = furnitureHeightForY * 0.01; // mm to Three.js units
 
         if (isLowerCabinetForY) {
           // 하부장은 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
@@ -3070,7 +3051,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
                   isCustomizable={placedModule.isCustomizable}
-                  customConfig={adjustedCustomConfig}
+                  customConfig={placedModule.customConfig}
                 />
               );
             })()}
