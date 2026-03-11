@@ -28,6 +28,8 @@ interface ContentPaneProps {
   };
   projectDesignFiles?: { [projectId: string]: any[] };
   isLoading?: boolean;
+  onSelectAll?: () => void;
+  onClearSelection?: () => void;
 }
 
 const ContentPane: React.FC<ContentPaneProps> = ({
@@ -45,6 +47,8 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   dragHandlers,
   projectDesignFiles,
   isLoading,
+  onSelectAll,
+  onClearSelection,
 }) => {
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
 
@@ -135,19 +139,49 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return <FileText size={size} className={styles.itemIconDesign} />;
   };
 
-  // 체크박스 렌더링
+  // 체크박스 렌더링 (선택된 항목이 1개 이상일 때만 표시)
+  const hasSelection = selectedItems.size > 0;
   const renderCheckbox = (item: ExplorerItem) => {
+    if (!hasSelection) return null;
     const isSelected = selectedItems.has(item.id);
     return (
       <input
         type="checkbox"
-        className={`${styles.itemCheckbox} ${isSelected ? styles.itemCheckboxVisible : ''}`}
+        className={`${styles.itemCheckbox} ${styles.itemCheckboxVisible}`}
         checked={isSelected}
         onChange={() => {}}
         onClick={(e) => handleCheckboxClick(e, item.id)}
         draggable={false}
         tabIndex={-1}
       />
+    );
+  };
+
+  // 전체선택 바 렌더링 (선택된 항목이 있을 때만 표시)
+  const isAllSelected = filteredItems.length > 0 && selectedItems.size === filteredItems.length;
+  const renderSelectionBar = () => {
+    if (!hasSelection || !onSelectAll) return null;
+    return (
+      <div className={styles.selectionBar}>
+        <label className={styles.selectionBarLabel}>
+          <input
+            type="checkbox"
+            checked={isAllSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = !isAllSelected && hasSelection;
+            }}
+            onChange={() => {
+              if (isAllSelected) {
+                onClearSelection?.();
+              } else {
+                onSelectAll();
+              }
+            }}
+          />
+          <span>전체선택</span>
+        </label>
+        <span className={styles.selectionBarCount}>{selectedItems.size}개 선택됨</span>
+      </div>
     );
   };
 
@@ -210,6 +244,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (viewMode === 'details') {
     return (
       <div className={styles.detailsTable}>
+        {renderSelectionBar()}
         <div className={styles.tableHeader}>
           <div className={styles.colName} onClick={onSortDirectionToggle}>
             이름 {sortBy === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
@@ -259,6 +294,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (viewMode === 'list') {
     return (
       <div className={styles.listView}>
+        {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -286,6 +322,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   if (viewMode === 'tiles') {
     return (
       <div className={styles.tileGrid}>
+        {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -327,6 +364,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       <div
         className={styles.saasGrid}
       >
+        {renderSelectionBar()}
         {filteredItems.map(item => (
           <div
             key={item.id}
@@ -415,6 +453,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       className={styles.iconGrid}
       style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
     >
+      {renderSelectionBar()}
       {filteredItems.map(item => (
         <div
           key={item.id}

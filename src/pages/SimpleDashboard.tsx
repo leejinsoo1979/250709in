@@ -749,6 +749,8 @@ const SimpleDashboard: React.FC = () => {
                 dragHandlers={actions.dragHandlers}
                 projectDesignFiles={data.projectDesignFiles}
                 isLoading={data.isLoading}
+                onSelectAll={actions.selectAll}
+                onClearSelection={actions.clearSelection}
               />
 
               {/* 마키 선택 오버레이 */}

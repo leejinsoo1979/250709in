@@ -44,10 +44,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onCreateFolder,
   onCreateDesign,
   nav,
-  totalItemCount = 0,
-  selectedCount = 0,
-  onSelectAll,
-  onClearSelection,
   searchTerm,
   onSearchChange,
   projects,
@@ -56,7 +52,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onItemNavigate,
 }) => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
-  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+  const [treeOpen, setTreeOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

@@ -76,6 +76,41 @@
   opacity: 0.7;
 }
 
+/* ── 전체선택 바 (선택 시 표시) ── */
+.selectionBar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: var(--theme-primary-light, rgba(59, 130, 246, 0.08));
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.selectionBarLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--theme-text);
+  user-select: none;
+}
+
+.selectionBarLabel input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--theme-primary);
+}
+
+.selectionBarCount {
+  font-size: 12px;
+  color: var(--theme-text-muted);
+}
+
 /* ── 아이템 체크박스 ── */
 .itemCheckbox {
   position: absolute;
@@ -104,21 +139,7 @@
   flex-shrink: 0;
 }
 
-/* hover 시 체크박스 표시 */
-.iconCard:hover .itemCheckbox,
-.tileCard:hover .itemCheckbox,
-.tableRow:hover .itemCheckbox,
-.listItem:hover .itemCheckbox {
-  opacity: 1;
-}
-
-/* 선택된 아이템은 항상 체크박스 표시 */
-.iconCardSelected .itemCheckbox,
-.tileCardSelected .itemCheckbox,
-.tableRowSelected .itemCheckbox,
-.listItemSelected .itemCheckbox {
-  opacity: 1;
-}
+/* 선택 모드 시 체크박스는 항상 표시 (renderCheckbox에서 조건부 렌더링) */
 
 /* 마키 선택 오버레이 */
 .marqueeOverlay {
@@ -468,7 +489,7 @@
 }
 
 .saasCard {
-  position: relative;
+  position: relative; /* for itemCheckbox absolute positioning */
   display: flex;
   flex-direction: column;
   background: var(--theme-background);

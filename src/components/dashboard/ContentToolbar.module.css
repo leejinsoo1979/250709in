@@ -113,8 +113,9 @@
 }
 
 .breadcrumbActive {
-  color: var(--theme-text);
+  color: var(--theme-primary);
   font-weight: 600;
+  background: none;
 }
 
 .breadcrumbActive .breadcrumbIcon {
