@@ -486,7 +486,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       }
 
       controls.object.lookAt(controls.target);
-      controls.update();
+      // saveState → reset으로 OrbitControls 내부 팬 오프셋까지 완전 초기화
+      controls.saveState();
+      controls.reset();
       return;
     }
 
@@ -513,9 +515,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     controls.object.up.set(0, 1, 0);
     controls.object.lookAt(controls.target);
-    controls.update();
+    // saveState → reset으로 OrbitControls 내부 팬 오프셋까지 완전 초기화
+    controls.saveState();
+    controls.reset();
 
-    canvasLog('🎯 3D 카메라 리셋 완료 (거리 유지):', {
+    canvasLog('🎯 3D 카메라 리셋 완료:', {
       newPosition: controls.object.position.toArray(),
       newTarget: controls.target.toArray(),
       distance: currentDistance
