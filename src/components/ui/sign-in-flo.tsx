@@ -68,7 +68,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
       {/* Left Panel - Branding */}
       <div className="w-1/2 relative overflow-hidden flex flex-col"
         style={{
-          background: 'linear-gradient(135deg, rgba(107,94,255,0.15) 0%, #09090b 50%, rgba(99,102,241,0.08) 100%)',
+          background: '#000000',
         }}
       >
         {/* Subtle grid */}
