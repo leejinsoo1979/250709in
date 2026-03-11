@@ -7,11 +7,14 @@
 /* ── Tab Menu (Segmented Control) ── */
 .tabMenu {
   display: flex;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   background: var(--theme-background-secondary);
   border-radius: 5px;
   padding: 2px;
   gap: 1px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .tabButton {
