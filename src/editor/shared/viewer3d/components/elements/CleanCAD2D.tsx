@@ -2295,7 +2295,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
           const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
 
-          const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
+          const floorFinishH = floorFinishHeightMmGlobal; // 바닥마감재 높이 (mm)
+          const bottomY = mmToThreeUnits(floatHeight); // 바닥 시작점
+          const floorFinishTopY = mmToThreeUnits(floatHeight + floorFinishH); // 바닥마감재 상단
+          const baseStartY = floorFinishH > 0 ? floorFinishTopY : bottomY; // 받침대 시작점 (마감재 있으면 위로)
           const bottomFrameTopY = mmToThreeUnits(floatHeight + bottomFrameHeight); // 하부 프레임 상단
           const cabinetAreaTopY = mmToThreeUnits(floatHeight + bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
           const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단 (= 공간 천장 높이)
@@ -2410,12 +2413,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               )}
               
-              {/* 1. 하부 프레임 높이 또는 하부섹션 높이 */}
-              {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
-              {!isFloating && bottomFrameHeight > 0 && (
+              {/* 0. 바닥마감재 두께 치수선 (바닥마감재 있을 때만) */}
+              {!isFloating && floorFinishH > 0 && (
               <group>
                 <NativeLine name="dimension_line"
-                  points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
+                  points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, floorFinishTopY, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
@@ -2423,6 +2425,48 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 <NativeLine name="dimension_line"
                   points={createArrowHead([rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomY - 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([rightDimensionX, floorFinishTopY, 0.002], [rightDimensionX, floorFinishTopY + 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + floorFinishH / 2), 0.01]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {floorFinishH}
+                </Text>
+              </group>
+              )}
+
+              {/* 1. 하부 프레임 높이 또는 하부섹션 높이 */}
+              {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
+              {!isFloating && bottomFrameHeight > 0 && (
+              <group>
+                <NativeLine name="dimension_line"
+                  points={[[rightDimensionX, baseStartY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([rightDimensionX, baseStartY, 0.002], [rightDimensionX, baseStartY - 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
@@ -2438,7 +2482,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + bottomFrameHeight / 2), 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (baseStartY + bottomFrameTopY) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
                   anchorX="center"
@@ -3384,6 +3428,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
 
             const bottomY = 0; // 바닥
+            const floorFinishTopYLocal = mmToThreeUnits(floorFinishHeightMm); // 바닥마감재 상단
+            const baseStartYLocal = floorFinishHeightMm > 0 ? floorFinishTopYLocal : bottomY; // 받침대 시작점
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단
@@ -3472,16 +3518,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
-                {!isFloating && bottomFrameHeight > 0 && (
+                {/* 바닥마감재 두께 치수선 (평면 뷰) */}
+                {!isFloating && floorFinishHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, bottomY, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
+                    points={[[0, bottomY, rightDimensionZ], [0, floorFinishTopYLocal, rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([0, bottomY, rightDimensionZ], [0, 0.03, rightDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([0, floorFinishTopYLocal, rightDimensionZ], [0, floorFinishTopYLocal + 0.03, rightDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[0, floorFinishTopYLocal / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                  >
+                    {floorFinishHeightMm}
+                  </Text>
+                </group>
+                )}
+
+                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
+                {!isFloating && bottomFrameHeight > 0 && (
+                <group>
+                  <Line
+                    points={[[0, baseStartYLocal, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([0, baseStartYLocal, rightDimensionZ], [0, baseStartYLocal - 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -3493,7 +3574,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[0, bottomFrameTopY / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, (baseStartYLocal + bottomFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -4329,6 +4410,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
 
             const bottomY = 0;
+            const floorFinishTopYRight = mmToThreeUnits(floorFinishHeightMm);
+            const baseStartYRight = floorFinishHeightMm > 0 ? floorFinishTopYRight : bottomY;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight);
@@ -4417,16 +4500,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
-                {!isFloating && bottomFrameHeight > 0 && (
+                {/* 바닥마감재 두께 치수선 (측면 뷰) */}
+                {!isFloating && floorFinishHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
+                    points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, floorFinishTopYRight, leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, floorFinishTopYRight, leftDimensionZ], [spaceWidth, floorFinishTopYRight + 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[spaceWidth, floorFinishTopYRight / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {floorFinishHeightMm}
+                  </Text>
+                </group>
+                )}
+
+                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
+                {!isFloating && bottomFrameHeight > 0 && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, baseStartYRight, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, baseStartYRight, leftDimensionZ], [spaceWidth, baseStartYRight - 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -4438,7 +4556,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[spaceWidth, bottomFrameTopY / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, (baseStartYRight + bottomFrameTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
