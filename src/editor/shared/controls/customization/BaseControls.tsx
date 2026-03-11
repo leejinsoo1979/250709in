@@ -9,9 +9,11 @@ interface BaseControlsProps {
   spaceInfo: SpaceInfo;
   onUpdate: (updates: Partial<SpaceInfo>) => void;
   disabled?: boolean;
+  /** 'type-only': 타입 선택만, 'placement-only': 높이/깊이만, undefined: 전부 */
+  renderMode?: 'type-only' | 'placement-only';
 }
 
-const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
+const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabled = false, renderMode }) => {
   const { placedModules, updateModule } = useFurnitureStore();
 
   console.log('🔧 BaseControls - disabled 상태:', disabled);
@@ -372,33 +374,34 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   return (
     <div className={styles.container}>
       {/* 받침대 타입 선택 */}
-      <BaseTypeSelector
-        baseConfig={spaceInfo.baseConfig}
-        onBaseTypeChange={handleBaseTypeChange}
-        disabled={disabled}
-      />
+      {renderMode !== 'placement-only' && (
+        <BaseTypeSelector
+          baseConfig={spaceInfo.baseConfig}
+          onBaseTypeChange={handleBaseTypeChange}
+          disabled={disabled}
+        />
+      )}
 
       {/* 배치 설정 및 높이 조절 */}
-      <PlacementControls
-        baseConfig={spaceInfo.baseConfig}
-        baseHeight={baseHeight}
-        baseDepth={baseDepth}
-        floatHeight={floatHeight}
-        onPlacementTypeChange={handlePlacementTypeChange}
-        onHeightChange={handleHeightChange}
-        onDepthChange={handleDepthChange}
-        onFloatHeightChange={handleFloatHeightChange}
-        onHeightBlur={handleHeightBlur}
-        onDepthBlur={handleDepthBlur}
-        onFloatHeightBlur={handleFloatHeightBlur}
-        onKeyDown={handleKeyDown}
-        onDepthKeyDown={handleDepthKeyDown}
-        onFloatKeyDown={handleFloatKeyDown}
-        disabled={disabled}
-      />
-
-      {/* 컬럼 수 설정 */}
-      {/* ColumnCountControls 컴포넌트를 제거하고 import도 삭제합니다. */}
+      {renderMode !== 'type-only' && (
+        <PlacementControls
+          baseConfig={spaceInfo.baseConfig}
+          baseHeight={baseHeight}
+          baseDepth={baseDepth}
+          floatHeight={floatHeight}
+          onPlacementTypeChange={handlePlacementTypeChange}
+          onHeightChange={handleHeightChange}
+          onDepthChange={handleDepthChange}
+          onFloatHeightChange={handleFloatHeightChange}
+          onHeightBlur={handleHeightBlur}
+          onDepthBlur={handleDepthBlur}
+          onFloatHeightBlur={handleFloatHeightBlur}
+          onKeyDown={handleKeyDown}
+          onDepthKeyDown={handleDepthKeyDown}
+          onFloatKeyDown={handleFloatKeyDown}
+          disabled={disabled}
+        />
+      )}
     </div>
   );
 };
