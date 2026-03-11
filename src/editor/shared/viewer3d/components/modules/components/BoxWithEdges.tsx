@@ -391,12 +391,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       >
         <boxGeometry args={args} />
         {renderMode === 'wireframe' ? (
-          // 와이어프레임 모드: 메시는 반투명, 엣지만 진하게
+          // 와이어프레임 모드: 메시 숨기고 엣지만 표시
           <meshBasicMaterial
-            transparent={true}
-            opacity={viewMode === '3D' ? 0.08 : 0}
-            depthWrite={false}
-            color={view2DTheme === 'dark' ? '#333333' : '#cccccc'}
+            visible={false}
           />
         ) : (
           // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
@@ -460,7 +457,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
+                    transparent={(viewMode === '3D' && renderMode !== 'wireframe') || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
                     opacity={
                       edgeOpacity !== undefined
                         ? edgeOpacity
@@ -472,7 +469,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                               ? (renderMode === 'wireframe' ? 1.0 : 0.65)
                               : 1
                     }
-                    depthTest={viewMode === '3D'}
+                    depthTest={viewMode === '3D' && renderMode !== 'wireframe'}
                     depthWrite={false}
                     linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
                   />
@@ -494,7 +491,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                 <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
-                  transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
+                  transparent={(viewMode === '3D' && renderMode !== 'wireframe') || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
                   opacity={
                     edgeOpacity !== undefined
                       ? edgeOpacity
@@ -506,7 +503,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                             ? (renderMode === 'wireframe' ? 1.0 : 0.65)
                             : 1
                   }
-                  depthTest={viewMode === '3D'}
+                  depthTest={viewMode === '3D' && renderMode !== 'wireframe'}
                   depthWrite={false}
                   polygonOffset={viewMode === '3D'}
                   polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
