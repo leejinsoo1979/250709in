@@ -185,9 +185,15 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       nav.navigateTo(node.projectId!, node.id, folder?.name || node.id);
       setTreeOpen(false);
     } else if (node.type === 'design') {
-      const item = currentItems?.find(ci => ci.id === node.id);
-      if (item && onItemNavigate) {
-        onItemNavigate(item);
+      // 디자인이 있는 위치(프로젝트/폴더)로 이동
+      if (node.projectId) {
+        if (node.folderId) {
+          const folder = folders?.[node.projectId]?.find(f => f.id === node.folderId);
+          nav.navigateTo(node.projectId, node.folderId, folder?.name || node.folderId);
+        } else {
+          const project = projects?.find(p => p.id === node.projectId);
+          nav.navigateTo(node.projectId, null, project?.title || node.projectId);
+        }
       }
       setTreeOpen(false);
     }
