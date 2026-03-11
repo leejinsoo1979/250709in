@@ -926,7 +926,7 @@ export class ColumnIndexer {
       // 왼쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
         // 서라운드: 중간 경계면 이격거리 3mm 적용
-        const BOUNDARY_GAP = 3;
+        const BOUNDARY_GAP = 2;
 
         // 단내림구간(좌): 좌측 프레임만 빼기 (BOUNDARY_GAP은 메인구간에 포함)
         droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
@@ -952,7 +952,7 @@ export class ColumnIndexer {
         // 노서라운드: 엔드패널 고려하여 계산 (단내림 우측과 동일한 로직)
         let leftReduction = 0;
         let rightReduction = 0;
-        const BOUNDARY_GAP = 3; // 중간 경계면 이격거리
+        const BOUNDARY_GAP = 2; // 중간 경계면 이격거리
 
         // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
         // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
@@ -1032,7 +1032,7 @@ export class ColumnIndexer {
       // 오른쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
         // 서라운드: 중간 경계면 이격거리 3mm 적용
-        const BOUNDARY_GAP = 3;
+        const BOUNDARY_GAP = 2;
 
         // 일반구간: 좌측 프레임만 빼기 (BOUNDARY_GAP 3mm은 메인구간 내부에 포함)
         normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
@@ -1058,7 +1058,7 @@ export class ColumnIndexer {
         // 노서라운드: 엔드패널 고려하여 계산
         let leftReduction = 0;
         let rightReduction = 0;
-        const BOUNDARY_GAP = 3; // 중간 경계면 이격거리
+        const BOUNDARY_GAP = 2; // 중간 경계면 이격거리
 
         // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
         // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
@@ -1137,7 +1137,7 @@ export class ColumnIndexer {
     }
     
     // 경계면 이격거리 (BOUNDARY_GAP과 동일한 값 사용)
-    let boundaryGap = 3; // 고정값
+    let boundaryGap = 2; // 고정값
 
     // 각 영역의 컬럼 수 계산
     let normalColumnCount: number;
