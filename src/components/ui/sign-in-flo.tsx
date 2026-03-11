@@ -154,7 +154,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={`dot-${i}`}
-                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full"
+                className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-full"
                 style={{ background: isDark ? '#fff' : '#000' }}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{
@@ -171,7 +171,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               />
             ))}
             <motion.span
-              className="font-black text-lg sm:text-xl md:text-2xl lg:text-3xl tracking-wide ml-1"
+              className="font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide ml-2"
               style={{ display: 'inline-flex', color: isDark ? '#fff' : '#000' }}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -209,7 +209,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             animate={craftControls}
           >
             <motion.div
-              className="font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight"
+              className="font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight"
               style={{ display: 'inline-flex', gap: '0.02em', color: isDark ? '#fff' : '#000' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
