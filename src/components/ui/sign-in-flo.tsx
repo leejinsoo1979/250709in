@@ -67,7 +67,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-row" style={{ background: isDark ? '#09090b' : '#f5f5f5' }}>
+    <div className="min-h-screen flex flex-row" style={{ background: isDark ? '#000000' : '#ffffff' }}>
       {/* Left Panel - Branding */}
       <div className="w-1/2 relative overflow-hidden flex flex-col"
         style={{
@@ -151,7 +151,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
         <motion.div
           className="w-full max-w-md rounded-2xl p-10"
           style={{
-            border: `1px solid ${isDark ? '#52525b' : '#e5e7eb'}`,
+            border: `1.5px solid ${isDark ? '#71717a' : '#d1d5db'}`,
             background: isDark ? 'rgba(24,24,27,0.4)' : '#ffffff',
           }}
           initial={{ opacity: 0, y: 24 }}
@@ -272,7 +272,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               <div className="w-full" style={{ borderTop: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}` }} />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 text-xs uppercase tracking-wider" style={{ background: isDark ? '#09090b' : '#f5f5f5', color: isDark ? '#52525b' : '#9ca3af' }}>
+              <span className="px-3 text-xs uppercase tracking-wider" style={{ background: isDark ? '#000000' : '#ffffff', color: isDark ? '#52525b' : '#9ca3af' }}>
                 Or continue with
               </span>
             </div>
