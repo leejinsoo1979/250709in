@@ -396,7 +396,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 이격거리 편집 상태
-  const [editingGapSide, setEditingGapSide] = useState<'left' | 'right' | null>(null);
+  const [editingGapSide, setEditingGapSide] = useState<'left' | 'right' | 'middle' | null>(null);
   const [editingGapValue, setEditingGapValue] = useState<string>('');
   const gapInputRef = useRef<HTMLInputElement>(null);
 
@@ -503,7 +503,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   };
 
   // 이격거리 편집 핸들러
-  const handleGapEdit = (side: 'left' | 'right', currentValue: number) => {
+  const handleGapEdit = (side: 'left' | 'right' | 'middle', currentValue: number) => {
     setEditingGapSide(side);
     setEditingGapValue(currentValue.toString());
     setTimeout(() => {
@@ -520,7 +520,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       setEditingGapValue('');
       return;
     }
-    const clamped = Math.max(0, Math.min(50, value));
+    // middle(경계면 이격)은 0~5mm, left/right는 0~50mm
+    const maxValue = editingGapSide === 'middle' ? 5 : 50;
+    const clamped = Math.max(0, Math.min(maxValue, value));
     setSpaceInfo({
       gapConfig: {
         ...spaceInfo.gapConfig,
@@ -1565,19 +1567,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         color={dimensionColor}
                         lineWidth={1}
                       />
-                      <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                        position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY - mmToThreeUnits(30), 0.01]}
-                        fontSize={smallFontSize * 0.85}
-                        color={textColor}
-                        anchorX="center"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                      >
-                        {`이격 ${boundaryGapMm}`}
-                      </Text>
+                      {/* 경계면 이격거리 텍스트 - 클릭 편집 */}
+                      {editingGapSide === 'middle' ? (
+                        <Html
+                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY - mmToThreeUnits(30), 0.01]}
+                          center
+                          style={{ pointerEvents: 'auto' }}
+                          zIndexRange={[10000, 10001]}
+                        >
+                          <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                            <input
+                              ref={gapInputRef}
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              max="5"
+                              value={editingGapValue}
+                              onChange={(e) => setEditingGapValue(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                              onBlur={handleGapEditSubmit}
+                              style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                          </div>
+                        </Html>
+                      ) : (
+                        <Html
+                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY - mmToThreeUnits(30), 0.01]}
+                          center
+                          style={{ pointerEvents: 'auto' }}
+                          zIndexRange={[9999, 10000]}
+                        >
+                          <div
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                              color: dimensionColor,
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                              whiteSpace: 'nowrap',
+                              background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                              borderRadius: '3px',
+                            }}
+                            onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
+                          >
+                            {`이격 ${boundaryGapMm}`}
+                          </div>
+                        </Html>
+                      )}
                     </>
                   );
                 })()}
@@ -3128,20 +3168,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         color={dimensionColor}
                         lineWidth={1}
                       />
-                      <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                        position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
-                        fontSize={smallFontSize * 0.85}
-                        color={textColor}
-                        anchorX="center"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                        rotation={[-Math.PI / 2, 0, 0]}
-                      >
-                        {`이격 ${boundaryGapMm}`}
-                      </Text>
+                      {/* 경계면 이격거리 텍스트 - 클릭 편집 (상단 뷰) */}
+                      {editingGapSide === 'middle' ? (
+                        <Html
+                          position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
+                          center
+                          style={{ pointerEvents: 'auto' }}
+                          zIndexRange={[10000, 10001]}
+                        >
+                          <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                            <input
+                              ref={gapInputRef}
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              max="5"
+                              value={editingGapValue}
+                              onChange={(e) => setEditingGapValue(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                              onBlur={handleGapEditSubmit}
+                              style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                          </div>
+                        </Html>
+                      ) : (
+                        <Html
+                          position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
+                          center
+                          style={{ pointerEvents: 'auto' }}
+                          zIndexRange={[9999, 10000]}
+                        >
+                          <div
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                              color: dimensionColor,
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                              whiteSpace: 'nowrap',
+                              background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                              borderRadius: '3px',
+                            }}
+                            onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
+                          >
+                            {`이격 ${boundaryGapMm}`}
+                          </div>
+                        </Html>
+                      )}
                     </>
                   );
                 })()}
