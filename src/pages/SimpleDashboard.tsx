@@ -378,7 +378,7 @@ const SimpleDashboard: React.FC = () => {
   }, [nav.currentProjectId]);
 
   const handleSaasCreateDesignSubmit = useCallback(async () => {
-    if (!newDesignName.trim() || !nav.currentProjectId) return;
+    if (!newDesignName.trim() || !nav.currentProjectId || isCreatingDesign) return;
 
     setIsCreatingDesign(true);
     try {
@@ -388,12 +388,18 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
 
-      const { id, error } = await createDesignFile({
+      const createData: any = {
         name: newDesignName.trim(),
         projectId: nav.currentProjectId,
         spaceConfig: DEFAULT_SPACE_CONFIG,
         furniture: { placedModules: [] },
-      });
+      };
+      // 폴더 안에서 생성 시 folderId 전달
+      if (nav.currentFolderId) {
+        createData.folderId = nav.currentFolderId;
+      }
+
+      const { id, error } = await createDesignFile(createData);
 
       if (error) {
         alert('디자인 생성에 실패했습니다: ' + error);
@@ -411,7 +417,7 @@ const SimpleDashboard: React.FC = () => {
     } finally {
       setIsCreatingDesign(false);
     }
-  }, [newDesignName, nav.currentProjectId, data]);
+  }, [newDesignName, nav.currentProjectId, nav.currentFolderId, isCreatingDesign, data]);
 
   // Step1 모달 닫기
   const handleCloseStep1Modal = useCallback(async () => {
