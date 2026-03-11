@@ -282,13 +282,6 @@ const Room: React.FC<RoomProps> = ({
   const isFullSurround = spaceInfo.surroundType === 'surround' &&
     spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
-  console.log('🔥 isFullSurround:', isFullSurround, {
-    surroundType: spaceInfo.surroundType,
-    frameConfig: spaceInfo.frameConfig,
-    topVal: spaceInfo.frameConfig?.top,
-    bottomVal: spaceInfo.frameConfig?.bottom,
-  });
-
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
 
@@ -2625,12 +2618,6 @@ const Room: React.FC<RoomProps> = ({
               }
             }
 
-            // 전체서라운드: 상부 프레임을 전체 너비로 확장 (좌우 프레임 상단을 덮음)
-            if (isFullSurround) {
-              frameStartX = -width / 2;
-              frameEndX = width / 2;
-            }
-
             const frameWidth = frameEndX - frameStartX;
             const frameX = (frameStartX + frameEndX) / 2;
 
@@ -2693,12 +2680,9 @@ const Room: React.FC<RoomProps> = ({
               let rightReduction = 0;
 
               if (spaceInfo.surroundType === 'surround') {
-                // 전체서라운드: 상부 프레임이 좌우 프레임 상단을 덮으므로 축소 불필요
-                if (!isFullSurround) {
-                  const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                  leftReduction = frameThickness.left;
-                  rightReduction = frameThickness.right;
-                }
+                const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
+                leftReduction = frameThickness.left;
+                rightReduction = frameThickness.right;
               } else {
                 // 노서라운드: 엔드패널이 있는 쪽만 조정
                 if (spaceInfo.installType === 'builtin') {
