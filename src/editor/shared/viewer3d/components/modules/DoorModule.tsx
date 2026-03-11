@@ -169,12 +169,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   const isSide2DView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
 
-  // furnitureId가 있으면 개별 도어 상태 사용 (분할 여부와 무관), 아니면 전역 상태 사용
+  // doorsOpen: true=전체열기, false=전체닫기, null=개별상태 사용
   const useIndividualState = furnitureId !== undefined;
   const effectiveSectionIndex = sectionIndex !== undefined ? sectionIndex : 0; // 병합 모드는 섹션 0
-  const isDoorOpen = useIndividualState
-    ? isIndividualDoorOpen(furnitureId, effectiveSectionIndex)
-    : doorsOpen;
+  const isDoorOpen = doorsOpen !== null
+    ? doorsOpen
+    : (useIndividualState ? isIndividualDoorOpen(furnitureId, effectiveSectionIndex) : false);
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;

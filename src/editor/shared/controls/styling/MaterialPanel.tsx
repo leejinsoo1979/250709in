@@ -74,7 +74,13 @@ const MaterialPanel: React.FC = () => {
       setDoorsOpen(true);
     } else if (materialTab === 'door') {
       setDoorsOpen(false);
+    } else {
+      setDoorsOpen(null);
     }
+    // 언마운트 시 개별 상태로 복원
+    return () => {
+      setDoorsOpen(null);
+    };
   }, [materialTab]);
 
 

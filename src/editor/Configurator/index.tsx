@@ -122,7 +122,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -2684,9 +2684,8 @@ const Configurator: React.FC = () => {
       setAllDoors(true);
 
       // 도어 설치 시 닫힌 상태로 유지
-      if (doorsOpen) {
-        console.log('🚪 도어가 열려있어서 닫기');
-        toggleDoors(); // 문이 열려있으면 닫기
+      if (doorsOpen !== null) {
+        setDoorsOpen(null); // 개별 상태로 리셋
       }
     }
   };
@@ -4263,73 +4262,17 @@ const Configurator: React.FC = () => {
             {hasDoorsInstalled && (
               <div className={styles.viewerDoorToggle}>
                 <button
-                  className={`${styles.viewerDoorButton} ${!doorsOpen ? styles.active : ''}`}
+                  className={`${styles.viewerDoorButton} ${doorsOpen !== true ? styles.active : ''}`}
                   onClick={() => {
-                    console.log('🚪 Close 버튼 클릭됨');
-                    console.log('전역 doorsOpen:', doorsOpen);
-                    console.log('placedModules 개수:', placedModules.length);
-
-                    // 전역 상태를 닫힘으로 설정
-                    if (doorsOpen) {
-                      console.log('전역 상태 닫기');
-                      toggleDoors();
-                    }
-
-                    // 모든 개별 도어를 닫기
-                    let closedCount = 0;
-                    placedModules.forEach((module) => {
-                      console.log(`모듈 ${module.id}: hasDoor=${module.hasDoor}, doorSplit=${module.doorSplit}`);
-                      if (module.hasDoor) {
-                        const sectionCount = module.doorSplit ? 2 : 1;
-                        for (let i = 0; i < sectionCount; i++) {
-                          const { isIndividualDoorOpen } = useUIStore.getState();
-                          const isOpen = isIndividualDoorOpen(module.id, i);
-                          console.log(`  섹션 ${i}: 열림=${isOpen}`);
-                          if (isOpen) {
-                            console.log(`  섹션 ${i} 닫기`);
-                            toggleIndividualDoor(module.id, i);
-                            closedCount++;
-                          }
-                        }
-                      }
-                    });
-                    console.log(`총 ${closedCount}개 도어 닫음`);
+                    setDoorsOpen(false);
                   }}
                 >
                   Close
                 </button>
                 <button
-                  className={`${styles.viewerDoorButton} ${doorsOpen ? styles.active : ''}`}
+                  className={`${styles.viewerDoorButton} ${doorsOpen === true ? styles.active : ''}`}
                   onClick={() => {
-                    console.log('🚪 Open 버튼 클릭됨');
-                    console.log('전역 doorsOpen:', doorsOpen);
-                    console.log('placedModules 개수:', placedModules.length);
-
-                    // 전역 상태를 열림으로 설정
-                    if (!doorsOpen) {
-                      console.log('전역 상태 열기');
-                      toggleDoors();
-                    }
-
-                    // 모든 개별 도어를 열기
-                    let openedCount = 0;
-                    placedModules.forEach((module) => {
-                      console.log(`모듈 ${module.id}: hasDoor=${module.hasDoor}, doorSplit=${module.doorSplit}`);
-                      if (module.hasDoor) {
-                        const sectionCount = module.doorSplit ? 2 : 1;
-                        for (let i = 0; i < sectionCount; i++) {
-                          const { isIndividualDoorOpen } = useUIStore.getState();
-                          const isOpen = isIndividualDoorOpen(module.id, i);
-                          console.log(`  섹션 ${i}: 열림=${isOpen}`);
-                          if (!isOpen) {
-                            console.log(`  섹션 ${i} 열기`);
-                            toggleIndividualDoor(module.id, i);
-                            openedCount++;
-                          }
-                        }
-                      }
-                    });
-                    console.log(`총 ${openedCount}개 도어 열음`);
+                    setDoorsOpen(true);
                   }}
                 >
                   Open

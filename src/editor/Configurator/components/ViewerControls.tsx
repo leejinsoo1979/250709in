@@ -32,7 +32,7 @@ interface ViewerControlsProps {
   onShowAxisToggle: () => void;
   showFurniture: boolean;
   onShowFurnitureToggle: () => void;
-  doorsOpen: boolean;
+  doorsOpen: boolean | null;
   onDoorsToggle: () => void;
   hasDoorsInstalled?: boolean;
   onDoorInstallationToggle?: () => void;
