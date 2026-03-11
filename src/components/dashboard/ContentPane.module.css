@@ -457,3 +457,144 @@
   background: var(--theme-background-secondary);
   border-radius: 6px;
 }
+
+/* ── SaaS 카드 뷰 (아주 큰 아이콘) ── */
+.saasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.saasCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--theme-background);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.saasCard:hover {
+  border-color: var(--theme-text-muted);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.saasCardSelected {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
+}
+
+/* 썸네일 영역 (상단) */
+.saasThumbnailArea {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--theme-background-secondary);
+}
+
+.saasSingleThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 2x2 프로젝트 그리드 (SaaS 카드) */
+.saasProjectGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 0;
+}
+
+.saasProjectGridItem {
+  overflow: hidden;
+  position: relative;
+  border: 0.5px solid var(--theme-border, rgba(0, 0, 0, 0.08));
+}
+
+.saasProjectGridItem img,
+.saasProjectGridItem .projectGridImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.saasProjectGridItemEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-background);
+  border: 0.5px solid var(--theme-border, rgba(0, 0, 0, 0.08));
+  color: var(--theme-text-muted);
+  opacity: 0.4;
+}
+
+/* 정보 영역 (하단) */
+.saasInfoArea {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--theme-border);
+}
+
+.saasName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--theme-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.saasDate {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  line-height: 1.4;
+}
+
+.saasOwner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.saasAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.saasAvatarFallback {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-primary-light, #e0e7ff);
+  color: var(--theme-primary, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.saasOwnerName {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

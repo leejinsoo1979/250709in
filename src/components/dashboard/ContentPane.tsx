@@ -102,6 +102,15 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
 
+  const formatDateFull = (timestamp: any) => {
+    if (!timestamp) return '-';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true,
+    });
+  };
+
   const getTypeLabel = (type: string) => {
     if (type === 'project') return '프로젝트';
     if (type === 'folder') return '폴더';
@@ -312,8 +321,93 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     );
   }
 
-  // ── 아이콘 뷰 (extra-large / large / medium / small) ──
-  const gridMinWidth = viewMode === 'extra-large' ? 280 : viewMode === 'large' ? 160 : viewMode === 'medium' ? 120 : 90;
+  // ── SaaS 카드 뷰 (extra-large) ──
+  if (viewMode === 'extra-large') {
+    return (
+      <div
+        className={styles.saasGrid}
+      >
+        {filteredItems.map(item => (
+          <div
+            key={item.id}
+            data-item-card
+            data-item-id={item.id}
+            className={`${styles.saasCard} ${selectedItems.has(item.id) ? styles.saasCardSelected : ''} ${
+              dragState.dragOverFolder === item.id ? styles.dragOver : ''
+            }`}
+            onClick={e => handleItemClick(e, item.id)}
+            onDoubleClick={() => onItemDoubleClick(item)}
+            onContextMenu={e => onItemContextMenu(e, item)}
+            {...getDragProps(item)}
+          >
+            {renderCheckbox(item)}
+            <div className={styles.saasThumbnailArea}>
+              {item.type === 'project' && projectDesignFiles ? (
+                (() => {
+                  const designFiles = projectDesignFiles[item.id] || [];
+                  if (designFiles.length === 0) {
+                    return (
+                      <div className={styles.projectGridEmpty}>
+                        <LuFileBox size={40} strokeWidth={1} />
+                      </div>
+                    );
+                  }
+                  const displayItems = designFiles.slice(0, 4);
+                  return (
+                    <div className={styles.saasProjectGrid}>
+                      {displayItems.map((df: any) => (
+                        <div key={df.id} className={styles.saasProjectGridItem}>
+                          <ThumbnailImage
+                            project={{ id: item.id, title: item.name } as any}
+                            designFile={{
+                              thumbnail: df.thumbnail,
+                              updatedAt: df.updatedAt,
+                              spaceConfig: df.spaceConfig,
+                              furniture: df.furniture,
+                            }}
+                            className={styles.projectGridImg}
+                            alt={df.name}
+                          />
+                        </div>
+                      ))}
+                      {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
+                        <div key={`empty-${i}`} className={styles.saasProjectGridItemEmpty}>
+                          <LuFileBox size={24} strokeWidth={1} />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()
+              ) : item.thumbnail ? (
+                <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
+              ) : (
+                <div className={styles.projectGridEmpty}>
+                  {getItemIcon(item, 40, true)}
+                </div>
+              )}
+            </div>
+            <div className={styles.saasInfoArea}>
+              <div className={styles.saasName} title={item.name}>{item.name}</div>
+              <div className={styles.saasDate}>{formatDateFull(item.updatedAt)}</div>
+              {item.ownerName && (
+                <div className={styles.saasOwner}>
+                  {item.ownerPhotoURL ? (
+                    <img src={item.ownerPhotoURL} alt={item.ownerName} className={styles.saasAvatar} />
+                  ) : (
+                    <div className={styles.saasAvatarFallback}>{item.ownerName.charAt(0)}</div>
+                  )}
+                  <span className={styles.saasOwnerName}>{item.ownerName}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── 아이콘 뷰 (large / medium / small) ──
+  const gridMinWidth = viewMode === 'large' ? 160 : viewMode === 'medium' ? 120 : 90;
   const thumbSize = iconSize;
 
   return (
@@ -336,7 +430,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         >
           {renderCheckbox(item)}
           <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
-            {(viewMode === 'extra-large' || viewMode === 'large') && item.type === 'project' && projectDesignFiles ? (
+            {viewMode === 'large' && item.type === 'project' && projectDesignFiles ? (
               (() => {
                 const designFiles = projectDesignFiles[item.id] || [];
                 if (designFiles.length === 0) {
