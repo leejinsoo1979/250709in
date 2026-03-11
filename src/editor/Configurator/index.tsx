@@ -3980,6 +3980,10 @@ const Configurator: React.FC = () => {
             disabled={hasSpecialDualFurniture}
             renderMode="placement-only"
           />
+          <div className={styles.sectionHeader} style={{ marginTop: '8px' }}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>배치방식</h3>
+          </div>
           <BaseControls
             spaceInfo={spaceInfo}
             onUpdate={handleSpaceInfoUpdate}
