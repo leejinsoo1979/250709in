@@ -940,6 +940,10 @@
   gap: 10px;
 }
 
+.spaceControlsRelaxed {
+  gap: 16px;
+}
+
 /* 설정 섹션 */
 .configSection {
   border-bottom: none;

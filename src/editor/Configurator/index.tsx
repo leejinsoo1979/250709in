@@ -3014,8 +3014,9 @@ const Configurator: React.FC = () => {
 
   // 우측 패널 컨텐츠 렌더링
   const renderRightPanelContent = () => {
+    const isFreeMode = (spaceInfo.layoutMode || 'equal-division') === 'free-placement';
     return (
-      <div className={styles.spaceControls}>
+      <div className={`${styles.spaceControls} ${isFreeMode ? styles.spaceControlsRelaxed : ''}`}>
         {/* 공간 설정 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
