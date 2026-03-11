@@ -274,7 +274,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                   {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
                   <div className={styles.breadcrumbSegment}>
                     <button
-                      className={`${styles.breadcrumbItem} ${isLast ? styles.breadcrumbActive : ''}`}
+                      className={`${styles.breadcrumbItem} ${isLast ? styles.breadcrumbCurrent : ''}`}
                       onClick={() => handleBreadcrumbClick(item)}
                     >
                       <span className={styles.breadcrumbIcon}>{getBreadcrumbIcon(item)}</span>

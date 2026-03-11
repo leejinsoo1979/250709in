@@ -112,18 +112,19 @@
   color: var(--theme-text);
 }
 
-.breadcrumbItem.breadcrumbActive,
-.breadcrumbItem.breadcrumbActive:hover {
-  color: var(--theme-primary);
-  font-weight: 600;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+.breadcrumbCurrent,
+.breadcrumbCurrent:hover {
+  color: var(--theme-primary) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 
-.breadcrumbItem.breadcrumbActive .breadcrumbIcon,
-.breadcrumbItem.breadcrumbActive:hover .breadcrumbIcon {
-  color: var(--theme-primary);
+.breadcrumbCurrent .breadcrumbIcon,
+.breadcrumbCurrent:hover .breadcrumbIcon {
+  color: var(--theme-primary) !important;
 }
 
 /* 브레드크럼 세그먼트 */
