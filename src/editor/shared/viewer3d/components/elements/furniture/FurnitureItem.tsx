@@ -1199,16 +1199,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const furnitureHeight = furnitureHeightForY * 0.01; // mm to Three.js units
 
         if (isLowerCabinetForY) {
-          // 하부장은 띄움 높이만큼 전체가 떠야 함
-          const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
+          // 하부장은 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
+          const yPos = floatHeight + (furnitureHeight / 2);
 
           adjustedPosition = {
             ...adjustedPosition,
             y: yPos
           };
         } else {
-          // 키큰장: 하부장과 동일하게 띄움 높이만큼 전체가 떠야 함
-          const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
+          // 키큰장: 하부장과 동일하게 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
+          const yPos = floatHeight + (furnitureHeight / 2);
 
           adjustedPosition = {
             ...adjustedPosition,
@@ -1229,8 +1229,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 가구 높이 (단내림 구간에서 조정된 높이 사용)
         const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
-        // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
-        const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
+        // Y 위치 계산: 받침대높이 + 가구높이/2 (바닥마감재는 조절발로 흡수되므로 Y 위치에 영향 없음)
+        const yPos = baseHeight + (furnitureHeight / 2);
 
         // 단내림 구간 Y 위치 디버깅
         if (placedModule.zone === 'dropped') {
