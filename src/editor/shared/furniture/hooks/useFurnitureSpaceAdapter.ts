@@ -89,27 +89,36 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           }
           
           const isDual = module.moduleId.startsWith('dual-');
-          const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
-                      (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
-          
+
+          // slotWidths가 있으면 사용 (이격거리 반영된 실제 슬롯 너비)
+          const slotWidth = targetZone.slotWidths?.[slotIndex] ?? targetZone.columnWidth;
+          const newX = targetZone.startX + (slotIndex * slotWidth) +
+                      (isDual ? slotWidth : slotWidth / 2);
+
           // 영역에 맞는 새로운 moduleId 생성
           // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
           // 소수점 포함 숫자만 정확히 제거하는 패턴
           const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, ''); // baseModuleType 우선 사용
-          const newModuleId = `${baseType}-${Math.round(targetZone.columnWidth * (isDual ? 2 : 1) * 10) / 10}`;
-          
-          // 디버깅: baseModuleType 확인
-          if (module.moduleId.includes('hanging')) {
+          const moduleWidth = isDual ? slotWidth * 2 : slotWidth;
+          const newModuleId = `${baseType}-${Math.round(moduleWidth * 10) / 10}`;
+
+          // slotWidths에서 customWidth 계산 (이격거리 반영)
+          let newCustomWidth: number | undefined;
+          if (targetZone.slotWidths && targetZone.slotWidths[slotIndex] !== undefined) {
+            if (isDual && slotIndex + 1 < targetZone.slotWidths.length) {
+              newCustomWidth = targetZone.slotWidths[slotIndex] + targetZone.slotWidths[slotIndex + 1];
+            } else {
+              newCustomWidth = targetZone.slotWidths[slotIndex];
+            }
           }
-          
-          
+
           updatedModules.push({
             ...module,
             moduleId: newModuleId,
             position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
             isValidInCurrentSpace: true,
-            adjustedWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
-            customWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
+            adjustedWidth: undefined,
+            customWidth: newCustomWidth, // slotWidths 기반 (이격거리 반영)
             isDualSlot: isDual
           });
           return;
