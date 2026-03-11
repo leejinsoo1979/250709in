@@ -1138,8 +1138,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.freeHeight
     : (actualModuleData?.dimensions.height || 0);
 
-  // 띄움배치: 가구 높이를 가용 공간에 맞춰 클램핑 (천장 뚫림 방지, 슬롯/자유배치 모두 적용)
-  if (!isUpperCabinetForY) {
+  // 자유배치 띄움배치: 가구 높이를 가용 공간에 맞춰 클램핑 (천장 뚫림 방지)
+  if (placedModule.isFreePlacement && !isUpperCabinetForY) {
     const isFloatMode = spaceInfo.baseConfig?.type === 'stand' &&
       spaceInfo.baseConfig?.placementType === 'float' &&
       (spaceInfo.baseConfig?.floatHeight || 0) > 0;

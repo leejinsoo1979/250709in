@@ -3387,22 +3387,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         }
 
-        // 띄움배치: 가구 높이를 가용 공간에 맞춰 클램핑 (상부장 제외)
-        if (!isUpperCabinet) {
-          const isFloatGhost = spaceInfo.baseConfig?.type === 'stand' &&
-            spaceInfo.baseConfig?.placementType === 'float' &&
-            (spaceInfo.baseConfig?.floatHeight || 0) > 0;
-          if (isFloatGhost) {
-            const ffMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-            const topFrMM = spaceInfo.frameSize?.top || 30;
-            const floatMM = spaceInfo.baseConfig?.floatHeight || 0;
-            const availMM = spaceInfo.height - ffMM - topFrMM - floatMM;
-            if (adjustedFurnitureHeightMm > availMM) {
-              adjustedFurnitureHeightMm = Math.max(availMM, 0);
-            }
-          }
-        }
-
         // 띄움 높이 계산 - 배치된 모듈에서 가져오거나 spaceInfo에서 가져옴
         const baseFloatOffsetMm = spaceInfo.baseConfig?.placementType === 'float'
           ? spaceInfo.baseConfig?.floatHeight || 0
