@@ -172,6 +172,18 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>{t('profile.quickMenu')}</h4>
             <div className={styles.menuSection}>
+              {isSuperAdmin && (
+                <button className={`${styles.menuItem} ${styles.adminMenuItem}`} onClick={() => {
+                  onClose();
+                  navigate('/admin');
+                }}>
+                  <div className={styles.menuLeft}>
+                    <Shield size={18} />
+                    <span>관리자 페이지</span>
+                  </div>
+                  <ChevronRight size={16} />
+                </button>
+              )}
               <button className={styles.menuItem} onClick={() => {
                 onClose();
                 navigate('/dashboard/profile?section=account');
