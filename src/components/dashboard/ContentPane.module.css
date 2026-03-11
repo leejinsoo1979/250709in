@@ -139,7 +139,23 @@
   flex-shrink: 0;
 }
 
-/* 선택 모드 시 체크박스는 항상 표시 (renderCheckbox에서 조건부 렌더링) */
+/* hover 시 체크박스 표시 */
+.iconCard:hover .itemCheckbox,
+.tileCard:hover .itemCheckbox,
+.saasCard:hover .itemCheckbox,
+.tableRow:hover .itemCheckbox,
+.listItem:hover .itemCheckbox {
+  opacity: 1;
+}
+
+/* 선택된 아이템은 항상 체크박스 표시 */
+.iconCardSelected .itemCheckbox,
+.tileCardSelected .itemCheckbox,
+.saasCardSelected .itemCheckbox,
+.tableRowSelected .itemCheckbox,
+.listItemSelected .itemCheckbox {
+  opacity: 1;
+}
 
 /* 마키 선택 오버레이 */
 .marqueeOverlay {

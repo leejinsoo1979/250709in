@@ -139,15 +139,14 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return <FileText size={size} className={styles.itemIconDesign} />;
   };
 
-  // 체크박스 렌더링 (선택된 항목이 1개 이상일 때만 표시)
+  // 체크박스 렌더링 (호버 시 표시, 선택된 아이템은 항상 표시)
   const hasSelection = selectedItems.size > 0;
   const renderCheckbox = (item: ExplorerItem) => {
-    if (!hasSelection) return null;
     const isSelected = selectedItems.has(item.id);
     return (
       <input
         type="checkbox"
-        className={`${styles.itemCheckbox} ${styles.itemCheckboxVisible}`}
+        className={`${styles.itemCheckbox} ${isSelected ? styles.itemCheckboxVisible : ''}`}
         checked={isSelected}
         onChange={() => {}}
         onClick={(e) => handleCheckboxClick(e, item.id)}
