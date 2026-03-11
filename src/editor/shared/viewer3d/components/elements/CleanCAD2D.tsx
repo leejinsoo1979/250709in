@@ -2798,6 +2798,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key={`module-guide-${index}`} renderOrder={1000000}>
 
+            {/* 가구 치수선 */}
+            <NativeLine name="dimension_line"
+              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={1000000}
+              depthTest={false}
+            />
+
+            {/* 좌측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={1000000}
+              depthTest={false}
+            />
+
+            {/* 우측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={1000000}
+              depthTest={false}
+            />
+
+            {/* 가구 치수 텍스트 */}
+            <Text
+              position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={1000000}
+              depthTest={false}
+            >
+              {Math.round(actualWidth)}
+            </Text>
+
+            {/* 연장선 끝 세리프 (가로 틱 마크) */}
+            {[leftX, rightX].map((x, ti) => (
+              <React.Fragment key={`tick-${ti}`}>
+                <NativeLine name="dimension_line"
+                  points={[[x - mmToThreeUnits(5), dimY, 0.001], [x + mmToThreeUnits(5), dimY, 0.001]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                />
+              </React.Fragment>
+            ))}
+
             {/* 연장선 - 가구 상단에서 내부너비 치수선(columnDimensionY)까지 */}
             <NativeLine name="dimension_line"
               points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY, 0.001]]}
@@ -2821,9 +2871,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           </group>
         );
       })}
-      
-      {/* 기둥별 치수선 (개별 슬롯 너비, 탑뷰가 아닐 때만) */}
-      {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
+
+      {/* 기둥별 치수선 (개별 기둥 너비) - 불필요하므로 비활성화 */}
+      {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
         const columnWidthM = column.width * 0.01;
         const leftX = column.position[0] - columnWidthM / 2;
         const rightX = column.position[0] + columnWidthM / 2;
@@ -5755,8 +5805,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           </group>
         )}
 
-        {/* 기둥별 치수 - 상부뷰 (기둥 내부에 텍스트만 표시) */}
-        {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
+        {/* 기둥별 치수 - 상부뷰 (기둥 내부에 텍스트만 표시) - 불필요하므로 비활성화 */}
+        {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
           const columnDepthM = (column.depth || 300) * 0.01;
           // 기둥 중앙 Z 위치 계산
           const columnCenterZ = column.position[2] || (spaceZOffset + columnDepthM / 2);
