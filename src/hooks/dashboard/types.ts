@@ -75,8 +75,8 @@ export type ViewMode = 'extra-large' | 'large' | 'medium' | 'small' | 'list' | '
 // 아이콘 크기 매핑 (px)
 export const VIEW_MODE_ICON_SIZE: Record<ViewMode, number> = {
   'extra-large': 256,
-  'large': 128,
-  'medium': 80,
+  'large': 200,
+  'medium': 120,
   'small': 48,
   'list': 16,
   'details': 16,

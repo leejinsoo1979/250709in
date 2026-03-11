@@ -407,7 +407,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   }
 
   // ── 아이콘 뷰 (large / medium / small) ──
-  const gridMinWidth = viewMode === 'large' ? 160 : viewMode === 'medium' ? 120 : 90;
+  const gridMinWidth = viewMode === 'large' ? 240 : viewMode === 'medium' ? 160 : 90;
   const thumbSize = iconSize;
 
   return (
