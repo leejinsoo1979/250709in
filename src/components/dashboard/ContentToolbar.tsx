@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Folder, Search, FileText } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Search, FileText } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
-import { ProjectIcon } from '@/components/common/Icons';
+import { RxDashboard } from 'react-icons/rx';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
 import type { ViewMode, SortBy, BreadcrumbItem, UseExplorerNavigationReturn, ExplorerItem } from '@/hooks/dashboard/types';
@@ -205,7 +205,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   const getBreadcrumbIcon = (item: BreadcrumbItem) => {
     switch (item.type) {
       case 'root': return <Clock size={13} />;
-      case 'project': return <Folder size={13} />;
+      case 'project': return <RxDashboard size={13} />;
       case 'folder': return <FcFolder size={13} />;
     }
   };
@@ -329,7 +329,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                         className={styles.treeItemLabel}
                         onClick={() => handleTreeItemClick(node)}
                       >
-                        {node.type === 'project' && <ProjectIcon size={14} />}
+                        {node.type === 'project' && <RxDashboard size={14} />}
                         {node.type === 'folder' && <FcFolder size={15} />}
                         {node.type === 'design' && <FileText size={14} />}
                         <span>{node.label}</span>
