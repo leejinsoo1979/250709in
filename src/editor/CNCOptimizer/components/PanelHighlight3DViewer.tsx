@@ -47,11 +47,11 @@ const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 
 
   useEffect(() => {
     const maxDim = Math.max(targetSize.x, targetSize.y, targetSize.z);
-    const distance = maxDim * 2.0;
+    const distance = maxDim * 3.0;
     camera.position.set(
-      center.x + distance * 0.7,
-      center.y + distance * 0.45,
-      center.z + distance * 0.9
+      center.x + distance * 0.6,
+      center.y + distance * 0.4,
+      center.z + distance * 0.8
     );
     camera.lookAt(center.x, center.y, center.z);
     camera.updateProjectionMatrix();
@@ -235,7 +235,7 @@ const Scene3D: React.FC<{
               enableZoom: true,
               enableRotate: true,
               minDistance: 0.3,
-              maxDistance: 15,
+              maxDistance: 50,
               target: [targetCenter.x, targetCenter.y, targetCenter.z],
             } as any}
           />
