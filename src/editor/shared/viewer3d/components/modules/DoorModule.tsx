@@ -736,14 +736,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 10;
     const baseHeightValue = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
 
+    // baseConfig.type === 'floor'일 때 baseConfig.height에는 이미 바닥마감재 높이가 포함됨
+    // 따라서 가구 높이 계산 시 floorHeightValue를 별도로 빼면 이중 차감됨
+    const isFloorType = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
+    const floorHeightForCalc = isFloorType ? 0 : floorHeightValue;
+
     // 가구 높이 계산 (자유배치: effectiveInternalHeight 사용, 슬롯배치: 공간에서 계산)
-    tallCabinetFurnitureHeight = effectiveInternalHeight || (fullSpaceHeight - topFrameHeightValue - floorHeightValue - baseHeightValue);
+    tallCabinetFurnitureHeight = effectiveInternalHeight || (fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue);
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
-    const baselineBottomGap = floorHeightValue + actualBaseHeight;
+    // baseConfig.type === 'floor'일 때 actualBaseHeight에 이미 바닥마감재 포함
+    const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
     const inputBottomGap = doorBottomGap ?? baselineBottomGap;
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
