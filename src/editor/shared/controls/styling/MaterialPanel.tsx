@@ -68,6 +68,15 @@ const MaterialPanel: React.FC = () => {
   // UI Store에서 도어 상태 가져오기
   const { doorsOpen, toggleDoors } = useUIStore();
 
+  // materialTab 변경 시 도어 자동 열기/닫기
+  useEffect(() => {
+    if (materialTab === 'interior' && !doorsOpen) {
+      toggleDoors();
+    } else if (materialTab === 'door' && doorsOpen) {
+      toggleDoors();
+    }
+  }, [materialTab]);
+
 
   // 현재 스토어의 색상
   const currentStoreColor = materialTab === 'interior'
