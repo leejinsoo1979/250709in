@@ -46,7 +46,8 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   // 싱글/듀얼 타입 (full 카테고리에서만 사용)
   const [cabinetType, setCabinetType] = useState<'single' | 'dual'>('dual');
   const [typeConfirmed, setTypeConfirmed] = useState(false); // 팝업 열릴 때 선택 표시
-  const currentWidth = category === 'full' ? (cabinetType === 'single' ? 500 : 1000) : dimensions.width;
+  const [customWidth, setCustomWidth] = useState<number>(1000);
+  const currentWidth = category === 'full' ? customWidth : dimensions.width;
 
   const {
     layout,
@@ -67,6 +68,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCabinetType('dual');
+      setCustomWidth(1000);
       setTypeConfirmed(false);
     }
   }, [isOpen]);
@@ -74,6 +76,18 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   // 타입 변경 시 레이아웃 리셋
   const handleTypeChange = useCallback((type: 'single' | 'dual') => {
     setCabinetType(type);
+    setCustomWidth(type === 'single' ? 500 : 1000);
+    setTypeConfirmed(true);
+    resetLayout();
+  }, [resetLayout]);
+
+  // 커스텀 너비 변경
+  const handleWidthChange = useCallback((value: number) => {
+    const clamped = Math.max(200, Math.min(2400, value));
+    setCustomWidth(clamped);
+    // 싱글/듀얼 자동 매칭
+    if (clamped <= 600) setCabinetType('single');
+    else setCabinetType('dual');
     setTypeConfirmed(true);
     resetLayout();
   }, [resetLayout]);
@@ -135,7 +149,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 
         {/* 바디 */}
         <div className={styles.body}>
-          {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
+          {/* 싱글/듀얼 타입 선택 + 너비 입력 (full 카테고리만) */}
           {category === 'full' && (
             <div className={styles.typeSelector}>
               <button
@@ -165,6 +179,28 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
                   <span className={styles.typeBtnSize}>1000mm</span>
                 </div>
               </button>
+              <div className={styles.widthInputWrap}>
+                <label className={styles.widthInputLabel}>너비</label>
+                <div className={styles.widthInputRow}>
+                  <input
+                    type="number"
+                    className={styles.widthInput}
+                    value={customWidth}
+                    min={200}
+                    max={2400}
+                    step={10}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v)) handleWidthChange(v);
+                    }}
+                    onBlur={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (isNaN(v)) handleWidthChange(1000);
+                    }}
+                  />
+                  <span className={styles.widthInputUnit}>mm</span>
+                </div>
+              </div>
             </div>
           )}
 
