@@ -381,7 +381,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                 {...getDragProps(item)}
               >
                 {renderCheckbox(item)}
-                <FcFolder size={80} />
+                <FcFolder size={128} />
                 <div className={styles.iconName} title={item.name}>{item.name}</div>
               </div>
             );
