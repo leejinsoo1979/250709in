@@ -62,22 +62,53 @@ const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 
 
 /** 비하이라이트 패널 반투명 처리 (scene traverse) */
 const PanelDimmer: React.FC<{
-  highlightedPanelId: string | null;
-}> = ({ highlightedPanelId }) => {
-  const { scene } = useThree();
+  highlightedFurnitureId: string | null;
+}> = ({ highlightedFurnitureId }) => {
+  const { scene, invalidate } = useThree();
   const originalMaterials = useRef<Map<string, { opacity: number; transparent: boolean; emissive: THREE.Color; emissiveIntensity: number }>>(new Map());
 
   useEffect(() => {
-    // 원본 머티리얼 속성 저장 (최초 1회)
-    if (originalMaterials.current.size === 0) {
-      scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+    // 원본 머티리얼 속성 저장 (새 메시가 추가될 때마다 갱신)
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+        if (!originalMaterials.current.has(obj.uuid)) {
           originalMaterials.current.set(obj.uuid, {
             opacity: obj.material.opacity,
             transparent: obj.material.transparent,
             emissive: obj.material.emissive.clone(),
             emissiveIntensity: obj.material.emissiveIntensity,
           });
+        }
+      }
+    });
+
+    if (!highlightedFurnitureId) {
+      // 하이라이트 없음 → 원래 상태 복원
+      scene.traverse((obj) => {
+        if (!(obj instanceof THREE.Mesh)) return;
+        const mat = obj.material;
+        if (!(mat instanceof THREE.MeshStandardMaterial)) return;
+        const original = originalMaterials.current.get(obj.uuid);
+        if (!original) return;
+        mat.opacity = original.opacity;
+        mat.transparent = original.transparent;
+        mat.emissive.copy(original.emissive);
+        mat.emissiveIntensity = original.emissiveIntensity;
+        mat.needsUpdate = true;
+      });
+      invalidate();
+      return;
+    }
+
+    // furnitureId로 이름이 지정된 그룹 찾기
+    const targetGroup = scene.getObjectByName(highlightedFurnitureId);
+
+    // 하이라이트 대상 메시 UUID 수집
+    const highlightedMeshUuids = new Set<string>();
+    if (targetGroup) {
+      targetGroup.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          highlightedMeshUuids.add(obj.uuid);
         }
       });
     }
@@ -90,23 +121,8 @@ const PanelDimmer: React.FC<{
       const original = originalMaterials.current.get(obj.uuid);
       if (!original) return;
 
-      if (!highlightedPanelId) {
-        // 하이라이트 없음 → 원래 상태 복원
-        mat.opacity = original.opacity;
-        mat.transparent = original.transparent;
-        mat.emissive.copy(original.emissive);
-        mat.emissiveIntensity = original.emissiveIntensity;
-        mat.needsUpdate = true;
-        return;
-      }
-
-      // highlightedPanel이 설정되면 UIStore 시스템이 하이라이트 처리함
-      // 여기서는 나머지 패널만 반투명 처리
-      const meshName = obj.name || '';
-      const isHighlighted = meshName.includes(highlightedPanelId.split('-').slice(1).join('-'));
-
-      if (isHighlighted) {
-        // 하이라이트된 패널: 강조
+      if (highlightedMeshUuids.has(obj.uuid)) {
+        // 하이라이트된 가구: 강조
         mat.opacity = 1;
         mat.transparent = false;
         mat.emissive.set(0x2266cc);
@@ -120,6 +136,9 @@ const PanelDimmer: React.FC<{
       }
       mat.needsUpdate = true;
     });
+
+    // 즉시 리렌더링 트리거
+    invalidate();
 
     return () => {
       // cleanup: 원래 상태로 복원
@@ -136,7 +155,7 @@ const PanelDimmer: React.FC<{
         mat.needsUpdate = true;
       });
     };
-  }, [highlightedPanelId, scene]);
+  }, [highlightedFurnitureId, scene, invalidate]);
 
   return null;
 };
@@ -209,8 +228,8 @@ const Scene3D: React.FC<{
   placedModules: PlacedModule[];
   targetSize: THREE.Vector3;
   targetCenter: THREE.Vector3;
-  highlightedPanelId: string | null;
-}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedPanelId }) => {
+  highlightedFurnitureId: string | null;
+}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedFurnitureId }) => {
   return (
     <Suspense fallback={null}>
       <ViewerThemeProvider viewMode="3D">
@@ -240,10 +259,11 @@ const Scene3D: React.FC<{
             } as any}
           />
 
-          {/* 가구 렌더링 */}
+          {/* 가구 렌더링 - name에 furniture ID 설정 (PanelDimmer 매칭용) */}
           {placedModules.map((pm) => (
             <group
               key={pm.id}
+              name={pm.id}
               position={[
                 pm.position?.x || 0,
                 pm.position?.y || 0,
@@ -257,8 +277,8 @@ const Scene3D: React.FC<{
             </group>
           ))}
 
-          {/* 반투명 처리 (UIStore 하이라이트 보완) */}
-          <PanelDimmer highlightedPanelId={highlightedPanelId} />
+          {/* 반투명 처리 (furnitureId 기반 그룹 매칭) */}
+          <PanelDimmer highlightedFurnitureId={highlightedFurnitureId} />
         </Space3DViewProvider>
       </ViewerThemeProvider>
     </Suspense>
@@ -289,12 +309,6 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     }
     return () => setHighlightedPanel(null);
   }, [highlightedPanelName, highlightedFurnitureId, setHighlightedPanel]);
-
-  // highlightedPanel ID (scene traverse 보조용)
-  const highlightedPanelId = useMemo(() => {
-    if (!highlightedPanelName || !highlightedFurnitureId) return null;
-    return `${highlightedFurnitureId}-${highlightedPanelName}`;
-  }, [highlightedPanelName, highlightedFurnitureId]);
 
   // 전체 가구 바운딩 박스 계산 (카메라 위치용)
   const { targetSize, targetCenter } = useMemo(() => {
@@ -392,7 +406,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
             placedModules={placedModules}
             targetSize={targetSize}
             targetCenter={targetCenter}
-            highlightedPanelId={highlightedPanelId}
+            highlightedFurnitureId={highlightedFurnitureId}
           />
         </Canvas>
       </WebGLErrorBoundary>
