@@ -3604,7 +3604,6 @@ const Configurator: React.FC = () => {
                   frameConfig: { ...currentFrameConfig, top: true, bottom: true },
                   frameSize: {
                     ...(spaceInfo.frameSize || { left: 50, right: 50, top: 10 }),
-                    top: 10,
                   },
                   baseConfig: {
                     ...(spaceInfo.baseConfig || { type: 'floor' as const, height: 65 }),

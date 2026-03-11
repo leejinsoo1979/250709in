@@ -87,17 +87,18 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       // 전체서라운드: 기존 서라운드 + frameConfig top/bottom 활성
       const updates: Partial<SpaceInfo> = { surroundType: 'surround' };
       const installType = spaceInfo.installType;
+      const currentTop = spaceInfo.frameSize?.top || 10;
 
       if (installType === 'builtin' || installType === 'built-in') {
-        updates.frameSize = { left: 50, right: 50, top: 10 };
+        updates.frameSize = { left: 50, right: 50, top: currentTop };
       } else if (installType === 'semistanding' || installType === 'semi-standing') {
         updates.frameSize = {
           left: hasLeftWall ? 50 : END_PANEL_WIDTH,
           right: hasRightWall ? 50 : END_PANEL_WIDTH,
-          top: 10,
+          top: currentTop,
         };
       } else if (installType === 'freestanding') {
-        updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: 10 };
+        updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: currentTop };
       }
 
       updates.gapConfig = { left: 2, right: 2 };
