@@ -87,7 +87,6 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               placeholder="65"
               disabled={disabled}
             />
-            <span className={styles.unit}>mm</span>
           </div>
           <span className={styles.label} style={{ minWidth: '24px', flexShrink: 0, margin: 0 }}>{t('frame.baseDepth')}</span>
           <div className={styles.inputWithUnit} style={{ flex: 1 }}>
@@ -102,7 +101,6 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               placeholder="0"
               disabled={disabled}
             />
-            <span className={styles.unit}>mm</span>
           </div>
         </div>
       )}
@@ -123,7 +121,6 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               placeholder="60"
               disabled={disabled}
             />
-            <span className={styles.unit}>mm</span>
           </div>
         </div>
       )}
