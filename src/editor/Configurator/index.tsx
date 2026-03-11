@@ -3016,8 +3016,7 @@ const Configurator: React.FC = () => {
   const renderRightPanelContent = () => {
     return (
       <div className={styles.spaceControls}>
-        <
-        {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
+        {/* 공간 설정 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
