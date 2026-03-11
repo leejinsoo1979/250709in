@@ -4366,11 +4366,88 @@ const Configurator: React.FC = () => {
             {/* 슬롯 분할 가이드 설명 팝업 */}
             {isSlotGuideOpen && (() => {
               const totalW = spaceInfo.width;
-              const gapL = spaceInfo.gapConfig?.left || 0;
-              const gapR = spaceInfo.gapConfig?.right || 0;
+              const isSurround = spaceInfo.surroundType === 'surround';
+              const installType = spaceInfo.installType || 'builtin';
+              const isBuiltin = installType === 'builtin' || installType === 'built-in';
+              const isSemi = installType === 'semistanding' || installType === 'semi-standing';
+              const isFree = installType === 'freestanding' || installType === 'free-standing';
+              const wallLeft = spaceInfo.wallConfig?.left ?? true;
+              const EP = 18; // 엔드패널 두께
+
+              // 내경 계산: 서라운드 vs 노서라운드
+              let leftReduction = 0;
+              let rightReduction = 0;
+              let leftLabel = '';
+              let rightLabel = '';
+              let installLabel = '';
+
+              if (isSurround) {
+                const defaultFrame = 50;
+                const frameL = spaceInfo.frameSize?.left !== undefined ? spaceInfo.frameSize.left : defaultFrame;
+                const frameR = spaceInfo.frameSize?.right !== undefined ? spaceInfo.frameSize.right : defaultFrame;
+
+                if (isBuiltin) {
+                  leftReduction = frameL;
+                  rightReduction = frameR;
+                  leftLabel = `좌측 프레임 ${frameL}mm`;
+                  rightLabel = `우측 프레임 ${frameR}mm`;
+                  installLabel = '양쪽벽 (빌트인)';
+                } else if (isSemi) {
+                  if (wallLeft) {
+                    leftReduction = frameL;
+                    rightReduction = EP;
+                    leftLabel = `좌측 프레임 ${frameL}mm (벽)`;
+                    rightLabel = `우측 엔드패널 ${EP}mm`;
+                  } else {
+                    leftReduction = EP;
+                    rightReduction = frameR;
+                    leftLabel = `좌측 엔드패널 ${EP}mm`;
+                    rightLabel = `우측 프레임 ${frameR}mm (벽)`;
+                  }
+                  installLabel = '한쪽벽 (세미스탠딩)';
+                } else {
+                  leftReduction = EP;
+                  rightReduction = EP;
+                  leftLabel = `좌측 엔드패널 ${EP}mm`;
+                  rightLabel = `우측 엔드패널 ${EP}mm`;
+                  installLabel = '벽없음 (프리스탠딩)';
+                }
+              } else {
+                // 노서라운드
+                const gapL = spaceInfo.gapConfig?.left ?? 2;
+                const gapR = spaceInfo.gapConfig?.right ?? 2;
+
+                if (isBuiltin) {
+                  leftReduction = gapL;
+                  rightReduction = gapR;
+                  leftLabel = `좌측 이격 ${gapL}mm`;
+                  rightLabel = `우측 이격 ${gapR}mm`;
+                  installLabel = '양쪽벽 (빌트인)';
+                } else if (isSemi) {
+                  if (wallLeft) {
+                    leftReduction = spaceInfo.gapConfig?.left || 0;
+                    rightReduction = 0;
+                    leftLabel = `좌측 이격 ${leftReduction}mm (벽)`;
+                    rightLabel = '우측 0mm (엔드패널 포함)';
+                  } else {
+                    leftReduction = 0;
+                    rightReduction = spaceInfo.gapConfig?.right || 0;
+                    leftLabel = '좌측 0mm (엔드패널 포함)';
+                    rightLabel = `우측 이격 ${rightReduction}mm (벽)`;
+                  }
+                  installLabel = '한쪽벽 (세미스탠딩)';
+                } else {
+                  leftReduction = 0;
+                  rightReduction = 0;
+                  leftLabel = '좌측 0mm (엔드패널 포함)';
+                  rightLabel = '우측 0mm (엔드패널 포함)';
+                  installLabel = '벽없음 (프리스탠딩)';
+                }
+              }
+
+              const internalW = totalW - leftReduction - rightReduction;
+              const hasReduction = leftReduction > 0 || rightReduction > 0;
               const gapM = spaceInfo.gapConfig?.middle ?? 2;
-              const hasGap = gapL > 0 || gapR > 0;
-              const internalW = totalW - gapL - gapR;
               const hasDropped = spaceInfo.droppedCeiling?.enabled === true;
               const droppedW = spaceInfo.droppedCeiling?.width || 900;
               const droppedPos = spaceInfo.droppedCeiling?.position || 'right';
@@ -4397,15 +4474,22 @@ const Configurator: React.FC = () => {
                     <TbRulerMeasure size={18} /> 슬롯 분할 가이드
                   </div>
 
+                  {/* 설치 타입 표시 */}
+                  <div className={styles.slotGuidePopupSection}>
+                    <div className={styles.slotGuidePopupLabel}>
+                      {isSurround ? '서라운드' : '노서라운드'} · {installLabel}
+                    </div>
+                  </div>
+
                   {/* 내경 계산 */}
                   <div className={styles.slotGuidePopupSection}>
                     <div className={styles.slotGuidePopupLabel}>내경 계산</div>
                     <p className={styles.slotGuidePopupDesc}>
-                      전체 너비({totalW}mm)에서 {hasGap ? (<>좌측 이격 {gapL}mm + 우측 이격 {gapR}mm를 빼서</>) : '이격거리가 없어'} <strong>내경 {internalW}mm</strong>{hasGap ? '를 구합니다.' : '가 전체 너비와 동일합니다.'}
+                      전체 너비({totalW}mm)에서 {hasReduction ? (<>{leftLabel} + {rightLabel}를 빼서</>) : '양쪽 차감이 없어'} <strong>내경 {internalW}mm</strong>{hasReduction ? '를 구합니다.' : '가 전체 너비와 동일합니다.'}
                     </p>
                     <p className={styles.slotGuidePopupDesc}>
                       <span className={styles.slotGuidePopupFormula}>
-                        {totalW} − {gapL} − {gapR} = {internalW}mm
+                        {totalW} − {leftReduction} − {rightReduction} = {internalW}mm
                       </span>
                     </p>
                   </div>
@@ -4500,9 +4584,11 @@ const Configurator: React.FC = () => {
                       <div className={styles.slotGuidePopupSection}>
                         <div className={styles.slotGuidePopupLabel}>가구 너비 결정 (내림 규칙)</div>
                         <p className={styles.slotGuidePopupDesc}>
-                          {hasGap
-                            ? <>이격거리로 인해 슬롯이 {normalRawSlot % 1 === 0 ? '정수' : '소수점'}이므로, 가구 제작 오차를 고려해 내림 처리합니다.</>
-                            : '가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.'}
+                          {isSurround
+                            ? <>프레임/엔드패널 차감으로 슬롯이 {normalRawSlot % 1 === 0 ? '정수' : '소수점'}이므로, 가구 제작 오차를 고려해 내림 처리합니다.</>
+                            : hasReduction
+                              ? <>이격거리로 인해 슬롯이 {normalRawSlot % 1 === 0 ? '정수' : '소수점'}이므로, 가구 제작 오차를 고려해 내림 처리합니다.</>
+                              : '가구 제작 시 오차를 고려하여 슬롯 너비를 내림 처리합니다.'}
                         </p>
                       </div>
 
