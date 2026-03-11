@@ -60,8 +60,9 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
  */
 export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
   // 상단 치수 라벨(전체폭, 내경, 구간별, 이격거리 등)이 잘리지 않도록
-  // 카메라가 충분한 상단 영역을 포함하도록 유효 높이에 여백 추가
-  const labelPadding = 800; // 상단 치수 라벨을 위한 여백 (mm)
+  // 카메라 타겟이 height/2 중앙이므로, 상단 라벨 영역까지 포함하려면
+  // 높이에 충분한 여백을 추가해야 함 (좁은 폭일수록 더 많은 여백 필요)
+  const labelPadding = Math.max(1200, height * 0.5); // 최소 1200mm 또는 높이의 50%
   const effectiveHeight = height + labelPadding;
 
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
