@@ -928,9 +928,8 @@
 
 .rightPanelContent {
   flex: 1;
-  padding: var(--spacing-xl, 24px);
+  padding: 8px 12px;
   overflow-y: auto;
-  padding-right: var(--spacing-lg, 20px);
   max-height: calc(100vh - 120px);
 }
 
@@ -1278,7 +1277,7 @@
 /* 큰 데스크톱 (1920px 이상) - 패딩/간격만 조정 */
 @media (min-width: 1920px) {
   .rightPanelContent {
-    padding: 28px;
+    padding: 8px 12px;
   }
 
   .modulePanelContent {
@@ -1289,7 +1288,7 @@
 /* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
 @media (max-width: 1399px) and (min-width: 1200px) {
   .rightPanelContent {
-    padding: 20px;
+    padding: 8px 12px;
   }
 
   .modulePanelContent {
@@ -1351,8 +1350,7 @@
   }
 
   .rightPanelContent {
-    padding: 16px;
-    padding-right: 12px;
+    padding: 8px 10px;
   }
 
   .modulePanelContent {
@@ -1523,7 +1521,7 @@
   }
 
   .rightPanelContent {
-    padding: 14px;
+    padding: 6px 8px;
   }
 
   .modulePanelContent {
