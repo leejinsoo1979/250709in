@@ -1177,24 +1177,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 커스텀 가구 띄움설치: 상부섹션에서만 높이 차감
+  // 커스텀 가구 섹션 높이는 furnitureHeightMm 클램핑 + 비례 조정(Line 1160-1178)에서 처리
   let adjustedCustomConfig = placedModule.customConfig;
-  if (isCustomFurniture && adjustedCustomConfig?.sections && adjustedCustomConfig.sections.length > 0) {
-    const isFloatForCustSection = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-    const floatForSection = isFloatForCustSection ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    if (floatForSection > 0) {
-      // 마지막 섹션(상부)에서 floatHeight 차감
-      const lastIdx = adjustedCustomConfig.sections.length - 1;
-      const adjustedSections = adjustedCustomConfig.sections.map((s, i) => {
-        if (i === lastIdx) {
-          const newHeight = Math.max(s.height - floatForSection, 100); // 최소 100mm
-          return { ...s, height: newHeight };
-        }
-        return s;
-      });
-      adjustedCustomConfig = { ...adjustedCustomConfig, sections: adjustedSections };
-    }
-  }
 
   // 하부장과 키큰장의 띄워서 배치 처리
   if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
