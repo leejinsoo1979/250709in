@@ -179,7 +179,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       {/* 생성 버튼 (맨 좌측) */}
       <div className={styles.actions}>
         {onCreateDesign && (
-          <button className={styles.createBtn} onClick={onCreateDesign}>
+          <button className={`${styles.createBtn} ${styles.createBtnPrimary}`} onClick={onCreateDesign}>
             <Plus size={16} />
             <span>새 디자인</span>
           </button>
@@ -192,23 +192,22 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         )}
       </div>
 
-      {/* 전체선택 체크박스 */}
-      {onSelectAll && totalItemCount > 0 && (
-        <div className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
-          <input
-            type="checkbox"
-            checked={isAllSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = isPartiallySelected;
-            }}
-            onChange={handleSelectAllToggle}
-          />
-        </div>
-      )}
-
       {/* 네비게이션 버튼 + 브레드크럼 */}
       {nav && (
         <div className={styles.navGroup}>
+          {/* 전체선택 체크박스 */}
+          {onSelectAll && totalItemCount > 0 && (
+            <div className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                ref={(el) => {
+                  if (el) el.indeterminate = isPartiallySelected;
+                }}
+                onChange={handleSelectAllToggle}
+              />
+            </div>
+          )}
           <button
             className={styles.navBtn}
             onClick={nav.goBack}
