@@ -643,7 +643,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const { t, currentLanguage } = useTranslation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['brand', 'price', 'material', 'space', 'droppedCeiling', 'mainSpace', 'layoutMode', 'layout', 'floor', 'frame'])
+    new Set(['space', 'layoutMode', 'layout'])
   );
   
   // 초기 렌더링 시 UIStore 동기화

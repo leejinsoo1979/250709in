@@ -34,14 +34,14 @@
   flex: 0 0 auto;
   background: transparent;
   border: none;
-  padding: 10px 18px;
+  padding: 8px 14px;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-text-muted);
   cursor: pointer;
   transition: color 0.12s ease;
-  line-height: 20px;
+  line-height: 18px;
   border-bottom: 2px solid transparent;
   white-space: nowrap;
   letter-spacing: -0.01em;
@@ -85,10 +85,10 @@
 
 /* ── Form Container ── */
 .formContainer {
-  padding: 12px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 /* ── Collapsible Form Section ── */
@@ -102,10 +102,10 @@
 .formHeader {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
+  padding: 7px 10px;
   cursor: pointer;
   transition: background 0.1s ease;
-  gap: 10px;
+  gap: 8px;
 }
 
 .formHeader:hover {
@@ -115,7 +115,7 @@
 /* Small colored dot → now a thin vertical accent bar */
 .formIndicator {
   width: 3px;
-  height: 14px;
+  height: 12px;
   border-radius: 2px;
   background: var(--theme-primary);
   flex-shrink: 0;
@@ -124,7 +124,7 @@
 
 .formLabel {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--theme-text);
   margin: 0;
@@ -143,7 +143,7 @@
 }
 
 .formContent {
-  padding: 12px 14px;
+  padding: 8px 10px;
   border-top: 1px solid var(--theme-border);
 }
 
@@ -192,9 +192,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
+  padding: 6px 10px;
   background: var(--theme-background-secondary);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .priceLabel {
@@ -340,7 +340,7 @@
 .numberInput {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
 }
 
 .inputLabel {
@@ -364,11 +364,11 @@
 .inputButton {
   background: transparent;
   border: none;
-  width: 36px;
-  min-width: 36px;
-  height: 34px;
+  width: 32px;
+  min-width: 32px;
+  height: 30px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--theme-text-muted);
   display: flex;
@@ -404,13 +404,13 @@
 
 .inputField input {
   width: 100%;
-  padding: 7px 8px;
+  padding: 5px 8px;
   border: none;
   border-left: 1px solid var(--theme-border);
   border-right: 1px solid var(--theme-border);
   outline: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-text);
   background: var(--theme-surface);
@@ -485,7 +485,7 @@
 
 /* ── Door Slider ── */
 .doorSlider {
-  margin: 10px 0;
+  margin: 6px 0;
   user-select: none;
 }
 
@@ -546,21 +546,21 @@
 .sliderLabels {
   display: flex;
   background: var(--theme-background-secondary);
-  border-radius: 8px;
-  padding: 3px;
-  margin-top: 8px;
+  border-radius: 6px;
+  padding: 2px;
+  margin-top: 6px;
   gap: 2px;
 }
 
 .sliderLabels span {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--theme-text-muted);
   font-weight: 500;
   cursor: pointer;
-  padding: 8px 12px;
-  min-height: 36px;
-  border-radius: 6px;
+  padding: 5px 8px;
+  min-height: 28px;
+  border-radius: 5px;
   transition: all 0.15s ease;
   flex: 1;
   display: flex;
@@ -671,10 +671,10 @@
 
 /* ── Module Settings ── */
 .moduleSettings {
-  padding: 12px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .placeholder {
@@ -719,10 +719,10 @@
 
 /* ── Zone Info ── */
 .zoneInfo {
-  margin-top: 8px;
-  padding: 10px 12px;
+  margin-top: 6px;
+  padding: 6px 10px;
   background: var(--theme-background-secondary);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .zoneInfoItem {
