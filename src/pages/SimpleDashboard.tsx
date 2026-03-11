@@ -62,7 +62,7 @@ const SimpleDashboard: React.FC = () => {
     containerRef: contentAreaRef,
     onSelectionChange: actions.setSelectedItems,
     existingSelection: actions.selectedItems,
-    enabled: dashboardLayout === 'windows',
+    enabled: true,
   });
 
   // 모달 상태들
