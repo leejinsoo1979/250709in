@@ -162,6 +162,7 @@ const Header: React.FC<HeaderProps> = ({
   const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   // UIStore에서 카메라 및 그래픽 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
   const { colors } = useThemeColors();
@@ -171,6 +172,15 @@ const Header: React.FC<HeaderProps> = ({
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
 
+  // 대시보드 이동 (해당 프로젝트 위치)
+  const navigateToDashboard = () => {
+    if (projectId) {
+      navigate(`/dashboard?projectId=${projectId}`);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   // 프로젝트명(경로) 클릭 → 자동저장 후 대시보드 이동 (해당 프로젝트 선택)
   const handleNavigateToDashboard = async () => {
     try {
@@ -178,11 +188,29 @@ const Header: React.FC<HeaderProps> = ({
     } catch (e) {
       console.error('자동저장 실패:', e);
     }
-    if (projectId) {
-      navigate(`/dashboard?projectId=${projectId}`);
-    } else {
-      navigate('/dashboard');
+    navigateToDashboard();
+  };
+
+  // 로고 클릭 → 나가기 확인 모달 표시
+  const handleLogoClick = () => {
+    setIsExitModalOpen(true);
+  };
+
+  // 저장하고 나가기
+  const handleSaveAndExit = async () => {
+    setIsExitModalOpen(false);
+    try {
+      await onSave();
+    } catch (e) {
+      console.error('저장 실패:', e);
     }
+    navigateToDashboard();
+  };
+
+  // 저장하지 않고 나가기
+  const handleExitWithoutSave = () => {
+    setIsExitModalOpen(false);
+    navigateToDashboard();
   };
 
   // HistoryStore에서 undo/redo 기능 가져오기
@@ -387,7 +415,7 @@ const Header: React.FC<HeaderProps> = ({
       <div className={styles.container}>
         {/* 로고 영역 — 고정 너비, 애니메이션 격리 */}
         <div className={styles.logo}>
-          <Logo size="medium" onClick={() => navigate('/')} noAnimation />
+          <Logo size="medium" onClick={handleLogoClick} noAnimation />
         </div>
 
         {/* 파일 메뉴 + 저장 버튼 */}
@@ -1011,6 +1039,105 @@ const Header: React.FC<HeaderProps> = ({
         onClose={() => setIsProfilePopupOpen(false)}
         position={profilePopupPosition}
       />
+
+      {/* 나가기 확인 모달 */}
+      {isExitModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+          }}
+          onClick={() => setIsExitModalOpen(false)}
+        >
+          <div
+            style={{
+              background: 'var(--theme-surface, #fff)',
+              borderRadius: '12px',
+              padding: '24px',
+              minWidth: '320px',
+              maxWidth: '400px',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              border: '1px solid var(--theme-border, #e5e7eb)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{
+              margin: '0 0 8px 0',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: 'var(--theme-text, #111)',
+            }}>
+              에디터 나가기
+            </h3>
+            <p style={{
+              margin: '0 0 20px 0',
+              fontSize: '14px',
+              color: 'var(--theme-text-secondary, #6b7280)',
+              lineHeight: 1.5,
+            }}>
+              저장하지 않은 변경사항이 있을 수 있습니다.
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              justifyContent: 'flex-end',
+            }}>
+              <button
+                onClick={() => setIsExitModalOpen(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--theme-border, #e5e7eb)',
+                  background: 'transparent',
+                  color: 'var(--theme-text-secondary, #6b7280)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleExitWithoutSave}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--theme-border, #e5e7eb)',
+                  background: 'transparent',
+                  color: 'var(--theme-text, #111)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                저장하지 않고 나가기
+              </button>
+              <button
+                onClick={handleSaveAndExit}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'var(--theme-primary, #667eea)',
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                저장하고 나가기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
