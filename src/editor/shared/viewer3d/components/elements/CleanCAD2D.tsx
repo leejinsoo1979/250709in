@@ -1015,7 +1015,86 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 정면도 치수선들 */}
       {showDimensions && (
         <>
-          {/* 상단 전체 폭 치수선 - 아래 슬롯/가구 치수와 중복이므로 비활성화 */}
+          {/* 상단 전체 프레임 포함 폭 치수선 */}
+          <group>
+        {(() => {
+          // 슬롯배치 + 가구 배치됨 → 아래 개별 가구 치수와 중복이므로 숨김
+          if (!isFreePlacement && placedModules.length > 0) {
+            return null;
+          }
+
+          // 자유배치 모드 또는 가구 미배치 시 → 공간 너비 표시
+          const actualLeftEdge = leftOffset;
+          const actualRightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+          const displayWidth = spaceInfo.width;
+
+          return (
+            <>
+              {/* 치수선 */}
+              <NativeLine name="dimension_line"
+                points={[[actualLeftEdge, topDimensionY, 0.002], [actualRightEdge, topDimensionY, 0.002]]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 좌측 화살표 */}
+              <NativeLine name="dimension_line"
+                points={createArrowHead([actualLeftEdge, topDimensionY, 0.002], [actualLeftEdge + 0.05, topDimensionY, 0.002])}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 우측 화살표 */}
+              <NativeLine name="dimension_line"
+                points={createArrowHead([actualRightEdge, topDimensionY, 0.002], [actualRightEdge - 0.05, topDimensionY, 0.002])}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 전체 폭 치수 텍스트 */}
+              {(showDimensionsText || isStep2) && (
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[(actualLeftEdge + actualRightEdge) / 2, topDimensionY + mmToThreeUnits(40), 0.01]}
+                  fontSize={largeFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
+                >
+                  {Math.round(displayWidth)}
+                </Text>
+              )}
+
+              {/* 연장선 (좌측 프레임) */}
+              <NativeLine name="dimension_line"
+                points={[[actualLeftEdge, 0, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 연장선 (우측 프레임) */}
+              <NativeLine name="dimension_line"
+                points={[[actualRightEdge, 0, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+            </>
+          );
+        })()}
+      </group>
 
       {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasLeftFurniture) && (() => {
