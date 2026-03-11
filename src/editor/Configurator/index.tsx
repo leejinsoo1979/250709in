@@ -3196,8 +3196,16 @@ const Configurator: React.FC = () => {
                     min="100"
                     max={(spaceInfo.width || 4800) - 100}
                     step="10"
-                    defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
-                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}`}
+                    defaultValue={(() => {
+                      const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
+                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                      const pos = spaceInfo.droppedCeiling?.position || 'right';
+                      const internal = pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight;
+                      return Math.round(internal);
+                    })()}
+                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3208,20 +3216,27 @@ const Configurator: React.FC = () => {
                       const inputValue = e.target.value;
                       const totalWidth = spaceInfo.width || 4800;
                       const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                      const currentMainWidth = totalWidth - currentDroppedWidth;
+                      // 입력값은 이격 반영된 내경이므로 이격을 더해서 외부 너비로 변환
+                      const pos = spaceInfo.droppedCeiling?.position || 'right';
+                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                      const gapToAdd = pos === 'right' ? gapLeft + gapMiddle : gapMiddle + gapRight;
+                      const currentMainOuter = totalWidth - currentDroppedWidth;
+                      const currentMainInternal = Math.round(currentMainOuter - gapToAdd);
 
                       // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
                       if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                        e.target.value = currentMainWidth.toString();
+                        e.target.value = currentMainInternal.toString();
                         return;
                       }
 
-                      const mainWidth = parseInt(inputValue);
-                      const newDroppedWidth = totalWidth - mainWidth;
+                      const mainInternal = parseInt(inputValue);
+                      const mainOuter = Math.round(mainInternal + gapToAdd);
+                      const newDroppedWidth = totalWidth - mainOuter;
 
                       // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
                       if (newDroppedWidth < 100) {
-                        e.target.value = (totalWidth - 100).toString();
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
                             ...spaceInfo.droppedCeiling,
@@ -3230,7 +3245,6 @@ const Configurator: React.FC = () => {
                           }
                         });
                       } else if (newDroppedWidth > totalWidth - 100) {
-                        e.target.value = '100';
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
                             ...spaceInfo.droppedCeiling,
@@ -3239,7 +3253,6 @@ const Configurator: React.FC = () => {
                           }
                         });
                       } else {
-                        // 유효한 값이면 그대로 적용
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
                             ...spaceInfo.droppedCeiling,
@@ -3345,8 +3358,15 @@ const Configurator: React.FC = () => {
                     min="100"
                     max={(spaceInfo.width || 4800) - 100}
                     step="10"
-                    defaultValue={spaceInfo.droppedCeiling?.width || 900}
-                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
+                    defaultValue={(() => {
+                      const droppedOuter = spaceInfo.droppedCeiling?.width || 900;
+                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                      const pos = spaceInfo.droppedCeiling?.position || 'right';
+                      const internal = pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft;
+                      return Math.round(internal);
+                    })()}
+                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3357,19 +3377,22 @@ const Configurator: React.FC = () => {
                       const inputValue = e.target.value;
                       const totalWidth = spaceInfo.width || 4800;
                       const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                      // 입력값은 이격 반영된 내경이므로 이격을 더해서 외부 너비로 변환
+                      const pos = spaceInfo.droppedCeiling?.position || 'right';
+                      const gapToAdd = pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
 
                       // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
                       if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                        e.target.value = currentDroppedWidth.toString();
+                        const currentInternal = Math.round(currentDroppedWidth - gapToAdd);
+                        e.target.value = currentInternal.toString();
                         return;
                       }
 
-                      const droppedWidth = parseInt(inputValue);
-                      const mainWidth = totalWidth - droppedWidth;
+                      const internalWidth = parseInt(inputValue);
+                      const droppedWidth = Math.round(internalWidth + gapToAdd);
 
                       // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
                       if (droppedWidth < 100) {
-                        e.target.value = '100';
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
                             ...spaceInfo.droppedCeiling,
@@ -3378,7 +3401,6 @@ const Configurator: React.FC = () => {
                           }
                         });
                       } else if (droppedWidth > totalWidth - 100) {
-                        e.target.value = (totalWidth - 100).toString();
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
                             ...spaceInfo.droppedCeiling,
@@ -3387,7 +3409,6 @@ const Configurator: React.FC = () => {
                           }
                         });
                       } else {
-                        // 유효한 값이면 그대로 적용
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
                             ...spaceInfo.droppedCeiling,

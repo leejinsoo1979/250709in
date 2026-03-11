@@ -849,11 +849,23 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 <div className={styles.zoneInfo}>
                   <div className={styles.zoneInfoItem}>
                     <span className={styles.zoneLabel}>{t('space.mainSection')}:</span>
-                    <span className={styles.zoneValue}>{width - spaceInfo.droppedCeiling.width} mm</span>
+                    <span className={styles.zoneValue}>{(() => {
+                      const mainOuter = width - spaceInfo.droppedCeiling.width;
+                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                      const pos = spaceInfo.droppedCeiling.position || 'right';
+                      return Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
+                    })()} mm</span>
                   </div>
                   <div className={styles.zoneInfoItem}>
                     <span className={styles.zoneLabel}>{t('space.droppedSection')}:</span>
-                    <span className={styles.zoneValue}>{spaceInfo.droppedCeiling.width} mm</span>
+                    <span className={styles.zoneValue}>{(() => {
+                      const droppedOuter = spaceInfo.droppedCeiling.width;
+                      const pos = spaceInfo.droppedCeiling.position || 'right';
+                      const gap = pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
+                      return Math.round(droppedOuter - gap);
+                    })()} mm</span>
                   </div>
                 </div>
               )}
@@ -988,7 +1000,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     <div className={styles.inputField}>
                       <input
                         type="number"
-                        value={width - spaceInfo.droppedCeiling.width}
+                        value={(() => {
+                          const mainOuter = width - spaceInfo.droppedCeiling.width;
+                          const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                          const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                          const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                          const pos = spaceInfo.droppedCeiling.position || 'right';
+                          return Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
+                        })()}
                         readOnly
                         style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
                       />
