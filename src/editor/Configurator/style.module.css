@@ -944,7 +944,7 @@
 /* 설정 섹션 */
 .configSection {
   border-bottom: 1px solid var(--theme-border);
-  padding: var(--spacing-sm, 10px) 0;
+  padding: 4px 0;
 }
 
 .configSection:last-child {
@@ -955,8 +955,8 @@
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs, 6px);
-  margin-bottom: var(--spacing-sm, 8px);
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .sectionDot {
@@ -977,7 +977,7 @@
 
 /* 입력 그룹 */
 .inputGroup {
-  margin-bottom: var(--spacing-sm, 8px);
+  margin-bottom: 4px;
 }
 
 .inputGroup:last-child {
@@ -989,7 +989,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-xs, 6px);
+  margin-bottom: 2px;
 }
 
 .inputLabel {
@@ -1006,10 +1006,10 @@
 
 .inputControlWithLabel input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 5px 10px;
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 4px;
+  font-size: 13px;
   color: var(--theme-text);
   background: var(--theme-surface);
   text-align: center;
@@ -2003,25 +2003,25 @@
 .toggleButtonGroup {
   display: flex;
   background: var(--theme-background-secondary);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-  margin-bottom: 16px;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 1px;
+  margin-bottom: 0;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 8px 12px;
+  padding: 4px 6px;
   border: none;
   background: transparent;
   color: var(--theme-text-muted);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
-  border-radius: 6px;
-  min-height: 36px;
+  border-radius: 4px;
+  min-height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2050,7 +2050,7 @@
 
 .stepDownSettings {
   animation: fadeIn 0.3s ease-out;
-  padding: 12px 0;
+  padding: 4px 0;
 }
 
 .stepDownDescription {
@@ -2107,10 +2107,10 @@
 
 .input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 5px 10px;
   border: 1px solid var(--theme-border);
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   background-color: var(--theme-background-secondary);
   color: var(--theme-text);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -2136,11 +2136,11 @@
 
 /* 슬라이더 섹션 라벨 */
 .sliderSectionLabel {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-text-secondary);
-  margin-bottom: 8px;
-  padding: 4px 0;
+  margin-bottom: 2px;
+  padding: 2px 0;
 }
 
 /* 배치된 가구 목록 스타일 */

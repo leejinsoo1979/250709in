@@ -71,80 +71,59 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
 
   return (
     <>
-      {/* 받침대 있음 - 높이 설정 */}
+      {/* 받침대 있음 - 높이/깊이 설정 (인라인) */}
       {isFloor && (
-        <div className={styles.section}>
-          <span className={styles.label}>{t('frame.baseHeight')}</span>
-          <div className={styles.inputWrapper}>
-            <div className={styles.inputWithUnit}>
-              <input
-                type="text"
-                value={baseHeight}
-                onChange={(e) => {
-                  console.log('🔧 PlacementControls - input onChange 호출됨:', e.target.value);
-                  onHeightChange(e.target.value);
-                }}
-                onInput={(e) => {
-                  console.log('🔧 PlacementControls - input onInput 호출됨:', e.currentTarget.value);
-                }}
-                onClick={(e) => {
-                  console.log('🔧 PlacementControls - input onClick 호출됨, disabled:', disabled);
-                }}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-                onKeyDown={onKeyDown}
-                className={`${styles.input} ${styles.inputWithUnitField}`}
-                placeholder="65"
-                disabled={disabled}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span className={styles.label} style={{ minWidth: '32px', flexShrink: 0, margin: 0 }}>{t('frame.baseHeight')}</span>
+          <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+            <input
+              type="text"
+              value={baseHeight}
+              onChange={(e) => onHeightChange(e.target.value)}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              onKeyDown={onKeyDown}
+              className={`${styles.input} ${styles.inputWithUnitField}`}
+              placeholder="65"
+              disabled={disabled}
+            />
+            <span className={styles.unit}>mm</span>
+          </div>
+          <span className={styles.label} style={{ minWidth: '24px', flexShrink: 0, margin: 0 }}>{t('frame.baseDepth')}</span>
+          <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+            <input
+              type="text"
+              value={baseDepth}
+              onChange={(e) => onDepthChange(e.target.value)}
+              onFocus={handleInputFocus}
+              onBlur={handleDepthInputBlur}
+              onKeyDown={onDepthKeyDown}
+              className={`${styles.input} ${styles.inputWithUnitField}`}
+              placeholder="0"
+              disabled={disabled}
+            />
+            <span className={styles.unit}>mm</span>
           </div>
         </div>
       )}
 
-      {/* 받침대 있음 - 깊이 설정 */}
-      {isFloor && (
-        <div className={styles.section}>
-          <span className={styles.label}>{t('frame.baseDepth')}</span>
-          <div className={styles.inputWrapper}>
-            <div className={styles.inputWithUnit}>
-              <input
-                type="text"
-                value={baseDepth}
-                onChange={(e) => onDepthChange(e.target.value)}
-                onFocus={handleInputFocus}
-                onBlur={handleDepthInputBlur}
-                onKeyDown={onDepthKeyDown}
-                className={`${styles.input} ${styles.inputWithUnitField}`}
-                placeholder="0"
-                disabled={disabled}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 띄워서 배치 - 띄움 높이 설정 */}
+      {/* 띄워서 배치 - 띄움 높이 설정 (인라인) */}
       {isStand && (
-        <div className={styles.section}>
-          <span className={styles.label}>{t('frame.floatHeight')}</span>
-          <div className={styles.inputWrapper}>
-            <div className={styles.inputWithUnit}>
-              <input
-                type="text"
-                value={floatHeight}
-                onChange={(e) => onFloatHeightChange(e.target.value)}
-                onFocus={handleInputFocus}
-                onBlur={handleFloatInputBlur}
-                onKeyDown={onFloatKeyDown}
-                className={`${styles.input} ${styles.inputWithUnitField}`}
-                placeholder="60"
-                disabled={disabled}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span className={styles.label} style={{ minWidth: '48px', flexShrink: 0, margin: 0 }}>{t('frame.floatHeight')}</span>
+          <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+            <input
+              type="text"
+              value={floatHeight}
+              onChange={(e) => onFloatHeightChange(e.target.value)}
+              onFocus={handleInputFocus}
+              onBlur={handleFloatInputBlur}
+              onKeyDown={onFloatKeyDown}
+              className={`${styles.input} ${styles.inputWithUnitField}`}
+              placeholder="60"
+              disabled={disabled}
+            />
+            <span className={styles.unit}>mm</span>
           </div>
         </div>
       )}

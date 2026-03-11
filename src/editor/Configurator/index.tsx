@@ -3023,9 +3023,9 @@ const Configurator: React.FC = () => {
             <h3 className={styles.sectionTitle}>공간 설정</h3>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
               <div style={{ flex: 1 }}>
                 <WidthControl
                   spaceInfo={spaceInfo}
@@ -3035,8 +3035,8 @@ const Configurator: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
               <div style={{ flex: 1 }}>
                 <HeightControl
                   spaceInfo={spaceInfo}
@@ -3133,8 +3133,8 @@ const Configurator: React.FC = () => {
 
           {/* 단내림이 활성화된 경우 위치 선택 */}
           {spaceInfo.droppedCeiling?.enabled && (
-            <div style={{ marginTop: '16px' }}>
-              <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
+            <div style={{ marginTop: '6px' }}>
+              <div className={styles.inputLabel} style={{ marginBottom: '4px' }}>위치</div>
               <div className={styles.toggleButtonGroup}>
                 <button
                   className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
@@ -3177,10 +3177,10 @@ const Configurator: React.FC = () => {
               <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               {/* 메인구간 폭 */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
@@ -3247,8 +3247,8 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 메인구간 높이 */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
@@ -3326,10 +3326,10 @@ const Configurator: React.FC = () => {
               <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               {/* 단내림 구간 폭 */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
@@ -3395,8 +3395,8 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 단내림 구간 높이 */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
@@ -3508,7 +3508,7 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 단내림구간 도어 개수 */}
-              <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
+              <div className={styles.inputGroup} style={{ marginTop: '8px' }}>
                 <DoorSlider
                   value={spaceInfo.droppedCeilingDoorCount || 1}
                   onChange={(value) => {
