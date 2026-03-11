@@ -4360,6 +4360,9 @@ const Configurator: React.FC = () => {
               ?
             </button>
 
+            {/* 슬롯 가이드 딤 오버레이 */}
+            {isSlotGuideOpen && <div className={styles.slotGuideOverlay} />}
+
             {/* 슬롯 분할 가이드 설명 팝업 */}
             {isSlotGuideOpen && (() => {
               const totalW = spaceInfo.width;

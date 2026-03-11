@@ -815,6 +815,21 @@
   background: var(--theme-primary);
 }
 
+/* 슬롯 가이드 딤 오버레이 */
+.slotGuideOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  background: rgba(0, 0, 0, 0.45);
+  animation: slotGuideDimIn 0.15s ease-out;
+  pointer-events: none;
+}
+
+@keyframes slotGuideDimIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 슬롯 분할 가이드 설명 팝업 */
 .slotGuidePopup {
   position: absolute;
