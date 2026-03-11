@@ -3360,14 +3360,13 @@ const Configurator: React.FC = () => {
                     step="10"
                     defaultValue={(() => {
                       const droppedOuter = spaceInfo.droppedCeiling?.width || 900;
-                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const internal = pos === 'right' ? droppedOuter - gapMiddle - gapRight : droppedOuter - gapLeft - gapMiddle;
+                      const internal = pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft;
                       return Math.round(internal);
                     })()}
-                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}
+                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3380,8 +3379,7 @@ const Configurator: React.FC = () => {
                       const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
                       // 입력값은 이격 반영된 내경이므로 이격을 더해서 외부 너비로 변환
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                      const gapToAdd = pos === 'right' ? gapMiddle + (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5) + gapMiddle;
+                      const gapToAdd = pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
 
                       // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
                       if (inputValue === '' || isNaN(parseInt(inputValue))) {
