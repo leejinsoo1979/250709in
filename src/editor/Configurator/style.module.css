@@ -1963,6 +1963,7 @@
   flex-direction: row;
   gap: 6px;
   margin-bottom: 0;
+  justify-content: flex-start;
 }
 
 .frameItem {
@@ -1970,7 +1971,7 @@
   flex-direction: row;
   align-items: center;
   gap: 4px;
-  flex: 1;
+  flex: none;
   min-width: 0;
 }
 
