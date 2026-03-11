@@ -4,6 +4,7 @@ import { BiDoorOpen } from 'react-icons/bi';
 import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -66,7 +67,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
+  const { placedModules } = useFurnitureStore();
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const hasFurniture = placedModules.length > 0;
   const { theme } = useTheme();
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -147,7 +150,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >2D</button>
           </div>
 
-          {onDoorInstallationToggle && (
+          {onDoorInstallationToggle && hasFurniture && (
             <button
               className={`${styles.mobileIconButton} ${hasDoorsInstalled ? styles.active : ''}`}
               onClick={onDoorInstallationToggle}
@@ -324,7 +327,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           ))}
         </div>
 
-        {onDoorInstallationToggle && (
+        {onDoorInstallationToggle && hasFurniture && (
           <div className={styles.segmentedControl}>
             <button
               className={`${styles.segmentButton} ${styles.segmentIconText} ${hasDoorsInstalled ? styles.segmentAccentActive : ''}`}
