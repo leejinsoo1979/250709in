@@ -811,7 +811,7 @@ const SimpleDashboard: React.FC = () => {
                 isLoading={data.isLoading}
                 onSelectAll={actions.selectAll}
                 onClearSelection={actions.clearSelection}
-                isNewUser={!data.isLoading && data.projects.length === 0}
+                isNewUser={!data.isLoading && data.projects.length === 0 && Object.values(data.projectDesignFiles).flat().length === 0}
                 userName={user?.displayName || ''}
                 onCreateProject={() => setIsCreateModalOpen(true)}
               />
