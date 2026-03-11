@@ -63,8 +63,10 @@
 
 /* 브레드크럼 (주소창 스타일) */
 .breadcrumb {
+  position: relative;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2px;
   flex: 1;
   min-width: 0;
@@ -160,36 +162,37 @@
 }
 
 
-/* 브레드크럼 드롭다운 메뉴 (파일 트리 스타일) */
+/* 브레드크럼 드롭다운 메뉴 (윈도우 탐색기 파일트리 스타일) */
 .breadcrumbDropdown {
   position: absolute;
-  top: calc(100% + 2px);
-  left: 0;
-  min-width: 200px;
-  max-height: 320px;
+  top: calc(100% + 1px);
+  left: -1px;
+  right: -1px;
+  max-height: 400px;
   overflow-y: auto;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  padding: 2px 0;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px 0;
   z-index: 200;
 }
 
 .breadcrumbDropdownItem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  height: 24px;
-  padding: 0 8px 0 12px;
+  height: 26px;
+  padding: 0 12px;
   border: none;
   border-radius: 0;
   background: transparent;
   color: var(--theme-text);
   font-size: 12px;
-  cursor: pointer;
-  transition: background 0.06s;
+  cursor: default;
+  transition: background 0.04s;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;

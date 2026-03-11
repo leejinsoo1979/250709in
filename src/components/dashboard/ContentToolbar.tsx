@@ -162,18 +162,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     }
   };
 
-  // 전체선택 체크박스 상태
-  const isAllSelected = totalItemCount > 0 && selectedCount === totalItemCount;
-  const isPartiallySelected = selectedCount > 0 && selectedCount < totalItemCount;
-
-  const handleSelectAllToggle = () => {
-    if (isAllSelected || isPartiallySelected) {
-      onClearSelection?.();
-    } else {
-      onSelectAll?.();
-    }
-  };
-
   return (
     <div className={styles.toolbar}>
       {/* 생성 버튼 (맨 좌측) */}
@@ -195,19 +183,6 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       {/* 네비게이션 버튼 + 브레드크럼 */}
       {nav && (
         <div className={styles.navGroup}>
-          {/* 전체선택 체크박스 */}
-          {onSelectAll && totalItemCount > 0 && (
-            <div className={styles.selectAllCheckbox} title={isAllSelected ? '선택 해제' : '전체 선택'}>
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = isPartiallySelected;
-                }}
-                onChange={handleSelectAllToggle}
-              />
-            </div>
-          )}
           <button
             className={styles.navBtn}
             onClick={nav.goBack}
@@ -233,7 +208,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
             <ArrowUp size={16} />
           </button>
 
-          <div className={styles.breadcrumb}>
+          <div className={styles.breadcrumb} ref={dropdownOpenId ? dropdownRef : undefined}>
             {nav.breadcrumbPath.map((item, i) => {
               const isLast = i === nav.breadcrumbPath.length - 1;
               const dropdownItems = getDropdownItems(item, isLast);
@@ -241,7 +216,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
               return (
                 <React.Fragment key={item.id}>
                   {i > 0 && <span className={styles.breadcrumbSep}>&gt;</span>}
-                  <div className={styles.breadcrumbSegment} ref={dropdownOpenId === item.id ? dropdownRef : undefined}>
+                  <div className={styles.breadcrumbSegment}>
                     <button
                       className={`${styles.breadcrumbItem} ${isLast ? styles.breadcrumbActive : ''}`}
                       onClick={() => handleBreadcrumbClick(item)}
@@ -260,26 +235,36 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
                         <ChevronDown size={10} />
                       </button>
                     )}
-                    {dropdownOpenId === item.id && dropdownItems.length > 0 && (
-                      <div className={styles.breadcrumbDropdown}>
-                        {dropdownItems.map(di => (
-                          <button
-                            key={di.id}
-                            className={styles.breadcrumbDropdownItem}
-                            onClick={() => handleDropdownItemClick(di)}
-                          >
-                            {di.icon === 'project' && <Folder size={13} />}
-                            {di.icon === 'folder' && <FcFolder size={13} />}
-                            {di.icon === 'design' && <FileText size={13} />}
-                            <span>{di.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </React.Fragment>
               );
             })}
+            {/* 드롭다운: breadcrumb 전체 너비로 펼침 */}
+            {dropdownOpenId && (() => {
+              const openItem = nav.breadcrumbPath.find(b => b.id === dropdownOpenId);
+              if (!openItem) return null;
+              const isLast = nav.breadcrumbPath[nav.breadcrumbPath.length - 1]?.id === dropdownOpenId;
+              const dropdownItems = getDropdownItems(openItem, isLast);
+              if (dropdownItems.length === 0) return null;
+
+              // 파일 트리 구조: 현재 경로의 형제 + 하위 항목
+              return (
+                <div className={styles.breadcrumbDropdown}>
+                  {dropdownItems.map(di => (
+                    <button
+                      key={di.id}
+                      className={styles.breadcrumbDropdownItem}
+                      onClick={() => handleDropdownItemClick(di)}
+                    >
+                      {di.icon === 'folder' && <FcFolder size={15} />}
+                      {di.icon === 'project' && <Folder size={14} />}
+                      {di.icon === 'design' && <FileText size={14} />}
+                      <span>{di.label}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
