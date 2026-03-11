@@ -299,6 +299,7 @@ const SimpleDashboard: React.FC = () => {
         type: 'folder' as const,
         children: [],
         expanded: false,
+        createdAt: Date.now(),
       };
 
       const updatedFolders = [...(data.folders[nav.currentProjectId] || []), newFolder];

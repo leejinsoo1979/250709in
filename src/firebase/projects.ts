@@ -1507,6 +1507,7 @@ export interface FolderData {
     projectId: string;
   }[];
   expanded?: boolean;
+  createdAt?: number;
 }
 
 // 폴더 데이터 저장

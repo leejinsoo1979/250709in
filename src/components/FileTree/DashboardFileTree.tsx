@@ -17,6 +17,7 @@ interface FolderData {
     type: 'file' | 'design';
   }[];
   expanded: boolean;
+  createdAt?: number;
 }
 
 interface DashboardFileTreeProps {
@@ -271,7 +272,8 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
         name: newFolderName.trim(),
         type: 'folder',
         children: [],
-        expanded: false
+        expanded: false,
+        createdAt: Date.now(),
       };
       
       const updatedFolders = [

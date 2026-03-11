@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { doc, getDocFromServer } from 'firebase/firestore';
+import { doc, getDocFromServer, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { ProjectSummary } from '@/firebase/types';
 import {
@@ -356,9 +356,13 @@ export function useExplorerData(
     const projectFolders = folders[currentProjectId] || [];
     if (!currentFolderId) {
       projectFolders.forEach(folder => {
+        // createdAt이 없는 기존 폴더는 id에서 타임스탬프 추출 (folder_1720000000000 형식)
+        const folderTimestamp = folder.createdAt
+          || (folder.id.startsWith('folder_') ? parseInt(folder.id.split('_')[1], 10) : undefined);
         items.push({
           id: folder.id, name: folder.name, type: 'folder',
           projectId: currentProjectId,
+          updatedAt: folderTimestamp ? Timestamp.fromMillis(folderTimestamp) : undefined,
         });
       });
     }
