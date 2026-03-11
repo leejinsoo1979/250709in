@@ -1880,8 +1880,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {/* 기둥 생성 마커는 드래그 앤 드롭 방식으로 대체됨 */}
 
               {/* Configurator에서 표시되는 요소들 */}
-              {/* 컬럼 가이드 표시 - 항상 켜짐 (슬롯이 모두 채워지면 자동으로 숨김) */}
-              <ColumnGuides viewMode={viewMode} />
+              {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
+              {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
 
               {/* CAD 스타일 치수/가이드 표시 - 3D 모드 또는 2D 정면/탑뷰에서 표시 */}
               {showDimensions && showDimensionsText && (viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
@@ -2309,8 +2309,8 @@ const QuadrantContent: React.FC<{
       />
       <ambientLight intensity={0.8} color="#ffffff" />
 
-      {/* 컬럼 가이드 표시 - 항상 켜짐 (슬롯이 모두 채워지면 자동으로 숨김) */}
-      <ColumnGuides viewMode="2D" />
+      {/* 컬럼 가이드 표시 */}
+      {showDimensions && showAll && <ColumnGuides viewMode="2D" />}
 
       {/* CAD 스타일 치수/가이드 표시 (측면뷰 제외) */}
       {showDimensions && showDimensionsText && viewDirection !== 'left' && viewDirection !== 'right' && (
