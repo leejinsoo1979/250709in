@@ -39,6 +39,8 @@ interface ThreeCanvasProps {
   zoomMultiplier?: number;
   /** 3D 씬 참조 (GLB 내보내기용) */
   sceneRef?: React.MutableRefObject<any>;
+  /** OrbitControls 준비 시 콜백 (줌 슬라이더 등 외부 제어용) */
+  onControlsReady?: (controls: any) => void;
 }
 
 /**
@@ -57,7 +59,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   isSplitView = false,
   cameraMode: cameraModeFromProps,
   zoomMultiplier,
-  sceneRef
+  sceneRef,
+  onControlsReady
 }) => {
   const CANVAS_DEBUG = false;
   const canvasLog = (...args: any[]) => {
@@ -1180,7 +1183,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           <OrbitControls
             ref={(ref) => {
               controlsRef.current = ref;
-              // 초기 상태 저장은 useEffect에서 camera props 변경 시 자동 처리됨
+              if (ref && onControlsReady) onControlsReady(ref);
             }}
             enabled={controlsConfig.enabled && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             target={controlsConfig.target}

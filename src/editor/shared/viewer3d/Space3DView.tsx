@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
 import { Sun, Moon } from 'lucide-react';
@@ -67,6 +67,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { theme } = useTheme();
   const { placeFurniture: originalPlaceFurniture } = useFurniturePlacement();
   const { isMobile } = useResponsive();
+
+  // 줌 슬라이더용 OrbitControls 참조
+  const orbitControlsRef = useRef<any>(null);
+  const [zoomSliderValue, setZoomSliderValue] = useState(50);
 
   // 읽기 전용 모드 체크를 포함한 placeFurniture wrapper
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
@@ -422,6 +426,67 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const ratio = isMobile ? 0.42 : 0.5;
     return mmToThreeUnits(height * ratio);
   }, [spaceInfo?.height, isMobile]);
+
+  // OrbitControls 준비 콜백 - 줌 슬라이더 동기화를 위해 change 이벤트 리스닝
+  const handleControlsReady = useCallback((controls: any) => {
+    orbitControlsRef.current = controls;
+    // 초기 슬라이더 값 설정
+    updateSliderFromCamera(controls);
+    // change 이벤트로 휠/트랙패드 줌 시 슬라이더 동기화
+    const onChange = () => updateSliderFromCamera(controls);
+    controls.addEventListener('change', onChange);
+    // cleanup은 컴포넌트 unmount 시
+    return () => controls.removeEventListener('change', onChange);
+  }, [viewMode]);
+
+  // 카메라 상태에서 슬라이더 값 계산
+  const updateSliderFromCamera = useCallback((controls: any) => {
+    if (!controls?.object) return;
+    const cam = controls.object;
+    if (cam.isOrthographicCamera) {
+      // 2D: zoom 0.5~10 → slider 0~100 (로그 스케일)
+      const minZ = 0.5, maxZ = 10;
+      const logMin = Math.log(minZ), logMax = Math.log(maxZ);
+      const logVal = Math.log(Math.max(minZ, Math.min(maxZ, cam.zoom)));
+      setZoomSliderValue(((logVal - logMin) / (logMax - logMin)) * 100);
+    } else {
+      // 3D: 카메라 거리 → slider (근거리=100, 원거리=0)
+      const dist = cam.position.distanceTo(controls.target);
+      const minD = 3, maxD = 120;
+      const clamped = Math.max(minD, Math.min(maxD, dist));
+      setZoomSliderValue(100 - ((clamped - minD) / (maxD - minD)) * 100);
+    }
+  }, []);
+
+  // 슬라이더 값 변경 → 카메라 줌 적용
+  const handleZoomSliderChange = useCallback((value: number) => {
+    setZoomSliderValue(value);
+    const controls = orbitControlsRef.current;
+    if (!controls?.object) return;
+    const cam = controls.object;
+
+    if (cam.isOrthographicCamera) {
+      // 2D: slider 0~100 → zoom 0.5~10 (로그 스케일)
+      const minZ = 0.5, maxZ = 10;
+      const logMin = Math.log(minZ), logMax = Math.log(maxZ);
+      const logVal = logMin + (value / 100) * (logMax - logMin);
+      cam.zoom = Math.exp(logVal);
+      cam.updateProjectionMatrix();
+      controls.update();
+    } else {
+      // 3D: slider 0~100 → 카메라 거리 (0=far, 100=close)
+      const minD = 3, maxD = 120;
+      const targetDist = maxD - (value / 100) * (maxD - minD);
+      const direction = cam.position.clone().sub(controls.target).normalize();
+      cam.position.copy(controls.target.clone().add(direction.multiplyScalar(targetDist)));
+      controls.update();
+    }
+  }, []);
+
+  // +/- 버튼용 줌 스텝 함수
+  const handleZoomStep = useCallback((delta: number) => {
+    handleZoomSliderChange(Math.max(0, Math.min(100, zoomSliderValue + delta)));
+  }, [zoomSliderValue, handleZoomSliderChange]);
 
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
@@ -1468,6 +1533,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             renderMode={renderMode}
             sceneRef={sceneRef}
             zoomMultiplier={embeddedZoomMultiplier ?? mobileViewerZoomMultiplier}
+            onControlsReady={handleControlsReady}
           >
             <React.Suspense fallback={null}>
               {/* 배경 클릭 감지용 평면 - selectedFurnitureId 해제 */}
@@ -1962,6 +2028,145 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             </>
           )}
 
+          {/* 줌 슬라이더 - 뷰어 하단 중앙 (임베디드/분할뷰 제외) */}
+          {!isEmbedded && view2DDirection !== 'all' && (<>
+            <style>{`
+              .zoom-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: #666;
+                cursor: pointer;
+                border: 2px solid #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+              }
+              .zoom-slider::-moz-range-thumb {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: #666;
+                cursor: pointer;
+                border: 2px solid #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+              }
+            `}</style>
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '16px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 20,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: viewMode === '2D'
+                  ? (view2DTheme === 'dark' ? 'rgba(18,18,18,0.75)' : 'rgba(255,255,255,0.9)')
+                  : 'rgba(255,255,255,0.9)',
+                border: `1px solid ${viewMode === '2D'
+                  ? (view2DTheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)')
+                  : 'rgba(0,0,0,0.15)'}`,
+                borderRadius: '20px',
+                padding: '4px 8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              {/* - 줌아웃 버튼 */}
+              <button
+                onClick={() => handleZoomStep(-8)}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: viewMode === '2D'
+                    ? (view2DTheme === 'dark' ? '#ccc' : '#555')
+                    : '#555',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  borderRadius: '50%',
+                  padding: 0,
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = viewMode === '2D'
+                    ? (view2DTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')
+                    : 'rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                title="줌 아웃"
+              >
+                −
+              </button>
+
+              {/* 슬라이더 */}
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={zoomSliderValue}
+                onChange={(e) => handleZoomSliderChange(Number(e.target.value))}
+                className="zoom-slider"
+                style={{
+                  width: '120px',
+                  height: '4px',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  background: viewMode === '2D'
+                    ? (view2DTheme === 'dark'
+                      ? `linear-gradient(to right, #888 ${zoomSliderValue}%, #444 ${zoomSliderValue}%)`
+                      : `linear-gradient(to right, #888 ${zoomSliderValue}%, #ddd ${zoomSliderValue}%)`)
+                    : `linear-gradient(to right, #888 ${zoomSliderValue}%, #ddd ${zoomSliderValue}%)`,
+                  borderRadius: '2px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              />
+
+              {/* + 줌인 버튼 */}
+              <button
+                onClick={() => handleZoomStep(8)}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: viewMode === '2D'
+                    ? (view2DTheme === 'dark' ? '#ccc' : '#555')
+                    : '#555',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  borderRadius: '50%',
+                  padding: 0,
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = viewMode === '2D'
+                    ? (view2DTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')
+                    : 'rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                title="줌 인"
+              >
+                +
+              </button>
+            </div>
+          </>)}
 
         </div>
       </Space3DViewProvider>
