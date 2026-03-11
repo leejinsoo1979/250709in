@@ -69,6 +69,7 @@ const SimpleDashboard: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -237,6 +238,8 @@ const SimpleDashboard: React.FC = () => {
 
   const handleCreateProjectSubmit = useCallback(async () => {
     if (!newProjectName.trim()) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
     setIsCreating(true);
     try {
@@ -274,6 +277,7 @@ const SimpleDashboard: React.FC = () => {
       alert('프로젝트 생성 중 오류가 발생했습니다.');
     } finally {
       setIsCreating(false);
+      isSubmittingRef.current = false;
     }
   }, [newProjectName, user, data, nav, navigate]);
 
@@ -732,7 +736,7 @@ const SimpleDashboard: React.FC = () => {
                 onSortChange={setSortBy}
                 onCreateProject={handleCreateProject}
                 onCreateFolder={nav.currentProjectId ? handleCreateFolder : undefined}
-                onCreateDesign={nav.currentProjectId ? () => handleCreateDesign() : undefined}
+                onCreateDesign={nav.currentProjectId ? handleSaasCreateDesign : undefined}
                 nav={nav}
                 totalItemCount={data.currentItems.length}
                 selectedCount={actions.selectedItems.size}
@@ -829,7 +833,7 @@ const SimpleDashboard: React.FC = () => {
               placeholder="프로젝트 이름을 입력하세요"
               value={newProjectName}
               onChange={e => setNewProjectName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCreateProjectSubmit()}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateProjectSubmit(); } }}
               autoFocus
             />
             <div className={styles.modalActions}>
