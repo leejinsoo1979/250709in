@@ -917,9 +917,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     }
   };
 
-  // 정면뷰 치수선 - Z축 좌표 0에 배치
-  const frontFrameZ = 0; // Z축 0 위치
-  const zOffset = is3DMode ? frontFrameZ : 0; // 3D 모드에서 Z축 0 위치로 배치
+  // 정면뷰 치수선 - 3D 모드에서는 가구 앞면(도어 두께만큼 뒤)에 배치
+  const doorThicknessOffset = mmToThreeUnits(20); // 도어 두께 20mm
+  const frontFrameZ = -doorThicknessOffset; // 가구 본체 앞면 z 좌표
+  const zOffset = is3DMode ? frontFrameZ : 0; // 3D 모드에서 가구 앞면 위치로 배치
   
   const renderFrontView = () => (
     <group position={[0, 0, zOffset]} renderOrder={9999}>
@@ -2292,7 +2293,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
           const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
-          const cabinetPlacementHeight = Math.max(spaceInfo.height - floorFinishHeightMmGlobal - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (바닥마감재 + 띄움 높이 제외)
+          const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
 
           const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
           const bottomFrameTopY = mmToThreeUnits(floatHeight + bottomFrameHeight); // 하부 프레임 상단
@@ -3380,7 +3381,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } = furnitureHeights;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
-            const cabinetPlacementHeight = Math.max(displaySpaceHeightMm - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역
+            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
 
             const bottomY = 0; // 바닥
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
@@ -4325,7 +4326,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } = furnitureHeights;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
-            const cabinetPlacementHeight = Math.max(displaySpaceHeightMm - topFrameHeight - bottomFrameHeight, 0);
+            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
 
             const bottomY = 0;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
