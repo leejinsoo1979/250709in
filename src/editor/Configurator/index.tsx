@@ -291,20 +291,28 @@ const Configurator: React.FC = () => {
     }
   }, [isFurniturePlacementMode, viewMode]);
 
-  // 커스텀 가구 설계→배치→세부설정→저장 동안 좌우 사이드바 자동 폴딩
+  // 커스텀 가구 설계→배치→세부설정→저장 동안 UI 자동 전환
+  // 사이드바 접기 + orthographic 카메라 + 그림자 끄기 → 저장/닫기 시 복원
   const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
   const setLayoutBuilderOpen = useUIStore(s => s.setLayoutBuilderOpen);
-  const sidebarStateBeforeDesign = useRef<{
+  const cameraMode = useUIStore(s => s.cameraMode);
+  const setCameraMode = useUIStore(s => s.setCameraMode);
+  const shadowEnabled = useUIStore(s => s.shadowEnabled);
+  const stateBeforeDesign = useRef<{
     activeSidebarTab: SidebarTab | null;
     isRightPanelOpen: boolean;
+    cameraMode: 'perspective' | 'orthographic';
+    shadowEnabled: boolean;
   } | null>(null);
   const wasCustomizableEditOpen = useRef(false);
 
   useEffect(() => {
-    if (isLayoutBuilderOpen && !sidebarStateBeforeDesign.current) {
-      sidebarStateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen };
+    if (isLayoutBuilderOpen && !stateBeforeDesign.current) {
+      stateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen, cameraMode, shadowEnabled };
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
+      setCameraMode('orthographic');
+      setShadowEnabled(false);
     }
   }, [isLayoutBuilderOpen]);
 
@@ -313,14 +321,16 @@ const Configurator: React.FC = () => {
       wasCustomizableEditOpen.current = true;
     }
     // customizableEdit가 열렸다가 닫힌 시점에만 복원
-    if (wasCustomizableEditOpen.current && activePopup.type !== 'customizableEdit' && sidebarStateBeforeDesign.current) {
-      setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
-      setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
-      sidebarStateBeforeDesign.current = null;
+    if (wasCustomizableEditOpen.current && activePopup.type !== 'customizableEdit' && stateBeforeDesign.current) {
+      setActiveSidebarTab(stateBeforeDesign.current.activeSidebarTab);
+      setIsRightPanelOpen(stateBeforeDesign.current.isRightPanelOpen);
+      setCameraMode(stateBeforeDesign.current.cameraMode);
+      setShadowEnabled(stateBeforeDesign.current.shadowEnabled);
+      stateBeforeDesign.current = null;
       wasCustomizableEditOpen.current = false;
       setLayoutBuilderOpen(false);
     }
-  }, [activePopup.type, setLayoutBuilderOpen]);
+  }, [activePopup.type, setLayoutBuilderOpen, setCameraMode, setShadowEnabled]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
