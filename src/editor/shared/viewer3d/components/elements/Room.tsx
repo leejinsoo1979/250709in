@@ -2546,6 +2546,10 @@ const Room: React.FC<RoomProps> = ({
       {(effectiveShowFrame || isFreePlacement) && topBottomFrameHeightMm > 0 && (() => {
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
+          // freeSurround 설정이 있고 top이 비활성이면 렌더링 안함
+          const freeTopEnabled = spaceInfo.freeSurround?.top?.enabled ?? true;
+          if (!freeTopEnabled) return null;
+
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
           if (topStripGroups.length === 0) return null;
 
@@ -2554,13 +2558,17 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
+              {/* 상부 프레임 스트립 */}
               {topStripGroups.map((group) => {
                 const widthMM = group.rightMM - group.leftMM;
                 const centerXmm = (group.leftMM + group.rightMM) / 2;
+                const freeTopCfg = spaceInfo.freeSurround?.top;
                 const groupFrameHeight = group.thicknessMM > 0
                   ? mmToThreeUnits(group.thicknessMM)
-                  : topBottomFrameHeight;
-                const topOffsetMM = spaceInfo.frameSize?.topOffset ?? 0;
+                  : freeTopCfg?.enabled
+                    ? mmToThreeUnits(freeTopCfg.size)
+                    : topBottomFrameHeight;
+                const topOffsetMM = freeTopCfg?.offset ?? spaceInfo.frameSize?.topOffset ?? 0;
                 const groupTopY = panelStartY + height - groupFrameHeight / 2 - mmToThreeUnits(topOffsetMM);
                 return (
                   <BoxWithEdges
@@ -2584,6 +2592,70 @@ const Room: React.FC<RoomProps> = ({
                   />
                 );
               })}
+
+              {/* 자유배치 좌측 서라운드 */}
+              {spaceInfo.freeSurround?.left?.enabled && topStripGroups.length > 0 && (() => {
+                const leftCfg = spaceInfo.freeSurround!.left;
+                const leftSizeMM = leftCfg.size;
+                const leftOffsetMM = leftCfg.offset;
+                // 가장 왼쪽 그룹의 leftMM에서 서라운드 배치
+                const minLeftMM = Math.min(...topStripGroups.map(g => g.leftMM));
+                const leftFrameX = mmToThreeUnits(minLeftMM - leftSizeMM / 2 - leftOffsetMM);
+                const leftFrameH = height - panelStartY;
+                return (
+                  <BoxWithEdges
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    key="free-left-surround"
+                    name="left-surround"
+                    args={[
+                      mmToThreeUnits(leftSizeMM),
+                      leftFrameH,
+                      mmToThreeUnits(END_PANEL_THICKNESS)
+                    ]}
+                    position={[
+                      leftFrameX,
+                      panelStartY + leftFrameH / 2,
+                      topZPosition
+                    ]}
+                    material={leftFrameMaterial ?? createFrameMaterial('left')}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                  />
+                );
+              })()}
+
+              {/* 자유배치 우측 서라운드 */}
+              {spaceInfo.freeSurround?.right?.enabled && topStripGroups.length > 0 && (() => {
+                const rightCfg = spaceInfo.freeSurround!.right;
+                const rightSizeMM = rightCfg.size;
+                const rightOffsetMM = rightCfg.offset;
+                // 가장 오른쪽 그룹의 rightMM에서 서라운드 배치
+                const maxRightMM = Math.max(...topStripGroups.map(g => g.rightMM));
+                const rightFrameX = mmToThreeUnits(maxRightMM + rightSizeMM / 2 + rightOffsetMM);
+                const rightFrameH = height - panelStartY;
+                return (
+                  <BoxWithEdges
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    key="free-right-surround"
+                    name="right-surround"
+                    args={[
+                      mmToThreeUnits(rightSizeMM),
+                      rightFrameH,
+                      mmToThreeUnits(END_PANEL_THICKNESS)
+                    ]}
+                    position={[
+                      rightFrameX,
+                      panelStartY + rightFrameH / 2,
+                      topZPosition
+                    ]}
+                    material={rightFrameMaterial ?? createFrameMaterial('right')}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                  />
+                );
+              })()}
             </>
           );
         }

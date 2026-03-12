@@ -14,6 +14,19 @@ export interface FrameSize {
   topOffset?: number; // 자유배치 상부프레임 옵셋 (mm, 천장에서 아래로)
 }
 
+// 자유배치 서라운드 개별 면 설정
+export interface FreeSurroundSide {
+  enabled: boolean;
+  size: number;    // 두께 (mm)
+  offset: number;  // 옵셋 (mm)
+}
+
+export interface FreeSurroundConfig {
+  left: FreeSurroundSide;
+  top: FreeSurroundSide;
+  right: FreeSurroundSide;
+}
+
 export interface GapConfig {
   left: number;  // 좌측 이격거리 (mm 단위)
   right: number; // 우측 이격거리 (mm 단위)
@@ -103,6 +116,9 @@ export interface SpaceInfo {
 
   // 개별 프레임 선택 설정
   frameConfig?: FrameConfig;
+
+  // 자유배치 서라운드 설정
+  freeSurround?: FreeSurroundConfig;
 }
 
 // 단내림 설정 인터페이스

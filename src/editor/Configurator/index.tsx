@@ -3673,67 +3673,103 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
-        {/* 프레임 설정 */}
+        {/* 프레임 설정 (슬롯배치) / 서라운드 (자유배치) */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>프레임 설정</h3>
+            <h3 className={styles.sectionTitle}>
+              {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' ? '서라운드' : '프레임 설정'}
+            </h3>
           </div>
 
-          {/* 자유배치 모드: 높이/옵셋만 표시 */}
-          {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
-            <div className={styles.subSetting}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <label className={styles.frameItemLabel} style={{ minWidth: '28px' }}>높이</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={frameInputTop}
-                    onChange={(e) => handleFrameInputChange('top', e.target.value)}
-                    onFocus={() => handleFrameInputFocus('top')}
-                    onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                    onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
-                    className={styles.frameNumberInput}
-                    style={{ width: '50px' }}
-                  />
+          {/* 자유배치 모드: 좌측/상부/우측 개별 토글 + 사이즈/옵셋 */}
+          {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (() => {
+            const fs = spaceInfo.freeSurround || {
+              left: { enabled: false, size: 50, offset: 0 },
+              top: { enabled: true, size: 30, offset: 0 },
+              right: { enabled: false, size: 50, offset: 0 },
+            };
+            const updateSide = (side: 'left' | 'top' | 'right', updates: Partial<{ enabled: boolean; size: number; offset: number }>) => {
+              handleSpaceInfoUpdate({
+                freeSurround: {
+                  ...fs,
+                  [side]: { ...fs[side], ...updates },
+                },
+              });
+            };
+            const sides = [
+              { key: 'left' as const, label: '좌측' },
+              { key: 'top' as const, label: '상부' },
+              { key: 'right' as const, label: '우측' },
+            ];
+            return (
+              <>
+                {/* 토글 버튼 */}
+                <div className={styles.toggleButtonGroup}>
+                  {sides.map(({ key, label }) => (
+                    <button
+                      key={key}
+                      className={`${styles.toggleButton} ${fs[key].enabled ? styles.toggleButtonActive : ''}`}
+                      onClick={() => updateSide(key, { enabled: !fs[key].enabled })}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <label className={styles.frameItemLabel} style={{ minWidth: '28px' }}>옵셋</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={spaceInfo.frameSize?.topOffset ?? 0}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === '' || /^\d+$/.test(val)) {
-                        const num = val === '' ? 0 : parseInt(val, 10);
-                        handleSpaceInfoUpdate({
-                          frameSize: {
-                            ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
-                            topOffset: num,
-                          },
-                        });
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const val = Math.max(0, Math.min(500, parseInt(e.target.value) || 0));
-                      handleSpaceInfoUpdate({
-                        frameSize: {
-                          ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
-                          topOffset: val,
-                        },
-                      });
-                    }}
-                    className={styles.frameNumberInput}
-                    style={{ width: '50px' }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+
+                {/* 활성화된 면의 사이즈/옵셋 설정 */}
+                {sides.filter(({ key }) => fs[key].enabled).map(({ key, label }) => (
+                  <div key={key} className={styles.subSetting} style={{ marginTop: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>{label}</div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <label className={styles.frameItemLabel} style={{ minWidth: '32px' }}>사이즈</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={fs[key].size}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d+$/.test(val)) {
+                              updateSide(key, { size: val === '' ? 0 : parseInt(val, 10) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = Math.max(10, Math.min(200, parseInt(e.target.value) || (key === 'top' ? 30 : 50)));
+                            updateSide(key, { size: val });
+                          }}
+                          className={styles.frameNumberInput}
+                          style={{ width: '50px' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <label className={styles.frameItemLabel} style={{ minWidth: '28px' }}>옵셋</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={fs[key].offset}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d+$/.test(val)) {
+                              updateSide(key, { offset: val === '' ? 0 : parseInt(val, 10) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = Math.max(0, Math.min(500, parseInt(e.target.value) || 0));
+                            updateSide(key, { offset: val });
+                          }}
+                          className={styles.frameNumberInput}
+                          style={{ width: '50px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            );
+          })()}
 
           {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 (슬롯배치 모드만) */}
           {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (() => {
