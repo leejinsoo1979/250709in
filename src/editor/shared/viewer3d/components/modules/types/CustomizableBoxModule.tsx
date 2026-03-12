@@ -1959,6 +1959,16 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const xPos = -innerW / 2 + 0.6;
         const lineX = -innerW / 2 + 0.45;
 
+        console.log('🔍 [DimGuide]', {
+          isSplit,
+          sectionCount: sections.length,
+          H_mm: height,
+          panelThickness,
+          t_unit: t,
+          innerH_mm: height - 2 * panelThickness,
+          sections: sections.map((s, i) => ({ idx: i, height: s.height, showBottom: s.showBottomPanel, showTop: s.showTopPanel })),
+        });
+
         // 섹션별 내경 치수 렌더링 헬퍼
         const renderSectionDims = (
           section: CustomSection,
@@ -2291,28 +2301,38 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 엔드패널(EP) 렌더링 — 본체 바깥, 원래 W 기준 위치 */}
-      {/* EndPanelWithTexture → BoxWithEdges는 Three.js 단위를 기대하므로 mmToUnit 변환 필요 */}
-      {hasLeftEndPanel && (
-        <EndPanelWithTexture
-          width={leftEP}
-          height={H}
-          depth={D}
-          position={[-(W / 2) + leftEP / 2, 0, 0]}
-          spaceInfo={spaceInfo}
-          renderMode={renderMode}
-        />
-      )}
-      {hasRightEndPanel && (
-        <EndPanelWithTexture
-          width={rightEP}
-          height={H}
-          depth={D}
-          position={[(W / 2) - rightEP / 2, 0, 0]}
-          spaceInfo={spaceInfo}
-          renderMode={renderMode}
-        />
-      )}
+      {/* 엔드패널(EP) 렌더링 — 바닥까지 연장 */}
+      {(() => {
+        const baseHeightMm = spaceInfo.baseConfig?.height || 65;
+        const baseDepthMm = spaceInfo.baseConfig?.depth || 0;
+        const footExtension = mmToUnit(baseHeightMm + baseDepthMm);
+        const epH = H + footExtension;
+        const epYOffset = -footExtension / 2;
+        return (
+          <>
+            {hasLeftEndPanel && (
+              <EndPanelWithTexture
+                width={leftEP}
+                height={epH}
+                depth={D}
+                position={[-(W / 2) + leftEP / 2, epYOffset, 0]}
+                spaceInfo={spaceInfo}
+                renderMode={renderMode}
+              />
+            )}
+            {hasRightEndPanel && (
+              <EndPanelWithTexture
+                width={rightEP}
+                height={epH}
+                depth={D}
+                position={[(W / 2) - rightEP / 2, epYOffset, 0]}
+                spaceInfo={spaceInfo}
+                renderMode={renderMode}
+              />
+            )}
+          </>
+        );
+      })()}
     </group>
   );
 };
