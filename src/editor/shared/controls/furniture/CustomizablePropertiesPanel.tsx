@@ -15,7 +15,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
  * activePopup.type === 'customizableEdit' 일 때 렌더링
  */
 const CustomizablePropertiesPanel: React.FC = () => {
-  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection } = useUIStore();
+  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection, setLayoutBuilderOpen } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule, setPlacedModules } = useFurnitureStore();
   const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId, editBackup, setEditBackup } = useMyCabinetStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
@@ -1675,6 +1675,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           alert('커스텀 캐비넷이 수정되었습니다.');
           restoreEditBackup();
           setEditingCabinetId(null);
+          setLayoutBuilderOpen(false);
           closeAllPopups();
         }
       } else {
@@ -1701,6 +1702,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           alert('새 커스텀 캐비넷으로 저장되었습니다.');
           restoreEditBackup();
           setEditingCabinetId(null);
+          setLayoutBuilderOpen(false);
           closeAllPopups();
         }
       }
@@ -1726,6 +1728,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
           await updateCabinet(id, { thumbnail: thumbnailDataUrl });
         }
         alert('커스텀 캐비넷에 저장되었습니다.');
+        setLayoutBuilderOpen(false);
+        closeAllPopups();
       }
     }
   };

@@ -294,7 +294,6 @@ const Configurator: React.FC = () => {
   // 커스텀 가구 설계→배치→세부설정→저장 동안 UI 자동 전환
   // 사이드바 접기 + orthographic 카메라 + 그림자 끄기 → 저장/닫기 시 복원
   const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
-  const setLayoutBuilderOpen = useUIStore(s => s.setLayoutBuilderOpen);
   const cameraMode = useUIStore(s => s.cameraMode);
   const setCameraMode = useUIStore(s => s.setCameraMode);
   const shadowEnabled = useUIStore(s => s.shadowEnabled);
@@ -304,33 +303,24 @@ const Configurator: React.FC = () => {
     cameraMode: 'perspective' | 'orthographic';
     shadowEnabled: boolean;
   } | null>(null);
-  const wasCustomizableEditOpen = useRef(false);
-
   useEffect(() => {
     if (isLayoutBuilderOpen && !stateBeforeDesign.current) {
+      // 설계모드 진입: 현재 상태 백업 후 UI 전환
       stateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen, cameraMode, shadowEnabled };
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
       setCameraMode('orthographic');
       setShadowEnabled(false);
     }
-  }, [isLayoutBuilderOpen]);
-
-  useEffect(() => {
-    if (activePopup.type === 'customizableEdit') {
-      wasCustomizableEditOpen.current = true;
-    }
-    // customizableEdit가 열렸다가 닫힌 시점에만 복원
-    if (wasCustomizableEditOpen.current && activePopup.type !== 'customizableEdit' && stateBeforeDesign.current) {
+    // "커스텀에 저장" 시 isLayoutBuilderOpen이 false로 → 복원
+    if (!isLayoutBuilderOpen && stateBeforeDesign.current) {
       setActiveSidebarTab(stateBeforeDesign.current.activeSidebarTab);
       setIsRightPanelOpen(stateBeforeDesign.current.isRightPanelOpen);
       setCameraMode(stateBeforeDesign.current.cameraMode);
       setShadowEnabled(stateBeforeDesign.current.shadowEnabled);
       stateBeforeDesign.current = null;
-      wasCustomizableEditOpen.current = false;
-      setLayoutBuilderOpen(false);
     }
-  }, [activePopup.type, setLayoutBuilderOpen, setCameraMode, setShadowEnabled]);
+  }, [isLayoutBuilderOpen]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
