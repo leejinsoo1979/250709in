@@ -205,7 +205,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     () => (showFurniture ? placedModulesStore : []),
     [placedModulesStore, showFurniture]
   );
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   // 단내림 설정
@@ -2874,7 +2874,114 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
       )}
-      
+
+      {/* 커스텀 가구 섹션별 높이 치수선 (설계모드 - 가구 좌측) */}
+      {showDimensions && isLayoutBuilderOpen && (
+      <group>
+        {(() => {
+          // 배치된 커스텀 가구 찾기
+          const customModule = placedModules.find(m => m.moduleId.startsWith('customizable-') && m.customConfig?.sections?.length);
+          if (!customModule || !customModule.customConfig) return null;
+
+          const { sections, panelThickness: pt } = customModule.customConfig;
+          const panelThickness = pt ?? 18;
+
+          // 가구 너비 (좌측 위치 계산용)
+          const furnitureWidth = customModule.customWidth || customModule.adjustedWidth || customModule.moduleWidth || 450;
+          const furnitureLeftX = customModule.position.x - mmToThreeUnits(furnitureWidth / 2);
+          const dimLineX = furnitureLeftX - mmToThreeUnits(120); // 가구 좌측에서 120mm 왼쪽
+
+          // 가구 하단 Y 계산 (기존 우측 치수선 로직과 동일)
+          const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+          const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+          const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+          const furnitureBaseY = isFloating ? mmToThreeUnits(floatHeight) : mmToThreeUnits(bottomFrameHeight);
+
+          // 각 섹션의 Y 범위 계산
+          let currentY = furnitureBaseY + mmToThreeUnits(panelThickness); // 하판 위
+          const sectionRanges: { startY: number; endY: number; heightMm: number }[] = [];
+          const sectionGap = customModule.customConfig.sectionGap ?? 0;
+
+          sections.forEach((section, i) => {
+            const sectionHeightUnits = mmToThreeUnits(section.height);
+            const startY = currentY;
+            const endY = currentY + sectionHeightUnits;
+            sectionRanges.push({ startY, endY, heightMm: section.height });
+            // 다음 섹션 시작: 현재 섹션 끝 + 칸막이 두께
+            if (i < sections.length - 1) {
+              currentY = endY + mmToThreeUnits(panelThickness) + mmToThreeUnits(sectionGap);
+            }
+          });
+
+          // 연장선 왼쪽 끝
+          const extLineLeftX = dimLineX - mmToThreeUnits(20);
+
+          return (
+            <>
+              {sectionRanges.map((range, idx) => (
+                <group key={`custom-section-dim-${idx}`}>
+                  {/* 수직 치수선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[dimLineX, range.startY, 0.002], [dimLineX, range.endY, 0.002]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  {/* 하단 틱 마크 */}
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([dimLineX, range.startY, 0.002], [dimLineX, range.startY - 0.03, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  {/* 상단 틱 마크 */}
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([dimLineX, range.endY, 0.002], [dimLineX, range.endY + 0.03, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  {/* 하단 보조 연장선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[furnitureLeftX, range.startY, 0.001], [extLineLeftX, range.startY, 0.001]]}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  {/* 상단 보조 연장선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[furnitureLeftX, range.endY, 0.001], [extLineLeftX, range.endY, 0.001]]}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  {/* 치수 텍스트 */}
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[dimLineX - mmToThreeUnits(60), (range.startY + range.endY) / 2, 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, 0, Math.PI / 2]}
+                  >
+                    {range.heightMm}
+                  </Text>
+                </group>
+              ))}
+            </>
+          );
+        })()}
+      </group>
+      )}
 
       {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시, 탑뷰가 아닐 때만) */}
       {showDimensions && furnitureDimensions && furnitureDimensions.map((item, index) => {
