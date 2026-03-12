@@ -42,6 +42,7 @@ interface CustomizableBoxModuleProps {
   hasLeftEndPanel?: boolean; // 좌측 엔드패널 표시 여부
   hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
   endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
+  endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0)
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -228,6 +229,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   hasLeftEndPanel = false,
   hasRightEndPanel = false,
   endPanelThickness: endPanelThicknessProp,
+  endPanelOffset: endPanelOffsetProp = 0,
   isEditable = true,
   onPointerDown,
   onPointerMove,
@@ -2301,13 +2303,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 엔드패널(EP) 렌더링 — 바닥까지 연장 */}
+      {/* 엔드패널(EP) 렌더링 — 바닥까지 연장, Z축 오프셋 적용 */}
       {(() => {
         const baseHeightMm = spaceInfo.baseConfig?.height || 65;
         const baseDepthMm = spaceInfo.baseConfig?.depth || 0;
         const footExtension = mmToUnit(baseHeightMm + baseDepthMm);
         const epH = H + footExtension;
         const epYOffset = -footExtension / 2;
+        const epOffsetZ = mmToUnit(endPanelOffsetProp);
         return (
           <>
             {hasLeftEndPanel && (
@@ -2315,7 +2318,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 width={leftEP}
                 height={epH}
                 depth={D}
-                position={[-(W / 2) + leftEP / 2, epYOffset, 0]}
+                position={[-(W / 2) + leftEP / 2, epYOffset, epOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
               />
@@ -2325,7 +2328,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 width={rightEP}
                 height={epH}
                 depth={D}
-                position={[(W / 2) - rightEP / 2, epYOffset, 0]}
+                position={[(W / 2) - rightEP / 2, epYOffset, epOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
               />
