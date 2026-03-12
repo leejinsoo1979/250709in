@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useState, useRef, useMemo } from 'react'
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import { SavedCabinet } from '@/firebase/types';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { createCustomizableModuleId } from './CustomizableFurnitureLibrary';
@@ -50,6 +51,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'full', ed
   const { savedCabinets, isLoading, fetchCabinets, deleteCabinet, setPendingPlacement, setEditingCabinetId, setEditBackup } = useMyCabinetStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData, placedModules, clearAllModules } = useFurnitureStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
+  const setLayoutBuilderOpen = useUIStore(s => s.setLayoutBuilderOpen);
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -131,6 +133,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'full', ed
     }
 
     setEditingCabinetId(cabinet.id);
+    setLayoutBuilderOpen(true);
     setPendingPlacement({
       customConfig: cabinet.customConfig,
       width: cabinet.width,
@@ -142,7 +145,7 @@ const MyCabinetGallery: React.FC<MyCabinetGalleryProps> = ({ filter = 'full', ed
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
     setSelectedIds(new Set());
-  }, [selectedIds, savedCabinets, spaceInfo.layoutMode, setSpaceInfo, setEditingCabinetId, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode, placedModules, clearAllModules, setEditBackup]);
+  }, [selectedIds, savedCabinets, spaceInfo.layoutMode, setSpaceInfo, setEditingCabinetId, setLayoutBuilderOpen, setPendingPlacement, setSelectedFurnitureId, setFurniturePlacementMode, placedModules, clearAllModules, setEditBackup]);
 
   // ── 액션: 삭제 (다중 선택 가능) ──
   const handleDeleteSelected = useCallback(async () => {

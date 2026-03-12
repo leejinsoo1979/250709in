@@ -297,6 +297,15 @@ const Configurator: React.FC = () => {
   const cameraMode = useUIStore(s => s.cameraMode);
   const setCameraMode = useUIStore(s => s.setCameraMode);
   const shadowEnabled = useUIStore(s => s.shadowEnabled);
+  // stale closure 방지: 최신 값을 ref로 추적
+  const latestSidebarTab = useRef(activeSidebarTab);
+  latestSidebarTab.current = activeSidebarTab;
+  const latestRightPanel = useRef(isRightPanelOpen);
+  latestRightPanel.current = isRightPanelOpen;
+  const latestCameraMode = useRef(cameraMode);
+  latestCameraMode.current = cameraMode;
+  const latestShadow = useRef(shadowEnabled);
+  latestShadow.current = shadowEnabled;
   const stateBeforeDesign = useRef<{
     activeSidebarTab: SidebarTab | null;
     isRightPanelOpen: boolean;
@@ -305,8 +314,13 @@ const Configurator: React.FC = () => {
   } | null>(null);
   useEffect(() => {
     if (isLayoutBuilderOpen && !stateBeforeDesign.current) {
-      // 설계모드 진입: 현재 상태 백업 후 UI 전환
-      stateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen, cameraMode, shadowEnabled };
+      // 설계모드 진입: 최신 상태 백업 후 UI 전환
+      stateBeforeDesign.current = {
+        activeSidebarTab: latestSidebarTab.current,
+        isRightPanelOpen: latestRightPanel.current,
+        cameraMode: latestCameraMode.current,
+        shadowEnabled: latestShadow.current,
+      };
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
       setCameraMode('orthographic');
