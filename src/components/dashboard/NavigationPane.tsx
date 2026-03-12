@@ -51,6 +51,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   const [localFolders, setLocalFolders] = useState<{ [projectId: string]: FolderData[] }>({});
   // 프로젝트별 디자인 파일 수
   const [designFileCounts, setDesignFileCounts] = useState<{ [projectId: string]: number }>({});
+  // 폴더별 디자인 파일 수
+  const [folderFileCounts, setFolderFileCounts] = useState<{ [folderId: string]: number }>({});
 
   // 프로젝트별 디자인 파일 수 로드
   const loadDesignFileCount = useCallback(async (projectId: string) => {
@@ -58,6 +60,14 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
       const { designFiles } = await getDesignFiles(projectId);
       const activeFiles = designFiles.filter((f: any) => !f.isDeleted);
       setDesignFileCounts(prev => ({ ...prev, [projectId]: activeFiles.length }));
+      // 폴더별 파일 수 계산
+      const folderCounts: { [folderId: string]: number } = {};
+      activeFiles.forEach((f: any) => {
+        if (f.folderId) {
+          folderCounts[f.folderId] = (folderCounts[f.folderId] || 0) + 1;
+        }
+      });
+      setFolderFileCounts(prev => ({ ...prev, ...folderCounts }));
     } catch {
       // ignore
     }
@@ -265,8 +275,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                           <span className={styles.treeLabel} title={folder.name}>
                             {folder.name}
                           </span>
-                          {folder.children && folder.children.length > 0 && (
-                            <span className={styles.treeBadge}>{folder.children.length}</span>
+                          {(folderFileCounts[folder.id] || 0) > 0 && (
+                            <span className={styles.treeBadge}>{folderFileCounts[folder.id]}</span>
                           )}
                         </button>
                       );
