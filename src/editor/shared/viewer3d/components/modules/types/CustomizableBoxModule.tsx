@@ -1962,32 +1962,32 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const lineX = -innerW / 2 + 0.45;
 
         // 섹션별 외경 치수 렌더링 헬퍼
+        // boxCenterY: 섹션 박스(외경) 중심 Y좌표 (Three.js 단위)
+        // boxH: 섹션 박스(외경) 높이 (Three.js 단위)
+        // displayHeightMm: 표시할 mm 숫자
         const renderSectionDims = (
           section: CustomSection,
           sIdx: number,
-          sectionCenterY: number,
-          sectionInnerH: number,
+          boxCenterY: number,
+          boxH: number,
           sectionBoxW: number,
-          outerHeightMm?: number,
+          displayHeightMm: number,
         ) => {
-          // 상하판 포함 여부
+          const outerTopY = boxCenterY + boxH / 2;
+          const outerBotY = boxCenterY - boxH / 2;
           const hb = section.showBottomPanel !== false;
           const ht = section.showTopPanel !== false;
-          // 외경 = 내경 + 상하판 두께
-          const outerH = sectionInnerH + (hb ? t : 0) + (ht ? t : 0);
-          const outerCenterY = sectionCenterY + ((hb ? t : 0) - (ht ? t : 0)) / 2;
-          const outerTopY = outerCenterY + outerH / 2;
-          const outerBotY = outerCenterY - outerH / 2;
+          const sectionInnerH = boxH - (hb ? t : 0) - (ht ? t : 0);
+          const sectionCenterY = boxCenterY + ((hb ? t : 0) - (ht ? t : 0)) / 2;
           const bInnerW = sectionBoxW - 2 * t;
           const nodes: React.ReactNode[] = [];
 
           // 외경 높이 치수 (상판 바깥 ~ 하판 바깥)
-          const displayHeight = outerHeightMm ?? Math.round(section.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness);
           nodes.push(
             <DimensionText
               key={`dim-h-${sIdx}`}
-              value={displayHeight}
-              position={[xPos, (outerTopY + outerBotY) / 2, zPos]}
+              value={displayHeightMm}
+              position={[xPos, boxCenterY, zPos]}
               rotation={[0, 0, Math.PI / 2]}
             />,
             <Line
@@ -2066,16 +2066,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               {sections.map((sec, si) => {
                 const hb = sec.showBottomPanel !== false;
                 const ht = sec.showTopPanel !== false;
-                const innerH = sectionHeights[si] - (hb ? t : 0) - (ht ? t : 0);
-                const contentCenter = dimCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
-                // 외경 기준 높이 표시 (내경 + 상하판 두께)
-                const outerHeight = Math.round(sec.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness);
-                return renderSectionDims(sec, si, contentCenter, innerH, effectiveW, outerHeight);
+                const outerHeightMm = Math.round(sec.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness);
+                return renderSectionDims(sec, si, dimCenters[si], sectionHeights[si], effectiveW, outerHeightMm);
               })}
             </>
           );
         } else {
-          return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, effectiveW, height)}</>;
+          return <>{renderSectionDims(sections[0], 0, 0, H, effectiveW, height)}</>;
         }
       })()}
 
