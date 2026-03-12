@@ -1748,6 +1748,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       });
     }
     setEditingCabinetId(null);
+    setLayoutBuilderOpen(false);
     closeAllPopups();
   };
 
@@ -1760,6 +1761,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       removeModule(moduleId);
     }
     setEditingCabinetId(null);
+    setLayoutBuilderOpen(false);
     closeAllPopups();
   };
 

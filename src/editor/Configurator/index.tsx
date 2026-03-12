@@ -320,6 +320,14 @@ const Configurator: React.FC = () => {
       setShadowEnabled(stateBeforeDesign.current.shadowEnabled);
       stateBeforeDesign.current = null;
     }
+    // 컴포넌트 언마운트(페이지 이탈) 시에도 복원
+    return () => {
+      if (stateBeforeDesign.current) {
+        setCameraMode(stateBeforeDesign.current.cameraMode);
+        setShadowEnabled(stateBeforeDesign.current.shadowEnabled);
+        stateBeforeDesign.current = null;
+      }
+    };
   }, [isLayoutBuilderOpen]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
