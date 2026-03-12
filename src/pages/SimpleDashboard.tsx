@@ -217,23 +217,8 @@ const SimpleDashboard: React.FC = () => {
     } else if (item.type === 'design') {
       const projectId = item.projectId || nav.currentProjectId;
       if (!projectId) return;
-
-      // 썸네일 또는 가구가 있으면 이미 작업한 디자인 → 바로 에디터
-      if (item.thumbnail || (item.furnitureCount && item.furnitureCount > 0)) {
-        handleDesignOpen(projectId, item.id, item.name);
-        return;
-      }
-
-      // 빈 디자인(새로 생성됨) → Step2(공간설정) 팝업
-      const project = data.projects.find(p => p.id === projectId);
-      const { setProjectId, setProjectTitle, setBasicInfo } = useProjectStore.getState();
-      setProjectId(projectId);
-      setProjectTitle(project?.title || '새 프로젝트');
-      setBasicInfo({ title: item.name, location: project?.title || '기본 위치' });
-      setModalProjectId(projectId);
-      setModalProjectTitle(project?.title || '새 프로젝트');
-      setModalInitialStep(2);
-      setIsStep1ModalOpen(true);
+      // 디자인 카드 클릭 → 바로 에디터로 이동
+      handleDesignOpen(projectId, item.id, item.name);
     }
   }, [nav, handleDesignOpen, data.projects]);
 
@@ -655,23 +640,10 @@ const SimpleDashboard: React.FC = () => {
             setBlankContextMenu({ x: e.clientX, y: e.clientY });
           }}
           onOpenEditor={(item) => {
-            // 썸네일 또는 가구가 있으면 이미 작업한 디자인 → 바로 에디터
-            if (item.thumbnail || (item.furnitureCount && item.furnitureCount > 0)) {
-              handleDesignOpen(item.projectId || nav.currentProjectId!, item.id, item.name);
-              return;
-            }
-            // 공간설정 안 된 디자인은 Step2(공간설정) 팝업
-            const project = data.projects.find(p => p.id === (item.projectId || nav.currentProjectId));
-            const targetProjectId = item.projectId || nav.currentProjectId;
-            if (targetProjectId) {
-              const { setProjectId, setProjectTitle, setBasicInfo } = useProjectStore.getState();
-              setProjectId(targetProjectId);
-              setProjectTitle(project?.title || '새 프로젝트');
-              setBasicInfo({ title: item.name, location: project?.title || '기본 위치' });
-              setModalProjectId(targetProjectId);
-              setModalProjectTitle(project?.title || '새 프로젝트');
-              setModalInitialStep(2);
-              setIsStep1ModalOpen(true);
+            // 디자인 카드 클릭 → 바로 에디터로 이동
+            const projectId = item.projectId || nav.currentProjectId;
+            if (projectId) {
+              handleDesignOpen(projectId, item.id, item.name);
             }
           }}
         />
