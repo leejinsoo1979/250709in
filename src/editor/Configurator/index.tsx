@@ -285,41 +285,32 @@ const Configurator: React.FC = () => {
 
   // 슬롯배치 모드 진입 시 컬럼 가이드 자동 켜기
   const isFurniturePlacementMode = useFurnitureStore(state => state.isFurniturePlacementMode);
-  const pendingCustomConfig = useFurnitureStore(state => state.pendingCustomConfig);
   useEffect(() => {
     if (isFurniturePlacementMode && viewMode === '3D') {
       setShowAll(true);
     }
   }, [isFurniturePlacementMode, viewMode]);
 
-  // 커스텀 가구 "레이아웃 확인" 후 배치 모드 시 좌우 사이드바 자동 폴딩
+  // 커스텀 가구 설계모드(LayoutBuilderPopup) 시 좌우 사이드바 자동 폴딩
+  const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
   const sidebarStateBeforeDesign = useRef<{
     activeSidebarTab: SidebarTab | null;
     isRightPanelOpen: boolean;
   } | null>(null);
-  const wasCustomPlacement = useRef(false);
 
   useEffect(() => {
-    // 커스텀 가구 배치 모드 진입 감지: pendingCustomConfig가 있으면서 배치 모드 ON
-    if (isFurniturePlacementMode && pendingCustomConfig && !wasCustomPlacement.current) {
-      wasCustomPlacement.current = true;
+    if (isLayoutBuilderOpen) {
+      // 설계 팝업 열림 → 사이드바 백업 후 접기
       sidebarStateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen };
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
+    } else if (sidebarStateBeforeDesign.current) {
+      // 설계 팝업 닫힘 → 사이드바 복원
+      setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
+      setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
+      sidebarStateBeforeDesign.current = null;
     }
-  }, [isFurniturePlacementMode, pendingCustomConfig]);
-
-  useEffect(() => {
-    // 배치 모드 해제 시 복원 (커스텀 가구 배치로 접은 경우에만)
-    if (!isFurniturePlacementMode && wasCustomPlacement.current) {
-      wasCustomPlacement.current = false;
-      if (sidebarStateBeforeDesign.current) {
-        setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
-        setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
-        sidebarStateBeforeDesign.current = null;
-      }
-    }
-  }, [isFurniturePlacementMode]);
+  }, [isLayoutBuilderOpen]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
