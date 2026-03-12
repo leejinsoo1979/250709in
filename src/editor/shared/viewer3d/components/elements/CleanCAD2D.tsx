@@ -200,6 +200,7 @@ const EditableLabel: React.FC<{
 const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
+  const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const showFurniture = useUIStore(state => state.showFurniture);
   const placedModules = useMemo(
     () => (showFurniture ? placedModulesStore : []),
@@ -407,6 +408,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const [editingGapValue, setEditingGapValue] = useState<string>('');
   const gapInputRef = useRef<HTMLInputElement>(null);
 
+  // 자유배치 가구 너비 편집 상태
+  const [editingFurnitureWidthId, setEditingFurnitureWidthId] = useState<string | null>(null);
+  const [editingFurnitureWidthValue, setEditingFurnitureWidthValue] = useState<string>('');
+  const furnitureWidthInputRef = useRef<HTMLInputElement>(null);
+
+  // 자유배치 가구 갭(벽~가구 거리) 편집 상태
+  const [editingFurnitureGapSide, setEditingFurnitureGapSide] = useState<'left' | 'right' | null>(null);
+  const [editingFurnitureGapValue, setEditingFurnitureGapValue] = useState<string>('');
+  const [editingFurnitureGapModuleId, setEditingFurnitureGapModuleId] = useState<string | null>(null);
+  const furnitureGapInputRef = useRef<HTMLInputElement>(null);
+
   // 편집 모드가 활성화되면 입력 필드에 포커스
   useEffect(() => {
     if (editingColumnId && editingSide && inputRef.current) {
@@ -556,6 +568,113 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       return () => clearTimeout(timer);
     }
   }, [editingGapSide]);
+
+  // 자유배치 가구 너비 편집 핸들러
+  const handleFurnitureWidthEdit = (moduleId: string, currentWidth: number) => {
+    setEditingFurnitureWidthId(moduleId);
+    setEditingFurnitureWidthValue(Math.round(currentWidth).toString());
+    setTimeout(() => {
+      furnitureWidthInputRef.current?.focus();
+      furnitureWidthInputRef.current?.select();
+    }, 100);
+  };
+
+  const handleFurnitureWidthSubmit = () => {
+    if (!editingFurnitureWidthId) return;
+    const value = parseFloat(editingFurnitureWidthValue);
+    if (isNaN(value) || value < 100) {
+      setEditingFurnitureWidthId(null);
+      setEditingFurnitureWidthValue('');
+      return;
+    }
+    const clamped = Math.max(100, Math.min(3000, Math.round(value)));
+    const module = placedModules.find(m => m.id === editingFurnitureWidthId);
+    if (module) {
+      updatePlacedModule(editingFurnitureWidthId, { freeWidth: clamped });
+    }
+    setEditingFurnitureWidthId(null);
+    setEditingFurnitureWidthValue('');
+  };
+
+  const handleFurnitureWidthCancel = () => {
+    setEditingFurnitureWidthId(null);
+    setEditingFurnitureWidthValue('');
+  };
+
+  useEffect(() => {
+    if (editingFurnitureWidthId && furnitureWidthInputRef.current) {
+      const timer = setTimeout(() => {
+        furnitureWidthInputRef.current?.focus();
+        furnitureWidthInputRef.current?.select();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [editingFurnitureWidthId]);
+
+  // 자유배치 가구 갭(벽~가구 거리) 편집 핸들러
+  const handleFurnitureGapEdit = (side: 'left' | 'right', moduleId: string, currentValue: number) => {
+    setEditingFurnitureGapSide(side);
+    setEditingFurnitureGapModuleId(moduleId);
+    setEditingFurnitureGapValue(Math.round(currentValue).toString());
+    setTimeout(() => {
+      furnitureGapInputRef.current?.focus();
+      furnitureGapInputRef.current?.select();
+    }, 100);
+  };
+
+  const handleFurnitureGapSubmit = () => {
+    if (!editingFurnitureGapSide || !editingFurnitureGapModuleId) return;
+    const value = parseFloat(editingFurnitureGapValue);
+    if (isNaN(value) || value < 0) {
+      setEditingFurnitureGapSide(null);
+      setEditingFurnitureGapValue('');
+      setEditingFurnitureGapModuleId(null);
+      return;
+    }
+    const module = placedModules.find(m => m.id === editingFurnitureGapModuleId);
+    if (!module) {
+      setEditingFurnitureGapSide(null);
+      setEditingFurnitureGapValue('');
+      setEditingFurnitureGapModuleId(null);
+      return;
+    }
+    const widthMm = getModuleWidthMm(module);
+    if (widthMm === null) return;
+    const moduleHalfWidth = widthMm * 0.01 / 2;
+    const leftOffsetVal = spaceInfo.surroundType === 'surround' ? -(spaceInfo.frameSize?.left || 50) * 0.01 : 0;
+    const maxGap = spaceInfo.width;
+    const clamped = Math.max(0, Math.min(maxGap, Math.round(value)));
+
+    if (editingFurnitureGapSide === 'left') {
+      // 왼쪽 벽에서 거리 → 가구 중심 X = leftOffset + gap(mm→three) + halfWidth
+      const newX = leftOffsetVal + clamped * 0.01 + moduleHalfWidth;
+      updatePlacedModule(editingFurnitureGapModuleId, { position: { ...module.position, x: newX } });
+    } else {
+      // 오른쪽 벽에서 거리 → 가구 중심 X = rightEdge - gap(mm→three) - halfWidth
+      const rightEdge = spaceInfo.width * 0.01 + leftOffsetVal;
+      const newX = rightEdge - clamped * 0.01 - moduleHalfWidth;
+      updatePlacedModule(editingFurnitureGapModuleId, { position: { ...module.position, x: newX } });
+    }
+    setEditingFurnitureGapSide(null);
+    setEditingFurnitureGapValue('');
+    setEditingFurnitureGapModuleId(null);
+  };
+
+  const handleFurnitureGapCancel = () => {
+    setEditingFurnitureGapSide(null);
+    setEditingFurnitureGapValue('');
+    setEditingFurnitureGapModuleId(null);
+  };
+
+  useEffect(() => {
+    if (editingFurnitureGapSide && furnitureGapInputRef.current) {
+      const timer = setTimeout(() => {
+        furnitureGapInputRef.current?.focus();
+        furnitureGapInputRef.current?.select();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [editingFurnitureGapSide]);
 
   // mm를 Three.js 단위로 변환 (furnitureDimensions에서 사용하기 위해 먼저 선언)
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -1714,6 +1833,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 가장 왼쪽 가구 위치 찾기
             let leftmostFurnitureX: number | null = null;
+            let leftmostModuleId: string | null = null;
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const widthMm = getModuleWidthMm(module);
@@ -1723,6 +1843,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const moduleLeft = moduleX - moduleWidth / 2;
                   if (leftmostFurnitureX === null || moduleLeft < leftmostFurnitureX) {
                     leftmostFurnitureX = moduleLeft;
+                    leftmostModuleId = module.id;
                   }
                 }
               });
@@ -1735,6 +1856,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             let leftValue: number;
             let leftText: string;
+            const isLeftEditable = isFreePlacement && !hasLeftWall && leftmostModuleId !== null;
 
             if (hasLeftWall) {
               // 왼쪽 벽이 있으면 이격거리 표시
@@ -1777,7 +1899,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   depthTest={false}
                 />
                 
-                {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
+                {/* 좌측 치수 텍스트 - 이격거리/가구갭 클릭 편집 */}
                 {showDimensionsText && hasLeftWall && editingGapSide === 'left' ? (
                   <Html
                     position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
@@ -1801,11 +1923,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
                     </div>
                   </Html>
+                ) : showDimensionsText && isLeftEditable && editingFurnitureGapSide === 'left' ? (
+                  <Html
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                    center
+                    style={{ pointerEvents: 'auto' }}
+                    zIndexRange={[10000, 10001]}
+                  >
+                    <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                      <input
+                        ref={furnitureGapInputRef}
+                        type="number"
+                        step="1"
+                        value={editingFurnitureGapValue}
+                        onChange={(e) => setEditingFurnitureGapValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleFurnitureGapSubmit(); else if (e.key === 'Escape') handleFurnitureGapCancel(); }}
+                        onBlur={handleFurnitureGapSubmit}
+                        style={{ width: '60px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                    </div>
+                  </Html>
                 ) : showDimensionsText ? (
                   <Html
                     position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
                     center
-                    style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
+                    style={{ pointerEvents: (hasLeftWall || isLeftEditable) ? 'auto' : 'none' }}
                     zIndexRange={[9999, 10000]}
                   >
                     <div
@@ -1814,15 +1959,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         fontSize: '12px',
                         fontWeight: 'bold',
                         color: dimensionColor,
-                        cursor: hasLeftWall ? 'pointer' : 'default',
+                        cursor: (hasLeftWall || isLeftEditable) ? 'pointer' : 'default',
                         userSelect: 'none',
                         whiteSpace: 'nowrap',
-                        background: hasLeftWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                        background: (hasLeftWall || isLeftEditable) ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                         borderRadius: '3px',
                       }}
-                      onClick={(e) => { if (hasLeftWall) { e.stopPropagation(); handleGapEdit('left', leftValue); } }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (hasLeftWall) { handleGapEdit('left', leftValue); }
+                        else if (isLeftEditable && leftmostModuleId) { handleFurnitureGapEdit('left', leftmostModuleId, leftValue); }
+                      }}
                     >
-                      {leftText}
+                      {leftText}{!hasLeftWall && 'mm'}
                     </div>
                   </Html>
                 ) : null}
@@ -1922,6 +2071,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 가장 오른쪽 가구 위치 찾기
             let rightmostFurnitureX: number | null = null;
+            let rightmostModuleId: string | null = null;
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const widthMm = getModuleWidthMm(module);
@@ -1931,6 +2081,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const moduleRight = moduleX + moduleWidth / 2;
                   if (rightmostFurnitureX === null || moduleRight > rightmostFurnitureX) {
                     rightmostFurnitureX = moduleRight;
+                    rightmostModuleId = module.id;
                   }
                 }
               });
@@ -1943,6 +2094,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             let rightValue: number;
             let rightText: string;
+            const isRightEditable = isFreePlacement && !hasRightWall && rightmostModuleId !== null;
 
             if (hasRightWall) {
               // 오른쪽 벽이 있으면 이격거리 표시
@@ -1986,7 +2138,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   depthTest={false}
                 />
                 
-                {/* 우측 치수 텍스트 - 이격거리 클릭 편집 */}
+                {/* 우측 치수 텍스트 - 이격거리/가구갭 클릭 편집 */}
                 {hasRightWall && editingGapSide === 'right' ? (
                   <Html
                     position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
@@ -2010,11 +2162,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
                     </div>
                   </Html>
+                ) : isRightEditable && editingFurnitureGapSide === 'right' ? (
+                  <Html
+                    position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                    center
+                    style={{ pointerEvents: 'auto' }}
+                    zIndexRange={[10000, 10001]}
+                  >
+                    <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                      <input
+                        ref={furnitureGapInputRef}
+                        type="number"
+                        step="1"
+                        value={editingFurnitureGapValue}
+                        onChange={(e) => setEditingFurnitureGapValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleFurnitureGapSubmit(); else if (e.key === 'Escape') handleFurnitureGapCancel(); }}
+                        onBlur={handleFurnitureGapSubmit}
+                        style={{ width: '60px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                    </div>
+                  </Html>
                 ) : (
                   <Html
                     position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
                     center
-                    style={{ pointerEvents: hasRightWall ? 'auto' : 'none' }}
+                    style={{ pointerEvents: (hasRightWall || isRightEditable) ? 'auto' : 'none' }}
                     zIndexRange={[9999, 10000]}
                   >
                     <div
@@ -2023,15 +2198,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         fontSize: '12px',
                         fontWeight: 'bold',
                         color: dimensionColor,
-                        cursor: hasRightWall ? 'pointer' : 'default',
+                        cursor: (hasRightWall || isRightEditable) ? 'pointer' : 'default',
                         userSelect: 'none',
                         whiteSpace: 'nowrap',
-                        background: hasRightWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                        background: (hasRightWall || isRightEditable) ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                         borderRadius: '3px',
                       }}
-                      onClick={(e) => { if (hasRightWall) { e.stopPropagation(); handleGapEdit('right', rightValue); } }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (hasRightWall) { handleGapEdit('right', rightValue); }
+                        else if (isRightEditable && rightmostModuleId) { handleFurnitureGapEdit('right', rightmostModuleId, rightValue); }
+                      }}
                     >
-                      {rightText}
+                      {rightText}{!hasRightWall && 'mm'}
                     </div>
                   </Html>
                 )}
@@ -3103,25 +3282,81 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
 
-            {/* 가구 치수 텍스트 — 듀얼: 0.5 단위 내림, 싱글: 정수 내림 */}
-            <Text
-              position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000000}
-              depthTest={false}
-            >
-              {(() => {
-                const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-                if (isDual) {
-                  const w = Math.floor(actualWidth * 2) / 2;
-                  return w % 1 === 0 ? w : w.toFixed(1);
-                }
-                return Math.floor(actualWidth);
-              })()}
-            </Text>
+            {/* 가구 치수 텍스트 — 자유배치: 클릭 편집 가능, 그 외: 읽기 전용 */}
+            {isFreePlacement && editingFurnitureWidthId === module.id ? (
+              <Html
+                position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[10000, 10001]}
+              >
+                <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                  <input
+                    ref={furnitureWidthInputRef}
+                    type="number"
+                    step="1"
+                    value={editingFurnitureWidthValue}
+                    onChange={(e) => setEditingFurnitureWidthValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleFurnitureWidthSubmit(); else if (e.key === 'Escape') handleFurnitureWidthCancel(); }}
+                    onBlur={handleFurnitureWidthSubmit}
+                    style={{ width: '60px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                </div>
+              </Html>
+            ) : isFreePlacement ? (
+              <Html
+                position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[9999, 10000]}
+              >
+                <div
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: dimensionColor,
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    whiteSpace: 'nowrap',
+                    background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                    borderRadius: '3px',
+                  }}
+                  onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
+                >
+                  {(() => {
+                    const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+                    if (isDual) {
+                      const w = Math.floor(actualWidth * 2) / 2;
+                      return w % 1 === 0 ? w : w.toFixed(1);
+                    }
+                    return Math.floor(actualWidth);
+                  })()}
+                </div>
+              </Html>
+            ) : (
+              <Text
+                position={[actualPositionX, dimY + mmToThreeUnits(30), 0.01]}
+                fontSize={baseFontSize}
+                color={dimensionColor}
+                anchorX="center"
+                anchorY="middle"
+                renderOrder={1000000}
+                depthTest={false}
+              >
+                {(() => {
+                  const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+                  if (isDual) {
+                    const w = Math.floor(actualWidth * 2) / 2;
+                    return w % 1 === 0 ? w : w.toFixed(1);
+                  }
+                  return Math.floor(actualWidth);
+                })()}
+              </Text>
+            )}
 
             {/* 연장선 끝 세리프 (가로 틱 마크) */}
             {[leftX, rightX].map((x, ti) => (
