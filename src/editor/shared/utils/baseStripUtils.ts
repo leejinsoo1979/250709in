@@ -15,6 +15,7 @@ export interface BaseStripGroup {
   rightMM: number;   // 우측 X 경계 (mm)
   depthMM: number;   // 그룹 내 최대 깊이 (mm)
   depthZOffsetMM: number; // 깊이 방향 Z오프셋 (mm, 하부섹션 깊이 축소 시)
+  thicknessMM: number; // 그룹 내 최대 프레임 두께 (mm, 0 = 공간 기본값 사용)
   modules: PlacedModule[];
 }
 
@@ -118,6 +119,7 @@ export function computeBaseStripGroups(
     rightMM: boundsWithModule[0].bounds.right,
     depthMM: boundsWithModule[0].depthMM,
     depthZOffsetMM: boundsWithModule[0].depthZOffsetMM,
+    thicknessMM: 0,
     modules: [boundsWithModule[0].module],
   };
 
@@ -137,6 +139,7 @@ export function computeBaseStripGroups(
         rightMM: item.bounds.right,
         depthMM: item.depthMM,
         depthZOffsetMM: item.depthZOffsetMM,
+        thicknessMM: 0,
         modules: [item.module],
       };
     }
@@ -167,6 +170,7 @@ export function computeTopStripGroups(
     module: m,
     bounds: getModuleBoundsX(m),
     depthMM: m.freeDepth || 580,
+    thicknessMM: m.topFrameThickness || 0,
   }));
   boundsWithModule.sort((a, b) => a.bounds.left - b.bounds.left);
 
@@ -177,6 +181,7 @@ export function computeTopStripGroups(
     rightMM: boundsWithModule[0].bounds.right,
     depthMM: boundsWithModule[0].depthMM,
     depthZOffsetMM: 0,
+    thicknessMM: boundsWithModule[0].thicknessMM,
     modules: [boundsWithModule[0].module],
   };
 
@@ -185,6 +190,7 @@ export function computeTopStripGroups(
     if (item.bounds.left <= currentGroup.rightMM + MERGE_TOLERANCE_MM) {
       currentGroup.rightMM = Math.max(currentGroup.rightMM, item.bounds.right);
       currentGroup.depthMM = Math.max(currentGroup.depthMM, item.depthMM);
+      currentGroup.thicknessMM = Math.max(currentGroup.thicknessMM, item.thicknessMM);
       currentGroup.modules.push(item.module);
     } else {
       groups.push(currentGroup);
@@ -194,6 +200,7 @@ export function computeTopStripGroups(
         rightMM: item.bounds.right,
         depthMM: item.depthMM,
         depthZOffsetMM: 0,
+        thicknessMM: item.thicknessMM,
         modules: [item.module],
       };
     }
