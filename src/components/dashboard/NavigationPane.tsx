@@ -56,7 +56,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   const loadDesignFileCount = useCallback(async (projectId: string) => {
     try {
       const { designFiles } = await getDesignFiles(projectId);
-      setDesignFileCounts(prev => ({ ...prev, [projectId]: designFiles.length }));
+      const activeFiles = designFiles.filter((f: any) => !f.isDeleted);
+      setDesignFileCounts(prev => ({ ...prev, [projectId]: activeFiles.length }));
     } catch {
       // ignore
     }
