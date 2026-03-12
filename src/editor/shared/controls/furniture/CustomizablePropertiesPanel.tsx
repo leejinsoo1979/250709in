@@ -15,7 +15,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
  * activePopup.type === 'customizableEdit' 일 때 렌더링
  */
 const CustomizablePropertiesPanel: React.FC = () => {
-  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection, setLayoutBuilderOpen } = useUIStore();
+  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection, setLayoutBuilderOpen, designExitSaveRequest, setDesignExitSaveRequest } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule, setPlacedModules } = useFurnitureStore();
   const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId, editBackup, setEditBackup } = useMyCabinetStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
@@ -177,6 +177,53 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return {};
   }, [activePopup.screenX, activePopup.screenY, activePopup.sectionIndex]);
 
+
+  // 설계모드 종료 버튼 → "저장하고 돌아가기" 요청 감지
+  useEffect(() => {
+    if (!designExitSaveRequest) return;
+    // 요청 플래그 즉시 해제
+    setDesignExitSaveRequest(false);
+    // 패널이 열려있지 않거나 데이터가 없으면 그냥 종료
+    if (!moduleId || !placedModule || !config) {
+      setLayoutBuilderOpen(false);
+      closeAllPopups();
+      return;
+    }
+    // 저장 실행 (handleSaveToCabinet과 동일한 로직)
+    (async () => {
+      const category = getCustomizableCategory(placedModule.moduleId);
+      const fW = placedModule.freeWidth ?? placedModule.moduleWidth;
+      const fH = placedModule.customConfig?.totalHeight ?? 2400;
+      const fD = placedModule.freeDepth ?? 600;
+
+      const thumbnailDataUrl =
+        captureFurnitureThumbnail(placedModule.id, { width: 300, height: 400 })
+        || generateCabinetThumbnail(config, fW, fH, { width: 300, height: 400 });
+
+      if (editingCabinetId) {
+        // 수정 모드: 덮어쓰기
+        await updateCabinet(editingCabinetId, {
+          category,
+          width: fW,
+          height: fH,
+          depth: fD,
+          customConfig: config,
+          thumbnail: thumbnailDataUrl || undefined,
+        });
+        restoreEditBackup();
+        setEditingCabinetId(null);
+      } else {
+        // 신규 저장
+        const name = config.sections.length > 1 ? '커스텀 2단 캐비넷' : '커스텀 캐비넷';
+        const { id } = await saveCabinet({ name, category, width: fW, height: fH, depth: fD, customConfig: config });
+        if (id && thumbnailDataUrl) {
+          await updateCabinet(id, { thumbnail: thumbnailDataUrl });
+        }
+      }
+      setLayoutBuilderOpen(false);
+      closeAllPopups();
+    })();
+  }, [designExitSaveRequest]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 렌더링 조건 체크 (모든 hooks 호출 이후)
   if (activePopup.type !== 'customizableEdit' || !moduleId || !placedModule || !config) {

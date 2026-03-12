@@ -176,6 +176,10 @@ interface UIState {
   isLayoutBuilderOpen: boolean;
   setLayoutBuilderOpen: (open: boolean) => void;
 
+  // 설계모드 저장 후 종료 요청 (종료 버튼 → CustomizablePropertiesPanel이 감지)
+  designExitSaveRequest: boolean;
+  setDesignExitSaveRequest: (req: boolean) => void;
+
   // 대시보드 레이아웃 타입
   dashboardLayout: 'saas' | 'windows';
   setDashboardLayout: (layout: 'saas' | 'windows') => void;
@@ -332,6 +336,7 @@ const initialUIState = {
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
+  designExitSaveRequest: false,  // 기본값: 저장 후 종료 요청 없음
   dashboardLayout: 'windows' as const,  // 기본값: 윈도우 스타일
   openTabs: [] as EditorTab[],
   activeTabId: null as string | null,
@@ -735,6 +740,9 @@ export const useUIStore = create<UIState>()(
 
       setLayoutBuilderOpen: (open) =>
         set({ isLayoutBuilderOpen: open }),
+
+      setDesignExitSaveRequest: (req) =>
+        set({ designExitSaveRequest: req }),
 
       setDashboardLayout: (layout) =>
         set({ dashboardLayout: layout }),

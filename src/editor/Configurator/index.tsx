@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { TbRulerMeasure } from 'react-icons/tb';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
@@ -313,6 +313,16 @@ const Configurator: React.FC = () => {
     cameraMode: 'perspective' | 'orthographic';
     shadowEnabled: boolean;
   } | null>(null);
+  // 설계모드가 아닐 때의 기본 UI 상태로 복원하는 헬퍼
+  const restoreNonDesignUI = useCallback(() => {
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    const defaultTab: SidebarTab = mode === 'readonly' ? 'material' : 'module';
+    if (latestSidebarTab.current === null) setActiveSidebarTab(defaultTab);
+    if (!latestRightPanel.current) setIsRightPanelOpen(true);
+    if (latestCameraMode.current === 'orthographic') setCameraMode('perspective');
+    if (!latestShadow.current) setShadowEnabled(true);
+  }, [setCameraMode, setShadowEnabled]);
+
   useEffect(() => {
     if (isLayoutBuilderOpen && !stateBeforeDesign.current) {
       // 설계모드 진입: 최신 상태 백업 후 UI 전환
@@ -327,13 +337,18 @@ const Configurator: React.FC = () => {
       setCameraMode('orthographic');
       setShadowEnabled(false);
     }
-    // "커스텀에 저장" 시 isLayoutBuilderOpen이 false로 → 복원
-    if (!isLayoutBuilderOpen && stateBeforeDesign.current) {
-      setActiveSidebarTab(stateBeforeDesign.current.activeSidebarTab);
-      setIsRightPanelOpen(stateBeforeDesign.current.isRightPanelOpen);
-      setCameraMode(stateBeforeDesign.current.cameraMode);
-      setShadowEnabled(stateBeforeDesign.current.shadowEnabled);
-      stateBeforeDesign.current = null;
+    if (!isLayoutBuilderOpen) {
+      if (stateBeforeDesign.current) {
+        // 백업에서 복원
+        setActiveSidebarTab(stateBeforeDesign.current.activeSidebarTab ?? 'module');
+        setIsRightPanelOpen(stateBeforeDesign.current.isRightPanelOpen ?? true);
+        setCameraMode(stateBeforeDesign.current.cameraMode ?? 'perspective');
+        setShadowEnabled(stateBeforeDesign.current.shadowEnabled ?? true);
+        stateBeforeDesign.current = null;
+      } else {
+        // 백업 유실 시 — 설계모드 UI가 남아있으면 기본값으로 복원
+        restoreNonDesignUI();
+      }
     }
     // 컴포넌트 언마운트(페이지 이탈) 시에도 복원
     return () => {
@@ -343,17 +358,7 @@ const Configurator: React.FC = () => {
         stateBeforeDesign.current = null;
       }
     };
-  }, [isLayoutBuilderOpen]);
-
-  // 안전장치: 설계모드가 아닌데 UI가 설계모드 상태로 남아있으면 복원
-  useEffect(() => {
-    if (!isLayoutBuilderOpen && !stateBeforeDesign.current) {
-      if (!shadowEnabled) setShadowEnabled(true);
-      if (cameraMode === 'orthographic') setCameraMode('perspective');
-      if (!isRightPanelOpen) setIsRightPanelOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 마운트 시 1회만
+  }, [isLayoutBuilderOpen, restoreNonDesignUI]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
@@ -4627,7 +4632,17 @@ const Configurator: React.FC = () => {
               <button
                 className={styles.exitDesignModeBtn}
                 onClick={() => {
-                  // myCabinetStore 클린업 (수정 모드 복원)
+                  const wantSave = window.confirm(
+                    '설계모드를 종료합니다.\n\n[확인] → 저장하고 돌아가기\n[취소] → 저장하지 않고 돌아가기'
+                  );
+
+                  if (wantSave) {
+                    // "저장하고 돌아가기" — CustomizablePropertiesPanel이 감지하여 저장 처리
+                    useUIStore.getState().setDesignExitSaveRequest(true);
+                    return;
+                  }
+
+                  // "그냥 돌아가기" — 저장 없이 종료
                   const myCabinetState = useMyCabinetStore.getState();
                   if (myCabinetState.editingCabinetId && myCabinetState.editBackup) {
                     const { setPlacedModules: setModules } = useFurnitureStore.getState();
@@ -4636,13 +4651,11 @@ const Configurator: React.FC = () => {
                     myCabinetState.setEditBackup(null);
                   }
                   myCabinetState.setEditingCabinetId(null);
-                  // 배치 모드 관련 상태 초기화
                   const furnitureState = useFurnitureStore.getState();
                   furnitureState.setFurniturePlacementMode(false);
                   furnitureState.setPendingCustomConfig(null);
-                  // 설계모드 닫기 + 팝업 닫기 (useEffect가 사이드바/카메라/그림자 복원)
-                  setLayoutBuilderOpen(false);
                   closeAllPopups();
+                  setLayoutBuilderOpen(false);
                 }}
               >
                 설계모드 종료
