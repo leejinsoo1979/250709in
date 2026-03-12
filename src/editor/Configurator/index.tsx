@@ -324,20 +324,22 @@ const Configurator: React.FC = () => {
   }, [setCameraMode, setShadowEnabled]);
 
   useEffect(() => {
-    if (isLayoutBuilderOpen && !stateBeforeDesign.current) {
-      // 설계모드 진입: 최신 상태 백업 후 UI 전환
-      stateBeforeDesign.current = {
-        activeSidebarTab: latestSidebarTab.current,
-        isRightPanelOpen: latestRightPanel.current,
-        cameraMode: latestCameraMode.current,
-        shadowEnabled: latestShadow.current,
-      };
+    if (isLayoutBuilderOpen) {
+      // 설계모드 진입: 최초 1회만 백업
+      if (!stateBeforeDesign.current) {
+        stateBeforeDesign.current = {
+          activeSidebarTab: latestSidebarTab.current,
+          isRightPanelOpen: latestRightPanel.current,
+          cameraMode: latestCameraMode.current,
+          shadowEnabled: latestShadow.current,
+        };
+      }
+      // 설계모드 동안 항상 강제: 사이드바 접기, 우측패널 접기, orthographic, 그림자 끄기
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
       setCameraMode('orthographic');
       setShadowEnabled(false);
-    }
-    if (!isLayoutBuilderOpen) {
+    } else {
       if (stateBeforeDesign.current) {
         // 백업에서 복원
         setActiveSidebarTab(stateBeforeDesign.current.activeSidebarTab ?? 'module');
@@ -346,7 +348,7 @@ const Configurator: React.FC = () => {
         setShadowEnabled(stateBeforeDesign.current.shadowEnabled ?? true);
         stateBeforeDesign.current = null;
       } else {
-        // 백업 유실 시 — 설계모드 UI가 남아있으면 기본값으로 복원
+        // 백업 유실 시 — 기본값으로 복원
         restoreNonDesignUI();
       }
     }
@@ -4435,9 +4437,10 @@ const Configurator: React.FC = () => {
           </div>
         </div>
 
-        {/* 좌측 사이드바 - PC에서는 항상 표시, 모바일 읽기 전용에서만 숨김 */}
+        {/* 좌측 사이드바 - 설계모드에서는 숨김, PC에서는 항상 표시 */}
         <>
-          {/* 좌측 사이드바 토글 버튼 */}
+          {/* 좌측 사이드바 토글 버튼 — 설계모드에서 숨김 */}
+          {!isLayoutBuilderOpen && (
           <button
             className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
             onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
@@ -4447,8 +4450,10 @@ const Configurator: React.FC = () => {
               <path d={activeSidebarTab ? "M6 1L1 6L6 11" : "M1 1L6 6L1 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+          )}
 
-          {/* 사이드바 - 읽기 전용 모드에서는 재질 탭만 보임 */}
+          {/* 사이드바 - 설계모드에서 숨김, 읽기 전용 모드에서는 재질 탭만 보임 */}
+          {!isLayoutBuilderOpen && (
           <Sidebar
             activeTab={activeSidebarTab}
             onTabClick={handleSidebarTabClick}
@@ -4462,14 +4467,15 @@ const Configurator: React.FC = () => {
             onFileTreeToggle={handleFileTreeToggle}
             isFileTreeOpen={isFileTreeOpen}
           />
+          )}
 
-          {/* 사이드바 컨텐츠 패널 */}
+          {/* 사이드바 컨텐츠 패널 — 설계모드에서 숨김 */}
           <div
             className={styles.sidebarContent}
             style={{
-              transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
-              opacity: activeSidebarTab ? 1 : 0,
-              pointerEvents: activeSidebarTab ? 'auto' : 'none'
+              transform: (activeSidebarTab && !isLayoutBuilderOpen) ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
+              opacity: (activeSidebarTab && !isLayoutBuilderOpen) ? 1 : 0,
+              pointerEvents: (activeSidebarTab && !isLayoutBuilderOpen) ? 'auto' : 'none'
             }}
           >
             {/* 배치 모드 토글 */}
@@ -4521,8 +4527,8 @@ const Configurator: React.FC = () => {
             padding: '0 40px', /* 좌우 치수 및 가이드가 잘리지 않도록 여백 확보 */
           } : {
             position: 'absolute',
-            left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 56px)', /* CSS 변수 사용 - 반응형 */
-            right: isReadOnly ? '0' : (isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0'), /* CSS 변수 사용 - 반응형 */
+            left: isLayoutBuilderOpen ? '0' : (activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 56px)'),
+            right: isLayoutBuilderOpen ? '0' : (isReadOnly ? '0' : (isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0')),
             top: 0,
             bottom: 0,
             transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
