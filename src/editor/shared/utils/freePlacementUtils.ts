@@ -23,11 +23,10 @@ export interface FurnitureBoundsX {
 export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number; endX: number } {
   const totalWidth = spaceInfo.width || 2400;
   const halfW = totalWidth / 2;
-  const leftGap = spaceInfo.gapConfig?.left ?? 0;
-  const rightGap = spaceInfo.gapConfig?.right ?? 0;
+  // 자유배치에서는 이격거리 적용하지 않음 — 전체 공간을 그대로 사용
   return {
-    startX: -halfW + leftGap,
-    endX: halfW - rightGap,
+    startX: -halfW,
+    endX: halfW,
   };
 }
 
