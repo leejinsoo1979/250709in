@@ -3872,8 +3872,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </>
           )}
 
-          {/* 엔드패널(EP) 토글 — 자유배치 모드 전용 */}
-          {placedModule?.isFreePlacement && (
+          {/* 엔드패널(EP) 토글 — 완성된 My커스텀가구 배치 시에만 표시 (디자인 단계에서는 숨김) */}
+          {placedModule?.isFreePlacement && !placedModule?.isCustomizable && (
             <>
               <div className={styles.divider} />
               <div className={styles.section}>
