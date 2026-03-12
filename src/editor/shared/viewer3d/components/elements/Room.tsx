@@ -2557,6 +2557,10 @@ const Room: React.FC<RoomProps> = ({
               {topStripGroups.map((group) => {
                 const widthMM = group.rightMM - group.leftMM;
                 const centerXmm = (group.leftMM + group.rightMM) / 2;
+                const groupFrameHeight = group.thicknessMM > 0
+                  ? mmToThreeUnits(group.thicknessMM)
+                  : topBottomFrameHeight;
+                const groupTopY = panelStartY + height - groupFrameHeight / 2;
                 return (
                   <BoxWithEdges
                     hideEdges={hideEdges}
@@ -2565,12 +2569,12 @@ const Room: React.FC<RoomProps> = ({
                     name="top-frame"
                     args={[
                       mmToThreeUnits(widthMM),
-                      topBottomFrameHeight,
+                      groupFrameHeight,
                       mmToThreeUnits(END_PANEL_THICKNESS)
                     ]}
                     position={[
                       mmToThreeUnits(centerXmm),
-                      topElementsY,
+                      groupTopY,
                       topZPosition
                     ]}
                     material={topFrameMaterial ?? createFrameMaterial('top')}
