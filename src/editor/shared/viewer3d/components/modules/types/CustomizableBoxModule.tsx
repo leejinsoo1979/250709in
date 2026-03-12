@@ -1961,40 +1961,38 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const xPos = -innerW / 2 + 0.6;
         const lineX = -innerW / 2 + 0.45;
 
-        console.log('🔍 [DimGuide]', {
-          isSplit,
-          sectionCount: sections.length,
-          H_mm: height,
-          panelThickness,
-          t_unit: t,
-          innerH_mm: height - 2 * panelThickness,
-          sections: sections.map((s, i) => ({ idx: i, height: s.height, showBottom: s.showBottomPanel, showTop: s.showTopPanel })),
-        });
-
-        // 섹션별 내경 치수 렌더링 헬퍼
+        // 섹션별 외경 치수 렌더링 헬퍼
         const renderSectionDims = (
           section: CustomSection,
           sIdx: number,
           sectionCenterY: number,
           sectionInnerH: number,
           sectionBoxW: number,
+          outerHeightMm?: number,
         ) => {
-          const topY = sectionCenterY + sectionInnerH / 2;
-          const botY = sectionCenterY - sectionInnerH / 2;
+          // 상하판 포함 여부
+          const hb = section.showBottomPanel !== false;
+          const ht = section.showTopPanel !== false;
+          // 외경 = 내경 + 상하판 두께
+          const outerH = sectionInnerH + (hb ? t : 0) + (ht ? t : 0);
+          const outerCenterY = sectionCenterY + ((hb ? t : 0) - (ht ? t : 0)) / 2;
+          const outerTopY = outerCenterY + outerH / 2;
+          const outerBotY = outerCenterY - outerH / 2;
           const bInnerW = sectionBoxW - 2 * t;
           const nodes: React.ReactNode[] = [];
 
-          // 높이 치수
+          // 외경 높이 치수 (상판 바깥 ~ 하판 바깥)
+          const displayHeight = outerHeightMm ?? Math.round(section.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness);
           nodes.push(
             <DimensionText
               key={`dim-h-${sIdx}`}
-              value={section.height}
-              position={[xPos, sectionCenterY, zPos]}
+              value={displayHeight}
+              position={[xPos, (outerTopY + outerBotY) / 2, zPos]}
               rotation={[0, 0, Math.PI / 2]}
             />,
             <Line
               key={`dim-hline-${sIdx}`}
-              points={[[lineX, topY, zPos], [lineX, botY, zPos]]}
+              points={[[lineX, outerTopY, zPos], [lineX, outerBotY, zPos]]}
               color="#888888"
               lineWidth={1}
             />
@@ -2056,18 +2054,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
             return mmToUnit(s.height + pc * panelThickness);
           });
-          const sumH = sectionHeights.reduce((a, b) => a + b, 0);
-          console.log('🔍 [DimGuide] H(total)=', height, 'mm, sumSectionBox=', sections.reduce((a, s) => {
-            const hb = s.showBottomPanel !== false; const ht = s.showTopPanel !== false;
-            return a + s.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness;
-          }, 0), 'mm, diff=', height - sections.reduce((a, s) => {
-            const hb = s.showBottomPanel !== false; const ht = s.showTopPanel !== false;
-            return a + s.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness;
-          }, 0), 'mm');
-          console.log('🔍 [DimGuide] sections:', sections.map((s, i) => ({
-            idx: i, height: s.height, showBottom: s.showBottomPanel, showTop: s.showTopPanel,
-            boxH_mm: s.height + ((s.showBottomPanel !== false ? 1 : 0) + (s.showTopPanel !== false ? 1 : 0)) * panelThickness,
-          })));
           let dimCurrentBottom = -H / 2;
           const dimCenters: number[] = [];
           for (let i = 0; i < sections.length; i++) {
