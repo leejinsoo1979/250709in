@@ -13,7 +13,7 @@ const CUSTOMIZABLE_DEFAULTS: Record<string, { width: number; height: number; dep
   'full-single': { width: 500, height: 0, depth: 580, label: '캐비닛만들기' },  // 싱글 = 듀얼의 절반
   'full-dual': { width: 1000, height: 0, depth: 580, label: '캐비닛만들기' },   // 듀얼 기본값
   upper: { width: 1000, height: 700, depth: 340, label: '커스텀 상부장' },
-  lower: { width: 1000, height: 1000, depth: 580, label: '커스텀 하부장' },
+  lower: { width: 1000, height: 1000, depth: 580, label: '커스텀 하부장' },  // 받침대 포함 전체 1000mm (실제 높이는 1000 - 받침대높이)
 };
 
 // 커스터마이징 가구를 위한 기본 빈 설정 생성
@@ -130,7 +130,11 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
         category={selectedCategory}
         dimensions={{
           width: CUSTOMIZABLE_DEFAULTS[selectedCategory].width,
-          height: selectedCategory === 'full' ? internalSpace.height : CUSTOMIZABLE_DEFAULTS[selectedCategory].height,
+          height: selectedCategory === 'full'
+            ? internalSpace.height
+            : selectedCategory === 'lower'
+              ? CUSTOMIZABLE_DEFAULTS['lower'].height - (spaceInfo.baseConfig?.height || 65)
+              : CUSTOMIZABLE_DEFAULTS[selectedCategory].height,
           depth: CUSTOMIZABLE_DEFAULTS[selectedCategory].depth,
         }}
       />
