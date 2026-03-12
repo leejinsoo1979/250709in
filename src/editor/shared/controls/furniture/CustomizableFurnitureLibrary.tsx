@@ -139,4 +139,16 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
 };
 
 export default CustomizableFurnitureLibrary;
+// 표준 가구 모듈 ID에서 치수 기억용 그룹 키 추출
+// 같은 카테고리(듀얼 키큰장, 싱글 키큰장 등)끼리 치수를 공유
+export function getStandardDimensionKey(moduleId: string): string {
+  if (moduleId.startsWith('dual-upper-')) return 'std-dual-upper';
+  if (moduleId.startsWith('dual-lower-')) return 'std-dual-lower';
+  if (moduleId.startsWith('dual-')) return 'std-dual-full';
+  if (moduleId.startsWith('single-upper-')) return 'std-single-upper';
+  if (moduleId.startsWith('single-lower-')) return 'std-single-lower';
+  if (moduleId.startsWith('single-')) return 'std-single-full';
+  return moduleId;
+}
+
 export { CUSTOMIZABLE_DEFAULTS, createDefaultCustomConfig };

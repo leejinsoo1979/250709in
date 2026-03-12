@@ -9,7 +9,7 @@ import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
-import { isCustomizableModuleId, getCustomDimensionKey } from './CustomizableFurnitureLibrary';
+import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
@@ -1956,8 +1956,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: val * 2 });
                             }
                           } else {
-                            // 표준 가구도 마지막 치수 기억
-                            store.setLastCustomDimensions(currentPlacedModule.moduleId, dims);
+                            // 표준 가구도 마지막 치수 기억 (같은 그룹끼리 공유)
+                            store.setLastCustomDimensions(getStandardDimensionKey(currentPlacedModule.moduleId), dims);
                           }
                         }
                       }}

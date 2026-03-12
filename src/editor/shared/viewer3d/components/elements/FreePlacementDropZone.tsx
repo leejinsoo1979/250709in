@@ -18,7 +18,7 @@ import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furnitur
 import BoxModule from '../modules/BoxModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
-import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, getStandardDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 
 // 키보드 이동 단위 (mm)
@@ -144,7 +144,8 @@ const FreePlacementDropZone: React.FC = () => {
     const baseModule = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
     if (!baseModule) return null;
 
-    const lastDims = lastCustomDimensions[selectedFurnitureId];
+    const groupKey = getStandardDimensionKey(selectedFurnitureId);
+    const lastDims = lastCustomDimensions[groupKey];
     if (lastDims) {
       return {
         ...baseModule,
