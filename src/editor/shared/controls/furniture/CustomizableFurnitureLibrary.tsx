@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { MdOutlineAutoAwesomeMosaic } from 'react-icons/md';
@@ -68,6 +69,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig, setLastCustomDimensions } = useFurnitureStore();
+  const setLayoutBuilderOpen = useUIStore(s => s.setLayoutBuilderOpen);
 
   // 레이아웃 빌더 팝업 상태
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -79,7 +81,8 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
   const handleItemClick = useCallback((category: 'full' | 'upper' | 'lower') => {
     setSelectedCategory(category);
     setIsPopupOpen(true);
-  }, []);
+    setLayoutBuilderOpen(true);
+  }, [setLayoutBuilderOpen]);
 
   // 레이아웃 빌더 확인 → pendingCustomConfig 저장 → 배치 모드 활성화
   const handlePopupConfirm = useCallback((config: CustomFurnitureConfig, width: number, height: number, depth: number) => {
@@ -89,6 +92,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     setPendingCustomConfig(config);
     setLastCustomDimensions(dimKey, { width, height, depth });
     setIsPopupOpen(false);
+    setLayoutBuilderOpen(false);
 
     // 자유배치 모드로 전환 후 Click & Place 활성화
     if (spaceInfo.layoutMode !== 'free-placement') {
@@ -96,11 +100,12 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     }
     setSelectedFurnitureId(moduleId);
     setFurniturePlacementMode(true);
-  }, [selectedCategory, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig, setLastCustomDimensions]);
+  }, [selectedCategory, spaceInfo.layoutMode, setSpaceInfo, setSelectedFurnitureId, setFurniturePlacementMode, setPendingCustomConfig, setLastCustomDimensions, setLayoutBuilderOpen]);
 
   const handlePopupClose = useCallback(() => {
     setIsPopupOpen(false);
-  }, []);
+    setLayoutBuilderOpen(false);
+  }, [setLayoutBuilderOpen]);
 
   const category = filter;
   const defaults = CUSTOMIZABLE_DEFAULTS[category];
