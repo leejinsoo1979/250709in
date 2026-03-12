@@ -292,13 +292,13 @@ const Configurator: React.FC = () => {
   }, [isFurniturePlacementMode, viewMode]);
 
   // 커스텀 가구 설계→배치→세부설정→저장 동안 좌우 사이드바 자동 폴딩
-  // "레이아웃 확인" → 사이드바 접기 / 커스텀 편집 팝업 닫힐 때 → 복원
   const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
   const setLayoutBuilderOpen = useUIStore(s => s.setLayoutBuilderOpen);
   const sidebarStateBeforeDesign = useRef<{
     activeSidebarTab: SidebarTab | null;
     isRightPanelOpen: boolean;
   } | null>(null);
+  const wasCustomizableEditOpen = useRef(false);
 
   useEffect(() => {
     if (isLayoutBuilderOpen && !sidebarStateBeforeDesign.current) {
@@ -309,14 +309,18 @@ const Configurator: React.FC = () => {
   }, [isLayoutBuilderOpen]);
 
   useEffect(() => {
-    // 커스텀 편집 팝업이 닫히고 배치모드도 아닐 때 사이드바 복원
-    if (isLayoutBuilderOpen && activePopup.type !== 'customizableEdit' && !isFurniturePlacementMode && sidebarStateBeforeDesign.current) {
+    if (activePopup.type === 'customizableEdit') {
+      wasCustomizableEditOpen.current = true;
+    }
+    // customizableEdit가 열렸다가 닫힌 시점에만 복원
+    if (wasCustomizableEditOpen.current && activePopup.type !== 'customizableEdit' && sidebarStateBeforeDesign.current) {
       setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
       setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
       sidebarStateBeforeDesign.current = null;
+      wasCustomizableEditOpen.current = false;
       setLayoutBuilderOpen(false);
     }
-  }, [activePopup.type, isFurniturePlacementMode, isLayoutBuilderOpen, setLayoutBuilderOpen]);
+  }, [activePopup.type, setLayoutBuilderOpen]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
