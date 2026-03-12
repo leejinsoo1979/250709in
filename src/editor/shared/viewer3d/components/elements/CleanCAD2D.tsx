@@ -1168,9 +1168,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 왼쪽 벽이 있는지 확인
         const hasLeftWall = spaceInfo.wallConfig?.left;
 
-        // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
-        if (isFreePlacement && !hasLeftWall) return null;
-
         // 왼쪽 엔드패널 값 결정
         let leftValue: number;
         let leftText: string;
@@ -1179,6 +1176,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
           leftText = `이격 ${leftValue}`;
+        } else if (isFreePlacement) {
+          // 자유배치 모드에서 벽이 없으면 EP 두께 표시
+          leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
+          leftText = `EP ${leftValue}`;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
@@ -1286,9 +1287,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 오른쪽 벽이 있는지 확인
         const hasRightWall = spaceInfo.wallConfig?.right;
 
-        // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
-        if (isFreePlacement && !hasRightWall) return null;
-
         // 오른쪽 엔드패널 값 결정
         let rightValue: number;
         let rightText: string;
@@ -1297,6 +1295,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
           rightText = `이격 ${rightValue}`;
+        } else if (isFreePlacement) {
+          // 자유배치 모드에서 벽이 없으면 EP 두께 표시
+          rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
+          rightText = `EP ${rightValue}`;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
@@ -1707,12 +1709,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 왼쪽 벽이 있는지 확인
             const hasLeftWall = spaceInfo.wallConfig?.left;
 
-            // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
-            if (isFreePlacement && !hasLeftWall) return null;
+            // 자유배치 모드에서 벽이 없으면 가구 위치 기반 이격거리 표시
+            // (벽이 없고 가구도 없으면 아래에서 null 반환)
 
             // 가장 왼쪽 가구 위치 찾기
             let leftmostFurnitureX: number | null = null;
-            if (!isFreePlacement && placedModules.length > 0) {
+            if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const widthMm = getModuleWidthMm(module);
                 if (widthMm !== null) {
@@ -1916,12 +1918,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 오른쪽 벽이 있는지 확인
             const hasRightWall = spaceInfo.wallConfig?.right;
 
-            // 자유배치 모드에서는 이격거리(벽이 있을 때)만 표시, 엔드패널은 숨김
-            if (isFreePlacement && !hasRightWall) return null;
+            // 자유배치 모드에서 벽이 없으면 가구 위치 기반 이격거리 표시
 
             // 가장 오른쪽 가구 위치 찾기
             let rightmostFurnitureX: number | null = null;
-            if (!isFreePlacement && placedModules.length > 0) {
+            if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const widthMm = getModuleWidthMm(module);
                 if (widthMm !== null) {
@@ -2742,8 +2743,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
               
-              {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 - 자유배치에서는 숨김 */}
-              {topFrameHeight > 0 && !isFreePlacement && (
+              {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+              {topFrameHeight > 0 && (
               <group>
                 <NativeLine name="dimension_line"
                   points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topFrameLineTopY, 0.002]]}
@@ -3877,8 +3878,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 - 자유배치에서는 숨김 */}
-                {!isFreePlacement && (
+                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                {(
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
@@ -4824,8 +4825,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 - 자유배치에서는 숨김 */}
-                {!isFreePlacement && (
+                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                {(
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
@@ -5180,8 +5181,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>
         
-        {/* 좌측 프레임 폭 치수선 - 외부로 이동 - 자유배치에서는 숨김 */}
-        {showDimensions && !isFreePlacement && <group>
+        {/* 좌측 프레임 폭 치수선 - 외부로 이동 */}
+        {showDimensions && <group>
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
@@ -5293,8 +5294,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>}
 
-        {/* 우측 프레임 폭 치수선 - 외부로 이동 - 자유배치에서는 숨김 */}
-        {showDimensions && !isFreePlacement && <group>
+        {/* 우측 프레임 폭 치수선 - 외부로 이동 */}
+        {showDimensions && <group>
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
