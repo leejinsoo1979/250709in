@@ -100,17 +100,17 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px 24px;
+  padding: 12px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* 타입 선택 버튼 */
 .typeSelector {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   width: 100%;
   max-width: 680px;
 }
@@ -119,10 +119,10 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 6px 12px;
   border: 2px solid var(--theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s;
@@ -173,21 +173,21 @@
   gap: 8px;
   width: 100%;
   max-width: 680px;
-  padding: 10px 14px;
+  padding: 6px 12px;
   background: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .dimField {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
 }
 
 .dimLabel {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--theme-text-muted);
 }
@@ -200,12 +200,12 @@
 
 .dimInput {
   width: 100%;
-  padding: 6px 8px;
+  padding: 4px 6px;
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   background: var(--theme-surface);
   color: var(--theme-text);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -244,8 +244,8 @@
 .guide {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 4px;
+  padding: 4px 10px;
   background: var(--theme-primary-light);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
@@ -254,14 +254,14 @@
 }
 
 .guideIcon {
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
 .guideText {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--theme-text-secondary);
-  line-height: 1.5;
+  line-height: 1.3;
   margin: 0;
 }
 
