@@ -3356,8 +3356,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
 
 
-        // 엔드패널 Y 위치는 키큰장/듀얼장과 동일 (finalYPosition 사용)
-        const endPanelYPosition = finalYPosition;
+        // 엔드패널: 가구 상단부터 바닥(Y=0)까지 연장
+        const furnitureTopY = finalYPosition + height / 2; // 가구 상단 Y
+        const extendedEndPanelHeight = furnitureTopY; // 바닥(0)부터 가구 상단까지
+        const endPanelYPosition = extendedEndPanelHeight / 2; // 중심 Y
 
         return (
           <>
@@ -3368,7 +3370,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               >
                 <EndPanelWithTexture
                   width={endPanelWidth}
-                  height={endPanelHeight}
+                  height={extendedEndPanelHeight}
                   depth={endPanelDepth}
                   position={[0, 0, 0]}
                   spaceInfo={zoneSpaceInfo}
