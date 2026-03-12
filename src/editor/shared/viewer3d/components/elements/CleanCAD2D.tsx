@@ -315,9 +315,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     const topFrameHeight = frameSize.top ?? 0;
     const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-    const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
     const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
     const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+    // 하부 프레임 높이: floor 타입은 받침대, stand 타입(비띄움)은 바닥레일
+    const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor'
+      ? (spaceInfo.baseConfig.height || 65)
+      : (spaceInfo.baseConfig?.type === 'stand' && !isFloating)
+        ? (spaceInfo.baseConfig?.height || 0)
+        : 0;
 
     let maxLowerCabinetHeightMm = 0;
     let maxUpperCabinetHeightMm = 0;
