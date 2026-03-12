@@ -287,8 +287,8 @@ const FreePlacementDropZone: React.FC = () => {
     setHoverXmm(clampedX);
   }, [spaceInfo, placedModules, spaceBounds]);
 
-  // 배치 실행 공통 함수
-  const executePlacement = useCallback((moduleId: string, xMm: number, dims: { width: number; height: number; depth: number }, modData: any, skipCollision?: boolean) => {
+  // 배치 실행 공통 함수 — 성공 시 배치된 모듈 ID 반환, 실패 시 null
+  const executePlacement = useCallback((moduleId: string, xMm: number, dims: { width: number; height: number; depth: number }, modData: any, skipCollision?: boolean): string | null => {
     const result = placeFurnitureFree({
       moduleId,
       xPositionMM: xMm,
@@ -303,10 +303,10 @@ const FreePlacementDropZone: React.FC = () => {
     if (result.success && result.module) {
       addModule(result.module);
       console.log('✅ [FreePlacement] 배치 완료:', result.module.id);
-      return true;
+      return result.module.id;
     } else {
       console.warn('❌ [FreePlacement] 배치 실패:', result.error);
-      return false;
+      return null;
     }
   }, [spaceInfo, placedModules, addModule, pendingPlacement]);
 
@@ -339,14 +339,22 @@ const FreePlacementDropZone: React.FC = () => {
         return;
       }
       e.stopPropagation();
-      const placed = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData, isSnapped);
-      if (placed) {
-        // 배치 성공 후 선택 해제 (고스트 제거) + 설계모드 종료
-        useFurnitureStore.getState().setSelectedFurnitureId(null);
+      const isDesignMode = useUIStore.getState().isLayoutBuilderOpen;
+      const placedId = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData, isSnapped);
+      if (placedId) {
+        // 배치 성공 후 배치 모드 해제 (고스트 제거)
         useFurnitureStore.getState().setFurniturePlacementMode(false);
-        useUIStore.getState().setLayoutBuilderOpen(false);
         setHoverXmm(null);
         setIsColliding(false);
+
+        if (isDesignMode) {
+          // 설계모드: 배치된 가구를 선택 상태로 유지 → hiddenInDesignMode 방지
+          useFurnitureStore.getState().setSelectedFurnitureId(placedId);
+          useUIStore.getState().setSelectedFurnitureId(placedId);
+        } else {
+          // 일반 모드: 선택 해제
+          useFurnitureStore.getState().setSelectedFurnitureId(null);
+        }
       }
     },
     [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
