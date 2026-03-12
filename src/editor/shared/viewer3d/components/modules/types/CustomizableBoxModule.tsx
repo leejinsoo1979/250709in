@@ -368,6 +368,22 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const sections = customConfig.sections;
   const isSplit = sections.length >= 2;
 
+  // 섹션 높이 정규화: 가구 전체 높이(H)와 섹션 높이 합이 다를 때 비례 조정
+  // (freeHeight로 가구 높이를 변경하면 섹션 높이는 갱신되지 않으므로 렌더링 시 보정)
+  const computeScaledSectionBoxHeights = useCallback(() => {
+    if (!isSplit) return { heights: [H], scale: 1 };
+    const rawHeights = sections.map(s => {
+      const hb = s.showBottomPanel !== false;
+      const ht = s.showTopPanel !== false;
+      const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
+      return mmToUnit(s.height + pc * panelThickness);
+    });
+    const rawSum = rawHeights.reduce((a, b) => a + b, 0);
+    if (Math.abs(rawSum - H) < 0.0001 || rawSum === 0) return { heights: rawHeights, scale: 1 };
+    const scale = H / rawSum;
+    return { heights: rawHeights.map(h => h * scale), scale };
+  }, [sections, H, isSplit, panelThickness]);
+
   // 섹션 옵션 아이콘 상태
   const showDimensions = useUIStore(state => state.showDimensions);
   const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
@@ -506,22 +522,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const sectionInnerHeightMm = section.height;
     const sectionInnerWidthMm = width - 2 * panelThickness;
 
-    // 섹션 중심 Y 계산
+    // 섹션 중심 Y 계산 (정규화된 높이 사용)
     let sectionCenterY = 0;
     let sectionInnerH = mmToUnit(sectionInnerHeightMm);
     if (isSplit) {
-      // 패널 소유 모델에 따라 박스 높이 계산
-      const splitBoxHeights = sections.map(s => {
-        const hb = s.showBottomPanel !== false;
-        const ht = s.showTopPanel !== false;
-        const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
-        return mmToUnit(s.height + pc * panelThickness);
-      });
+      const { heights: splitBoxHeights, scale } = computeScaledSectionBoxHeights();
       let currentBot = -H / 2;
       for (let i = 0; i < sIdx; i++) {
         currentBot += splitBoxHeights[i];
       }
       sectionCenterY = currentBot + splitBoxHeights[sIdx] / 2;
+      // 스케일 적용 시 내경도 보정
+      const hb = section.showBottomPanel !== false;
+      const ht = section.showTopPanel !== false;
+      const scaledT = t * scale;
+      sectionInnerH = splitBoxHeights[sIdx] - (hb ? scaledT : 0) - (ht ? scaledT : 0);
     }
 
     // 가이드 라인 좌표 (Three.js 단위)
@@ -626,13 +641,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const frontZ = D / 2 + 0.1;
 
     if (isSplit) {
-      // 각 섹션의 박스 높이(패널 소유 모델)와 중심 Y 계산
-      const sectionBoxHeights = sections.map(s => {
-        const hb = s.showBottomPanel !== false;
-        const ht = s.showTopPanel !== false;
-        const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
-        return mmToUnit(s.height + pc * panelThickness);
-      });
+      // 정규화된 섹션 높이 사용
+      const { heights: sectionBoxHeights } = computeScaledSectionBoxHeights();
       const sectionCenterYs: number[] = [];
       let currentBottom = -H / 2;
       for (let i = 0; i < sections.length; i++) {
@@ -829,18 +839,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     let centerY = 0;
     let areaH: number;
     if (isSplit) {
-      const sectionBoxHeights = sections.map(s => {
-        const hb = s.showBottomPanel !== false;
-        const ht = s.showTopPanel !== false;
-        const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
-        return mmToUnit(s.height + pc * panelThickness);
-      });
+      const { heights: sectionBoxHeights, scale } = computeScaledSectionBoxHeights();
       let currentBottom = -H / 2;
       for (let i = 0; i < sIdx; i++) {
         currentBottom += sectionBoxHeights[i];
       }
       centerY = currentBottom + sectionBoxHeights[sIdx] / 2;
-      areaH = sectionBoxHeights[sIdx] - t;
+      areaH = sectionBoxHeights[sIdx] - t * scale;
     } else {
       areaH = H - 2 * t;
     }
@@ -1875,12 +1880,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             // 독립 박스 모델: 각 섹션은 완전한 독립 박스 (자체 상/하/좌/우판 보유)
             // 네모난 상자 위에 네모난 상자가 올라가는 구조 (겹침 없음)
             // N개 섹션 → 2*N개 수평 패널 (각 박스가 자체 상/하판 보유)
-            const sectionBoxHeights = sections.map(s => {
-              const hasBottom = s.showBottomPanel !== false;
-              const hasTop = s.showTopPanel !== false;
-              const panelCount = (hasBottom ? 1 : 0) + (hasTop ? 1 : 0);
-              return mmToUnit(s.height + panelCount * panelThickness);
-            });
+            const { heights: sectionBoxHeights } = computeScaledSectionBoxHeights();
             const sectionCenterYs: number[] = [];
             let currentBottom = -H / 2;
             for (let i = 0; i < sections.length; i++) {
@@ -1968,17 +1968,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           sectionCenterY: number,
           sectionInnerH: number,
           sectionBoxW: number,
+          overrideHeight?: number,
         ) => {
           const topY = sectionCenterY + sectionInnerH / 2;
           const botY = sectionCenterY - sectionInnerH / 2;
           const bInnerW = sectionBoxW - 2 * t;
           const nodes: React.ReactNode[] = [];
 
-          // 높이 치수
+          // 높이 치수 (스케일 적용 시 보정된 값 사용)
           nodes.push(
             <DimensionText
               key={`dim-h-${sIdx}`}
-              value={section.height}
+              value={overrideHeight !== undefined ? overrideHeight : section.height}
               position={[xPos, sectionCenterY, zPos]}
               rotation={[0, 0, Math.PI / 2]}
             />,
@@ -2040,13 +2041,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         };
 
         if (isSplit) {
-          // 패널 소유 모델에 따라 박스 높이 & 내경 계산
-          const sectionHeights = sections.map(s => {
-            const hb = s.showBottomPanel !== false;
-            const ht = s.showTopPanel !== false;
-            const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
-            return mmToUnit(s.height + pc * panelThickness);
-          });
+          // 정규화된 섹션 높이 사용 (가구 높이 변경 시에도 정확한 위치)
+          const { heights: sectionHeights, scale: dimScale } = computeScaledSectionBoxHeights();
           let dimCurrentBottom = -H / 2;
           const dimCenters: number[] = [];
           for (let i = 0; i < sections.length; i++) {
@@ -2059,9 +2055,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               {sections.map((sec, si) => {
                 const hb = sec.showBottomPanel !== false;
                 const ht = sec.showTopPanel !== false;
-                const innerH = sectionHeights[si] - (hb ? t : 0) - (ht ? t : 0);
-                const contentCenter = dimCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
-                return renderSectionDims(sec, si, contentCenter, innerH, effectiveW);
+                const scaledT = t * dimScale;
+                const innerH = sectionHeights[si] - (hb ? scaledT : 0) - (ht ? scaledT : 0);
+                const contentCenter = dimCenters[si] + ((hb ? scaledT : 0) - (ht ? scaledT : 0)) / 2;
+                // 치수 표시값: 스케일된 내경 높이를 mm로 역변환
+                const displayHeight = Math.round(innerH / mmToUnit(1));
+                return renderSectionDims(sec, si, contentCenter, innerH, effectiveW, displayHeight);
               })}
             </>
           );
@@ -2154,13 +2153,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         };
 
         if (isSplit) {
-          // 패널 소유 모델에 따라 박스 높이 계산
-          const gapBoxHeights = sections.map(s => {
-            const hb = s.showBottomPanel !== false;
-            const ht = s.showTopPanel !== false;
-            const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
-            return mmToUnit(s.height + pc * panelThickness);
-          });
+          // 정규화된 섹션 높이 사용
+          const { heights: gapBoxHeights, scale: gapScale } = computeScaledSectionBoxHeights();
           let gapBottom = -H / 2;
           const gapCenters: number[] = [];
           for (let i = 0; i < sections.length; i++) {
@@ -2172,8 +2166,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               {sections.map((sec, si) => {
                 const hb = sec.showBottomPanel !== false;
                 const ht = sec.showTopPanel !== false;
-                const innerH = gapBoxHeights[si] - (hb ? t : 0) - (ht ? t : 0);
-                const contentCenter = gapCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
+                const scaledT = t * gapScale;
+                const innerH = gapBoxHeights[si] - (hb ? scaledT : 0) - (ht ? scaledT : 0);
+                const contentCenter = gapCenters[si] + ((hb ? scaledT : 0) - (ht ? scaledT : 0)) / 2;
                 return renderShelfGaps(sec, si, contentCenter, innerH);
               })}
             </>
