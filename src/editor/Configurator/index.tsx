@@ -344,6 +344,16 @@ const Configurator: React.FC = () => {
     };
   }, [isLayoutBuilderOpen]);
 
+  // 안전장치: 설계모드가 아닌데 그림자/카메라가 설계모드 상태로 남아있으면 복원
+  // (이전 크래시 등으로 localStorage에 잘못된 값이 남은 경우 대비)
+  useEffect(() => {
+    if (!isLayoutBuilderOpen && !stateBeforeDesign.current) {
+      if (!shadowEnabled) setShadowEnabled(true);
+      if (cameraMode === 'orthographic') setCameraMode('perspective');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 마운트 시 1회만
+
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
   const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
@@ -3769,8 +3779,8 @@ const Configurator: React.FC = () => {
             );
           })()}
 
-          {/* 프레임 속성 설정 */}
-          {(spaceInfo.surroundType || 'surround') === 'surround' ? (
+          {/* 프레임 속성 설정 (슬롯배치 모드만) */}
+          {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && ((spaceInfo.surroundType || 'surround') === 'surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
                 {/* 좌측 */}
@@ -4058,7 +4068,7 @@ const Configurator: React.FC = () => {
               </div>
 
                           </div>
-          ) : null}
+          ) : null)}
 
         </div>
 
