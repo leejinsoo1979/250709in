@@ -2092,8 +2092,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     min={10}
                     max={100}
                     step={1}
-                    value={currentPlacedModule.topFrameThickness ?? ''}
-                    placeholder={`${spaceInfo.frameSize?.top ?? 30}`}
+                    value={currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)}
                     onChange={(e) => {
                       const val = e.target.value === '' ? undefined : Number(e.target.value);
                       updatePlacedModule(currentPlacedModule.id, { topFrameThickness: val });
