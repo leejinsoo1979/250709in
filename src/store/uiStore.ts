@@ -174,6 +174,7 @@ interface UIState {
 
   // 레이아웃 빌더(커스텀 가구 설계모드) 열림 상태
   isLayoutBuilderOpen: boolean;
+  layoutBuilderRevision: number; // setLayoutBuilderOpen(true) 호출 시마다 증가 → useEffect 재트리거용
   setLayoutBuilderOpen: (open: boolean) => void;
 
   // 설계모드 저장 후 종료 요청 (종료 버튼 → CustomizablePropertiesPanel이 감지)
@@ -336,6 +337,7 @@ const initialUIState = {
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
+  layoutBuilderRevision: 0,
   designExitSaveRequest: false,  // 기본값: 저장 후 종료 요청 없음
   dashboardLayout: 'windows' as const,  // 기본값: 윈도우 스타일
   openTabs: [] as EditorTab[],
@@ -739,7 +741,11 @@ export const useUIStore = create<UIState>()(
         set({ hoveredMeasureLineId: id }),
 
       setLayoutBuilderOpen: (open) =>
-        set({ isLayoutBuilderOpen: open }),
+        set((state) => ({
+          isLayoutBuilderOpen: open,
+          // true 설정 시 revision 증가 → 이미 true인 상태에서 다시 true 호출해도 useEffect 재트리거
+          layoutBuilderRevision: open ? state.layoutBuilderRevision + 1 : state.layoutBuilderRevision,
+        })),
 
       setDesignExitSaveRequest: (req) =>
         set({ designExitSaveRequest: req }),

@@ -295,6 +295,7 @@ const Configurator: React.FC = () => {
   // 커스텀 가구 설계→배치→세부설정→저장 동안 UI 자동 전환
   // 사이드바 접기 + orthographic 카메라 + 그림자 끄기 → 저장/닫기 시 복원
   const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
+  const layoutBuilderRevision = useUIStore(s => s.layoutBuilderRevision);
   const cameraMode = useUIStore(s => s.cameraMode);
   const setCameraMode = useUIStore(s => s.setCameraMode);
   const shadowEnabled = useUIStore(s => s.shadowEnabled);
@@ -307,11 +308,17 @@ const Configurator: React.FC = () => {
   latestCameraMode.current = cameraMode;
   const latestShadow = useRef(shadowEnabled);
   latestShadow.current = shadowEnabled;
+  const latestViewMode = useRef(viewMode);
+  latestViewMode.current = viewMode;
+  const latestView2DDirection = useRef(view2DDirection);
+  latestView2DDirection.current = view2DDirection;
   const stateBeforeDesign = useRef<{
     activeSidebarTab: SidebarTab | null;
     isRightPanelOpen: boolean;
     cameraMode: 'perspective' | 'orthographic';
     shadowEnabled: boolean;
+    viewMode: '2D' | '3D';
+    view2DDirection: string;
   } | null>(null);
   // 설계모드가 아닐 때의 기본 UI 상태로 복원하는 헬퍼
   const restoreNonDesignUI = useCallback(() => {
@@ -321,7 +328,8 @@ const Configurator: React.FC = () => {
     if (!latestRightPanel.current) setIsRightPanelOpen(true);
     if (latestCameraMode.current === 'orthographic') setCameraMode('perspective');
     if (!latestShadow.current) setShadowEnabled(true);
-  }, [setCameraMode, setShadowEnabled]);
+    if (latestViewMode.current === '2D') setViewMode('3D');
+  }, [setCameraMode, setShadowEnabled, setViewMode]);
 
   useEffect(() => {
     if (isLayoutBuilderOpen) {
@@ -332,13 +340,17 @@ const Configurator: React.FC = () => {
           isRightPanelOpen: latestRightPanel.current,
           cameraMode: latestCameraMode.current,
           shadowEnabled: latestShadow.current,
+          viewMode: latestViewMode.current,
+          view2DDirection: latestView2DDirection.current,
         };
       }
-      // 설계모드 동안 항상 강제: 사이드바 접기, 우측패널 접기, orthographic, 그림자 끄기
+      // 설계모드 동안 항상 강제: 사이드바 접기, 우측패널 접기, 2D front, 그림자 끄기
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
       setCameraMode('orthographic');
       setShadowEnabled(false);
+      setViewMode('2D');
+      setView2DDirection('front');
     } else {
       if (stateBeforeDesign.current) {
         // 백업에서 복원
@@ -346,6 +358,8 @@ const Configurator: React.FC = () => {
         setIsRightPanelOpen(stateBeforeDesign.current.isRightPanelOpen ?? true);
         setCameraMode(stateBeforeDesign.current.cameraMode ?? 'perspective');
         setShadowEnabled(stateBeforeDesign.current.shadowEnabled ?? true);
+        setViewMode(stateBeforeDesign.current.viewMode ?? '3D');
+        setView2DDirection(stateBeforeDesign.current.view2DDirection ?? 'front');
         stateBeforeDesign.current = null;
       } else {
         // 백업 유실 시 — 기본값으로 복원
@@ -357,10 +371,11 @@ const Configurator: React.FC = () => {
       if (stateBeforeDesign.current) {
         setCameraMode(stateBeforeDesign.current.cameraMode);
         setShadowEnabled(stateBeforeDesign.current.shadowEnabled);
+        setViewMode(stateBeforeDesign.current.viewMode ?? '3D');
         stateBeforeDesign.current = null;
       }
     };
-  }, [isLayoutBuilderOpen, restoreNonDesignUI]);
+  }, [isLayoutBuilderOpen, layoutBuilderRevision, restoreNonDesignUI]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
