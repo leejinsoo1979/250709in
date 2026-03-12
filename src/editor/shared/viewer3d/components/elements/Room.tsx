@@ -2560,7 +2560,8 @@ const Room: React.FC<RoomProps> = ({
                 const groupFrameHeight = group.thicknessMM > 0
                   ? mmToThreeUnits(group.thicknessMM)
                   : topBottomFrameHeight;
-                const groupTopY = panelStartY + height - groupFrameHeight / 2;
+                const topOffsetMM = spaceInfo.frameSize?.topOffset ?? 0;
+                const groupTopY = panelStartY + height - groupFrameHeight / 2 - mmToThreeUnits(topOffsetMM);
                 return (
                   <BoxWithEdges
                     hideEdges={hideEdges}

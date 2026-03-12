@@ -3680,45 +3680,56 @@ const Configurator: React.FC = () => {
             <h3 className={styles.sectionTitle}>프레임 설정</h3>
           </div>
 
-          {/* 자유배치 모드: 상부 프레임 두께만 표시 */}
+          {/* 자유배치 모드: 높이/옵셋만 표시 */}
           {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
             <div className={styles.subSetting}>
-              <div className={styles.frameGrid}>
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>상부 프레임 두께</label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
-                        const newTop = Math.max(10, currentTop - 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={frameInputTop}
-                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
-                      onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
-                      className={styles.frameNumberInput}
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
-                        const newTop = Math.min(200, currentTop + 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <label className={styles.frameItemLabel} style={{ minWidth: '28px' }}>높이</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={frameInputTop}
+                    onChange={(e) => handleFrameInputChange('top', e.target.value)}
+                    onFocus={() => handleFrameInputFocus('top')}
+                    onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
+                    onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
+                    className={styles.frameNumberInput}
+                    style={{ width: '50px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <label className={styles.frameItemLabel} style={{ minWidth: '28px' }}>옵셋</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={spaceInfo.frameSize?.topOffset ?? 0}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d+$/.test(val)) {
+                        const num = val === '' ? 0 : parseInt(val, 10);
+                        handleSpaceInfoUpdate({
+                          frameSize: {
+                            ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                            topOffset: num,
+                          },
+                        });
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = Math.max(0, Math.min(500, parseInt(e.target.value) || 0));
+                      handleSpaceInfoUpdate({
+                        frameSize: {
+                          ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                          topOffset: val,
+                        },
+                      });
+                    }}
+                    className={styles.frameNumberInput}
+                    style={{ width: '50px' }}
+                  />
                 </div>
               </div>
             </div>

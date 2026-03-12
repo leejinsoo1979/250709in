@@ -11,6 +11,7 @@ export interface FrameSize {
   left: number;
   right: number;
   top: number;
+  topOffset?: number; // 자유배치 상부프레임 옵셋 (mm, 천장에서 아래로)
 }
 
 export interface GapConfig {
