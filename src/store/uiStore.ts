@@ -172,10 +172,6 @@ interface UIState {
   isEraserMode: boolean;
   hoveredMeasureLineId: string | null; // 호버 중인 측정선 ID
 
-  // 레이아웃 빌더(커스텀 가구 설계모드) 열림 상태
-  isLayoutBuilderOpen: boolean;
-  setLayoutBuilderOpen: (open: boolean) => void;
-
   // 대시보드 레이아웃 타입
   dashboardLayout: 'saas' | 'windows';
   setDashboardLayout: (layout: 'saas' | 'windows') => void;
@@ -331,7 +327,6 @@ const initialUIState = {
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
-  isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
   dashboardLayout: 'windows' as const,  // 기본값: 윈도우 스타일
   openTabs: [] as EditorTab[],
   activeTabId: null as string | null,
@@ -732,9 +727,6 @@ export const useUIStore = create<UIState>()(
 
       setHoveredMeasureLineId: (id) =>
         set({ hoveredMeasureLineId: id }),
-
-      setLayoutBuilderOpen: (open) =>
-        set({ isLayoutBuilderOpen: open }),
 
       setDashboardLayout: (layout) =>
         set({ dashboardLayout: layout }),

@@ -173,27 +173,6 @@ const Configurator: React.FC = () => {
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 커스텀 가구 설계모드 시 좌우 사이드바 자동 폴딩
-  const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
-  const sidebarStateBeforeDesign = useRef<{
-    activeSidebarTab: SidebarTab | null;
-    isRightPanelOpen: boolean;
-  } | null>(null);
-
-  useEffect(() => {
-    if (isLayoutBuilderOpen) {
-      // 현재 상태 백업 후 접기
-      sidebarStateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen };
-      setActiveSidebarTab(null);
-      setIsRightPanelOpen(false);
-    } else if (sidebarStateBeforeDesign.current) {
-      // 복원
-      setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
-      setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
-      sidebarStateBeforeDesign.current = null;
-    }
-  }, [isLayoutBuilderOpen]);
-
   // 슬롯 가이드 팝업 외부 클릭 닫기
   useEffect(() => {
     if (!isSlotGuideOpen) return;
