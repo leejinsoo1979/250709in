@@ -81,8 +81,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
   const handleItemClick = useCallback((category: 'full' | 'upper' | 'lower') => {
     setSelectedCategory(category);
     setIsPopupOpen(true);
-    setLayoutBuilderOpen(true);
-  }, [setLayoutBuilderOpen]);
+  }, []);
 
   // 레이아웃 빌더 확인 → pendingCustomConfig 저장 → 배치 모드 활성화
   const handlePopupConfirm = useCallback((config: CustomFurnitureConfig, width: number, height: number, depth: number) => {
@@ -92,7 +91,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
     setPendingCustomConfig(config);
     setLastCustomDimensions(dimKey, { width, height, depth });
     setIsPopupOpen(false);
-    setLayoutBuilderOpen(false);
+    setLayoutBuilderOpen(true);
 
     // 자유배치 모드로 전환 후 Click & Place 활성화
     if (spaceInfo.layoutMode !== 'free-placement') {
@@ -104,8 +103,7 @@ const CustomizableFurnitureLibrary: React.FC<CustomizableFurnitureLibraryProps> 
 
   const handlePopupClose = useCallback(() => {
     setIsPopupOpen(false);
-    setLayoutBuilderOpen(false);
-  }, [setLayoutBuilderOpen]);
+  }, []);
 
   const category = filter;
   const defaults = CUSTOMIZABLE_DEFAULTS[category];

@@ -291,26 +291,34 @@ const Configurator: React.FC = () => {
     }
   }, [isFurniturePlacementMode, viewMode]);
 
-  // 커스텀 가구 설계모드(LayoutBuilderPopup) 시 좌우 사이드바 자동 폴딩
+  // 커스텀 가구 배치 모드 시 좌우 사이드바 자동 폴딩
+  // "레이아웃 확인" 클릭 → isLayoutBuilderOpen=true → 사이드바 접기
+  // 배치 완료/취소 → isFurniturePlacementMode=false → 사이드바 복원
   const isLayoutBuilderOpen = useUIStore(s => s.isLayoutBuilderOpen);
+  const setLayoutBuilderOpen = useUIStore(s => s.setLayoutBuilderOpen);
   const sidebarStateBeforeDesign = useRef<{
     activeSidebarTab: SidebarTab | null;
     isRightPanelOpen: boolean;
   } | null>(null);
 
   useEffect(() => {
-    if (isLayoutBuilderOpen) {
-      // 설계 팝업 열림 → 사이드바 백업 후 접기
+    if (isLayoutBuilderOpen && !sidebarStateBeforeDesign.current) {
+      // 배치 모드 진입 → 사이드바 백업 후 접기
       sidebarStateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen };
       setActiveSidebarTab(null);
       setIsRightPanelOpen(false);
-    } else if (sidebarStateBeforeDesign.current) {
-      // 설계 팝업 닫힘 → 사이드바 복원
+    }
+  }, [isLayoutBuilderOpen]);
+
+  useEffect(() => {
+    // 배치 완료/취소 시 사이드바 복원
+    if (!isFurniturePlacementMode && isLayoutBuilderOpen && sidebarStateBeforeDesign.current) {
       setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
       setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
       sidebarStateBeforeDesign.current = null;
+      setLayoutBuilderOpen(false);
     }
-  }, [isLayoutBuilderOpen]);
+  }, [isFurniturePlacementMode, isLayoutBuilderOpen, setLayoutBuilderOpen]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
