@@ -15,6 +15,7 @@ import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator'
 import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { calculateFrameThickness, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -201,6 +202,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const { spaceInfo } = useSpaceConfigStore();
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
+  const setLastCustomDimensions = useFurnitureStore(state => state.setLastCustomDimensions);
   const showFurniture = useUIStore(state => state.showFurniture);
   const placedModules = useMemo(
     () => (showFurniture ? placedModulesStore : []),
@@ -591,6 +593,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const module = placedModules.find(m => m.id === editingFurnitureWidthId);
     if (module) {
       updatePlacedModule(editingFurnitureWidthId, { freeWidth: clamped });
+      // 마지막 치수 기억 → 다음 추가 배치 시 이 너비로 배치
+      const height = module.freeHeight ?? module.customConfig?.totalHeight ?? 2400;
+      const depth = module.freeDepth ?? 600;
+      const dims = { width: clamped, height, depth };
+      if (isCustomizableModuleId(module.moduleId)) {
+        const dimKey = getCustomDimensionKey(module.moduleId);
+        setLastCustomDimensions(dimKey, dims);
+      } else {
+        const stdKey = getStandardDimensionKey(module.moduleId);
+        setLastCustomDimensions(stdKey, dims);
+      }
     }
     setEditingFurnitureWidthId(null);
     setEditingFurnitureWidthValue('');
