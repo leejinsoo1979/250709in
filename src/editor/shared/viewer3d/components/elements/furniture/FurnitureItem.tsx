@@ -652,9 +652,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const custDefaults = CUSTOMIZABLE_DEFAULTS[custCategory];
     const custWidth = placedModule.customWidth || placedModule.adjustedWidth || placedModule.freeWidth || custDefaults.width;
 
-    // internalSpace.height는 이미 띄움 높이/받침대 높이가 차감된 내경 높이
-    const maxCustHeight = custCategory === 'full' ? internalSpace.height : custDefaults.height;
-    let custHeight = placedModule.freeHeight ? Math.min(placedModule.freeHeight, maxCustHeight) : maxCustHeight;
+    // freeHeight가 있으면 배치 시 설정된 높이를 그대로 사용 (customConfig와 일치 보장)
+    // freeHeight가 없으면 internalSpace.height 또는 기본값 사용
+    const fallbackHeight = custCategory === 'full' ? internalSpace.height : custDefaults.height;
+    let custHeight = placedModule.freeHeight || fallbackHeight;
     const custDepth = placedModule.freeDepth || custDefaults.depth;
     moduleData = {
       id: placedModule.moduleId,

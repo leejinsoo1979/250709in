@@ -54,7 +54,7 @@ const DynamicLine: React.FC<{ points: number[]; color: string }> = ({ points, co
  */
 const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule, lastCustomDimensions } = useFurnitureStore();
+  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule, lastCustomDimensions, pendingCustomConfig } = useFurnitureStore();
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
@@ -877,6 +877,7 @@ const FreePlacementDropZone: React.FC = () => {
             adjustedWidth={activeDimensions.width}
             internalHeight={ghostEffectiveHeight}
             spaceInfo={spaceInfo}
+            customConfig={pendingCustomConfig || (pendingPlacement?.customConfig) || undefined}
           />
         </group>
       )}
