@@ -341,9 +341,10 @@ const FreePlacementDropZone: React.FC = () => {
       e.stopPropagation();
       const placed = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData, isSnapped);
       if (placed) {
-        // 배치 성공 후 선택 해제 (고스트 제거)
+        // 배치 성공 후 선택 해제 (고스트 제거) + 설계모드 종료
         useFurnitureStore.getState().setSelectedFurnitureId(null);
         useFurnitureStore.getState().setFurniturePlacementMode(false);
+        useUIStore.getState().setLayoutBuilderOpen(false);
         setHoverXmm(null);
         setIsColliding(false);
       }
