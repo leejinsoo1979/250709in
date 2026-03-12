@@ -340,6 +340,37 @@
   font-variant-numeric: tabular-nums;
 }
 
+.cellDimEditable {
+  cursor: text;
+  border-bottom: 1px dashed var(--theme-primary);
+  padding-bottom: 1px;
+}
+
+.cellDimEditable:hover {
+  color: var(--theme-primary);
+}
+
+.cellDimInput {
+  width: 52px;
+  padding: 1px 3px;
+  border: 1px solid var(--theme-primary);
+  border-radius: 3px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.cellDimInput::-webkit-inner-spin-button,
+.cellDimInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .cellDimensionSub {
   font-size: 10px;
   font-weight: 400;

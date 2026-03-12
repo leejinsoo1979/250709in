@@ -60,6 +60,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
     splitNode,
     mergeNode,
     resizeNode,
+    resizeNodeByMM,
     resetLayout,
     computeRects,
     computeHandles,
@@ -284,6 +285,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
             computeRects={computeRects}
             computeHandles={computeHandles}
             onResize={resizeNode}
+            onResizeByMM={resizeNodeByMM}
             canSplit={canSplit}
             onSplit={wrappedSplitNode}
             disableHorizontalSplit={isSingle}

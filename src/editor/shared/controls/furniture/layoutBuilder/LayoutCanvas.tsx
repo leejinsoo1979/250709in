@@ -30,6 +30,7 @@ interface LayoutCanvasProps {
     depth?: number,
   ) => ResizeHandle[];
   onResize: (parentId: string, childIndex: number, delta: number) => void;
+  onResizeByMM: (nodeId: string, newSizeMM: number) => void;
   canSplit: (nodeId: string) => boolean;
   onSplit: (nodeId: string, direction: 'horizontal' | 'vertical') => void;
   disableHorizontalSplit?: boolean;
@@ -49,11 +50,13 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
   computeRects,
   computeHandles,
   onResize,
+  onResizeByMM,
   canSplit,
   onSplit,
   disableHorizontalSplit,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [editingNode, setEditingNode] = useState<{ nodeId: string; field: 'width' | 'height'; value: string } | null>(null);
   const [dragState, setDragState] = useState<{
     parentId: string;
     childIndex: number;
@@ -164,23 +167,124 @@ const LayoutCanvas: React.FC<LayoutCanvasProps> = ({
     setDragState(null);
   }, []);
 
+  // 부모 노드의 방향 찾기 (편집 가능한 축 결정)
+  const findParentDirection = useCallback((nodeId: string): 'horizontal' | 'vertical' | null => {
+    const find = (node: LayoutNode, targetId: string): LayoutNode | null => {
+      if (node.children) {
+        for (const child of node.children) {
+          if (child.id === targetId) return node;
+          const found = find(child, targetId);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    const parent = find(layout, nodeId);
+    return parent?.direction === 'horizontal' || parent?.direction === 'vertical' ? parent.direction : null;
+  }, [layout]);
+
+  // 입력 확정
+  const commitEdit = useCallback(() => {
+    if (!editingNode) return;
+    const val = parseInt(editingNode.value, 10);
+    if (!isNaN(val) && val > 0) {
+      onResizeByMM(editingNode.nodeId, val);
+    }
+    setEditingNode(null);
+  }, [editingNode, onResizeByMM]);
+
   // 셀이 작으면 치수 표기를 간결하게
   const renderCellContent = (rect: LeafRect, isSelected: boolean, splitAllowed: boolean) => {
     const isSmall = rect.width < 80 || rect.height < 60;
     const isTiny = rect.width < 50 || rect.height < 40;
+    const parentDir = findParentDirection(rect.nodeId);
+    // 부모가 horizontal이면 width 편집, vertical이면 height 편집
+    const editableField = parentDir === 'horizontal' ? 'width' : parentDir === 'vertical' ? 'height' : null;
+    const isEditing = editingNode?.nodeId === rect.nodeId;
 
-    return (
-      <div className={styles.cellContent}>
-        {!isTiny && (
-          <span className={styles.cellDimension}>
-            {rect.widthMM} × {rect.heightMM}
+    const handleDimClick = (e: React.MouseEvent, field: 'width' | 'height') => {
+      if (!editableField) return;
+      e.stopPropagation();
+      setEditingNode({
+        nodeId: rect.nodeId,
+        field,
+        value: String(field === 'width' ? rect.widthMM : rect.heightMM),
+      });
+    };
+
+    const renderDimension = () => {
+      if (isEditing && editingNode) {
+        return (
+          <span className={styles.cellDimension} onClick={(e) => e.stopPropagation()}>
+            {editingNode.field === 'width' ? (
+              <>
+                <input
+                  className={styles.cellDimInput}
+                  type="number"
+                  value={editingNode.value}
+                  autoFocus
+                  onChange={(e) => setEditingNode({ ...editingNode, value: e.target.value })}
+                  onBlur={commitEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitEdit();
+                    if (e.key === 'Escape') setEditingNode(null);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span style={{ opacity: 0.5 }}> × {rect.heightMM}</span>
+              </>
+            ) : (
+              <>
+                <span style={{ opacity: 0.5 }}>{rect.widthMM} × </span>
+                <input
+                  className={styles.cellDimInput}
+                  type="number"
+                  value={editingNode.value}
+                  autoFocus
+                  onChange={(e) => setEditingNode({ ...editingNode, value: e.target.value })}
+                  onBlur={commitEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitEdit();
+                    if (e.key === 'Escape') setEditingNode(null);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </>
+            )}
           </span>
-        )}
-        {isTiny && (
+        );
+      }
+
+      if (isTiny) {
+        return (
           <span className={styles.cellDimensionSub}>
             {rect.widthMM}×{rect.heightMM}
           </span>
-        )}
+        );
+      }
+
+      if (editableField) {
+        return (
+          <span
+            className={`${styles.cellDimension} ${styles.cellDimEditable}`}
+            onClick={(e) => handleDimClick(e, editableField)}
+            title="클릭하여 크기 입력"
+          >
+            {rect.widthMM} × {rect.heightMM}
+          </span>
+        );
+      }
+
+      return (
+        <span className={styles.cellDimension}>
+          {rect.widthMM} × {rect.heightMM}
+        </span>
+      );
+    };
+
+    return (
+      <div className={styles.cellContent}>
+        {renderDimension()}
         {isSelected && splitAllowed && !isSmall && (
           <div className={styles.cellActions}>
             <button

@@ -150,6 +150,57 @@ export function useLayoutBuilder(totalWidthMM: number, totalHeightMM: number) {
     });
   }, [findNode, replaceNode, totalWidthMM, totalHeightMM]);
 
+  // mm 값으로 직접 리사이즈: nodeId의 치수를 newSizeMM로 설정
+  const resizeNodeByMM = useCallback((nodeId: string, newSizeMM: number) => {
+    setLayout(prev => {
+      const parent = findParent(prev, nodeId);
+      if (!parent || !parent.children) return prev;
+
+      const childIndex = parent.children.findIndex(c => c.id === nodeId);
+      if (childIndex < 0) return prev;
+
+      // 부모의 실제 mm 크기를 루트에서 재귀적으로 계산
+      const computeNodeMM = (node: LayoutNode, wMM: number, hMM: number, targetId: string): { w: number; h: number } | null => {
+        if (node.id === targetId) return { w: wMM, h: hMM };
+        if (!node.children) return null;
+        for (const child of node.children) {
+          const cw = node.direction === 'horizontal' ? wMM * child.ratio : wMM;
+          const ch = node.direction === 'vertical' ? hMM * child.ratio : hMM;
+          const found = computeNodeMM(child, cw, ch, targetId);
+          if (found) return found;
+        }
+        return null;
+      };
+
+      const parentMM = computeNodeMM(prev, totalWidthMM, totalHeightMM, parent.id);
+      if (!parentMM) return prev;
+
+      // 부모 방향에 맞는 축의 총 mm
+      const totalParentMM = parent.direction === 'horizontal' ? parentMM.w : parentMM.h;
+
+      // 새 ratio 계산
+      const clampedSize = Math.max(MIN_SECTION_SIZE, Math.min(newSizeMM, totalParentMM - MIN_SECTION_SIZE * (parent.children.length - 1)));
+      const newRatio = clampedSize / totalParentMM;
+
+      // 나머지 children의 ratio를 비례적으로 재분배
+      const oldRatio = parent.children[childIndex].ratio;
+      const remainingOldRatio = 1 - oldRatio;
+      const remainingNewRatio = 1 - newRatio;
+
+      const children = parent.children.map((child, i) => {
+        if (i === childIndex) return { ...child, ratio: newRatio };
+        if (remainingOldRatio > 0) {
+          return { ...child, ratio: (child.ratio / remainingOldRatio) * remainingNewRatio };
+        }
+        // fallback: 균등 분배
+        return { ...child, ratio: remainingNewRatio / (parent.children!.length - 1) };
+      });
+
+      const newParent: LayoutNode = { ...parent, children };
+      return replaceNode(prev, parent.id, newParent);
+    });
+  }, [findParent, replaceNode, totalWidthMM, totalHeightMM]);
+
   // 리셋
   const resetLayout = useCallback(() => {
     setLayout(createInitialLayout());
@@ -310,6 +361,7 @@ export function useLayoutBuilder(totalWidthMM: number, totalHeightMM: number) {
     splitNode,
     mergeNode,
     resizeNode,
+    resizeNodeByMM,
     resetLayout,
     computeRects,
     computeHandles,
