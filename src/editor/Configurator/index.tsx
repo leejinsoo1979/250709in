@@ -123,7 +123,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -4522,6 +4522,19 @@ const Configurator: React.FC = () => {
               readOnly={isReadOnly} // 읽기 전용 모드
               sceneRef={sceneRef} // GLB 내보내기용 씬 참조
             />
+
+            {/* 커스텀 가구 설계모드 종료 버튼 — 뷰어 중앙 하단 */}
+            {isLayoutBuilderOpen && (
+              <button
+                className={styles.exitDesignModeBtn}
+                onClick={() => {
+                  setLayoutBuilderOpen(false);
+                  closeAllPopups();
+                }}
+              >
+                설계모드 종료
+              </button>
+            )}
 
             {/* 슬롯 분할 가이드 도움말 ? 아이콘 (자유배치 모드에서는 숨김) */}
             {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (
