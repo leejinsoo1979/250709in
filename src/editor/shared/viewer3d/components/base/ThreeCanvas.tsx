@@ -943,9 +943,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             // R3F 이벤트 처리 후 실행되도록 다음 프레임에서 확인
             requestAnimationFrame(() => {
               if (!(window as any).__r3fClickHandled) {
-                useFurnitureStore.getState().setSelectedFurnitureId(null);
-                useUIStore.getState().setSelectedFurnitureId(null);
-                useUIStore.getState().closeAllPopups();
+                const isDesignMode = useUIStore.getState().isLayoutBuilderOpen;
+                if (!isDesignMode) {
+                  useFurnitureStore.getState().setSelectedFurnitureId(null);
+                  useUIStore.getState().setSelectedFurnitureId(null);
+                  useUIStore.getState().closeAllPopups();
+                }
               }
               (window as any).__r3fClickHandled = false;
             });
@@ -971,9 +974,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           key={`${canvasKey}-shadow-${shadowEnabled}-rm-${renderMode}`}
           shadows={viewMode === '3D' && shadowEnabled}
           onPointerMissed={() => {
-            useFurnitureStore.getState().setSelectedFurnitureId(null);
-            useUIStore.getState().setSelectedFurnitureId(null);
-            useUIStore.getState().closeAllPopups();
+            const isDesignMode = useUIStore.getState().isLayoutBuilderOpen;
+            if (!isDesignMode) {
+              useFurnitureStore.getState().setSelectedFurnitureId(null);
+              useUIStore.getState().setSelectedFurnitureId(null);
+              useUIStore.getState().closeAllPopups();
+            }
           }}
           style={{
             ...style,

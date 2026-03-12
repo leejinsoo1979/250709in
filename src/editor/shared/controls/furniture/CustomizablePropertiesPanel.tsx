@@ -426,7 +426,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (sec.horizontalSplit && (side === 'left' || side === 'center' || side === 'right')) {
       return side === 'left' ? sec.horizontalSplit.leftElements
         : side === 'center' ? sec.horizontalSplit.centerElements
-        : sec.horizontalSplit.rightElements;
+          : sec.horizontalSplit.rightElements;
     }
     return side === 'full' ? sec.elements : side === 'left' ? sec.leftElements : sec.rightElements;
   };
@@ -1783,7 +1783,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   // 취소: 원본 스냅샷으로 복원 후 닫기
   const handleCancel = () => {
-    if (editingCabinetId && editBackup) {
+    const newlyPlacedId = useFurnitureStore.getState().newlyPlacedCustomModuleId;
+
+    if (newlyPlacedId && moduleId === newlyPlacedId) {
+      // 새로 배치된 임시 가구이므로 모델 자체를 완전 삭제
+      removeModule(moduleId);
+      useFurnitureStore.getState().setNewlyPlacedCustomModuleId(null);
+    } else if (editingCabinetId && editBackup) {
       // 수정 모드: 임시 모듈 제거 + 기존 배치 복원
       restoreEditBackup();
     } else if (originalSnapshot && moduleId) {
@@ -2918,363 +2924,363 @@ const CustomizablePropertiesPanel: React.FC = () => {
         </div>
 
         <div className={styles.section}>
-        <div className={styles.sectionTitle}>내부 구조</div>
+          <div className={styles.sectionTitle}>내부 구조</div>
 
-        {/* 칸막이 토글 (좌우분할이 없을 때만 표시) */}
-        {!section.horizontalSplit && (
-        <div className={styles.row}>
-          <span className={styles.label}>칸막이</span>
-          <div className={styles.toggleGroup}>
-            <button
-              className={`${styles.toggleButton} ${!hasPartition ? styles.active : ''}`}
-              onClick={() => handlePartitionToggle(sIdx, false)}
-            >
-              없음
-            </button>
-            <button
-              className={`${styles.toggleButton} ${hasPartition ? styles.active : ''}`}
-              onClick={() => handlePartitionToggle(sIdx, true)}
-            >
-              추가
-            </button>
-          </div>
-        </div>
-        )}
-
-        {/* 칸막이 좌/우 거리 입력 */}
-        {hasPartition && (
-          <>
+          {/* 칸막이 토글 (좌우분할이 없을 때만 표시) */}
+          {!section.horizontalSplit && (
             <div className={styles.row}>
-              <span className={styles.label}>좌</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                className={`${styles.input} ${styles.inputSmall}`}
-                value={partitionInputs[`${sIdx}-left`] ?? (section.partitionPosition || Math.round(innerW / 2)).toString()}
-                onChange={(e) => {
-                  setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-left`]: e.target.value }));
-                }}
-                onBlur={() => {
-                  const val = parseInt(partitionInputs[`${sIdx}-left`] || '0');
-                  const minV = 100;
-                  const maxV = innerW - 100;
-                  const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
-                  handlePartitionPosition(sIdx, clamped);
-                  setPartitionInputs((prev) => ({
-                    ...prev,
-                    [`${sIdx}-left`]: clamped.toString(),
-                    [`${sIdx}-right`]: (innerW - clamped).toString(),
-                  }));
-                }}
-                style={{ width: '70px' }}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.label}>우</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                className={`${styles.input} ${styles.inputSmall}`}
-                value={partitionInputs[`${sIdx}-right`] ?? (innerW - (section.partitionPosition || Math.round(innerW / 2))).toString()}
-                onChange={(e) => {
-                  setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-right`]: e.target.value }));
-                }}
-                onBlur={() => {
-                  const val = parseInt(partitionInputs[`${sIdx}-right`] || '0');
-                  const minV = 100;
-                  const maxV = innerW - 100;
-                  const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
-                  const newPos = innerW - clamped;
-                  handlePartitionPosition(sIdx, newPos);
-                  setPartitionInputs((prev) => ({
-                    ...prev,
-                    [`${sIdx}-left`]: newPos.toString(),
-                    [`${sIdx}-right`]: clamped.toString(),
-                  }));
-                }}
-                style={{ width: '70px' }}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.label}>앞 오프셋</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                className={`${styles.input} ${styles.inputSmall}`}
-                value={section.partitionFrontInset ?? 0}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === '' || /^\d+$/.test(v)) {
-                    const sections = [...config.sections];
-                    const sec = { ...sections[sIdx] };
-                    sec.partitionFrontInset = v === '' ? 0 : Math.min(furnitureDepth - 100, parseInt(v, 10));
-                    sections[sIdx] = sec;
-                    applyConfig({ ...config, sections });
-                  }
-                }}
-                style={{ width: '70px' }}
-              />
-              <span className={styles.unit}>mm</span>
-            </div>
-          </>
-        )}
-
-        {/* 좌우분할 토글 (독립 박스) */}
-        {!hasPartition && (() => {
-          const hasHSplit = !!section.horizontalSplit;
-          const is3Split = hasHSplit && section.horizontalSplit?.secondPosition != null;
-          return (
-            <div className={styles.row} style={{ marginTop: '8px' }}>
-              <span className={styles.label}>좌우분할</span>
+              <span className={styles.label}>칸막이</span>
               <div className={styles.toggleGroup}>
                 <button
-                  className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
-                  onClick={() => { if (hasHSplit) handleHSplitMode(sIdx, 'none'); }}
+                  className={`${styles.toggleButton} ${!hasPartition ? styles.active : ''}`}
+                  onClick={() => handlePartitionToggle(sIdx, false)}
                 >
                   없음
                 </button>
                 <button
-                  className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
-                  onClick={() => handleHSplitMode(sIdx, '2split')}
+                  className={`${styles.toggleButton} ${hasPartition ? styles.active : ''}`}
+                  onClick={() => handlePartitionToggle(sIdx, true)}
                 >
-                  2분할
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
-                  onClick={() => handleHSplitMode(sIdx, '3split')}
-                >
-                  3분할
+                  추가
                 </button>
               </div>
             </div>
-          );
-        })()}
+          )}
 
-        {/* 좌우분할 너비 입력 */}
-        {section.horizontalSplit && (() => {
-          const hs = section.horizontalSplit;
-          const is3 = hs.secondPosition != null;
-          const pos = hs.position;
-          const centerWVal = hs.secondPosition || 0;
-          const extraPanels = is3 ? 4 : 2;
-          const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
-          return (
-            <div style={{ marginTop: '8px' }}>
+          {/* 칸막이 좌/우 거리 입력 */}
+          {hasPartition && (
+            <>
               <div className={styles.row}>
                 <span className={styles.label}>좌</span>
                 <input
-                  type="text" inputMode="numeric"
+                  type="text"
+                  inputMode="numeric"
                   className={`${styles.input} ${styles.inputSmall}`}
-                  value={hSplitInputs[`${sIdx}-left`] ?? pos.toString()}
-                  onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: e.target.value }))}
-                  onBlur={() => {
-                    const val = parseInt(hSplitInputs[`${sIdx}-left`] || '0');
-                    const clamped = Math.max(100, Math.min(innerW - 200, isNaN(val) ? pos : val));
-                    handleHSplitPosition(sIdx, clamped);
-                    setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: clamped.toString() }));
+                  value={partitionInputs[`${sIdx}-left`] ?? (section.partitionPosition || Math.round(innerW / 2)).toString()}
+                  onChange={(e) => {
+                    setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-left`]: e.target.value }));
                   }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                  style={{ width: '60px' }}
+                  onBlur={() => {
+                    const val = parseInt(partitionInputs[`${sIdx}-left`] || '0');
+                    const minV = 100;
+                    const maxV = innerW - 100;
+                    const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
+                    handlePartitionPosition(sIdx, clamped);
+                    setPartitionInputs((prev) => ({
+                      ...prev,
+                      [`${sIdx}-left`]: clamped.toString(),
+                      [`${sIdx}-right`]: (innerW - clamped).toString(),
+                    }));
+                  }}
+                  style={{ width: '70px' }}
                 />
                 <span className={styles.unit}>mm</span>
               </div>
-              {is3 && (
+              <div className={styles.row}>
+                <span className={styles.label}>우</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={partitionInputs[`${sIdx}-right`] ?? (innerW - (section.partitionPosition || Math.round(innerW / 2))).toString()}
+                  onChange={(e) => {
+                    setPartitionInputs((prev) => ({ ...prev, [`${sIdx}-right`]: e.target.value }));
+                  }}
+                  onBlur={() => {
+                    const val = parseInt(partitionInputs[`${sIdx}-right`] || '0');
+                    const minV = 100;
+                    const maxV = innerW - 100;
+                    const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(innerW / 2) : val));
+                    const newPos = innerW - clamped;
+                    handlePartitionPosition(sIdx, newPos);
+                    setPartitionInputs((prev) => ({
+                      ...prev,
+                      [`${sIdx}-left`]: newPos.toString(),
+                      [`${sIdx}-right`]: clamped.toString(),
+                    }));
+                  }}
+                  style={{ width: '70px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.label}>앞 오프셋</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.input} ${styles.inputSmall}`}
+                  value={section.partitionFrontInset ?? 0}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === '' || /^\d+$/.test(v)) {
+                      const sections = [...config.sections];
+                      const sec = { ...sections[sIdx] };
+                      sec.partitionFrontInset = v === '' ? 0 : Math.min(furnitureDepth - 100, parseInt(v, 10));
+                      sections[sIdx] = sec;
+                      applyConfig({ ...config, sections });
+                    }
+                  }}
+                  style={{ width: '70px' }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+            </>
+          )}
+
+          {/* 좌우분할 토글 (독립 박스) */}
+          {!hasPartition && (() => {
+            const hasHSplit = !!section.horizontalSplit;
+            const is3Split = hasHSplit && section.horizontalSplit?.secondPosition != null;
+            return (
+              <div className={styles.row} style={{ marginTop: '8px' }}>
+                <span className={styles.label}>좌우분할</span>
+                <div className={styles.toggleGroup}>
+                  <button
+                    className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
+                    onClick={() => { if (hasHSplit) handleHSplitMode(sIdx, 'none'); }}
+                  >
+                    없음
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
+                    onClick={() => handleHSplitMode(sIdx, '2split')}
+                  >
+                    2분할
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
+                    onClick={() => handleHSplitMode(sIdx, '3split')}
+                  >
+                    3분할
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 좌우분할 너비 입력 */}
+          {section.horizontalSplit && (() => {
+            const hs = section.horizontalSplit;
+            const is3 = hs.secondPosition != null;
+            const pos = hs.position;
+            const centerWVal = hs.secondPosition || 0;
+            const extraPanels = is3 ? 4 : 2;
+            const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
+            return (
+              <div style={{ marginTop: '8px' }}>
                 <div className={styles.row}>
-                  <span className={styles.label}>중앙</span>
+                  <span className={styles.label}>좌</span>
                   <input
                     type="text" inputMode="numeric"
                     className={`${styles.input} ${styles.inputSmall}`}
-                    value={hSplitInputs[`${sIdx}-center`] ?? centerWVal.toString()}
-                    onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: e.target.value }))}
+                    value={hSplitInputs[`${sIdx}-left`] ?? pos.toString()}
+                    onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: e.target.value }))}
                     onBlur={() => {
-                      const val = parseInt(hSplitInputs[`${sIdx}-center`] || '0');
-                      const clamped = Math.max(100, Math.min(innerW - pos - 200, isNaN(val) ? centerWVal : val));
-                      handleHSplitSecondPosition(sIdx, clamped);
-                      setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: clamped.toString() }));
+                      const val = parseInt(hSplitInputs[`${sIdx}-left`] || '0');
+                      const clamped = Math.max(100, Math.min(innerW - 200, isNaN(val) ? pos : val));
+                      handleHSplitPosition(sIdx, clamped);
+                      setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: clamped.toString() }));
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                     style={{ width: '60px' }}
                   />
                   <span className={styles.unit}>mm</span>
                 </div>
-              )}
-              <div className={styles.row}>
-                <span className={styles.label}>우</span>
-                <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '60px' }}>
-                  {Math.round(rightW)}
-                </span>
-                <span className={styles.unit}>mm</span>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* 내부 요소 편집 */}
-        {section.horizontalSplit ? (
-          /* 좌우분할 모드: 각 서브 박스별 요소 편집 + 상하분할 */
-          <>
-            {(['left', ...(section.horizontalSplit.secondPosition != null ? ['center'] : []), 'right'] as const).map((side) => {
-              const sideLabel = side === 'left' ? '좌측' : side === 'center' ? '중앙' : '우측';
-              const sideElements = side === 'left' ? section.horizontalSplit!.leftElements
-                : side === 'center' ? section.horizontalSplit!.centerElements
-                : section.horizontalSplit!.rightElements;
-              if (side === 'center' && !sideElements) return null;
-              const areaSubSplit = section.areaSubSplits?.[side];
-              const isAreaSubSplit = areaSubSplit?.enabled || false;
-              const subSplitKeyArea = `${sIdx}-${side}`;
-              return (
-                <div className={styles.areaCard} key={side}>
-                  <div className={styles.areaTitle}>{sideLabel} 영역</div>
-                  {/* 상하분할 토글 */}
-                  <div className={styles.row} style={{ marginBottom: '8px' }}>
-                    <span className={styles.label}>상하분할</span>
-                    <div className={styles.toggleGroup}>
-                      <button
-                        className={`${styles.toggleButton} ${!isAreaSubSplit ? styles.active : ''}`}
-                        onClick={() => handleAreaSubSplitToggle(sIdx, side as 'left' | 'center' | 'right', false)}
-                      >없음</button>
-                      <button
-                        className={`${styles.toggleButton} ${isAreaSubSplit ? styles.active : ''}`}
-                        onClick={() => handleAreaSubSplitToggle(sIdx, side as 'left' | 'center' | 'right', true)}
-                      >분할</button>
-                    </div>
+                {is3 && (
+                  <div className={styles.row}>
+                    <span className={styles.label}>중앙</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      className={`${styles.input} ${styles.inputSmall}`}
+                      value={hSplitInputs[`${sIdx}-center`] ?? centerWVal.toString()}
+                      onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: e.target.value }))}
+                      onBlur={() => {
+                        const val = parseInt(hSplitInputs[`${sIdx}-center`] || '0');
+                        const clamped = Math.max(100, Math.min(innerW - pos - 200, isNaN(val) ? centerWVal : val));
+                        handleHSplitSecondPosition(sIdx, clamped);
+                        setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: clamped.toString() }));
+                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      style={{ width: '60px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
                   </div>
-                  {isAreaSubSplit && areaSubSplit ? (
-                    <>
-                      <div className={styles.row}>
-                        <span className={styles.label}>하부 높이</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          className={`${styles.input} ${styles.inputSmall}`}
-                          value={subSplitHeightInputs[subSplitKeyArea] ?? areaSubSplit.lowerHeight.toString()}
-                          onChange={(e) => {
-                            setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKeyArea]: e.target.value }));
-                          }}
-                          onBlur={() => {
-                            const val = parseInt(subSplitHeightInputs[subSplitKeyArea] || '0');
-                            const minV = 100;
-                            const maxV = section.height - 100;
-                            const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(section.height / 2) : val));
-                            handleAreaSubSplitHeight(sIdx, side, clamped);
-                            setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKeyArea]: clamped.toString() }));
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                          style={{ width: '70px' }}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                      <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
-                        상부: {section.height - areaSubSplit.lowerHeight}mm / 하부: {areaSubSplit.lowerHeight}mm
-                      </div>
-                      <div style={{ marginTop: '12px' }}>
-                        <div className={styles.sectionTitle}>상부 내부 구조</div>
-                        <div className={styles.areaCard}>
-                          {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'upper', areaSubSplit.upperElements, section.height - areaSubSplit.lowerHeight)}
-                        </div>
-                      </div>
-                      <div style={{ marginTop: '12px' }}>
-                        <div className={styles.sectionTitle}>하부 내부 구조</div>
-                        <div className={styles.areaCard}>
-                          {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'lower', areaSubSplit.lowerElements, areaSubSplit.lowerHeight)}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    renderElementEditor(sIdx, side as 'left' | 'center' | 'right', sideElements, section.height)
-                  )}
+                )}
+                <div className={styles.row}>
+                  <span className={styles.label}>우</span>
+                  <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '60px' }}>
+                    {Math.round(rightW)}
+                  </span>
+                  <span className={styles.unit}>mm</span>
                 </div>
-              );
-            })}
-          </>
-        ) : hasPartition ? (
-          <>
-            <div className={styles.areaCard}>
-              <div className={styles.areaTitle}>좌측 영역</div>
-              {renderElementEditor(sIdx, 'left', section.leftElements, section.height)}
-            </div>
-            <div className={styles.areaCard}>
-              <div className={styles.areaTitle}>우측 영역</div>
-              {renderElementEditor(sIdx, 'right', section.rightElements, section.height)}
-            </div>
-          </>
-        ) : (
-          <div className={styles.areaCard}>
-            <div className={styles.areaTitle}>전체 영역</div>
-            {renderElementEditor(sIdx, 'full', section.elements, section.height)}
-          </div>
-        )}
-      </div>
+              </div>
+            );
+          })()}
 
-      {/* 마감 설정 */}
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>마감</div>
-        <div className={styles.row}>
-          <span className={styles.label}>상판</span>
-          <div className={styles.toggleGroup}>
-            <button
-              className={`${styles.toggleButton} ${section.showTopPanel !== false ? styles.active : ''}`}
-              onClick={() => {
-                const sections = [...config.sections];
-                sections[sIdx] = { ...sections[sIdx], showTopPanel: true };
-                applyConfig({ ...config, sections });
-              }}
-            >있음</button>
-            <button
-              className={`${styles.toggleButton} ${section.showTopPanel === false ? styles.active : ''}`}
-              onClick={() => {
-                const sections = [...config.sections];
-                sections[sIdx] = { ...sections[sIdx], showTopPanel: false };
-                applyConfig({ ...config, sections });
-              }}
-            >없음</button>
+          {/* 내부 요소 편집 */}
+          {section.horizontalSplit ? (
+            /* 좌우분할 모드: 각 서브 박스별 요소 편집 + 상하분할 */
+            <>
+              {(['left', ...(section.horizontalSplit.secondPosition != null ? ['center'] : []), 'right'] as const).map((side) => {
+                const sideLabel = side === 'left' ? '좌측' : side === 'center' ? '중앙' : '우측';
+                const sideElements = side === 'left' ? section.horizontalSplit!.leftElements
+                  : side === 'center' ? section.horizontalSplit!.centerElements
+                    : section.horizontalSplit!.rightElements;
+                if (side === 'center' && !sideElements) return null;
+                const areaSubSplit = section.areaSubSplits?.[side];
+                const isAreaSubSplit = areaSubSplit?.enabled || false;
+                const subSplitKeyArea = `${sIdx}-${side}`;
+                return (
+                  <div className={styles.areaCard} key={side}>
+                    <div className={styles.areaTitle}>{sideLabel} 영역</div>
+                    {/* 상하분할 토글 */}
+                    <div className={styles.row} style={{ marginBottom: '8px' }}>
+                      <span className={styles.label}>상하분할</span>
+                      <div className={styles.toggleGroup}>
+                        <button
+                          className={`${styles.toggleButton} ${!isAreaSubSplit ? styles.active : ''}`}
+                          onClick={() => handleAreaSubSplitToggle(sIdx, side as 'left' | 'center' | 'right', false)}
+                        >없음</button>
+                        <button
+                          className={`${styles.toggleButton} ${isAreaSubSplit ? styles.active : ''}`}
+                          onClick={() => handleAreaSubSplitToggle(sIdx, side as 'left' | 'center' | 'right', true)}
+                        >분할</button>
+                      </div>
+                    </div>
+                    {isAreaSubSplit && areaSubSplit ? (
+                      <>
+                        <div className={styles.row}>
+                          <span className={styles.label}>하부 높이</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            className={`${styles.input} ${styles.inputSmall}`}
+                            value={subSplitHeightInputs[subSplitKeyArea] ?? areaSubSplit.lowerHeight.toString()}
+                            onChange={(e) => {
+                              setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKeyArea]: e.target.value }));
+                            }}
+                            onBlur={() => {
+                              const val = parseInt(subSplitHeightInputs[subSplitKeyArea] || '0');
+                              const minV = 100;
+                              const maxV = section.height - 100;
+                              const clamped = Math.max(minV, Math.min(maxV, isNaN(val) ? Math.round(section.height / 2) : val));
+                              handleAreaSubSplitHeight(sIdx, side, clamped);
+                              setSubSplitHeightInputs((prev) => ({ ...prev, [subSplitKeyArea]: clamped.toString() }));
+                            }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            style={{ width: '70px' }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                        <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
+                          상부: {section.height - areaSubSplit.lowerHeight}mm / 하부: {areaSubSplit.lowerHeight}mm
+                        </div>
+                        <div style={{ marginTop: '12px' }}>
+                          <div className={styles.sectionTitle}>상부 내부 구조</div>
+                          <div className={styles.areaCard}>
+                            {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'upper', areaSubSplit.upperElements, section.height - areaSubSplit.lowerHeight)}
+                          </div>
+                        </div>
+                        <div style={{ marginTop: '12px' }}>
+                          <div className={styles.sectionTitle}>하부 내부 구조</div>
+                          <div className={styles.areaCard}>
+                            {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'lower', areaSubSplit.lowerElements, areaSubSplit.lowerHeight)}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      renderElementEditor(sIdx, side as 'left' | 'center' | 'right', sideElements, section.height)
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          ) : hasPartition ? (
+            <>
+              <div className={styles.areaCard}>
+                <div className={styles.areaTitle}>좌측 영역</div>
+                {renderElementEditor(sIdx, 'left', section.leftElements, section.height)}
+              </div>
+              <div className={styles.areaCard}>
+                <div className={styles.areaTitle}>우측 영역</div>
+                {renderElementEditor(sIdx, 'right', section.rightElements, section.height)}
+              </div>
+            </>
+          ) : (
+            <div className={styles.areaCard}>
+              <div className={styles.areaTitle}>전체 영역</div>
+              {renderElementEditor(sIdx, 'full', section.elements, section.height)}
+            </div>
+          )}
+        </div>
+
+        {/* 마감 설정 */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>마감</div>
+          <div className={styles.row}>
+            <span className={styles.label}>상판</span>
+            <div className={styles.toggleGroup}>
+              <button
+                className={`${styles.toggleButton} ${section.showTopPanel !== false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showTopPanel: true };
+                  applyConfig({ ...config, sections });
+                }}
+              >있음</button>
+              <button
+                className={`${styles.toggleButton} ${section.showTopPanel === false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showTopPanel: false };
+                  applyConfig({ ...config, sections });
+                }}
+              >없음</button>
+            </div>
+          </div>
+          <div className={styles.row}>
+            <span className={styles.label}>하판</span>
+            <div className={styles.toggleGroup}>
+              <button
+                className={`${styles.toggleButton} ${section.showBottomPanel !== false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showBottomPanel: true };
+                  applyConfig({ ...config, sections });
+                }}
+              >있음</button>
+              <button
+                className={`${styles.toggleButton} ${section.showBottomPanel === false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showBottomPanel: false };
+                  applyConfig({ ...config, sections });
+                }}
+              >없음</button>
+            </div>
+          </div>
+          <div className={styles.row}>
+            <span className={styles.label}>뒷벽</span>
+            <div className={styles.toggleGroup}>
+              <button
+                className={`${styles.toggleButton} ${section.showBackPanel !== false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showBackPanel: true };
+                  applyConfig({ ...config, sections });
+                }}
+              >있음</button>
+              <button
+                className={`${styles.toggleButton} ${section.showBackPanel === false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showBackPanel: false };
+                  applyConfig({ ...config, sections });
+                }}
+              >없음</button>
+            </div>
           </div>
         </div>
-        <div className={styles.row}>
-          <span className={styles.label}>하판</span>
-          <div className={styles.toggleGroup}>
-            <button
-              className={`${styles.toggleButton} ${section.showBottomPanel !== false ? styles.active : ''}`}
-              onClick={() => {
-                const sections = [...config.sections];
-                sections[sIdx] = { ...sections[sIdx], showBottomPanel: true };
-                applyConfig({ ...config, sections });
-              }}
-            >있음</button>
-            <button
-              className={`${styles.toggleButton} ${section.showBottomPanel === false ? styles.active : ''}`}
-              onClick={() => {
-                const sections = [...config.sections];
-                sections[sIdx] = { ...sections[sIdx], showBottomPanel: false };
-                applyConfig({ ...config, sections });
-              }}
-            >없음</button>
-          </div>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>뒷벽</span>
-          <div className={styles.toggleGroup}>
-            <button
-              className={`${styles.toggleButton} ${section.showBackPanel !== false ? styles.active : ''}`}
-              onClick={() => {
-                const sections = [...config.sections];
-                sections[sIdx] = { ...sections[sIdx], showBackPanel: true };
-                applyConfig({ ...config, sections });
-              }}
-            >있음</button>
-            <button
-              className={`${styles.toggleButton} ${section.showBackPanel === false ? styles.active : ''}`}
-              onClick={() => {
-                const sections = [...config.sections];
-                sections[sIdx] = { ...sections[sIdx], showBackPanel: false };
-                applyConfig({ ...config, sections });
-              }}
-            >없음</button>
-          </div>
-        </div>
-      </div>
       </div>
     );
   };
@@ -3343,10 +3349,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
             focusedAreaSide ? (
               /* 칸막이 좌/우 영역 톱니 아이콘 클릭: 해당 영역만 편집 */
               config.sections[focusedSectionIndex] &&
-                renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex, focusedAreaSide)
+              renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex, focusedAreaSide)
             ) : (
-            /* 톱니 아이콘 클릭: 해당 섹션 세부설정 (칸막이 + 내부 요소) */
-            config.sections[focusedSectionIndex] &&
+              /* 톱니 아이콘 클릭: 해당 섹션 세부설정 (칸막이 + 내부 요소) */
+              config.sections[focusedSectionIndex] &&
               renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
             )
           ) : (
@@ -3549,146 +3555,146 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         </div>
                       </div>
                       {section.enabled !== false && (
-                      <>
-                      <div className={styles.row}>
-                        <span className={styles.label}>높이</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          className={`${styles.input} ${styles.inputSmall}`}
-                          value={sectionHeightInputs[realIdx] ?? section.height.toString()}
-                          onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
-                          onBlur={() => handleSectionHeightBlur(realIdx)}
-                          onKeyDown={(e) => handleSectionHeightKeyDown(e, realIdx)}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-
-                      {/* 좌우분할 토글 (독립 박스) */}
-                      {(() => {
-                        const is3Split = hasHSplit && section.horizontalSplit?.secondPosition != null;
-                        return (
-                      <div className={styles.row} style={{ marginTop: '8px' }}>
-                        <span className={styles.label}>좌우분할</span>
-                        <div className={styles.toggleGroup}>
-                          <button
-                            className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
-                            onClick={() => { if (hasHSplit) handleHSplitMode(realIdx, 'none'); }}
-                          >
-                            없음
-                          </button>
-                          <button
-                            className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
-                            onClick={() => handleHSplitMode(realIdx, '2split')}
-                          >
-                            2분할
-                          </button>
-                          <button
-                            className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
-                            onClick={() => handleHSplitMode(realIdx, '3split')}
-                          >
-                            3분할
-                          </button>
-                        </div>
-                      </div>
-                        );
-                      })()}
-
-                      {hasHSplit && section.horizontalSplit ? (
                         <>
-                          {/* 너비 입력 (내경 기준) */}
+                          <div className={styles.row}>
+                            <span className={styles.label}>높이</span>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              className={`${styles.input} ${styles.inputSmall}`}
+                              value={sectionHeightInputs[realIdx] ?? section.height.toString()}
+                              onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
+                              onBlur={() => handleSectionHeightBlur(realIdx)}
+                              onKeyDown={(e) => handleSectionHeightKeyDown(e, realIdx)}
+                            />
+                            <span className={styles.unit}>mm</span>
+                          </div>
+
+                          {/* 좌우분할 토글 (독립 박스) */}
                           {(() => {
-                            const hs = section.horizontalSplit;
-                            const is3 = hs.secondPosition != null;
-                            const pos = hs.position;
-                            const centerWVal = hs.secondPosition || 0;
-                            const extraPanels = is3 ? 4 : 2;
-                            const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
-
-                            // 너비 입력 onBlur 핸들러 (좌/중/우 중 하나를 변경하면 우측을 자동 조정)
-                            const syncInputs = (newLeft: number, newCenter: number) => {
-                              const newRight = innerW - newLeft - newCenter - extraPanels * panelThickness;
-                              handleHSplitPosition(realIdx, newLeft);
-                              if (is3) handleHSplitSecondPosition(realIdx, newCenter);
-                              setHSplitInputs((prev) => ({
-                                ...prev,
-                                [`${realIdx}-left`]: newLeft.toString(),
-                                [`${realIdx}-center`]: is3 ? newCenter.toString() : '',
-                                [`${realIdx}-right`]: newRight.toString(),
-                              }));
-                            };
-
+                            const is3Split = hasHSplit && section.horizontalSplit?.secondPosition != null;
                             return (
-                              <>
-                              <div className={styles.row} style={{ marginTop: '4px' }}>
-                                <span className={styles.label}>좌</span>
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  className={`${styles.input} ${styles.inputSmall}`}
-                                  value={hSplitInputs[`${realIdx}-left`] ?? pos.toString()}
-                                  onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-left`]: e.target.value }))}
-                                  onBlur={() => {
-                                    const val = parseInt(hSplitInputs[`${realIdx}-left`] || '0');
-                                    const maxLeft = innerW - extraPanels * panelThickness - (is3 ? centerWVal + 100 : 0) - 100;
-                                    const clamped = Math.max(100, Math.min(maxLeft, isNaN(val) ? pos : val));
-                                    syncInputs(clamped, centerWVal);
-                                  }}
-                                  onKeyDown={handleInputKeyDown}
-                                />
-                                <span className={styles.unit}>mm</span>
-                                {is3 && (
-                                  <>
-                                    <span style={{ margin: '0 2px', color: '#999' }}>/</span>
-                                    <span className={styles.label}>중</span>
-                                    <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      className={`${styles.input} ${styles.inputSmall}`}
-                                      value={hSplitInputs[`${realIdx}-center`] ?? centerWVal.toString()}
-                                      onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-center`]: e.target.value }))}
-                                      onBlur={() => {
-                                        const val = parseInt(hSplitInputs[`${realIdx}-center`] || '0');
-                                        const maxCenter = innerW - 4 * panelThickness - pos - 100;
-                                        const clamped = Math.max(100, Math.min(maxCenter, isNaN(val) ? centerWVal : val));
-                                        syncInputs(pos, clamped);
-                                      }}
-                                      onKeyDown={handleInputKeyDown}
-                                    />
-                                    <span className={styles.unit}>mm</span>
-                                  </>
-                                )}
-                                <span style={{ margin: '0 2px', color: '#999' }}>/</span>
-                                <span className={styles.label}>우</span>
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  className={`${styles.input} ${styles.inputSmall}`}
-                                  value={hSplitInputs[`${realIdx}-right`] ?? rightW.toString()}
-                                  onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-right`]: e.target.value }))}
-                                  onBlur={() => {
-                                    const val = parseInt(hSplitInputs[`${realIdx}-right`] || '0');
-                                    const maxRight = innerW - extraPanels * panelThickness - pos - (is3 ? centerWVal : 0);
-                                    const clamped = Math.max(100, Math.min(maxRight, isNaN(val) ? rightW : val));
-                                    // 우측 변경 시: 좌측을 자동 조정 (3분할: 중앙 유지)
-                                    const newLeft = innerW - clamped - (is3 ? centerWVal : 0) - extraPanels * panelThickness;
-                                    syncInputs(Math.max(100, newLeft), centerWVal);
-                                  }}
-                                  onKeyDown={handleInputKeyDown}
-                                />
-                                <span className={styles.unit}>mm</span>
+                              <div className={styles.row} style={{ marginTop: '8px' }}>
+                                <span className={styles.label}>좌우분할</span>
+                                <div className={styles.toggleGroup}>
+                                  <button
+                                    className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
+                                    onClick={() => { if (hasHSplit) handleHSplitMode(realIdx, 'none'); }}
+                                  >
+                                    없음
+                                  </button>
+                                  <button
+                                    className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
+                                    onClick={() => handleHSplitMode(realIdx, '2split')}
+                                  >
+                                    2분할
+                                  </button>
+                                  <button
+                                    className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
+                                    onClick={() => handleHSplitMode(realIdx, '3split')}
+                                  >
+                                    3분할
+                                  </button>
+                                </div>
                               </div>
-                              </>
                             );
                           })()}
-                          {/* 영역 활성/비움 */}
-                          {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌측')}
-                          {section.horizontalSplit.secondPosition != null &&
-                            renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중앙')}
-                          {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우측')}
+
+                          {hasHSplit && section.horizontalSplit ? (
+                            <>
+                              {/* 너비 입력 (내경 기준) */}
+                              {(() => {
+                                const hs = section.horizontalSplit;
+                                const is3 = hs.secondPosition != null;
+                                const pos = hs.position;
+                                const centerWVal = hs.secondPosition || 0;
+                                const extraPanels = is3 ? 4 : 2;
+                                const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
+
+                                // 너비 입력 onBlur 핸들러 (좌/중/우 중 하나를 변경하면 우측을 자동 조정)
+                                const syncInputs = (newLeft: number, newCenter: number) => {
+                                  const newRight = innerW - newLeft - newCenter - extraPanels * panelThickness;
+                                  handleHSplitPosition(realIdx, newLeft);
+                                  if (is3) handleHSplitSecondPosition(realIdx, newCenter);
+                                  setHSplitInputs((prev) => ({
+                                    ...prev,
+                                    [`${realIdx}-left`]: newLeft.toString(),
+                                    [`${realIdx}-center`]: is3 ? newCenter.toString() : '',
+                                    [`${realIdx}-right`]: newRight.toString(),
+                                  }));
+                                };
+
+                                return (
+                                  <>
+                                    <div className={styles.row} style={{ marginTop: '4px' }}>
+                                      <span className={styles.label}>좌</span>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        className={`${styles.input} ${styles.inputSmall}`}
+                                        value={hSplitInputs[`${realIdx}-left`] ?? pos.toString()}
+                                        onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-left`]: e.target.value }))}
+                                        onBlur={() => {
+                                          const val = parseInt(hSplitInputs[`${realIdx}-left`] || '0');
+                                          const maxLeft = innerW - extraPanels * panelThickness - (is3 ? centerWVal + 100 : 0) - 100;
+                                          const clamped = Math.max(100, Math.min(maxLeft, isNaN(val) ? pos : val));
+                                          syncInputs(clamped, centerWVal);
+                                        }}
+                                        onKeyDown={handleInputKeyDown}
+                                      />
+                                      <span className={styles.unit}>mm</span>
+                                      {is3 && (
+                                        <>
+                                          <span style={{ margin: '0 2px', color: '#999' }}>/</span>
+                                          <span className={styles.label}>중</span>
+                                          <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            className={`${styles.input} ${styles.inputSmall}`}
+                                            value={hSplitInputs[`${realIdx}-center`] ?? centerWVal.toString()}
+                                            onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-center`]: e.target.value }))}
+                                            onBlur={() => {
+                                              const val = parseInt(hSplitInputs[`${realIdx}-center`] || '0');
+                                              const maxCenter = innerW - 4 * panelThickness - pos - 100;
+                                              const clamped = Math.max(100, Math.min(maxCenter, isNaN(val) ? centerWVal : val));
+                                              syncInputs(pos, clamped);
+                                            }}
+                                            onKeyDown={handleInputKeyDown}
+                                          />
+                                          <span className={styles.unit}>mm</span>
+                                        </>
+                                      )}
+                                      <span style={{ margin: '0 2px', color: '#999' }}>/</span>
+                                      <span className={styles.label}>우</span>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        className={`${styles.input} ${styles.inputSmall}`}
+                                        value={hSplitInputs[`${realIdx}-right`] ?? rightW.toString()}
+                                        onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-right`]: e.target.value }))}
+                                        onBlur={() => {
+                                          const val = parseInt(hSplitInputs[`${realIdx}-right`] || '0');
+                                          const maxRight = innerW - extraPanels * panelThickness - pos - (is3 ? centerWVal : 0);
+                                          const clamped = Math.max(100, Math.min(maxRight, isNaN(val) ? rightW : val));
+                                          // 우측 변경 시: 좌측을 자동 조정 (3분할: 중앙 유지)
+                                          const newLeft = innerW - clamped - (is3 ? centerWVal : 0) - extraPanels * panelThickness;
+                                          syncInputs(Math.max(100, newLeft), centerWVal);
+                                        }}
+                                        onKeyDown={handleInputKeyDown}
+                                      />
+                                      <span className={styles.unit}>mm</span>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                              {/* 영역 활성/비움 */}
+                              {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌측')}
+                              {section.horizontalSplit.secondPosition != null &&
+                                renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중앙')}
+                              {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우측')}
+                            </>
+                          ) : null}
                         </>
-                      ) : null}
-                      </>
                       )}
                     </div>
                   );
@@ -3795,29 +3801,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       {(() => {
                         const is3Split = hasHSplit && section.horizontalSplit?.secondPosition != null;
                         return (
-                      <div className={styles.row}>
-                        <span className={styles.label}>좌우분할</span>
-                        <div className={styles.toggleGroup}>
-                          <button
-                            className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
-                            onClick={() => { if (hasHSplit) handleHSplitMode(0, 'none'); }}
-                          >
-                            없음
-                          </button>
-                          <button
-                            className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
-                            onClick={() => handleHSplitMode(0, '2split')}
-                          >
-                            2분할
-                          </button>
-                          <button
-                            className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
-                            onClick={() => handleHSplitMode(0, '3split')}
-                          >
-                            3분할
-                          </button>
-                        </div>
-                      </div>
+                          <div className={styles.row}>
+                            <span className={styles.label}>좌우분할</span>
+                            <div className={styles.toggleGroup}>
+                              <button
+                                className={`${styles.toggleButton} ${!hasHSplit ? styles.active : ''}`}
+                                onClick={() => { if (hasHSplit) handleHSplitMode(0, 'none'); }}
+                              >
+                                없음
+                              </button>
+                              <button
+                                className={`${styles.toggleButton} ${hasHSplit && !is3Split ? styles.active : ''}`}
+                                onClick={() => handleHSplitMode(0, '2split')}
+                              >
+                                2분할
+                              </button>
+                              <button
+                                className={`${styles.toggleButton} ${is3Split ? styles.active : ''}`}
+                                onClick={() => handleHSplitMode(0, '3split')}
+                              >
+                                3분할
+                              </button>
+                            </div>
+                          </div>
                         );
                       })()}
 
@@ -3846,63 +3852,63 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
                             return (
                               <>
-                              <div className={styles.row} style={{ marginTop: '4px' }}>
-                                <span className={styles.label}>좌</span>
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  className={`${styles.input} ${styles.inputSmall}`}
-                                  value={hSplitInputs['0-left'] ?? pos.toString()}
-                                  onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-left']: e.target.value }))}
-                                  onBlur={() => {
-                                    const val = parseInt(hSplitInputs['0-left'] || '0');
-                                    const maxLeft = innerW - extraPanels * panelThickness - (is3 ? centerWVal + 100 : 0) - 100;
-                                    const clamped = Math.max(100, Math.min(maxLeft, isNaN(val) ? pos : val));
-                                    syncInputs(clamped, centerWVal);
-                                  }}
-                                  onKeyDown={handleInputKeyDown}
-                                />
-                                <span className={styles.unit}>mm</span>
-                                {is3 && (
-                                  <>
-                                    <span style={{ margin: '0 2px', color: '#999' }}>/</span>
-                                    <span className={styles.label}>중</span>
-                                    <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      className={`${styles.input} ${styles.inputSmall}`}
-                                      value={hSplitInputs['0-center'] ?? centerWVal.toString()}
-                                      onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-center']: e.target.value }))}
-                                      onBlur={() => {
-                                        const val = parseInt(hSplitInputs['0-center'] || '0');
-                                        const maxCenter = innerW - 4 * panelThickness - pos - 100;
-                                        const clamped = Math.max(100, Math.min(maxCenter, isNaN(val) ? centerWVal : val));
-                                        syncInputs(pos, clamped);
-                                      }}
-                                      onKeyDown={handleInputKeyDown}
-                                    />
-                                    <span className={styles.unit}>mm</span>
-                                  </>
-                                )}
-                                <span style={{ margin: '0 2px', color: '#999' }}>/</span>
-                                <span className={styles.label}>우</span>
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  className={`${styles.input} ${styles.inputSmall}`}
-                                  value={hSplitInputs['0-right'] ?? rightW.toString()}
-                                  onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-right']: e.target.value }))}
-                                  onBlur={() => {
-                                    const val = parseInt(hSplitInputs['0-right'] || '0');
-                                    const maxRight = innerW - extraPanels * panelThickness - pos - (is3 ? centerWVal : 0);
-                                    const clamped = Math.max(100, Math.min(maxRight, isNaN(val) ? rightW : val));
-                                    const newLeft = innerW - clamped - (is3 ? centerWVal : 0) - extraPanels * panelThickness;
-                                    syncInputs(Math.max(100, newLeft), centerWVal);
-                                  }}
-                                  onKeyDown={handleInputKeyDown}
-                                />
-                                <span className={styles.unit}>mm</span>
-                              </div>
+                                <div className={styles.row} style={{ marginTop: '4px' }}>
+                                  <span className={styles.label}>좌</span>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className={`${styles.input} ${styles.inputSmall}`}
+                                    value={hSplitInputs['0-left'] ?? pos.toString()}
+                                    onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-left']: e.target.value }))}
+                                    onBlur={() => {
+                                      const val = parseInt(hSplitInputs['0-left'] || '0');
+                                      const maxLeft = innerW - extraPanels * panelThickness - (is3 ? centerWVal + 100 : 0) - 100;
+                                      const clamped = Math.max(100, Math.min(maxLeft, isNaN(val) ? pos : val));
+                                      syncInputs(clamped, centerWVal);
+                                    }}
+                                    onKeyDown={handleInputKeyDown}
+                                  />
+                                  <span className={styles.unit}>mm</span>
+                                  {is3 && (
+                                    <>
+                                      <span style={{ margin: '0 2px', color: '#999' }}>/</span>
+                                      <span className={styles.label}>중</span>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        className={`${styles.input} ${styles.inputSmall}`}
+                                        value={hSplitInputs['0-center'] ?? centerWVal.toString()}
+                                        onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-center']: e.target.value }))}
+                                        onBlur={() => {
+                                          const val = parseInt(hSplitInputs['0-center'] || '0');
+                                          const maxCenter = innerW - 4 * panelThickness - pos - 100;
+                                          const clamped = Math.max(100, Math.min(maxCenter, isNaN(val) ? centerWVal : val));
+                                          syncInputs(pos, clamped);
+                                        }}
+                                        onKeyDown={handleInputKeyDown}
+                                      />
+                                      <span className={styles.unit}>mm</span>
+                                    </>
+                                  )}
+                                  <span style={{ margin: '0 2px', color: '#999' }}>/</span>
+                                  <span className={styles.label}>우</span>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className={`${styles.input} ${styles.inputSmall}`}
+                                    value={hSplitInputs['0-right'] ?? rightW.toString()}
+                                    onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-right']: e.target.value }))}
+                                    onBlur={() => {
+                                      const val = parseInt(hSplitInputs['0-right'] || '0');
+                                      const maxRight = innerW - extraPanels * panelThickness - pos - (is3 ? centerWVal : 0);
+                                      const clamped = Math.max(100, Math.min(maxRight, isNaN(val) ? rightW : val));
+                                      const newLeft = innerW - clamped - (is3 ? centerWVal : 0) - extraPanels * panelThickness;
+                                      syncInputs(Math.max(100, newLeft), centerWVal);
+                                    }}
+                                    onKeyDown={handleInputKeyDown}
+                                  />
+                                  <span className={styles.unit}>mm</span>
+                                </div>
                               </>
                             );
                           })()}

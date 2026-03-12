@@ -100,6 +100,26 @@ const FreePlacementDropZone: React.FC = () => {
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
   const spaceBounds = useMemo(() => getInternalSpaceBoundsX(spaceInfo), [spaceInfo]);
 
+  // 남은 최대 빈 공간 계산 (이미 배치된 가구를 제외한 최대 연속 빈 공간)
+  const maxRemainingWidth = useMemo(() => {
+    const { startX, endX } = spaceBounds;
+    const totalAvailable = endX - startX;
+    const freeModules = placedModules.filter(m => m.isFreePlacement);
+    if (freeModules.length === 0) return totalAvailable;
+
+    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+    let maxGap = 0;
+    // 왼쪽 벽 ~ 첫 가구
+    if (bounds[0].left > startX) maxGap = Math.max(maxGap, bounds[0].left - startX);
+    // 가구 사이
+    for (let i = 0; i < bounds.length - 1; i++) {
+      maxGap = Math.max(maxGap, bounds[i + 1].left - bounds[i].right);
+    }
+    // 마지막 가구 ~ 오른쪽 벽
+    maxGap = Math.max(maxGap, endX - bounds[bounds.length - 1].right);
+    return Math.round(maxGap);
+  }, [placedModules, spaceBounds]);
+
   // 활성 가구 데이터 (클릭 선택 기반 - 자유배치는 currentDragData 미사용)
   const activeModuleId = selectedFurnitureId;
   const activeModuleData = useMemo(() => {
@@ -116,9 +136,14 @@ const FreePlacementDropZone: React.FC = () => {
 
       // 우선순위: pendingPlacement(My캐비넷) > lastCustomDimensions(마지막 치수) > CUSTOMIZABLE_DEFAULTS(기본값)
       const pp = pendingPlacement;
-      const useWidth = pp ? pp.width : (lastDims ? lastDims.width : defaults.width);
+      let useWidth = pp ? pp.width : (lastDims ? lastDims.width : defaults.width);
       const useHeight = pp ? pp.height : (lastDims ? lastDims.height : height);
       const useDepth = pp ? pp.depth : (lastDims ? lastDims.depth : defaults.depth);
+
+      // 남은 공간보다 크면 남은 공간으로 클램핑 (lastDims가 있으면 사용자 의도이므로 유지)
+      if (!pp && !lastDims && useWidth > maxRemainingWidth) {
+        useWidth = maxRemainingWidth;
+      }
 
       return {
         id: selectedFurnitureId,
@@ -156,8 +181,19 @@ const FreePlacementDropZone: React.FC = () => {
         },
       };
     }
+
+    // lastDims 없고 기본 너비가 남은 공간보다 크면 남은 공간으로 클램핑
+    if (baseModule.dimensions.width > maxRemainingWidth) {
+      return {
+        ...baseModule,
+        dimensions: {
+          ...baseModule.dimensions,
+          width: maxRemainingWidth,
+        },
+      };
+    }
     return baseModule;
-  }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement, lastCustomDimensions]);
+  }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement, lastCustomDimensions, maxRemainingWidth]);
 
   // 활성 가구 치수
   const activeDimensions = useMemo(() => {
@@ -351,6 +387,13 @@ const FreePlacementDropZone: React.FC = () => {
           // 설계모드: 배치된 가구를 선택 상태로 유지 → hiddenInDesignMode 방지
           useFurnitureStore.getState().setSelectedFurnitureId(placedId);
           useUIStore.getState().setSelectedFurnitureId(placedId);
+
+          // 설계모드(커스텀 가구 설계) 시 배치 직후 속성 패널 열기
+          const placedMod = useFurnitureStore.getState().placedModules.find(m => m.id === placedId);
+          if (placedMod && isCustomizableModuleId(placedMod.moduleId)) {
+            useFurnitureStore.getState().setNewlyPlacedCustomModuleId(placedId);
+            useUIStore.getState().openCustomizableEditPopup(placedId);
+          }
         } else {
           // 일반 모드: 선택 해제
           useFurnitureStore.getState().setSelectedFurnitureId(null);
@@ -1157,114 +1200,114 @@ const FreePlacementDropZone: React.FC = () => {
         const lineColor = themeColor;
 
         return (
-        <group key={`gap-${i}`}>
-          {/* 가로 치수선 */}
-          <DynamicLine points={[
-            gap.startX * 0.01, gap.centerY, guideZPosition,
-            gap.endX * 0.01, gap.centerY, guideZPosition,
-          ]} color={lineColor} />
-          {/* 양쪽 틱 마크 */}
-          <DynamicLine points={[
-            gap.startX * 0.01, gap.centerY - 0.08, guideZPosition,
-            gap.startX * 0.01, gap.centerY + 0.08, guideZPosition,
-          ]} color={lineColor} />
-          <DynamicLine points={[
-            gap.endX * 0.01, gap.centerY - 0.08, guideZPosition,
-            gap.endX * 0.01, gap.centerY + 0.08, guideZPosition,
-          ]} color={lineColor} />
-          {/* 치수 라벨 - 클릭하면 인라인 편집 */}
-          {editingGapIndex === i ? (
-            <Html
-              position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
-              center
-              style={{ pointerEvents: 'auto' }}
-              zIndexRange={[10000, 10001]}
-            >
-              <div
-                style={{
-                  background: 'white',
-                  padding: '2px 4px',
-                  borderRadius: '4px',
-                  border: `2px solid ${themeColor}`,
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '2px',
-                }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
-                }}
+          <group key={`gap-${i}`}>
+            {/* 가로 치수선 */}
+            <DynamicLine points={[
+              gap.startX * 0.01, gap.centerY, guideZPosition,
+              gap.endX * 0.01, gap.centerY, guideZPosition,
+            ]} color={lineColor} />
+            {/* 양쪽 틱 마크 */}
+            <DynamicLine points={[
+              gap.startX * 0.01, gap.centerY - 0.08, guideZPosition,
+              gap.startX * 0.01, gap.centerY + 0.08, guideZPosition,
+            ]} color={lineColor} />
+            <DynamicLine points={[
+              gap.endX * 0.01, gap.centerY - 0.08, guideZPosition,
+              gap.endX * 0.01, gap.centerY + 0.08, guideZPosition,
+            ]} color={lineColor} />
+            {/* 치수 라벨 - 클릭하면 인라인 편집 */}
+            {editingGapIndex === i ? (
+              <Html
+                position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[10000, 10001]}
               >
-                <input
-                  ref={gapInputRef}
-                  type="number"
-                  value={editingGapValue}
-                  onChange={(e) => setEditingGapValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleGapEditSubmit();
-                    else if (e.key === 'Escape') handleGapEditCancel();
-                  }}
-                  onBlur={handleGapEditSubmit}
+                <div
                   style={{
-                    width: '60px',
+                    background: 'white',
                     padding: '2px 4px',
-                    border: '1px solid #ccc',
-                    borderRadius: '2px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    outline: 'none',
+                    borderRadius: '4px',
+                    border: `2px solid ${themeColor}`,
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2px',
                   }}
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                />
-                <span style={{ fontSize: '11px', color: '#666', fontWeight: '600' }}>mm</span>
-              </div>
-            </Html>
-          ) : (
-            <Html
-              position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
-              center
-              style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999 }}
-              zIndexRange={[9999, 10000]}
-            >
-              <div
-                style={{
-                  background: themeColor,
-                  color: 'white',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.12)';
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-                }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
-                  handleGapLabelClick(i, gap.width);
-                }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
+                >
+                  <input
+                    ref={gapInputRef}
+                    type="number"
+                    value={editingGapValue}
+                    onChange={(e) => setEditingGapValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleGapEditSubmit();
+                      else if (e.key === 'Escape') handleGapEditCancel();
+                    }}
+                    onBlur={handleGapEditSubmit}
+                    style={{
+                      width: '60px',
+                      padding: '2px 4px',
+                      border: '1px solid #ccc',
+                      borderRadius: '2px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      outline: 'none',
+                    }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  />
+                  <span style={{ fontSize: '11px', color: '#666', fontWeight: '600' }}>mm</span>
+                </div>
+              </Html>
+            ) : (
+              <Html
+                position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
+                center
+                style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999 }}
+                zIndexRange={[9999, 10000]}
               >
-                {gap.width}mm
-              </div>
-            </Html>
-          )}
-        </group>
+                <div
+                  style={{
+                    background: themeColor,
+                    color: 'white',
+                    padding: '1px 6px',
+                    borderRadius: '3px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.12)';
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                  }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                    handleGapLabelClick(i, gap.width);
+                  }}
+                >
+                  {gap.width}mm
+                </div>
+              </Html>
+            )}
+          </group>
         );
       })}
     </>

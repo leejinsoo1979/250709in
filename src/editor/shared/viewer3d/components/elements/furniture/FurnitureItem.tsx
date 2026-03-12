@@ -1785,68 +1785,68 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     originalSlotWidthMm = placedModule.freeWidth;
   } else {
 
-  // 노서라운드 모드에서 끝 슬롯인지 확인
-  const isEndSlotInNoSurround = spaceInfo.surroundType === 'no-surround' &&
-    normalizedSlotIndex !== undefined &&
-    (normalizedSlotIndex === 0 || normalizedSlotIndex === indexing.columnCount - 1);
+    // 노서라운드 모드에서 끝 슬롯인지 확인
+    const isEndSlotInNoSurround = spaceInfo.surroundType === 'no-surround' &&
+      normalizedSlotIndex !== undefined &&
+      (normalizedSlotIndex === 0 || normalizedSlotIndex === indexing.columnCount - 1);
 
-  if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && zoneSlotInfo) {
-    const targetZone = placedModule.zone === 'dropped' && zoneSlotInfo.dropped ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
-    const localIndex = localSlotIndex ?? placedModule.slotIndex ?? 0;
+    if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && zoneSlotInfo) {
+      const targetZone = placedModule.zone === 'dropped' && zoneSlotInfo.dropped ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+      const localIndex = localSlotIndex ?? placedModule.slotIndex ?? 0;
 
-    // 마지막 슬롯의 경우 실제 남은 너비 사용
-    if (isLastSlot && !isDualFurniture) {
-      const usedWidth = targetZone.columnWidth * (targetZone.columnCount - 1);
-      originalSlotWidthMm = targetZone.width - usedWidth;
-    } else if (isDualFurniture && localIndex === targetZone.columnCount - 2) {
-      // 마지막-1 슬롯의 듀얼 가구인 경우
-      const normalSlotWidth = targetZone.columnWidth;
-      const lastSlotStart = targetZone.startX + ((targetZone.columnCount - 1) * targetZone.columnWidth);
-      const lastSlotEnd = targetZone.startX + targetZone.width;
-      const lastSlotWidth = lastSlotEnd - lastSlotStart;
-      originalSlotWidthMm = normalSlotWidth + lastSlotWidth;
-    } else if (isDualFurniture) {
-      // 듀얼 가구: 실제 슬롯 너비들의 합계 사용
-      if (targetZone.slotWidths && localIndex >= 0 && localIndex < targetZone.slotWidths.length - 1) {
-        originalSlotWidthMm = targetZone.slotWidths[localIndex] + targetZone.slotWidths[localIndex + 1];
+      // 마지막 슬롯의 경우 실제 남은 너비 사용
+      if (isLastSlot && !isDualFurniture) {
+        const usedWidth = targetZone.columnWidth * (targetZone.columnCount - 1);
+        originalSlotWidthMm = targetZone.width - usedWidth;
+      } else if (isDualFurniture && localIndex === targetZone.columnCount - 2) {
+        // 마지막-1 슬롯의 듀얼 가구인 경우
+        const normalSlotWidth = targetZone.columnWidth;
+        const lastSlotStart = targetZone.startX + ((targetZone.columnCount - 1) * targetZone.columnWidth);
+        const lastSlotEnd = targetZone.startX + targetZone.width;
+        const lastSlotWidth = lastSlotEnd - lastSlotStart;
+        originalSlotWidthMm = normalSlotWidth + lastSlotWidth;
+      } else if (isDualFurniture) {
+        // 듀얼 가구: 실제 슬롯 너비들의 합계 사용
+        if (targetZone.slotWidths && localIndex >= 0 && localIndex < targetZone.slotWidths.length - 1) {
+          originalSlotWidthMm = targetZone.slotWidths[localIndex] + targetZone.slotWidths[localIndex + 1];
+        } else {
+          // fallback: 평균 너비 * 2
+          originalSlotWidthMm = targetZone.columnWidth * 2;
+        }
       } else {
-        // fallback: 평균 너비 * 2
-        originalSlotWidthMm = targetZone.columnWidth * 2;
+        // 싱글 가구: 해당 슬롯의 실제 너비 사용
+        if (targetZone.slotWidths && localIndex >= 0 && localIndex < targetZone.slotWidths.length) {
+          originalSlotWidthMm = targetZone.slotWidths[localIndex];
+        } else {
+          // fallback: 평균 너비
+          originalSlotWidthMm = targetZone.columnWidth;
+        }
       }
+
     } else {
-      // 싱글 가구: 해당 슬롯의 실제 너비 사용
-      if (targetZone.slotWidths && localIndex >= 0 && localIndex < targetZone.slotWidths.length) {
-        originalSlotWidthMm = targetZone.slotWidths[localIndex];
+      // 단내림이 없는 경우도 마지막 슬롯 처리
+      if (isLastSlot && !isDualFurniture) {
+        const usedWidth = indexing.columnWidth * (indexing.columnCount - 1);
+        const totalInternalWidth = internalSpace.width;  // 내경 전체 너비
+        originalSlotWidthMm = totalInternalWidth - usedWidth;
+      } else if (isDualFurniture) {
+        // 듀얼 가구: 실제 슬롯 너비들의 합계 사용
+        if (indexing.slotWidths && normalizedSlotIndex !== undefined && normalizedSlotIndex < indexing.slotWidths.length - 1) {
+          originalSlotWidthMm = indexing.slotWidths[normalizedSlotIndex] + indexing.slotWidths[normalizedSlotIndex + 1];
+        } else {
+          // fallback: 평균 너비 * 2
+          originalSlotWidthMm = indexing.columnWidth * 2;
+        }
       } else {
-        // fallback: 평균 너비
-        originalSlotWidthMm = targetZone.columnWidth;
+        // 싱글 가구: 해당 슬롯의 실제 너비 사용
+        if (indexing.slotWidths && normalizedSlotIndex !== undefined && indexing.slotWidths[normalizedSlotIndex] !== undefined) {
+          originalSlotWidthMm = indexing.slotWidths[normalizedSlotIndex];
+        } else {
+          // fallback: 평균 너비
+          originalSlotWidthMm = indexing.columnWidth;
+        }
       }
     }
-
-  } else {
-    // 단내림이 없는 경우도 마지막 슬롯 처리
-    if (isLastSlot && !isDualFurniture) {
-      const usedWidth = indexing.columnWidth * (indexing.columnCount - 1);
-      const totalInternalWidth = internalSpace.width;  // 내경 전체 너비
-      originalSlotWidthMm = totalInternalWidth - usedWidth;
-    } else if (isDualFurniture) {
-      // 듀얼 가구: 실제 슬롯 너비들의 합계 사용
-      if (indexing.slotWidths && normalizedSlotIndex !== undefined && normalizedSlotIndex < indexing.slotWidths.length - 1) {
-        originalSlotWidthMm = indexing.slotWidths[normalizedSlotIndex] + indexing.slotWidths[normalizedSlotIndex + 1];
-      } else {
-        // fallback: 평균 너비 * 2
-        originalSlotWidthMm = indexing.columnWidth * 2;
-      }
-    } else {
-      // 싱글 가구: 해당 슬롯의 실제 너비 사용
-      if (indexing.slotWidths && normalizedSlotIndex !== undefined && indexing.slotWidths[normalizedSlotIndex] !== undefined) {
-        originalSlotWidthMm = indexing.slotWidths[normalizedSlotIndex];
-      } else {
-        // fallback: 평균 너비
-        originalSlotWidthMm = indexing.columnWidth;
-      }
-    }
-  }
   } // end else (slot-based originalSlotWidthMm)
 
   // 도어 크기 디버깅
@@ -2675,7 +2675,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 설계모드에서는 설계 중인 가구만 표시, 나머지 숨김
-  const hiddenInDesignMode = isLayoutBuilderOpen && selectedFurnitureId !== placedModule.id;
+  // 팝업이 열려있다면 해당 가구도 표시 (비정상적인 선택 해제 방어)
+  const isCurrentlyDesigning = selectedFurnitureId === placedModule.id ||
+    (activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id);
+  const hiddenInDesignMode = isLayoutBuilderOpen && !isCurrentlyDesigning;
 
   return (
     <group userData={{ furnitureId: placedModule.id }} visible={!hiddenInDesignMode}>

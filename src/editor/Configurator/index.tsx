@@ -3135,11 +3135,11 @@ const Configurator: React.FC = () => {
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   {myCabinetEditMode ? (
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   ) : (
                     <>
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </>
                   )}
                 </svg>
@@ -3203,52 +3203,52 @@ const Configurator: React.FC = () => {
 
         {/* 컬럼수 표시 - 공간유형 바로 아래 */}
         {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
-        <div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>컬럼수</h3>
-          </div>
-
-          {!spaceInfo.droppedCeiling?.enabled ? (
-            // 단내림이 없을 때 - 컬럼 개수만 표시
-            <div className={styles.inputGroup}>
-              <DoorSlider
-                value={getCurrentColumnCount()}
-                onChange={(value) => {
-                  handleSpaceInfoUpdate({ customColumnCount: value });
-                }}
-                width={spaceInfo.width || 4800}
-              />
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>컬럼수</h3>
             </div>
-          ) : (
-            // 단내림이 있을 때
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+
+            {!spaceInfo.droppedCeiling?.enabled ? (
+              // 단내림이 없을 때 - 컬럼 개수만 표시
               <div className={styles.inputGroup}>
                 <DoorSlider
-                  value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                  value={getCurrentColumnCount()}
                   onChange={(value) => {
-                    handleSpaceInfoUpdate({ mainDoorCount: value });
+                    handleSpaceInfoUpdate({ customColumnCount: value });
                   }}
                   width={spaceInfo.width || 4800}
-                  label="메인"
                 />
               </div>
+            ) : (
+              // 단내림이 있을 때
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={styles.inputGroup}>
+                  <DoorSlider
+                    value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ mainDoorCount: value });
+                    }}
+                    width={spaceInfo.width || 4800}
+                    label="메인"
+                  />
+                </div>
 
-              {/* 단내림구간 도어 개수 */}
-              <div className={styles.inputGroup}>
-                <DoorSlider
-                  value={spaceInfo.droppedCeilingDoorCount || 1}
-                  onChange={(value) => {
-                    handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                  }}
-                  width={spaceInfo.droppedCeiling?.width || 900}
-                  label="단내림"
-                />
+                {/* 단내림구간 도어 개수 */}
+                <div className={styles.inputGroup}>
+                  <DoorSlider
+                    value={spaceInfo.droppedCeilingDoorCount || 1}
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                    }}
+                    width={spaceInfo.droppedCeiling?.width || 900}
+                    label="단내림"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-        </div>
+          </div>
         )}
 
         {/* 자유배치 모드에서는 이격거리 불필요 — 제거됨 */}
@@ -3779,7 +3779,7 @@ const Configurator: React.FC = () => {
             const st = spaceInfo.surroundType || 'surround';
             const mode = st === 'no-surround' ? 'no-surround'
               : (!currentFrameConfig.top && !currentFrameConfig.bottom) ? 'sides-only'
-              : 'full-surround';
+                : 'full-surround';
 
             const handleModeChange = (newMode: string) => {
               if (newMode === 'full-surround') {
@@ -3981,7 +3981,7 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-                          </div>
+            </div>
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
@@ -4116,7 +4116,7 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-                          </div>
+            </div>
           ) : null)}
 
         </div>
@@ -4343,7 +4343,7 @@ const Configurator: React.FC = () => {
             title="파일 트리 접기"
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M7 1L3 5L7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M7 1L3 5L7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           {/* 좌측: 프로젝트/폴더 트리 */}
@@ -4383,12 +4383,11 @@ const Configurator: React.FC = () => {
                   {fileTreeDesignFiles.map(file => (
                     <button
                       key={file.id}
-                      className={`${styles.fileTreeFileCard} ${
-                        searchParams.get('designFileId') === file.id ? styles.fileTreeFileCardActive : ''
-                      }`}
+                      className={`${styles.fileTreeFileCard} ${searchParams.get('designFileId') === file.id ? styles.fileTreeFileCardActive : ''
+                        }`}
                       onClick={async () => {
                         // 현재 파일 자동 저장
-                        try { await saveProject(); } catch {}
+                        try { await saveProject(); } catch { }
                         // 탭 추가 (프로젝트명 조회) — 닫힌 탭 기록에서 제거하여 재오픈 허용
                         const proj = fileTreeProjects.find(p => p.id === fileTreeSelectedProjectId);
                         useUIStore.getState().addTab({
@@ -4435,32 +4434,32 @@ const Configurator: React.FC = () => {
         <>
           {/* 좌측 사이드바 토글 버튼 — 설계모드에서 숨김 */}
           {!isLayoutBuilderOpen && (
-          <button
-            className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
-            onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
-            title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
-          >
-            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d={activeSidebarTab ? "M6 1L1 6L6 11" : "M1 1L6 6L1 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+            <button
+              className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
+              onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
+              title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
+            >
+              <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d={activeSidebarTab ? "M6 1L1 6L6 11" : "M1 1L6 6L1 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           )}
 
           {/* 사이드바 - 설계모드에서 숨김, 읽기 전용 모드에서는 재질 탭만 보임 */}
           {!isLayoutBuilderOpen && (
-          <Sidebar
-            activeTab={activeSidebarTab}
-            onTabClick={handleSidebarTabClick}
-            isOpen={!!activeSidebarTab}
-            onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
-            onSave={saveProject}
-            readOnly={isReadOnly}
-            owner={projectOwner}
-            collaborators={collaborators}
-            onAddCollaborator={() => setIsShareModalOpen(true)}
-            onFileTreeToggle={handleFileTreeToggle}
-            isFileTreeOpen={isFileTreeOpen}
-          />
+            <Sidebar
+              activeTab={activeSidebarTab}
+              onTabClick={handleSidebarTabClick}
+              isOpen={!!activeSidebarTab}
+              onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
+              onSave={saveProject}
+              readOnly={isReadOnly}
+              owner={projectOwner}
+              collaborators={collaborators}
+              onAddCollaborator={() => setIsShareModalOpen(true)}
+              onFileTreeToggle={handleFileTreeToggle}
+              isFileTreeOpen={isFileTreeOpen}
+            />
           )}
 
           {/* 사이드바 컨텐츠 패널 — 설계모드에서 숨김 */}
@@ -4674,15 +4673,22 @@ const Configurator: React.FC = () => {
                   }
 
                   // "그냥 돌아가기" — 저장 없이 종료
+                  const furnitureState = useFurnitureStore.getState();
+                  const newlyPlacedId = furnitureState.newlyPlacedCustomModuleId;
+
+                  if (newlyPlacedId) {
+                    furnitureState.removeModule(newlyPlacedId);
+                    furnitureState.setNewlyPlacedCustomModuleId(null);
+                  }
+
                   const myCabinetState = useMyCabinetStore.getState();
                   if (myCabinetState.editingCabinetId && myCabinetState.editBackup) {
-                    const { setPlacedModules: setModules } = useFurnitureStore.getState();
+                    const { setPlacedModules: setModules } = furnitureState;
                     setModules(myCabinetState.editBackup.modules);
                     setSpaceInfo({ layoutMode: myCabinetState.editBackup.layoutMode });
                     myCabinetState.setEditBackup(null);
                   }
                   myCabinetState.setEditingCabinetId(null);
-                  const furnitureState = useFurnitureStore.getState();
                   furnitureState.setFurniturePlacementMode(false);
                   furnitureState.setPendingCustomConfig(null);
                   closeAllPopups();
@@ -4983,7 +4989,7 @@ const Configurator: React.FC = () => {
             title={isRightPanelOpen ? "우측 패널 접기" : "우측 패널 펼치기"}
           >
             <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d={isRightPanelOpen ? "M1 1L6 6L1 11" : "M6 1L1 6L6 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d={isRightPanelOpen ? "M1 1L6 6L1 11" : "M6 1L1 6L6 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         )}
@@ -5163,7 +5169,7 @@ const Configurator: React.FC = () => {
               mode="configure"
               designFileId={currentDesignFileId || undefined}
               projectId={currentProjectId || undefined}
-              onPrevious={() => {}}
+              onPrevious={() => { }}
               onClose={() => setShowSpaceConfigPopup(false)}
               onComplete={() => {
                 console.log('✅ 공간 설정 팝업 완료');
