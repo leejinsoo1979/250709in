@@ -3663,16 +3663,59 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
-        {/* 프레임 설정 - 슬롯배치 모드에서만 표시 */}
-        {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (<>
+        {/* 프레임 설정 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>프레임 설정</h3>
           </div>
 
-          {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 */}
-          {(() => {
+          {/* 자유배치 모드: 상부 프레임 두께만 표시 */}
+          {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
+            <div className={styles.subSetting}>
+              <div className={styles.frameGrid}>
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>상부 프레임 두께</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const newTop = Math.max(10, currentTop - 1);
+                        updateFrameSize('top', newTop);
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={frameInputTop}
+                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
+                      onFocus={() => handleFrameInputFocus('top')}
+                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentTop = spaceInfo.frameSize?.top || 30;
+                        const newTop = Math.min(200, currentTop + 1);
+                        updateFrameSize('top', newTop);
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 (슬롯배치 모드만) */}
+          {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (() => {
             const currentFrameConfig = inferFrameConfig(spaceInfo);
             const st = spaceInfo.surroundType || 'surround';
             const mode = st === 'no-surround' ? 'no-surround'
@@ -4521,7 +4564,6 @@ const Configurator: React.FC = () => {
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
               readOnly={isReadOnly} // 읽기 전용 모드
               sceneRef={sceneRef} // GLB 내보내기용 씬 참조
-              showFurniture={isLayoutBuilderOpen ? false : undefined} // 설계모드에서는 기존 가구 숨김
             />
 
             {/* 커스텀 가구 설계모드 종료 버튼 — 뷰어 중앙 하단 */}

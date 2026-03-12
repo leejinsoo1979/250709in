@@ -293,7 +293,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
-  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen } = useUIStore();
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const activePopup = useUIStore(state => state.activePopup);
   const { updatePlacedModule } = useFurnitureStore();
@@ -2673,8 +2673,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.zone === 'dropped') {
   }
 
+  // 설계모드에서는 설계 중인 가구만 표시, 나머지 숨김
+  const hiddenInDesignMode = isLayoutBuilderOpen && selectedFurnitureId !== placedModule.id;
+
   return (
-    <group userData={{ furnitureId: placedModule.id }}>
+    <group userData={{ furnitureId: placedModule.id }} visible={!hiddenInDesignMode}>
       {shouldGhostHighlight && width > 0 && height > 0 && depth > 0 && (
         <group position={furnitureGroupPosition} rotation={furnitureGroupRotation}>
           <mesh renderOrder={1000}>
