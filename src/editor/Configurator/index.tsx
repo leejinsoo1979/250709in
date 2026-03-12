@@ -5,6 +5,7 @@ import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useUIStore, type EditorTab } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
@@ -344,12 +345,12 @@ const Configurator: React.FC = () => {
     };
   }, [isLayoutBuilderOpen]);
 
-  // 안전장치: 설계모드가 아닌데 그림자/카메라가 설계모드 상태로 남아있으면 복원
-  // (이전 크래시 등으로 localStorage에 잘못된 값이 남은 경우 대비)
+  // 안전장치: 설계모드가 아닌데 UI가 설계모드 상태로 남아있으면 복원
   useEffect(() => {
     if (!isLayoutBuilderOpen && !stateBeforeDesign.current) {
       if (!shadowEnabled) setShadowEnabled(true);
       if (cameraMode === 'orthographic') setCameraMode('perspective');
+      if (!isRightPanelOpen) setIsRightPanelOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 마운트 시 1회만
@@ -4626,6 +4627,20 @@ const Configurator: React.FC = () => {
               <button
                 className={styles.exitDesignModeBtn}
                 onClick={() => {
+                  // myCabinetStore 클린업 (수정 모드 복원)
+                  const myCabinetState = useMyCabinetStore.getState();
+                  if (myCabinetState.editingCabinetId && myCabinetState.editBackup) {
+                    const { setPlacedModules: setModules } = useFurnitureStore.getState();
+                    setModules(myCabinetState.editBackup.modules);
+                    setSpaceInfo({ layoutMode: myCabinetState.editBackup.layoutMode });
+                    myCabinetState.setEditBackup(null);
+                  }
+                  myCabinetState.setEditingCabinetId(null);
+                  // 배치 모드 관련 상태 초기화
+                  const furnitureState = useFurnitureStore.getState();
+                  furnitureState.setFurniturePlacementMode(false);
+                  furnitureState.setPendingCustomConfig(null);
+                  // 설계모드 닫기 + 팝업 닫기 (useEffect가 사이드바/카메라/그림자 복원)
                   setLayoutBuilderOpen(false);
                   closeAllPopups();
                 }}
