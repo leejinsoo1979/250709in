@@ -159,9 +159,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const isMainPopup = activePopup.sectionIndex === undefined;
     if (sx != null) {
       const vh = window.innerHeight;
-      const left = Math.max(8, Math.min(sx, window.innerWidth - 350));
+      const vw = window.innerWidth;
+      const panelWidth = 350;
+      // 화면 우측 끝에 붙이되, 최소 마진 8px 보장
+      const left = Math.max(sx, vw - panelWidth - 8);
       if (isMainPopup) {
-        // 메인 팝업: 가구 우측, 화면 세로 중앙
+        // 메인 팝업: 화면 우측, 세로 중앙
         return { top: '50%', left, right: 'auto', transform: 'translateY(-50%)', maxHeight: vh - 24 };
       }
       // 섹션 팝업: 클릭 Y에서 위로 올려 배치, 화면 안에 clamp
