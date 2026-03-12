@@ -2907,7 +2907,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const sectionHeightUnits = mmToThreeUnits(section.height);
             const startY = currentY;
             const endY = currentY + sectionHeightUnits;
-            sectionRanges.push({ startY, endY, heightMm: section.height });
+            // 외경 기준 높이 표시 (내경 + 상하판 두께)
+            const hb = section.showBottomPanel !== false;
+            const ht = section.showTopPanel !== false;
+            const outerH = section.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness;
+            sectionRanges.push({ startY, endY, heightMm: outerH });
             // 다음 섹션 시작: 현재 섹션 끝 + 칸막이 두께
             if (i < sections.length - 1) {
               currentY = endY + mmToThreeUnits(panelThickness) + mmToThreeUnits(sectionGap);

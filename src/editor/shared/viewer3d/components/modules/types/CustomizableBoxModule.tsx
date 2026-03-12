@@ -2082,12 +2082,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 const ht = sec.showTopPanel !== false;
                 const innerH = sectionHeights[si] - (hb ? t : 0) - (ht ? t : 0);
                 const contentCenter = dimCenters[si] + ((hb ? t : 0) - (ht ? t : 0)) / 2;
-                return renderSectionDims(sec, si, contentCenter, innerH, effectiveW);
+                // 외경 기준 높이 표시 (내경 + 상하판 두께)
+                const outerHeight = Math.round(sec.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness);
+                return renderSectionDims(sec, si, contentCenter, innerH, effectiveW, outerHeight);
               })}
             </>
           );
         } else {
-          return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, effectiveW)}</>;
+          return <>{renderSectionDims(sections[0], 0, 0, H - 2 * t, effectiveW, height)}</>;
         }
       })()}
 
