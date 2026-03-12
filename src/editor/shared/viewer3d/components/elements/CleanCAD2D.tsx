@@ -1277,8 +1277,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasLeftFurniture) && (() => {
+      {/* 노서라운드/자유배치 모드 좌측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (isFreePlacement || hasLeftFurniture) && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1396,8 +1396,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
       
-      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (isFreePlacement || hasRightFurniture) && (() => {
+      {/* 노서라운드/자유배치 모드 우측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (isFreePlacement || hasRightFurniture) && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1820,8 +1820,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
       )}
       
-      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 좌측 프레임 치수선 / 노서라운드·자유배치일 때는 이격거리/엔드패널 치수선 */}
+      {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (() => {
             // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
             if (spaceInfo.installType === 'freestanding') return null;
 
@@ -2059,8 +2059,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 우측 프레임 치수선 / 노서라운드·자유배치일 때는 이격거리/엔드패널 치수선 */}
+      {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (() => {
             // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
             if (spaceInfo.installType === 'freestanding') return null;
 
