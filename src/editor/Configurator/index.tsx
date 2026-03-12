@@ -4521,6 +4521,7 @@ const Configurator: React.FC = () => {
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
               readOnly={isReadOnly} // 읽기 전용 모드
               sceneRef={sceneRef} // GLB 내보내기용 씬 참조
+              showFurniture={isLayoutBuilderOpen ? false : undefined} // 설계모드에서는 기존 가구 숨김
             />
 
             {/* 커스텀 가구 설계모드 종료 버튼 — 뷰어 중앙 하단 */}
