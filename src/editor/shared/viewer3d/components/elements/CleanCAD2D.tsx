@@ -1290,8 +1290,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드/자유배치 모드 좌측 엔드패널/이격거리 치수선 */}
-      {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (isFreePlacement || hasLeftFurniture) && (() => {
+      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 (자유배치에서는 미표시) */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1308,9 +1308,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
           leftText = `이격 ${leftValue}`;
-        } else if (isFreePlacement) {
-          // 자유배치 모드에서 벽이 없으면 치수선 미표시
-          return null;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
@@ -1408,8 +1405,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
       
-      {/* 노서라운드/자유배치 모드 우측 엔드패널/이격거리 치수선 */}
-      {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (isFreePlacement || hasRightFurniture) && (() => {
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 (자유배치에서는 미표시) */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1426,9 +1423,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
           rightText = `이격 ${rightValue}`;
-        } else if (isFreePlacement) {
-          // 자유배치 모드에서 벽이 없으면 치수선 미표시
-          return null;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
@@ -1831,16 +1825,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
       )}
       
-      {/* 좌측 프레임 치수선 / 노서라운드·자유배치일 때는 이격거리/엔드패널 치수선 */}
+      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 (자유배치에서는 갭만 표시) */}
       {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (() => {
             // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
             if (spaceInfo.installType === 'freestanding') return null;
 
             // 왼쪽 벽이 있는지 확인
             const hasLeftWall = spaceInfo.wallConfig?.left;
-
-            // 자유배치 모드에서 벽이 없으면 가구 위치 기반 이격거리 표시
-            // (벽이 없고 가구도 없으면 아래에서 null 반환)
 
             // 가장 왼쪽 가구 위치 찾기
             let leftmostFurnitureX: number | null = null;
@@ -1867,16 +1858,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             let leftValue: number;
             let leftText: string;
-            const isLeftEditable = isFreePlacement && !hasLeftWall && leftmostModuleId !== null;
+            const isLeftEditable = isFreePlacement && leftmostModuleId !== null;
 
-            if (hasLeftWall) {
-              // 왼쪽 벽이 있으면 이격거리 표시
+            if (isFreePlacement) {
+              // 자유배치 모드: 이격 개념 없음 — 가구가 있으면 벽~가구 갭만 표시
+              if (leftmostFurnitureX === null) return null;
+              const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100;
+              leftValue = Math.round(Math.abs(distanceFromLeft));
+              if (leftValue === 0) return null;
+              leftText = `${leftValue}`;
+            } else if (hasLeftWall) {
+              // 노서라운드: 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left ?? 1.5;
               if (leftValue === 0) return null;
               leftText = `이격 ${leftValue}`;
-            } else if (isFreePlacement) {
-              // 자유배치 모드에서 벽이 없으면 치수선 미표시
-              return null;
             } else if (leftmostFurnitureX !== null) {
               // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
@@ -2073,15 +2068,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 우측 프레임 치수선 / 노서라운드·자유배치일 때는 이격거리/엔드패널 치수선 */}
+      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 (자유배치에서는 갭만 표시) */}
       {showDimensions && !isStep2 && (spaceInfo.surroundType === 'no-surround' || isFreePlacement) && (() => {
             // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
             if (spaceInfo.installType === 'freestanding') return null;
 
             // 오른쪽 벽이 있는지 확인
             const hasRightWall = spaceInfo.wallConfig?.right;
-
-            // 자유배치 모드에서 벽이 없으면 가구 위치 기반 이격거리 표시
 
             // 가장 오른쪽 가구 위치 찾기
             let rightmostFurnitureX: number | null = null;
@@ -2108,20 +2101,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             let rightValue: number;
             let rightText: string;
-            const isRightEditable = isFreePlacement && !hasRightWall && rightmostModuleId !== null;
+            const isRightEditable = isFreePlacement && rightmostModuleId !== null;
 
-            if (hasRightWall) {
-              // 오른쪽 벽이 있으면 이격거리 표시
+            if (isFreePlacement) {
+              // 자유배치 모드: 이격 개념 없음 — 가구가 있으면 벽~가구 갭만 표시
+              if (rightmostFurnitureX === null) return null;
+              const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+              const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100;
+              rightValue = Math.round(Math.abs(distanceFromRight));
+              if (rightValue === 0) return null;
+              rightText = `${rightValue}`;
+            } else if (hasRightWall) {
+              // 노서라운드: 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right ?? 1.5;
               if (rightValue === 0) return null;
               rightText = `이격 ${rightValue}`;
-            } else if (isFreePlacement) {
-              // 자유배치 모드에서 벽이 없으면 치수선 미표시
-              return null;
             } else if (rightmostFurnitureX !== null) {
               // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-              const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100; // mm 단위로 변환
+              const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100;
               rightValue = Math.round(Math.abs(distanceFromRight));
               rightText = `${rightValue}`;
             }
