@@ -2084,6 +2084,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 />
                 <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>상부프레임</span>
               </label>
+              {currentPlacedModule.hasTopFrame !== false && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingLeft: '24px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap' }}>두께</span>
+                  <input
+                    type="number"
+                    min={10}
+                    max={100}
+                    step={1}
+                    value={currentPlacedModule.topFrameThickness ?? ''}
+                    placeholder={`${spaceInfo.frameSize?.top ?? 30}`}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? undefined : Number(e.target.value);
+                      updatePlacedModule(currentPlacedModule.id, { topFrameThickness: val });
+                    }}
+                    style={{
+                      width: '60px',
+                      padding: '4px 6px',
+                      fontSize: '12px',
+                      border: '1px solid var(--theme-border)',
+                      borderRadius: '4px',
+                      backgroundColor: 'var(--theme-bg)',
+                      color: 'var(--theme-text)',
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                </div>
+              )}
             </div>
           )}
 
