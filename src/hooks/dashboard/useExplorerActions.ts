@@ -154,22 +154,37 @@ export function useExplorerActions(
 
   // 영구 삭제
   const permanentDeleteItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
-    for (const item of items) {
+    // 프로젝트를 먼저 삭제 (하위 디자인파일도 함께 삭제됨)
+    const deletedProjectIds = new Set<string>();
+    const projects = items.filter(i => i.type === 'project');
+    const others = items.filter(i => i.type !== 'project');
+
+    for (const item of projects) {
       try {
-        if (item.type === 'project') {
-          const { error } = await permanentDeleteProject(item.id);
-          if (error) {
-            alert('프로젝트 영구 삭제 실패: ' + error);
-          } else {
-            try {
-              const ch = new BroadcastChannel('project-updates');
-              ch.postMessage({ type: 'PROJECT_DELETED', projectId: item.id });
-              ch.close();
-            } catch { /* ignore */ }
-          }
-        } else if (item.type === 'design' && item.projectId) {
+        const { error } = await permanentDeleteProject(item.id);
+        if (error) {
+          alert('프로젝트 영구 삭제 실패: ' + error);
+        } else {
+          deletedProjectIds.add(item.id);
+          try {
+            const ch = new BroadcastChannel('project-updates');
+            ch.postMessage({ type: 'PROJECT_DELETED', projectId: item.id });
+            ch.close();
+          } catch { /* ignore */ }
+        }
+      } catch (err) {
+        console.error('영구 삭제 중 오류:', err);
+      }
+    }
+
+    // 디자인파일 삭제 (이미 삭제된 프로젝트 소속은 건너뛰기)
+    for (const item of others) {
+      try {
+        if (item.type === 'design' && item.projectId) {
+          // 프로젝트가 이미 삭제되었으면 하위 디자인파일도 함께 삭제되었으므로 건너뛰기
+          if (deletedProjectIds.has(item.projectId)) continue;
           const { error } = await permanentDeleteDesignFile(item.id, item.projectId);
-          if (error) alert('디자인파일 영구 삭제 실패: ' + error);
+          if (error) console.warn('디자인파일 영구 삭제:', error);
         }
       } catch (err) {
         console.error('영구 삭제 중 오류:', err);

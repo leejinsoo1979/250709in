@@ -963,7 +963,9 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
     // 디자인파일 정보 조회 (소유자 확인용)
     const designSnap = await getDocFromServer(docRef);
     if (!designSnap.exists()) {
-      return { error: '디자인 파일을 찾을 수 없습니다.' };
+      // 이미 삭제된 파일 (프로젝트 삭제 시 함께 삭제됨) → 성공으로 처리
+      console.log(`디자인파일 이미 삭제됨: ${designFileId}`);
+      return { error: null };
     }
 
     const designData = designSnap.data();
