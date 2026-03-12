@@ -733,6 +733,9 @@ export const useUIStore = create<UIState>()(
       setHoveredMeasureLineId: (id) =>
         set({ hoveredMeasureLineId: id }),
 
+      setLayoutBuilderOpen: (open) =>
+        set({ isLayoutBuilderOpen: open }),
+
       setDashboardLayout: (layout) =>
         set({ dashboardLayout: layout }),
 
