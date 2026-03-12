@@ -1773,15 +1773,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const el = elements?.[0] || { type: 'open' as const };
     const currentType = el.type;
 
-    // 상부섹션(sIdx===1, 2단분할)에는 서랍 불가
-    // 하부섹션(sIdx===0, 2단분할)에는 옷봉만 가능 (서랍 불가)
-    const isUpperSection = config.sections.length > 1 && sIdx === 1;
-    const isLowerSection = config.sections.length > 1 && sIdx === 0;
+    // 상부섹션(최상단)에는 서랍 불가 (위에 공간이 없어 인출 불가)
+    // 그 외 섹션(하부/중간/단독)에는 모든 타입 허용
+    const isUpperSection = config.sections.length > 1 && sIdx === config.sections.length - 1;
     const availableTypes = isUpperSection
-      ? (['open', 'shelf', 'rod'] as const)
-      : isLowerSection
-        ? (['open', 'shelf', 'rod', 'pants'] as const)
-        : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
+      ? (['open', 'shelf', 'rod', 'pants'] as const)
+      : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
 
     return (
       <div>
@@ -2161,10 +2158,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const el = elements?.[0] || { type: 'open' as const };
     const currentType = el.type;
 
-    // 상부에는 서랍 불가, 하부에는 옷봉만 (서랍 불가)
+    // 상부에는 서랍 불가 (인출 공간 부족), 하부에는 모든 타입 허용
     const availableTypes = subPart === 'upper'
-      ? (['open', 'shelf', 'rod'] as const)
-      : (['open', 'shelf', 'rod', 'pants'] as const);
+      ? (['open', 'shelf', 'rod', 'pants'] as const)
+      : (['open', 'shelf', 'drawer', 'rod', 'pants'] as const);
 
     return (
       <div>
