@@ -65,7 +65,8 @@ export function useLayoutBuilder(totalWidthMM: number, totalHeightMM: number) {
     return { ...root };
   }, []);
 
-  // 분할: leaf → direction + 2 children (50:50)
+  // 분할: leaf → direction + 2 children
+  // vertical 분할 시 하부 1000mm 기본 높이 적용 (루트 레벨에서만)
   const splitNode = useCallback((nodeId: string, direction: SplitDirection) => {
     setLayout(prev => {
       const depth = getNodeDepth(prev, nodeId);
@@ -74,18 +75,35 @@ export function useLayoutBuilder(totalWidthMM: number, totalHeightMM: number) {
       const node = findNode(prev, nodeId);
       if (!node || node.direction !== 'leaf') return prev;
 
+      // vertical 분할 + 루트 레벨(depth=0): 하부 1000mm 기본 높이 적용
+      // convertToConfig에서 패널 차감 후 ratio를 적용하므로, 역산하여 정확한 ratio 계산
+      let upperRatio = 0.5;
+      let lowerRatio = 0.5;
+      if (direction === 'vertical' && depth === 0 && totalHeightMM > 0) {
+        const PANEL_THICKNESS = 18;
+        const lowerOuterDefault = 1000; // 하부섹션 기본 외경 높이 (mm)
+        const lowerInner = lowerOuterDefault - 2 * PANEL_THICKNESS; // 964mm
+        const availableHeight = totalHeightMM - 4 * PANEL_THICKNESS; // 2섹션 = 4패널
+        if (availableHeight > lowerInner + 200) {
+          // 캔버스 아래(하부)의 ratio = lowerInner / availableHeight
+          lowerRatio = lowerInner / availableHeight;
+          upperRatio = 1 - lowerRatio;
+        }
+      }
+
+      // 캔버스 Y축: children[0]=위(상부), children[1]=아래(하부)
       const newNode: LayoutNode = {
         ...node,
         direction,
         children: [
-          { id: uuidv4(), direction: 'leaf', ratio: 0.5 },
-          { id: uuidv4(), direction: 'leaf', ratio: 0.5 },
+          { id: uuidv4(), direction: 'leaf', ratio: direction === 'vertical' ? upperRatio : 0.5 },
+          { id: uuidv4(), direction: 'leaf', ratio: direction === 'vertical' ? lowerRatio : 0.5 },
         ],
       };
 
       return replaceNode(prev, nodeId, newNode);
     });
-  }, [findNode, replaceNode]);
+  }, [findNode, replaceNode, totalHeightMM]);
 
   // 병합: 부모의 children 제거 → leaf로 전환
   const mergeNode = useCallback((nodeId: string) => {
