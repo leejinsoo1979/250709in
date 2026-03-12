@@ -68,8 +68,20 @@ export function convertToConfig(
     // → reverse해서 캔버스 아래→sections[0](하부), 캔버스 위→sections[last](상부)
     const reversed = [...flatChildren].reverse();
 
+    // 각 섹션의 외경(ratio × 전체높이)에서 패널 두께를 빼서 내경 계산
+    // → ratio가 외경 기준으로 설정되어도 정확한 내경이 나옴
+    const sectionInnerHeights = reversed.map((child) => {
+      const outerHeight = Math.round(child.ratio * height);
+      return outerHeight - 2 * PANEL_THICKNESS;
+    });
+    // 반올림 오차 보정: 마지막 섹션에 잔여 높이 할당
+    const sumInner = sectionInnerHeights.reduce((a, b) => a + b, 0);
+    if (sumInner !== availableHeight) {
+      sectionInnerHeights[sectionInnerHeights.length - 1] += availableHeight - sumInner;
+    }
+
     const sections = reversed.map((child, idx) => {
-      const sectionInnerHeight = Math.round(child.ratio * availableHeight);
+      const sectionInnerHeight = sectionInnerHeights[idx];
       const section = createSection(`section-${idx}`, sectionInnerHeight);
 
       // 독립 박스: 모든 섹션이 자체 상/하판 보유
