@@ -589,6 +589,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeWidthInput, setFreeWidthInput] = useState<string>('');
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
+  const [topFrameThicknessInput, setTopFrameThicknessInput] = useState<string>('');
 
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
@@ -865,6 +866,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
+        setTopFrameThicknessInput((currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)).toString());
       }
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
@@ -2088,14 +2090,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingLeft: '24px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap' }}>두께</span>
                   <input
-                    type="number"
-                    min={10}
-                    max={100}
-                    step={1}
-                    value={currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)}
-                    onChange={(e) => {
-                      const val = e.target.value === '' ? undefined : Number(e.target.value);
-                      updatePlacedModule(currentPlacedModule.id, { topFrameThickness: val });
+                    type="text"
+                    inputMode="numeric"
+                    value={topFrameThicknessInput}
+                    onChange={(e) => setTopFrameThicknessInput(e.target.value)}
+                    onBlur={() => {
+                      const val = parseInt(topFrameThicknessInput, 10);
+                      if (!isNaN(val) && val >= 10 && val <= 100 && currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { topFrameThickness: val });
+                        setTopFrameThicknessInput(val.toString());
+                      } else {
+                        // 유효하지 않으면 이전 값으로 복원
+                        setTopFrameThicknessInput((currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)).toString());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                     }}
                     style={{
                       width: '60px',
@@ -2105,6 +2115,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       borderRadius: '4px',
                       backgroundColor: 'var(--theme-bg)',
                       color: 'var(--theme-text)',
+                      textAlign: 'center',
                     }}
                   />
                   <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
