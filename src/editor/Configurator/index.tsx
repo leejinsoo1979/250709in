@@ -285,11 +285,34 @@ const Configurator: React.FC = () => {
 
   // 슬롯배치 모드 진입 시 컬럼 가이드 자동 켜기
   const isFurniturePlacementMode = useFurnitureStore(state => state.isFurniturePlacementMode);
+  const pendingCustomConfig = useFurnitureStore(state => state.pendingCustomConfig);
   useEffect(() => {
     if (isFurniturePlacementMode && viewMode === '3D') {
       setShowAll(true);
     }
   }, [isFurniturePlacementMode, viewMode]);
+
+  // 커스텀 가구 "레이아웃 확인" 후 배치 모드 시 좌우 사이드바 자동 폴딩
+  const sidebarStateBeforeDesign = useRef<{
+    activeSidebarTab: SidebarTab | null;
+    isRightPanelOpen: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (isFurniturePlacementMode && pendingCustomConfig) {
+      // 커스텀 가구 배치 모드 진입 → 사이드바 백업 후 접기
+      if (!sidebarStateBeforeDesign.current) {
+        sidebarStateBeforeDesign.current = { activeSidebarTab, isRightPanelOpen };
+        setActiveSidebarTab(null);
+        setIsRightPanelOpen(false);
+      }
+    } else if (sidebarStateBeforeDesign.current) {
+      // 배치 완료/취소 → 사이드바 복원
+      setActiveSidebarTab(sidebarStateBeforeDesign.current.activeSidebarTab);
+      setIsRightPanelOpen(sidebarStateBeforeDesign.current.isRightPanelOpen);
+      sidebarStateBeforeDesign.current = null;
+    }
+  }, [isFurniturePlacementMode, pendingCustomConfig]);
 
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
