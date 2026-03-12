@@ -4062,8 +4062,6 @@ const Configurator: React.FC = () => {
 
         </div>
 
-        </>)}
-
         {/* 걸레받이 높이/깊이 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
