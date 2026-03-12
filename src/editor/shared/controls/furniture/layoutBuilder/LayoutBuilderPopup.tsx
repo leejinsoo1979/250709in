@@ -156,123 +156,97 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 
         {/* 바디 */}
         <div className={styles.body}>
-          {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
-          {category === 'full' && (
-            <div className={styles.typeSelector}>
-              <button
-                className={`${styles.typeBtn} ${cabinetType === 'single' ? styles.typeBtnActive : ''}`}
-                onClick={() => handleTypeChange('single')}
-              >
-                <div className={styles.typeBtnIcon}>
-                  <div style={{ width: '14px', height: '20px', border: '2px solid currentColor', borderRadius: '2px' }} />
-                </div>
-                <div className={styles.typeBtnText}>
+          {/* 타입 + 치수 통합 바 */}
+          <div className={styles.configBar}>
+            {/* 싱글/듀얼 타입 선택 (full 카테고리만) */}
+            {category === 'full' && (
+              <div className={styles.typeSelector}>
+                <button
+                  className={`${styles.typeBtn} ${cabinetType === 'single' ? styles.typeBtnActive : ''}`}
+                  onClick={() => handleTypeChange('single')}
+                  title="싱글 (500mm)"
+                >
+                  <div style={{ width: '10px', height: '16px', border: '1.5px solid currentColor', borderRadius: '1px' }} />
                   <span className={styles.typeBtnLabel}>싱글</span>
-                  <span className={styles.typeBtnSize}>500mm</span>
-                </div>
-              </button>
-              <button
-                className={`${styles.typeBtn} ${cabinetType === 'dual' ? styles.typeBtnActive : ''}`}
-                onClick={() => handleTypeChange('dual')}
-              >
-                <div className={styles.typeBtnIcon}>
-                  <div style={{ display: 'flex', gap: '2px' }}>
-                    <div style={{ width: '12px', height: '20px', border: '2px solid currentColor', borderRadius: '2px' }} />
-                    <div style={{ width: '12px', height: '20px', border: '2px solid currentColor', borderRadius: '2px' }} />
+                </button>
+                <button
+                  className={`${styles.typeBtn} ${cabinetType === 'dual' ? styles.typeBtnActive : ''}`}
+                  onClick={() => handleTypeChange('dual')}
+                  title="듀얼 (1000mm)"
+                >
+                  <div style={{ display: 'flex', gap: '1px' }}>
+                    <div style={{ width: '8px', height: '16px', border: '1.5px solid currentColor', borderRadius: '1px' }} />
+                    <div style={{ width: '8px', height: '16px', border: '1.5px solid currentColor', borderRadius: '1px' }} />
                   </div>
-                </div>
-                <div className={styles.typeBtnText}>
                   <span className={styles.typeBtnLabel}>듀얼</span>
-                  <span className={styles.typeBtnSize}>1000mm</span>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* 치수 입력 (폭 × 높이 × 깊이) */}
-          <div className={styles.dimRow}>
-            <div className={styles.dimField}>
-              <label className={styles.dimLabel}>폭 (W)</label>
-              <div className={styles.dimInputRow}>
-                <input
-                  type="number"
-                  className={styles.dimInput}
-                  value={customWidth}
-                  min={200}
-                  max={2400}
-                  step={10}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (!isNaN(v)) handleWidthChange(v);
-                  }}
-                  onBlur={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (isNaN(v)) handleWidthChange(1000);
-                  }}
-                />
-                <span className={styles.dimUnit}>mm</span>
+                </button>
               </div>
+            )}
+            {category === 'full' && <span className={styles.configDivider} />}
+            {/* 치수 입력 */}
+            <div className={styles.dimRow}>
+              <label className={styles.dimLabel}>W</label>
+              <input
+                type="number"
+                className={styles.dimInput}
+                value={customWidth}
+                min={200}
+                max={2400}
+                step={10}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) handleWidthChange(v);
+                }}
+                onBlur={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (isNaN(v)) handleWidthChange(1000);
+                }}
+              />
+              <span className={styles.dimSeparator}>×</span>
+              <label className={styles.dimLabel}>H</label>
+              <input
+                type="number"
+                className={styles.dimInput}
+                value={Math.round(customHeight)}
+                min={200}
+                max={3000}
+                step={10}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) {
+                    setCustomHeight(Math.max(200, Math.min(3000, v)));
+                    resetLayout();
+                  }
+                }}
+                onBlur={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (isNaN(v)) {
+                    setCustomHeight(dimensions.height);
+                    resetLayout();
+                  }
+                }}
+              />
+              <span className={styles.dimSeparator}>×</span>
+              <label className={styles.dimLabel}>D</label>
+              <input
+                type="number"
+                className={styles.dimInput}
+                value={customDepth}
+                min={200}
+                max={800}
+                step={10}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) setCustomDepth(Math.max(200, Math.min(800, v)));
+                }}
+                onBlur={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (isNaN(v)) setCustomDepth(dimensions.depth);
+                }}
+              />
+              <span className={styles.dimUnit}>mm</span>
             </div>
-            <span className={styles.dimSeparator}>×</span>
-            <div className={styles.dimField}>
-              <label className={styles.dimLabel}>높이 (H)</label>
-              <div className={styles.dimInputRow}>
-                <input
-                  type="number"
-                  className={styles.dimInput}
-                  value={Math.round(customHeight)}
-                  min={200}
-                  max={3000}
-                  step={10}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (!isNaN(v)) {
-                      setCustomHeight(Math.max(200, Math.min(3000, v)));
-                      resetLayout();
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (isNaN(v)) {
-                      setCustomHeight(dimensions.height);
-                      resetLayout();
-                    }
-                  }}
-                />
-                <span className={styles.dimUnit}>mm</span>
-              </div>
-            </div>
-            <span className={styles.dimSeparator}>×</span>
-            <div className={styles.dimField}>
-              <label className={styles.dimLabel}>깊이 (D)</label>
-              <div className={styles.dimInputRow}>
-                <input
-                  type="number"
-                  className={styles.dimInput}
-                  value={customDepth}
-                  min={200}
-                  max={800}
-                  step={10}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (!isNaN(v)) setCustomDepth(Math.max(200, Math.min(800, v)));
-                  }}
-                  onBlur={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (isNaN(v)) setCustomDepth(dimensions.depth);
-                  }}
-                />
-                <span className={styles.dimUnit}>mm</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 가이드 */}
-          <div className={styles.guide}>
-            <span className={styles.guideIcon}>💡</span>
-            <p className={styles.guideText}>
-              영역 클릭 후 분할 | 경계선 드래그로 크기 조정 | 최대 3단계
-            </p>
+            <span className={styles.guideHint} title="영역 클릭 후 분할 | 경계선 드래그로 크기 조정 | 최대 3단계">💡</span>
           </div>
 
           {/* 캔버스 */}
