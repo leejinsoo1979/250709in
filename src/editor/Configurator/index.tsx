@@ -4593,6 +4593,37 @@ const Configurator: React.FC = () => {
               onDoorsToggle={toggleDoors}
               hasDoorsInstalled={hasDoorsInstalled}
               onDoorInstallationToggle={handleDoorInstallation}
+              hasSurround={(() => {
+                const fs = spaceInfo.freeSurround;
+                return fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
+              })()}
+              onSurroundToggle={() => {
+                const fs = spaceInfo.freeSurround || {
+                  left: { enabled: false, size: 50, offset: 0 },
+                  top: { enabled: true, size: 30, offset: 0 },
+                  right: { enabled: false, size: 50, offset: 0 },
+                };
+                const anyEnabled = fs.left.enabled || fs.top.enabled || fs.right.enabled;
+                if (anyEnabled) {
+                  // 전부 끄기
+                  handleSpaceInfoUpdate({
+                    freeSurround: {
+                      left: { ...fs.left, enabled: false },
+                      top: { ...fs.top, enabled: false },
+                      right: { ...fs.right, enabled: false },
+                    },
+                  });
+                } else {
+                  // 전부 켜기
+                  handleSpaceInfoUpdate({
+                    freeSurround: {
+                      left: { ...fs.left, enabled: true },
+                      top: { ...fs.top, enabled: true },
+                      right: { ...fs.right, enabled: true },
+                    },
+                  });
+                }
+              }}
             />
           )}
 

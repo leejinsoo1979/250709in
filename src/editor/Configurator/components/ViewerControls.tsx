@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
+import { TbBorderOuter } from 'react-icons/tb';
 import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -36,6 +37,8 @@ interface ViewerControlsProps {
   onDoorsToggle: () => void;
   hasDoorsInstalled?: boolean;
   onDoorInstallationToggle?: () => void;
+  hasSurround?: boolean;
+  onSurroundToggle?: () => void;
 }
 
 /** Thin vertical separator */
@@ -63,7 +66,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   doorsOpen,
   onDoorsToggle,
   hasDoorsInstalled = false,
-  onDoorInstallationToggle
+  onDoorInstallationToggle,
+  hasSurround = false,
+  onSurroundToggle
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
@@ -335,6 +340,18 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >
               <BiDoorOpen size={13} />
               {hasDoorsInstalled ? '도어제거' : '도어설치'}
+            </button>
+          </div>
+        )}
+
+        {isFreePlacement && onSurroundToggle && (
+          <div className={styles.segmentedControl}>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${hasSurround ? styles.segmentAccentActive : ''}`}
+              onClick={onSurroundToggle}
+            >
+              <TbBorderOuter size={13} />
+              서라운드
             </button>
           </div>
         )}
