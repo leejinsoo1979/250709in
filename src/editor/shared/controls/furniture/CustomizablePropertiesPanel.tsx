@@ -4077,7 +4077,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       <div
         className={styles.sectionPopup}
         style={{
-          top: Math.max(60, Math.min((activePopup.screenY ?? 300) - 200, window.innerHeight - 500)),
+          top: Math.max(60, Math.min((activePopup.screenY ?? 300) - 160, window.innerHeight - 450)),
         }}
       >
         <div className={styles.header}>
