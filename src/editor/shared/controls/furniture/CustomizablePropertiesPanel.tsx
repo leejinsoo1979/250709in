@@ -48,6 +48,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
     freeDepth: number;
   } | null>(null);
 
+  // 커스텀 토스트 메시지
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2000);
+  }, []);
+
   // 너비/깊이 입력용 문자열 상태 (기존 가구 패턴과 동일)
   const [widthInput, setWidthInput] = useState<string>('');
   const [depthInput, setDepthInput] = useState<string>('');
@@ -1875,7 +1882,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               key={type}
               className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
               onClick={() => {
-                if (type === 'pants') { alert('바지걸이는 준비중입니다.'); return; }
+                if (type === 'pants') { showToast('바지걸이는 준비중입니다.'); return; }
                 handleElementChange(sIdx, side, type);
               }}
             >
@@ -2261,7 +2268,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               key={type}
               className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
               onClick={() => {
-                if (type === 'pants') { alert('바지걸이는 준비중입니다.'); return; }
+                if (type === 'pants') { showToast('바지걸이는 준비중입니다.'); return; }
                 handleSubSplitElementChange(sIdx, areaKey, subPart, type);
               }}
             >
@@ -3371,6 +3378,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
   return (
     <>
+    {toastMsg && (
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '14px 28px',
+        borderRadius: '10px', fontSize: '14px', fontWeight: 500, zIndex: 9999,
+        pointerEvents: 'none', animation: 'fadeIn 0.2s ease-out',
+      }}>
+        {toastMsg}
+      </div>
+    )}
     <div className={isLayoutBuilderOpen ? styles.overlayFixed : styles.overlay}>
       <div className={isLayoutBuilderOpen ? styles.panelFixed : styles.panel} style={isLayoutBuilderOpen ? undefined : panelStyle}>
         {/* 헤더 */}
