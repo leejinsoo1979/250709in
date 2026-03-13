@@ -3559,12 +3559,16 @@ const Room: React.FC<RoomProps> = ({
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
       {!isLayoutBuilderOpen && (effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
-        // bottomPanelRaise 활성 가구가 있으면 하부프레임 숨김 (조절발 없을 때 하부프레임 불필요)
-        const hasBottomRaiseActive = placedModulesFromStore.some(m => {
+        // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 하부프레임 전체 숨김
+        // 일부만 활성이면 조절발 있는 가구용 하부프레임은 유지
+        const lowerFullModules = placedModulesFromStore.filter(m => {
+          const id = m.moduleId || '';
+          return !id.includes('upper');
+        });
+        if (lowerFullModules.length > 0 && lowerFullModules.every(m => {
           const secs = (m as any).customConfig?.sections;
           return secs?.[0]?.bottomPanelRaise && secs[0].bottomPanelRaise > 0;
-        });
-        if (hasBottomRaiseActive) return null;
+        })) return null;
         return true;
       })() && (() => {
         console.log('🎯 베이스프레임 높이 확인:', {
