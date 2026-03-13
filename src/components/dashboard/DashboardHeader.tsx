@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Settings, Search } from 'lucide-react';
 import Logo from '@/components/common/Logo';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
 import styles from './DashboardHeader.module.css';
 
@@ -40,6 +41,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             />
           </div>
         )}
+        <NotificationCenter />
         {onOpenSettings && (
           <button
             className={styles.settingsBtn}
