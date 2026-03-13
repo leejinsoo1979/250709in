@@ -3888,18 +3888,6 @@ const Room: React.FC<RoomProps> = ({
               });
             }
 
-            console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (뷰어 모드):', {
-              roomId: roomId.substring(0, 20),
-              viewMode,
-              renderMode,
-              activeZone,
-              selectedSlotIndex,
-              view2DDirection,
-              originalCount: placedModules?.length || 0,
-              filteredCount: filteredModules?.length || 0,
-              placedModules: filteredModules
-            });
-
             return (
               <>
                 <PlacedFurnitureContainer
@@ -3927,15 +3915,6 @@ const Room: React.FC<RoomProps> = ({
       ) : (
         // placedModules prop이 없는 경우 (에디터 모드)
         <>
-          {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
-            roomId: roomId.substring(0, 20),
-            viewMode,
-            renderMode,
-            view2DDirection,
-            activeZone,
-            selectedSlotIndex,
-            timestamp: Date.now()
-          })}
           <PlacedFurnitureContainer
             viewMode={viewMode}
             view2DDirection={view2DDirection}

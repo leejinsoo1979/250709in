@@ -942,13 +942,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerSectionHeight = sectionHeights[0];
                 const upperSectionHeight = sectionHeights[1];
 
-                console.log('🔍🔍🔍 섹션 높이:', {
-                  lowerSectionHeightMm: lowerSectionHeight / 0.01,
-                  upperSectionHeightMm: upperSectionHeight / 0.01,
-                  totalHeightMm: height / 0.01,
-                  basicThicknessMm: basicThickness / 0.01
-                });
-
                 // 가구 타입 확인
                 const is4Drawer = moduleData?.id?.includes('4drawer-hanging');
                 const isTwoDrawer = moduleData?.id?.includes('2drawer-hanging');

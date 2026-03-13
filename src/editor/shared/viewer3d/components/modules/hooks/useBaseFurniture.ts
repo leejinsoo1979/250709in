@@ -133,15 +133,17 @@ export const useBaseFurniture = (
     // 비율 계산: 새 높이 / 원래 높이 (sections 합 기준, 판재 두께 포함)
     const preciseRatio = renderHeightMm / originalSectionsTotal;
 
+    const scaledSections = originalModelConfig.sections.map((section: SectionConfig) => ({
+      ...section,
+      height: section.heightType === 'absolute'
+        ? Math.round(section.height * preciseRatio)
+        : section.height,
+      shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * preciseRatio))
+    }));
+
     return {
       ...originalModelConfig,
-      sections: originalModelConfig.sections.map((section: SectionConfig) => ({
-        ...section,
-        height: section.heightType === 'absolute'
-          ? Math.round(section.height * preciseRatio)
-          : section.height,
-        shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * preciseRatio))
-      }))
+      sections: scaledSections
     };
   }, [internalHeight, moduleData.dimensions.height, originalModelConfig]);
   

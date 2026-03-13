@@ -172,17 +172,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     backPanelThicknessMm: backPanelThicknessProp
   });
 
-  // DEBUG: BoxModule에서 받은 internalHeight와 baseFurniture.height 확인
-  if (isFreePlacement) {
-    console.log('🟢 [BoxModule FreeHeight]', {
-      moduleId: moduleData.id,
-      internalHeight,
-      baseFurnitureHeight: baseFurniture.height * 100,
-      moduleDataHeight: moduleData.dimensions.height,
-      customSections: customSections?.map(s => ({ h: s.height, calc: s.calculatedHeight })),
-      hasCustomConfig: !!customConfig,
-    });
-  }
 
   // 디버그: showFurniture 값 확인
   useEffect(() => {

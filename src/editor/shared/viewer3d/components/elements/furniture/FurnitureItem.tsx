@@ -1156,20 +1156,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.freeHeight
     : (actualModuleData?.dimensions.height || 0);
 
-  // DEBUG: freeHeight 렌더링 체인 확인
-  if (placedModule.isFreePlacement) {
-    console.log('🔴 [FreeHeight DEBUG]', {
-      id: placedModule.id,
-      moduleId: placedModule.moduleId,
-      isFreePlacement: placedModule.isFreePlacement,
-      freeHeight: placedModule.freeHeight,
-      furnitureHeightMm,
-      moduleDataHeight: moduleData?.dimensions?.height,
-      actualModuleDataHeight: actualModuleData?.dimensions?.height,
-      sectionsCount: actualModuleData?.modelConfig?.sections?.length,
-      sectionsHeights: actualModuleData?.modelConfig?.sections?.map(s => s.height),
-    });
-  }
 
   // customSections는 placedModule에 직접 저장된 것만 사용
   // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
