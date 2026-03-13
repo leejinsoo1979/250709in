@@ -176,9 +176,8 @@ export const useBaseFurniture = (
   const height = mmToThreeUnits(internalHeight || moduleData.dimensions.height);
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
-  
-  
-  
+
+
   // 내경 치수 계산
   const innerWidth = width - basicThickness * 2;
   const innerHeight = height - basicThickness * 2;
