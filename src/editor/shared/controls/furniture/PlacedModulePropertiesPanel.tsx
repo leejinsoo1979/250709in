@@ -1982,7 +1982,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeHeightInput, 10);
-                        console.log('🔴 [freeHeight onBlur]', { freeHeightInput, val, hasModule: !!currentPlacedModule });
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
                           setFreeHeightInput(val.toString());

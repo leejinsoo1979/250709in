@@ -630,11 +630,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   if (isCustomFurniture) {
     // 커스텀 가구: customFurnitureStore에서 데이터 변환
+    // 자유배치에서 freeHeight가 있으면 사용 (사용자가 높이를 수동 조정한 경우)
+    const custFurnHeight = (placedModule.isFreePlacement && placedModule.freeHeight)
+      ? placedModule.freeHeight
+      : (internalSpace?.height || zoneSpaceInfo?.height);
     moduleData = createModuleDataFromCustomFurniture(
       placedModule.moduleId,
       getCustomFurnitureById,
       placedModule.customWidth || internalSpace?.width,
-      internalSpace?.height || zoneSpaceInfo?.height,
+      custFurnHeight,
       placedModule.customDepth || internalSpace?.depth || zoneSpaceInfo?.depth
     );
 
