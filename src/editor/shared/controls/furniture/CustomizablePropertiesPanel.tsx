@@ -3367,9 +3367,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
           ) : (
             /* 설계모드: 항상 메인 편집 UI / 비설계모드: 연필 클릭 시 */
             <>
-              {/* 기본 치수 */}
+              {/* 전체 치수 (한 줄) */}
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>치수</div>
+                <div className={styles.sectionTitle}>전체 치수</div>
                 <div className={styles.row}>
                   <span className={styles.label}>너비</span>
                   <input
@@ -3382,18 +3382,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     onBlur={handleWidthInputBlur}
                     onKeyDown={handleInputKeyDown}
                   />
-                  <span className={styles.unit}>mm</span>
-                </div>
-                {widthError && <div className={styles.errorMessage}>{widthError}</div>}
-                <div className={styles.row}>
-                  <span className={styles.label}>높이</span>
+                  <span className={styles.label} style={{ marginLeft: 4 }}>높이</span>
                   <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
                     {furnitureHeight}
                   </span>
-                  <span className={styles.unit}>mm</span>
-                </div>
-                <div className={styles.row}>
-                  <span className={styles.label}>깊이</span>
+                  <span className={styles.label} style={{ marginLeft: 4 }}>깊이</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -3406,7 +3399,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   />
                   <span className={styles.unit}>mm</span>
                 </div>
-                {depthError && <div className={styles.errorMessage}>{depthError}</div>}
+                {(widthError || depthError) && <div className={styles.errorMessage}>{widthError || depthError}</div>}
               </div>
 
               <div className={styles.divider} />
