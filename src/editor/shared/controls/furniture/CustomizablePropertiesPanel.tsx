@@ -4074,7 +4074,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     {/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (메인 패널 왼쪽에 표시) */}
     {isLayoutBuilderOpen && focusedSectionIndex !== undefined && config.sections[focusedSectionIndex] && moduleId && (
-      <div className={styles.sectionPopup} style={{ top: activePopup.screenY ?? 100 }}>
+      <div className={styles.sectionPopup}>
         <div className={styles.header}>
           <span className={styles.headerTitle}>{getSectionPopupTitle()}</span>
           <button className={styles.closeButton} onClick={() => openCustomizableEditPopup(moduleId)}>
