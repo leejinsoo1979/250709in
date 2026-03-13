@@ -3289,22 +3289,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }
 
                   if (activeSub) {
-                    // 섹션 내경 높이 (mm) = 외경 - 2 * panelThickness
-                    const sectionInnerH = section.height;
-                    const lowerH = activeSub.lowerHeight;
-                    const upperH = sectionInnerH - lowerH;
-                    // 내경 시작 Y = 외경 하단 + 패널
-                    const innerStartY = range.startY + ptUnits;
-                    // 하부 구간 (외경: 패널 포함)
-                    const lowerOuterStartY = range.startY;
-                    const lowerOuterEndY = innerStartY + mmToThreeUnits(lowerH) + ptUnits; // 내경하단 + lowerH + 중간패널상단
-                    const lowerOuterMm = lowerH + 2 * panelThickness;
-                    // 상부 구간
-                    const upperOuterStartY = lowerOuterEndY;
-                    const upperOuterEndY = range.endY;
-                    const upperOuterMm = Math.round(range.heightMm - lowerOuterMm);
-                    rightSegments.push({ startY: lowerOuterStartY, endY: lowerOuterEndY, heightMm: Math.round(lowerOuterMm) });
-                    rightSegments.push({ startY: upperOuterStartY, endY: upperOuterEndY, heightMm: upperOuterMm });
+                    // 비율 기반 분할 (CustomizableBoxModule과 동일)
+                    // 서브분할은 섹션 내경 안에서 비율로 나누며, 중간에 별도 패널 없음
+                    const ratio = activeSub.lowerHeight / section.height;
+                    const totalY = range.endY - range.startY; // 전체 외경 Three.js 높이
+                    const lowerY = totalY * ratio;
+                    const splitY = range.startY + lowerY;
+                    const lowerMm = Math.round(range.heightMm * ratio);
+                    const upperMm = range.heightMm - lowerMm;
+                    rightSegments.push({ startY: range.startY, endY: splitY, heightMm: lowerMm });
+                    rightSegments.push({ startY: splitY, endY: range.endY, heightMm: upperMm });
                   } else {
                     rightSegments.push(range);
                   }
