@@ -44,7 +44,7 @@
   bottom: 0;
   background: var(--theme-surface);
   border-left: 1px solid var(--theme-border);
-  width: 360px;
+  width: 380px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -68,13 +68,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 10px 14px;
   border-bottom: 2px solid var(--theme-border);
   flex-shrink: 0;
 }
 
 .headerTitle {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--theme-text);
 }
@@ -101,18 +101,18 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 10px 14px;
 }
 
 .section {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .sectionTitle {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--theme-text-secondary);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -120,22 +120,22 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 5px;
 }
 
 .label {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--theme-text-secondary);
-  min-width: 60px;
+  min-width: 36px;
   flex-shrink: 0;
 }
 
 .input {
   flex: 1;
-  padding: 6px 10px;
+  padding: 5px 8px;
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
+  border-radius: 5px;
   background: var(--theme-background);
   color: var(--theme-text);
   font-size: 13px;
@@ -155,36 +155,37 @@
 .errorMessage {
   font-size: 11px;
   color: var(--theme-error, #ef4444);
-  margin: -4px 0 4px 60px;
+  margin: -2px 0 3px 36px;
 }
 
 .inputSmall {
-  width: 70px;
+  width: 64px;
   flex: none;
 }
 
 .unit {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--theme-text-tertiary);
+  flex-shrink: 0;
 }
 
 /* 토글 버튼 그룹 */
 .toggleGroup {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex: 1;
 }
 
 .toggleButton {
   flex: 1;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border: 1px solid var(--theme-border);
-  border-radius: 6px;
+  border-radius: 5px;
   background: var(--theme-background);
   color: var(--theme-text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .toggleButton:hover {
@@ -200,20 +201,20 @@
 /* 요소 타입 선택 */
 .elementSelector {
   display: flex;
-  gap: 4px;
-  margin-bottom: 10px;
+  gap: 3px;
+  margin-bottom: 8px;
 }
 
 .elementButton {
   flex: 1;
-  padding: 8px 6px;
+  padding: 6px 4px;
   border: 1px solid var(--theme-border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--theme-background);
   color: var(--theme-text-secondary);
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   text-align: center;
 }
 
@@ -231,20 +232,20 @@
 .heightList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .heightItem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .heightIndex {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--theme-text-tertiary);
-  width: 20px;
+  width: 18px;
   text-align: center;
 }
 
@@ -263,16 +264,16 @@
 }
 
 .addButton {
-  padding: 6px 12px;
+  padding: 5px 10px;
   border: 1px dashed var(--theme-border);
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .addButton:hover {
@@ -285,36 +286,36 @@
 .areaCard {
   background: var(--theme-background);
   border: 1px solid var(--theme-border);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 10px;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
 }
 
 .areaTitle {
   font-size: 12px;
   font-weight: 600;
   color: var(--theme-text);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 /* 하단 버튼 */
 .footer {
-  padding: 12px 20px;
+  padding: 10px 14px;
   border-top: 1px solid var(--theme-border);
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .footerButton {
   flex: 1;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .primaryButton {
@@ -347,15 +348,15 @@
 .divider {
   height: 1px;
   background: var(--theme-border);
-  margin: 16px 0;
+  margin: 10px 0;
 }
 
 /* 칸막이 위치 슬라이더 */
 .sliderRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .slider {
@@ -379,22 +380,22 @@
 .sliderValue {
   font-size: 12px;
   color: var(--theme-text-secondary);
-  min-width: 50px;
+  min-width: 44px;
   text-align: right;
 }
 
 /* My캐비닛 저장 버튼 */
 .saveButton {
   width: 100%;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border: 1px dashed var(--theme-border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -410,7 +411,7 @@
 /* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (메인 패널 왼쪽) */
 .sectionPopup {
   position: fixed;
-  right: 330px;
+  right: 396px;
   background: var(--theme-surface);
   border-radius: 12px;
   box-shadow: var(--popup-shadow);
