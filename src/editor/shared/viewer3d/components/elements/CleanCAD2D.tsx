@@ -3150,12 +3150,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const furnitureRightX = furnitureCenterX + mmToThreeUnits(furnitureWidth / 2);
 
           // horizontalSplit이 있는 섹션의 폭 치수 데이터 계산
-          const widthDimSections: { sectionIdx: number; dimY: number; boxes: { startX: number; endX: number; widthMm: number }[] }[] = [];
+          // 하부 섹션(아래쪽 절반) → 가구 아래에, 상부 섹션(위쪽 절반) → 가구 위에 표시
+          const widthDimSections: { sectionIdx: number; dimY: number; isAbove: boolean; anchorY: number; boxes: { startX: number; endX: number; widthMm: number }[] }[] = [];
+          const lastSectionIdx = sections.length - 1;
+          let bottomRowIndex = 0; // 아래로 누적되는 줄 번호
+          let topRowIndex = 0;    // 위로 누적되는 줄 번호
+          // 가구 전체 외경 상단 Y
+          const furnitureTopY = sectionRanges.length > 0 ? sectionRanges[sectionRanges.length - 1].endY : furnitureBaseY;
+
           sections.forEach((section: any, i: number) => {
             const hs = section.horizontalSplit;
             if (!hs) return;
 
-            const range = sectionRanges[i];
             // 섹션 내경 너비 (mm) = 가구 전체 외경 너비 - 좌우 패널 2개
             const sectionInnerWMm = furnitureWidth - 2 * panelThickness;
             const leftInnerWMm = hs.position;
@@ -3177,20 +3183,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 박스 X 위치 계산 (가구 좌측 외경 기준)
             const boxes: { startX: number; endX: number; widthMm: number }[] = [];
             let curX = furnitureLeftX;
-            // 좌측 박스
             boxes.push({ startX: curX, endX: curX + mmToThreeUnits(leftOuterWMm), widthMm: Math.round(leftOuterWMm) });
             curX += mmToThreeUnits(leftOuterWMm);
-            // 중앙 박스 (3분할)
             if (is3Split) {
               boxes.push({ startX: curX, endX: curX + mmToThreeUnits(centerOuterWMm), widthMm: Math.round(centerOuterWMm) });
               curX += mmToThreeUnits(centerOuterWMm);
             }
-            // 우측 박스
             boxes.push({ startX: curX, endX: curX + mmToThreeUnits(rightOuterWMm), widthMm: Math.round(rightOuterWMm) });
 
-            // 치수선 Y: 조절발/하부프레임 아래쪽으로 (바닥 기준 -80mm)
-            const wDimY = -mmToThreeUnits(80);
-            widthDimSections.push({ sectionIdx: i, dimY: wDimY, boxes });
+            // 하부 섹션 → 가구 아래, 상부 섹션 → 가구 위
+            const isAbove = i > lastSectionIdx / 2; // 상부 절반은 위에 표시
+            if (isAbove) {
+              const wDimY = furnitureTopY + mmToThreeUnits(80 + topRowIndex * 80);
+              widthDimSections.push({ sectionIdx: i, dimY: wDimY, isAbove: true, anchorY: furnitureTopY, boxes });
+              topRowIndex++;
+            } else {
+              const wDimY = -mmToThreeUnits(80 + bottomRowIndex * 80);
+              widthDimSections.push({ sectionIdx: i, dimY: wDimY, isAbove: false, anchorY: 0, boxes });
+              bottomRowIndex++;
+            }
           });
 
           return (
@@ -3255,9 +3266,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               ))}
 
-              {/* 좌우분할 섹션 하단 폭 치수선 */}
+              {/* 좌우분할 섹션 폭 치수선 (하부→아래, 상부→위) */}
               {widthDimSections.map((wd) => {
-                const extLineBottomY = wd.dimY - mmToThreeUnits(20);
+                // 연장선 끝: 치수선에서 20mm 더 바깥쪽
+                const extEndY = wd.isAbove ? wd.dimY + mmToThreeUnits(20) : wd.dimY - mmToThreeUnits(20);
+                // 텍스트 위치: 치수선에서 40mm 바깥쪽
+                const textY = wd.isAbove ? wd.dimY + mmToThreeUnits(40) : wd.dimY - mmToThreeUnits(40);
                 return (
                   <group key={`custom-width-dim-s${wd.sectionIdx}`}>
                     {wd.boxes.map((box, bIdx) => (
@@ -3286,17 +3300,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           renderOrder={100000}
                           depthTest={false}
                         />
-                        {/* 좌측 수직 보조 연장선 (바닥에서 치수선까지) */}
+                        {/* 좌측 수직 보조 연장선 (가구 끝에서 치수선까지) */}
                         <NativeLine name="dimension_line"
-                          points={[[box.startX, 0, 0.001], [box.startX, extLineBottomY, 0.001]]}
+                          points={[[box.startX, wd.anchorY, 0.001], [box.startX, extEndY, 0.001]]}
                           color={dimensionColor}
                           lineWidth={0.5}
                           renderOrder={100000}
                           depthTest={false}
                         />
-                        {/* 우측 수직 보조 연장선 (바닥에서 치수선까지) */}
+                        {/* 우측 수직 보조 연장선 (가구 끝에서 치수선까지) */}
                         <NativeLine name="dimension_line"
-                          points={[[box.endX, 0, 0.001], [box.endX, extLineBottomY, 0.001]]}
+                          points={[[box.endX, wd.anchorY, 0.001], [box.endX, extEndY, 0.001]]}
                           color={dimensionColor}
                           lineWidth={0.5}
                           renderOrder={100000}
@@ -3306,7 +3320,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         <Text
                           renderOrder={1000}
                           depthTest={false}
-                          position={[(box.startX + box.endX) / 2, wd.dimY - mmToThreeUnits(40), 0.01]}
+                          position={[(box.startX + box.endX) / 2, textY, 0.01]}
                           fontSize={baseFontSize}
                           color={textColor}
                           anchorX="center"
