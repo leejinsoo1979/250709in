@@ -3522,7 +3522,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     }
 
                     return (
-                      <div key={side} style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
+                      <div key={side} style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
                           <div className={styles.toggleGroup} style={{ flex: 'none' }}>
@@ -3788,7 +3788,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     }
 
                     return (
-                      <div key={side} style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
+                      <div key={side} style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
                           <div className={styles.toggleGroup} style={{ flex: 'none' }}>
