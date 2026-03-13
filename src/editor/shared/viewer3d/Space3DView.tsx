@@ -1716,7 +1716,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 readOnly={readOnly}
                 onFurnitureClick={onFurnitureClick || (isEmbedded ? handleEmbeddedFurnitureClick : undefined)}
                 ghostHighlightSlotIndex={previewGhostSlotIndex}
-                _placedModulesForRerender={placedModules}
+
               />
 
               {/* 단내림 공간 렌더링 */}

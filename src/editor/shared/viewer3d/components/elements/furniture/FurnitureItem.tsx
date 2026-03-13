@@ -276,7 +276,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onFurnitureClick,
   ghostHighlightSlotIndex
 }) => {
-  console.log('🟠 [FurnitureItem] render:', { id: placedModule.id.slice(0,8), freeHeight: placedModule.freeHeight, moduleId: placedModule.moduleId });
   const FURNITURE_DEBUG = false;
   const debugLog = (...args: any[]) => {
     if (FURNITURE_DEBUG) {
@@ -1205,6 +1204,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
         // 바닥판 올림(bottomPanelRaise) 활성 시 조절발 높이를 0으로 → 가구 전체가 바닥으로 내려감
         const bottomRaiseActive = adjustedCustomSections?.[0]?.bottomPanelRaise && adjustedCustomSections[0].bottomPanelRaise > 0;
+        console.log('🔴 [FurnitureItem Y] bottomPanelRaise 체크:', {
+          moduleId: placedModule.moduleId,
+          hasCustomSections: !!adjustedCustomSections,
+          sectionsLength: adjustedCustomSections?.length,
+          section0BottomPanelRaise: adjustedCustomSections?.[0]?.bottomPanelRaise,
+          bottomRaiseActive,
+          baseConfigType: spaceInfo.baseConfig?.type,
+          baseConfigHeight: spaceInfo.baseConfig?.height,
+        });
         const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65));
         const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
 

@@ -78,8 +78,20 @@ interface FurnitureDataState {
   resetAll: () => void;
 }
 
+// R3F ConcurrentRoot + Zustand v5 useSyncExternalStore 호환성 workaround:
+// react-reconciler의 ConcurrentRoot에서 첫 번째 store 업데이트의 re-render가 누락되는 문제 해결
+// set() 후 setTimeout으로 동일 데이터를 새 참조로 재전송하여 R3F reconciler가 확실히 처리하도록 함
+// R3F ConcurrentRoot + Zustand v5 호환성 workaround 헬퍼
+// (아래 store 생성 후 storeRef에 할당됨)
+let storeRef: typeof useFurnitureStore | null = null;
+const notifyR3F = (modules: PlacedModule[]) => {
+  setTimeout(() => {
+    storeRef?.setState({ placedModules: [...modules] });
+  }, 50);
+};
+
 // 가구 데이터 Store 생성
-export const useFurnitureStore = create<FurnitureDataState>((set) => ({
+export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 가구 데이터 초기 상태
   placedModules: [],
 
@@ -247,123 +259,115 @@ export const useFurnitureStore = create<FurnitureDataState>((set) => ({
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
-    set((state) => {
-      // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
-      const checkTarget = state.placedModules.find(m => m.id === id);
-      if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
-        const targetModule = checkTarget;
-        if (targetModule) {
-          const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
-          const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
+    // get() + non-callback set() 방식 사용
+    // (callback set()은 R3F Canvas 내부 컴포넌트 re-render를 트리거하지 않는 문제가 있음)
+    const state = get();
 
-          // 이동하는 모듈의 카테고리 확인
-          const spaceInfo = useSpaceConfigStore.getState();
-          const internalSpace = calculateInternalSpace(spaceInfo);
-          // updates.moduleId가 있으면 그걸 우선 사용 (모듈 타입이 변경되는 경우를 위해)
-          const moduleIdToCheck = updates.moduleId || targetModule.moduleId;
-          const targetModuleData = getModuleById(moduleIdToCheck, internalSpace, spaceInfo);
-          const targetCategory = targetModuleData?.category;
-          const isTargetUpper = targetCategory === 'upper';
-          const isTargetLower = targetCategory === 'lower';
+    // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
+    const checkTarget = state.placedModules.find(m => m.id === id);
+    if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
+      const targetModule = checkTarget;
+      if (targetModule) {
+        const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
+        const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
 
-          // 듀얼 가구인지 확인 (업데이트된 moduleId 사용)
-          const isDual = moduleIdToCheck.includes('dual-');
-          const occupiedSlots = isDual ? [newSlotIndex, newSlotIndex + 1] : [newSlotIndex];
+        // 이동하는 모듈의 카테고리 확인
+        const spaceInfo = useSpaceConfigStore.getState();
+        const internalSpace = calculateInternalSpace(spaceInfo);
+        // updates.moduleId가 있으면 그걸 우선 사용 (모듈 타입이 변경되는 경우를 위해)
+        const moduleIdToCheck = updates.moduleId || targetModule.moduleId;
+        const targetModuleData = getModuleById(moduleIdToCheck, internalSpace, spaceInfo);
+        const targetCategory = targetModuleData?.category;
+        const isTargetUpper = targetCategory === 'upper';
+        const isTargetLower = targetCategory === 'lower';
 
-          // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
-          let existingModulesInSlot: typeof state.placedModules = [];
-          for (const slotIdx of occupiedSlots) {
-            const modulesInThisSlot = state.placedModules.filter(m => {
-              if (m.id === id) return false; // 자기 자신은 제외
+        // 듀얼 가구인지 확인 (업데이트된 moduleId 사용)
+        const isDual = moduleIdToCheck.includes('dual-');
+        const occupiedSlots = isDual ? [newSlotIndex, newSlotIndex + 1] : [newSlotIndex];
 
-              // 기존 가구가 듀얼인지 확인
-              const existingIsDual = m.moduleId.includes('dual-');
-              const existingOccupiedSlots = existingIsDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
+        // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
+        let existingModulesInSlot: typeof state.placedModules = [];
+        for (const slotIdx of occupiedSlots) {
+          const modulesInThisSlot = state.placedModules.filter(m => {
+            if (m.id === id) return false; // 자기 자신은 제외
 
-              // 기존 가구가 차지하는 슬롯 중 하나라도 현재 슬롯과 겹치는지 확인
-              return existingOccupiedSlots.includes(slotIdx) && m.zone === newZone;
-            });
+            // 기존 가구가 듀얼인지 확인
+            const existingIsDual = m.moduleId.includes('dual-');
+            const existingOccupiedSlots = existingIsDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
 
-            // 중복 제거하며 추가
-            modulesInThisSlot.forEach(m => {
-              if (!existingModulesInSlot.find(existing => existing.id === m.id)) {
-                existingModulesInSlot.push(m);
-              }
-            });
+            // 기존 가구가 차지하는 슬롯 중 하나라도 현재 슬롯과 겹치는지 확인
+            return existingOccupiedSlots.includes(slotIdx) && m.zone === newZone;
+          });
+
+          // 중복 제거하며 추가
+          modulesInThisSlot.forEach(m => {
+            if (!existingModulesInSlot.find(existing => existing.id === m.id)) {
+              existingModulesInSlot.push(m);
+            }
+          });
+        }
+
+        if (existingModulesInSlot.length > 0) {
+
+          // 상부장-하부장 공존 가능 여부를 체크
+          let modulesToReplace: typeof state.placedModules = [];
+
+          // 기존 가구들과의 공존 가능 여부 체크
+          for (const existing of existingModulesInSlot) {
+            const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
+            const existingCategory = existingModuleData?.category;
+
+            // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
+            const canCoexist = (isTargetUpper && existingCategory === 'lower') ||
+              (isTargetLower && existingCategory === 'upper');
+
+            if (canCoexist) {
+              // 공존 가능하므로 modulesToReplace에 추가하지 않음
+            } else {
+              // 같은 카테고리거나 full 카테고리면 교체 필요
+              modulesToReplace.push(existing);
+            }
           }
 
-          if (existingModulesInSlot.length > 0) {
+          // 모든 기존 가구와 공존 가능하면 그냥 업데이트
+          if (modulesToReplace.length === 0) {
+            const newModules = state.placedModules.map(module =>
+              module.id === id
+                ? { ...module, ...updates }
+                : module
+            );
+            set({ placedModules: newModules });
+            notifyR3F(newModules);
+            return;
+          }
 
-            // 상부장-하부장 공존 가능 여부를 체크
-            let modulesToReplace: typeof state.placedModules = [];
-
-            // 기존 가구들과의 공존 가능 여부 체크
-            for (const existing of existingModulesInSlot) {
-              const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-              const existingCategory = existingModuleData?.category;
-              const existingIsDual = existing.moduleId.includes('dual-');
-
-              // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
-              const canCoexist = (isTargetUpper && existingCategory === 'lower') ||
-                (isTargetLower && existingCategory === 'upper');
-
-              if (canCoexist) {
-
-                // 공존 가능하므로 modulesToReplace에 추가하지 않음
-              } else {
-                // 같은 카테고리거나 full 카테고리면 교체 필요
-                modulesToReplace.push(existing);
-
-              }
-            }
-
-            // 모든 기존 가구와 공존 가능하면 그냥 업데이트
-            if (modulesToReplace.length === 0) {
-
-              const newModules = state.placedModules.map(module =>
-                module.id === id
-                  ? { ...module, ...updates }
-                  : module
-              );
-
-              return {
-                placedModules: newModules
-              };
-            }
-
-            // 교체가 필요한 경우
-            if (modulesToReplace.length > 0) {
-
-              // 교체될 가구들의 ID 목록
-              const replaceIds = modulesToReplace.map(m => m.id);
-
-              const filteredModules = state.placedModules.filter(m => !replaceIds.includes(m.id));
-              const newModules = filteredModules.map(module =>
-                module.id === id
-                  ? { ...module, ...updates }
-                  : module
-              );
-
-              return {
-                placedModules: newModules
-              };
-            }
+          // 교체가 필요한 경우
+          if (modulesToReplace.length > 0) {
+            const replaceIds = modulesToReplace.map(m => m.id);
+            const filteredModules = state.placedModules.filter(m => !replaceIds.includes(m.id));
+            const newModules = filteredModules.map(module =>
+              module.id === id
+                ? { ...module, ...updates }
+                : module
+            );
+            set({ placedModules: newModules });
+            notifyR3F(newModules);
+            return;
           }
         }
       }
+    }
 
-      // 충돌이 없으면 일반 업데이트
-      const newModules = state.placedModules.map(module => {
-        if (module.id === id) {
-          return { ...module, ...updates };
-        }
-        return module;
-      });
-
-      return {
-        placedModules: newModules
-      };
+    // 충돌이 없으면 일반 업데이트
+    const newModules = state.placedModules.map(module => {
+      if (module.id === id) {
+        return { ...module, ...updates };
+      }
+      return module;
     });
+
+    set({ placedModules: newModules });
+    notifyR3F(newModules);
   },
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)
@@ -593,6 +597,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set) => ({
     });
   }
 }));
+
+// R3F 호환성 workaround: store 참조 설정
+storeRef = useFurnitureStore;
 
 // Development mode에서 디버깅을 위해 store를 window에 노출
 if (process.env.NODE_ENV === 'development') {

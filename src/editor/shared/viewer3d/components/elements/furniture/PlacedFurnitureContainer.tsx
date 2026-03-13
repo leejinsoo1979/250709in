@@ -37,6 +37,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
+
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
 

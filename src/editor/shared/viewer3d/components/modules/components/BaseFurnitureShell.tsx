@@ -1258,16 +1258,6 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.backPanelThickness === nextProps.backPanelThickness &&
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
-  console.log('🏠 BaseFurnitureShell React.memo 비교:', {
-    materialPropsEqual,
-    otherPropsEqual,
-    prevInteriorTexture: prevMaterialConfig?.interiorTexture,
-    nextInteriorTexture: nextMaterialConfig?.interiorTexture,
-    prevDoorTexture: prevMaterialConfig?.doorTexture,
-    nextDoorTexture: nextMaterialConfig?.doorTexture,
-    willRerender: !(materialPropsEqual && otherPropsEqual)
-  });
-
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
   return materialPropsEqual && otherPropsEqual;
 }); 
