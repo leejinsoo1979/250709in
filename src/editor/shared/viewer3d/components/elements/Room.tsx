@@ -2638,9 +2638,9 @@ const Room: React.FC<RoomProps> = ({
                 //   측면패널: 18mm(X) × 높이(Y) × 40mm(Z) — 가구 측면에 붙음, 전면패널 뒤쪽
                 //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 가장 앞, 측면패널 가림
                 const SIDE_DEPTH_MM = 40; // 측면패널 Z 깊이 고정 40mm
-                // 측면패널: 가구 바로 옆(minLeftMM - 18/2), 전면패널 뒤쪽에 위치
+                // 측면패널: 가구 바로 옆(minLeftMM - 18/2), 전면패널 뒤쪽(Z- = 벽방향)
                 const sideX = mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2);
-                const sideZ = frontZ + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(SIDE_DEPTH_MM) / 2;
+                const sideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
                 // 전면패널: 가장 앞에서 gap 전체 폭
                 const frontX = mmToThreeUnits(minLeftMM - gapMM / 2);
                 return (
@@ -2727,9 +2727,9 @@ const Room: React.FC<RoomProps> = ({
                 //   측면패널: 18mm(X) × 높이(Y) × 40mm(Z) — 가구 측면에 붙음, 전면패널 뒤쪽
                 //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 가장 앞, 측면패널 가림
                 const SIDE_DEPTH_MM = 40;
-                // 측면패널: 가구 바로 옆(maxRightMM + 18/2), 전면패널 뒤쪽에 위치
+                // 측면패널: 가구 바로 옆(maxRightMM + 18/2), 전면패널 뒤쪽(Z- = 벽방향)
                 const sideX = mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2);
-                const sideZ = frontZ + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(SIDE_DEPTH_MM) / 2;
+                const sideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
                 // 전면패널: 가장 앞에서 gap 전체 폭
                 const frontX = mmToThreeUnits(maxRightMM + gapMM / 2);
                 return (
