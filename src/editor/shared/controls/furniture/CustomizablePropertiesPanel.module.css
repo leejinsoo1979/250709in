@@ -411,8 +411,6 @@
 .sectionPopup {
   position: fixed;
   right: 316px;
-  top: 50%;
-  transform: translateY(-50%);
   background: var(--theme-surface);
   border-radius: 12px;
   box-shadow: var(--popup-shadow);

@@ -4072,9 +4072,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
       </div>
     </div>
 
-    {/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (메인 패널 왼쪽에 표시) */}
+    {/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (클릭한 섹션 옆에 표시) */}
     {isLayoutBuilderOpen && focusedSectionIndex !== undefined && config.sections[focusedSectionIndex] && moduleId && (
-      <div className={styles.sectionPopup}>
+      <div
+        className={styles.sectionPopup}
+        style={{
+          top: Math.max(60, Math.min((activePopup.screenY ?? 300) - 200, window.innerHeight - 500)),
+        }}
+      >
         <div className={styles.header}>
           <span className={styles.headerTitle}>{getSectionPopupTitle()}</span>
           <button className={styles.closeButton} onClick={() => openCustomizableEditPopup(moduleId)}>
