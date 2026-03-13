@@ -3096,22 +3096,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 물리 구조 (아래→위): 하판(pt) → section[0] 내경 → 칸막이(pt) → section[1] 내경 → 상판(pt)
           const sectionRanges: { startY: number; endY: number; heightMm: number }[] = [];
           const sectionGap = customModule.customConfig.sectionGap ?? 0;
-          const pt = mmToThreeUnits(panelThickness);
+          const ptUnits = mmToThreeUnits(panelThickness);
 
           // 각 섹션의 내경 시작 Y 위치를 먼저 누적 계산
-          let internalY = furnitureBaseY + pt; // 하판 상단 = section[0] 내경 하단
+          let internalY = furnitureBaseY + ptUnits; // 하판 상단 = section[0] 내경 하단
           sections.forEach((section, i) => {
             const internalH = mmToThreeUnits(section.height);
             // 외경 하단: 이 섹션 아래의 패널 하단
-            const outerStartY = internalY - pt;
+            const outerStartY = internalY - ptUnits;
             // 외경 상단: 이 섹션 위의 패널 상단
-            const outerEndY = internalY + internalH + pt;
+            const outerEndY = internalY + internalH + ptUnits;
             // 외경 높이 (mm)
             const outerH = section.height + 2 * panelThickness;
             sectionRanges.push({ startY: outerStartY, endY: outerEndY, heightMm: outerH });
             // 다음 섹션 내경 시작: 칸막이 상단
             if (i < sections.length - 1) {
-              internalY = internalY + internalH + pt + mmToThreeUnits(sectionGap);
+              internalY = internalY + internalH + ptUnits + mmToThreeUnits(sectionGap);
             }
           });
 
