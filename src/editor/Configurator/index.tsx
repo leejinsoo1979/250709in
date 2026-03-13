@@ -336,9 +336,8 @@ const Configurator: React.FC = () => {
           shadowEnabled: latestShadow.current,
         };
       }
-      // 설계모드 동안 항상 강제: 사이드바 접기, 우측패널 접기, orthographic, 그림자 끄기
+      // 설계모드 동안 항상 강제: 사이드바 접기, orthographic, 그림자 끄기 (우측패널은 유지 — 커스텀 편집 패널이 덮음)
       setActiveSidebarTab(null);
-      setIsRightPanelOpen(false);
       setCameraMode('orthographic');
       setShadowEnabled(false);
     } else {
