@@ -70,7 +70,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   surroundGenerated = false,
   onSurroundGenerate
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
@@ -361,7 +361,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* ─── Right: View direction (2D 모드에서만 표시) ─── */}
       {viewMode === '2D' && (
-        <div className={styles.segmentedControl} style={{ marginRight: '80px' }}>
+        <div className={styles.segmentedControl} style={{ marginRight: isLayoutBuilderOpen ? '400px' : '80px' }}>
           {viewDirections.map((direction) => (
             <button
               key={direction.id}
