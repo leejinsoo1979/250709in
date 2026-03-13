@@ -3362,6 +3362,27 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </div>
           </div>
           <div className={styles.row}>
+            <span className={styles.label}>백패널</span>
+            <div className={styles.toggleGroup}>
+              <button
+                className={`${styles.toggleButton} ${section.showBackPanel !== false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showBackPanel: true };
+                  applyConfig({ ...config, sections });
+                }}
+              >있음</button>
+              <button
+                className={`${styles.toggleButton} ${section.showBackPanel === false ? styles.active : ''}`}
+                onClick={() => {
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], showBackPanel: false };
+                  applyConfig({ ...config, sections });
+                }}
+              >없음</button>
+            </div>
+          </div>
+          <div className={styles.row}>
             <span className={styles.label}>바닥판</span>
             <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginRight: '2px' }}>올림</span>
             <input
@@ -3386,27 +3407,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
               onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
             />
             <span className={styles.unit}>mm</span>
-          </div>
-          <div className={styles.row}>
-            <span className={styles.label}>백패널</span>
-            <div className={styles.toggleGroup}>
-              <button
-                className={`${styles.toggleButton} ${section.showBackPanel !== false ? styles.active : ''}`}
-                onClick={() => {
-                  const sections = [...config.sections];
-                  sections[sIdx] = { ...sections[sIdx], showBackPanel: true };
-                  applyConfig({ ...config, sections });
-                }}
-              >있음</button>
-              <button
-                className={`${styles.toggleButton} ${section.showBackPanel === false ? styles.active : ''}`}
-                onClick={() => {
-                  const sections = [...config.sections];
-                  sections[sIdx] = { ...sections[sIdx], showBackPanel: false };
-                  applyConfig({ ...config, sections });
-                }}
-              >없음</button>
-            </div>
           </div>
         </div>
       </div>
