@@ -59,7 +59,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen } = useUIStore();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -1716,6 +1716,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 readOnly={readOnly}
                 onFurnitureClick={onFurnitureClick || (isEmbedded ? handleEmbeddedFurnitureClick : undefined)}
                 ghostHighlightSlotIndex={previewGhostSlotIndex}
+                _placedModulesForRerender={placedModules}
               />
 
               {/* 단내림 공간 렌더링 */}
@@ -1950,7 +1951,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               style={{
                 position: 'absolute',
                 top: '10px',
-                right: '10px',
+                right: isLayoutBuilderOpen ? '390px' : '10px',
                 width: '36px',
                 height: '36px',
                 backgroundColor: view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
@@ -2001,7 +2002,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 style={{
                   position: 'absolute',
                   top: '56px', // 분할 버튼(36px) + 간격(10px) + 상단 여백(10px)
-                  right: '10px',
+                  right: isLayoutBuilderOpen ? '390px' : '10px',
                   width: '36px',
                   height: '36px',
                   backgroundColor: isMeasureMode
@@ -2052,7 +2053,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 style={{
                   position: 'absolute',
                   top: '102px', // 측정 버튼(56px + 36px) + 간격(10px)
-                  right: '10px',
+                  right: isLayoutBuilderOpen ? '390px' : '10px',
                   width: '36px',
                   height: '36px',
                   backgroundColor: isEraserMode
@@ -2100,7 +2101,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 style={{
                   position: 'absolute',
                   top: '148px',
-                  right: '10px',
+                  right: isLayoutBuilderOpen ? '390px' : '10px',
                   width: '36px',
                   height: '36px',
                   backgroundColor: view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
