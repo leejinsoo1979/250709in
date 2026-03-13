@@ -367,7 +367,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     }
   }, [textureUrl, material, furnitureColor, isDragging, isEditMode]);
 
-  // 섹션 높이 보정: height(외경)가 변경되면 sections 높이를 비례 스케일링
+  // 섹션 높이 보정: height(외경)가 변경되면 상부(마지막) 섹션만 조정
+  // 하부 섹션은 고정, 높이 차이를 상부 섹션이 흡수
   const sections = useMemo(() => {
     const raw = customConfig.sections;
     if (raw.length === 0) return raw;
@@ -377,22 +378,29 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const pc = (s.showBottomPanel !== false ? 1 : 0) + (s.showTopPanel !== false ? 1 : 0);
       return sum + s.height + pc * PT;
     }, 0);
-    // 1mm 이상 차이가 있으면 비례 스케일링
+    // 1mm 이상 차이가 있으면 조정
     if (Math.abs(outerSum - height) <= 1) return raw;
-    // 내경만 비례 조정 (패널 두께는 유지)
+
+    if (raw.length >= 2) {
+      // 다중 섹션: 하부(0~n-2) 고정, 상부(마지막)만 조정
+      const lastIdx = raw.length - 1;
+      const fixedOuter = raw.slice(0, lastIdx).reduce((sum, s) => {
+        const pc = (s.showBottomPanel !== false ? 1 : 0) + (s.showTopPanel !== false ? 1 : 0);
+        return sum + s.height + pc * PT;
+      }, 0);
+      const lastPc = (raw[lastIdx].showBottomPanel !== false ? 1 : 0) + (raw[lastIdx].showTopPanel !== false ? 1 : 0);
+      const newLastInner = height - fixedOuter - lastPc * PT;
+      if (newLastInner <= 0) return raw;
+      const adjusted = raw.map((s, i) => i === lastIdx ? { ...s, height: Math.round(newLastInner) } : s);
+      return adjusted;
+    }
+
+    // 단일 섹션: 기존 비례 스케일링
     const totalInner = raw.reduce((sum, s) => sum + s.height, 0);
     const totalPanels = outerSum - totalInner;
     const newTotalInner = height - totalPanels;
     if (newTotalInner <= 0 || totalInner <= 0) return raw;
-    const ratio = newTotalInner / totalInner;
-    const adjusted = raw.map((s, i) => ({
-      ...s,
-      height: i < raw.length - 1 ? Math.round(s.height * ratio) : s.height, // 마지막은 잔여값
-    }));
-    // 마지막 섹션에 잔여값 할당
-    const usedInner = adjusted.slice(0, -1).reduce((sum, s) => sum + s.height, 0);
-    adjusted[adjusted.length - 1] = { ...adjusted[adjusted.length - 1], height: newTotalInner - usedInner };
-    return adjusted;
+    return raw.map(s => ({ ...s, height: Math.round(newTotalInner) }));
   }, [customConfig.sections, customConfig.panelThickness, height]);
   const isSplit = sections.length >= 2;
 
