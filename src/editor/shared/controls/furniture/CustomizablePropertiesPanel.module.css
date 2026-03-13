@@ -44,7 +44,7 @@
   bottom: 0;
   background: var(--theme-surface);
   border-left: 1px solid var(--theme-border);
-  width: 300px;
+  width: 320px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
