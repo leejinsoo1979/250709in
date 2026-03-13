@@ -4503,9 +4503,23 @@ const Configurator: React.FC = () => {
                 return fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
               })()}
               onSurroundGenerate={() => {
-                console.log('🔧 [서라운드 생성] placedModules:', placedModules.length, 'free:', placedModules.filter(m => m.isFreePlacement).length);
+                const fs = spaceInfo.freeSurround;
+                const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
+
+                if (isActive) {
+                  // 서라운드 제거
+                  handleSpaceInfoUpdate({
+                    freeSurround: {
+                      left: { enabled: false, size: 18, offset: 0 },
+                      top: { enabled: false, size: 30, offset: 0 },
+                      right: { enabled: false, size: 18, offset: 0 },
+                    }
+                  });
+                  return;
+                }
+
+                // 서라운드 생성
                 const result = generateSurround(spaceInfo, placedModules);
-                console.log('🔧 [서라운드 생성] result:', JSON.stringify(result));
                 if (!result.success) {
                   alert(result.errorMessage);
                   return;
