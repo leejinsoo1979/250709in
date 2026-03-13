@@ -4084,6 +4084,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     {/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (클릭한 섹션 옆에 표시) */}
     {isLayoutBuilderOpen && focusedSectionIndex !== undefined && config.sections[focusedSectionIndex] && moduleId && (
+      <>
+      <div
+        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 999 }}
+        onClick={() => openCustomizableEditPopup(moduleId)}
+      />
       <div
         className={styles.sectionPopup}
         style={{
@@ -4119,6 +4124,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </button>
         </div>
       </div>
+      </>
     )}
     </>
   );
