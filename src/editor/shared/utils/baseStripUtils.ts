@@ -17,6 +17,7 @@ export interface BaseStripGroup {
   depthZOffsetMM: number; // 깊이 방향 Z오프셋 (mm, 하부섹션 깊이 축소 시)
   thicknessMM: number; // 그룹 내 최대 프레임 두께 (mm, 0 = 공간 기본값 사용)
   minFreeHeightMM: number; // 그룹 내 최소 freeHeight (mm, 상부프레임 확장 계산용)
+  maxFreeHeightMM: number; // 그룹 내 최대 freeHeight (mm, 원래 배치 높이)
   modules: PlacedModule[];
 }
 
@@ -120,6 +121,7 @@ export function computeBaseStripGroups(
     depthZOffsetMM: boundsWithModule[0].depthZOffsetMM,
     thicknessMM: 0,
     minFreeHeightMM: 0,
+    maxFreeHeightMM: 0,
     modules: [boundsWithModule[0].module],
   };
 
@@ -141,6 +143,7 @@ export function computeBaseStripGroups(
         depthZOffsetMM: item.depthZOffsetMM,
         thicknessMM: 0,
         minFreeHeightMM: 0,
+        maxFreeHeightMM: 0,
         modules: [item.module],
       };
     }
@@ -184,6 +187,7 @@ export function computeTopStripGroups(
     depthZOffsetMM: 0,
     thicknessMM: boundsWithModule[0].thicknessMM,
     minFreeHeightMM: boundsWithModule[0].freeHeightMM,
+    maxFreeHeightMM: boundsWithModule[0].freeHeightMM,
     modules: [boundsWithModule[0].module],
   };
 
@@ -197,6 +201,7 @@ export function computeTopStripGroups(
         currentGroup.minFreeHeightMM = currentGroup.minFreeHeightMM > 0
           ? Math.min(currentGroup.minFreeHeightMM, item.freeHeightMM)
           : item.freeHeightMM;
+        currentGroup.maxFreeHeightMM = Math.max(currentGroup.maxFreeHeightMM, item.freeHeightMM);
       }
       currentGroup.modules.push(item.module);
     } else {
@@ -209,6 +214,7 @@ export function computeTopStripGroups(
         depthZOffsetMM: 0,
         thicknessMM: item.thicknessMM,
         minFreeHeightMM: item.freeHeightMM,
+        maxFreeHeightMM: item.freeHeightMM,
         modules: [item.module],
       };
     }

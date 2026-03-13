@@ -2568,14 +2568,14 @@ const Room: React.FC<RoomProps> = ({
                 const centerXmm = (group.leftMM + group.rightMM) / 2;
                 const freeTopCfg = spaceInfo.freeSurround?.top;
 
-                // 가구 freeHeight가 공간 높이보다 작으면 → 상부프레임이 가구 상단~천장까지 확장
+                // 가구 freeHeight가 줄어들면 → 상부프레임이 줄어든 만큼 아래로 확장
                 const baseFrameThicknessMM = group.thicknessMM > 0
                   ? group.thicknessMM
                   : freeTopCfg?.enabled
                     ? freeTopCfg.size
                     : topBottomFrameHeightMm;
-                const gapMM = (group.minFreeHeightMM > 0 && group.minFreeHeightMM < heightMm)
-                  ? heightMm - group.minFreeHeightMM
+                const gapMM = (group.minFreeHeightMM > 0 && group.maxFreeHeightMM > group.minFreeHeightMM)
+                  ? group.maxFreeHeightMM - group.minFreeHeightMM
                   : 0;
                 const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
                 const groupFrameHeight = mmToThreeUnits(totalFrameHeightMM);
