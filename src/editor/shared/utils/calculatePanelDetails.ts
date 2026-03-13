@@ -310,14 +310,14 @@ export const calculatePanelDetails = (
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
       if (section.type === 'drawer' && section.count) {
         const drawerHeights = section.drawerHeights;
-        
+
         for (let i = 0; i < section.count; i++) {
           const drawerNum = i + 1;
-          
-          // 개별 서랍 높이 (drawerHeights 배열에서 가져오거나 균등 분할)
+
+          // 개별 서랍 높이 (drawerHeights 배열에서 가져오거나 균등 분할, freeHeight 비례 적용)
           let individualDrawerHeight;
           if (drawerHeights && drawerHeights[i]) {
-            individualDrawerHeight = drawerHeights[i];
+            individualDrawerHeight = Math.round(drawerHeights[i] * heightRatio);
           } else {
             // 균등 분할 (전체 섹션 높이 - 칸막이 두께) / 서랍 개수
             individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
