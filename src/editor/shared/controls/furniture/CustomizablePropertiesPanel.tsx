@@ -2730,7 +2730,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   <span className={styles.unit}>mm</span>
                 </div>
                 <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
-                  상부: {section.height - subSplit.lowerHeight}mm / 하부: {subSplit.lowerHeight}mm
+                  상부: {Math.round((section.height - subSplit.lowerHeight) / section.height * (section.height + 2 * panelThickness))}mm / 하부: {Math.round(subSplit.lowerHeight / section.height * (section.height + 2 * panelThickness))}mm
                 </div>
 
                 {/* 상부 내부 구조 */}
@@ -3069,6 +3069,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             const centerWVal = hs.secondPosition || 0;
             const extraPanels = is3 ? 4 : 2;
             const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
+            const pt2 = 2 * panelThickness;
             return (
               <div style={{ marginTop: '8px' }}>
                 <div className={styles.row}>
@@ -3076,13 +3077,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   <input
                     type="text" inputMode="numeric"
                     className={`${styles.input} ${styles.inputSmall}`}
-                    value={hSplitInputs[`${sIdx}-left`] ?? pos.toString()}
+                    value={hSplitInputs[`${sIdx}-left`] ?? (pos + pt2).toString()}
                     onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: e.target.value }))}
                     onBlur={() => {
                       const val = parseInt(hSplitInputs[`${sIdx}-left`] || '0');
-                      const clamped = Math.max(100, Math.min(innerW - 200, isNaN(val) ? pos : val));
+                      const innerVal = (isNaN(val) ? pos + pt2 : val) - pt2;
+                      const clamped = Math.max(100, Math.min(innerW - 200, innerVal));
                       handleHSplitPosition(sIdx, clamped);
-                      setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: clamped.toString() }));
+                      setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: (clamped + pt2).toString() }));
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                     style={{ width: '60px' }}
@@ -3095,13 +3097,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     <input
                       type="text" inputMode="numeric"
                       className={`${styles.input} ${styles.inputSmall}`}
-                      value={hSplitInputs[`${sIdx}-center`] ?? centerWVal.toString()}
+                      value={hSplitInputs[`${sIdx}-center`] ?? (centerWVal + pt2).toString()}
                       onChange={(e) => setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: e.target.value }))}
                       onBlur={() => {
                         const val = parseInt(hSplitInputs[`${sIdx}-center`] || '0');
-                        const clamped = Math.max(100, Math.min(innerW - pos - 200, isNaN(val) ? centerWVal : val));
+                        const innerVal = (isNaN(val) ? centerWVal + pt2 : val) - pt2;
+                        const clamped = Math.max(100, Math.min(innerW - pos - 200, innerVal));
                         handleHSplitSecondPosition(sIdx, clamped);
-                        setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: clamped.toString() }));
+                        setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: (clamped + pt2).toString() }));
                       }}
                       onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                       style={{ width: '60px' }}
@@ -3112,7 +3115,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 <div className={styles.row}>
                   <span className={styles.label}>우</span>
                   <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '60px' }}>
-                    {Math.round(rightW)}
+                    {Math.round(rightW + pt2)}
                   </span>
                   <span className={styles.unit}>mm</span>
                 </div>
@@ -3176,7 +3179,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           <span className={styles.unit}>mm</span>
                         </div>
                         <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>
-                          상부: {section.height - areaSubSplit.lowerHeight}mm / 하부: {areaSubSplit.lowerHeight}mm
+                          상부: {Math.round((section.height - areaSubSplit.lowerHeight) / section.height * (section.height + 2 * panelThickness))}mm / 하부: {Math.round(areaSubSplit.lowerHeight / section.height * (section.height + 2 * panelThickness))}mm
                         </div>
                         <div style={{ marginTop: '12px' }}>
                           <div className={styles.sectionTitle}>상부 내부 구조</div>
@@ -3608,7 +3611,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
                           {hasHSplit && section.horizontalSplit ? (
                             <>
-                              {/* 너비 입력 (내경 기준) */}
+                              {/* 너비 입력 (외경 기준 표시) */}
                               {(() => {
                                 const hs = section.horizontalSplit;
                                 const is3 = hs.secondPosition != null;
@@ -3616,6 +3619,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 const centerWVal = hs.secondPosition || 0;
                                 const extraPanels = is3 ? 4 : 2;
                                 const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
+                                const pt2 = 2 * panelThickness;
 
                                 // 너비 입력 onBlur 핸들러 (좌/중/우 중 하나를 변경하면 우측을 자동 조정)
                                 const syncInputs = (newLeft: number, newCenter: number) => {
@@ -3624,9 +3628,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                   if (is3) handleHSplitSecondPosition(realIdx, newCenter);
                                   setHSplitInputs((prev) => ({
                                     ...prev,
-                                    [`${realIdx}-left`]: newLeft.toString(),
-                                    [`${realIdx}-center`]: is3 ? newCenter.toString() : '',
-                                    [`${realIdx}-right`]: newRight.toString(),
+                                    [`${realIdx}-left`]: (newLeft + pt2).toString(),
+                                    [`${realIdx}-center`]: is3 ? (newCenter + pt2).toString() : '',
+                                    [`${realIdx}-right`]: (newRight + pt2).toString(),
                                   }));
                                 };
 
@@ -3638,12 +3642,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                         type="text"
                                         inputMode="numeric"
                                         className={`${styles.input} ${styles.inputSmall}`}
-                                        value={hSplitInputs[`${realIdx}-left`] ?? pos.toString()}
+                                        value={hSplitInputs[`${realIdx}-left`] ?? (pos + pt2).toString()}
                                         onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-left`]: e.target.value }))}
                                         onBlur={() => {
                                           const val = parseInt(hSplitInputs[`${realIdx}-left`] || '0');
+                                          const innerVal = (isNaN(val) ? pos + pt2 : val) - pt2;
                                           const maxLeft = innerW - extraPanels * panelThickness - (is3 ? centerWVal + 100 : 0) - 100;
-                                          const clamped = Math.max(100, Math.min(maxLeft, isNaN(val) ? pos : val));
+                                          const clamped = Math.max(100, Math.min(maxLeft, innerVal));
                                           syncInputs(clamped, centerWVal);
                                         }}
                                         onKeyDown={handleInputKeyDown}
@@ -3657,12 +3662,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                             type="text"
                                             inputMode="numeric"
                                             className={`${styles.input} ${styles.inputSmall}`}
-                                            value={hSplitInputs[`${realIdx}-center`] ?? centerWVal.toString()}
+                                            value={hSplitInputs[`${realIdx}-center`] ?? (centerWVal + pt2).toString()}
                                             onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-center`]: e.target.value }))}
                                             onBlur={() => {
                                               const val = parseInt(hSplitInputs[`${realIdx}-center`] || '0');
+                                              const innerVal = (isNaN(val) ? centerWVal + pt2 : val) - pt2;
                                               const maxCenter = innerW - 4 * panelThickness - pos - 100;
-                                              const clamped = Math.max(100, Math.min(maxCenter, isNaN(val) ? centerWVal : val));
+                                              const clamped = Math.max(100, Math.min(maxCenter, innerVal));
                                               syncInputs(pos, clamped);
                                             }}
                                             onKeyDown={handleInputKeyDown}
@@ -3676,13 +3682,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                         type="text"
                                         inputMode="numeric"
                                         className={`${styles.input} ${styles.inputSmall}`}
-                                        value={hSplitInputs[`${realIdx}-right`] ?? rightW.toString()}
+                                        value={hSplitInputs[`${realIdx}-right`] ?? (rightW + pt2).toString()}
                                         onChange={(e) => setHSplitInputs((prev) => ({ ...prev, [`${realIdx}-right`]: e.target.value }))}
                                         onBlur={() => {
                                           const val = parseInt(hSplitInputs[`${realIdx}-right`] || '0');
+                                          const innerVal = (isNaN(val) ? rightW + pt2 : val) - pt2;
                                           const maxRight = innerW - extraPanels * panelThickness - pos - (is3 ? centerWVal : 0);
-                                          const clamped = Math.max(100, Math.min(maxRight, isNaN(val) ? rightW : val));
-                                          // 우측 변경 시: 좌측을 자동 조정 (3분할: 중앙 유지)
+                                          const clamped = Math.max(100, Math.min(maxRight, innerVal));
                                           const newLeft = innerW - clamped - (is3 ? centerWVal : 0) - extraPanels * panelThickness;
                                           syncInputs(Math.max(100, newLeft), centerWVal);
                                         }}
@@ -3835,7 +3841,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
                       {hasHSplit && section.horizontalSplit ? (
                         <>
-                          {/* 너비 입력 (내경 기준) */}
+                          {/* 너비 입력 (외경 기준 표시) */}
                           {(() => {
                             const hs = section.horizontalSplit;
                             const is3 = hs.secondPosition != null;
@@ -3843,6 +3849,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             const centerWVal = hs.secondPosition || 0;
                             const extraPanels = is3 ? 4 : 2;
                             const rightW = innerW - pos - centerWVal - extraPanels * panelThickness;
+                            const pt2 = 2 * panelThickness;
 
                             const syncInputs = (newLeft: number, newCenter: number) => {
                               const newRight = innerW - newLeft - newCenter - extraPanels * panelThickness;
@@ -3850,9 +3857,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               if (is3) handleHSplitSecondPosition(0, newCenter);
                               setHSplitInputs((prev) => ({
                                 ...prev,
-                                ['0-left']: newLeft.toString(),
-                                ['0-center']: is3 ? newCenter.toString() : '',
-                                ['0-right']: newRight.toString(),
+                                ['0-left']: (newLeft + pt2).toString(),
+                                ['0-center']: is3 ? (newCenter + pt2).toString() : '',
+                                ['0-right']: (newRight + pt2).toString(),
                               }));
                             };
 
@@ -3864,12 +3871,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                     type="text"
                                     inputMode="numeric"
                                     className={`${styles.input} ${styles.inputSmall}`}
-                                    value={hSplitInputs['0-left'] ?? pos.toString()}
+                                    value={hSplitInputs['0-left'] ?? (pos + pt2).toString()}
                                     onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-left']: e.target.value }))}
                                     onBlur={() => {
                                       const val = parseInt(hSplitInputs['0-left'] || '0');
+                                      const innerVal = (isNaN(val) ? pos + pt2 : val) - pt2;
                                       const maxLeft = innerW - extraPanels * panelThickness - (is3 ? centerWVal + 100 : 0) - 100;
-                                      const clamped = Math.max(100, Math.min(maxLeft, isNaN(val) ? pos : val));
+                                      const clamped = Math.max(100, Math.min(maxLeft, innerVal));
                                       syncInputs(clamped, centerWVal);
                                     }}
                                     onKeyDown={handleInputKeyDown}
@@ -3883,12 +3891,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                         type="text"
                                         inputMode="numeric"
                                         className={`${styles.input} ${styles.inputSmall}`}
-                                        value={hSplitInputs['0-center'] ?? centerWVal.toString()}
+                                        value={hSplitInputs['0-center'] ?? (centerWVal + pt2).toString()}
                                         onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-center']: e.target.value }))}
                                         onBlur={() => {
                                           const val = parseInt(hSplitInputs['0-center'] || '0');
+                                          const innerVal = (isNaN(val) ? centerWVal + pt2 : val) - pt2;
                                           const maxCenter = innerW - 4 * panelThickness - pos - 100;
-                                          const clamped = Math.max(100, Math.min(maxCenter, isNaN(val) ? centerWVal : val));
+                                          const clamped = Math.max(100, Math.min(maxCenter, innerVal));
                                           syncInputs(pos, clamped);
                                         }}
                                         onKeyDown={handleInputKeyDown}
@@ -3902,12 +3911,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                     type="text"
                                     inputMode="numeric"
                                     className={`${styles.input} ${styles.inputSmall}`}
-                                    value={hSplitInputs['0-right'] ?? rightW.toString()}
+                                    value={hSplitInputs['0-right'] ?? (rightW + pt2).toString()}
                                     onChange={(e) => setHSplitInputs((prev) => ({ ...prev, ['0-right']: e.target.value }))}
                                     onBlur={() => {
                                       const val = parseInt(hSplitInputs['0-right'] || '0');
+                                      const innerVal = (isNaN(val) ? rightW + pt2 : val) - pt2;
                                       const maxRight = innerW - extraPanels * panelThickness - pos - (is3 ? centerWVal : 0);
-                                      const clamped = Math.max(100, Math.min(maxRight, isNaN(val) ? rightW : val));
+                                      const clamped = Math.max(100, Math.min(maxRight, innerVal));
                                       const newLeft = innerW - clamped - (is3 ? centerWVal : 0) - extraPanels * panelThickness;
                                       syncInputs(Math.max(100, newLeft), centerWVal);
                                     }}
