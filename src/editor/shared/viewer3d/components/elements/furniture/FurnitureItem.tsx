@@ -1171,36 +1171,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
 
-  let adjustedCustomSections = placedModule.customSections;
-
-  // 섹션 높이 조정 (actualModuleData.dimensions.height가 이미 조정된 경우를 대비)
-  if (actualModuleData?.modelConfig?.sections && actualModuleData.modelConfig.sections.length > 0) {
-    // 섹션들의 원래 총 높이 계산
-    const originalSectionsTotal = actualModuleData.modelConfig.sections.reduce((sum, s) => sum + s.height, 0);
-
-    // 현재 가구 높이와 섹션 총합이 다르면 조정 필요 (1mm 이상 차이)
-    if (Math.abs(furnitureHeightMm - originalSectionsTotal) > 1) {
-      const heightRatio = furnitureHeightMm / originalSectionsTotal;
-
-      // DEBUG: 섹션 높이 조정 확인
-      if (placedModule.isFreePlacement) {
-        console.log('🟡 [FreeHeight SECTIONS ADJUST]', {
-          furnitureHeightMm,
-          originalSectionsTotal,
-          heightRatio,
-        });
-      }
-
-      adjustedCustomSections = actualModuleData.modelConfig.sections.map(section => ({
-        ...section,
-        height: Math.round(section.height * heightRatio),
-        calculatedHeight: Math.round(section.height * heightRatio),
-        // 선반 위치도 비례해서 조정
-        shelfPositions: section.shelfPositions?.map(pos => Math.round(pos * heightRatio))
-      }));
-
-    }
-  }
+  // customSections는 placedModule에 직접 저장된 것만 사용
+  // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
+  const adjustedCustomSections = placedModule.customSections;
 
   // 하부장과 키큰장의 띄워서 배치 처리
   if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
