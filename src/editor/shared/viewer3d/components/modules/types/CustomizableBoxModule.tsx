@@ -1414,6 +1414,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const prefix = `box-${sIdx}`;
     const sectionLabel = sIdx === 0 ? '하부' : '상부';
 
+    // 바닥판 올림: 최하단 섹션(sIdx===0)에서 bottomPanelRaise > 0이면 측판을 조절발 높이만큼 아래로 연장
+    const bottomRaiseMm = sIdx === 0 ? (section.bottomPanelRaise || 0) : 0;
+    const bottomRaiseUnit = mmToUnit(bottomRaiseMm);
+    const footHeightMm = (spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0);
+    const legExtension = bottomRaiseMm > 0 ? mmToUnit(footHeightMm) : 0;
+
     // 칸막이 좌/우 독립 깊이 여부 (1단/2단 모두 지원)
     const hasPartitionInSection = section.hasPartition && section.partitionPosition;
     const hasIndependentDepth = hasPartitionInSection && (lowerLeftSectionDepth || lowerRightSectionDepth);
@@ -1435,18 +1441,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const rightInnerW = bInnerW - partPos - t / 2;
       const rightCenterX = partitionX + t / 2 + rightOuterW / 2;
 
-      // ── 좌측 측판 ──
+      // ── 좌측 측판 ── (바닥판 올림 시 다리로 연장)
       meshes.push(
         <BoxWithEdges key={`${prefix}-left`}
-          args={[t, boxH, leftD]} position={[-bInnerW / 2 - t / 2, centerY, leftZOffset]}
+          args={[t, boxH + legExtension, leftD]} position={[-bInnerW / 2 - t / 2, centerY - legExtension / 2, leftZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
-      // ── 우측 측판 ──
+      // ── 우측 측판 ── (바닥판 올림 시 다리로 연장)
       meshes.push(
         <BoxWithEdges key={`${prefix}-right`}
-          args={[t, boxH, rightD]} position={[bInnerW / 2 + t / 2, centerY, rightZOffset]}
+          args={[t, boxH + legExtension, rightD]} position={[bInnerW / 2 + t / 2, centerY - legExtension / 2, rightZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1469,7 +1475,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-left`}
           args={[leftInnerW - widthReduction / 2, t, leftD - backReduction]}
-          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2, leftZOffset + backReduction / 2]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, leftZOffset + backReduction / 2]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1490,7 +1496,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-right`}
           args={[rightInnerW - widthReduction / 2, t, rightD - backReduction]}
-          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2, rightZOffset + backReduction / 2]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, rightZOffset + backReduction / 2]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1522,12 +1528,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     } else {
     // ═══ 기존 단일 깊이 렌더링 ═══
 
-    // ═══ 1. 측판 (좌/우) - 전체 높이, 전체 깊이 ═══
+    // ═══ 1. 측판 (좌/우) - 전체 높이, 전체 깊이 (바닥판 올림 시 다리로 연장) ═══
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-left`}
-        args={[t, boxH, boxD]}
-        position={[-bInnerW / 2 - t / 2, centerY, 0]}
+        args={[t, boxH + legExtension, boxD]}
+        position={[-bInnerW / 2 - t / 2, centerY - legExtension / 2, 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1540,8 +1546,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-right`}
-        args={[t, boxH, boxD]}
-        position={[bInnerW / 2 + t / 2, centerY, 0]}
+        args={[t, boxH + legExtension, boxD]}
+        position={[bInnerW / 2 + t / 2, centerY - legExtension / 2, 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1577,7 +1583,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       <BoxWithEdges
         key={`${prefix}-bottom`}
         args={[bInnerW - widthReduction, t, boxD - backReduction]}
-        position={[0, centerY - boxH / 2 + t / 2, backReduction / 2]}
+        position={[0, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, backReduction / 2]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1677,6 +1683,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const rightCenterX = boxW / 2 - rightOuterW / 2;
 
     const sectionLabel = sections.length > 1 ? (sIdx === 0 ? '하부' : '상부') : '';
+    // 바닥판 올림: 최하단 섹션에서 측판 연장
+    const hsBottomRaiseMm = sIdx === 0 ? (section.bottomPanelRaise || 0) : 0;
+    const hsBottomRaiseUnit = mmToUnit(hsBottomRaiseMm);
+    const hsFootHeightMm = (spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0);
+    const hsLegExtension = hsBottomRaiseMm > 0 ? mmToUnit(hsFootHeightMm) : 0;
     // 패널 소유에 따른 내경 높이 계산
     const hsHasBottom = section.showBottomPanel !== false;
     const hsHasTop = section.showTopPanel !== false;
@@ -1721,12 +1732,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const hasContent = !!elements;
       const subMeshes: React.ReactNode[] = [];
 
-      // 측판 (좌/우)
+      // 측판 (좌/우) — 바닥판 올림 시 다리로 연장
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-left-panel`}
-          args={[t, sbBoxH, subBoxD]}
-          position={[subCenterX - subInnerW / 2 - t / 2, sbCenterY, 0]}
+          args={[t, sbBoxH + hsLegExtension, subBoxD]}
+          position={[subCenterX - subInnerW / 2 - t / 2, sbCenterY - hsLegExtension / 2, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1739,8 +1750,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-right-panel`}
-          args={[t, sbBoxH, subBoxD]}
-          position={[subCenterX + subInnerW / 2 + t / 2, sbCenterY, 0]}
+          args={[t, sbBoxH + hsLegExtension, subBoxD]}
+          position={[subCenterX + subInnerW / 2 + t / 2, sbCenterY - hsLegExtension / 2, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1773,7 +1784,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <BoxWithEdges
           key={`${prefix}-bottom`}
           args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2, backReduction / 2]}
+          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2 + hsBottomRaiseUnit, backReduction / 2]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -2222,8 +2233,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       })()}
 
-      {/* 조절발 (upper가 아닌 경우) — 하부(최하단) 섹션 너비/깊이/정렬 기준 */}
-      {showFurniture && category !== 'upper' && (() => {
+      {/* 조절발 (upper가 아닌 경우) — 바닥판 올림 시 숨김 */}
+      {showFurniture && category !== 'upper' && !(sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0) && (() => {
         const lowerSection = sections[0];
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
         const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
