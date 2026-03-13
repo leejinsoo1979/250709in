@@ -3266,6 +3266,71 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               ))}
 
+              {/* 우측 섹션 높이 치수선 (가구 우측) */}
+              {(() => {
+                const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
+                const extLineRightX = dimLineRightX + mmToThreeUnits(20);
+                return sectionRanges.map((range, idx) => (
+                  <group key={`custom-section-dim-right-${idx}`}>
+                    {/* 수직 치수선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[dimLineRightX, range.startY, 0.002], [dimLineRightX, range.endY, 0.002]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 하단 틱 마크 */}
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([dimLineRightX, range.startY, 0.002], [dimLineRightX, range.startY - 0.03, 0.002])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 상단 틱 마크 */}
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([dimLineRightX, range.endY, 0.002], [dimLineRightX, range.endY + 0.03, 0.002])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 하단 보조 연장선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[furnitureRightX, range.startY, 0.001], [extLineRightX, range.startY, 0.001]]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 상단 보조 연장선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[furnitureRightX, range.endY, 0.001], [extLineRightX, range.endY, 0.001]]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 치수 텍스트 */}
+                    <Text
+                      renderOrder={1000}
+                      depthTest={false}
+                      position={[dimLineRightX + mmToThreeUnits(60), (range.startY + range.endY) / 2, 0.01]}
+                      fontSize={baseFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                      rotation={[0, 0, Math.PI / 2]}
+                    >
+                      {range.heightMm}
+                    </Text>
+                  </group>
+                ));
+              })()}
+
               {/* 좌우분할 섹션 폭 치수선 (하부→아래, 상부→위) */}
               {widthDimSections.map((wd) => {
                 // 연장선 끝: 치수선에서 20mm 더 바깥쪽
