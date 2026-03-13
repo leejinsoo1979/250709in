@@ -2589,7 +2589,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       mmToThreeUnits(centerXmm),
                       groupTopY,
-                      topZPosition - topZOffset
+                      topZPosition + topZOffset
                     ]}
                     material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
@@ -2606,7 +2606,7 @@ const Room: React.FC<RoomProps> = ({
                 const gapMM = leftCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
                 const leftZOffset = leftCfg.offset ? mmToThreeUnits(leftCfg.offset) : 0;
-                const frontZ = topZPosition - leftZOffset;
+                const frontZ = topZPosition + leftZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이
                 // 바닥배치: 전체높이 - 바닥마감재
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
@@ -2698,7 +2698,7 @@ const Room: React.FC<RoomProps> = ({
                 const gapMM = rightCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
                 const rightZOffset = rightCfg.offset ? mmToThreeUnits(rightCfg.offset) : 0;
-                const frontZ = topZPosition - rightZOffset;
+                const frontZ = topZPosition + rightZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
