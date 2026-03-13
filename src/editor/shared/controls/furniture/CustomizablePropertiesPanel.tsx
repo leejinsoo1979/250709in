@@ -3951,13 +3951,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
               )}
 
               <div className={styles.divider} />
-
-              {/* 안내 */}
-              <div className={styles.section}>
-                <p className={styles.helpText} style={{ margin: '0', fontSize: '12px', color: '#999' }}>
-                  각 섹션의 세부 구조(칸막이, 선반 높이, 서랍 높이 등)는 3D 뷰에서 해당 섹션의 ⚙️ 아이콘을 클릭하여 설정하세요.
-                </p>
-              </div>
             </>
           )}
 
