@@ -344,7 +344,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        {isFreePlacement && onSurroundGenerate && (
+        {isFreePlacement && hasFurniture && onSurroundGenerate && (
           <div className={styles.segmentedControl}>
             <button
               className={`${styles.segmentButton} ${styles.segmentIconText} ${surroundGenerated ? styles.segmentAccentActive : ''}`}
