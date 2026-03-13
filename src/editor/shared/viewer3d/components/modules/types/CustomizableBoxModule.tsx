@@ -1500,9 +1500,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         />
       );
       }
-      // ── 좌측 백패널 ── (바닥판 올림 시 같이 올림)
+      // ── 좌측 백패널 ── (바닥판 올림 시 높이 축소 + 위로 올림)
       if (section.showBackPanel !== false) {
-      const leftBackH = bInnerH + mmToUnit(backPanelHeightExtMm);
+      const leftBackH = bInnerH + mmToUnit(backPanelHeightExtMm) - bottomRaiseUnit;
       const leftBackW = leftInnerW + mmToUnit(backPanelWidthExtMm / 2);
       meshes.push(
         <BoxWithEdges key={`${prefix}-back-left`}
@@ -1593,9 +1593,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     );
     }
 
-    // ═══ 3. 백패널 ═══ (바닥판 올림 시 같이 올림)
+    // ═══ 3. 백패널 ═══ (바닥판 올림 시 높이 축소 + 위로 올림)
     if (section.showBackPanel !== false) {
-    const backPanelH = bInnerH + mmToUnit(backPanelHeightExtMm);
+    const backPanelH = bInnerH + mmToUnit(backPanelHeightExtMm) - bottomRaiseUnit;
     const backPanelW = bInnerW + mmToUnit(backPanelWidthExtMm);
     const backPanelZ = -boxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
 
@@ -1792,9 +1792,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
       }
 
-      // 백패널 (바닥판 올림 시 같이 올림)
+      // 백패널 (바닥판 올림 시 높이 축소 + 위로 올림)
       if (section.showBackPanel !== false) {
-      const bpH = sbInnerH + mmToUnit(backPanelHeightExtMm);
+      const bpH = sbInnerH + mmToUnit(backPanelHeightExtMm) - hsBottomRaiseUnit;
       const bpW = subInnerW + mmToUnit(backPanelWidthExtMm);
       const bpZ = -subBoxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
       subMeshes.push(
