@@ -72,7 +72,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
+  const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
   const hasFurniture = placedModules.length > 0;
   const { theme } = useTheme();
@@ -344,7 +344,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        {isFreePlacement && hasFurniture && onSurroundGenerate && (
+        {isFreePlacement && hasFurniture && !isFurniturePlacementMode && onSurroundGenerate && (
           <div className={styles.segmentedControl}>
             <button
               className={`${styles.segmentButton} ${styles.segmentIconText} ${surroundGenerated ? styles.segmentAccentActive : ''}`}
