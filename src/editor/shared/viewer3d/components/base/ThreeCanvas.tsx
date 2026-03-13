@@ -465,14 +465,26 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     // 2D 모드 또는 Orthographic 카메라 리셋
     if (viewMode === '2D' || isOrthographicCamera) {
       const initial = initialCameraSetup.current;
-      const targetVec = initial.target2D?.clone() ?? new THREE.Vector3(...camera.target);
-      const positionVec = initial.position2D?.clone() ?? new THREE.Vector3(...camera.position);
-      const upVec = initial.up2D?.clone() ?? new THREE.Vector3(0, 1, 0);
-      const initialZoom = initial.zoom2D ?? camera.zoom;
+      // viewMode=3D + orthographic(설계모드)일 때는 position0/target0 사용
+      const use3DInitial = viewMode === '3D' && isOrthographicCamera;
+      const targetVec = use3DInitial
+        ? (initial.target0?.clone() ?? new THREE.Vector3(...camera.target))
+        : (initial.target2D?.clone() ?? new THREE.Vector3(...camera.target));
+      const positionVec = use3DInitial
+        ? (initial.position0?.clone() ?? new THREE.Vector3(...camera.position))
+        : (initial.position2D?.clone() ?? new THREE.Vector3(...camera.position));
+      const upVec = use3DInitial
+        ? new THREE.Vector3(0, 1, 0)
+        : (initial.up2D?.clone() ?? new THREE.Vector3(0, 1, 0));
+      const initialZoom = use3DInitial
+        ? (initial.zoom0 ?? camera.zoom)
+        : (initial.zoom2D ?? camera.zoom);
 
-      canvasLog('🎯 2D 카메라 완전 리셋', {
+      canvasLog('🎯 카메라 완전 리셋', {
         initialZoom,
-        storedTarget: initial.target2D?.toArray(),
+        use3DInitial,
+        storedTarget: targetVec.toArray(),
+        storedPosition: positionVec.toArray(),
       });
 
       // damping 임시 비활성화 — update() 시 panOffset이 즉시 0으로 리셋되도록
