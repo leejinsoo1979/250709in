@@ -2572,8 +2572,9 @@ const Room: React.FC<RoomProps> = ({
                   : freeTopCfg?.enabled
                     ? mmToThreeUnits(freeTopCfg.size)
                     : topBottomFrameHeight;
-                const topOffsetMM = freeTopCfg?.offset ?? spaceInfo.frameSize?.topOffset ?? 0;
-                const groupTopY = panelStartY + height - groupFrameHeight / 2 - mmToThreeUnits(topOffsetMM);
+                const groupTopY = panelStartY + height - groupFrameHeight / 2;
+                // Z축 옵셋: 양수=앞으로, 음수=뒤로 (가구 앞면 기준)
+                const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
                 return (
                   <BoxWithEdges
                     hideEdges={hideEdges}
@@ -2588,7 +2589,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       mmToThreeUnits(centerXmm),
                       groupTopY,
-                      topZPosition
+                      topZPosition - topZOffset
                     ]}
                     material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
@@ -2603,7 +2604,9 @@ const Room: React.FC<RoomProps> = ({
                 const method = leftCfg.method || 'none';
                 if (method === 'none') return null;
                 const gapMM = leftCfg.gap || 0;
-                const frontZ = topZPosition;
+                // Z축 옵셋: 양수=앞으로, 음수=뒤로
+                const leftZOffset = leftCfg.offset ? mmToThreeUnits(leftCfg.offset) : 0;
+                const frontZ = topZPosition - leftZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이
                 // 바닥배치: 전체높이 - 바닥마감재
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
@@ -2693,7 +2696,9 @@ const Room: React.FC<RoomProps> = ({
                 const method = rightCfg.method || 'none';
                 if (method === 'none') return null;
                 const gapMM = rightCfg.gap || 0;
-                const frontZ = topZPosition;
+                // Z축 옵셋: 양수=앞으로, 음수=뒤로
+                const rightZOffset = rightCfg.offset ? mmToThreeUnits(rightCfg.offset) : 0;
+                const frontZ = topZPosition - rightZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;

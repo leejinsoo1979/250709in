@@ -4045,58 +4045,83 @@ const Configurator: React.FC = () => {
                 <h3 className={styles.sectionTitle}>서라운드</h3>
               </div>
               <div className={styles.subSetting}>
-                {/* 좌측 */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
-                    좌측 {fs!.left.gap != null ? `(${fs!.left.gap}mm)` : ''}
-                  </span>
-                  <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
-                    <button
-                      className={`${styles.toggleButton} ${fs!.left.enabled ? styles.toggleButtonActive : ''}`}
-                      style={{ padding: '2px 8px', fontSize: '11px' }}
-                      onClick={() => {
-                        const updated = { ...fs!, left: { ...fs!.left, enabled: !fs!.left.enabled } };
-                        setSpaceInfo({ freeSurround: updated });
-                      }}
-                    >
-                      {fs!.left.enabled ? 'ON' : 'OFF'}
-                    </button>
-                  </div>
-                </div>
-                {/* 상부 */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>상부</span>
-                  <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
-                    <button
-                      className={`${styles.toggleButton} ${fs!.top.enabled ? styles.toggleButtonActive : ''}`}
-                      style={{ padding: '2px 8px', fontSize: '11px' }}
-                      onClick={() => {
-                        const updated = { ...fs!, top: { ...fs!.top, enabled: !fs!.top.enabled } };
-                        setSpaceInfo({ freeSurround: updated });
-                      }}
-                    >
-                      {fs!.top.enabled ? 'ON' : 'OFF'}
-                    </button>
-                  </div>
-                </div>
-                {/* 우측 */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
-                    우측 {fs!.right.gap != null ? `(${fs!.right.gap}mm)` : ''}
-                  </span>
-                  <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
-                    <button
-                      className={`${styles.toggleButton} ${fs!.right.enabled ? styles.toggleButtonActive : ''}`}
-                      style={{ padding: '2px 8px', fontSize: '11px' }}
-                      onClick={() => {
-                        const updated = { ...fs!, right: { ...fs!.right, enabled: !fs!.right.enabled } };
-                        setSpaceInfo({ freeSurround: updated });
-                      }}
-                    >
-                      {fs!.right.enabled ? 'ON' : 'OFF'}
-                    </button>
-                  </div>
-                </div>
+                {(['left', 'top', 'right'] as const).map((side) => {
+                  const sideData = fs![side];
+                  const label = side === 'left' ? '좌측' : side === 'top' ? '상부' : '우측';
+                  const gapText = sideData.gap != null ? ` (${sideData.gap}mm)` : '';
+                  return (
+                    <div key={side}>
+                      {/* ON/OFF 토글 행 */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
+                          {label}{gapText}
+                        </span>
+                        <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
+                          <button
+                            className={`${styles.toggleButton} ${sideData.enabled ? styles.toggleButtonActive : ''}`}
+                            style={{ padding: '2px 8px', fontSize: '11px' }}
+                            onClick={() => {
+                              const updated = { ...fs!, [side]: { ...sideData, enabled: !sideData.enabled } };
+                              setSpaceInfo({ freeSurround: updated });
+                            }}
+                          >
+                            {sideData.enabled ? 'ON' : 'OFF'}
+                          </button>
+                        </div>
+                      </div>
+                      {/* ON일 때 옵셋 설정 */}
+                      {sideData.enabled && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0 6px 12px', fontSize: '11px' }}>
+                          <span style={{ color: 'var(--theme-text-muted)', minWidth: '24px' }}>옵셋</span>
+                          <span style={{ color: 'var(--theme-text-muted)' }}>앞</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={sideData.offset > 0 ? sideData.offset : ''}
+                            placeholder="0"
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '' || /^\d+$/.test(val)) {
+                                const num = val === '' ? 0 : parseInt(val, 10);
+                                const updated = { ...fs!, [side]: { ...sideData, offset: num } };
+                                setSpaceInfo({ freeSurround: updated });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const val = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                              const updated = { ...fs!, [side]: { ...sideData, offset: val } };
+                              setSpaceInfo({ freeSurround: updated });
+                            }}
+                            className={styles.frameNumberInput}
+                            style={{ width: '36px', textAlign: 'center' }}
+                          />
+                          <span style={{ color: 'var(--theme-text-muted)' }}>뒤</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={sideData.offset < 0 ? Math.abs(sideData.offset) : ''}
+                            placeholder="0"
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '' || /^\d+$/.test(val)) {
+                                const num = val === '' ? 0 : -parseInt(val, 10);
+                                const updated = { ...fs!, [side]: { ...sideData, offset: num } };
+                                setSpaceInfo({ freeSurround: updated });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const val = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                              const updated = { ...fs!, [side]: { ...sideData, offset: val === -0 ? 0 : val } };
+                              setSpaceInfo({ freeSurround: updated });
+                            }}
+                            className={styles.frameNumberInput}
+                            style={{ width: '36px', textAlign: 'center' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

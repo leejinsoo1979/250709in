@@ -1156,6 +1156,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.freeHeight
     : (actualModuleData?.dimensions.height || 0);
 
+  // DEBUG: freeHeight 렌더링 체인 확인
+  if (placedModule.isFreePlacement) {
+    console.log('🔴 [FreeHeight DEBUG]', {
+      id: placedModule.id,
+      moduleId: placedModule.moduleId,
+      isFreePlacement: placedModule.isFreePlacement,
+      freeHeight: placedModule.freeHeight,
+      furnitureHeightMm,
+      moduleDataHeight: moduleData?.dimensions?.height,
+      actualModuleDataHeight: actualModuleData?.dimensions?.height,
+      sectionsCount: actualModuleData?.modelConfig?.sections?.length,
+      sectionsHeights: actualModuleData?.modelConfig?.sections?.map(s => s.height),
+    });
+  }
+
   let adjustedCustomSections = placedModule.customSections;
 
   // 섹션 높이 조정 (actualModuleData.dimensions.height가 이미 조정된 경우를 대비)
@@ -1167,6 +1182,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (Math.abs(furnitureHeightMm - originalSectionsTotal) > 1) {
       const heightRatio = furnitureHeightMm / originalSectionsTotal;
 
+      // DEBUG: 섹션 높이 조정 확인
+      if (placedModule.isFreePlacement) {
+        console.log('🟡 [FreeHeight SECTIONS ADJUST]', {
+          furnitureHeightMm,
+          originalSectionsTotal,
+          heightRatio,
+        });
+      }
 
       adjustedCustomSections = actualModuleData.modelConfig.sections.map(section => ({
         ...section,
