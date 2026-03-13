@@ -7,6 +7,9 @@ import { useFurnitureStore } from './furnitureStore';
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
 
+// 자유배치 서라운드 생성 방식
+export type SurroundMethod = 'none' | 'ep' | 'lshape';
+
 export interface FrameSize {
   left: number;
   right: number;
@@ -19,6 +22,8 @@ export interface FreeSurroundSide {
   enabled: boolean;
   size: number;    // 두께 (mm)
   offset: number;  // 옵셋 (mm)
+  method?: SurroundMethod;  // 서라운드 생성 방식
+  gap?: number;             // 실측 gap (mm)
 }
 
 export interface FreeSurroundConfig {
