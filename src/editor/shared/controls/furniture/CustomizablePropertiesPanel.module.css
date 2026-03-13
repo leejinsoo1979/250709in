@@ -407,6 +407,22 @@
   background: var(--theme-primary-light, rgba(59, 130, 246, 0.05));
 }
 
+/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (메인 패널 왼쪽) */
+.sectionPopup {
+  position: fixed;
+  right: 308px;
+  background: var(--theme-surface);
+  border-radius: 12px;
+  box-shadow: var(--popup-shadow);
+  width: 320px;
+  max-height: calc(100vh - 100px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.15s ease-out;
+  z-index: 1000;
+}
+
 /* 선반 위치 기준 (위에서/아래에서) 토글 */
 .refDirToggle {
   display: flex;

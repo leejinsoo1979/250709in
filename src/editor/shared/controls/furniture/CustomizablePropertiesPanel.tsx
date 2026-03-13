@@ -3288,58 +3288,60 @@ const CustomizablePropertiesPanel: React.FC = () => {
     );
   };
 
+  // 섹션 팝업 헤더 타이틀 생성
+  const getSectionPopupTitle = () => {
+    if (focusedSectionIndex === undefined) return '';
+    const sec = config.sections[focusedSectionIndex];
+    if (!sec) return '섹션 설정';
+
+    let areaH = sec.height;
+    if (focusedSubPart && focusedAreaSide) {
+      const subSplit = sec.areaSubSplits?.[focusedAreaSide];
+      if (subSplit?.enabled) {
+        areaH = focusedSubPart === 'lower' ? subSplit.lowerHeight : sec.height - subSplit.lowerHeight;
+      }
+    }
+
+    const innerW = furnitureWidth - 2 * panelThickness;
+    let areaW = innerW;
+    if (focusedAreaSide && sec.horizontalSplit) {
+      const hs = sec.horizontalSplit;
+      if (focusedAreaSide === 'left') {
+        areaW = hs.position;
+      } else if (focusedAreaSide === 'center' && hs.secondPosition !== undefined) {
+        areaW = hs.secondPosition;
+      } else {
+        const dividers = hs.secondPosition !== undefined ? 2 : 1;
+        areaW = innerW - hs.position - (hs.secondPosition || 0) - 2 * dividers * panelThickness;
+      }
+    } else if (focusedAreaSide && sec.hasPartition && sec.partitionPosition) {
+      areaW = focusedAreaSide === 'left'
+        ? sec.partitionPosition - panelThickness / 2
+        : innerW - sec.partitionPosition - panelThickness / 2;
+    }
+
+    const sectionLabel = config.sections.length === 1
+      ? '섹션'
+      : config.sections.length === 3
+        ? (focusedSectionIndex === 2 ? '상부섹션' : focusedSectionIndex === 1 ? '중간섹션' : '하부섹션')
+        : (focusedSectionIndex === 0 ? '하부섹션' : '상부섹션');
+    const sideLabel = focusedAreaSide ? ` ${focusedAreaSide === 'left' ? '좌측' : '우측'}` : '';
+    const subPartLabel = focusedSubPart ? (focusedSubPart === 'upper' ? ' 상부' : ' 하부') : '';
+
+    return `${sectionLabel}${sideLabel}${subPartLabel} (${Math.round(areaW)}×${Math.round(areaH)})`;
+  };
+
   return (
+    <>
     <div className={isLayoutBuilderOpen ? styles.overlayFixed : styles.overlay}>
       <div className={isLayoutBuilderOpen ? styles.panelFixed : styles.panel} style={isLayoutBuilderOpen ? undefined : panelStyle}>
         {/* 헤더 */}
         <div className={styles.header}>
           <span className={styles.headerTitle}>
-            {(() => {
-              if (focusedSectionIndex === undefined) return '커스터마이징 가구 편집';
-              const sec = config.sections[focusedSectionIndex];
-              if (!sec) return '섹션 설정';
-
-              // 영역 높이 계산
-              let areaH = sec.height;
-              if (focusedSubPart && focusedAreaSide) {
-                const subSplit = sec.areaSubSplits?.[focusedAreaSide];
-                if (subSplit?.enabled) {
-                  areaH = focusedSubPart === 'lower' ? subSplit.lowerHeight : sec.height - subSplit.lowerHeight;
-                }
-              }
-
-              // 영역 너비 계산
-              const innerW = furnitureWidth - 2 * panelThickness;
-              let areaW = innerW;
-              if (focusedAreaSide && sec.horizontalSplit) {
-                // 좌우분할(horizontalSplit) 서브 박스 너비
-                const hs = sec.horizontalSplit;
-                if (focusedAreaSide === 'left') {
-                  areaW = hs.position;
-                } else if (focusedAreaSide === 'center' && hs.secondPosition !== undefined) {
-                  areaW = hs.secondPosition;
-                } else {
-                  // right
-                  const dividers = hs.secondPosition !== undefined ? 2 : 1;
-                  areaW = innerW - hs.position - (hs.secondPosition || 0) - 2 * dividers * panelThickness;
-                }
-              } else if (focusedAreaSide && sec.hasPartition && sec.partitionPosition) {
-                areaW = focusedAreaSide === 'left'
-                  ? sec.partitionPosition - panelThickness / 2
-                  : innerW - sec.partitionPosition - panelThickness / 2;
-              }
-
-              // 라벨 조합
-              const sectionLabel = config.sections.length === 1
-                ? '섹션'
-                : config.sections.length === 3
-                  ? (focusedSectionIndex === 2 ? '상부섹션' : focusedSectionIndex === 1 ? '중간섹션' : '하부섹션')
-                  : (focusedSectionIndex === 0 ? '하부섹션' : '상부섹션');
-              const sideLabel = focusedAreaSide ? ` ${focusedAreaSide === 'left' ? '좌측' : '우측'}` : '';
-              const subPartLabel = focusedSubPart ? (focusedSubPart === 'upper' ? ' 상부' : ' 하부') : '';
-
-              return `${sectionLabel}${sideLabel}${subPartLabel} (${Math.round(areaW)}×${Math.round(areaH)})`;
-            })()}
+            {isLayoutBuilderOpen
+              ? '커스터마이징 가구 편집'
+              : (focusedSectionIndex === undefined ? '커스터마이징 가구 편집' : getSectionPopupTitle())
+            }
           </span>
           {!isLayoutBuilderOpen && (
             <button className={styles.closeButton} onClick={handleCancel}>
@@ -3350,18 +3352,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
         {/* 본문 */}
         <div className={styles.body}>
-          {focusedSectionIndex !== undefined ? (
+          {/* 설계모드가 아닐 때: 기존 동작 (톱니→섹션편집 / 연필→메인편집) */}
+          {!isLayoutBuilderOpen && focusedSectionIndex !== undefined ? (
             focusedAreaSide ? (
-              /* 칸막이 좌/우 영역 톱니 아이콘 클릭: 해당 영역만 편집 */
               config.sections[focusedSectionIndex] &&
               renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex, focusedAreaSide)
             ) : (
-              /* 톱니 아이콘 클릭: 해당 섹션 세부설정 (칸막이 + 내부 요소) */
               config.sections[focusedSectionIndex] &&
               renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
             )
           ) : (
-            /* 연필 아이콘 클릭: 치수 + 섹션 분할/크기 + 전체 섹션 편집 */
+            /* 설계모드: 항상 메인 편집 UI / 비설계모드: 연필 클릭 시 */
             <>
               {/* 기본 치수 */}
               <div className={styles.section}>
@@ -4015,8 +4016,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
           )}
         </div>
 
-        {/* 섹션 설정 하단 버튼 (톱니 메뉴에서 표시) */}
-        {focusedSectionIndex !== undefined && moduleId && (
+        {/* 섹션 설정 하단 버튼 (톱니 메뉴에서 표시) — 설계모드에서는 별도 팝업으로 이동 */}
+        {!isLayoutBuilderOpen && focusedSectionIndex !== undefined && moduleId && (
           <div className={styles.footer}>
             <button
               className={`${styles.footerButton} ${styles.secondaryButton}`}
@@ -4033,8 +4034,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
-        {/* My캐비닛 저장 + 하단 버튼 (연필 메뉴에서만 표시) */}
-        {focusedSectionIndex === undefined && (
+        {/* My캐비닛 저장 + 하단 버튼 (메인 편집 UI에서 표시) */}
+        {(isLayoutBuilderOpen || focusedSectionIndex === undefined) && (
           <>
             <div style={{ padding: '0 20px 8px', flexShrink: 0 }}>
               <button className={styles.saveButton} onClick={handleSaveToCabinet}>
@@ -4070,6 +4071,39 @@ const CustomizablePropertiesPanel: React.FC = () => {
         )}
       </div>
     </div>
+
+    {/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (메인 패널 왼쪽에 표시) */}
+    {isLayoutBuilderOpen && focusedSectionIndex !== undefined && config.sections[focusedSectionIndex] && moduleId && (
+      <div className={styles.sectionPopup} style={{ top: activePopup.screenY ?? 100 }}>
+        <div className={styles.header}>
+          <span className={styles.headerTitle}>{getSectionPopupTitle()}</span>
+          <button className={styles.closeButton} onClick={() => openCustomizableEditPopup(moduleId)}>
+            ×
+          </button>
+        </div>
+        <div className={styles.body}>
+          {focusedAreaSide
+            ? renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex, focusedAreaSide)
+            : renderSectionEditor(config.sections[focusedSectionIndex], focusedSectionIndex)
+          }
+        </div>
+        <div className={styles.footer}>
+          <button
+            className={`${styles.footerButton} ${styles.secondaryButton}`}
+            onClick={() => openCustomizableEditPopup(moduleId)}
+          >
+            취소
+          </button>
+          <button
+            className={`${styles.footerButton} ${styles.primaryButton}`}
+            onClick={() => openCustomizableEditPopup(moduleId)}
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
