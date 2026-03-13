@@ -3078,7 +3078,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const customModule = placedModules.find(m => m.moduleId.startsWith('customizable-') && m.customConfig?.sections?.length);
           if (!customModule || !customModule.customConfig) return null;
 
-          const { sections, panelThickness: pt } = customModule.customConfig;
+          const { sections: rawSections, panelThickness: pt } = customModule.customConfig;
           const panelThickness = pt ?? 18;
 
           // 가구 너비 (좌측 위치 계산용)
@@ -3092,6 +3092,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
           const furnitureBaseY = isFloating ? mmToThreeUnits(floatHeight) : mmToThreeUnits(bottomFrameHeight);
 
+          // 섹션 높이 보정 (CustomizableBoxModule과 동일한 로직)
+          // 가구 전체 외경 높이에 맞게 상부(마지막) 섹션 높이를 조정
+          const furnitureHeight = customModule.customConfig.totalHeight
+            || customModule.freeHeight
+            || customModule.customHeight
+            || customModule.moduleHeight
+            || (spaceInfo.height - (spaceInfo.frameSize?.top || 30) - bottomFrameHeight);
+          let sections = rawSections;
+          if (rawSections.length >= 2) {
+            const outerSum = rawSections.reduce((sum: number, s: any) => {
+              const pc = (s.showBottomPanel !== false ? 1 : 0) + (s.showTopPanel !== false ? 1 : 0);
+              return sum + s.height + pc * panelThickness;
+            }, 0);
+            if (Math.abs(outerSum - furnitureHeight) > 1) {
+              const lastIdx = rawSections.length - 1;
+              const fixedOuter = rawSections.slice(0, lastIdx).reduce((sum: number, s: any) => {
+                const pc = (s.showBottomPanel !== false ? 1 : 0) + (s.showTopPanel !== false ? 1 : 0);
+                return sum + s.height + pc * panelThickness;
+              }, 0);
+              const lastPc = (rawSections[lastIdx].showBottomPanel !== false ? 1 : 0) + (rawSections[lastIdx].showTopPanel !== false ? 1 : 0);
+              const newLastInner = furnitureHeight - fixedOuter - lastPc * panelThickness;
+              if (newLastInner > 0) {
+                sections = rawSections.map((s: any, i: number) => i === lastIdx ? { ...s, height: Math.round(newLastInner) } : s);
+              }
+            }
+          }
+
           // 각 섹션의 외경 Y 범위 계산
           // 물리 구조 (아래→위): 하판(pt) → section[0] 내경 → 칸막이(pt) → section[1] 내경 → 상판(pt)
           const sectionRanges: { startY: number; endY: number; heightMm: number }[] = [];
@@ -3100,7 +3127,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 각 섹션의 내경 시작 Y 위치를 먼저 누적 계산
           let internalY = furnitureBaseY + ptUnits; // 하판 상단 = section[0] 내경 하단
-          sections.forEach((section, i) => {
+          sections.forEach((section: any, i: number) => {
             const internalH = mmToThreeUnits(section.height);
             // 외경 하단: 이 섹션 아래의 패널 하단
             const outerStartY = internalY - ptUnits;
@@ -3109,9 +3136,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 외경 높이 (mm)
             const outerH = section.height + 2 * panelThickness;
             sectionRanges.push({ startY: outerStartY, endY: outerEndY, heightMm: outerH });
-            // 다음 섹션 내경 시작: 칸막이 상단
+            // 다음 섹션 내경 시작: 현재 상판 + 다음 하판 (독립 박스이므로 패널 2개)
             if (i < sections.length - 1) {
-              internalY = internalY + internalH + ptUnits + mmToThreeUnits(sectionGap);
+              internalY = internalY + internalH + ptUnits + ptUnits + mmToThreeUnits(sectionGap);
             }
           });
 
