@@ -15,7 +15,7 @@ import styles from './CustomizablePropertiesPanel.module.css';
  * activePopup.type === 'customizableEdit' 일 때 렌더링
  */
 const CustomizablePropertiesPanel: React.FC = () => {
-  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection, setLayoutBuilderOpen, designExitSaveRequest, setDesignExitSaveRequest } = useUIStore();
+  const { activePopup, closeAllPopups, openCustomizableEditPopup, setHighlightedSection, setLayoutBuilderOpen, isLayoutBuilderOpen, designExitSaveRequest, setDesignExitSaveRequest } = useUIStore();
   const { placedModules, updatePlacedModule, removeModule, setPlacedModules } = useFurnitureStore();
   const { saveCabinet, updateCabinet, editingCabinetId, setEditingCabinetId, editBackup, setEditBackup } = useMyCabinetStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
@@ -3289,8 +3289,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.panel} style={panelStyle}>
+    <div className={isLayoutBuilderOpen ? styles.overlayFixed : styles.overlay}>
+      <div className={isLayoutBuilderOpen ? styles.panelFixed : styles.panel} style={isLayoutBuilderOpen ? undefined : panelStyle}>
         {/* 헤더 */}
         <div className={styles.header}>
           <span className={styles.headerTitle}>
@@ -3341,9 +3341,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
               return `${sectionLabel}${sideLabel}${subPartLabel} (${Math.round(areaW)}×${Math.round(areaH)})`;
             })()}
           </span>
-          <button className={styles.closeButton} onClick={handleCancel}>
-            ×
-          </button>
+          {!isLayoutBuilderOpen && (
+            <button className={styles.closeButton} onClick={handleCancel}>
+              ×
+            </button>
+          )}
         </div>
 
         {/* 본문 */}

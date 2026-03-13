@@ -9,6 +9,16 @@
   pointer-events: none;
 }
 
+/* 설계모드: 오버레이 없이 우측 고정 */
+.overlayFixed {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 900;
+  pointer-events: none;
+}
+
 .panel {
   position: fixed;
   top: 50%;
@@ -24,6 +34,23 @@
   flex-direction: column;
   animation: slideIn 0.15s ease-out;
   pointer-events: auto;
+}
+
+/* 설계모드: 우측 고정 패널 */
+.panelFixed {
+  position: fixed;
+  top: 48px;
+  right: 0;
+  bottom: 0;
+  background: var(--theme-surface);
+  border-left: 1px solid var(--theme-border);
+  width: 300px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 @keyframes slideIn {
