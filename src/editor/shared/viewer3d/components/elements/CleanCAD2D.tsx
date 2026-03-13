@@ -3188,8 +3188,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 우측 박스
             boxes.push({ startX: curX, endX: curX + mmToThreeUnits(rightOuterWMm), widthMm: Math.round(rightOuterWMm) });
 
-            // 치수선 Y: 해당 섹션 외경 하단에서 아래쪽으로
-            const wDimY = range.startY - mmToThreeUnits(80);
+            // 치수선 Y: 조절발/하부프레임 아래쪽으로 (바닥 기준 -80mm)
+            const wDimY = -mmToThreeUnits(80);
             widthDimSections.push({ sectionIdx: i, dimY: wDimY, boxes });
           });
 
@@ -3286,17 +3286,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           renderOrder={100000}
                           depthTest={false}
                         />
-                        {/* 좌측 수직 보조 연장선 */}
+                        {/* 좌측 수직 보조 연장선 (바닥에서 치수선까지) */}
                         <NativeLine name="dimension_line"
-                          points={[[box.startX, sectionRanges[wd.sectionIdx].startY, 0.001], [box.startX, extLineBottomY, 0.001]]}
+                          points={[[box.startX, 0, 0.001], [box.startX, extLineBottomY, 0.001]]}
                           color={dimensionColor}
                           lineWidth={0.5}
                           renderOrder={100000}
                           depthTest={false}
                         />
-                        {/* 우측 수직 보조 연장선 */}
+                        {/* 우측 수직 보조 연장선 (바닥에서 치수선까지) */}
                         <NativeLine name="dimension_line"
-                          points={[[box.endX, sectionRanges[wd.sectionIdx].startY, 0.001], [box.endX, extLineBottomY, 0.001]]}
+                          points={[[box.endX, 0, 0.001], [box.endX, extLineBottomY, 0.001]]}
                           color={dimensionColor}
                           lineWidth={0.5}
                           renderOrder={100000}
