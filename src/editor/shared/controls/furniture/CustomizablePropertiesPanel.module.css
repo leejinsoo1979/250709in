@@ -410,7 +410,7 @@
 /* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (메인 패널 왼쪽) */
 .sectionPopup {
   position: fixed;
-  right: 316px;
+  right: 330px;
   background: var(--theme-surface);
   border-radius: 12px;
   box-shadow: var(--popup-shadow);
