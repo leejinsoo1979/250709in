@@ -37,8 +37,8 @@ interface ViewerControlsProps {
   onDoorsToggle: () => void;
   hasDoorsInstalled?: boolean;
   onDoorInstallationToggle?: () => void;
-  hasSurround?: boolean;
-  onSurroundToggle?: () => void;
+  surroundGenerated?: boolean;
+  onSurroundGenerate?: () => void;
 }
 
 /** Thin vertical separator */
@@ -67,8 +67,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorsToggle,
   hasDoorsInstalled = false,
   onDoorInstallationToggle,
-  hasSurround = false,
-  onSurroundToggle
+  surroundGenerated = false,
+  onSurroundGenerate
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
@@ -344,11 +344,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        {isFreePlacement && onSurroundToggle && (
+        {isFreePlacement && onSurroundGenerate && (
           <div className={styles.segmentedControl}>
             <button
-              className={`${styles.segmentButton} ${styles.segmentIconText} ${hasSurround ? styles.segmentAccentActive : ''}`}
-              onClick={onSurroundToggle}
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${surroundGenerated ? styles.segmentAccentActive : ''}`}
+              onClick={onSurroundGenerate}
             >
               <TbBorderOuter size={13} />
               서라운드
