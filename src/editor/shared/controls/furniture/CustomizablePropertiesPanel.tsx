@@ -74,7 +74,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 좌우 섹션분할 깊이 입력 - 키: "sIdx-left" / "sIdx-center" / "sIdx-right"
   const [hSplitDepthInputs, setHSplitDepthInputs] = useState<Record<string, string>>({});
 
-  // 섹션 팝업 바깥 클릭 감지용 ref
+  // 섹션 팝업 바깥 클릭 감지용 ref + 동적 위치 조정
   const sectionPopupRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!isLayoutBuilderOpen || focusedSectionIndex === undefined || !moduleId) return;
@@ -86,6 +86,22 @@ const CustomizablePropertiesPanel: React.FC = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [isLayoutBuilderOpen, focusedSectionIndex, moduleId, openCustomizableEditPopup]);
+
+  // 섹션 팝업 높이 변화에 따라 top 동적 조정
+  useEffect(() => {
+    const el = sectionPopupRef.current;
+    if (!el || !isLayoutBuilderOpen || focusedSectionIndex === undefined) return;
+    const adjust = () => {
+      const h = el.scrollHeight;
+      const maxTop = window.innerHeight - Math.min(h, window.innerHeight - 80) - 40;
+      const desired = (activePopup.screenY ?? 300) - 150;
+      el.style.top = `${Math.max(40, Math.min(desired, maxTop))}px`;
+    };
+    adjust();
+    const observer = new MutationObserver(adjust);
+    observer.observe(el, { childList: true, subtree: true, attributes: true });
+    return () => observer.disconnect();
+  }, [isLayoutBuilderOpen, focusedSectionIndex, activePopup.screenY, focusedAreaSide, focusedSubPart]);
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -4091,7 +4107,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
         ref={sectionPopupRef}
         className={styles.sectionPopup}
         style={{
-          top: Math.max(60, Math.min((activePopup.screenY ?? 300) - 250, window.innerHeight - 500)),
           right: 'auto',
           left: Math.min((activePopup.screenX ?? 800) + 20, window.innerWidth - 300 - 320 - 16),
         }}
