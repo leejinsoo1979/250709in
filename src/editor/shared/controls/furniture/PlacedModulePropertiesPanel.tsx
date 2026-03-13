@@ -2193,14 +2193,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 자유배치 모드 치수 편집 */}
+          {/* 자유배치 모드 치수 편집 — 한 줄 가로 배치 */}
           {currentPlacedModule?.isFreePlacement && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>{t('furniture.furnitureWidth')} / {t('furniture.furnitureHeight')} / {t('furniture.furnitureDepth')}</h5>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {/* 가로 */}
-                <div className={styles.depthInputWrapper}>
-                  <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>{t('furniture.furnitureWidth')}</label>
+              <h5 className={styles.sectionTitle}>가구 치수</h5>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                {/* 너비 */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>W</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2209,9 +2209,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeWidthInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
-                        console.log('🔴 [freeWidth onBlur]', { freeWidthInput, val, hasModule: !!currentPlacedModule, moduleId: currentPlacedModule?.id, currentFreeWidth: currentPlacedModule?.freeWidth, currentModuleWidth: currentPlacedModule?.moduleWidth });
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          // 붙어있는 방향 유지하며 위치 보정
                           const newX = currentPlacedModule.isFreePlacement
                             ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
                             : currentPlacedModule.position.x;
@@ -2221,7 +2219,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             position: { ...currentPlacedModule.position, x: newX },
                           });
                           setFreeWidthInput(val.toString());
-                          // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: val,
@@ -2231,17 +2228,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(key, dims);
-                            // 듀얼↔싱글 너비 연동 (듀얼=싱글*2)
                             if (key === 'full-dual') {
                               store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(val / 2) });
                             } else if (key === 'full-single') {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: val * 2 });
                             }
                           } else {
-                            // 표준 가구도 마지막 치수 기억 (같은 그룹끼리 공유)
                             const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(stdKey, dims);
-                            // 표준 듀얼↔싱글 폭 연동 (듀얼=싱글*2)
                             if (stdKey === 'std-dual-full') {
                               store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(val / 2) });
                             } else if (stdKey === 'std-single-full') {
@@ -2258,19 +2252,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         }
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                       className={`${styles.depthInput} furniture-depth-input`}
-                      placeholder="100-2400"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                      placeholder="너비"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
                 </div>
-                {/* 세로 */}
-                <div className={styles.depthInputWrapper}>
-                  <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>{t('furniture.furnitureHeight')}</label>
+                <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                {/* 높이 */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>H</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2282,7 +2275,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
                           setFreeHeightInput(val.toString());
-                          // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
@@ -2292,14 +2284,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(key, dims);
-                            // 듀얼↔싱글 높이/깊이 연동
                             if (key === 'full-dual') {
                               store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
                             } else if (key === 'full-single') {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
                             }
                           } else {
-                            // 표준 가구 높이 기억 + 듀얼↔싱글 연동
                             const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(stdKey, dims);
                             if (stdKey === 'std-dual-full') {
@@ -2318,19 +2308,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         }
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                       className={`${styles.depthInput} furniture-depth-input`}
-                      placeholder="100-3000"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                      placeholder="높이"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
                 </div>
+                <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                 {/* 깊이 */}
-                <div className={styles.depthInputWrapper}>
-                  <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>{t('furniture.furnitureDepth')}</label>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>D</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2339,11 +2328,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeDepthInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeDepthInput, 10);
-                        console.log('🔴 [freeDepth onBlur]', { freeDepthInput, val, hasModule: !!currentPlacedModule });
                         if (!isNaN(val) && val >= 100 && val <= 800 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeDepth: val });
                           setFreeDepthInput(val.toString());
-                          // 마지막 치수 기억 (추가배치 시 동일 사이즈 적용)
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
@@ -2353,14 +2340,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(key, dims);
-                            // 듀얼↔싱글 깊이 연동
                             if (key === 'full-dual') {
                               store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
                             } else if (key === 'full-single') {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
                             }
                           } else {
-                            // 표준 가구 깊이 기억 + 듀얼↔싱글 연동
                             const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(stdKey, dims);
                             if (stdKey === 'std-dual-full') {
@@ -2379,12 +2364,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         }
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                       className={`${styles.depthInput} furniture-depth-input`}
-                      placeholder="100-800"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
+                      placeholder="깊이"
+                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
