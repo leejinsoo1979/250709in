@@ -1203,16 +1203,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 일반 배치 (받침대 있거나 바닥 배치)
         // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
         // 바닥판 올림(bottomPanelRaise) 활성 시 조절발 높이를 0으로 → 가구 전체가 바닥으로 내려감
-        const bottomRaiseActive = adjustedCustomSections?.[0]?.bottomPanelRaise && adjustedCustomSections[0].bottomPanelRaise > 0;
-        console.log('🔴 [FurnitureItem Y] bottomPanelRaise 체크:', {
-          moduleId: placedModule.moduleId,
-          hasCustomSections: !!adjustedCustomSections,
-          sectionsLength: adjustedCustomSections?.length,
-          section0BottomPanelRaise: adjustedCustomSections?.[0]?.bottomPanelRaise,
-          bottomRaiseActive,
-          baseConfigType: spaceInfo.baseConfig?.type,
-          baseConfigHeight: spaceInfo.baseConfig?.height,
-        });
+        // customConfig.sections에서 bottomPanelRaise 확인 (customSections가 아닌 customConfig가 실제 데이터 소스)
+        const configSections = placedModule.customConfig?.sections;
+        const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
         const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65));
         const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
 
