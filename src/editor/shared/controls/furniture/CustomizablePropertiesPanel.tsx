@@ -79,9 +79,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (placedModule?.customConfig) {
       const cfg = JSON.parse(JSON.stringify(placedModule.customConfig)) as CustomFurnitureConfig;
       setConfig(cfg);
-      // 섹션 높이 입력 초기화
+      // 섹션 높이 입력 초기화 (외경 = 내경 + 2 * panelThickness)
+      const pt = cfg.panelThickness || 18;
       const sectionHInputs: Record<number, string> = {};
-      cfg.sections.forEach((s, i) => { sectionHInputs[i] = s.height.toString(); });
+      cfg.sections.forEach((s, i) => { sectionHInputs[i] = (s.height + 2 * pt).toString(); });
       setSectionHeightInputs(sectionHInputs);
       // 사이 간격 입력 초기화
       // 선반/서랍 높이 입력 초기화
@@ -511,7 +512,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       if (clamped === current) return;
       sections[idx] = { ...sections[idx], height: clamped };
       applyConfig({ ...config, sections });
-      setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: (clamped + 2 * panelThickness).toString() }));
     } else {
       // 2분할: 독립 박스 모델 → 4개 패널
       const totalInner = furnitureHeight - 4 * panelThickness;
@@ -539,7 +540,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       }
 
       applyConfig({ ...config, sections });
-      setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+      setSectionHeightInputs({ [idx]: (clamped + 2 * panelThickness).toString(), [1 - idx]: (otherH + 2 * panelThickness).toString() });
     }
   };
 
@@ -562,7 +563,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           { id: 'section-upper', height: upperH, elements: [{ type: 'open' }] },
         ],
       });
-      setSectionHeightInputs({ 0: lowerH.toString(), 1: upperH.toString() });
+      setSectionHeightInputs({ 0: (lowerH + 2 * panelThickness).toString(), 1: (upperH + 2 * panelThickness).toString() });
     } else if (mode === '3split') {
       // 독립 박스 모델: 3섹션 → 6개 패널(각 박스 상/하판 × 3)
       const availableHeight = furnitureHeight - 6 * panelThickness;
@@ -580,7 +581,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           { id: 'section-upper', height: upperH, elements: [{ type: 'open' }] },
         ],
       });
-      setSectionHeightInputs({ 0: lowerH.toString(), 1: middleH.toString(), 2: upperH.toString() });
+      setSectionHeightInputs({ 0: (lowerH + 2 * panelThickness).toString(), 1: (middleH + 2 * panelThickness).toString(), 2: (upperH + 2 * panelThickness).toString() });
     } else {
       // 분할 해제 → 단일 섹션
       applyConfig({
@@ -590,7 +591,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         sectionGap: undefined,
         sections: [{ id: 'section-0', height: innerHeight, elements: config.sections[0]?.elements || [{ type: 'open' }] }],
       });
-      setSectionHeightInputs({ 0: innerHeight.toString() });
+      setSectionHeightInputs({ 0: (innerHeight + 2 * panelThickness).toString() });
     }
   };
 
@@ -609,15 +610,17 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 섹션 높이 확정 (onBlur / Enter) — 2분할/3분할 공통
+  // 사용자 입력은 외경(패널 포함), 저장은 내경(패널 미포함)
   const handleSectionHeightBlur = (idx: number) => {
     const sectionCount = config.sections.length;
     if (sectionCount < 2) return;
     const raw = sectionHeightInputs[idx] ?? '';
     if (raw === '') {
-      setSectionHeightInputs((prev) => ({ ...prev, [idx]: config.sections[idx].height.toString() }));
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: (config.sections[idx].height + 2 * panelThickness).toString() }));
       return;
     }
-    const num = parseInt(raw, 10);
+    const outerInput = parseInt(raw, 10);
+    const innerInput = outerInput - 2 * panelThickness; // 외경 → 내경 변환
     const sections = [...config.sections];
 
     if (sectionCount === 3) {
@@ -625,14 +628,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const totalInner = furnitureHeight - 6 * panelThickness;
       const othersH = sections.reduce((sum, s, i) => i === idx ? sum : sum + s.height, 0);
       const maxH = totalInner - othersH;
-      const clamped = Math.max(100, Math.min(maxH, num));
+      const clamped = Math.max(100, Math.min(maxH, innerInput));
       sections[idx] = { ...sections[idx], height: clamped };
       applyConfig({ ...config, sections });
-      setSectionHeightInputs((prev) => ({ ...prev, [idx]: clamped.toString() }));
+      setSectionHeightInputs((prev) => ({ ...prev, [idx]: (clamped + 2 * panelThickness).toString() }));
     } else {
       // 2분할: 독립 박스 모델 → 4개 패널
       const totalInner = furnitureHeight - 4 * panelThickness;
-      const clamped = Math.max(100, Math.min(totalInner - 100, num));
+      const clamped = Math.max(100, Math.min(totalInner - 100, innerInput));
       const otherH = totalInner - clamped;
       sections[idx] = { ...sections[idx], height: clamped };
       sections[1 - idx] = { ...sections[1 - idx], height: otherH };
@@ -655,7 +658,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       }
 
       applyConfig({ ...config, sections });
-      setSectionHeightInputs({ [idx]: clamped.toString(), [1 - idx]: otherH.toString() });
+      setSectionHeightInputs({ [idx]: (clamped + 2 * panelThickness).toString(), [1 - idx]: (otherH + 2 * panelThickness).toString() });
     }
   };
 
@@ -2534,7 +2537,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     type="text"
                     inputMode="numeric"
                     className={`${styles.input} ${styles.inputSmall}`}
-                    value={sectionHeightInputs[sIdx] ?? section.height.toString()}
+                    value={sectionHeightInputs[sIdx] ?? (section.height + 2 * panelThickness).toString()}
                     onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
                     onBlur={() => handleSectionHeightBlur(sIdx)}
                     onKeyDown={(e) => handleSectionHeightKeyDown(e, sIdx)}
@@ -2545,7 +2548,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               ) : (
                 <>
                   <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
-                    {section.height}
+                    {section.height + 2 * panelThickness}
                   </span>
                   <span className={styles.unit}>mm</span>
                 </>
@@ -2554,7 +2557,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             {/* 2단 분할 시 반대 섹션 높이 표시 */}
             {config.sections.length > 1 && (
               <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
-                {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height}mm
+                {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height + 2 * panelThickness}mm
               </div>
             )}
             {/* 깊이 */}
@@ -2773,7 +2776,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                   type="text"
                   inputMode="numeric"
                   className={`${styles.input} ${styles.inputSmall}`}
-                  value={sectionHeightInputs[sIdx] ?? section.height.toString()}
+                  value={sectionHeightInputs[sIdx] ?? (section.height + 2 * panelThickness).toString()}
                   onChange={(e) => handleSectionHeightInputChange(sIdx, e.target.value)}
                   onBlur={() => handleSectionHeightBlur(sIdx)}
                   onKeyDown={(e) => handleSectionHeightKeyDown(e, sIdx)}
@@ -2784,7 +2787,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             ) : (
               <>
                 <span className={styles.input} style={{ cursor: 'default', opacity: 0.7, width: '70px' }}>
-                  {section.height}
+                  {section.height + 2 * panelThickness}
                 </span>
                 <span className={styles.unit}>mm</span>
               </>
@@ -2792,7 +2795,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
           {config.sections.length === 2 && (
             <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
-              {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height}mm
+              {sIdx === 0 ? '상부' : '하부'}: {config.sections[1 - sIdx].height + 2 * panelThickness}mm
             </div>
           )}
           {/* 깊이 (2단분할: 섹션별 / 단일: 전체) */}
@@ -3562,7 +3565,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               type="text"
                               inputMode="numeric"
                               className={`${styles.input} ${styles.inputSmall}`}
-                              value={sectionHeightInputs[realIdx] ?? section.height.toString()}
+                              value={sectionHeightInputs[realIdx] ?? (section.height + 2 * panelThickness).toString()}
                               onChange={(e) => handleSectionHeightInputChange(realIdx, e.target.value)}
                               onBlur={() => handleSectionHeightBlur(realIdx)}
                               onKeyDown={(e) => handleSectionHeightKeyDown(e, realIdx)}
