@@ -92,11 +92,14 @@ function getBaseFrameBoundsX(module: PlacedModule): { left: number; right: numbe
 export function computeBaseStripGroups(
   placedModules: PlacedModule[],
 ): BaseStripGroup[] {
-  // 1. 걸래받이 대상 모듈 필터링
+  // 1. 걸래받이 대상 모듈 필터링 (바닥판 올림 활성 가구는 하부프레임 불필요)
   const baseModules = placedModules.filter((m) => {
     if (!m.isFreePlacement) return false;
     const category = getModuleCategory(m);
     if (category === 'upper') return false;
+    // bottomPanelRaise 활성 시 조절발/하부프레임 없음
+    const sections = (m as any).customConfig?.sections;
+    if (sections?.[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0) return false;
     return true;
   });
 
