@@ -2597,18 +2597,22 @@ const Room: React.FC<RoomProps> = ({
                 );
               })}
 
-              {/* 자유배치 좌측 서라운드 — L자 프레임 (위에서 본 단면: 측면+하부) */}
+              {/* 자유배치 좌측 서라운드 — L자 (전면에서 이격 가림) */}
               {spaceInfo.freeSurround?.left?.enabled && hasFreeMods && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
                 const method = leftCfg.method || 'none';
                 if (method === 'none') return null;
-                const surrHeight = height - panelStartY;
                 const gapMM = leftCfg.gap || 0;
-                // 캐비넷 앞면 Z (topZPosition은 앞면 프레임 센터)
-                const frontFaceZ = topZPosition;
+                // 전면 Z (캐비넷 앞면 = topZPosition)
+                const frontZ = topZPosition;
+                // 서라운드 높이 = 상부 프레임 높이 (캐비넷 위쪽 프레임과 동일)
+                const surrFrameH = topBottomFrameHeight;
+                // 서라운드 Y 위치 = 상부 프레임과 같은 높이
+                const freeTopCfg = spaceInfo.freeSurround?.top;
+                const topOffsetMM = freeTopCfg?.offset ?? spaceInfo.frameSize?.topOffset ?? 0;
+                const surrTopY = panelStartY + height - surrFrameH / 2 - mmToThreeUnits(topOffsetMM);
 
                 if (method === 'ep') {
-                  // EP: 18mm(X) × 전체높이(Y) × 18mm(Z), 캐비닛 측면 부착
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -2617,13 +2621,13 @@ const Room: React.FC<RoomProps> = ({
                       name="left-surround-ep"
                       args={[
                         mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrHeight,
+                        surrFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2),
-                        panelStartY + surrHeight / 2,
-                        frontFaceZ
+                        surrTopY,
+                        frontZ
                       ]}
                       material={leftFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
@@ -2632,15 +2636,15 @@ const Room: React.FC<RoomProps> = ({
                   );
                 }
 
-                // L-shape (위에서 본 단면):
-                //   측면패널: 벽쪽, 18mm(X) × height(Y) × gap(Z) — 앞면에서 뒤로 gap만큼
-                //   하부패널: 앞면, gap(X) × 18mm(Y) × 18mm(Z) — 벽~캐비넷 가로질러
+                // L-shape (전면에서 이격 가림, 위에서 본 평면도 기준):
+                //   측면패널: 캐비넷 옆 벽쪽, 18mm(X) × 프레임높이(Y) × gap(Z) — 전면에서 뒤로
+                //   하부패널: 전면, gap(X) × 프레임높이(Y) × 18mm(Z) — 벽~캐비넷 가로질러
                 const sideX = mmToThreeUnits(minLeftMM - gapMM + END_PANEL_THICKNESS / 2);
-                const sideZ = frontFaceZ - mmToThreeUnits(gapMM) / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                const sideZ = frontZ - mmToThreeUnits(gapMM) / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                 const bottomX = mmToThreeUnits(minLeftMM - gapMM / 2);
                 return (
                   <>
-                    {/* 측면 패널: 벽쪽, 18mm(X) × height(Y) × gap(Z) */}
+                    {/* 측면 패널: 벽쪽, 18mm(X) × 프레임높이(Y) × gap(Z) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2648,19 +2652,19 @@ const Room: React.FC<RoomProps> = ({
                       name="left-surround-lshape-side"
                       args={[
                         mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrHeight,
+                        surrFrameH,
                         mmToThreeUnits(gapMM)
                       ]}
                       position={[
                         sideX,
-                        panelStartY + surrHeight / 2,
+                        surrTopY,
                         sideZ
                       ]}
                       material={leftFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
-                    {/* 하부 패널: 앞면, gap(X) × 18mm(Y) × 18mm(Z) */}
+                    {/* 하부 패널: 전면, gap(X) × 프레임높이(Y) × 18mm(Z) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2668,13 +2672,13 @@ const Room: React.FC<RoomProps> = ({
                       name="left-surround-lshape-bottom"
                       args={[
                         mmToThreeUnits(gapMM),
-                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         bottomX,
-                        panelStartY + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
-                        frontFaceZ
+                        surrTopY,
+                        frontZ
                       ]}
                       material={leftFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
@@ -2684,17 +2688,19 @@ const Room: React.FC<RoomProps> = ({
                 );
               })()}
 
-              {/* 자유배치 우측 서라운드 — L자 프레임 (위에서 본 단면: 측면+하부) */}
+              {/* 자유배치 우측 서라운드 — L자 (전면에서 이격 가림) */}
               {spaceInfo.freeSurround?.right?.enabled && hasFreeMods && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
                 const method = rightCfg.method || 'none';
                 if (method === 'none') return null;
-                const surrHeight = height - panelStartY;
                 const gapMM = rightCfg.gap || 0;
-                const frontFaceZ = topZPosition;
+                const frontZ = topZPosition;
+                const surrFrameH = topBottomFrameHeight;
+                const freeTopCfg = spaceInfo.freeSurround?.top;
+                const topOffsetMM = freeTopCfg?.offset ?? spaceInfo.frameSize?.topOffset ?? 0;
+                const surrTopY = panelStartY + height - surrFrameH / 2 - mmToThreeUnits(topOffsetMM);
 
                 if (method === 'ep') {
-                  // EP: 18mm(X) × 전체높이(Y) × 18mm(Z)
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -2703,13 +2709,13 @@ const Room: React.FC<RoomProps> = ({
                       name="right-surround-ep"
                       args={[
                         mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrHeight,
+                        surrFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2),
-                        panelStartY + surrHeight / 2,
-                        frontFaceZ
+                        surrTopY,
+                        frontZ
                       ]}
                       material={rightFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
@@ -2718,15 +2724,15 @@ const Room: React.FC<RoomProps> = ({
                   );
                 }
 
-                // L-shape (위에서 본 단면):
-                //   측면패널: 벽쪽, 18mm(X) × height(Y) × gap(Z) — 앞면에서 뒤로 gap만큼
-                //   하부패널: 앞면, gap(X) × 18mm(Y) × 18mm(Z) — 캐비넷~벽 가로질러
+                // L-shape (전면에서 이격 가림, 위에서 본 평면도 기준):
+                //   측면패널: 캐비넷 옆 벽쪽, 18mm(X) × 프레임높이(Y) × gap(Z) — 전면에서 뒤로
+                //   하부패널: 전면, gap(X) × 프레임높이(Y) × 18mm(Z) — 캐비넷~벽 가로질러
                 const sideX = mmToThreeUnits(maxRightMM + gapMM - END_PANEL_THICKNESS / 2);
-                const sideZ = frontFaceZ - mmToThreeUnits(gapMM) / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                const sideZ = frontZ - mmToThreeUnits(gapMM) / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                 const bottomX = mmToThreeUnits(maxRightMM + gapMM / 2);
                 return (
                   <>
-                    {/* 측면 패널: 벽쪽, 18mm(X) × height(Y) × gap(Z) */}
+                    {/* 측면 패널: 벽쪽, 18mm(X) × 프레임높이(Y) × gap(Z) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2734,19 +2740,19 @@ const Room: React.FC<RoomProps> = ({
                       name="right-surround-lshape-side"
                       args={[
                         mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrHeight,
+                        surrFrameH,
                         mmToThreeUnits(gapMM)
                       ]}
                       position={[
                         sideX,
-                        panelStartY + surrHeight / 2,
+                        surrTopY,
                         sideZ
                       ]}
                       material={rightFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
-                    {/* 하부 패널: 앞면, gap(X) × 18mm(Y) × 18mm(Z) */}
+                    {/* 하부 패널: 전면, gap(X) × 프레임높이(Y) × 18mm(Z) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2754,13 +2760,13 @@ const Room: React.FC<RoomProps> = ({
                       name="right-surround-lshape-bottom"
                       args={[
                         mmToThreeUnits(gapMM),
-                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         bottomX,
-                        panelStartY + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
-                        frontFaceZ
+                        surrTopY,
+                        frontZ
                       ]}
                       material={rightFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
@@ -3990,6 +3996,9 @@ export default React.memo(Room, (prevProps, nextProps) => {
 
   // gapConfig 비교 (노서라운드 모드에서 엔드패널 위치에 영향)
   if (JSON.stringify(prevSpace.gapConfig) !== JSON.stringify(nextSpace.gapConfig)) return false;
+
+  // freeSurround 비교 (자유배치 서라운드 토글)
+  if (JSON.stringify(prevSpace.freeSurround) !== JSON.stringify(nextSpace.freeSurround)) return false;
 
   // 가구 배치 비교 (빠른 비교를 위해 길이만 우선 확인)
   const prevModules = prevProps.placedModules || [];

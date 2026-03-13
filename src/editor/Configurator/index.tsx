@@ -4507,8 +4507,8 @@ const Configurator: React.FC = () => {
                 const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
 
                 if (isActive) {
-                  // 서라운드 제거
-                  handleSpaceInfoUpdate({
+                  // 서라운드 제거 — setSpaceInfo 직접 호출
+                  setSpaceInfo({
                     freeSurround: {
                       left: { enabled: false, size: 18, offset: 0 },
                       top: { enabled: false, size: 30, offset: 0 },
@@ -4524,7 +4524,7 @@ const Configurator: React.FC = () => {
                   alert(result.errorMessage);
                   return;
                 }
-                handleSpaceInfoUpdate({ freeSurround: result.config });
+                setSpaceInfo({ freeSurround: result.config });
               }}
             />
           )}
