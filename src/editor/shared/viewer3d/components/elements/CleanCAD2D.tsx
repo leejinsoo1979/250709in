@@ -3145,6 +3145,54 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 연장선 왼쪽 끝
           const extLineLeftX = dimLineX - mmToThreeUnits(20);
 
+          // 가구 중심 X 및 우측 X (폭 치수용)
+          const furnitureCenterX = customModule.position.x;
+          const furnitureRightX = furnitureCenterX + mmToThreeUnits(furnitureWidth / 2);
+
+          // horizontalSplit이 있는 섹션의 폭 치수 데이터 계산
+          const widthDimSections: { sectionIdx: number; dimY: number; boxes: { startX: number; endX: number; widthMm: number }[] }[] = [];
+          sections.forEach((section: any, i: number) => {
+            const hs = section.horizontalSplit;
+            if (!hs) return;
+
+            const range = sectionRanges[i];
+            // 섹션 내경 너비 (mm) = 가구 전체 외경 너비 - 좌우 패널 2개
+            const sectionInnerWMm = furnitureWidth - 2 * panelThickness;
+            const leftInnerWMm = hs.position;
+            const is3Split = hs.secondPosition !== undefined && hs.secondPosition > 0;
+            const leftOuterWMm = leftInnerWMm + 2 * panelThickness;
+
+            let centerInnerWMm = 0;
+            let centerOuterWMm = 0;
+            if (is3Split) {
+              centerInnerWMm = hs.secondPosition!;
+              centerOuterWMm = centerInnerWMm + 2 * panelThickness;
+            }
+
+            const rightInnerWMm = is3Split
+              ? sectionInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
+              : sectionInnerWMm - leftInnerWMm - 2 * panelThickness;
+            const rightOuterWMm = rightInnerWMm + 2 * panelThickness;
+
+            // 박스 X 위치 계산 (가구 좌측 외경 기준)
+            const boxes: { startX: number; endX: number; widthMm: number }[] = [];
+            let curX = furnitureLeftX;
+            // 좌측 박스
+            boxes.push({ startX: curX, endX: curX + mmToThreeUnits(leftOuterWMm), widthMm: Math.round(leftOuterWMm) });
+            curX += mmToThreeUnits(leftOuterWMm);
+            // 중앙 박스 (3분할)
+            if (is3Split) {
+              boxes.push({ startX: curX, endX: curX + mmToThreeUnits(centerOuterWMm), widthMm: Math.round(centerOuterWMm) });
+              curX += mmToThreeUnits(centerOuterWMm);
+            }
+            // 우측 박스
+            boxes.push({ startX: curX, endX: curX + mmToThreeUnits(rightOuterWMm), widthMm: Math.round(rightOuterWMm) });
+
+            // 치수선 Y: 해당 섹션 외경 하단에서 아래쪽으로
+            const wDimY = range.startY - mmToThreeUnits(80);
+            widthDimSections.push({ sectionIdx: i, dimY: wDimY, boxes });
+          });
+
           return (
             <>
               {sectionRanges.map((range, idx) => (
@@ -3206,6 +3254,73 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </group>
               ))}
+
+              {/* 좌우분할 섹션 하단 폭 치수선 */}
+              {widthDimSections.map((wd) => {
+                const extLineBottomY = wd.dimY - mmToThreeUnits(20);
+                return (
+                  <group key={`custom-width-dim-s${wd.sectionIdx}`}>
+                    {wd.boxes.map((box, bIdx) => (
+                      <group key={`wb-${wd.sectionIdx}-${bIdx}`}>
+                        {/* 수평 치수선 */}
+                        <NativeLine name="dimension_line"
+                          points={[[box.startX, wd.dimY, 0.002], [box.endX, wd.dimY, 0.002]]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+                        {/* 좌측 틱 마크 */}
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([box.startX, wd.dimY, 0.002], [box.startX - 0.03, wd.dimY, 0.002])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+                        {/* 우측 틱 마크 */}
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([box.endX, wd.dimY, 0.002], [box.endX + 0.03, wd.dimY, 0.002])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+                        {/* 좌측 수직 보조 연장선 */}
+                        <NativeLine name="dimension_line"
+                          points={[[box.startX, sectionRanges[wd.sectionIdx].startY, 0.001], [box.startX, extLineBottomY, 0.001]]}
+                          color={dimensionColor}
+                          lineWidth={0.5}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+                        {/* 우측 수직 보조 연장선 */}
+                        <NativeLine name="dimension_line"
+                          points={[[box.endX, sectionRanges[wd.sectionIdx].startY, 0.001], [box.endX, extLineBottomY, 0.001]]}
+                          color={dimensionColor}
+                          lineWidth={0.5}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+                        {/* 폭 치수 텍스트 */}
+                        <Text
+                          renderOrder={1000}
+                          depthTest={false}
+                          position={[(box.startX + box.endX) / 2, wd.dimY - mmToThreeUnits(40), 0.01]}
+                          fontSize={baseFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
+                        >
+                          {box.widthMm}
+                        </Text>
+                      </group>
+                    ))}
+                  </group>
+                );
+              })}
             </>
           );
         })()}
