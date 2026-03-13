@@ -105,16 +105,16 @@ export const useBaseFurniture = (
     shelfCount: 0
   };
 
-  // internalHeight가 원래 섹션 합과 다르면 sections 높이를 비례 조정한 modelConfig 생성
-  // 주의: FurnitureItem에서 moduleData.dimensions.height가 이미 freeHeight로 변경되므로
-  //       원래 높이는 sections의 합으로 계산해야 함
+  // freeHeight 변경 시 sections 높이를 비례 조정한 modelConfig 생성
+  // shelving.ts에서: dimensions.height = maxHeight = sections 합 (판재 두께 포함)
+  // FurnitureItem에서: dimensions.height = freeHeight로 오버라이드
+  // 따라서: sections 합(=원래 dimensions.height) vs 현재 dimensions.height(=freeHeight)로 비교
   const modelConfig = useMemo(() => {
     if (!originalModelConfig.sections || originalModelConfig.sections.length === 0) {
       return originalModelConfig;
     }
 
-    // 원래 가구 높이 = absolute 섹션들의 합 + 상하판 두께
-    const thicknessMm = originalModelConfig.basicThickness || 18;
+    // absolute 섹션들의 합 = 원래 dimensions.height (FurnitureItem 변경 전)
     const originalSectionsTotal = originalModelConfig.sections.reduce((sum: number, s: SectionConfig) => {
       return sum + (s.heightType === 'absolute' ? s.height : 0);
     }, 0);
@@ -122,19 +122,16 @@ export const useBaseFurniture = (
       return originalModelConfig;
     }
 
-    // 실제 렌더링에 사용할 높이 (freeHeight 또는 원래 높이)
+    // 현재 렌더링 높이 (freeHeight가 적용된 dimensions.height)
     const renderHeightMm = internalHeight || moduleData.dimensions.height;
-    // 원래 가구 전체 높이 (섹션 합 + 상하판)
-    const originalFullHeightMm = originalSectionsTotal + thicknessMm * 2;
 
-    // 높이 차이가 1mm 이하면 조정 불필요
-    if (Math.abs(renderHeightMm - originalFullHeightMm) <= 1) {
+    // 렌더링 높이와 원래 섹션 합의 차이가 1mm 이하면 조정 불필요
+    if (Math.abs(renderHeightMm - originalSectionsTotal) <= 1) {
       return originalModelConfig;
     }
 
-    // 비율 계산: 새 내부 가용 높이 / 원래 내부 가용 높이
-    const newAvailableMm = renderHeightMm - thicknessMm * 2;
-    const preciseRatio = originalSectionsTotal > 0 ? newAvailableMm / originalSectionsTotal : 1;
+    // 비율 계산: 새 높이 / 원래 높이 (sections 합 기준, 판재 두께 포함)
+    const preciseRatio = renderHeightMm / originalSectionsTotal;
 
     return {
       ...originalModelConfig,
