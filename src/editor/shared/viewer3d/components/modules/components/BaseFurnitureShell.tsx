@@ -446,6 +446,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
+            {(() => {
+              console.log('🟢 중간 패널 렌더링 체크:', {
+                moduleId: moduleData?.id,
+                isMultiSection: isMultiSectionFurniture(),
+                sectionLengths: getSectionHeights().length,
+                includes4Drawer: moduleData?.id?.includes('4drawer-hanging'),
+                includes2Drawer: moduleData?.id?.includes('2drawer-hanging'),
+                includes2Hanging: moduleData?.id?.includes('2hanging')
+              });
+              return null;
+            })()}
             {moduleData?.id?.includes('4drawer-hanging') ? (
               // 4drawer-hanging: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
               (() => {
@@ -957,10 +968,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   ? originalUpperBackPanelHeight + totalHeightExtension - basicThickness
                   : originalUpperBackPanelHeight + totalHeightExtension;
 
+                console.log('🔍🔍🔍 백패널 높이 (13mm씩 확장):', {
+                  lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
+                  upperBackPanelHeightMm: upperBackPanelHeight / 0.01,
+                  originalLowerMm: originalLowerBackPanelHeight / 0.01,
+                  originalUpperMm: originalUpperBackPanelHeight / 0.01,
+                  extensionMm: backPanelTopExtension + backPanelBottomExtension,
+                  applyOffset,
+                  isTwoHanging
+                });
+
                 // 백패널 Y 위치 조정 (하단 13mm 확장분만큼 아래로 이동)
                 const lowerBackPanelY = -height/2 + lowerSectionHeight/2 - mmToThreeUnits(backPanelBottomExtension - backPanelTopExtension)/2;
                 const upperOffset = applyOffset ? basicThickness : 0;
                 const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperSectionHeight/2;
+
+                console.log('🔍🔍🔍 백패널 Y 위치:', {
+                  lowerBackPanelYMm: lowerBackPanelY / 0.01,
+                  upperBackPanelYMm: upperBackPanelY / 0.01
+                });
 
                 // 섹션별 백패널 Z 위치 계산
                 const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
@@ -977,6 +1003,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                 // 환기캡 Z 위치 계산 (상부 백패널 앞쪽 표면에 붙음)
                 const ventCapZ = upperBackPanelZ + backPanelThickness/2 + 0.01;
+
+                console.log('🔧 백패널 Z 위치 계산:', {
+                  depthMm: depth / 0.01,
+                  upperSectionDepthMm: upperSectionDepth / 0.01,
+                  upperDepthDiffMm: upperDepthDiff / 0.01,
+                  upperZOffsetMm: upperZOffset / 0.01,
+                  backPanelThicknessMm: backPanelThickness / 0.01,
+                  depthOffsetMm: backPanelConfig.depthOffset,
+                  계산식: '-upperSectionDepth/2 + backPanelThickness/2 + depthOffset + upperZOffset',
+                  upperBackPanelZMm: upperBackPanelZ / 0.01,
+                  ventCapZMm: ventCapZ / 0.01
+                });
 
                 return (
                   <>

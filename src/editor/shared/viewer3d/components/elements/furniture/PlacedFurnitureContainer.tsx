@@ -33,10 +33,10 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   ghostHighlightSlotIndex
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
+  const storePlacedModules = useFurnitureStore(state => state.placedModules);
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
-  const storePlacedModules = useFurnitureStore(state => state.placedModules);
 
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
