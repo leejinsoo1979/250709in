@@ -2593,18 +2593,17 @@ const Room: React.FC<RoomProps> = ({
                 );
               })}
 
-              {/* 자유배치 좌측 서라운드 (EP / L-shape) */}
+              {/* 자유배치 좌측 서라운드 (EP / L-shape) — 슬롯배치 프레임과 동일하게 전면 배치 */}
               {spaceInfo.freeSurround?.left?.enabled && topStripGroups.length > 0 && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
                 const method = leftCfg.method || 'none';
                 if (method === 'none') return null;
                 const minLeftMM = Math.min(...topStripGroups.map(g => g.leftMM));
                 const surrHeight = height - panelStartY;
-                const depthMM = furnitureDepthMm;
                 const gapMM = leftCfg.gap || 0;
 
                 if (method === 'ep') {
-                  // EP: 18T × 40W 패널, 캐비닛 측면 부착
+                  // EP: 18T × 40W 패널, 캐비닛 측면 부착 (전면, Z=18mm)
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -2628,12 +2627,13 @@ const Room: React.FC<RoomProps> = ({
                   );
                 }
 
-                // L-shape: 측면패널(벽쪽) + 하부패널(바닥)
+                // L-shape: 측면패널(벽쪽, 전면 18mm) + 하부패널(바닥, 전면 18mm)
+                // 슬롯배치 프레임과 동일하게 전면(Z=END_PANEL_THICKNESS)에 세로로 배치
                 const sideX = mmToThreeUnits(minLeftMM - gapMM + END_PANEL_THICKNESS / 2);
                 const bottomX = mmToThreeUnits(minLeftMM - gapMM / 2);
                 return (
                   <>
-                    {/* 측면 패널: 18mm × 전체높이 × 가구깊이, 벽 쪽 */}
+                    {/* 측면 패널: gap폭 × 전체높이 × 18mm (전면, 세로) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2642,18 +2642,18 @@ const Room: React.FC<RoomProps> = ({
                       args={[
                         mmToThreeUnits(END_PANEL_THICKNESS),
                         surrHeight,
-                        mmToThreeUnits(depthMM)
+                        mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         sideX,
                         panelStartY + surrHeight / 2,
-                        furnitureZOffset
+                        topZPosition
                       ]}
                       material={leftFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
-                    {/* 하부 패널: gap폭 × 18mm × 가구깊이, 바닥 */}
+                    {/* 하부 패널: gap폭 × 18mm × 18mm (전면, 가로) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2662,12 +2662,12 @@ const Room: React.FC<RoomProps> = ({
                       args={[
                         mmToThreeUnits(gapMM),
                         mmToThreeUnits(END_PANEL_THICKNESS),
-                        mmToThreeUnits(depthMM)
+                        mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         bottomX,
                         panelStartY + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
-                        furnitureZOffset
+                        topZPosition
                       ]}
                       material={leftFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
@@ -2677,18 +2677,17 @@ const Room: React.FC<RoomProps> = ({
                 );
               })()}
 
-              {/* 자유배치 우측 서라운드 (EP / L-shape) */}
+              {/* 자유배치 우측 서라운드 (EP / L-shape) — 슬롯배치 프레임과 동일하게 전면 배치 */}
               {spaceInfo.freeSurround?.right?.enabled && topStripGroups.length > 0 && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
                 const method = rightCfg.method || 'none';
                 if (method === 'none') return null;
                 const maxRightMM = Math.max(...topStripGroups.map(g => g.rightMM));
                 const surrHeight = height - panelStartY;
-                const depthMM = furnitureDepthMm;
                 const gapMM = rightCfg.gap || 0;
 
                 if (method === 'ep') {
-                  // EP: 18T × 40W 패널, 캐비닛 측면 부착
+                  // EP: 18T × 40W 패널, 캐비닛 측면 부착 (전면)
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -2712,12 +2711,12 @@ const Room: React.FC<RoomProps> = ({
                   );
                 }
 
-                // L-shape: 측면패널(벽쪽) + 하부패널(바닥)
+                // L-shape: 측면패널(벽쪽, 전면 18mm) + 하부패널(바닥, 전면 18mm)
                 const sideX = mmToThreeUnits(maxRightMM + gapMM - END_PANEL_THICKNESS / 2);
                 const bottomX = mmToThreeUnits(maxRightMM + gapMM / 2);
                 return (
                   <>
-                    {/* 측면 패널: 18mm × 전체높이 × 가구깊이, 벽 쪽 */}
+                    {/* 측면 패널: 18mm × 전체높이 × 18mm (전면, 세로) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2726,18 +2725,18 @@ const Room: React.FC<RoomProps> = ({
                       args={[
                         mmToThreeUnits(END_PANEL_THICKNESS),
                         surrHeight,
-                        mmToThreeUnits(depthMM)
+                        mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         sideX,
                         panelStartY + surrHeight / 2,
-                        furnitureZOffset
+                        topZPosition
                       ]}
                       material={rightFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
-                    {/* 하부 패널: gap폭 × 18mm × 가구깊이, 바닥 */}
+                    {/* 하부 패널: gap폭 × 18mm × 18mm (전면, 가로) */}
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2746,12 +2745,12 @@ const Room: React.FC<RoomProps> = ({
                       args={[
                         mmToThreeUnits(gapMM),
                         mmToThreeUnits(END_PANEL_THICKNESS),
-                        mmToThreeUnits(depthMM)
+                        mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
                         bottomX,
                         panelStartY + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
-                        furnitureZOffset
+                        topZPosition
                       ]}
                       material={rightFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
