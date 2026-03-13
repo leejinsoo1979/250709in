@@ -358,6 +358,27 @@ export const useBaseFurniture = (
 
     const availableHeight = height - basicThickness * 2;
 
+    // internalHeight가 원래 높이와 다르면 (freeHeight 변경) → 비례 조정
+    const originalHeightMm = moduleData.dimensions.height;
+    const actualHeightMm = internalHeight || originalHeightMm;
+    const needsProportionalScale = internalHeight && Math.abs(actualHeightMm - originalHeightMm) > 1;
+
+    if (needsProportionalScale) {
+      // 비례 스케일링: 모든 섹션을 현재 높이에 맞춰 비례 조정
+      const originalSectionsTotal = sections.reduce((sum: number, s: SectionConfig) => {
+        return sum + (s.heightType === 'absolute' ? s.height : 0);
+      }, 0);
+      if (originalSectionsTotal > 0) {
+        const ratio = availableHeight / mmToThreeUnits(originalSectionsTotal);
+        return sections.map((section: SectionConfig) => {
+          if (section.heightType === 'absolute') {
+            return mmToThreeUnits(section.height) * ratio;
+          }
+          return availableHeight * (section.height / 100);
+        });
+      }
+    }
+
     // 고정 높이 섹션들 분리
     const fixedSections = sections.filter((s: SectionConfig) => s.heightType === 'absolute');
 
