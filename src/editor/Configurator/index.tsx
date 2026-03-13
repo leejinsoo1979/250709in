@@ -4052,52 +4052,66 @@ const Configurator: React.FC = () => {
               <div className={styles.subSetting}>
                 {sides.map(({ key, label }) => {
                   const d = fs![key];
-                  if (!d.enabled) return null;
                   return (
-                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0', fontSize: '11px' }}>
-                      <span style={{ minWidth: '14px', fontWeight: 500, color: 'var(--theme-text-secondary)' }}>{label}</span>
-                      <span style={{ color: 'var(--theme-text-muted)', fontSize: '10px' }}>{d.size}mm</span>
-                      <span style={{ color: 'var(--theme-text-muted)', marginLeft: 'auto' }}>앞</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={d.offset > 0 ? d.offset : ''}
-                        placeholder="0"
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === '' || /^\d+$/.test(v)) {
-                            const num = v === '' ? 0 : parseInt(v, 10);
-                            setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: num } } });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                          setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v } } });
-                        }}
-                        className={styles.frameNumberInput}
-                        style={{ width: '30px', textAlign: 'center' }}
-                      />
-                      <span style={{ color: 'var(--theme-text-muted)' }}>뒤</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={d.offset < 0 ? Math.abs(d.offset) : ''}
-                        placeholder="0"
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === '' || /^\d+$/.test(v)) {
-                            const num = v === '' ? 0 : -parseInt(v, 10);
-                            setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: num } } });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                          setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === -0 ? 0 : v } } });
-                        }}
-                        className={styles.frameNumberInput}
-                        style={{ width: '30px', textAlign: 'center' }}
-                      />
-                    </div>
+                    <React.Fragment key={key}>
+                      {/* 토글 행 */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
+                        <span style={{ fontSize: '11px', color: d.enabled ? 'var(--theme-text-primary)' : 'var(--theme-text-muted)' }}>
+                          {label}{d.enabled && d.size ? <span style={{ fontSize: '10px', color: 'var(--theme-text-muted)', marginLeft: '3px' }}>{d.size}mm</span> : ''}
+                        </span>
+                        <button
+                          onClick={() => setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, enabled: !d.enabled } } })}
+                          style={{
+                            position: 'relative', width: '28px', height: '16px', borderRadius: '8px', border: 'none',
+                            background: d.enabled ? 'var(--theme-primary)' : 'var(--theme-border)', cursor: 'pointer', padding: 0,
+                          }}
+                        >
+                          <span style={{
+                            position: 'absolute', top: '2px', left: d.enabled ? '14px' : '2px',
+                            width: '12px', height: '12px', borderRadius: '50%', background: '#fff',
+                            transition: 'left 0.15s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                          }} />
+                        </button>
+                      </div>
+                      {/* ON일 때 옵셋 */}
+                      {d.enabled && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 0 4px 16px', fontSize: '11px' }}>
+                          <span style={{ color: 'var(--theme-text-muted)', fontSize: '10px' }}>옵셋</span>
+                          <span style={{ color: 'var(--theme-text-muted)', fontSize: '10px' }}>앞</span>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={d.offset > 0 ? d.offset : ''} placeholder="0"
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === '' ? 0 : parseInt(v, 10) } } });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                              setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v } } });
+                            }}
+                            className={styles.frameNumberInput} style={{ width: '28px', textAlign: 'center' }}
+                          />
+                          <span style={{ color: 'var(--theme-text-muted)', fontSize: '10px' }}>뒤</span>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={d.offset < 0 ? Math.abs(d.offset) : ''} placeholder="0"
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === '' ? 0 : -parseInt(v, 10) } } });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                              setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === -0 ? 0 : v } } });
+                            }}
+                            className={styles.frameNumberInput} style={{ width: '28px', textAlign: 'center' }}
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </div>
