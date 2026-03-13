@@ -2567,11 +2567,19 @@ const Room: React.FC<RoomProps> = ({
                 const widthMM = group.rightMM - group.leftMM;
                 const centerXmm = (group.leftMM + group.rightMM) / 2;
                 const freeTopCfg = spaceInfo.freeSurround?.top;
-                const groupFrameHeight = group.thicknessMM > 0
-                  ? mmToThreeUnits(group.thicknessMM)
+
+                // 가구 freeHeight가 공간 높이보다 작으면 → 상부프레임이 가구 상단~천장까지 확장
+                const baseFrameThicknessMM = group.thicknessMM > 0
+                  ? group.thicknessMM
                   : freeTopCfg?.enabled
-                    ? mmToThreeUnits(freeTopCfg.size)
-                    : topBottomFrameHeight;
+                    ? freeTopCfg.size
+                    : topBottomFrameHeightMm;
+                const gapMM = (group.minFreeHeightMM > 0 && group.minFreeHeightMM < heightMm)
+                  ? heightMm - group.minFreeHeightMM
+                  : 0;
+                const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
+                const groupFrameHeight = mmToThreeUnits(totalFrameHeightMM);
+
                 const groupTopY = panelStartY + height - groupFrameHeight / 2;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로 (가구 앞면 기준)
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;

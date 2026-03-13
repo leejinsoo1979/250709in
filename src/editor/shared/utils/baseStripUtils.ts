@@ -16,6 +16,7 @@ export interface BaseStripGroup {
   depthMM: number;   // 그룹 내 최대 깊이 (mm)
   depthZOffsetMM: number; // 깊이 방향 Z오프셋 (mm, 하부섹션 깊이 축소 시)
   thicknessMM: number; // 그룹 내 최대 프레임 두께 (mm, 0 = 공간 기본값 사용)
+  minFreeHeightMM: number; // 그룹 내 최소 freeHeight (mm, 상부프레임 확장 계산용)
   modules: PlacedModule[];
 }
 
@@ -118,6 +119,7 @@ export function computeBaseStripGroups(
     depthMM: boundsWithModule[0].depthMM,
     depthZOffsetMM: boundsWithModule[0].depthZOffsetMM,
     thicknessMM: 0,
+    minFreeHeightMM: 0,
     modules: [boundsWithModule[0].module],
   };
 
@@ -138,6 +140,7 @@ export function computeBaseStripGroups(
         depthMM: item.depthMM,
         depthZOffsetMM: item.depthZOffsetMM,
         thicknessMM: 0,
+        minFreeHeightMM: 0,
         modules: [item.module],
       };
     }
@@ -168,6 +171,7 @@ export function computeTopStripGroups(
     bounds: getModuleBoundsX(m),
     depthMM: m.freeDepth || 580,
     thicknessMM: m.topFrameThickness || 0,
+    freeHeightMM: m.freeHeight || 0,
   }));
   boundsWithModule.sort((a, b) => a.bounds.left - b.bounds.left);
 
@@ -179,6 +183,7 @@ export function computeTopStripGroups(
     depthMM: boundsWithModule[0].depthMM,
     depthZOffsetMM: 0,
     thicknessMM: boundsWithModule[0].thicknessMM,
+    minFreeHeightMM: boundsWithModule[0].freeHeightMM,
     modules: [boundsWithModule[0].module],
   };
 
@@ -188,6 +193,11 @@ export function computeTopStripGroups(
       currentGroup.rightMM = Math.max(currentGroup.rightMM, item.bounds.right);
       currentGroup.depthMM = Math.max(currentGroup.depthMM, item.depthMM);
       currentGroup.thicknessMM = Math.max(currentGroup.thicknessMM, item.thicknessMM);
+      if (item.freeHeightMM > 0) {
+        currentGroup.minFreeHeightMM = currentGroup.minFreeHeightMM > 0
+          ? Math.min(currentGroup.minFreeHeightMM, item.freeHeightMM)
+          : item.freeHeightMM;
+      }
       currentGroup.modules.push(item.module);
     } else {
       groups.push(currentGroup);
@@ -198,6 +208,7 @@ export function computeTopStripGroups(
         depthMM: item.depthMM,
         depthZOffsetMM: 0,
         thicknessMM: item.thicknessMM,
+        minFreeHeightMM: item.freeHeightMM,
         modules: [item.module],
       };
     }
