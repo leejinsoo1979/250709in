@@ -590,6 +590,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
 
+  // 섹션별 치수 상태 (자유배치 + customConfig 분할 가구용)
+  const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
+  const [sectionDepthInputs, setSectionDepthInputs] = useState<Record<number, string>>({});
+  const [sectionWidthInputs, setSectionWidthInputs] = useState<Record<number, string>>({});
+  // 좌우분할(horizontalSplit) 서브박스 치수
+  const [hsLeftWidthInput, setHsLeftWidthInput] = useState<Record<number, string>>({});
+  const [hsRightWidthInput, setHsRightWidthInput] = useState<Record<number, string>>({});
+  const [hsLeftDepthInput, setHsLeftDepthInput] = useState<Record<number, string>>({});
+  const [hsRightDepthInput, setHsRightDepthInput] = useState<Record<number, string>>({});
+  const [hsCenterWidthInput, setHsCenterWidthInput] = useState<Record<number, string>>({});
+  const [hsCenterDepthInput, setHsCenterDepthInput] = useState<Record<number, string>>({});
+
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
@@ -865,6 +877,57 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
+
+        // 섹션별 치수 초기화 (customConfig가 있을 때)
+        const cc = currentPlacedModule.customConfig;
+        if (cc && cc.sections && cc.sections.length > 0) {
+          const pt = cc.panelThickness || 18;
+          const totalDepth = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
+          const totalWidth = currentPlacedModule.freeWidth || moduleData.dimensions.width;
+          const hInputs: Record<number, string> = {};
+          const dInputs: Record<number, string> = {};
+          const wInputs: Record<number, string> = {};
+          const hsLW: Record<number, string> = {};
+          const hsRW: Record<number, string> = {};
+          const hsLD: Record<number, string> = {};
+          const hsRD: Record<number, string> = {};
+          const hsCW: Record<number, string> = {};
+          const hsCD: Record<number, string> = {};
+          cc.sections.forEach((sec: any, i: number) => {
+            // 섹션 높이 (내경 + 상하판 = 외경)
+            hInputs[i] = Math.round(sec.height + 2 * pt).toString();
+            // 섹션 깊이 (개별 깊이가 없으면 전체 깊이)
+            if (i === 0) dInputs[i] = Math.round(currentPlacedModule.lowerSectionDepth || totalDepth).toString();
+            else if (i === 1) dInputs[i] = Math.round(currentPlacedModule.upperSectionDepth || totalDepth).toString();
+            else dInputs[i] = Math.round(totalDepth).toString();
+            // 섹션 너비 (개별 너비가 없으면 전체 너비)
+            wInputs[i] = Math.round(sec.width || totalWidth).toString();
+            // horizontalSplit 서브박스
+            const hs = sec.horizontalSplit;
+            if (hs) {
+              const innerW = (sec.width || totalWidth) - 2 * pt;
+              hsLW[i] = Math.round(hs.position || Math.floor(innerW / 2)).toString();
+              if (hs.secondPosition) {
+                hsCW[i] = Math.round(hs.secondPosition).toString();
+                hsRW[i] = Math.round(innerW - (hs.position || 0) - (hs.secondPosition || 0) - 2 * pt).toString();
+              } else {
+                hsRW[i] = Math.round(innerW - (hs.position || Math.floor(innerW / 2)) - pt).toString();
+              }
+              hsLD[i] = Math.round(hs.leftDepth || totalDepth).toString();
+              hsRD[i] = Math.round(hs.rightDepth || totalDepth).toString();
+              if (hs.centerDepth) hsCD[i] = Math.round(hs.centerDepth).toString();
+            }
+          });
+          setSectionHeightInputs(hInputs);
+          setSectionDepthInputs(dInputs);
+          setSectionWidthInputs(wInputs);
+          setHsLeftWidthInput(hsLW);
+          setHsRightWidthInput(hsRW);
+          setHsLeftDepthInput(hsLD);
+          setHsRightDepthInput(hsRD);
+          setHsCenterWidthInput(hsCW);
+          setHsCenterDepthInput(hsCD);
+        }
       }
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
@@ -1404,6 +1467,196 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: numValue });
       console.log('💾 [updatePlacedModule 호출 완료]');
     }
+  };
+
+  // ─── 섹션별 치수 핸들러 (자유배치 + customConfig) ───
+
+  // 섹션 높이 변경 (onBlur) — 다른 섹션 높이를 재분배
+  const handleSectionHeightBlur = (sIdx: number) => {
+    if (!currentPlacedModule?.customConfig) return;
+    const cc = currentPlacedModule.customConfig;
+    const pt = cc.panelThickness || 18;
+    const sections = [...cc.sections];
+    const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+    if (isNaN(inputVal) || inputVal < 100) {
+      // 유효하지 않으면 원래값 복원
+      const orig = sections[sIdx].height + 2 * pt;
+      setSectionHeightInputs(prev => ({ ...prev, [sIdx]: Math.round(orig).toString() }));
+      return;
+    }
+    const newInnerH = inputVal - 2 * pt;
+    if (newInnerH < 50) return;
+
+    const totalH = currentPlacedModule.freeHeight || 2000;
+    const sectionCount = sections.length;
+    const oldInnerH = sections[sIdx].height;
+    const diff = newInnerH - oldInnerH;
+
+    // 다른 섹션에서 diff만큼 빼기 (비율로 분배)
+    const otherIndices = sections.map((_, i) => i).filter(i => i !== sIdx);
+    const otherTotal = otherIndices.reduce((sum, i) => sum + sections[i].height, 0);
+    if (otherTotal - diff < otherIndices.length * 50) return; // 다른 섹션 최소 50mm
+
+    sections[sIdx] = { ...sections[sIdx], height: newInnerH };
+    otherIndices.forEach(i => {
+      const ratio = otherTotal > 0 ? sections[i].height / otherTotal : 1 / otherIndices.length;
+      sections[i] = { ...sections[i], height: Math.round(sections[i].height - diff * ratio) };
+    });
+    // 반올림 오차 보정
+    const allocated = sections.reduce((sum, s) => sum + s.height, 0);
+    const totalInner = totalH - sectionCount * 2 * pt - (cc.sectionGap || 0) * (sectionCount - 1);
+    const remainder = totalInner - allocated;
+    if (Math.abs(remainder) > 0) {
+      const lastOther = otherIndices[otherIndices.length - 1];
+      sections[lastOther] = { ...sections[lastOther], height: sections[lastOther].height + remainder };
+    }
+
+    const newConfig = { ...cc, sections };
+    updatePlacedModule(currentPlacedModule.id, { customConfig: newConfig });
+    // 모든 입력 갱신
+    const hInputs: Record<number, string> = {};
+    sections.forEach((s, i) => { hInputs[i] = Math.round(s.height + 2 * pt).toString(); });
+    setSectionHeightInputs(hInputs);
+  };
+
+  // 섹션 깊이 변경 (onBlur)
+  const handleSectionDepthBlur = (sIdx: number) => {
+    if (!currentPlacedModule) return;
+    const val = parseInt(sectionDepthInputs[sIdx] || '0', 10);
+    if (isNaN(val) || val < 100 || val > 800) {
+      const orig = sIdx === 0
+        ? (currentPlacedModule.lowerSectionDepth || currentPlacedModule.freeDepth || 580)
+        : (currentPlacedModule.upperSectionDepth || currentPlacedModule.freeDepth || 580);
+      setSectionDepthInputs(prev => ({ ...prev, [sIdx]: Math.round(orig).toString() }));
+      return;
+    }
+    if (sIdx === 0) {
+      setLowerSectionDepth(val);
+      updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: val });
+      setLowerDepthInput(val.toString());
+    } else if (sIdx === 1) {
+      setUpperSectionDepth(val);
+      updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: val });
+      setUpperDepthInput(val.toString());
+    }
+  };
+
+  // 섹션 너비 변경 (onBlur) — 전체 가구 너비 변경
+  const handleSectionWidthBlur = (sIdx: number) => {
+    if (!currentPlacedModule?.customConfig) return;
+    const val = parseInt(sectionWidthInputs[sIdx] || '0', 10);
+    if (isNaN(val) || val < 100 || val > 2400) {
+      const cc = currentPlacedModule.customConfig;
+      const orig = cc.sections[sIdx]?.width || currentPlacedModule.freeWidth || 600;
+      setSectionWidthInputs(prev => ({ ...prev, [sIdx]: Math.round(orig).toString() }));
+      return;
+    }
+    const cc = currentPlacedModule.customConfig;
+    const sections = cc.sections.map((s: any, i: number) => {
+      if (i === sIdx) return { ...s, width: val };
+      return { ...s, width: val }; // 모든 섹션 너비 연동
+    });
+    const newConfig = { ...cc, sections };
+    const newX = calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo);
+    updatePlacedModule(currentPlacedModule.id, {
+      customConfig: newConfig,
+      freeWidth: val,
+      moduleWidth: val,
+      position: { ...currentPlacedModule.position, x: newX },
+    });
+    setFreeWidthInput(val.toString());
+    // 모든 섹션 너비 입력 동기화
+    const wInputs: Record<number, string> = {};
+    sections.forEach((_: any, i: number) => { wInputs[i] = val.toString(); });
+    setSectionWidthInputs(wInputs);
+  };
+
+  // horizontalSplit 좌측 너비 변경 (onBlur) — 우측이 자동 조정
+  const handleHsLeftWidthBlur = (sIdx: number) => {
+    if (!currentPlacedModule?.customConfig) return;
+    const cc = currentPlacedModule.customConfig;
+    const sec = cc.sections[sIdx];
+    if (!sec?.horizontalSplit) return;
+    const pt = cc.panelThickness || 18;
+    const sectionW = sec.width || currentPlacedModule.freeWidth || 600;
+    const innerW = sectionW - 2 * pt;
+    const val = parseInt(hsLeftWidthInput[sIdx] || '0', 10);
+    if (isNaN(val) || val < 50) {
+      setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: Math.round(sec.horizontalSplit!.position || innerW / 2).toString() }));
+      return;
+    }
+    const has3Split = !!sec.horizontalSplit.secondPosition;
+    const maxLeft = has3Split
+      ? innerW - (sec.horizontalSplit.secondPosition || 0) - 2 * pt - 50
+      : innerW - pt - 50;
+    const clamped = Math.min(val, maxLeft);
+    const hs = { ...sec.horizontalSplit, position: clamped };
+    const newSections = cc.sections.map((s: any, i: number) =>
+      i === sIdx ? { ...s, horizontalSplit: hs } : s
+    );
+    updatePlacedModule(currentPlacedModule.id, { customConfig: { ...cc, sections: newSections } });
+    setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: clamped.toString() }));
+    // 우측 자동 업데이트
+    const rightW = has3Split
+      ? innerW - clamped - (hs.secondPosition || 0) - 2 * pt
+      : innerW - clamped - pt;
+    setHsRightWidthInput(prev => ({ ...prev, [sIdx]: Math.round(rightW).toString() }));
+  };
+
+  // horizontalSplit 우측 너비 변경 (onBlur) — 좌측이 자동 조정
+  const handleHsRightWidthBlur = (sIdx: number) => {
+    if (!currentPlacedModule?.customConfig) return;
+    const cc = currentPlacedModule.customConfig;
+    const sec = cc.sections[sIdx];
+    if (!sec?.horizontalSplit) return;
+    const pt = cc.panelThickness || 18;
+    const sectionW = sec.width || currentPlacedModule.freeWidth || 600;
+    const innerW = sectionW - 2 * pt;
+    const val = parseInt(hsRightWidthInput[sIdx] || '0', 10);
+    if (isNaN(val) || val < 50) {
+      const origRight = sec.horizontalSplit.secondPosition
+        ? innerW - (sec.horizontalSplit.position || 0) - (sec.horizontalSplit.secondPosition || 0) - 2 * pt
+        : innerW - (sec.horizontalSplit.position || innerW / 2) - pt;
+      setHsRightWidthInput(prev => ({ ...prev, [sIdx]: Math.round(origRight).toString() }));
+      return;
+    }
+    const has3Split = !!sec.horizontalSplit.secondPosition;
+    const maxRight = has3Split
+      ? innerW - (sec.horizontalSplit.secondPosition || 0) - 2 * pt - 50
+      : innerW - pt - 50;
+    const clamped = Math.min(val, maxRight);
+    const newLeftW = has3Split
+      ? innerW - clamped - (sec.horizontalSplit.secondPosition || 0) - 2 * pt
+      : innerW - clamped - pt;
+    const hs = { ...sec.horizontalSplit, position: Math.max(50, newLeftW) };
+    const newSections = cc.sections.map((s: any, i: number) =>
+      i === sIdx ? { ...s, horizontalSplit: hs } : s
+    );
+    updatePlacedModule(currentPlacedModule.id, { customConfig: { ...cc, sections: newSections } });
+    setHsRightWidthInput(prev => ({ ...prev, [sIdx]: clamped.toString() }));
+    setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: Math.max(50, newLeftW).toString() }));
+  };
+
+  // horizontalSplit 서브박스 깊이 변경 (onBlur)
+  const handleHsDepthBlur = (sIdx: number, side: 'left' | 'right' | 'center') => {
+    if (!currentPlacedModule?.customConfig) return;
+    const cc = currentPlacedModule.customConfig;
+    const sec = cc.sections[sIdx];
+    if (!sec?.horizontalSplit) return;
+    const inputMap = { left: hsLeftDepthInput, right: hsRightDepthInput, center: hsCenterDepthInput };
+    const val = parseInt(inputMap[side][sIdx] || '0', 10);
+    const totalDepth = currentPlacedModule.freeDepth || 580;
+    if (isNaN(val) || val < 100 || val > 800) {
+      const orig = (sec.horizontalSplit as any)[`${side}Depth`] || totalDepth;
+      const setMap = { left: setHsLeftDepthInput, right: setHsRightDepthInput, center: setHsCenterDepthInput };
+      setMap[side](prev => ({ ...prev, [sIdx]: Math.round(orig).toString() }));
+      return;
+    }
+    const hs = { ...sec.horizontalSplit, [`${side}Depth`]: val };
+    const newSections = cc.sections.map((s: any, i: number) =>
+      i === sIdx ? { ...s, horizontalSplit: hs } : s
+    );
+    updatePlacedModule(currentPlacedModule.id, { customConfig: { ...cc, sections: newSections } });
   };
 
   const handleLowerTopOffsetChange = (value: string) => {
@@ -2108,6 +2361,197 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 섹션별 치수 설정 (자유배치 + customConfig 분할 가구) */}
+          {currentPlacedModule?.isFreePlacement && currentPlacedModule.customConfig &&
+           currentPlacedModule.customConfig.sections.length >= 2 && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>섹션별 치수</h5>
+              {currentPlacedModule.customConfig.sections.map((sec: any, sIdx: number) => {
+                const pt = currentPlacedModule.customConfig!.panelThickness || 18;
+                const sectionLabel = currentPlacedModule.customConfig!.sections.length === 2
+                  ? (sIdx === 0 ? '하부' : '상부')
+                  : `섹션 ${sIdx + 1}`;
+                const hasHS = !!sec.horizontalSplit;
+                return (
+                  <div key={sIdx} style={{
+                    background: 'var(--theme-background)',
+                    border: '1px solid var(--theme-border)',
+                    borderRadius: '6px',
+                    padding: '8px 10px',
+                    marginBottom: sIdx < currentPlacedModule.customConfig!.sections.length - 1 ? '8px' : 0,
+                  }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text)', marginBottom: '6px' }}>
+                      {sectionLabel}
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {/* 섹션 너비 */}
+                      <div style={{ flex: 1, minWidth: '70px' }}>
+                        <label style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>너비</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={sectionWidthInputs[sIdx] || ''}
+                            onChange={(e) => setSectionWidthInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                            onBlur={() => handleSectionWidthBlur(sIdx)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            className={styles.depthInput}
+                            style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      {/* 섹션 높이 */}
+                      <div style={{ flex: 1, minWidth: '70px' }}>
+                        <label style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>높이</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={sectionHeightInputs[sIdx] || ''}
+                            onChange={(e) => setSectionHeightInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                            onBlur={() => handleSectionHeightBlur(sIdx)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            className={styles.depthInput}
+                            style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      {/* 섹션 깊이 */}
+                      <div style={{ flex: 1, minWidth: '70px' }}>
+                        <label style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>깊이</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={sectionDepthInputs[sIdx] || ''}
+                            onChange={(e) => setSectionDepthInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                            onBlur={() => handleSectionDepthBlur(sIdx)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            className={styles.depthInput}
+                            style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 좌우 분할 서브박스 치수 */}
+                    {hasHS && (
+                      <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed var(--theme-border)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>좌우 분할</div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {/* 좌측 */}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>좌측</div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input
+                                    type="text" inputMode="numeric"
+                                    value={hsLeftWidthInput[sIdx] || ''}
+                                    onChange={(e) => setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsLeftWidthBlur(sIdx)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input
+                                    type="text" inputMode="numeric"
+                                    value={hsLeftDepthInput[sIdx] || ''}
+                                    onChange={(e) => setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsDepthBlur(sIdx, 'left')}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* 중앙 (3분할 시) */}
+                          {sec.horizontalSplit.secondPosition && (
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>중앙</div>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
+                                  <div className={styles.inputWithUnit}>
+                                    <input
+                                      type="text" inputMode="numeric"
+                                      value={hsCenterWidthInput[sIdx] || ''}
+                                      onChange={(e) => setHsCenterWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                      className={styles.depthInput}
+                                      style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                      readOnly
+                                    />
+                                  </div>
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
+                                  <div className={styles.inputWithUnit}>
+                                    <input
+                                      type="text" inputMode="numeric"
+                                      value={hsCenterDepthInput[sIdx] || ''}
+                                      onChange={(e) => setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                      onBlur={() => handleHsDepthBlur(sIdx, 'center')}
+                                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                      className={styles.depthInput}
+                                      style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {/* 우측 */}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>우측</div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input
+                                    type="text" inputMode="numeric"
+                                    value={hsRightWidthInput[sIdx] || ''}
+                                    onChange={(e) => setHsRightWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsRightWidthBlur(sIdx)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input
+                                    type="text" inputMode="numeric"
+                                    value={hsRightDepthInput[sIdx] || ''}
+                                    onChange={(e) => setHsRightDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsDepthBlur(sIdx, 'right')}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
