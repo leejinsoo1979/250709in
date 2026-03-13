@@ -3287,7 +3287,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </div>
           </div>
           <div className={styles.row}>
-            <span className={styles.label}>하판</span>
+            <span className={styles.label}>바닥판</span>
             <div className={styles.toggleGroup}>
               <button
                 className={`${styles.toggleButton} ${section.showBottomPanel !== false ? styles.active : ''}`}
@@ -3308,7 +3308,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </div>
           </div>
           <div className={styles.row}>
-            <span className={styles.label}>뒷벽</span>
+            <span className={styles.label}>백패널</span>
             <div className={styles.toggleGroup}>
               <button
                 className={`${styles.toggleButton} ${section.showBackPanel !== false ? styles.active : ''}`}
