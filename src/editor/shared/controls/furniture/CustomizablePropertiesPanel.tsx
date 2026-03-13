@@ -55,10 +55,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     setTimeout(() => setToastMsg(null), 2000);
   }, []);
 
-  // 너비/깊이 입력용 문자열 상태 (기존 가구 패턴과 동일)
+  // 너비/깊이/높이 입력용 문자열 상태 (기존 가구 패턴과 동일)
   const [widthInput, setWidthInput] = useState<string>('');
+  const [heightInput, setHeightInput] = useState<string>('');
   const [depthInput, setDepthInput] = useState<string>('');
   const [widthError, setWidthError] = useState<string>('');
+  const [heightError, setHeightError] = useState<string>('');
   const [depthError, setDepthError] = useState<string>('');
   // 섹션 높이 입력용 문자열 상태 (직접 바인딩 시 입력 불가 문제 방지)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
@@ -153,9 +155,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     if (placedModule) {
       const w = placedModule.freeWidth || placedModule.moduleWidth || 600;
       const d = placedModule.freeDepth || 580;
+      const h = placedModule.freeHeight || 2000;
       setWidthInput(w.toString());
+      setHeightInput(h.toString());
       setDepthInput(d.toString());
       setWidthError('');
+      setHeightError('');
       setDepthError('');
       // 섹션별 깊이 초기화
       const lD = placedModule.lowerSectionDepth ?? d;
@@ -275,7 +280,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
   // 내부 유효 높이 (상하판 두께 제외)
   const innerHeight = furnitureHeight - 2 * panelThickness;
 
-  // 너비/깊이 범위 (기존 가구와 동일 패턴)
+  // 너비/깊이/높이 범위
+  const MIN_HEIGHT = 300;
+  const MAX_HEIGHT = 3000;
   const MIN_WIDTH = 150;
   const MAX_WIDTH = 2400;
   const MIN_DEPTH = 200;
@@ -372,6 +379,74 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const key = getCustomDimensionKey(placedModule.moduleId);
         const store = useFurnitureStore.getState();
         const dims = { width: furnitureWidth, height: furnitureHeight, depth: num };
+        store.setLastCustomDimensions(key, dims);
+        if (key === 'full-dual') {
+          store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
+        } else if (key === 'full-single') {
+          store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
+        }
+      }
+    }
+  };
+
+  // 전체 높이 입력 핸들러 (자유배치 모드)
+  const handleHeightInputChange = (value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setHeightInput(value);
+      setHeightError('');
+    }
+  };
+
+  // 전체 높이 확정 (onBlur / Enter) — 섹션 높이 비율 유지하며 재분배
+  const handleHeightInputBlur = () => {
+    if (heightInput === '') {
+      setHeightInput(furnitureHeight.toString());
+      return;
+    }
+    const num = parseInt(heightInput, 10);
+    if (num < MIN_HEIGHT) {
+      setHeightError(`최소 ${MIN_HEIGHT}mm`);
+      setHeightInput(furnitureHeight.toString());
+    } else if (num > MAX_HEIGHT) {
+      setHeightError(`최대 ${MAX_HEIGHT}mm`);
+      setHeightInput(furnitureHeight.toString());
+    } else {
+      setHeightError('');
+      const sections = [...config.sections];
+      const sectionCount = sections.length;
+
+      if (sectionCount >= 2) {
+        // 2/3분할: 총 내경에서 비율 유지하며 재분배
+        const oldTotalInner = sections.reduce((sum, s) => sum + s.height, 0);
+        const newTotalInner = num - sectionCount * 2 * panelThickness;
+        if (newTotalInner > sectionCount * 100) {
+          sections.forEach((s, i) => {
+            const ratio = oldTotalInner > 0 ? s.height / oldTotalInner : 1 / sectionCount;
+            sections[i] = { ...s, height: Math.round(ratio * newTotalInner) };
+          });
+          // 반올림 오차 보정: 마지막 섹션에 나머지 할당
+          const allocated = sections.reduce((sum, s) => sum + s.height, 0);
+          const diff = newTotalInner - allocated;
+          sections[sections.length - 1] = { ...sections[sections.length - 1], height: sections[sections.length - 1].height + diff };
+        }
+      } else {
+        // 단일 섹션: 내경 = 전체 - 상하판
+        sections[0] = { ...sections[0], height: num - 2 * panelThickness };
+      }
+
+      applyConfig({ ...config, sections });
+      updatePlacedModule(moduleId, { freeHeight: num });
+
+      // 섹션 높이 입력 갱신
+      const newInputs: Record<number, string> = {};
+      sections.forEach((s, i) => { newInputs[i] = (s.height + 2 * panelThickness).toString(); });
+      setSectionHeightInputs(newInputs);
+
+      // 커스터마이징 가구 마지막 치수 기억
+      if (placedModule && isCustomizableModuleId(placedModule.moduleId)) {
+        const key = getCustomDimensionKey(placedModule.moduleId);
+        const store = useFurnitureStore.getState();
+        const dims = { width: furnitureWidth, height: num, depth: furnitureDepth };
         store.setLastCustomDimensions(key, dims);
         if (key === 'full-dual') {
           store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(dims.width / 2) });
@@ -3440,9 +3515,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     onKeyDown={handleInputKeyDown}
                   />
                   <span className={styles.label} style={{ marginLeft: 4 }}>높이</span>
-                  <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
-                    {furnitureHeight}
-                  </span>
+                  {placedModule.isFreePlacement ? (
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className={`${styles.input} ${heightError ? styles.inputError : ''}`}
+                      value={heightInput}
+                      placeholder={`${MIN_HEIGHT}-${MAX_HEIGHT}`}
+                      onChange={(e) => handleHeightInputChange(e.target.value)}
+                      onBlur={handleHeightInputBlur}
+                      onKeyDown={handleInputKeyDown}
+                      style={{ width: '60px' }}
+                    />
+                  ) : (
+                    <span className={styles.input} style={{ cursor: 'default', opacity: 0.7 }}>
+                      {furnitureHeight}
+                    </span>
+                  )}
                   <span className={styles.label} style={{ marginLeft: 4 }}>깊이</span>
                   <input
                     type="text"
