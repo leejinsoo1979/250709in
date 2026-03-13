@@ -3268,7 +3268,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 우측 섹션 높이 치수선 (가구 우측) — 상하 서브분할 반영 */}
               {(() => {
-                const dimLineRightX = furnitureRightX + mmToThreeUnits(60);
+                const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
                 const extLineRightX = dimLineRightX + mmToThreeUnits(20);
 
                 // 각 섹션에 대해 서브분할이 있으면 분할된 높이 구간 목록, 없으면 전체 하나
@@ -3344,7 +3344,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     <Text
                       renderOrder={1000}
                       depthTest={false}
-                      position={[dimLineRightX + mmToThreeUnits(40), (seg.startY + seg.endY) / 2, 0.01]}
+                      position={[dimLineRightX + mmToThreeUnits(60), (seg.startY + seg.endY) / 2, 0.01]}
                       fontSize={baseFontSize}
                       color={textColor}
                       anchorX="center"
