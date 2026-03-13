@@ -21,7 +21,8 @@ export const calculatePanelDetails = (
   customConfig?: CustomFurnitureConfig, // 커스텀 가구 내부 구조
   hasLeftEndPanel?: boolean, // 좌측 엔드패널 여부
   hasRightEndPanel?: boolean, // 우측 엔드패널 여부
-  endPanelThickness?: number // 엔드패널 두께 (mm, 기본값: 18)
+  endPanelThickness?: number, // 엔드패널 두께 (mm, 기본값: 18)
+  freeHeight?: number // 자유배치 모드 가구 높이 (mm) — 지정 시 섹션 비례 스케일링
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[] } = {
     upper: [],     // 상부장 패널
@@ -39,7 +40,9 @@ export const calculatePanelDetails = (
   const drawerSideThickness = 15; // 서랍 측면 두께 (DRAWER_SIDE_THICKNESS) 
   const drawerBottomThickness = 5; // 서랍 바닥판 두께
   
-  const height = moduleData.dimensions.height;
+  const originalHeight = moduleData.dimensions.height;
+  const height = freeHeight || originalHeight;
+  const heightRatio = freeHeight && originalHeight > 0 ? freeHeight / originalHeight : 1;
   const innerWidth = customWidth - (basicThickness * 2);
   const _innerHeight = height - (basicThickness * 2);
   
@@ -139,11 +142,11 @@ export const calculatePanelDetails = (
         sectionName = '';
       }
 
-      // 실제 섹션 높이 계산 (전체 높이 기준)
+      // 실제 섹션 높이 계산 (전체 높이 기준, freeHeight 비례 스케일링 적용)
       let sectionHeightMm;
       if (section.heightType === 'absolute') {
-        // 절대값은 정의된 값 그대로 사용
-        sectionHeightMm = section.height || 0;
+        // 절대값은 정의된 값에 비례 스케일링 적용
+        sectionHeightMm = Math.round((section.height || 0) * heightRatio);
       } else {
         // 비율 섹션은 남은 높이에서 계산
         const variableSections = sections.filter(s => s.heightType !== 'absolute');

@@ -54,8 +54,6 @@ import { useResponsive } from '@/hooks/useResponsive';
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick } = props;
-  console.log('🌐 Space3DView - viewMode:', viewMode);
-  console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();

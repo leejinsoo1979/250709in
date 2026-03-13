@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -33,10 +33,18 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   ghostHighlightSlotIndex
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const storePlacedModules = useFurnitureStore(state => state.placedModules);
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
+  // R3F ConcurrentRoot에서 useSyncExternalStore가 동작하지 않는 문제 해결:
+  // Zustand의 subscribe()로 직접 구독하여 state 변경 시 강제 re-render
+  const [storePlacedModules, setStorePlacedModules] = useState(() => useFurnitureStore.getState().placedModules);
+  useEffect(() => {
+    const unsub = useFurnitureStore.subscribe((state) => {
+      setStorePlacedModules(state.placedModules);
+    });
+    return unsub;
+  }, []);
 
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
