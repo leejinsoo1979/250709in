@@ -2593,67 +2593,171 @@ const Room: React.FC<RoomProps> = ({
                 );
               })}
 
-              {/* 자유배치 좌측 서라운드 */}
+              {/* 자유배치 좌측 서라운드 (EP / L-shape) */}
               {spaceInfo.freeSurround?.left?.enabled && topStripGroups.length > 0 && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
-                const leftSizeMM = leftCfg.size;
-                const leftOffsetMM = leftCfg.offset;
-                // 가장 왼쪽 그룹의 leftMM에서 서라운드 배치
+                const method = leftCfg.method || 'none';
+                if (method === 'none') return null;
                 const minLeftMM = Math.min(...topStripGroups.map(g => g.leftMM));
-                const leftFrameX = mmToThreeUnits(minLeftMM - leftSizeMM / 2 - leftOffsetMM);
-                const leftFrameH = height - panelStartY;
+                const surrHeight = height - panelStartY;
+                const depthMM = furnitureDepthMm;
+                const gapMM = leftCfg.gap || 0;
+
+                if (method === 'ep') {
+                  // EP: 18T × 40W 패널, 캐비닛 측면 부착
+                  return (
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-left-ep"
+                      name="left-surround-ep"
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrHeight,
+                        mmToThreeUnits(40)
+                      ]}
+                      position={[
+                        mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2),
+                        panelStartY + surrHeight / 2,
+                        topZPosition
+                      ]}
+                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  );
+                }
+
+                // L-shape: 측면패널(벽쪽) + 하부패널(바닥)
+                const sideX = mmToThreeUnits(minLeftMM - gapMM + END_PANEL_THICKNESS / 2);
+                const bottomX = mmToThreeUnits(minLeftMM - gapMM / 2);
                 return (
-                  <BoxWithEdges
-                    hideEdges={hideEdges}
-                    isOuterFrame
-                    key="free-left-surround"
-                    name="left-surround"
-                    args={[
-                      mmToThreeUnits(leftSizeMM),
-                      leftFrameH,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      leftFrameX,
-                      panelStartY + leftFrameH / 2,
-                      topZPosition
-                    ]}
-                    material={leftFrameMaterial ?? createFrameMaterial('left')}
-                    renderMode={renderMode}
-                    shadowEnabled={shadowEnabled}
-                  />
+                  <>
+                    {/* 측면 패널: 18mm × 전체높이 × 가구깊이, 벽 쪽 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-left-lshape-side"
+                      name="left-surround-lshape-side"
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrHeight,
+                        mmToThreeUnits(depthMM)
+                      ]}
+                      position={[
+                        sideX,
+                        panelStartY + surrHeight / 2,
+                        furnitureZOffset
+                      ]}
+                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                    {/* 하부 패널: gap폭 × 18mm × 가구깊이, 바닥 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-left-lshape-bottom"
+                      name="left-surround-lshape-bottom"
+                      args={[
+                        mmToThreeUnits(gapMM),
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        mmToThreeUnits(depthMM)
+                      ]}
+                      position={[
+                        bottomX,
+                        panelStartY + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
+                        furnitureZOffset
+                      ]}
+                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </>
                 );
               })()}
 
-              {/* 자유배치 우측 서라운드 */}
+              {/* 자유배치 우측 서라운드 (EP / L-shape) */}
               {spaceInfo.freeSurround?.right?.enabled && topStripGroups.length > 0 && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
-                const rightSizeMM = rightCfg.size;
-                const rightOffsetMM = rightCfg.offset;
-                // 가장 오른쪽 그룹의 rightMM에서 서라운드 배치
+                const method = rightCfg.method || 'none';
+                if (method === 'none') return null;
                 const maxRightMM = Math.max(...topStripGroups.map(g => g.rightMM));
-                const rightFrameX = mmToThreeUnits(maxRightMM + rightSizeMM / 2 + rightOffsetMM);
-                const rightFrameH = height - panelStartY;
+                const surrHeight = height - panelStartY;
+                const depthMM = furnitureDepthMm;
+                const gapMM = rightCfg.gap || 0;
+
+                if (method === 'ep') {
+                  // EP: 18T × 40W 패널, 캐비닛 측면 부착
+                  return (
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-right-ep"
+                      name="right-surround-ep"
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrHeight,
+                        mmToThreeUnits(40)
+                      ]}
+                      position={[
+                        mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2),
+                        panelStartY + surrHeight / 2,
+                        topZPosition
+                      ]}
+                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  );
+                }
+
+                // L-shape: 측면패널(벽쪽) + 하부패널(바닥)
+                const sideX = mmToThreeUnits(maxRightMM + gapMM - END_PANEL_THICKNESS / 2);
+                const bottomX = mmToThreeUnits(maxRightMM + gapMM / 2);
                 return (
-                  <BoxWithEdges
-                    hideEdges={hideEdges}
-                    isOuterFrame
-                    key="free-right-surround"
-                    name="right-surround"
-                    args={[
-                      mmToThreeUnits(rightSizeMM),
-                      rightFrameH,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      rightFrameX,
-                      panelStartY + rightFrameH / 2,
-                      topZPosition
-                    ]}
-                    material={rightFrameMaterial ?? createFrameMaterial('right')}
-                    renderMode={renderMode}
-                    shadowEnabled={shadowEnabled}
-                  />
+                  <>
+                    {/* 측면 패널: 18mm × 전체높이 × 가구깊이, 벽 쪽 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-right-lshape-side"
+                      name="right-surround-lshape-side"
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrHeight,
+                        mmToThreeUnits(depthMM)
+                      ]}
+                      position={[
+                        sideX,
+                        panelStartY + surrHeight / 2,
+                        furnitureZOffset
+                      ]}
+                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                    {/* 하부 패널: gap폭 × 18mm × 가구깊이, 바닥 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-right-lshape-bottom"
+                      name="right-surround-lshape-bottom"
+                      args={[
+                        mmToThreeUnits(gapMM),
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        mmToThreeUnits(depthMM)
+                      ]}
+                      position={[
+                        bottomX,
+                        panelStartY + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
+                        furnitureZOffset
+                      ]}
+                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </>
                 );
               })()}
             </>
