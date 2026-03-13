@@ -105,27 +105,37 @@ export const useBaseFurniture = (
     shelfCount: 0
   };
 
-  // internalHeight가 원래 높이와 다르면 sections 높이를 비례 조정한 modelConfig 생성
+  // internalHeight가 원래 섹션 합과 다르면 sections 높이를 비례 조정한 modelConfig 생성
+  // 주의: FurnitureItem에서 moduleData.dimensions.height가 이미 freeHeight로 변경되므로
+  //       원래 높이는 sections의 합으로 계산해야 함
   const modelConfig = useMemo(() => {
-    if (!internalHeight || !originalModelConfig.sections || originalModelConfig.sections.length === 0) {
+    if (!originalModelConfig.sections || originalModelConfig.sections.length === 0) {
       return originalModelConfig;
     }
-    const originalHeightMm = moduleData.dimensions.height;
-    if (Math.abs(internalHeight - originalHeightMm) <= 1) {
-      return originalModelConfig;
-    }
-    // 원본 섹션 총합 (absolute 기준)
+
+    // 원래 가구 높이 = absolute 섹션들의 합 + 상하판 두께
+    const thicknessMm = originalModelConfig.basicThickness || 18;
     const originalSectionsTotal = originalModelConfig.sections.reduce((sum: number, s: SectionConfig) => {
       return sum + (s.heightType === 'absolute' ? s.height : 0);
     }, 0);
     if (originalSectionsTotal <= 0) {
       return originalModelConfig;
     }
+
+    // 실제 렌더링에 사용할 높이 (freeHeight 또는 원래 높이)
+    const renderHeightMm = internalHeight || moduleData.dimensions.height;
+    // 원래 가구 전체 높이 (섹션 합 + 상하판)
+    const originalFullHeightMm = originalSectionsTotal + thicknessMm * 2;
+
+    // 높이 차이가 1mm 이하면 조정 불필요
+    if (Math.abs(renderHeightMm - originalFullHeightMm) <= 1) {
+      return originalModelConfig;
+    }
+
     // 비율 계산: 새 내부 가용 높이 / 원래 내부 가용 높이
-    const thicknessMm = originalModelConfig.basicThickness || 18;
-    const newAvailableMm = internalHeight - thicknessMm * 2;
-    const originalAvailableMm = originalHeightMm - thicknessMm * 2;
-    const preciseRatio = originalAvailableMm > 0 ? newAvailableMm / originalAvailableMm : 1;
+    const newAvailableMm = renderHeightMm - thicknessMm * 2;
+    const preciseRatio = originalSectionsTotal > 0 ? newAvailableMm / originalSectionsTotal : 1;
+
     return {
       ...originalModelConfig,
       sections: originalModelConfig.sections.map((section: SectionConfig) => ({
@@ -133,7 +143,6 @@ export const useBaseFurniture = (
         height: section.heightType === 'absolute'
           ? Math.round(section.height * preciseRatio)
           : section.height,
-        // 선반 위치도 비례 조정
         shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * preciseRatio))
       }))
     };
