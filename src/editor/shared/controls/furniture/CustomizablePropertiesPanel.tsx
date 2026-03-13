@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
@@ -73,6 +73,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [hSplitInputs, setHSplitInputs] = useState<Record<string, string>>({});
   // 좌우 섹션분할 깊이 입력 - 키: "sIdx-left" / "sIdx-center" / "sIdx-right"
   const [hSplitDepthInputs, setHSplitDepthInputs] = useState<Record<string, string>>({});
+
+  // 섹션 팝업 바깥 클릭 감지용 ref
+  const sectionPopupRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isLayoutBuilderOpen || focusedSectionIndex === undefined || !moduleId) return;
+    const handler = (e: MouseEvent) => {
+      if (sectionPopupRef.current && !sectionPopupRef.current.contains(e.target as Node)) {
+        openCustomizableEditPopup(moduleId);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isLayoutBuilderOpen, focusedSectionIndex, moduleId, openCustomizableEditPopup]);
 
   // 팝업 열릴 때 config 및 입력값 초기화
   useEffect(() => {
@@ -4081,12 +4094,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
 
     {/* 설계모드: 톱니 클릭 시 별도 섹션 팝업 (클릭한 섹션 옆에 표시) */}
     {isLayoutBuilderOpen && focusedSectionIndex !== undefined && config.sections[focusedSectionIndex] && moduleId && (
-      <>
       <div
-        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 999 }}
-        onClick={() => openCustomizableEditPopup(moduleId)}
-      />
-      <div
+        ref={sectionPopupRef}
         className={styles.sectionPopup}
         style={{
           top: Math.max(60, Math.min((activePopup.screenY ?? 300) - 250, window.innerHeight - 500)),
@@ -4121,7 +4130,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </button>
         </div>
       </div>
-      </>
     )}
     </>
   );
