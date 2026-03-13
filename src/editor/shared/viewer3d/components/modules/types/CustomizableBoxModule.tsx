@@ -542,11 +542,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const sectionInnerHeightMm = section.height;
     const sectionInnerWidthMm = width - 2 * panelThickness;
 
-    // 섹션 중심 Y 계산 (바닥판 올림 시 같이 내려감)
-    const guideDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-    const guideDropMm = guideDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-    const guideDropOffset = mmToUnit(guideDropMm);
-    let sectionCenterY = -guideDropOffset;
+    // 섹션 중심 Y 계산
+    let sectionCenterY = 0;
     let sectionInnerH = mmToUnit(sectionInnerHeightMm);
     if (isSplit) {
       const splitBoxHeights = sections.map(s => {
@@ -555,7 +552,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
         return mmToUnit(s.height + pc * panelThickness);
       });
-      let currentBot = -H / 2 - guideDropOffset;
+      let currentBot = -H / 2;
       for (let i = 0; i < sIdx; i++) {
         currentBot += splitBoxHeights[i];
       }
@@ -663,11 +660,6 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const icons: React.ReactNode[] = [];
     const frontZ = D / 2 + 0.1;
 
-    // 바닥판 올림 시 아이콘도 같이 내려감
-    const iconDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-    const iconDropMm = iconDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-    const iconDropOffset = mmToUnit(iconDropMm);
-
     if (isSplit) {
       const sectionBoxHeights = sections.map(s => {
         const hb = s.showBottomPanel !== false;
@@ -676,7 +668,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         return mmToUnit(s.height + pc * panelThickness);
       });
       const sectionCenterYs: number[] = [];
-      let currentBottom = -H / 2 - iconDropOffset;
+      let currentBottom = -H / 2;
       for (let i = 0; i < sections.length; i++) {
         sectionCenterYs.push(currentBottom + sectionBoxHeights[i] / 2);
         currentBottom += sectionBoxHeights[i];
@@ -777,14 +769,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const areaInnerH = mmToUnit(section.height);
           const lH = mmToUnit(subSplit.lowerHeight);
           const uH = areaInnerH - lH;
-          const lowerCY = -areaInnerH / 2 + lH / 2 - iconDropOffset;
-          const upperCY = areaInnerH / 2 - uH / 2 - iconDropOffset;
+          const lowerCY = -areaInnerH / 2 + lH / 2;
+          const upperCY = areaInnerH / 2 - uH / 2;
           const side = areaKey === 'full' ? undefined : areaKey;
           icons.push(renderSectionIcon(`single-${areaKey}-lower`, cx + singleAlignOffset, lowerCY, frontZ, 0, side, 'lower'));
           icons.push(renderSectionIcon(`single-${areaKey}-upper`, cx + singleAlignOffset, upperCY, frontZ, 0, side, 'upper'));
         } else {
           const side = areaKey === 'full' ? undefined : areaKey;
-          icons.push(renderSectionIcon(`single-${areaKey}`, cx + singleAlignOffset, -iconDropOffset, frontZ, 0, side));
+          icons.push(renderSectionIcon(`single-${areaKey}`, cx + singleAlignOffset, 0, frontZ, 0, side));
         }
       };
 
@@ -867,11 +859,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
     const themeColor = getThemeColor();
 
-    // Y 위치 계산 (바닥판 올림 시 하이라이트도 같이 내려감)
-    const hlDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-    const hlDropMm = hlDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-    const hlDropOffset = mmToUnit(hlDropMm);
-    let centerY = -hlDropOffset;
+    // Y 위치 계산
+    let centerY = 0;
     let areaH: number;
     if (isSplit) {
       const sectionBoxHeights = sections.map(s => {
@@ -880,7 +869,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
         return mmToUnit(s.height + pc * panelThickness);
       });
-      let currentBottom = -H / 2 - hlDropOffset;
+      let currentBottom = -H / 2;
       for (let i = 0; i < sIdx; i++) {
         currentBottom += sectionBoxHeights[i];
       }
@@ -1933,12 +1922,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               const panelCount = (hasBottom ? 1 : 0) + (hasTop ? 1 : 0);
               return mmToUnit(s.height + panelCount * panelThickness);
             });
-            // 바닥판 올림 시: 조절발이 사라지므로 모든 섹션을 조절발 높이만큼 아래로 이동
-            const bottomRaiseActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-            const footDropMm = bottomRaiseActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-            const footDropOffset = mmToUnit(footDropMm);
             const sectionCenterYs: number[] = [];
-            let currentBottom = -H / 2 - footDropOffset;
+            let currentBottom = -H / 2;
             for (let i = 0; i < sections.length; i++) {
               sectionCenterYs.push(currentBottom + sectionBoxHeights[i] / 2);
               currentBottom += sectionBoxHeights[i];
@@ -1985,13 +1970,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       ) : sections[0]?.horizontalSplit ? (
         <>
           {/* 1단 + 좌우 섹션분할: renderBox가 독립 박스 2개로 렌더링 */}
-          {(() => {
-            if (sections[0].enabled === false) return null;
-            const singleBottomRaiseActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-            const singleFootDropMm = singleBottomRaiseActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-            const singleFootDrop = mmToUnit(singleFootDropMm);
-            return renderBox(sections[0], 0, effectiveW, H, D, -singleFootDrop);
-          })()}
+          {sections[0].enabled !== false && renderBox(sections[0], 0, effectiveW, H, D, 0)}
         </>
       ) : (
         <>
@@ -1999,13 +1978,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           {(() => {
             const section = sections[0];
             if (section?.enabled === false) return null;
-            const singleBottomRaiseActive = section?.bottomPanelRaise && section.bottomPanelRaise > 0;
-            const singleFootDropMm = singleBottomRaiseActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-            const singleFootDrop = mmToUnit(singleFootDropMm);
             const singleW = section?.width ? mmToUnit(section.width) : effectiveW;
             const singleAlignOff = calculateAlignOffset(singleW, effectiveW, section?.align || 'center');
             const needsGroup = singleW !== effectiveW;
-            const content = renderBox(section, 0, singleW, H, D, -singleFootDrop);
+            const content = renderBox(section, 0, singleW, H, D, 0);
             return needsGroup ? (
               <group position={[singleAlignOff, 0, 0]}>{content}</group>
             ) : <>{content}</>;
@@ -2119,11 +2095,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
             return mmToUnit(s.height + pc * panelThickness);
           });
-          // 바닥판 올림 시 치수도 같이 내려가야 함
-          const dimBottomRaiseActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-          const dimFootDropMm = dimBottomRaiseActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-          const dimFootDrop = mmToUnit(dimFootDropMm);
-          let dimCurrentBottom = -H / 2 - dimFootDrop;
+          let dimCurrentBottom = -H / 2;
           const dimCenters: number[] = [];
           for (let i = 0; i < sections.length; i++) {
             dimCenters.push(dimCurrentBottom + sectionHeights[i] / 2);
@@ -2141,11 +2113,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             </>
           );
         } else {
-          // 1단: 바닥판 올림 시 치수도 같이 내려감
-          const dimSingleDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-          const dimSingleDropMm = dimSingleDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-          const dimSingleDrop = mmToUnit(dimSingleDropMm);
-          return <>{renderSectionDims(sections[0], 0, -dimSingleDrop, H, effectiveW, height)}</>;
+          return <>{renderSectionDims(sections[0], 0, 0, H, effectiveW, height)}</>;
         }
       })()}
 
@@ -2239,11 +2207,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
             return mmToUnit(s.height + pc * panelThickness);
           });
-          // 바닥판 올림 시 선반 간격 치수도 같이 내려감
-          const gapDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-          const gapDropMm = gapDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-          const gapDropOffset = mmToUnit(gapDropMm);
-          let gapBottom = -H / 2 - gapDropOffset;
+          let gapBottom = -H / 2;
           const gapCenters: number[] = [];
           for (let i = 0; i < sections.length; i++) {
             gapCenters.push(gapBottom + gapBoxHeights[i] / 2);
@@ -2261,11 +2225,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             </>
           );
         } else {
-          // 1단: 바닥판 올림 시 선반 간격 치수도 같이 내려감
-          const gapSingleDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-          const gapSingleDropMm = gapSingleDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
-          const gapSingleDrop = mmToUnit(gapSingleDropMm);
-          return <>{renderShelfGaps(sections[0], 0, -gapSingleDrop, H - 2 * t)}</>;
+          return <>{renderShelfGaps(sections[0], 0, 0, H - 2 * t)}</>;
         }
       })()}
 
