@@ -1470,7 +1470,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반/서랍 높이 입력 변경 (문자열 상태만 업데이트, 확정은 blur에서)
-  const handleHeightInputChange = (
+  const handleElementHeightInputChange = (
     sIdx: number,
     side: 'full' | 'left' | 'center' | 'right',
     heightIdx: number,
@@ -1483,7 +1483,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   };
 
   // 선반/서랍 높이 확정 (onBlur / Enter)
-  const handleHeightInputBlur = (
+  const handleElementHeightInputBlur = (
     sIdx: number,
     side: 'full' | 'left' | 'center' | 'right',
     heightIdx: number,
@@ -2150,8 +2150,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       inputMode="numeric"
                       className={`${styles.input} ${styles.inputSmall}`}
                       value={displayVal}
-                      onChange={(e) => handleHeightInputChange(sIdx, side, hi, e.target.value)}
-                      onBlur={() => handleHeightInputBlur(sIdx, side, hi, sectionHeight)}
+                      onChange={(e) => handleElementHeightInputChange(sIdx, side, hi, e.target.value)}
+                      onBlur={() => handleElementHeightInputBlur(sIdx, side, hi, sectionHeight)}
                       onKeyDown={(e) => handleShelfHeightKeyDown(e, sIdx, side, hi, sectionHeight)}
                     />
                     <span className={styles.unit}>mm</span>

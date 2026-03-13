@@ -109,7 +109,6 @@ export const useBaseFurniture = (
   // shelving.ts에서: dimensions.height = maxHeight = sections 합 (판재 두께 포함)
   // FurnitureItem에서: dimensions.height = freeHeight로 오버라이드
   // 따라서: sections 합(=원래 dimensions.height) vs 현재 dimensions.height(=freeHeight)로 비교
-  console.log('>>> [useBaseFurniture] internalHeight:', internalHeight, 'dim.height:', moduleData.dimensions.height, 'height(3js):', height, 'moduleId:', moduleData.id);
   const modelConfig = useMemo(() => {
     if (!originalModelConfig.sections || originalModelConfig.sections.length === 0) {
       return originalModelConfig;

@@ -253,20 +253,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     const remainingHeight = availableHeight - totalFixedHeight;
     
     // 모든 섹션의 높이 계산
+    // 각 absolute 섹션은 자체 지정 높이를 사용 (useBaseFurniture에서 이미 비례 조정됨)
     const allSections = sections.map((section: SectionConfig, index: number) => {
       let calcHeight: number;
 
       if (section.heightType === 'absolute') {
-        if (index === 0) {
-          // 첫 번째 섹션: 지정된 높이 사용
-          calcHeight = calculateSectionHeight(section, availableHeight);
-        } else {
-          // 상부 섹션: 전체 높이에서 하부 섹션들을 뺀 나머지
-          const lowerSectionsHeight = sections
-            .slice(0, index)
-            .reduce((sum, s) => sum + calculateSectionHeight(s, availableHeight), 0);
-          calcHeight = availableHeight - lowerSectionsHeight;
-        }
+        calcHeight = calculateSectionHeight(section, availableHeight);
       } else {
         calcHeight = calculateSectionHeight(section, remainingHeight);
       }
@@ -276,6 +268,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         calculatedHeight: calcHeight
       };
     });
+
+    // 마지막 섹션은 나머지 공간을 채우도록 조정 (오차 보정)
+    if (allSections.length >= 2) {
+      const lastIdx = allSections.length - 1;
+      const lowerSectionsHeight = allSections
+        .slice(0, lastIdx)
+        .reduce((sum, s) => sum + s.calculatedHeight, 0);
+      allSections[lastIdx].calculatedHeight = availableHeight - lowerSectionsHeight;
+    }
 
     // 렌더링
     let currentYPosition = -height/2 + basicThickness;
