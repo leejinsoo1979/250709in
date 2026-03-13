@@ -95,8 +95,6 @@ export function computeBaseStripGroups(
     if (!m.isFreePlacement) return false;
     const category = getModuleCategory(m);
     if (category === 'upper') return false;
-    // hasBase가 undefined인 경우 (기존 데이터) → full/lower는 true 취급
-    if (m.hasBase === false) return false;
     return true;
   });
 
@@ -159,7 +157,6 @@ export function computeTopStripGroups(
 ): BaseStripGroup[] {
   const topModules = placedModules.filter((m) => {
     if (!m.isFreePlacement) return false;
-    if (m.hasTopFrame === false) return false;
     const category = getModuleCategory(m);
     return category === 'upper' || category === 'full';
   });

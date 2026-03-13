@@ -589,7 +589,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeWidthInput, setFreeWidthInput] = useState<string>('');
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
-  const [topFrameThicknessInput, setTopFrameThicknessInput] = useState<string>('');
 
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
@@ -866,7 +865,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
-        setTopFrameThicknessInput((currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)).toString());
       }
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
@@ -2066,82 +2064,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* 자유배치 상부프레임 토글 (하부장 제외) */}
-          {currentPlacedModule?.isFreePlacement &&
-           moduleData &&
-           moduleData.category !== 'lower' && (
-            <div className={styles.propertySection}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={currentPlacedModule.hasTopFrame !== false}
-                  onChange={() => {
-                    const newValue = currentPlacedModule.hasTopFrame === false;
-                    updatePlacedModule(currentPlacedModule.id, { hasTopFrame: newValue });
-                  }}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
-                />
-                <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>상부프레임</span>
-              </label>
-              {currentPlacedModule.hasTopFrame !== false && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingLeft: '24px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap' }}>두께</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={topFrameThicknessInput}
-                    onChange={(e) => setTopFrameThicknessInput(e.target.value)}
-                    onBlur={() => {
-                      const val = parseInt(topFrameThicknessInput, 10);
-                      if (!isNaN(val) && val >= 10 && val <= 100 && currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { topFrameThickness: val });
-                        setTopFrameThicknessInput(val.toString());
-                      } else {
-                        // 유효하지 않으면 이전 값으로 복원
-                        setTopFrameThicknessInput((currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)).toString());
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                    }}
-                    style={{
-                      width: '60px',
-                      padding: '4px 6px',
-                      fontSize: '12px',
-                      border: '1px solid var(--theme-border)',
-                      borderRadius: '4px',
-                      backgroundColor: 'var(--theme-bg)',
-                      color: 'var(--theme-text)',
-                      textAlign: 'center',
-                    }}
-                  />
-                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 자유배치 하부프레임 토글 (상부장 제외, floor 타입만) */}
-          {currentPlacedModule?.isFreePlacement &&
-           moduleData &&
-           moduleData.category !== 'upper' &&
-           spaceInfo.baseConfig?.type === 'floor' && (
-            <div className={styles.propertySection}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={currentPlacedModule.hasBase !== false}
-                  onChange={() => {
-                    const newValue = currentPlacedModule.hasBase === false;
-                    updatePlacedModule(currentPlacedModule.id, { hasBase: newValue });
-                  }}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
-                />
-                <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>하부프레임</span>
-              </label>
             </div>
           )}
 
