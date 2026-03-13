@@ -2332,6 +2332,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 position={[-(W / 2) + leftEP / 2, epYOffset, epOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
+                useFrameColor={spaceInfo.layoutMode === 'free-placement'}
               />
             )}
             {hasRightEndPanel && (
@@ -2342,6 +2343,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 position={[(W / 2) - rightEP / 2, epYOffset, epOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
+                useFrameColor={spaceInfo.layoutMode === 'free-placement'}
               />
             )}
           </>

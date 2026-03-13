@@ -3098,6 +3098,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       position={[-(width / 2) - epW / 2, epYRelative, epOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
+                      useFrameColor={placedModule.isFreePlacement}
                     />
                   )}
                   {hasRight && (
@@ -3108,6 +3109,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       position={[(width / 2) + epW / 2, epYRelative, epOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
+                      useFrameColor={placedModule.isFreePlacement}
                     />
                   )}
                 </>

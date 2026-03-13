@@ -11,6 +11,7 @@ interface EndPanelWithTextureProps {
   position: [number, number, number];
   spaceInfo: SpaceInfo;
   renderMode?: 'solid' | 'wireframe';
+  useFrameColor?: boolean; // true면 프레임 색상 사용 (자유배치 EP)
 }
 
 /**
@@ -23,19 +24,26 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   depth,
   position,
   spaceInfo,
-  renderMode = 'solid'
+  renderMode = 'solid',
+  useFrameColor = false
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
-  
+
   // 재질을 useMemo로 캐싱
   const endPanelMaterial = useMemo(() => {
-    const material = new THREE.MeshStandardMaterial({ 
-      color: spaceInfo.materialConfig?.doorColor || '#E0E0E0',
-      metalness: 0.1,
-      roughness: 0.8
+    // 프레임 색상 사용 시 frameColor/frameTexture, 아니면 doorColor/doorTexture
+    const baseColor = useFrameColor
+      ? (spaceInfo.materialConfig?.frameColor || '#E0E0E0')
+      : (spaceInfo.materialConfig?.doorColor || '#E0E0E0');
+    const material = new THREE.MeshStandardMaterial({
+      color: baseColor,
+      metalness: useFrameColor ? 0.0 : 0.1,
+      roughness: useFrameColor ? 0.6 : 0.8
     });
-    
-    const textureUrl = spaceInfo.materialConfig?.interiorTexture || spaceInfo.materialConfig?.doorTexture;
+
+    const textureUrl = useFrameColor
+      ? (spaceInfo.materialConfig?.frameTexture || spaceInfo.materialConfig?.doorTexture)
+      : (spaceInfo.materialConfig?.interiorTexture || spaceInfo.materialConfig?.doorTexture);
     
     if (textureUrl) {
       // Cabinet Texture1인 경우 먼저 색상 설정
@@ -71,7 +79,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     }
     
     return material;
-  }, [spaceInfo.materialConfig?.doorColor, spaceInfo.materialConfig?.interiorTexture, spaceInfo.materialConfig?.doorTexture]);
+  }, [useFrameColor, spaceInfo.materialConfig?.doorColor, spaceInfo.materialConfig?.frameColor, spaceInfo.materialConfig?.frameTexture, spaceInfo.materialConfig?.interiorTexture, spaceInfo.materialConfig?.doorTexture]);
   
   // 컴포넌트 언마운트 시 재질 정리
   useEffect(() => {
