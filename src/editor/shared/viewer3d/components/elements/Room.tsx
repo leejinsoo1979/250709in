@@ -2634,38 +2634,36 @@ const Room: React.FC<RoomProps> = ({
                   );
                 }
 
-                // L-shape (전면에서 이격 가림, 겹침 없는 L자):
-                //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 전면 전체 폭
-                //   측면패널: 18mm(X) × 높이(Y) × (gap-18mm)(Z) — 전면패널 뒤쪽까지만
-                const sideDepthMM = gapMM - END_PANEL_THICKNESS; // 겹침 방지: 전면패널 두께만큼 빼기
-                // 측면패널: 벽에 붙음, 전면패널 뒤쪽 경계까지
-                const sideX = mmToThreeUnits(minLeftMM - gapMM + END_PANEL_THICKNESS / 2);
-                const sideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(sideDepthMM) / 2;
-                // 전면패널: 전면에서 gap 전체 폭
+                // L-shape (겹침 없는 L자):
+                //   측면패널: 18mm(X) × 높이(Y) × 40mm(Z) — 가구 측면에 붙음, 전면패널 뒤쪽
+                //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 가장 앞, 측면패널 가림
+                const SIDE_DEPTH_MM = 40; // 측면패널 Z 깊이 고정 40mm
+                // 측면패널: 가구 바로 옆(minLeftMM - 18/2), 전면패널 뒤쪽에 위치
+                const sideX = mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2);
+                const sideZ = frontZ + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(SIDE_DEPTH_MM) / 2;
+                // 전면패널: 가장 앞에서 gap 전체 폭
                 const frontX = mmToThreeUnits(minLeftMM - gapMM / 2);
                 return (
                   <>
-                    {sideDepthMM > 0 && (
-                      <BoxWithEdges
-                        hideEdges={hideEdges}
-                        isOuterFrame
-                        key="free-left-lshape-side"
-                        name="left-surround-lshape-side"
-                        args={[
-                          mmToThreeUnits(END_PANEL_THICKNESS),
-                          surrH,
-                          mmToThreeUnits(sideDepthMM)
-                        ]}
-                        position={[
-                          sideX,
-                          surrCenterY,
-                          sideZ
-                        ]}
-                        material={leftFrameMaterial ?? createFrameMaterial('left')}
-                        renderMode={renderMode}
-                        shadowEnabled={shadowEnabled}
-                      />
-                    )}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-left-lshape-side"
+                      name="left-surround-lshape-side"
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrH,
+                        mmToThreeUnits(SIDE_DEPTH_MM)
+                      ]}
+                      position={[
+                        sideX,
+                        surrCenterY,
+                        sideZ
+                      ]}
+                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
@@ -2726,36 +2724,35 @@ const Room: React.FC<RoomProps> = ({
 
                 // L-shape (전면에서 이격 가림, 겹침 없는 L자):
                 //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 전면 전체 폭
-                //   측면패널: 18mm(X) × 높이(Y) × (gap-18mm)(Z) — 전면패널 뒤쪽까지만
-                const sideDepthMM = gapMM - END_PANEL_THICKNESS;
-                // 측면패널: 우측 벽에 붙음, 전면패널 뒤쪽 경계까지
-                const sideX = mmToThreeUnits(maxRightMM + gapMM - END_PANEL_THICKNESS / 2);
-                const sideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(sideDepthMM) / 2;
-                // 전면패널: 전면에서 gap 전체 폭
+                //   측면패널: 18mm(X) × 높이(Y) × 40mm(Z) — 가구 측면에 붙음, 전면패널 뒤쪽
+                //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 가장 앞, 측면패널 가림
+                const SIDE_DEPTH_MM = 40;
+                // 측면패널: 가구 바로 옆(maxRightMM + 18/2), 전면패널 뒤쪽에 위치
+                const sideX = mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2);
+                const sideZ = frontZ + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(SIDE_DEPTH_MM) / 2;
+                // 전면패널: 가장 앞에서 gap 전체 폭
                 const frontX = mmToThreeUnits(maxRightMM + gapMM / 2);
                 return (
                   <>
-                    {sideDepthMM > 0 && (
-                      <BoxWithEdges
-                        hideEdges={hideEdges}
-                        isOuterFrame
-                        key="free-right-lshape-side"
-                        name="right-surround-lshape-side"
-                        args={[
-                          mmToThreeUnits(END_PANEL_THICKNESS),
-                          surrH,
-                          mmToThreeUnits(sideDepthMM)
-                        ]}
-                        position={[
-                          sideX,
-                          surrCenterY,
-                          sideZ
-                        ]}
-                        material={rightFrameMaterial ?? createFrameMaterial('right')}
-                        renderMode={renderMode}
-                        shadowEnabled={shadowEnabled}
-                      />
-                    )}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key="free-right-lshape-side"
+                      name="right-surround-lshape-side"
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrH,
+                        mmToThreeUnits(SIDE_DEPTH_MM)
+                      ]}
+                      position={[
+                        sideX,
+                        surrCenterY,
+                        sideZ
+                      ]}
+                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
