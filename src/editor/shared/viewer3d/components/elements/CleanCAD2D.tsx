@@ -3092,23 +3092,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
           const furnitureBaseY = isFloating ? mmToThreeUnits(floatHeight) : mmToThreeUnits(bottomFrameHeight);
 
-          // 각 섹션의 Y 범위 계산
-          let currentY = furnitureBaseY + mmToThreeUnits(panelThickness); // 하판 위
+          // 각 섹션의 외경 Y 범위 계산
+          // 물리 구조 (아래→위): 하판(pt) → section[0] 내경 → 칸막이(pt) → section[1] 내경 → 상판(pt)
           const sectionRanges: { startY: number; endY: number; heightMm: number }[] = [];
           const sectionGap = customModule.customConfig.sectionGap ?? 0;
+          const pt = mmToThreeUnits(panelThickness);
 
+          // 각 섹션의 내경 시작 Y 위치를 먼저 누적 계산
+          let internalY = furnitureBaseY + pt; // 하판 상단 = section[0] 내경 하단
           sections.forEach((section, i) => {
-            const sectionHeightUnits = mmToThreeUnits(section.height);
-            const startY = currentY;
-            const endY = currentY + sectionHeightUnits;
-            // 외경 기준 높이 표시 (내경 + 상하판 두께)
-            const hb = section.showBottomPanel !== false;
-            const ht = section.showTopPanel !== false;
-            const outerH = section.height + ((hb ? 1 : 0) + (ht ? 1 : 0)) * panelThickness;
-            sectionRanges.push({ startY, endY, heightMm: outerH });
-            // 다음 섹션 시작: 현재 섹션 끝 + 칸막이 두께
+            const internalH = mmToThreeUnits(section.height);
+            // 외경 하단: 이 섹션 아래의 패널 하단
+            const outerStartY = internalY - pt;
+            // 외경 상단: 이 섹션 위의 패널 상단
+            const outerEndY = internalY + internalH + pt;
+            // 외경 높이 (mm)
+            const outerH = section.height + 2 * panelThickness;
+            sectionRanges.push({ startY: outerStartY, endY: outerEndY, heightMm: outerH });
+            // 다음 섹션 내경 시작: 칸막이 상단
             if (i < sections.length - 1) {
-              currentY = endY + mmToThreeUnits(panelThickness) + mmToThreeUnits(sectionGap);
+              internalY = internalY + internalH + pt + mmToThreeUnits(sectionGap);
             }
           });
 
