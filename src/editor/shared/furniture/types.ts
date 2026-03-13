@@ -57,6 +57,7 @@ export interface CustomSection {
   // 마감 패널 (기본: true = 렌더링)
   showTopPanel?: boolean;    // 상판 마감 (기본: true)
   showBottomPanel?: boolean; // 하판 마감 (기본: true)
+  bottomPanelRaise?: number; // 바닥판 올림 mm (>0이면 조절발 제거, 측판이 아래로 연장)
   showBackPanel?: boolean;   // 뒷벽 마감 (기본: true)
 }
 

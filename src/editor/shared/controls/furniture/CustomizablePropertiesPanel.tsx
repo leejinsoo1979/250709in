@@ -3288,24 +3288,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
           <div className={styles.row}>
             <span className={styles.label}>바닥판</span>
-            <div className={styles.toggleGroup}>
-              <button
-                className={`${styles.toggleButton} ${section.showBottomPanel !== false ? styles.active : ''}`}
-                onClick={() => {
-                  const sections = [...config.sections];
-                  sections[sIdx] = { ...sections[sIdx], showBottomPanel: true };
-                  applyConfig({ ...config, sections });
-                }}
-              >있음</button>
-              <button
-                className={`${styles.toggleButton} ${section.showBottomPanel === false ? styles.active : ''}`}
-                onClick={() => {
-                  const sections = [...config.sections];
-                  sections[sIdx] = { ...sections[sIdx], showBottomPanel: false };
-                  applyConfig({ ...config, sections });
-                }}
-              >없음</button>
-            </div>
+            <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginRight: '2px' }}>올림</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              className={styles.input}
+              style={{ width: '60px', flex: 'none' }}
+              value={section.bottomPanelRaise ?? 0}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9]/g, '');
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], bottomPanelRaise: v === '' ? 0 : parseInt(v) };
+                applyConfig({ ...config, sections });
+              }}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value) || 0;
+                const clamped = Math.max(0, Math.min(500, val));
+                const sections = [...config.sections];
+                sections[sIdx] = { ...sections[sIdx], bottomPanelRaise: clamped };
+                applyConfig({ ...config, sections });
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            />
+            <span className={styles.unit}>mm</span>
           </div>
           <div className={styles.row}>
             <span className={styles.label}>백패널</span>
