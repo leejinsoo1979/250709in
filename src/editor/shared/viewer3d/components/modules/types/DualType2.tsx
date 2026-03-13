@@ -35,6 +35,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   slotWidths,
   adjustedWidth, // adjustedWidth 추가
+  customSections, // 사용자 정의 섹션 설정 (자유배치 freeHeight 조정)
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
@@ -63,6 +64,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjustedWidth, // adjustedWidth 전달
+    customSections, // 사용자 정의 섹션 설정
     panelGrainDirections: propsPanelGrainDirections,
     backPanelThicknessMm: backPanelThicknessProp
   });

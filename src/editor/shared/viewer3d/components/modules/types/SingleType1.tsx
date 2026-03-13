@@ -26,6 +26,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   slotInfo,
   slotCenterX,
   showFurniture = true,
+  customSections, // 사용자 정의 섹션 설정 (자유배치 freeHeight 조정)
   placedFurnitureId,
   panelGrainDirections,
   backPanelThickness,
@@ -50,6 +51,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
+    customSections, // 사용자 정의 섹션 설정
     panelGrainDirections,
     backPanelThicknessMm: backPanelThickness
   });
