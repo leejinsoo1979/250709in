@@ -20,6 +20,7 @@ import {
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups } from '@/editor/shared/utils/baseStripUtils';
+import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -2546,12 +2547,15 @@ const Room: React.FC<RoomProps> = ({
       {(effectiveShowFrame || isFreePlacement) && topBottomFrameHeightMm > 0 && (() => {
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
-          // freeSurround 설정이 있고 top이 비활성이면 렌더링 안함
-          const freeTopEnabled = spaceInfo.freeSurround?.top?.enabled ?? true;
-          if (!freeTopEnabled) return null;
-
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
-          if (topStripGroups.length === 0) return null;
+          const freeTopEnabled = spaceInfo.freeSurround?.top?.enabled ?? true;
+
+          // 자유배치 모듈의 X 범위를 직접 계산 (topStripGroups와 독립적)
+          const freeModules = placedModulesFromStore.filter(m => m.isFreePlacement);
+          const allModuleBounds = freeModules.map(m => getModuleBoundsX(m));
+          const hasFreeMods = allModuleBounds.length > 0;
+          const minLeftMM = hasFreeMods ? Math.min(...allModuleBounds.map(b => b.left)) : 0;
+          const maxRightMM = hasFreeMods ? Math.max(...allModuleBounds.map(b => b.right)) : 0;
 
           const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
@@ -2559,7 +2563,7 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {/* 상부 프레임 스트립 */}
-              {topStripGroups.map((group) => {
+              {freeTopEnabled && topStripGroups.map((group) => {
                 const widthMM = group.rightMM - group.leftMM;
                 const centerXmm = (group.leftMM + group.rightMM) / 2;
                 const freeTopCfg = spaceInfo.freeSurround?.top;
@@ -2594,11 +2598,10 @@ const Room: React.FC<RoomProps> = ({
               })}
 
               {/* 자유배치 좌측 서라운드 — 슬롯배치와 동일 구조: 벽~가구앞면까지 깊이 방향 패널 */}
-              {spaceInfo.freeSurround?.left?.enabled && topStripGroups.length > 0 && (() => {
+              {spaceInfo.freeSurround?.left?.enabled && hasFreeMods && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
                 const method = leftCfg.method || 'none';
                 if (method === 'none') return null;
-                const minLeftMM = Math.min(...topStripGroups.map(g => g.leftMM));
                 const surrHeight = height - panelStartY;
                 const gapMM = leftCfg.gap || 0;
 
@@ -2677,11 +2680,10 @@ const Room: React.FC<RoomProps> = ({
               })()}
 
               {/* 자유배치 우측 서라운드 — 슬롯배치와 동일 구조 */}
-              {spaceInfo.freeSurround?.right?.enabled && topStripGroups.length > 0 && (() => {
+              {spaceInfo.freeSurround?.right?.enabled && hasFreeMods && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
                 const method = rightCfg.method || 'none';
                 if (method === 'none') return null;
-                const maxRightMM = Math.max(...topStripGroups.map(g => g.rightMM));
                 const surrHeight = height - panelStartY;
                 const gapMM = rightCfg.gap || 0;
 
