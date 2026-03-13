@@ -838,7 +838,4 @@ export const useUIStore = create<UIState>()(
       }),
     }
   )
-);
-
-// 디버깅용 전역 노출
-(window as any).__uiStore = useUIStore;
+); 

@@ -1713,7 +1713,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 readOnly={readOnly}
                 onFurnitureClick={onFurnitureClick || (isEmbedded ? handleEmbeddedFurnitureClick : undefined)}
                 ghostHighlightSlotIndex={previewGhostSlotIndex}
-                placedModules={placedModules}
               />
 
               {/* 단내림 공간 렌더링 */}
@@ -2380,7 +2379,6 @@ const QuadrantContent: React.FC<{
         showFurniture={showFurniture}
         readOnly={readOnly}
         onFurnitureClick={onFurnitureClick}
-        placedModules={placedModules}
       />
     </React.Suspense>
   );
