@@ -4000,10 +4000,31 @@ export default React.memo(Room, (prevProps, nextProps) => {
   // freeSurround 비교 (자유배치 서라운드 토글)
   if (JSON.stringify(prevSpace.freeSurround) !== JSON.stringify(nextSpace.freeSurround)) return false;
 
-  // 가구 배치 비교 (빠른 비교를 위해 길이만 우선 확인)
+  // 가구 배치 비교
   const prevModules = prevProps.placedModules || [];
   const nextModules = nextProps.placedModules || [];
   if (prevModules.length !== nextModules.length) return false;
+
+  // 개별 가구 속성 비교 (freeHeight, freeWidth, freeDepth, customConfig 등 변경 감지)
+  for (let i = 0; i < prevModules.length; i++) {
+    const prev = prevModules[i];
+    const next = nextModules[i];
+    if (!prev || !next) return false;
+    if (prev.id !== next.id) return false;
+    if (prev.moduleId !== next.moduleId) return false;
+    if (prev.freeHeight !== next.freeHeight) return false;
+    if (prev.freeWidth !== next.freeWidth) return false;
+    if (prev.freeDepth !== next.freeDepth) return false;
+    if (prev.freeX !== next.freeX) return false;
+    if (prev.slotIndex !== next.slotIndex) return false;
+    if (prev.customWidth !== next.customWidth) return false;
+    if (prev.adjustedWidth !== next.adjustedWidth) return false;
+    if (prev.hasTopFrame !== next.hasTopFrame) return false;
+    if (prev.hasBase !== next.hasBase) return false;
+    if (prev.customConfig !== next.customConfig) return false;
+    if (prev.hasLeftEndPanel !== next.hasLeftEndPanel) return false;
+    if (prev.hasRightEndPanel !== next.hasRightEndPanel) return false;
+  }
 
   // 기둥 배열이 변경되었는지 확인 (프레임 분절에 영향)
   const prevColumns = prevSpace.columns || [];
