@@ -13,6 +13,7 @@ import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
+import { getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
@@ -474,7 +475,12 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           return;
         }
 
-        const dims = module.dimensions;
+        // 이전 배치 치수 적용 (lastCustomDimensions)
+        const stdKey = getStandardDimensionKey(module.id);
+        const lastDims = useFurnitureStore.getState().lastCustomDimensions[stdKey];
+        const dims = lastDims
+          ? { width: lastDims.width, height: lastDims.height, depth: lastDims.depth }
+          : module.dimensions;
         const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
 
         // 중앙부터 시작해 빈 자리 찾기

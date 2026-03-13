@@ -1957,7 +1957,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }
                           } else {
                             // 표준 가구도 마지막 치수 기억 (같은 그룹끼리 공유)
-                            store.setLastCustomDimensions(getStandardDimensionKey(currentPlacedModule.moduleId), dims);
+                            const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
+                            store.setLastCustomDimensions(stdKey, dims);
+                            // 표준 듀얼↔싱글 폭 연동 (듀얼=싱글*2)
+                            if (stdKey === 'std-dual-full') {
+                              store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(val / 2) });
+                            } else if (stdKey === 'std-single-full') {
+                              store.setLastCustomDimensions('std-dual-full', { ...dims, width: val * 2 });
+                            } else if (stdKey === 'std-dual-upper') {
+                              store.setLastCustomDimensions('std-single-upper', { ...dims, width: Math.round(val / 2) });
+                            } else if (stdKey === 'std-single-upper') {
+                              store.setLastCustomDimensions('std-dual-upper', { ...dims, width: val * 2 });
+                            } else if (stdKey === 'std-dual-lower') {
+                              store.setLastCustomDimensions('std-single-lower', { ...dims, width: Math.round(val / 2) });
+                            } else if (stdKey === 'std-single-lower') {
+                              store.setLastCustomDimensions('std-dual-lower', { ...dims, width: val * 2 });
+                            }
                           }
                         }
                       }}
@@ -2002,7 +2017,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
                             }
                           } else {
-                            store.setLastCustomDimensions(currentPlacedModule.moduleId, dims);
+                            // 표준 가구 높이 기억 + 듀얼↔싱글 연동
+                            const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
+                            store.setLastCustomDimensions(stdKey, dims);
+                            if (stdKey === 'std-dual-full') {
+                              store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (stdKey === 'std-single-full') {
+                              store.setLastCustomDimensions('std-dual-full', { ...dims, width: dims.width * 2 });
+                            } else if (stdKey === 'std-dual-upper') {
+                              store.setLastCustomDimensions('std-single-upper', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (stdKey === 'std-single-upper') {
+                              store.setLastCustomDimensions('std-dual-upper', { ...dims, width: dims.width * 2 });
+                            } else if (stdKey === 'std-dual-lower') {
+                              store.setLastCustomDimensions('std-single-lower', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (stdKey === 'std-single-lower') {
+                              store.setLastCustomDimensions('std-dual-lower', { ...dims, width: dims.width * 2 });
+                            }
                           }
                         }
                       }}
@@ -2048,7 +2078,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               store.setLastCustomDimensions('full-dual', { ...dims, width: dims.width * 2 });
                             }
                           } else {
-                            store.setLastCustomDimensions(currentPlacedModule.moduleId, dims);
+                            // 표준 가구 깊이 기억 + 듀얼↔싱글 연동
+                            const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
+                            store.setLastCustomDimensions(stdKey, dims);
+                            if (stdKey === 'std-dual-full') {
+                              store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (stdKey === 'std-single-full') {
+                              store.setLastCustomDimensions('std-dual-full', { ...dims, width: dims.width * 2 });
+                            } else if (stdKey === 'std-dual-upper') {
+                              store.setLastCustomDimensions('std-single-upper', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (stdKey === 'std-single-upper') {
+                              store.setLastCustomDimensions('std-dual-upper', { ...dims, width: dims.width * 2 });
+                            } else if (stdKey === 'std-dual-lower') {
+                              store.setLastCustomDimensions('std-single-lower', { ...dims, width: Math.round(dims.width / 2) });
+                            } else if (stdKey === 'std-single-lower') {
+                              store.setLastCustomDimensions('std-dual-lower', { ...dims, width: dims.width * 2 });
+                            }
                           }
                         }
                       }}
