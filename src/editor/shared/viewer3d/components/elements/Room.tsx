@@ -2548,7 +2548,7 @@ const Room: React.FC<RoomProps> = ({
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
-          const freeTopEnabled = spaceInfo.freeSurround?.top?.enabled ?? true;
+          const freeTopEnabled = spaceInfo.freeSurround?.top?.enabled ?? false;
 
           // 자유배치 모듈의 X 범위를 직접 계산 (topStripGroups와 독립적)
           const freeModules = placedModulesFromStore.filter(m => m.isFreePlacement);
