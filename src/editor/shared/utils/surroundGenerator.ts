@@ -1,6 +1,6 @@
 /**
  * 자유배치 서라운드 자동 생성 유틸리티
- * 벽-캐비닛 간 gap 계산 → EP / L-shape 자동 판정
+ * 벽-캐비닛 간 gap 계산 → 서라운드 프레임 자동 생성
  */
 
 import { PlacedModule } from '@/editor/shared/furniture/types';
@@ -15,13 +15,11 @@ export interface SurroundGenerationResult {
 
 /**
  * gap 값으로 서라운드 방식 결정
- * - ≤ 18mm → 'none' (서라운드 불필요)
- * - 18 < gap ≤ 22mm → 'ep' (18T × 40W 패널)
- * - 22 < gap ≤ 100mm → 'lshape' (측면패널 + 하부패널)
+ * - ≤ 2mm → 'none' (밀착, 서라운드 불필요)
+ * - > 2mm → 'lshape' (측면패널 + 하부패널)
  */
 function determineSurroundMethod(gap: number): SurroundMethod {
-  if (gap <= 18) return 'none';
-  if (gap <= 22) return 'ep';
+  if (gap <= 2) return 'none';
   return 'lshape';
 }
 
@@ -30,7 +28,7 @@ function determineSurroundMethod(gap: number): SurroundMethod {
  * 1. 자유배치 모듈만 필터
  * 2. 공간 좌/우 경계 계산
  * 3. 가장 좌/우측 가구 edge 계산
- * 4. gap 판정 → EP / L-shape / none
+ * 4. gap 기반 서라운드 방식 결정
  */
 export function generateSurround(
   spaceInfo: SpaceInfo,
@@ -40,7 +38,7 @@ export function generateSurround(
   const freeModules = placedModules.filter((m) => m.isFreePlacement);
 
   if (freeModules.length === 0) {
-    return { success: false, errorMessage: '가구를 더 채워주세요' };
+    return { success: false, errorMessage: '배치된 가구가 없습니다' };
   }
 
   // 2. 공간 좌/우 경계
@@ -55,26 +53,19 @@ export function generateSurround(
   const leftGap = leftMostEdge - spaceBounds.startX;
   const rightGap = spaceBounds.endX - rightMostEdge;
 
-  // 5. gap 초과 검사
-  if (leftGap > 100 || rightGap > 100) {
-    const overSide = leftGap > 100 && rightGap > 100
-      ? '좌우측'
-      : leftGap > 100 ? '좌측' : '우측';
-    return {
-      success: false,
-      errorMessage: `${overSide} 이격거리가 100mm를 초과합니다. 가구를 더 채워주세요`,
-    };
-  }
+  console.log('🔧 [generateSurround]', {
+    spaceBounds, leftMostEdge, rightMostEdge, leftGap, rightGap,
+  });
 
-  // 6. 좌/우 독립 판정
+  // 5. 좌/우 독립 판정
   const leftMethod = determineSurroundMethod(leftGap);
   const rightMethod = determineSurroundMethod(rightGap);
 
-  // 7. FreeSurroundConfig 구성
+  // 6. FreeSurroundConfig 구성
   const config: FreeSurroundConfig = {
     left: {
       enabled: leftMethod !== 'none',
-      size: leftMethod === 'ep' ? 18 : leftMethod === 'lshape' ? 18 : 0,
+      size: 18,
       offset: 0,
       method: leftMethod,
       gap: Math.round(leftGap),
@@ -86,7 +77,7 @@ export function generateSurround(
     },
     right: {
       enabled: rightMethod !== 'none',
-      size: rightMethod === 'ep' ? 18 : rightMethod === 'lshape' ? 18 : 0,
+      size: 18,
       offset: 0,
       method: rightMethod,
       gap: Math.round(rightGap),

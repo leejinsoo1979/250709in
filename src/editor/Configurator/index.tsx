@@ -4503,7 +4503,9 @@ const Configurator: React.FC = () => {
                 return fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
               })()}
               onSurroundGenerate={() => {
+                console.log('🔧 [서라운드 생성] placedModules:', placedModules.length, 'free:', placedModules.filter(m => m.isFreePlacement).length);
                 const result = generateSurround(spaceInfo, placedModules);
+                console.log('🔧 [서라운드 생성] result:', JSON.stringify(result));
                 if (!result.success) {
                   alert(result.errorMessage);
                   return;
