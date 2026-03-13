@@ -4033,6 +4033,75 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
+        {/* 서라운드 세부옵션 — 서라운드 활성 시에만 표시 */}
+        {isFreeMode && (() => {
+          const fs = spaceInfo.freeSurround;
+          const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
+          if (!isActive) return null;
+          return (
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>서라운드</h3>
+              </div>
+              <div className={styles.subSetting}>
+                {/* 좌측 */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
+                    좌측 {fs!.left.gap != null ? `(${fs!.left.gap}mm)` : ''}
+                  </span>
+                  <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
+                    <button
+                      className={`${styles.toggleButton} ${fs!.left.enabled ? styles.toggleButtonActive : ''}`}
+                      style={{ padding: '2px 8px', fontSize: '11px' }}
+                      onClick={() => {
+                        const updated = { ...fs!, left: { ...fs!.left, enabled: !fs!.left.enabled } };
+                        setSpaceInfo({ freeSurround: updated });
+                      }}
+                    >
+                      {fs!.left.enabled ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                </div>
+                {/* 상부 */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>상부</span>
+                  <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
+                    <button
+                      className={`${styles.toggleButton} ${fs!.top.enabled ? styles.toggleButtonActive : ''}`}
+                      style={{ padding: '2px 8px', fontSize: '11px' }}
+                      onClick={() => {
+                        const updated = { ...fs!, top: { ...fs!.top, enabled: !fs!.top.enabled } };
+                        setSpaceInfo({ freeSurround: updated });
+                      }}
+                    >
+                      {fs!.top.enabled ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                </div>
+                {/* 우측 */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
+                    우측 {fs!.right.gap != null ? `(${fs!.right.gap}mm)` : ''}
+                  </span>
+                  <div className={styles.toggleButtonGroup} style={{ width: 'auto', minWidth: '100px' }}>
+                    <button
+                      className={`${styles.toggleButton} ${fs!.right.enabled ? styles.toggleButtonActive : ''}`}
+                      style={{ padding: '2px 8px', fontSize: '11px' }}
+                      onClick={() => {
+                        const updated = { ...fs!, right: { ...fs!.right, enabled: !fs!.right.enabled } };
+                        setSpaceInfo({ freeSurround: updated });
+                      }}
+                    >
+                      {fs!.right.enabled ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* 걸레받이 높이/깊이 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
