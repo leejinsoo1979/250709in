@@ -3693,10 +3693,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 );
                               })()}
                               {/* 영역 활성/비움 */}
-                              {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌측')}
-                              {section.horizontalSplit.secondPosition != null &&
-                                renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중앙')}
-                              {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우측')}
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌')}
+                                {section.horizontalSplit.secondPosition != null &&
+                                  renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중')}
+                                {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우')}
+                              </div>
                             </>
                           ) : null}
                         </>
@@ -3922,10 +3924,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             );
                           })()}
                           {/* 영역 타입 + 삭제 */}
-                          {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌측')}
-                          {section.horizontalSplit.secondPosition != null &&
-                            renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중앙')}
-                          {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우측')}
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌')}
+                            {section.horizontalSplit.secondPosition != null &&
+                              renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중')}
+                            {renderHSplitAreaControls('right', section.horizontalSplit.rightElements, '우')}
+                          </div>
                         </>
                       ) : null}
                     </div>
