@@ -813,6 +813,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
+  // 자유배치 모드: freeHeight가 있으면 moduleData.dimensions.height 오버라이드
+  // (커스텀/커스터마이징 가구는 이미 위에서 처리됨, 여기는 표준 모듈용)
+  if (moduleData && placedModule.isFreePlacement && placedModule.freeHeight
+      && !isCustomFurniture && !isCustomizableModuleId(placedModule.moduleId)) {
+    moduleData = {
+      ...moduleData,
+      dimensions: {
+        ...moduleData.dimensions,
+        height: placedModule.freeHeight,
+      },
+    };
+  }
+
   // moduleData가 없을 때 체크 - 단순 변수로 처리
   const moduleNotFound = !moduleData;
 
