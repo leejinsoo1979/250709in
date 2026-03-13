@@ -3266,57 +3266,91 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               ))}
 
-              {/* 우측 섹션 높이 치수선 (가구 우측) */}
+              {/* 우측 섹션 높이 치수선 (가구 우측) — 상하 서브분할 반영 */}
               {(() => {
                 const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
                 const extLineRightX = dimLineRightX + mmToThreeUnits(20);
-                return sectionRanges.map((range, idx) => (
+
+                // 각 섹션에 대해 서브분할이 있으면 분할된 높이 구간 목록, 없으면 전체 하나
+                const rightSegments: { startY: number; endY: number; heightMm: number }[] = [];
+                sectionRanges.forEach((range, idx) => {
+                  const section = sections[idx] as any;
+                  // areaSubSplits에서 활성화된 서브분할 찾기 (어느 영역이든)
+                  const subSplits = section.areaSubSplits;
+                  let activeSub: any = null;
+                  if (subSplits) {
+                    // right, left, center, full 순서로 활성화된 것 찾기
+                    for (const key of ['right', 'left', 'center', 'full']) {
+                      if (subSplits[key]?.enabled) {
+                        activeSub = subSplits[key];
+                        break;
+                      }
+                    }
+                  }
+
+                  if (activeSub) {
+                    // 섹션 내경 높이 (mm) = 외경 - 2 * panelThickness
+                    const sectionInnerH = section.height;
+                    const lowerH = activeSub.lowerHeight;
+                    const upperH = sectionInnerH - lowerH;
+                    // 내경 시작 Y = 외경 하단 + 패널
+                    const innerStartY = range.startY + ptUnits;
+                    // 하부 구간 (외경: 패널 포함)
+                    const lowerOuterStartY = range.startY;
+                    const lowerOuterEndY = innerStartY + mmToThreeUnits(lowerH) + ptUnits; // 내경하단 + lowerH + 중간패널상단
+                    const lowerOuterMm = lowerH + 2 * panelThickness;
+                    // 상부 구간
+                    const upperOuterStartY = lowerOuterEndY;
+                    const upperOuterEndY = range.endY;
+                    const upperOuterMm = Math.round(range.heightMm - lowerOuterMm);
+                    rightSegments.push({ startY: lowerOuterStartY, endY: lowerOuterEndY, heightMm: Math.round(lowerOuterMm) });
+                    rightSegments.push({ startY: upperOuterStartY, endY: upperOuterEndY, heightMm: upperOuterMm });
+                  } else {
+                    rightSegments.push(range);
+                  }
+                });
+
+                return rightSegments.map((seg, idx) => (
                   <group key={`custom-section-dim-right-${idx}`}>
-                    {/* 수직 치수선 */}
                     <NativeLine name="dimension_line"
-                      points={[[dimLineRightX, range.startY, 0.002], [dimLineRightX, range.endY, 0.002]]}
+                      points={[[dimLineRightX, seg.startY, 0.002], [dimLineRightX, seg.endY, 0.002]]}
                       color={dimensionColor}
                       lineWidth={1}
                       renderOrder={100000}
                       depthTest={false}
                     />
-                    {/* 하단 틱 마크 */}
                     <NativeLine name="dimension_line"
-                      points={createArrowHead([dimLineRightX, range.startY, 0.002], [dimLineRightX, range.startY - 0.03, 0.002])}
+                      points={createArrowHead([dimLineRightX, seg.startY, 0.002], [dimLineRightX, seg.startY - 0.03, 0.002])}
                       color={dimensionColor}
                       lineWidth={1}
                       renderOrder={100000}
                       depthTest={false}
                     />
-                    {/* 상단 틱 마크 */}
                     <NativeLine name="dimension_line"
-                      points={createArrowHead([dimLineRightX, range.endY, 0.002], [dimLineRightX, range.endY + 0.03, 0.002])}
+                      points={createArrowHead([dimLineRightX, seg.endY, 0.002], [dimLineRightX, seg.endY + 0.03, 0.002])}
                       color={dimensionColor}
                       lineWidth={1}
                       renderOrder={100000}
                       depthTest={false}
                     />
-                    {/* 하단 보조 연장선 */}
                     <NativeLine name="dimension_line"
-                      points={[[furnitureRightX, range.startY, 0.001], [extLineRightX, range.startY, 0.001]]}
+                      points={[[furnitureRightX, seg.startY, 0.001], [extLineRightX, seg.startY, 0.001]]}
                       color={dimensionColor}
                       lineWidth={0.5}
                       renderOrder={100000}
                       depthTest={false}
                     />
-                    {/* 상단 보조 연장선 */}
                     <NativeLine name="dimension_line"
-                      points={[[furnitureRightX, range.endY, 0.001], [extLineRightX, range.endY, 0.001]]}
+                      points={[[furnitureRightX, seg.endY, 0.001], [extLineRightX, seg.endY, 0.001]]}
                       color={dimensionColor}
                       lineWidth={0.5}
                       renderOrder={100000}
                       depthTest={false}
                     />
-                    {/* 치수 텍스트 */}
                     <Text
                       renderOrder={1000}
                       depthTest={false}
-                      position={[dimLineRightX + mmToThreeUnits(60), (range.startY + range.endY) / 2, 0.01]}
+                      position={[dimLineRightX + mmToThreeUnits(60), (seg.startY + seg.endY) / 2, 0.01]}
                       fontSize={baseFontSize}
                       color={textColor}
                       anchorX="center"
@@ -3325,7 +3359,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       outlineColor={textOutlineColor}
                       rotation={[0, 0, Math.PI / 2]}
                     >
-                      {range.heightMm}
+                      {seg.heightMm}
                     </Text>
                   </group>
                 ));
