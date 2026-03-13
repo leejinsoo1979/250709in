@@ -270,7 +270,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
@@ -3557,7 +3557,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {(effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
+      {!isLayoutBuilderOpen && (effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
         console.log('🎯 베이스프레임 높이 확인:', {
           '최종_높이': baseFrameHeightMm,
           baseFrameHeight_ThreeUnits: baseFrameHeight,
