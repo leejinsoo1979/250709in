@@ -1874,7 +1874,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
             <button
               key={type}
               className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-              onClick={() => handleElementChange(sIdx, side, type)}
+              onClick={() => {
+                if (type === 'pants') { alert('바지걸이는 준비중입니다.'); return; }
+                handleElementChange(sIdx, side, type);
+              }}
             >
               {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
             </button>
@@ -2257,7 +2260,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
             <button
               key={type}
               className={`${styles.elementButton} ${currentType === type ? styles.active : ''}`}
-              onClick={() => handleSubSplitElementChange(sIdx, areaKey, subPart, type)}
+              onClick={() => {
+                if (type === 'pants') { alert('바지걸이는 준비중입니다.'); return; }
+                handleSubSplitElementChange(sIdx, areaKey, subPart, type);
+              }}
             >
               {type === 'open' ? '비움' : type === 'shelf' ? '선반' : type === 'drawer' ? '서랍' : type === 'rod' ? '옷봉' : '바지걸이'}
             </button>
