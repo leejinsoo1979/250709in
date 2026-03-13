@@ -542,8 +542,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const sectionInnerHeightMm = section.height;
     const sectionInnerWidthMm = width - 2 * panelThickness;
 
-    // 섹션 중심 Y 계산
-    let sectionCenterY = 0;
+    // 섹션 중심 Y 계산 (바닥판 올림 시 같이 내려감)
+    const guideDropActive = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
+    const guideDropMm = guideDropActive ? ((spaceInfo.baseConfig?.height || 65) + (spaceInfo.baseConfig?.depth || 0)) : 0;
+    const guideDropOffset = mmToUnit(guideDropMm);
+    let sectionCenterY = -guideDropOffset;
     let sectionInnerH = mmToUnit(sectionInnerHeightMm);
     if (isSplit) {
       const splitBoxHeights = sections.map(s => {
@@ -552,7 +555,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const pc = (hb ? 1 : 0) + (ht ? 1 : 0);
         return mmToUnit(s.height + pc * panelThickness);
       });
-      let currentBot = -H / 2;
+      let currentBot = -H / 2 - guideDropOffset;
       for (let i = 0; i < sIdx; i++) {
         currentBot += splitBoxHeights[i];
       }
