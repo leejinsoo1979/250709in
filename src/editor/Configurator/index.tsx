@@ -4035,13 +4035,14 @@ const Configurator: React.FC = () => {
         {/* 서라운드 세부옵션 — 자유배치 모드 */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
-          const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
+          const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
           if (!isActive) return null;
           const sides = [
             { key: 'left' as const, label: '좌' },
             { key: 'top' as const, label: '상' },
             { key: 'right' as const, label: '우' },
           ];
+          const middleGaps = fs?.middle || [];
           return (
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
@@ -4107,6 +4108,28 @@ const Configurator: React.FC = () => {
                     </div>
                   );
                 })}
+                {/* 중간 gap 서라운드 */}
+                {middleGaps.map((midCfg, idx) => (
+                  <div key={`middle-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                    <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>중{middleGaps.length > 1 ? idx + 1 : ''}</span>
+                    <button
+                      onClick={() => {
+                        const newMiddle = [...middleGaps];
+                        newMiddle[idx] = { ...newMiddle[idx], enabled: !newMiddle[idx].enabled };
+                        setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
+                      }}
+                      className={`${styles.toggleButton} ${midCfg.enabled ? styles.toggleButtonActive : ''}`}
+                      style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
+                    >
+                      {midCfg.enabled ? 'ON' : 'OFF'}
+                    </button>
+                    {midCfg.enabled ? (
+                      <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)' }}>
+                        {midCfg.gap}mm
+                      </span>
+                    ) : null}
+                  </div>
+                ))}
               </div>
             </div>
           );
@@ -4579,11 +4602,11 @@ const Configurator: React.FC = () => {
               onDoorInstallationToggle={handleDoorInstallation}
               surroundGenerated={(() => {
                 const fs = spaceInfo.freeSurround;
-                return fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
+                return fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
               })()}
               onSurroundGenerate={() => {
                 const fs = spaceInfo.freeSurround;
-                const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled) : false;
+                const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
 
                 if (isActive) {
                   // 서라운드 제거 — setSpaceInfo 직접 호출
