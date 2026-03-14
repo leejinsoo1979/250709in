@@ -3014,7 +3014,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <h5 className={styles.sectionTitle}>좌우 이격거리</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측{currentPlacedModule.freeLeftGapLocked ? ' \uD83D\uDD12' : ''}</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -3054,7 +3054,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측{currentPlacedModule.freeRightGapLocked ? ' \uD83D\uDD12' : ''}</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"

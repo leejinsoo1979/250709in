@@ -20,6 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, getStandardDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
+import { IoLockClosed, IoLockOpen } from 'react-icons/io5';
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
@@ -232,14 +233,34 @@ const FreePlacementDropZone: React.FC = () => {
     const halfWidth = widthMm / 2;
     const { startX, endX } = spaceBounds;
 
+    // 잠긴 이격 구간을 가상 벽으로 처리 (새 가구 배치 시)
+    let effectiveStartX = startX;
+    let effectiveEndX = endX;
+    for (const m of placedModules) {
+      if (!m.isFreePlacement) continue;
+      if (m.freeLeftGapLocked && m.freeLeftGap != null && m.freeLeftGap > 0) {
+        const lockedWall = startX + m.freeLeftGap;
+        if (clampedX > lockedWall) {
+          effectiveStartX = Math.max(effectiveStartX, lockedWall);
+        }
+      }
+      if (m.freeRightGapLocked && m.freeRightGap != null && m.freeRightGap > 0) {
+        const lockedWall = endX - m.freeRightGap;
+        if (clampedX < lockedWall) {
+          effectiveEndX = Math.min(effectiveEndX, lockedWall);
+        }
+      }
+    }
+    clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
+
     // 배치된 가구의 X범위
     const freeModules = placedModules.filter(m => m.isFreePlacement);
     const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
 
     // 스냅 포인트 수집: 벽 + 가구 가장자리
     const snapPoints: number[] = [];
-    snapPoints.push(startX + halfWidth);   // 왼쪽 벽
-    snapPoints.push(endX - halfWidth);     // 오른쪽 벽
+    snapPoints.push(effectiveStartX + halfWidth);   // 왼쪽 벽 (잠긴 이격 반영)
+    snapPoints.push(effectiveEndX - halfWidth);     // 오른쪽 벽 (잠긴 이격 반영)
     for (const b of bounds) {
       snapPoints.push(b.right + halfWidth); // 가구 오른쪽에 붙기
       snapPoints.push(b.left - halfWidth);  // 가구 왼쪽에 붙기
@@ -716,6 +737,30 @@ const FreePlacementDropZone: React.FC = () => {
     const halfWidth = widthMm / 2;
     const { startX, endX } = spaceBounds;
 
+    // 잠긴 이격 구간을 가상 벽으로 처리 — 이동 중인 가구 자신의 잠금은 무시
+    let effectiveStartX = startX;
+    let effectiveEndX = endX;
+    for (const m of placedModules) {
+      if (m.id === moduleId || !m.isFreePlacement) continue;
+      if (m.freeLeftGapLocked && m.freeLeftGap != null && m.freeLeftGap > 0) {
+        const lockedWall = startX + m.freeLeftGap;
+        // 이동 가구가 잠긴 구간의 오른쪽에 있으면 effectiveStartX를 확장
+        if (clampedX > lockedWall) {
+          effectiveStartX = Math.max(effectiveStartX, lockedWall);
+        }
+      }
+      if (m.freeRightGapLocked && m.freeRightGap != null && m.freeRightGap > 0) {
+        const lockedWall = endX - m.freeRightGap;
+        // 이동 가구가 잠긴 구간의 왼쪽에 있으면 effectiveEndX를 축소
+        if (clampedX < lockedWall) {
+          effectiveEndX = Math.min(effectiveEndX, lockedWall);
+        }
+      }
+    }
+
+    // 잠긴 이격 경계 내로 클램핑
+    clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
+
     // 자기 자신 제외한 가구의 X범위
     const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== moduleId);
     const bounds = otherModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
@@ -726,8 +771,8 @@ const FreePlacementDropZone: React.FC = () => {
     if (!skipSnap) {
       // 스냅 포인트 수집
       const snapPoints: number[] = [];
-      snapPoints.push(startX + halfWidth);
-      snapPoints.push(endX - halfWidth);
+      snapPoints.push(effectiveStartX + halfWidth);
+      snapPoints.push(effectiveEndX - halfWidth);
       for (const b of bounds) {
         snapPoints.push(b.right + halfWidth);
         snapPoints.push(b.left - halfWidth);
@@ -742,6 +787,8 @@ const FreePlacementDropZone: React.FC = () => {
       if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
     }
 
+    // 잠긴 이격 경계 내로 재클램핑
+    clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
 
     // 충돌 체크 (자기 자신 제외)
@@ -1297,13 +1344,15 @@ const FreePlacementDropZone: React.FC = () => {
                       <div
                         style={{
                           cursor: 'pointer',
-                          fontSize: '13px',
-                          lineHeight: 1,
-                          opacity: isLocked ? 1 : 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: isLocked ? 1 : 0.4,
                           transition: 'opacity 0.15s',
+                          color: isLocked ? themeColor : '#999',
                         }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
-                        onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.opacity = '0.5'; }}
+                        onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.opacity = '0.4'; }}
                         onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1311,16 +1360,16 @@ const FreePlacementDropZone: React.FC = () => {
                           const updates: Record<string, unknown> = {};
                           if (gap.gapType === 'left-wall') {
                             updates.freeLeftGapLocked = !isLocked;
-                            if (!isLocked) updates.freeLeftGap = gap.width; // 잠글 때 현재 값 저장
+                            if (!isLocked) updates.freeLeftGap = gap.width;
                           } else {
                             updates.freeRightGapLocked = !isLocked;
-                            if (!isLocked) updates.freeRightGap = gap.width; // 잠글 때 현재 값 저장
+                            if (!isLocked) updates.freeRightGap = gap.width;
                           }
                           updatePlacedModule(gap.adjacentModuleId!, updates);
                         }}
-                        title={isLocked ? '잠금 해제' : '잠금 (너비 변경 시 이격 유지)'}
+                        title={isLocked ? '잠금 해제' : '잠금'}
                       >
-                        {isLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}
+                        {isLocked ? <IoLockClosed size={14} /> : <IoLockOpen size={14} />}
                       </div>
                     );
                   })()}
