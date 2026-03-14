@@ -931,9 +931,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       <div
         ref={containerRef}
         onPointerDown={(e) => {
-          // HTML UI 요소(input, button, select) 클릭은 무시
-          const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+          // HTML UI 요소(input, button, select, svg 등) 클릭은 무시
+          const target = e.target as HTMLElement;
+          const tag = target?.tagName?.toLowerCase();
           if (tag === 'input' || tag === 'button' || tag === 'select' || tag === 'textarea') return;
+          // SVG 요소(svg, path, rect 등)가 button 내부에 있으면 무시
+          if (target?.closest?.('button')) return;
 
           // 허공 클릭 시 팝업 닫기/고스트 해제를 위한 플래그 설정
           (window as any).__canvasPointerDownTime = Date.now();
