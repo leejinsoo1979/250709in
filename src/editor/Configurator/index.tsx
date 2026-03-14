@@ -4219,7 +4219,10 @@ const Configurator: React.FC = () => {
             </div>
           );
 
-          let counter = 0;
+          // 각 카테고리별 독립 번호 계산
+          let surroundNum = 0;
+          let topFrameNum = 0;
+          let baseFrameNum = 0;
           return (
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
@@ -4260,36 +4263,42 @@ const Configurator: React.FC = () => {
               />
               <div className={styles.subSetting}>
                 {items.map((item, _i) => {
-                  counter++;
-                  const num = counter;
                   if (item.kind === 'surround-left') {
+                    surroundNum++;
+                    const sn = surroundNum;
                     const d = fs.left;
-                    return <React.Fragment key="surround-left">{renderSurroundRow(num, d.enabled, d.offset,
+                    return <React.Fragment key="surround-left">{renderSurroundRow(sn, d.enabled, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
                       'surround-left',
                     )}</React.Fragment>;
                   }
                   if (item.kind === 'surround-right') {
+                    surroundNum++;
+                    const sn = surroundNum;
                     const d = fs.right;
-                    return <React.Fragment key="surround-right">{renderSurroundRow(num, d.enabled, d.offset,
+                    return <React.Fragment key="surround-right">{renderSurroundRow(sn, d.enabled, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
                       'surround-right',
                     )}</React.Fragment>;
                   }
                   if (item.kind === 'surround-top') {
+                    surroundNum++;
+                    const sn = surroundNum;
                     const d = fs.top;
-                    return <React.Fragment key="surround-top">{renderSurroundRow(num, d.enabled, d.offset,
+                    return <React.Fragment key="surround-top">{renderSurroundRow(sn, d.enabled, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, offset: v } } }),
                       'surround-top',
                     )}</React.Fragment>;
                   }
                   if (item.kind === 'surround-middle') {
+                    surroundNum++;
+                    const sn = surroundNum;
                     const midIdx = item.idx;
                     const midCfg = middleGaps[midIdx];
-                    return <React.Fragment key={`surround-middle-${midIdx}`}>{renderSurroundRow(num, midCfg.enabled, midCfg.offset || 0,
+                    return <React.Fragment key={`surround-middle-${midIdx}`}>{renderSurroundRow(sn, midCfg.enabled, midCfg.offset || 0,
                       () => {
                         const newMiddle = [...middleGaps];
                         newMiddle[midIdx] = { ...newMiddle[midIdx], enabled: !newMiddle[midIdx].enabled };
@@ -4310,7 +4319,9 @@ const Configurator: React.FC = () => {
                     const hasBaseFrame = cat === 'lower' || cat === 'full';
                     const rows: React.ReactNode[] = [];
                     if (hasTop) {
-                      rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameRow(num, '상프레임',
+                      topFrameNum++;
+                      const tn = topFrameNum;
+                      rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameRow(tn, '(상)프레임',
                         mod.hasTopFrame !== false, mod.topFrameOffset || 0,
                         () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                         (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
@@ -4318,7 +4329,9 @@ const Configurator: React.FC = () => {
                       )}</React.Fragment>);
                     }
                     if (hasBaseFrame) {
-                      rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameRow(num, '하프레임',
+                      baseFrameNum++;
+                      const bn = baseFrameNum;
+                      rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameRow(bn, '(하)프레임',
                         mod.hasBase !== false, mod.baseFrameOffset || 0,
                         () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
                         (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
