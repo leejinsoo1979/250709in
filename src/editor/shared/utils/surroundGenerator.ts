@@ -85,33 +85,26 @@ export function generateSurround(
   const leftMethod = determineSurroundMethod(leftGap);
   const rightMethod = determineSurroundMethod(rightGap);
 
-  // 커튼박스 활성 시, 커튼박스 쪽 서라운드는 불필요 (벽으로 막혀있음)
+  // 커튼박스 활성 시, 커튼박스 쪽은 'curtain-box' 방식으로 생성 (서라운드에 통합)
   const hasCurtainBox = spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode === 'free-placement';
   const curtainBoxPosition = spaceInfo.droppedCeiling?.position || 'right';
-  const skipLeft = hasCurtainBox && curtainBoxPosition === 'left';
-  const skipRight = hasCurtainBox && curtainBoxPosition === 'right';
+  const isCBLeft = hasCurtainBox && curtainBoxPosition === 'left';
+  const isCBRight = hasCurtainBox && curtainBoxPosition === 'right';
+  const dcWidthMM = spaceInfo.droppedCeiling?.width || 150;
 
   // 7. FreeSurroundConfig 구성
   const config: FreeSurroundConfig = {
-    left: {
-      enabled: skipLeft ? false : leftMethod !== 'none',
-      size: 18,
-      offset: 0,
-      method: skipLeft ? 'none' : leftMethod,
-      gap: Math.round(leftGap),
-    },
+    left: isCBLeft
+      ? { enabled: spaceInfo.curtainBoxFinished ?? true, size: 18, offset: 0, method: 'curtain-box', gap: dcWidthMM }
+      : { enabled: leftMethod !== 'none', size: 18, offset: 0, method: leftMethod, gap: Math.round(leftGap) },
     top: {
       enabled: true,
       size: 30,
       offset: 0,
     },
-    right: {
-      enabled: skipRight ? false : rightMethod !== 'none',
-      size: 18,
-      offset: 0,
-      method: skipRight ? 'none' : rightMethod,
-      gap: Math.round(rightGap),
-    },
+    right: isCBRight
+      ? { enabled: spaceInfo.curtainBoxFinished ?? true, size: 18, offset: 0, method: 'curtain-box', gap: dcWidthMM }
+      : { enabled: rightMethod !== 'none', size: 18, offset: 0, method: rightMethod, gap: Math.round(rightGap) },
     middle: middleGaps.length > 0 ? middleGaps : undefined,
   };
 

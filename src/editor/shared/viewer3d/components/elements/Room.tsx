@@ -2808,9 +2808,13 @@ const Room: React.FC<RoomProps> = ({
                 );
               })}
 
-              {/* 커튼박스 마감 — 커튼박스 구간 안에 프레임 패널 */}
-              {spaceInfo.curtainBoxFinished && spaceInfo.droppedCeiling?.enabled && (() => {
+              {/* 커튼박스 마감 — freeSurround의 curtain-box method로 제어 */}
+              {spaceInfo.droppedCeiling?.enabled && (() => {
                 const dcPos = spaceInfo.droppedCeiling!.position || 'right';
+                const cbSurround = dcPos === 'left' ? spaceInfo.freeSurround?.left : spaceInfo.freeSurround?.right;
+                // freeSurround가 없으면 기존 curtainBoxFinished 플래그로 폴백
+                const cbEnabled = cbSurround ? (cbSurround.enabled && cbSurround.method === 'curtain-box') : !!spaceInfo.curtainBoxFinished;
+                if (!cbEnabled) return null;
                 const dcWidthMM = spaceInfo.droppedCeiling!.width || 150;
                 const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 100;
                 const dcTotalH = heightMm + dcDropH; // 커튼박스 전체 높이(mm)

@@ -8,7 +8,7 @@ import { useFurnitureStore } from './furnitureStore';
 export type SurroundType = 'surround' | 'no-surround';
 
 // 자유배치 서라운드 생성 방식
-export type SurroundMethod = 'none' | 'ep' | 'lshape';
+export type SurroundMethod = 'none' | 'ep' | 'lshape' | 'curtain-box';
 
 export interface FrameSize {
   left: number;
