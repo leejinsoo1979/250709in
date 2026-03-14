@@ -8,6 +8,10 @@ import type { ModuleData } from './shelving';
 // 공통 타입들 re-export
 export type { ModuleData };
 
+// 서라운드 패널 모듈 re-export
+export { surroundPanelModules, SURROUND_PANEL_THICKNESS, isSurroundPanelId, getSurroundPanelType } from './surroundPanels';
+export type { SurroundPanelType, SurroundPanelModuleData } from './surroundPanels';
+
 /**
  * 모든 동적 모듈들을 생성하는 통합 함수
  * 
