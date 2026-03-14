@@ -248,8 +248,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 제거 함수 (기존 Context 로직과 동일)
   removeModule: (id: string) => {
+    const state = get();
+    const module = state.placedModules.find(m => m.id === id);
+
+    // 삭제되는 가구의 잠긴 이격을 공간 레벨로 이관
+    if (module?.isFreePlacement) {
+      const { setLockedWallGap } = useSpaceConfigStore.getState();
+      if (module.freeLeftGapLocked && module.freeLeftGap != null) {
+        setLockedWallGap('left', module.freeLeftGap);
+      }
+      if (module.freeRightGapLocked && module.freeRightGap != null) {
+        setLockedWallGap('right', module.freeRightGap);
+      }
+    }
+
     set((state) => ({
-      placedModules: state.placedModules.filter(module => module.id !== id)
+      placedModules: state.placedModules.filter(m => m.id !== id)
     }));
   },
 
