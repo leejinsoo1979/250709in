@@ -1073,7 +1073,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
         const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
         const totalHeight = mmToThreeUnits(spaceInfo.height);
-        const normalHeight = totalHeight - droppedHeight;
+        // 자유배치: 커튼박스가 위로 확장 (normalHeight=totalHeight, 해칭은 totalHeight~totalHeight+droppedHeight)
+        // 슬롯배치: 단내림이 아래로 축소 (normalHeight=totalHeight-droppedHeight, 해칭은 normalHeight~totalHeight)
+        const normalHeight = isFreePlacement ? totalHeight : totalHeight - droppedHeight;
 
         const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
           ? leftOffset
@@ -1097,7 +1099,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const startX = droppedStartX + offset;
           const startY = normalHeight;
           const endX = startX + droppedHeight;
-          const endY = totalHeight;
+          const endY = isFreePlacement ? totalHeight + droppedHeight : totalHeight;
 
           // 단내림 영역 내부만 그리도록 클리핑
           let clippedStartX = startX;
@@ -1118,8 +1120,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
 
           // 유효한 선분인지 확인
+          const hatchTop = isFreePlacement ? totalHeight + droppedHeight : totalHeight;
           if (clippedStartX < droppedEndX && clippedEndX > droppedStartX &&
-              clippedStartY < totalHeight && clippedEndY > normalHeight) {
+              clippedStartY < hatchTop && clippedEndY > normalHeight) {
             hatchLines.push(
               <Line
                 key={`hatch-${i}`}
@@ -1135,7 +1138,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group>
             {/* 회색 반투명 배경 메쉬 */}
-            <mesh position={[(droppedStartX + droppedEndX) / 2, (normalHeight + totalHeight) / 2, 0.0005]}>
+            <mesh position={[(droppedStartX + droppedEndX) / 2, (normalHeight + (isFreePlacement ? totalHeight + droppedHeight : totalHeight)) / 2, 0.0005]}>
               <planeGeometry args={[droppedWidth, droppedHeight]} />
               <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
             </mesh>
@@ -2358,48 +2361,60 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 단내림 위치에 따라 치수선 표시 */}
             {spaceInfo.droppedCeiling.position === 'left' ? (
               <>
-                {/* 좌측 단내림 - 좌측 외부 치수선에 단내림 구간 높이 표시 */}
-                <NativeLine name="dimension_line"
-                  points={[[leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
-
-                {/* 하단 화살표 */}
-                <NativeLine name="dimension_line"
-                  points={createArrowHead([leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), 0.002], [leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight) + 0.05, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
-
-                {/* 상단 화살표 */}
-                <NativeLine name="dimension_line"
-                  points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
-                
-                {/* 단내림 구간 높이 텍스트 */}
-                <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                  position={[leftDimensionX + leftOffset - mmToThreeUnits(60), mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight / 2), 0.01]}
-                  fontSize={largeFontSize}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  outlineWidth={textOutlineWidth}
-                  outlineColor={textOutlineColor}
-                  rotation={[0, 0, -Math.PI / 2]}
-                >
-                  {spaceInfo.droppedCeiling.dropHeight}
-                </Text>
+                {/* 좌측 단내림/커튼박스 - 좌측 외부 치수선에 높이차이 표시 */}
+                {(() => {
+                  // 자유배치: dropHeight 구간은 height ~ height+dropHeight (위로 확장)
+                  // 슬롯배치: dropHeight 구간은 height-dropHeight ~ height (아래로 축소)
+                  const dimBottom = isFreePlacement
+                    ? mmToThreeUnits(spaceInfo.height)
+                    : mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
+                  const dimTop = isFreePlacement
+                    ? mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight)
+                    : spaceHeight;
+                  const dimMid = (dimBottom + dimTop) / 2;
+                  return (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[leftDimensionX + leftOffset, dimBottom, 0.002], [leftDimensionX + leftOffset, dimTop, 0.002]]}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+                      {/* 하단 화살표 */}
+                      <NativeLine name="dimension_line"
+                        points={createArrowHead([leftDimensionX + leftOffset, dimBottom, 0.002], [leftDimensionX + leftOffset, dimBottom + 0.05, 0.002])}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+                      {/* 상단 화살표 */}
+                      <NativeLine name="dimension_line"
+                        points={createArrowHead([leftDimensionX + leftOffset, dimTop, 0.002], [leftDimensionX + leftOffset, dimTop - 0.05, 0.002])}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+                      {/* 높이차이 텍스트 */}
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), dimMid, 0.01]}
+                        fontSize={largeFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, 0, -Math.PI / 2]}
+                      >
+                        {spaceInfo.droppedCeiling.dropHeight}
+                      </Text>
+                    </>
+                  );
+                })()}
               </>
             ) : (
               <>
@@ -4920,44 +4935,55 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 단내림 위치에 따라 치수선 표시 */}
               {spaceInfo.droppedCeiling.position === 'right' ? (
                 <>
-                  {/* 우측 단내림 - 우측 외부 치수선에 단내림 구간 높이 표시 */}
-                  <Line
-                    points={[[rightDimensionX, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  
-                  {/* 하단 화살표 */}
-                  <Line
-                    points={createArrowHead([rightDimensionX, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight) + 0.05, spaceZOffset - mmToThreeUnits(200)])}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  
-                  {/* 상단 화살표 */}
-                  <Line
-                    points={createArrowHead([rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  
-                  {/* 단내림 구간 높이 텍스트 */}
-                  {(showDimensionsText || isStep2) && (
-                    <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                      position={[rightDimensionX + mmToThreeUnits(60), mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight / 2), spaceZOffset - mmToThreeUnits(200)]}
-                      fontSize={largeFontSize}
-                      color={textColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      outlineWidth={textOutlineWidth}
-                      outlineColor={textOutlineColor}
-                      rotation={[0, 0, -Math.PI / 2]}
-                    >
-                      {spaceInfo.droppedCeiling.dropHeight}
-                    </Text>
-                  )}
+                  {/* 우측 단내림/커튼박스 - 우측 외부 치수선에 높이차이 표시 */}
+                  {(() => {
+                    const dimBottom = isFreePlacement
+                      ? mmToThreeUnits(spaceInfo.height)
+                      : mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
+                    const dimTop = isFreePlacement
+                      ? mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight)
+                      : actualSpaceHeight;
+                    const dimMid = (dimBottom + dimTop) / 2;
+                    const zPos = spaceZOffset - mmToThreeUnits(200);
+                    return (
+                      <>
+                        <Line
+                          points={[[rightDimensionX, dimBottom, zPos], [rightDimensionX, dimTop, zPos]]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {/* 하단 화살표 */}
+                        <Line
+                          points={createArrowHead([rightDimensionX, dimBottom, zPos], [rightDimensionX, dimBottom + 0.05, zPos])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {/* 상단 화살표 */}
+                        <Line
+                          points={createArrowHead([rightDimensionX, dimTop, zPos], [rightDimensionX, dimTop - 0.05, zPos])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {/* 높이차이 텍스트 */}
+                        {(showDimensionsText || isStep2) && (
+                          <Text
+                            renderOrder={1000}
+                            depthTest={false}
+                            position={[rightDimensionX + mmToThreeUnits(60), dimMid, zPos]}
+                            fontSize={largeFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, 0, -Math.PI / 2]}
+                          >
+                            {spaceInfo.droppedCeiling.dropHeight}
+                          </Text>
+                        )}
+                      </>
+                    );
+                  })()}
                 </>
               ) : (
                 <>
@@ -5058,12 +5084,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             lineWidth={1}
           />
           
-          {/* 단내림 높이 연장선 - 단내림이 있는 경우에만 표시 */}
+          {/* 단내림/커튼박스 높이 연장선 - 구간분할이 있는 경우에만 표시 */}
           {spaceInfo.droppedCeiling?.enabled && (
             <Line
               points={[
-                [actualSpaceWidth, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset], 
-                [actualSpaceWidth, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset - mmToThreeUnits(180)]
+                [actualSpaceWidth, isFreePlacement ? mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight) : mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset],
+                [actualSpaceWidth, isFreePlacement ? mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight) : mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset - mmToThreeUnits(180)]
               ]}
               color={dimensionColor}
               lineWidth={1}

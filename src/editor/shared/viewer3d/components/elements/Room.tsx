@@ -1208,8 +1208,9 @@ const Room: React.FC<RoomProps> = ({
 
                 // 왼쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
                 if (hasDroppedCeiling && isLeftDropped) {
-                  // 자유배치모드: 서라운드구간 벽은 전체 높이
-                  const droppedWallHeight = isFreePlacement ? height : (height - droppedCeilingHeight);
+                  // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
+                  // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
+                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
@@ -1269,8 +1270,9 @@ const Room: React.FC<RoomProps> = ({
 
                 // 오른쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
                 if (hasDroppedCeiling && isRightDropped) {
-                  // 자유배치모드: 서라운드구간 벽은 전체 높이
-                  const droppedWallHeight = isFreePlacement ? height : (height - droppedCeilingHeight);
+                  // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
+                  // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
+                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
@@ -1414,15 +1416,16 @@ const Room: React.FC<RoomProps> = ({
             })();
 
             const wfColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
-            // 자유배치: 커튼박스구간이 높고 메인구간이 낮음 (반전)
+            // 자유배치: 커튼박스가 메인보다 dropHeight만큼 높음 (위로 확장)
+            // 슬롯배치: 단내림구간이 dropHeight만큼 낮음 (아래로 축소)
             const droppedCeilingY = isFreePlacement
-              ? panelStartY + height + 0.001                          // 커튼박스: 전체 높이
+              ? panelStartY + height + droppedCeilingHeight + 0.001   // 커튼박스: 메인 + dropHeight (위로 확장)
               : panelStartY + height - droppedCeilingHeight + 0.001;  // 슬롯: 단내림 낮은 높이
             const normalCeilingY = isFreePlacement
-              ? panelStartY + height - droppedCeilingHeight + 0.001   // 메인: 낮은 높이
+              ? panelStartY + height + 0.001                          // 메인: 공간설정 높이 그대로
               : panelStartY + height + 0.001;                         // 슬롯: 전체 높이
             const boundaryWallY = isFreePlacement
-              ? panelStartY + height - droppedCeilingHeight / 2       // 메인쪽 경계벽
+              ? panelStartY + height + droppedCeilingHeight / 2       // 경계벽: 메인 천장 ~ 커튼박스 천장 사이
               : panelStartY + height - droppedCeilingHeight / 2;      // 단내림쪽 경계벽
 
             return renderMode === 'solid' ? (
