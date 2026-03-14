@@ -4289,12 +4289,6 @@ const Configurator: React.FC = () => {
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
               </div>
-              <BaseControls
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-                disabled={hasSpecialDualFurniture}
-                renderMode="placement-only"
-              />
               <div className={styles.subSetting}>
                 {/* 상부프레임 전체 ON/OFF + 옵셋 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
@@ -4358,7 +4352,7 @@ const Configurator: React.FC = () => {
                       mod.hasTopFrame !== false, mod.topFrameOffset || 0,
                       () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                       (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
-                      'top',
+                      `top-${mod.id}`,
                     )}</React.Fragment>);
                   }
                   if (hasBaseFrame) {
@@ -4368,7 +4362,7 @@ const Configurator: React.FC = () => {
                       mod.hasBase !== false, mod.baseFrameOffset || 0,
                       () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
                       (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
-                      'base',
+                      `base-${mod.id}`,
                     )}</React.Fragment>);
                   }
                   return <React.Fragment key={`frame-${mod.id}`}>{rows}</React.Fragment>;
@@ -4377,6 +4371,22 @@ const Configurator: React.FC = () => {
             </div>
           );
         })()}
+
+        {/* 하부프레임 높이/깊이 (글로벌) */}
+        {isFreeMode && (
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>하부프레임 설정</h3>
+            </div>
+            <BaseControls
+              spaceInfo={spaceInfo}
+              onUpdate={handleSpaceInfoUpdate}
+              disabled={hasSpecialDualFurniture}
+              renderMode="placement-only"
+            />
+          </div>
+        )}
 
         {/* 배치방식 */}
         <div className={styles.configSection}>

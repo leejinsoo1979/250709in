@@ -2573,14 +2573,17 @@ const Room: React.FC<RoomProps> = ({
                 const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
                 // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
                 const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
-                const topSurrMat = highlightedFrame === 'surround-top'
-                  ? createFrameMaterial('surround-top')
-                  : (topFrameMaterial ?? createFrameMaterial('top'));
-
                 // 각 모듈별 개별 상부프레임 생성
                 const isDoorBase = spaceInfo.surroundOffsetBase === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
+                  // 개별 가구 하이라이트 or 서라운드-top 하이라이트 or 기본 top material
+                  const topModHighlightKey = `top-${mod.id}`;
+                  const topSurrMat = highlightedFrame === topModHighlightKey
+                    ? createFrameMaterial(topModHighlightKey)
+                    : highlightedFrame === 'surround-top'
+                      ? createFrameMaterial('surround-top')
+                      : (topFrameMaterial ?? createFrameMaterial('top'));
                   const bounds = getModuleBoundsX(mod);
                   // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
                   const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
@@ -3703,6 +3706,11 @@ const Room: React.FC<RoomProps> = ({
                   // 가구별 하부프레임 Z축 옵셋
                   const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
                   const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
+                  // 개별 가구 하이라이트 or 기본 base material
+                  const baseModHighlightKey = `base-${mod.id}`;
+                  const baseMat = highlightedFrame === baseModHighlightKey
+                    ? createFrameMaterial(baseModHighlightKey)
+                    : (baseFrameMaterial ?? createFrameMaterial('base'));
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -3719,7 +3727,7 @@ const Room: React.FC<RoomProps> = ({
                         panelStartY + floatHeight + visualBaseFrameHeight / 2,
                         baseZPosition
                       ]}
-                      material={baseFrameMaterial ?? createFrameMaterial('base')}
+                      material={baseMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
