@@ -3086,10 +3086,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const epOffsetZ = mmToThreeUnits(epOffsetMm);
               const epD = depth;
 
-              // EP는 바닥(Y=0)부터 가구 상단까지 — 상부장도 바닥까지 내려옴
-              const groupY = adjustedPosition.y; // Three.js 단위
-              const epH = groupY + height / 2; // 바닥~가구상단
-              const epYRelative = (height / 2 - groupY) / 2; // 그룹 내 EP 중심 Y
+              // EP는 바닥(Y=0)부터 천장(공간 높이)까지
+              const spaceH = mmToThreeUnits(spaceInfo.height); // 공간 전체 높이
+              const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
+              const epH = spaceH; // 바닥~천장
+              const epCenterWorldY = spaceH / 2; // EP 월드 중심 Y
+              const epYRelative = epCenterWorldY - groupY; // 가구 그룹 내 EP 중심 Y
 
               return (
                 <>
