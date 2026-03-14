@@ -80,7 +80,7 @@ export interface MaterialConfig {
 export const DEFAULT_DROPPED_CEILING_VALUES = {
   WIDTH: 1200,
   DROP_HEIGHT: 200,
-  POSITION: 'left' as const
+  POSITION: 'right' as const
 };
 
 // 공간 정보 타입
@@ -132,6 +132,9 @@ export interface SpaceInfo {
 
   // 개별 프레임 선택 설정
   frameConfig?: FrameConfig;
+
+  // 커튼박스 마감 (자유배치 전용 — 커튼박스 구간 벽 마감)
+  curtainBoxFinished?: boolean;
 
   // 자유배치 서라운드 설정
   freeSurround?: FreeSurroundConfig;
@@ -290,9 +293,9 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
     // 단내림 기본값 설정
     droppedCeiling: {
       enabled: false,
-      position: 'right',
-      width: 900,
-      dropHeight: 200
+      position: DEFAULT_DROPPED_CEILING_VALUES.POSITION,
+      width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+      dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
     },
     // 개별 프레임 선택 기본값 (전체 서라운드)
     frameConfig: {
@@ -359,8 +362,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
         processedInfo.droppedCeiling = {
           ...processedInfo.droppedCeiling,
-          width: processedInfo.droppedCeiling.width || 900,
-          dropHeight: processedInfo.droppedCeiling.dropHeight || 200
+          width: processedInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+          dropHeight: processedInfo.droppedCeiling.dropHeight || DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
         };
       }
 
