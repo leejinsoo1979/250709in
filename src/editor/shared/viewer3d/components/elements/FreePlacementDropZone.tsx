@@ -469,7 +469,7 @@ const FreePlacementDropZone: React.FC = () => {
         leftObstacle = b.right;
       }
     }
-    const leftDistance = Math.round(ghostLeft - leftObstacle);
+    const leftDistance = Math.round((ghostLeft - leftObstacle) * 10) / 10;
 
     // 오른쪽 이격: 고스트 오른쪽 가장자리 ~ 가장 가까운 오른쪽 장애물
     let rightObstacle = endX;
@@ -479,7 +479,7 @@ const FreePlacementDropZone: React.FC = () => {
         break;
       }
     }
-    const rightDistance = Math.round(rightObstacle - ghostRight);
+    const rightDistance = Math.round((rightObstacle - ghostRight) * 10) / 10;
 
     const guideY = ghostYThree;
 
@@ -510,7 +510,7 @@ const FreePlacementDropZone: React.FC = () => {
         leftObstacle = b.right;
       }
     }
-    const leftDistance = Math.round(modLeft - leftObstacle);
+    const leftDistance = Math.round((modLeft - leftObstacle) * 10) / 10;
 
     // 오른쪽 장애물
     let rightObstacle = endX;
@@ -520,7 +520,7 @@ const FreePlacementDropZone: React.FC = () => {
         break;
       }
     }
-    const rightDistance = Math.round(rightObstacle - modRight);
+    const rightDistance = Math.round((rightObstacle - modRight) * 10) / 10;
 
     const guideY = mod.position.y;
     const heightMm = mod.freeHeight || 2325;
@@ -596,7 +596,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (lockedGaps?.left != null) {
         result.push({
           startX, endX: startX + lockedGaps.left,
-          width: Math.round(lockedGaps.left),
+          width: Math.round(lockedGaps.left * 10) / 10,
           centerX: ((startX + startX + lockedGaps.left) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: null, isWallGap: 'left', gapType: 'left-wall', anchorX: startX,
@@ -605,7 +605,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (lockedGaps?.right != null) {
         result.push({
           startX: endX - lockedGaps.right, endX,
-          width: Math.round(lockedGaps.right),
+          width: Math.round(lockedGaps.right * 10) / 10,
           centerX: ((endX - lockedGaps.right + endX) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: null, isWallGap: 'right', gapType: 'right-wall', anchorX: endX,
@@ -628,7 +628,7 @@ const FreePlacementDropZone: React.FC = () => {
       gaps.push({
         startX,
         endX: bounds[0].left,
-        width: Math.round(gapWidth),
+        width: Math.round(gapWidth * 10) / 10,
         centerX: ((startX + bounds[0].left) / 2) * 0.01,
         centerY: gapLabelY,
         adjacentModuleId: bounds[0].id,
@@ -646,7 +646,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.round(gapEnd - gapStart),
+          width: Math.round((gapEnd - gapStart) * 10) / 10,
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
@@ -665,7 +665,7 @@ const FreePlacementDropZone: React.FC = () => {
       gaps.push({
         startX: lastBound.right,
         endX,
-        width: Math.round(gapWidth),
+        width: Math.round(gapWidth * 10) / 10,
         centerX: ((lastBound.right + endX) / 2) * 0.01,
         centerY: gapLabelY,
         adjacentModuleId: lastBound.id,
@@ -688,7 +688,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (gap.gapType === 'right-wall' && lockedWallGaps?.right != null) return;
     }
     setEditingGapIndex(index);
-    setEditingGapValue(Math.round(currentWidth).toString());
+    setEditingGapValue((Math.round(currentWidth * 10) / 10).toString());
     setTimeout(() => {
       gapInputRef.current?.focus();
       gapInputRef.current?.select();
@@ -1383,6 +1383,7 @@ const FreePlacementDropZone: React.FC = () => {
                   <input
                     ref={gapInputRef}
                     type="number"
+                    step="any"
                     value={editingGapValue}
                     onChange={(e) => setEditingGapValue(e.target.value)}
                     onKeyDown={(e) => {
