@@ -4065,101 +4065,25 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
-        {/* 서라운드 + 상,하부프레임 통합 — 좌→우 순서 (서라운드1, 2, 3...) */}
+        {/* 서라운드 섹션 — 좌→우 순서 */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
-          const freeMods = placedModules.filter(m => m.isFreePlacement);
-          const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
           const middleGaps = fs.middle || [];
 
-          // 좌→우 순서로 아이템 배열 생성: 좌서라운드, 가구1상/하, 중간서라운드1, 가구2상/하, ..., 우서라운드
-          type ItemType =
-            | { kind: 'surround-left' }
-            | { kind: 'surround-right' }
-            | { kind: 'surround-top' }
-            | { kind: 'surround-middle'; idx: number }
-            | { kind: 'furniture'; mod: typeof sorted[0] };
-          const items: ItemType[] = [];
+          // 서라운드 목록: 좌 → 중간들 → 상 → 우 (좌→우 순서)
+          type SurroundItem =
+            | { kind: 'left' }
+            | { kind: 'right' }
+            | { kind: 'top' }
+            | { kind: 'middle'; idx: number };
+          const surroundItems: SurroundItem[] = [];
+          surroundItems.push({ kind: 'left' });
+          middleGaps.forEach((_m, i) => surroundItems.push({ kind: 'middle', idx: i }));
+          surroundItems.push({ kind: 'top' });
+          surroundItems.push({ kind: 'right' });
 
-          // 좌 서라운드
-          if (fs.left.enabled) items.push({ kind: 'surround-left' });
-          // 가구 + 중간 서라운드 교차 배치
-          sorted.forEach((mod, i) => {
-            items.push({ kind: 'furniture', mod });
-            if (i < sorted.length - 1 && middleGaps[i]) {
-              items.push({ kind: 'surround-middle', idx: i });
-            }
-          });
-          // 상 서라운드 (상부프레임)
-          if (fs.top.enabled) items.push({ kind: 'surround-top' });
-          // 우 서라운드
-          if (fs.right.enabled) items.push({ kind: 'surround-right' });
-
-          if (items.length === 0) return null;
-
-          // 서라운드 행 렌더 헬퍼 (ON/OFF + 앞/뒤)
-          const renderSurroundRow = (
-            num: number,
-            enabled: boolean,
-            offset: number,
-            onToggle: () => void,
-            onOffsetChange: (val: number) => void,
-            highlightKey: string,
-          ) => (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '40px', textAlign: 'left', margin: 0 }}>서라운드{num}</span>
-              <button
-                onClick={onToggle}
-                className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
-                style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-              >
-                {enabled ? 'ON' : 'OFF'}
-              </button>
-              {enabled ? (
-                <>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={offset > 0 ? offset : ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(highlightKey)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        onOffsetChange(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(highlightKey)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : -parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                        onOffsetChange(v === -0 ? 0 : v);
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                </>
-              ) : null}
-            </div>
-          );
-
-          // 가구 프레임 행 렌더 헬퍼 (상/하 ON/OFF + 앞/뒤)
-          const renderFrameRow = (
+          const renderOffsetRow = (
             num: number,
             label: string,
             enabled: boolean,
@@ -4169,7 +4093,7 @@ const Configurator: React.FC = () => {
             highlightKey: string,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '40px', textAlign: 'left', margin: 0 }}>{label}{num}</span>
+              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num}</span>
               <button
                 onClick={onToggle}
                 className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
@@ -4219,15 +4143,11 @@ const Configurator: React.FC = () => {
             </div>
           );
 
-          // 각 카테고리별 독립 번호 계산
-          let surroundNum = 0;
-          let topFrameNum = 0;
-          let baseFrameNum = 0;
           return (
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>서라운드 / 상,하부프레임</h3>
+                <h3 className={styles.sectionTitle}>서라운드</h3>
               </div>
               {/* 서라운드 옵셋 기준 선택 */}
               <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
@@ -4254,7 +4174,131 @@ const Configurator: React.FC = () => {
                   도어기준
                 </button>
               </div>
-              {/* 하부프레임 높이/깊이 (글로벌) */}
+              <div className={styles.subSetting}>
+                {surroundItems.map((si, idx) => {
+                  const num = idx + 1;
+                  if (si.kind === 'left') {
+                    const d = fs.left;
+                    return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.offset,
+                      () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
+                      'surround-left',
+                    )}</React.Fragment>;
+                  }
+                  if (si.kind === 'right') {
+                    const d = fs.right;
+                    return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.offset,
+                      () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
+                      'surround-right',
+                    )}</React.Fragment>;
+                  }
+                  if (si.kind === 'top') {
+                    const d = fs.top;
+                    return <React.Fragment key="surround-top">{renderOffsetRow(num, '서라운드', d.enabled, d.offset,
+                      () => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, offset: v } } }),
+                      'surround-top',
+                    )}</React.Fragment>;
+                  }
+                  if (si.kind === 'middle') {
+                    const midCfg = middleGaps[si.idx];
+                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(num, '서라운드', midCfg.enabled, midCfg.offset || 0,
+                      () => {
+                        const newMiddle = [...middleGaps];
+                        newMiddle[si.idx] = { ...newMiddle[si.idx], enabled: !newMiddle[si.idx].enabled };
+                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                      },
+                      (v) => {
+                        const newMiddle = [...middleGaps];
+                        newMiddle[si.idx] = { ...newMiddle[si.idx], offset: v };
+                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                      },
+                      `surround-middle-${si.idx}`,
+                    )}</React.Fragment>;
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 상,하부프레임 섹션 — 가구별 좌→우 순서 */}
+        {isFreeMode && (() => {
+          const fs = spaceInfo.freeSurround;
+          if (!fs) return null;
+          const freeMods = placedModules.filter(m => m.isFreePlacement);
+          const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
+
+          const renderFrameOffsetRow = (
+            num: number,
+            label: string,
+            enabled: boolean,
+            offset: number,
+            onToggle: () => void,
+            onOffsetChange: (val: number) => void,
+            highlightKey: string,
+          ) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num}</span>
+              <button
+                onClick={onToggle}
+                className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
+                style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
+              >
+                {enabled ? 'ON' : 'OFF'}
+              </button>
+              {enabled ? (
+                <>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset > 0 ? offset : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onOffsetChange(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : -parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                        onOffsetChange(v === -0 ? 0 : v);
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+          );
+
+          let topNum = 0;
+          let baseNum = 0;
+          return (
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>상,하부프레임</h3>
+              </div>
               <BaseControls
                 spaceInfo={spaceInfo}
                 onUpdate={handleSpaceInfoUpdate}
@@ -4262,85 +4306,32 @@ const Configurator: React.FC = () => {
                 renderMode="placement-only"
               />
               <div className={styles.subSetting}>
-                {items.map((item, _i) => {
-                  if (item.kind === 'surround-left') {
-                    surroundNum++;
-                    const sn = surroundNum;
-                    const d = fs.left;
-                    return <React.Fragment key="surround-left">{renderSurroundRow(sn, d.enabled, d.offset,
-                      () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
-                      (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
-                      'surround-left',
-                    )}</React.Fragment>;
+                {sorted.map((mod) => {
+                  const cat = getModuleCategory(mod);
+                  const hasTop = cat === 'upper' || cat === 'full';
+                  const hasBaseFrame = cat === 'lower' || cat === 'full';
+                  const rows: React.ReactNode[] = [];
+                  if (hasTop) {
+                    topNum++;
+                    const tn = topNum;
+                    rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)프레임',
+                      mod.hasTopFrame !== false, mod.topFrameOffset || 0,
+                      () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
+                      (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
+                      'top',
+                    )}</React.Fragment>);
                   }
-                  if (item.kind === 'surround-right') {
-                    surroundNum++;
-                    const sn = surroundNum;
-                    const d = fs.right;
-                    return <React.Fragment key="surround-right">{renderSurroundRow(sn, d.enabled, d.offset,
-                      () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
-                      (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
-                      'surround-right',
-                    )}</React.Fragment>;
+                  if (hasBaseFrame) {
+                    baseNum++;
+                    const bn = baseNum;
+                    rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)프레임',
+                      mod.hasBase !== false, mod.baseFrameOffset || 0,
+                      () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
+                      (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
+                      'base',
+                    )}</React.Fragment>);
                   }
-                  if (item.kind === 'surround-top') {
-                    surroundNum++;
-                    const sn = surroundNum;
-                    const d = fs.top;
-                    return <React.Fragment key="surround-top">{renderSurroundRow(sn, d.enabled, d.offset,
-                      () => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, enabled: !d.enabled } } }),
-                      (v) => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, offset: v } } }),
-                      'surround-top',
-                    )}</React.Fragment>;
-                  }
-                  if (item.kind === 'surround-middle') {
-                    surroundNum++;
-                    const sn = surroundNum;
-                    const midIdx = item.idx;
-                    const midCfg = middleGaps[midIdx];
-                    return <React.Fragment key={`surround-middle-${midIdx}`}>{renderSurroundRow(sn, midCfg.enabled, midCfg.offset || 0,
-                      () => {
-                        const newMiddle = [...middleGaps];
-                        newMiddle[midIdx] = { ...newMiddle[midIdx], enabled: !newMiddle[midIdx].enabled };
-                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
-                      },
-                      (v) => {
-                        const newMiddle = [...middleGaps];
-                        newMiddle[midIdx] = { ...newMiddle[midIdx], offset: v };
-                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
-                      },
-                      `surround-middle-${midIdx}`,
-                    )}</React.Fragment>;
-                  }
-                  if (item.kind === 'furniture') {
-                    const mod = item.mod;
-                    const cat = getModuleCategory(mod);
-                    const hasTop = cat === 'upper' || cat === 'full';
-                    const hasBaseFrame = cat === 'lower' || cat === 'full';
-                    const rows: React.ReactNode[] = [];
-                    if (hasTop) {
-                      topFrameNum++;
-                      const tn = topFrameNum;
-                      rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameRow(tn, '(상)프레임',
-                        mod.hasTopFrame !== false, mod.topFrameOffset || 0,
-                        () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                        (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
-                        'top',
-                      )}</React.Fragment>);
-                    }
-                    if (hasBaseFrame) {
-                      baseFrameNum++;
-                      const bn = baseFrameNum;
-                      rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameRow(bn, '(하)프레임',
-                        mod.hasBase !== false, mod.baseFrameOffset || 0,
-                        () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
-                        (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
-                        'base',
-                      )}</React.Fragment>);
-                    }
-                    return <React.Fragment key={`furniture-${mod.id}`}>{rows}</React.Fragment>;
-                  }
-                  return null;
+                  return <React.Fragment key={`frame-${mod.id}`}>{rows}</React.Fragment>;
                 })}
               </div>
             </div>
