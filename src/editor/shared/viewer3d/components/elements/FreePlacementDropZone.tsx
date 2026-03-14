@@ -175,7 +175,7 @@ const FreePlacementDropZone: React.FC = () => {
 
       currentX += w;
     });
-  }, [equalDistribution, freeModules.length, isFreePlacement]);
+  }, [equalDistribution, isFreePlacement]);
 
   // 활성 가구 데이터 (클릭 선택 기반 - 자유배치는 currentDragData 미사용)
   const activeModuleId = selectedFurnitureId;
