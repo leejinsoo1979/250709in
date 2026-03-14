@@ -126,6 +126,7 @@ interface DoorModuleProps {
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   internalHeight?: number; // 자유배치 시 실제 가구 높이 (mm) - freeHeight
   isFreePlacement?: boolean; // 자유배치 모드 여부
+  topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm) — 도어 상단 갭 계산용
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -153,7 +154,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   panelGrainDirections, // 패널별 결 방향
   zone, // 단내림 영역 정보
   internalHeight, // 자유배치 시 실제 가구 높이 (mm)
-  isFreePlacement = false // 자유배치 모드 여부
+  isFreePlacement = false, // 자유배치 모드 여부
+  topFrameThickness: perFurnitureTopFrame // 개별 가구 상부프레임 두께
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -782,15 +784,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       originalSpaceInfo.frameConfig?.top === true && originalSpaceInfo.frameConfig?.bottom === true;
 
     // doorTopGap은 천장에서 도어 상단까지의 절대 거리
-    // 가구 상단은 천장에서 topFrameHeight만큼 아래에 있음
+    // 가구 상단은 천장에서 effectiveTopFrame만큼 아래에 있음
+    // 개별 가구 상부프레임(perFurnitureTopFrame)이 있으면 그 값 사용, 없으면 글로벌 값
     // 전체서라운드: 도어가 상부프레임 하단에서 1.5mm 떨어짐 (가구 상단 기준 extraTopGap = 1.5)
-    // 그 외: 기존 로직 (doorTopGap - topFrameHeight)
+    // 그 외: 기존 로직 (doorTopGap - effectiveTopFrame)
+    const effectiveTopFrame = perFurnitureTopFrame ?? topFrameHeightValue;
     let extraTopGap: number;
     if (isFullSurround) {
       extraTopGap = 1.5; // 상부프레임 하단에서 1.5mm 갭
     } else {
-      const absoluteTopGap = doorTopGap !== undefined ? doorTopGap : (topFrameHeightValue + 5);
-      extraTopGap = absoluteTopGap - topFrameHeightValue;
+      const absoluteTopGap = doorTopGap !== undefined ? doorTopGap : (effectiveTopFrame + 5);
+      extraTopGap = absoluteTopGap - effectiveTopFrame;
     }
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
@@ -2866,7 +2870,8 @@ export default React.memo(DoorModule, (prevProps, nextProps) => {
     prevProps.lowerDoorBottomGap === nextProps.lowerDoorBottomGap &&
     prevProps.furnitureId === nextProps.furnitureId &&
     prevProps.internalHeight === nextProps.internalHeight &&
-    prevProps.isFreePlacement === nextProps.isFreePlacement;
+    prevProps.isFreePlacement === nextProps.isFreePlacement &&
+    prevProps.topFrameThickness === nextProps.topFrameThickness;
 
   // panelGrainDirections 객체 비교
   const panelGrainDirectionsEqual = JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);

@@ -75,6 +75,7 @@ interface BoxModuleProps {
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm)
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
+  topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm)
   isCustomizable?: boolean; // 커스터마이징 가구 여부
   customConfig?: CustomFurnitureConfig; // 커스터마이징 설정
   // 이벤트 핸들러 추가
@@ -146,6 +147,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   rightEndPanelOffset, // 우측 EP 개별 옵셋 (mm)
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
+  topFrameThickness, // 개별 가구 상부프레임 두께
   isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
   customConfig, // 커스터마이징 설정
   // 이벤트 핸들러들
@@ -266,6 +268,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             zone={zone}
             internalHeight={internalHeight}
             isFreePlacement={isFreePlacement}
+            topFrameThickness={topFrameThickness}
           />
         )}
       </>
@@ -829,6 +832,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               zone={zone} // 단내림 영역 정보 전달
               internalHeight={internalHeight} // 자유배치 시 실제 가구 높이 전달
               isFreePlacement={isFreePlacement} // 자유배치 모드 전달
+              topFrameThickness={topFrameThickness} // 개별 가구 상부프레임 두께
             />
           );
         }
