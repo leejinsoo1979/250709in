@@ -2465,7 +2465,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             return (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>섹션별 치수</h5>
-              {Array.from({ length: sectionCount }).map((_, sIdx) => {
+              {Array.from({ length: sectionCount }).map((_, i) => sectionCount - 1 - i).map((sIdx) => {
                 const sec = isCustom ? ccSections![sIdx] : mcSections![sIdx];
                 const sectionLabel = sectionCount === 2
                   ? (sIdx === 0 ? '하부' : '상부')
