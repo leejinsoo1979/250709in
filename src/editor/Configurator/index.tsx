@@ -4334,11 +4334,7 @@ const Configurator: React.FC = () => {
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                    (v) => {
-                      // size 변경 → 가구 높이를 역산: freeHeight = 공간높이 - 받침대 - 새 topFrame
-                      const newFreeHeight = Math.max(100, spaceInfo.height - baseH - v);
-                      updatePlacedModule(mod.id, { topFrameThickness: v, freeHeight: newFreeHeight });
-                    },
+                    (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                     `top-${mod.id}`,
                   )}</React.Fragment>;
