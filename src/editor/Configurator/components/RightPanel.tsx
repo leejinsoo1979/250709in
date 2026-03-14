@@ -754,13 +754,66 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onFrameTypeChange
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { placedModules, clearAllModules } = useFurnitureStore();
-  const { setActiveDroppedCeilingTab } = useUIStore();
+  const { placedModules, clearAllModules, updatePlacedModule } = useFurnitureStore();
+  const { setActiveDroppedCeilingTab, selectedFurnitureId } = useUIStore();
   const { t, currentLanguage } = useTranslation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['space', 'layoutMode', 'layout'])
   );
+
+  // 선택된 자유배치 가구의 도어 셋팅
+  const selectedDoorModule = selectedFurnitureId
+    ? placedModules.find(m => m.id === selectedFurnitureId && m.isFreePlacement && m.hasDoor)
+    : null;
+
+  const [rpDoorMode, setRpDoorMode] = useState<'auto' | 'manual'>(selectedDoorModule?.doorSettingMode || 'auto');
+  const [rpDoorOL, setRpDoorOL] = useState(String(selectedDoorModule?.doorOverlayLeft || 0));
+  const [rpDoorOR, setRpDoorOR] = useState(String(selectedDoorModule?.doorOverlayRight || 0));
+  const [rpDoorOT, setRpDoorOT] = useState(String(selectedDoorModule?.doorOverlayTop || 0));
+  const [rpDoorOB, setRpDoorOB] = useState(String(selectedDoorModule?.doorOverlayBottom || 0));
+
+  useEffect(() => {
+    if (selectedDoorModule) {
+      setRpDoorMode(selectedDoorModule.doorSettingMode || 'auto');
+      setRpDoorOL(String(selectedDoorModule.doorOverlayLeft || 0));
+      setRpDoorOR(String(selectedDoorModule.doorOverlayRight || 0));
+      setRpDoorOT(String(selectedDoorModule.doorOverlayTop || 0));
+      setRpDoorOB(String(selectedDoorModule.doorOverlayBottom || 0));
+    }
+  }, [selectedFurnitureId]);
+
+  const handleRpDoorModeChange = (mode: 'auto' | 'manual') => {
+    setRpDoorMode(mode);
+    if (selectedDoorModule) {
+      if (mode === 'auto') {
+        setRpDoorOL('0'); setRpDoorOR('0'); setRpDoorOT('0'); setRpDoorOB('0');
+        updatePlacedModule(selectedDoorModule.id, {
+          doorSettingMode: 'auto', doorOverlayLeft: 0, doorOverlayRight: 0, doorOverlayTop: 0, doorOverlayBottom: 0,
+        });
+      } else {
+        updatePlacedModule(selectedDoorModule.id, { doorSettingMode: 'manual' });
+      }
+    }
+  };
+
+  const handleRpDoorOverlay = (dir: 'left' | 'right' | 'top' | 'bottom', val: string) => {
+    const setters: Record<string, (v: string) => void> = { left: setRpDoorOL, right: setRpDoorOR, top: setRpDoorOT, bottom: setRpDoorOB };
+    setters[dir](val);
+    const num = parseFloat(val);
+    if (!isNaN(num) && selectedDoorModule) {
+      const key = { left: 'doorOverlayLeft', right: 'doorOverlayRight', top: 'doorOverlayTop', bottom: 'doorOverlayBottom' }[dir];
+      updatePlacedModule(selectedDoorModule.id, { [key]: num });
+    }
+  };
+
+  const handleRpDoorBlur = (dir: 'left' | 'right' | 'top' | 'bottom') => {
+    const inputs: Record<string, string> = { left: rpDoorOL, right: rpDoorOR, top: rpDoorOT, bottom: rpDoorOB };
+    const setters: Record<string, (v: string) => void> = { left: setRpDoorOL, right: setRpDoorOR, top: setRpDoorOT, bottom: setRpDoorOB };
+    if (isNaN(parseFloat(inputs[dir]))) setters[dir]('0');
+  };
+
+  const doorInputStyle = { color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 };
   
   // 초기 렌더링 시 UIStore 동기화
   useEffect(() => {
@@ -1251,6 +1304,88 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   selected={hasFloorFinish ? 'yes' : 'no'}
                   onChange={(value) => onFloorFinishToggle()}
                 />
+              </FormControl>
+            )}
+
+            {/* 선택된 자유배치 가구의 도어 셋팅 */}
+            {selectedDoorModule && (
+              <FormControl
+                label="도어 셋팅"
+                expanded={expandedSections.has('doorSetting')}
+                onToggle={() => toggleSection('doorSetting')}
+              >
+                <div className={doorStyles.doorTabSelector}>
+                  <button
+                    className={`${doorStyles.doorTab} ${rpDoorMode === 'auto' ? doorStyles.activeDoorTab : ''}`}
+                    onClick={() => handleRpDoorModeChange('auto')}
+                  >
+                    자동
+                    <span className={doorStyles.doorTabSubtitle}>기본값 적용</span>
+                  </button>
+                  <button
+                    className={`${doorStyles.doorTab} ${rpDoorMode === 'manual' ? doorStyles.activeDoorTab : ''}`}
+                    onClick={() => handleRpDoorModeChange('manual')}
+                  >
+                    수동
+                    <span className={doorStyles.doorTabSubtitle}>직접 설정</span>
+                  </button>
+                </div>
+
+                {rpDoorMode === 'manual' && (
+                  <>
+                    <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '8px 0 12px 0' }}>
+                      가구 기준으로 도어를 확장/축소 (mm)
+                    </p>
+                    <div className={doorStyles.doorGapContainer}>
+                      <div className={doorStyles.doorGapField}>
+                        <label className={doorStyles.doorGapLabel}>좌측 ←</label>
+                        <div className={doorStyles.inputWithUnit}>
+                          <input type="text" inputMode="numeric" value={rpDoorOL}
+                            onChange={(e) => handleRpDoorOverlay('left', e.target.value)}
+                            onBlur={() => handleRpDoorBlur('left')}
+                            className={`${doorStyles.depthInput} furniture-depth-input`}
+                            placeholder="0" style={doorInputStyle} />
+                          <span className={doorStyles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div className={doorStyles.doorGapField}>
+                        <label className={doorStyles.doorGapLabel}>우측 →</label>
+                        <div className={doorStyles.inputWithUnit}>
+                          <input type="text" inputMode="numeric" value={rpDoorOR}
+                            onChange={(e) => handleRpDoorOverlay('right', e.target.value)}
+                            onBlur={() => handleRpDoorBlur('right')}
+                            className={`${doorStyles.depthInput} furniture-depth-input`}
+                            placeholder="0" style={doorInputStyle} />
+                          <span className={doorStyles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={doorStyles.doorGapContainer} style={{ marginTop: '8px' }}>
+                      <div className={doorStyles.doorGapField}>
+                        <label className={doorStyles.doorGapLabel}>상단 ↑</label>
+                        <div className={doorStyles.inputWithUnit}>
+                          <input type="text" inputMode="numeric" value={rpDoorOT}
+                            onChange={(e) => handleRpDoorOverlay('top', e.target.value)}
+                            onBlur={() => handleRpDoorBlur('top')}
+                            className={`${doorStyles.depthInput} furniture-depth-input`}
+                            placeholder="0" style={doorInputStyle} />
+                          <span className={doorStyles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div className={doorStyles.doorGapField}>
+                        <label className={doorStyles.doorGapLabel}>하단 ↓</label>
+                        <div className={doorStyles.inputWithUnit}>
+                          <input type="text" inputMode="numeric" value={rpDoorOB}
+                            onChange={(e) => handleRpDoorOverlay('bottom', e.target.value)}
+                            onBlur={() => handleRpDoorBlur('bottom')}
+                            className={`${doorStyles.depthInput} furniture-depth-input`}
+                            placeholder="0" style={doorInputStyle} />
+                          <span className={doorStyles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </FormControl>
             )}
 
