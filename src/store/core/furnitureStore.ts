@@ -437,6 +437,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)
   clearAllModules: () => {
     set({ placedModules: [] });
+    // 가구 전체 삭제 시 서라운드도 함께 초기화
+    useSpaceConfigStore.getState().setSpaceInfo({ freeSurround: undefined });
   },
 
   // 가구 목록 직접 설정 함수 (함수형 업데이트 지원)
