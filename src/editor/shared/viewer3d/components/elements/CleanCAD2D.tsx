@@ -2620,9 +2620,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const totalHThree = mmToThreeUnits(totalH);
         const isLeftCurtain = spaceInfo.droppedCeiling.position === 'left';
         // 커튼박스가 좌측이면 좌측 외측, 우측이면 우측 외측에 치수선 표시
+        // 기존 치수선(좌: -200, 우: +200/+270)보다 더 바깥쪽에 배치
         const dimX = isLeftCurtain
-          ? leftDimensionX + leftOffset - mmToThreeUnits(100)                          // 기존 좌측 치수선보다 더 바깥쪽
-          : mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(120);        // 우측 바깥쪽
+          ? leftDimensionX + leftOffset - mmToThreeUnits(150)                          // 좌측: 기존(-200)보다 150 더 바깥 = -350
+          : mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(350);        // 우측: 기존(+270)보다 더 바깥 = +350
         const midY = totalHThree / 2;
         return (
           <group>
@@ -5170,7 +5171,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
             const totalH = spaceInfo.height + dropH;
             const totalHThree = mmToThreeUnits(totalH);
-            const dimX = rightDimensionX + mmToThreeUnits(100); // 기존 우측 치수선보다 더 바깥쪽
+            const dimX = rightDimensionX + mmToThreeUnits(150); // 기존 우측 치수선(+200)보다 150 더 바깥 = +350
             const zPos = spaceZOffset - mmToThreeUnits(200);
             const midY = totalHThree / 2;
             return (
