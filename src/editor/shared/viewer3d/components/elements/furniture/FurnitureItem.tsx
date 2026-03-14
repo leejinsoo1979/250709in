@@ -2765,8 +2765,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             {/* 가구 상단 아이콘 툴바 (readOnly 모드에서는 숨김) */}
             {!isPanelListTabActive && !readOnly && (
               <Html
-                position={[0, height / 2 + mmToThreeUnits(50), 0]}
+                position={[0, height / 2 + mmToThreeUnits(50), depth / 2 + 0.03]}
                 center
+                occlude={false}
+                zIndexRange={[10000, 10001]}
                 style={{
                   pointerEvents: 'auto',
                   userSelect: 'none',

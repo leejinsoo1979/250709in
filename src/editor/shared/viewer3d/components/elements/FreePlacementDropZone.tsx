@@ -782,8 +782,16 @@ const FreePlacementDropZone: React.FC = () => {
       const modBottomY = (mod.position.y * 100) - modHeight / 2;
       const modTopY = (mod.position.y * 100) + modHeight / 2;
       const margin = 30; // 30mm 여유
+
+      // 툴바 영역 (가구 상단 위쪽)은 드래그 시작하지 않음 — HTML 버튼 클릭 허용
+      const toolbarMargin = 150; // 150mm (툴바 높이 + 여유)
+      if (clickYmm > modTopY && clickYmm < modTopY + toolbarMargin &&
+          clickXmm >= bounds.left - margin && clickXmm <= bounds.right + margin) {
+        return; // 툴바 영역 클릭 → 드래그 무시, HTML 이벤트로 전달
+      }
+
       const outsideX = clickXmm < bounds.left - margin || clickXmm > bounds.right + margin;
-      const outsideY = clickYmm < modBottomY - margin || clickYmm > modTopY + margin;
+      const outsideY = clickYmm < modBottomY - margin || clickYmm > modTopY + toolbarMargin;
       if (outsideX || outsideY) {
         // 허공 클릭 → 선택 해제
         useFurnitureStore.getState().setSelectedFurnitureId(null);
