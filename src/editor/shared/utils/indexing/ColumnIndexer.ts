@@ -874,7 +874,7 @@ export class ColumnIndexer {
     
     // 단내림이 활성화된 경우
     const totalWidth = spaceInfo.width;
-    const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+    const droppedWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
 
     console.log('🔍 단내림 구간 너비 설정:', {

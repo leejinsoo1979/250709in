@@ -247,7 +247,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
         // 영역별 spaceInfo와 internalSpace 생성
         // 단내림 영역별 외경 너비 계산 (프레임 포함)
-        const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+        const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
         let zoneOuterWidth: number;
 
         if (currentModule.zone === 'dropped') {

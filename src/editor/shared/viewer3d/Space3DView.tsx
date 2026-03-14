@@ -1798,7 +1798,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
                 if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
                   const totalWidth = spaceInfo.width;
-                  const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+                  const droppedWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
                   const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
                   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
 
@@ -1871,7 +1871,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 let wallHeight = wall.height;
                 if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
                   const totalWidth = spaceInfo.width;
-                  const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+                  const droppedWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
                   const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
                   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
 

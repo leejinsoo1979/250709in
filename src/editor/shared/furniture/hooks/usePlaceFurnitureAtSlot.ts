@@ -45,7 +45,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   let zoneInternalSpace = calculateInternalSpace(spaceInfo);
 
   if (hasDroppedCeiling && zone && indexing.zones) {
-    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
 
     if (zone === 'dropped') {
       zoneSpaceInfo = {

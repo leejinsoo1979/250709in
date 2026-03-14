@@ -750,7 +750,7 @@ const Configurator: React.FC = () => {
 
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 활성화된 경우 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || 900);
+      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900));
     }
 
     const range = calculateDoorRange(effectiveWidth);
@@ -2699,7 +2699,7 @@ const Configurator: React.FC = () => {
     if (updates.droppedCeiling?.enabled && !spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 새로 활성화된 경우
       const currentWidth = finalUpdates.width || spaceInfo.width || 4800;
-      const droppedWidth = updates.droppedCeiling.width || 900;
+      const droppedWidth = updates.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
       const mainZoneWidth = currentWidth - droppedWidth;
       const frameThickness = 50;
       const normalAreaInternalWidth = mainZoneWidth - frameThickness;
@@ -3421,7 +3421,8 @@ const Configurator: React.FC = () => {
                     max={(spaceInfo.width || 4800) - 100}
                     step="10"
                     defaultValue={(() => {
-                      const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
+                      const dcDefaultW = isFreeMode ? 150 : 900;
+                      const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || dcDefaultW);
                       if (isFreeMode) return Math.round(mainOuter);
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
@@ -3430,7 +3431,7 @@ const Configurator: React.FC = () => {
                       const internal = pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight;
                       return Math.round(internal);
                     })()}
-                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}`}
+                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900))}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3440,7 +3441,7 @@ const Configurator: React.FC = () => {
                     onBlur={(e) => {
                       const inputValue = e.target.value;
                       const totalWidth = spaceInfo.width || 4800;
-                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
                       // 자유배치: 이격 없이 순수 너비, 슬롯배치: 이격 반영
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
@@ -3589,7 +3590,8 @@ const Configurator: React.FC = () => {
                     max={(spaceInfo.width || 4800) - 100}
                     step="10"
                     defaultValue={(() => {
-                      const droppedOuter = spaceInfo.droppedCeiling?.width || 900;
+                      const dcDefaultW = isFreeMode ? 150 : 900;
+                      const droppedOuter = spaceInfo.droppedCeiling?.width || dcDefaultW;
                       if (isFreeMode) return Math.round(droppedOuter);
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
@@ -3597,7 +3599,7 @@ const Configurator: React.FC = () => {
                       const internal = pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft;
                       return Math.round(internal);
                     })()}
-                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}`}
+                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3607,7 +3609,7 @@ const Configurator: React.FC = () => {
                     onBlur={(e) => {
                       const inputValue = e.target.value;
                       const totalWidth = spaceInfo.width || 4800;
-                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
                       // 자유배치: 이격 없이 순수 너비, 슬롯배치: 이격 반영
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
                       const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5));
@@ -3723,37 +3725,17 @@ const Configurator: React.FC = () => {
             </div>
 
             {/* 커튼박스 마감 버튼 (자유배치 전용) */}
-            {isFreeMode && (() => {
-              const fs = spaceInfo.freeSurround;
-              const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
-              const hasFreeModules = placedModules.some(m => m.isFreePlacement && !m.isSurroundPanel);
-              return (
-                <button
-                  className={`${styles.toggleButton} ${isSurroundActive ? styles.toggleButtonActive : ''}`}
-                  disabled={!hasFreeModules}
-                  style={{ width: '100%', marginTop: '8px' }}
-                  onClick={() => {
-                    if (isSurroundActive) {
-                      setSpaceInfo({
-                        freeSurround: {
-                          left: { ...fs!.left, enabled: false },
-                          top: { ...fs!.top, enabled: false },
-                          right: { ...fs!.right, enabled: false },
-                          middle: fs!.middle?.map(m => ({ ...m, enabled: false })),
-                        }
-                      });
-                    } else {
-                      const result = generateSurround(spaceInfo, placedModules);
-                      if (result.success && result.config) {
-                        setSpaceInfo({ freeSurround: result.config });
-                      }
-                    }
-                  }}
-                >
-                  {isSurroundActive ? '커튼박스 마감 해제' : '커튼박스 마감'}
-                </button>
-              );
-            })()}
+            {isFreeMode && (
+              <button
+                className={`${styles.toggleButton} ${spaceInfo.curtainBoxFinished ? styles.toggleButtonActive : ''}`}
+                style={{ width: '100%', marginTop: '8px' }}
+                onClick={() => {
+                  setSpaceInfo({ curtainBoxFinished: !spaceInfo.curtainBoxFinished });
+                }}
+              >
+                {spaceInfo.curtainBoxFinished ? '커튼박스 마감 해제' : '커튼박스 마감'}
+              </button>
+            )}
           </div>
         )}
 
@@ -5180,7 +5162,7 @@ const Configurator: React.FC = () => {
               const hasReduction = leftReduction > 0 || rightReduction > 0;
               const gapM = spaceInfo.gapConfig?.middle ?? 2;
               const hasDropped = spaceInfo.droppedCeiling?.enabled === true;
-              const droppedW = spaceInfo.droppedCeiling?.width || 900;
+              const droppedW = spaceInfo.droppedCeiling?.width || ((spaceInfo.layoutMode === 'free-placement') ? 150 : 900);
               const droppedPos = spaceInfo.droppedCeiling?.position || 'right';
 
               // 단내림 구간별 슬롯 영역 계산 (B안)

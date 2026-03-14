@@ -1070,7 +1070,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     <group position={[0, 0, zOffset]} renderOrder={9999}>
       {/* 단내림 구간 표시 (해칭) - 2D 모드, 슬롯배치에서만 (자유배치는 경계선만 표시) */}
       {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== '3D' && !isFreePlacement && (() => {
-        const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+        const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
         const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
         const totalHeight = mmToThreeUnits(spaceInfo.height);
         // 자유배치: 커튼박스가 위로 확장 (normalHeight=totalHeight, 해칭은 totalHeight~totalHeight+droppedHeight)
@@ -1079,7 +1079,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
           ? leftOffset
-          : leftOffset + mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+          : leftOffset + mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900)));
         const droppedEndX = droppedStartX + droppedWidth;
 
         // 단내림 구간 빗금 해칭 (대각선 패턴)

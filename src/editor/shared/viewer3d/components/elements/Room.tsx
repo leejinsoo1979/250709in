@@ -1311,7 +1311,7 @@ const Room: React.FC<RoomProps> = ({
           {viewMode !== '2D' && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
             const droppedWidth = hasDroppedCeiling && spaceInfo.droppedCeiling
-              ? mmToThreeUnits(spaceInfo.droppedCeiling.width || 900)
+              ? mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900))
               : 0;
             const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
             const dropHeight = hasDroppedCeiling && spaceInfo.droppedCeiling
@@ -1748,7 +1748,7 @@ const Room: React.FC<RoomProps> = ({
             const hasDC = spaceInfo.droppedCeiling?.enabled;
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
-            const dcW = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 900) : 0;
+            const dcW = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
             const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW; // 경계벽 X
 
             if (hasDC) {
@@ -1795,7 +1795,7 @@ const Room: React.FC<RoomProps> = ({
 
             // === 단내림 경계벽 윤곽선 ===
             if (spaceInfo.droppedCeiling?.enabled) {
-              const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dcDropHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
               const isLeft = spaceInfo.droppedCeiling.position === 'left';
               const droppedCeilingY = ceilingY - dcDropHeight;
@@ -2880,7 +2880,7 @@ const Room: React.FC<RoomProps> = ({
             let droppedHeight = 0;
             let isLeftDropped = false;
             if (hasDroppedCeiling && spaceInfo.droppedCeiling) {
-              droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
               droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
@@ -3003,7 +3003,7 @@ const Room: React.FC<RoomProps> = ({
               // zoneSlotInfo에서 실제 계산된 너비 사용
               const droppedAreaInternalWidthMm = zoneSlotInfo.dropped
                 ? (zoneSlotInfo.dropped.width + (zoneSlotInfo.dropped.startX - (-(spaceInfo.width / 2))))
-                : (spaceInfo.droppedCeiling.width || 900);
+                : (spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const normalAreaInternalWidthMm = zoneSlotInfo.normal.width +
                 (zoneSlotInfo.normal.startX - (isLeftDropped
                   ? (-(spaceInfo.width / 2) + droppedAreaInternalWidthMm)
@@ -3011,8 +3011,8 @@ const Room: React.FC<RoomProps> = ({
 
               if (isLeftDropped) {
                 // 왼쪽 단내림
-                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
-                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
+                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900)));
 
                 // 단내림: 왼쪽만 reduction, 오른쪽(경계면)은 확장
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
@@ -3022,8 +3022,8 @@ const Room: React.FC<RoomProps> = ({
                 normalFrameWidth = mmToThreeUnits(zoneSlotInfo.normal.width);
               } else {
                 // 오른쪽 단내림
-                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
-                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900)));
+                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
 
                 // 일반구간: 왼쪽 reduction + 경계면 갭
                 normalFrameWidth = mmToThreeUnits(zoneSlotInfo.normal.width);
@@ -3427,7 +3427,7 @@ const Room: React.FC<RoomProps> = ({
               const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               const droppedFrameHeight = droppedHeight - floatHeight;
               const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight / 2;
-              const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
+              const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || (isFreePlacement ? 150 : 900));
 
 // console.log('🔥🔥🔥 [왼쪽 서브프레임 - 단내림] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
 
@@ -3534,7 +3534,7 @@ const Room: React.FC<RoomProps> = ({
               const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               const droppedFrameHeight = droppedHeight - floatHeight;
               const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight / 2;
-              const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
+              const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || (isFreePlacement ? 150 : 900));
 
 // console.log('🔥🔥🔥 [오른쪽 서브프레임 - 단내림] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
 

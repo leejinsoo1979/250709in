@@ -388,7 +388,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 단내림이 활성화되어 있고 zone 정보가 없으면 X 위치로 판단
   if (spaceInfo.droppedCeiling?.enabled && !effectiveZone) {
     const droppedPosition = spaceInfo.droppedCeiling.position;
-    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
+    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
     const totalWidth = spaceInfo.width;
 
     // X 위치를 mm로 변환 (Three.js 단위 * 100)
@@ -415,7 +415,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const targetZone = effectiveZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
 
     // 단내림 영역별 외경 너비 계산 (프레임 포함)
-    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
     let zoneOuterWidth: number;
 
     if (effectiveZone === 'dropped') {
