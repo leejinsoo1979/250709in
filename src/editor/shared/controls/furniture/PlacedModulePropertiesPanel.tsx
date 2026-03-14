@@ -2239,14 +2239,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const val = parseInt(freeWidthInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
                           let newX: number;
-                          if (currentPlacedModule.isFreePlacement && (currentPlacedModule.freeLeftGapLocked || currentPlacedModule.freeRightGapLocked)) {
+                          const lockedGaps = spaceInfo.lockedWallGaps;
+                          const hasLeftLock = lockedGaps?.left != null;
+                          const hasRightLock = lockedGaps?.right != null;
+                          if (currentPlacedModule.isFreePlacement && (hasLeftLock || hasRightLock)) {
                             const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-                            if (currentPlacedModule.freeLeftGapLocked && !currentPlacedModule.freeRightGapLocked) {
-                              const leftGap = currentPlacedModule.freeLeftGap ?? 0;
-                              newX = (startX + leftGap + val / 2) * 0.01;
-                            } else if (currentPlacedModule.freeRightGapLocked && !currentPlacedModule.freeLeftGapLocked) {
-                              const rightGap = currentPlacedModule.freeRightGap ?? 0;
-                              newX = (endX - rightGap - val / 2) * 0.01;
+                            if (hasLeftLock && !hasRightLock) {
+                              newX = (startX + lockedGaps.left! + val / 2) * 0.01;
+                            } else if (hasRightLock && !hasLeftLock) {
+                              newX = (endX - lockedGaps.right! - val / 2) * 0.01;
                             } else {
                               // 양쪽 잠금 → 중심 고정
                               newX = currentPlacedModule.position.x;
@@ -2304,14 +2305,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           setFreeWidthInput(next.toString());
                           if (currentPlacedModule) {
                             let newX: number;
-                            if (currentPlacedModule.isFreePlacement && (currentPlacedModule.freeLeftGapLocked || currentPlacedModule.freeRightGapLocked)) {
+                            const lockedGapsKey = spaceInfo.lockedWallGaps;
+                            const hasLeftLockKey = lockedGapsKey?.left != null;
+                            const hasRightLockKey = lockedGapsKey?.right != null;
+                            if (currentPlacedModule.isFreePlacement && (hasLeftLockKey || hasRightLockKey)) {
                               const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-                              if (currentPlacedModule.freeLeftGapLocked && !currentPlacedModule.freeRightGapLocked) {
-                                const leftGap = currentPlacedModule.freeLeftGap ?? 0;
-                                newX = (startX + leftGap + next / 2) * 0.01;
-                              } else if (currentPlacedModule.freeRightGapLocked && !currentPlacedModule.freeLeftGapLocked) {
-                                const rightGap = currentPlacedModule.freeRightGap ?? 0;
-                                newX = (endX - rightGap - next / 2) * 0.01;
+                              if (hasLeftLockKey && !hasRightLockKey) {
+                                newX = (startX + lockedGapsKey.left! + next / 2) * 0.01;
+                              } else if (hasRightLockKey && !hasLeftLockKey) {
+                                newX = (endX - lockedGapsKey.right! - next / 2) * 0.01;
                               } else {
                                 newX = currentPlacedModule.position.x;
                               }
