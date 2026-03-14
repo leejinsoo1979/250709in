@@ -624,7 +624,8 @@ const FreePlacementDropZone: React.FC = () => {
 
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left - startX > 0.5) {
-      const gapWidth = bounds[0].left - startX;
+      const lockedLeft = spaceInfo.lockedWallGaps?.left;
+      const gapWidth = lockedLeft != null ? lockedLeft : bounds[0].left - startX;
       gaps.push({
         startX,
         endX: bounds[0].left,
@@ -661,7 +662,8 @@ const FreePlacementDropZone: React.FC = () => {
     // 마지막 가구 ~ 오른쪽 벽
     const lastBound = bounds[bounds.length - 1];
     if (endX - lastBound.right > 0.5) {
-      const gapWidth = endX - lastBound.right;
+      const lockedRight = spaceInfo.lockedWallGaps?.right;
+      const gapWidth = lockedRight != null ? lockedRight : endX - lastBound.right;
       gaps.push({
         startX: lastBound.right,
         endX,
