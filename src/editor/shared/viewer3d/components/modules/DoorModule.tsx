@@ -144,8 +144,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   slotWidths,
   slotIndex,
   floatHeight: floatHeightProp,
-  doorTopGap = 5, // 천장에서 아래로 갭 (기본값 5mm)
-  doorBottomGap = 25, // 바닥에서 위로 갭 (기본값 25mm)
+  doorTopGap: doorTopGapProp, // 개별 가구 doorTopGap (undefined면 글로벌 → 기본값 순서로 fallback)
+  doorBottomGap: doorBottomGapProp, // 개별 가구 doorBottomGap
   sectionHeightsMm,
   sectionIndex, // 섹션 인덱스 (분할 모드용)
   totalSections = 1, // 전체 섹션 수 (분할 모드용)
@@ -580,6 +580,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 원본 spaceInfo 가져오기 (zone별로 분리되지 않은 전체 공간 정보)
   const { spaceInfo: originalSpaceInfo } = useSpaceConfigStore();
 
+  // doorTopGap/doorBottomGap: 개별 가구 값 → 글로벌 spaceInfo 값 → 기본값 순서로 fallback
+  const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 5;
+  const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 25;
+
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);
 
@@ -753,13 +757,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const floorHeightForCalc = isFloorType ? 0 : floorHeightValue;
 
     // 가구 높이 계산
-    // 공간에 맞춤(space-fit): 항상 공간 높이 기준으로 도어 높이 계산
-    // 가구에 맞춤(furniture-fit): 자유배치 시 effectiveInternalHeight(가구 높이) 사용
+    // 공간에 맞춤(space-fit): 공간 전체 높이 기준 (글로벌 topFrame) — 도어가 공간을 채움
+    // 가구에 맞춤(furniture-fit): 가구 높이 기준 (per-furniture topFrame 반영) — 도어가 가구에 맞춤
     const doorSetupMode = originalSpaceInfo.doorSetupMode || 'furniture-fit';
     const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
     if (doorSetupMode === 'space-fit') {
+      // 공간에 맞춤: 글로벌 프레임 기준 공간 높이 사용 (per-furniture topFrame과 무관)
       tallCabinetFurnitureHeight = spaceBasedHeight;
     } else {
+      // 가구에 맞춤: 실제 가구 높이 사용 (per-furniture topFrame 반영됨)
       tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
     }
     console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight);
