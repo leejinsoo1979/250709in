@@ -4122,36 +4122,19 @@ const Configurator: React.FC = () => {
                     />
                   </div>
                   <div className={styles.frameItemInput} style={{ flex: 2 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>앞</span>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
-                      value={offset > 0 ? offset : ''} placeholder="0"
+                      value={offset !== 0 ? offset : ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(highlightKey)}
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : parseInt(v, 10));
+                        if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onOffsetChange(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>뒤</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(highlightKey)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : -parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                        onOffsetChange(v === -0 ? 0 : v);
+                        const parsed = parseInt(e.target.value) || 0;
+                        onOffsetChange(Math.max(-200, Math.min(200, parsed)));
                       }}
                       className={styles.frameNumberInput}
                     />
@@ -4289,36 +4272,19 @@ const Configurator: React.FC = () => {
                     />
                   </div>
                   <div className={styles.frameItemInput} style={{ flex: 2 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>앞</span>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
-                      value={offset > 0 ? offset : ''} placeholder="0"
+                      value={offset !== 0 ? offset : ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(highlightKey)}
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : parseInt(v, 10));
+                        if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onOffsetChange(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>뒤</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(highlightKey)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : -parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                        onOffsetChange(v === -0 ? 0 : v);
+                        const parsed = parseInt(e.target.value) || 0;
+                        onOffsetChange(Math.max(-200, Math.min(200, parsed)));
                       }}
                       className={styles.frameNumberInput}
                     />
