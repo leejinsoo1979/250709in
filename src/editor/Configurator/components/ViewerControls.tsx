@@ -70,7 +70,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   surroundGenerated = false,
   onSurroundGenerate
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
@@ -313,6 +313,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
       <div className={styles.centerAbsolute}>
+        {isFreePlacement && (
+          <div className={styles.segmentedControl}>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${equalDistribution ? styles.segmentAccentActive : ''}`}
+              onClick={toggleEqualDistribution}
+            >
+              균등배치
+            </button>
+          </div>
+        )}
+
         <div className={styles.segmentedControl}>
           {viewModes.map((mode) => (
             <button
