@@ -26,10 +26,20 @@ export interface FreeSurroundSide {
   gap?: number;             // 실측 gap (mm)
 }
 
+// 자유배치 가구 간 중간 gap 서라운드 설정
+export interface FreeSurroundMiddle {
+  enabled: boolean;
+  gap: number;       // gap 너비 (mm)
+  leftX: number;     // 좌측 가구의 오른쪽 edge (mm)
+  rightX: number;    // 우측 가구의 왼쪽 edge (mm)
+  method: SurroundMethod;
+}
+
 export interface FreeSurroundConfig {
   left: FreeSurroundSide;
   top: FreeSurroundSide;
   right: FreeSurroundSide;
+  middle?: FreeSurroundMiddle[];  // 가구 간 중간 gap 서라운드
 }
 
 export interface GapConfig {

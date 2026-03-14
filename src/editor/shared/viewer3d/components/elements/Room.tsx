@@ -2791,6 +2791,81 @@ const Room: React.FC<RoomProps> = ({
                   </>
                 );
               })()}
+
+              {/* 자유배치 중간 gap 서라운드 — 가구 사이 빈 공간 가림 */}
+              {spaceInfo.freeSurround?.middle?.map((midCfg, idx) => {
+                if (!midCfg.enabled || midCfg.method === 'none') return null;
+                const gapMM = midCfg.gap;
+                const centerXmm = (midCfg.leftX + midCfg.rightX) / 2;
+                const surrH = adjustedPanelHeight;
+                const surrCenterY = sideFrameStartY + surrH / 2;
+                const SIDE_DEPTH_MM = 40;
+
+                // 전면패널: gap 너비만큼 앞면 가림
+                const frontZ = topZPosition;
+                // 좌측 측면패널: leftX(좌측 가구 오른쪽) + 18/2
+                const leftSideX = mmToThreeUnits(midCfg.leftX + END_PANEL_THICKNESS / 2);
+                const leftSideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
+                // 우측 측면패널: rightX(우측 가구 왼쪽) - 18/2
+                const rightSideX = mmToThreeUnits(midCfg.rightX - END_PANEL_THICKNESS / 2);
+                const rightSideZ = leftSideZ;
+                // 전면패널: gap 전체 폭
+                const frontX = mmToThreeUnits(centerXmm);
+                const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
+
+                return (
+                  <group key={`free-middle-surround-${idx}`}>
+                    {/* 좌측 측면패널 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key={`free-mid-lside-${idx}`}
+                      name={`middle-surround-left-side-${idx}`}
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrH,
+                        mmToThreeUnits(SIDE_DEPTH_MM)
+                      ]}
+                      position={[leftSideX, surrCenterY, leftSideZ]}
+                      material={frameMat}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                    {/* 우측 측면패널 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key={`free-mid-rside-${idx}`}
+                      name={`middle-surround-right-side-${idx}`}
+                      args={[
+                        mmToThreeUnits(END_PANEL_THICKNESS),
+                        surrH,
+                        mmToThreeUnits(SIDE_DEPTH_MM)
+                      ]}
+                      position={[rightSideX, surrCenterY, rightSideZ]}
+                      material={frameMat}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                    {/* 전면패널 — gap 전체 폭 */}
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key={`free-mid-front-${idx}`}
+                      name={`middle-surround-front-${idx}`}
+                      args={[
+                        mmToThreeUnits(gapMM),
+                        surrH,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[frontX, surrCenterY, frontZ]}
+                      material={frameMat}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </group>
+                );
+              })}
             </>
           );
         }

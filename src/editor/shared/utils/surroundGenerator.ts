@@ -4,7 +4,7 @@
  */
 
 import { PlacedModule } from '@/editor/shared/furniture/types';
-import { SpaceInfo, FreeSurroundConfig, SurroundMethod } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, FreeSurroundConfig, FreeSurroundMiddle, SurroundMethod } from '@/store/core/spaceConfigStore';
 import { getInternalSpaceBoundsX, getModuleBoundsX } from './freePlacementUtils';
 
 export interface SurroundGenerationResult {
@@ -53,15 +53,38 @@ export function generateSurround(
   const leftGap = leftMostEdge - spaceBounds.startX;
   const rightGap = spaceBounds.endX - rightMostEdge;
 
+  // 5. 가구 간 중간 gap 계산 (X 좌표 기준 정렬 → 인접 가구 사이 gap)
+  const sortedBounds = allBounds
+    .map((b, i) => ({ ...b, index: i }))
+    .sort((a, b) => a.left - b.left);
+
+  const middleGaps: FreeSurroundMiddle[] = [];
+  for (let i = 0; i < sortedBounds.length - 1; i++) {
+    const currentRight = sortedBounds[i].right;
+    const nextLeft = sortedBounds[i + 1].left;
+    const gap = nextLeft - currentRight;
+    const method = determineSurroundMethod(gap);
+    if (method !== 'none') {
+      middleGaps.push({
+        enabled: true,
+        gap: Math.round(gap),
+        leftX: Math.round(currentRight),
+        rightX: Math.round(nextLeft),
+        method,
+      });
+    }
+  }
+
   console.log('🔧 [generateSurround]', {
     spaceBounds, leftMostEdge, rightMostEdge, leftGap, rightGap,
+    middleGaps: middleGaps.length,
   });
 
-  // 5. 좌/우 독립 판정
+  // 6. 좌/우 독립 판정
   const leftMethod = determineSurroundMethod(leftGap);
   const rightMethod = determineSurroundMethod(rightGap);
 
-  // 6. FreeSurroundConfig 구성
+  // 7. FreeSurroundConfig 구성
   const config: FreeSurroundConfig = {
     left: {
       enabled: leftMethod !== 'none',
@@ -82,6 +105,7 @@ export function generateSurround(
       method: rightMethod,
       gap: Math.round(rightGap),
     },
+    middle: middleGaps.length > 0 ? middleGaps : undefined,
   };
 
   return { success: true, config };
