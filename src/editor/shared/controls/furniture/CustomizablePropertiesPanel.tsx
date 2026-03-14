@@ -332,11 +332,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
         });
         setSectionWidthInputs(newInputs);
       }
-      // 붙어있는 방향 유지하며 위치 보정
+      // 붙어있는 방향 유지하며 위치 보정 (store에서 최신 데이터 사용)
       const posUpdate: Record<string, any> = { freeWidth: num, moduleWidth: num };
       if (placedModule?.isFreePlacement) {
-        const newX = calcResizedPositionX(placedModule, num, placedModules, spaceInfo);
-        posUpdate.position = { ...placedModule.position, x: newX };
+        const freshMod = useFurnitureStore.getState().placedModules.find(m => m.id === moduleId) || placedModule;
+        const freshAll = useFurnitureStore.getState().placedModules;
+        const freshSI = useSpaceConfigStore.getState().spaceInfo;
+        const newX = calcResizedPositionX(freshMod, num, freshAll, freshSI);
+        posUpdate.position = { ...freshMod.position, x: newX };
       }
       updatePlacedModule(moduleId, posUpdate);
       // 커스터마이징 가구 마지막 치수 기억 + 듀얼↔싱글 연동

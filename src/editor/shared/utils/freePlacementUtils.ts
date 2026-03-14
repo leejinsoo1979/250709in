@@ -222,5 +222,24 @@ export function calcResizedPositionX(
   // 잠긴 이격 영역 침범 방지
   clampedMm = Math.max(effStart + halfNew, Math.min(effEnd - halfNew, clampedMm));
 
+  // 결과 검증 로그
+  const resultLeft = clampedMm - halfNew;
+  const resultRight = clampedMm + halfNew;
+  if (lockedGaps?.left != null || lockedGaps?.right != null) {
+    console.log('🔒 [calcResizedPositionX]', {
+      oldWidth: module.freeWidth || module.moduleWidth,
+      newWidth: newWidthMm,
+      oldCenter: currentCenterMm,
+      oldLeft: oldBounds.left, oldRight: oldBounds.right,
+      effStart, effEnd,
+      leftAttached, rightAttached,
+      newCenter: clampedMm,
+      resultLeft, resultRight,
+      leftGap: resultLeft - startX,
+      rightGap: endX - resultRight,
+      lockedGaps,
+    });
+  }
+
   return clampedMm * 0.01;
 }

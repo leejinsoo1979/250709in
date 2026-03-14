@@ -1606,12 +1606,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       return { ...s, width: val }; // 모든 섹션 너비 연동
     });
     const newConfig = { ...cc, sections };
-    const newX = calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo);
+    // store에서 최신 모듈 가져오기 (stale state 방지)
+    const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
+    const fa = useFurnitureStore.getState().placedModules;
+    const freshSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const newX = calcResizedPositionX(fm, val, fa, freshSpaceInfo);
     updatePlacedModule(currentPlacedModule.id, {
       customConfig: newConfig,
       freeWidth: val,
       moduleWidth: val,
-      position: { ...currentPlacedModule.position, x: newX },
+      position: { ...fm.position, x: newX },
     });
     setFreeWidthInput(val.toString());
     // 모든 섹션 너비 입력 동기화
@@ -2238,13 +2242,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          const newX = currentPlacedModule.isFreePlacement
-                            ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
-                            : currentPlacedModule.position.x;
+                          // store에서 최신 모듈/spaceInfo 가져오기 (stale state 방지)
+                          const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
+                          const freshAll = useFurnitureStore.getState().placedModules;
+                          const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                          const newX = freshModule.isFreePlacement
+                            ? calcResizedPositionX(freshModule, val, freshAll, freshSI)
+                            : freshModule.position.x;
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: val,
                             moduleWidth: val,
-                            position: { ...currentPlacedModule.position, x: newX },
+                            position: { ...freshModule.position, x: newX },
                           });
                           setFreeWidthInput(val.toString());
                           const store = useFurnitureStore.getState();
@@ -2284,17 +2292,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
-                          const cur = parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
-                          const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          // store에서 최신 너비 읽기 (React state 대신)
+                          const freshMod = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule?.id);
+                          const curW = freshMod?.freeWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
+                          const next = Math.max(100, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeWidthInput(next.toString());
-                          if (currentPlacedModule) {
-                            const newX = currentPlacedModule.isFreePlacement
-                              ? calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo)
-                              : currentPlacedModule.position.x;
+                          if (currentPlacedModule && freshMod) {
+                            const freshAll = useFurnitureStore.getState().placedModules;
+                            const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                            const newX = freshMod.isFreePlacement
+                              ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
+                              : freshMod.position.x;
                             updatePlacedModule(currentPlacedModule.id, {
                               freeWidth: next,
                               moduleWidth: next,
-                              position: { ...currentPlacedModule.position, x: newX },
+                              position: { ...freshMod.position, x: newX },
                             });
                           }
                         }
@@ -2521,11 +2533,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               // 너비 변경 → 전체 가구 너비 변경 (모든 섹션 연동)
                               const val = parseInt(sectionWidthInputs[sIdx] || displayW, 10);
                               if (!isNaN(val) && val >= 100 && val <= 2400) {
-                                const newX = calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo);
+                                const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
+                                const fa = useFurnitureStore.getState().placedModules;
+                                const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                                const newX = calcResizedPositionX(fm, val, fa, freshSI);
                                 const updates: any = {
                                   freeWidth: val,
                                   moduleWidth: val,
-                                  position: { ...currentPlacedModule.position, x: newX },
+                                  position: { ...fm.position, x: newX },
                                 };
                                 if (isCustom) {
                                   const newSecs = cc!.sections.map((s: any) => ({ ...s, width: val }));
@@ -2544,11 +2559,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                               else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = parseInt(displayW, 10) || Math.round(totalW);
-                                const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const fm2 = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
+                                const curW2 = fm2.freeWidth || parseInt(displayW, 10) || Math.round(totalW);
+                                const next = Math.max(100, Math.min(2400, curW2 + (e.key === 'ArrowUp' ? 1 : -1)));
                                 setSectionWidthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                const newX = calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo);
-                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...currentPlacedModule.position, x: newX } };
+                                const fa2 = useFurnitureStore.getState().placedModules;
+                                const freshSI2 = useSpaceConfigStore.getState().spaceInfo;
+                                const newX = calcResizedPositionX(fm2, next, fa2, freshSI2);
+                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...fm2.position, x: newX } };
                                 if (isCustom) {
                                   const newSecs = cc!.sections.map((s: any) => ({ ...s, width: next }));
                                   updates.customConfig = { ...cc!, sections: newSecs };
