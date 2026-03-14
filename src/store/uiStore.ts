@@ -372,8 +372,9 @@ export const useUIStore = create<UIState>()(
       setViewMode: (mode) =>
         set((state) => ({
           viewMode: mode,
-          // 2D 모드로 전환 시 가구 체크박스 기본 ON
-          showFurniture: mode === '2D' ? true : state.showFurniture
+          // 2D 모드로 전환 시 가구 체크박스 기본 ON, 축 기본 OFF
+          showFurniture: mode === '2D' ? true : state.showFurniture,
+          showAxis: mode === '2D' ? false : state.showAxis
         })),
         
       setActiveDroppedCeilingTab: (tab) => {
