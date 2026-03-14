@@ -141,6 +141,7 @@ export interface PlacedModule {
   hasLeftEndPanel?: boolean;     // 좌측 EP 표시 여부
   hasRightEndPanel?: boolean;    // 우측 EP 표시 여부
   endPanelThickness?: number;    // EP 두께 (mm, 기본값: 18)
+  endPanelDepth?: number;        // EP 깊이 (mm, 기본값: 가구 깊이)
   endPanelOffset?: number;       // EP 옵셋 (mm, 기본값: 0) — 하위호환용
   leftEndPanelOffset?: number;   // 좌측 EP 개별 옵셋 (mm)
   rightEndPanelOffset?: number;  // 우측 EP 개별 옵셋 (mm)
