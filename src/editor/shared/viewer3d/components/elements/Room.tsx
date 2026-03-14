@@ -2832,7 +2832,8 @@ const Room: React.FC<RoomProps> = ({
                 const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
 
                 // L자 구조: 전면패널 + 경계면 측면패널 (서라운드와 동일 구조)
-                const frontZ = surroundZPosition;
+                const cbZOffset = cbSurround?.offset ? mmToThreeUnits(cbSurround.offset) : 0;
+                const frontZ = surroundZPosition + cbZOffset;
                 const SIDE_DEPTH_MM = 40; // 측면패널 깊이 (서라운드와 동일)
 
                 // 전면패널: 커튼박스 전체 폭, 가구 앞면 위치
