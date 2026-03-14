@@ -284,17 +284,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // (callback set()은 R3F Canvas 내부 컴포넌트 re-render를 트리거하지 않는 문제가 있음)
     const state = get();
 
-    // ── 공간 레벨 잠긴 이격 강제 보정 ──
-    // position이 변경될 때, 공간 레벨 벽 잠금이 있으면 해당 쪽 위치를 강제 보정
+    // ── 공간 레벨 잠긴 이격 영역 침범 방지 ──
+    // position이 변경될 때, 잠긴 이격 영역 안으로 가구가 들어가지 않도록 클램핑
     let finalUpdates = updates;
     const existingModule = state.placedModules.find(m => m.id === id);
     if (existingModule?.isFreePlacement && updates.position) {
       const spaceState = useSpaceConfigStore.getState();
       const lockedWallGaps = spaceState.spaceInfo.lockedWallGaps;
-      const hasLockedLeft = lockedWallGaps?.left != null;
-      const hasLockedRight = lockedWallGaps?.right != null;
 
-      if (hasLockedLeft || hasLockedRight) {
+      if (lockedWallGaps?.left != null || lockedWallGaps?.right != null) {
         const totalWidth = spaceState.spaceInfo.width || 2400;
         const halfW = totalWidth / 2;
         const startX = -halfW;
@@ -303,34 +301,18 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         const widthMm = merged.freeWidth || merged.moduleWidth || 450;
         const halfFW = widthMm / 2;
         let posX = (updates.position as any).x as number;
-        let corrected = false;
 
-        // 가장 왼쪽 가구인지 확인
-        const currentLeftEdge = posX * 100 - halfFW;
-        const isLeftmost = hasLockedLeft && !state.placedModules.some(m =>
-          m.id !== id && m.isFreePlacement &&
-          (m.position.x * 100 - (m.freeWidth || m.moduleWidth || 450) / 2) < currentLeftEdge
-        );
-        if (isLeftmost) {
-          const fixedLeft = startX + lockedWallGaps.left!;
-          posX = (fixedLeft + halfFW) * 0.01;
-          corrected = true;
-        }
+        // 잠긴 영역 경계 계산
+        const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
+        const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
 
-        // 가장 오른쪽 가구인지 확인
-        const currentRightEdge = posX * 100 + halfFW;
-        const isRightmost = hasLockedRight && !state.placedModules.some(m =>
-          m.id !== id && m.isFreePlacement &&
-          (m.position.x * 100 + (m.freeWidth || m.moduleWidth || 450) / 2) > currentRightEdge
-        );
-        if (isRightmost) {
-          const fixedRight = endX - lockedWallGaps.right!;
-          posX = (fixedRight - halfFW) * 0.01;
-          corrected = true;
-        }
+        // 가구가 잠긴 영역을 침범하면 경계로 밀어냄
+        const minPosX = (effectiveStartX + halfFW) * 0.01;
+        const maxPosX = (effectiveEndX - halfFW) * 0.01;
+        const clampedPosX = Math.max(minPosX, Math.min(maxPosX, posX));
 
-        if (corrected) {
-          finalUpdates = { ...updates, position: { ...(updates.position as any), x: posX } };
+        if (clampedPosX !== posX) {
+          finalUpdates = { ...updates, position: { ...(updates.position as any), x: clampedPosX } };
         }
       }
     }
