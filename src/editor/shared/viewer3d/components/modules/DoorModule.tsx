@@ -1375,7 +1375,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       leftDoorWidth = effectiveColumnWidth - doorGap;
       rightDoorWidth = effectiveColumnWidth - doorGap;
     }
-    
+
+    // EP 앞으로 돌출 시 해당 쪽 도어 너비 축소
+    let leftEpTrimShift = 0;
+    let rightEpTrimShift = 0;
+    if (isFree && storePlacedModule) {
+      const epThickMm = storePlacedModule.endPanelThickness || 18;
+      const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+
+      if (storePlacedModule.hasLeftEndPanel && leftOffset > 0) {
+        leftDoorWidth -= epThickMm;
+        leftEpTrimShift = mmToThreeUnits(epThickMm) / 2; // 좌도어를 오른쪽으로 밀기
+      }
+      if (storePlacedModule.hasRightEndPanel && rightOffset > 0) {
+        rightDoorWidth -= epThickMm;
+        rightEpTrimShift = -mmToThreeUnits(epThickMm) / 2; // 우도어를 왼쪽으로 밀기
+      }
+    }
+
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
@@ -1419,7 +1437,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
-        <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
+        <group position={[leftHingeX + leftEpTrimShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1823,7 +1841,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
-        <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
+        <group position={[rightHingeX + rightEpTrimShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -2230,9 +2248,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
     // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
     const doorGap = 3;
-    const doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
+    let doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
+
+    // EP 앞으로 돌출 시 경첩 반대쪽에서 EP 두께만큼 축소
+    let epTrimShiftX = 0; // 도어 X 위치 보정값
+    if (isFree && storePlacedModule) {
+      const epThickMm = storePlacedModule.endPanelThickness || 18;
+      const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      const hasLeft = storePlacedModule.hasLeftEndPanel && leftOffset > 0;
+      const hasRight = storePlacedModule.hasRightEndPanel && rightOffset > 0;
+
+      if (adjustedHingePosition === 'left') {
+        // 경첩 좌측 → 우측 EP 앞돌출 시 우측에서 줄임
+        if (hasRight) { doorWidth -= epThickMm; epTrimShiftX = -mmToThreeUnits(epThickMm) / 2; }
+      } else {
+        // 경첩 우측 → 좌측 EP 앞돌출 시 좌측에서 줄임
+        if (hasLeft) { doorWidth -= epThickMm; epTrimShiftX = mmToThreeUnits(epThickMm) / 2; }
+      }
+    }
+
     const doorWidthUnits = mmToThreeUnits(doorWidth);
-    
+
     console.log('🚪 싱글 도어 크기:', {
       actualDoorWidth,
       doorWidth,
@@ -2240,17 +2277,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       fallbackColumnWidth: indexing.columnWidth,
       moduleDataId: moduleData?.id
     });
-    
+
     // 조정된 힌지 위치 사용
-    const hingeAxisOffset = adjustedHingePosition === 'left' 
+    const hingeAxisOffset = adjustedHingePosition === 'left'
       ? -doorWidthUnits / 2 + hingeOffsetUnits  // 왼쪽 힌지: 왼쪽 가장자리에서 9mm 안쪽
       : doorWidthUnits / 2 - hingeOffsetUnits;  // 오른쪽 힌지: 오른쪽 가장자리에서 9mm 안쪽
-    
+
     // 도어 위치: 회전축이 힌지 위치에 맞게 조정
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
     return (
-      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
