@@ -4378,32 +4378,6 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
-        {/* 배치방식 */}
-        <div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>배치방식</h3>
-          </div>
-          <BaseControls
-            spaceInfo={spaceInfo}
-            onUpdate={handleSpaceInfoUpdate}
-            disabled={hasSpecialDualFurniture}
-            renderMode="type-only"
-          />
-        </div>
-
-        {/* 바닥마감재 */}
-        <div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>바닥마감재</h3>
-          </div>
-          <FloorFinishControls
-            spaceInfo={spaceInfo}
-            onUpdate={handleSpaceInfoUpdate}
-          />
-        </div>
-
         {/* 도어 셋팅: 자유배치 + 도어 가구 존재 시 */}
         {showDoorSetup && (
           <div className={styles.configSection}>
@@ -4454,6 +4428,32 @@ const Configurator: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* 배치방식 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>배치방식</h3>
+          </div>
+          <BaseControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+            disabled={hasSpecialDualFurniture}
+            renderMode="type-only"
+          />
+        </div>
+
+        {/* 바닥마감재 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>바닥마감재</h3>
+          </div>
+          <FloorFinishControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+          />
+        </div>
 
       </div>
     );
