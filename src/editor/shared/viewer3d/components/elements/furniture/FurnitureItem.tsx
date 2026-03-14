@@ -1151,13 +1151,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 가구 높이 계산 (Y 위치 계산 전에 필요)
-  // 자유배치 키큰장: 프레임 변경에 자동 연동 — internalSpace.height 기반 + 개별 topFrame 보정
+  // 자유배치 키큰장: freeHeight(사용자 지정) 우선 → 없으면 internalSpace.height(프레임 자동 연동)
+  //   + 개별 topFrameThickness delta 보정
   // 자유배치 상/하부장: freeHeight 고정 (프레임 변경과 무관한 독립 높이)
   // 슬롯 기반: actualModuleData.dimensions.height (이미 internalSpace 반영)
   let furnitureHeightMm: number;
   if (placedModule.isFreePlacement && isTallCabinetForY) {
-    // 키큰장: 현재 내경 높이를 기반으로 (글로벌 프레임 변경에 자동 연동)
-    furnitureHeightMm = internalSpace.height;
+    // 키큰장: freeHeight 우선, 없으면 내경 높이 기반
+    furnitureHeightMm = placedModule.freeHeight || internalSpace.height;
     // 개별 가구 상부프레임 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;

@@ -945,12 +945,15 @@ const Room: React.FC<RoomProps> = ({
   //   return () => mat.dispose();
   // }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
 
-  // 하이라이트 material 생성 함수 — MeshBasicMaterial 사용 (BoxWithEdges 2D 투명화 우회)
-  const createHighlightMaterial = useCallback(() => {
+  // 하이라이트 material — 단일 인스턴스 공유 (overlay mesh에서 사용)
+  const highlightOverlayMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
       color: new THREE.Color('#ff3333'),
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.45,
+      depthTest: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
     });
   }, []);
 
@@ -2571,6 +2574,7 @@ const Room: React.FC<RoomProps> = ({
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
                   // 개별 가구 하이라이트 or 서라운드-top 하이라이트 or 기본 top material
                   const isThisTopHighlighted = highlightedFrame === `top-${mod.id}` || highlightedFrame === 'surround-top';
+                  if (highlightedFrame) console.log(`🔴 TOP frame [${mod.id}]:`, { highlightedFrame, key: `top-${mod.id}`, match: isThisTopHighlighted });
                   const topSurrMat = isThisTopHighlighted
                     ? createHighlightMaterial()
                     : (topFrameMaterial ?? createFrameMaterial('top'));
@@ -2580,12 +2584,12 @@ const Room: React.FC<RoomProps> = ({
                   const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
                   const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
                   const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
-                  // 키큰장: 현재 내경 높이 기반 (프레임 변경에 자동 연동)
+                  // 키큰장: freeHeight(사용자 지정) 우선 → 없으면 internalSpaceHeight(프레임 자동 연동)
                   // 상/하부장: freeHeight 고정
                   const modCategory = getModuleCategory(mod);
                   let modFreeHeight: number;
                   if (modCategory === 'full') {
-                    modFreeHeight = internalSpaceHeight;
+                    modFreeHeight = mod.freeHeight || internalSpaceHeight;
                     // 개별 가구 상부프레임 두께 보정
                     if (mod.topFrameThickness !== undefined) {
                       const globalTopFrame = spaceInfo.frameSize?.top || 30;
@@ -2650,83 +2654,42 @@ const Room: React.FC<RoomProps> = ({
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
-                const leftSurrMat = highlightedFrame === 'surround-left'
-                  ? createHighlightMaterial()
-                  : (leftFrameMaterial ?? createFrameMaterial('left'));
+                const leftSurrMat = leftFrameMaterial ?? createFrameMaterial('left');
+                const isLeftHighlighted = highlightedFrame === 'surround-left';
 
                 if (method === 'ep') {
+                  const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                  const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key="free-left-ep"
-                      name="left-surround-ep"
-                      args={[
-                        mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrH,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2),
-                        surrCenterY,
-                        frontZ
-                      ]}
-                      material={leftSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <>
+                      <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
+                        args={epArgs} position={epPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                      {isLeftHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                    </>
                   );
                 }
 
-                // L-shape (겹침 없는 L자):
-                //   측면패널: 18mm(X) × 높이(Y) × 40mm(Z) — 가구 측면에 붙음, 전면패널 뒤쪽
-                //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 가장 앞, 측면패널 가림
-                const SIDE_DEPTH_MM = 40; // 측면패널 Z 깊이 고정 40mm
-                // 측면패널: 가구 바로 옆(minLeftMM - 18/2), 전면패널 뒤쪽(Z- = 벽방향)
+                // L-shape (겹침 없는 L자)
+                const SIDE_DEPTH_MM = 40;
                 const sideX = mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2);
                 const sideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
-                // 전면패널: 가장 앞에서 gap 전체 폭
                 const frontX = mmToThreeUnits(minLeftMM - gapMM / 2);
+                const sideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
+                const sidePos: [number, number, number] = [sideX, surrCenterY, sideZ];
+                const frontArgs: [number, number, number] = [mmToThreeUnits(gapMM), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                const frontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
                 return (
                   <>
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key="free-left-lshape-side"
-                      name="left-surround-lshape-side"
-                      args={[
-                        mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrH,
-                        mmToThreeUnits(SIDE_DEPTH_MM)
-                      ]}
-                      position={[
-                        sideX,
-                        surrCenterY,
-                        sideZ
-                      ]}
-                      material={leftSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key="free-left-lshape-front"
-                      name="left-surround-lshape-front"
-                      args={[
-                        mmToThreeUnits(gapMM),
-                        surrH,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        frontX,
-                        surrCenterY,
-                        frontZ
-                      ]}
-                      material={leftSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
+                      args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
+                      args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    {isLeftHighlighted && (
+                      <>
+                        <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                        <mesh position={frontPos}><boxGeometry args={frontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                      </>
+                    )}
                   </>
                 );
               })()}
@@ -2744,84 +2707,42 @@ const Room: React.FC<RoomProps> = ({
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
-                const rightSurrMat = highlightedFrame === 'surround-right'
-                  ? createHighlightMaterial()
-                  : (rightFrameMaterial ?? createFrameMaterial('right'));
+                const rightSurrMat = rightFrameMaterial ?? createFrameMaterial('right');
+                const isRightHighlighted = highlightedFrame === 'surround-right';
 
                 if (method === 'ep') {
+                  const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                  const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key="free-right-ep"
-                      name="right-surround-ep"
-                      args={[
-                        mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrH,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2),
-                        surrCenterY,
-                        frontZ
-                      ]}
-                      material={rightSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <>
+                      <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
+                        args={epArgs} position={epPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                      {isRightHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                    </>
                   );
                 }
 
-                // L-shape (전면에서 이격 가림, 겹침 없는 L자):
-                //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 전면 전체 폭
-                //   측면패널: 18mm(X) × 높이(Y) × 40mm(Z) — 가구 측면에 붙음, 전면패널 뒤쪽
-                //   전면패널: gap(X) × 높이(Y) × 18mm(Z) — 가장 앞, 측면패널 가림
+                // L-shape
                 const SIDE_DEPTH_MM = 40;
-                // 측면패널: 가구 바로 옆(maxRightMM + 18/2), 전면패널 뒤쪽(Z- = 벽방향)
                 const sideX = mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2);
                 const sideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
-                // 전면패널: 가장 앞에서 gap 전체 폭
                 const frontX = mmToThreeUnits(maxRightMM + gapMM / 2);
+                const rSideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
+                const rSidePos: [number, number, number] = [sideX, surrCenterY, sideZ];
+                const rFrontArgs: [number, number, number] = [mmToThreeUnits(gapMM), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                const rFrontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
                 return (
                   <>
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key="free-right-lshape-side"
-                      name="right-surround-lshape-side"
-                      args={[
-                        mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrH,
-                        mmToThreeUnits(SIDE_DEPTH_MM)
-                      ]}
-                      position={[
-                        sideX,
-                        surrCenterY,
-                        sideZ
-                      ]}
-                      material={rightSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key="free-right-lshape-front"
-                      name="right-surround-lshape-front"
-                      args={[
-                        mmToThreeUnits(gapMM),
-                        surrH,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        frontX,
-                        surrCenterY,
-                        frontZ
-                      ]}
-                      material={rightSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
+                      args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
+                      args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    {isRightHighlighted && (
+                      <>
+                        <mesh position={rSidePos}><boxGeometry args={rSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                        <mesh position={rFrontPos}><boxGeometry args={rFrontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                      </>
+                    )}
                   </>
                 );
               })()}
@@ -2849,60 +2770,29 @@ const Room: React.FC<RoomProps> = ({
                 // 전면패널: gap 전체 폭
                 const frontX = mmToThreeUnits(centerXmm);
                 const isMiddleHighlighted = highlightedFrame === `surround-middle-${idx}`;
-                const frameMat = isMiddleHighlighted
-                  ? createHighlightMaterial()
-                  : (leftFrameMaterial ?? createFrameMaterial('left'));
+                const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
+                const mLSideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
+                const mLSidePos: [number, number, number] = [leftSideX, surrCenterY, leftSideZ];
+                const mRSideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
+                const mRSidePos: [number, number, number] = [rightSideX, surrCenterY, rightSideZ];
+                const mFrontArgs: [number, number, number] = [mmToThreeUnits(gapMM), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                const mFrontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
 
                 return (
                   <group key={`free-middle-surround-${idx}`}>
-                    {/* 좌측 측면패널 */}
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key={`free-mid-lside-${idx}`}
-                      name={`middle-surround-left-side-${idx}`}
-                      args={[
-                        mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrH,
-                        mmToThreeUnits(SIDE_DEPTH_MM)
-                      ]}
-                      position={[leftSideX, surrCenterY, leftSideZ]}
-                      material={frameMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
-                    {/* 우측 측면패널 */}
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key={`free-mid-rside-${idx}`}
-                      name={`middle-surround-right-side-${idx}`}
-                      args={[
-                        mmToThreeUnits(END_PANEL_THICKNESS),
-                        surrH,
-                        mmToThreeUnits(SIDE_DEPTH_MM)
-                      ]}
-                      position={[rightSideX, surrCenterY, rightSideZ]}
-                      material={frameMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
-                    {/* 전면패널 — gap 전체 폭 */}
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key={`free-mid-front-${idx}`}
-                      name={`middle-surround-front-${idx}`}
-                      args={[
-                        mmToThreeUnits(gapMM),
-                        surrH,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[frontX, surrCenterY, frontZ]}
-                      material={frameMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key={`free-mid-lside-${idx}`} name={`middle-surround-left-side-${idx}`}
+                      args={mLSideArgs} position={mLSidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key={`free-mid-rside-${idx}`} name={`middle-surround-right-side-${idx}`}
+                      args={mRSideArgs} position={mRSidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key={`free-mid-front-${idx}`} name={`middle-surround-front-${idx}`}
+                      args={mFrontArgs} position={mFrontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    {isMiddleHighlighted && (
+                      <>
+                        <mesh position={mLSidePos}><boxGeometry args={mLSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                        <mesh position={mRSidePos}><boxGeometry args={mRSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                        <mesh position={mFrontPos}><boxGeometry args={mFrontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                      </>
+                    )}
                   </group>
                 );
               })}
@@ -3716,6 +3606,7 @@ const Room: React.FC<RoomProps> = ({
                   const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
                   // 개별 가구 하이라이트 or 기본 base material
                   const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
+                  if (highlightedFrame) console.log(`🔴 BASE frame [${mod.id}]:`, { highlightedFrame, key: `base-${mod.id}`, match: isThisBaseHighlighted });
                   const baseMat = isThisBaseHighlighted
                     ? createHighlightMaterial()
                     : (baseFrameMaterial ?? createFrameMaterial('base'));
