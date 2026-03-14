@@ -658,18 +658,49 @@ const FreePlacementDropZone: React.FC = () => {
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left - startX > 0.5) {
       const lockedLeft = spaceInfo.lockedWallGaps?.left;
-      const gapWidth = lockedLeft != null ? lockedLeft : bounds[0].left - startX;
-      gaps.push({
-        startX,
-        endX: bounds[0].left,
-        width: Math.round(gapWidth * 10) / 10,
-        centerX: ((startX + bounds[0].left) / 2) * 0.01,
-        centerY: gapLabelY,
-        adjacentModuleId: bounds[0].id,
-        isWallGap: 'left',
-        gapType: 'left-wall',
-        anchorX: startX,
-      });
+      if (lockedLeft != null) {
+        // 잠금 영역: 벽 ~ 잠금 끝
+        const lockEndX = startX + lockedLeft;
+        gaps.push({
+          startX,
+          endX: lockEndX,
+          width: Math.round(lockedLeft * 10) / 10,
+          centerX: ((startX + lockEndX) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: null,
+          isWallGap: 'left',
+          gapType: 'left-wall',
+          anchorX: startX,
+        });
+        // 추가 이격: 잠금 끝 ~ 첫 가구
+        const extraGap = bounds[0].left - lockEndX;
+        if (extraGap > 0.5) {
+          gaps.push({
+            startX: lockEndX,
+            endX: bounds[0].left,
+            width: Math.round(extraGap * 10) / 10,
+            centerX: ((lockEndX + bounds[0].left) / 2) * 0.01,
+            centerY: gapLabelY,
+            adjacentModuleId: bounds[0].id,
+            leftModuleId: null,
+            isWallGap: null,
+            gapType: 'between',
+            anchorX: lockEndX,
+          });
+        }
+      } else {
+        gaps.push({
+          startX,
+          endX: bounds[0].left,
+          width: Math.round((bounds[0].left - startX) * 10) / 10,
+          centerX: ((startX + bounds[0].left) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: bounds[0].id,
+          isWallGap: 'left',
+          gapType: 'left-wall',
+          anchorX: startX,
+        });
+      }
     }
 
     // 가구 사이 갭
@@ -696,18 +727,49 @@ const FreePlacementDropZone: React.FC = () => {
     const lastBound = bounds[bounds.length - 1];
     if (endX - lastBound.right > 0.5) {
       const lockedRight = spaceInfo.lockedWallGaps?.right;
-      const gapWidth = lockedRight != null ? lockedRight : endX - lastBound.right;
-      gaps.push({
-        startX: lastBound.right,
-        endX,
-        width: Math.round(gapWidth * 10) / 10,
-        centerX: ((lastBound.right + endX) / 2) * 0.01,
-        centerY: gapLabelY,
-        adjacentModuleId: lastBound.id,
-        isWallGap: 'right',
-        gapType: 'right-wall',
-        anchorX: endX,
-      });
+      if (lockedRight != null) {
+        const lockStartX = endX - lockedRight;
+        // 추가 이격: 마지막 가구 ~ 잠금 시작
+        const extraGap = lockStartX - lastBound.right;
+        if (extraGap > 0.5) {
+          gaps.push({
+            startX: lastBound.right,
+            endX: lockStartX,
+            width: Math.round(extraGap * 10) / 10,
+            centerX: ((lastBound.right + lockStartX) / 2) * 0.01,
+            centerY: gapLabelY,
+            adjacentModuleId: lastBound.id,
+            leftModuleId: null,
+            isWallGap: null,
+            gapType: 'between',
+            anchorX: lastBound.right,
+          });
+        }
+        // 잠금 영역: 잠금 시작 ~ 벽
+        gaps.push({
+          startX: lockStartX,
+          endX,
+          width: Math.round(lockedRight * 10) / 10,
+          centerX: ((lockStartX + endX) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: null,
+          isWallGap: 'right',
+          gapType: 'right-wall',
+          anchorX: endX,
+        });
+      } else {
+        gaps.push({
+          startX: lastBound.right,
+          endX,
+          width: Math.round((endX - lastBound.right) * 10) / 10,
+          centerX: ((lastBound.right + endX) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: lastBound.id,
+          isWallGap: 'right',
+          gapType: 'right-wall',
+          anchorX: endX,
+        });
+      }
     }
 
     return gaps;
