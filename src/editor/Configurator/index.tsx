@@ -4088,6 +4088,7 @@ const Configurator: React.FC = () => {
             sizeMM: number,
             offset: number,
             onToggle: () => void,
+            onSizeChange: (val: number) => void,
             onOffsetChange: (val: number) => void,
             highlightKey: string,
           ) => (
@@ -4102,9 +4103,22 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 50px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
-                    <span style={{ fontSize: '10px', color: 'var(--theme-text)', padding: '0 2px' }}>{sizeMM}</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={sizeMM || ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
                   </div>
                   <div className={styles.frameItemInput} style={{ flex: 1 }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
@@ -4184,6 +4198,7 @@ const Configurator: React.FC = () => {
                     const d = fs.left;
                     return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.gap || 0, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, gap: v } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
                       'surround-left',
                     )}</React.Fragment>;
@@ -4192,6 +4207,7 @@ const Configurator: React.FC = () => {
                     const d = fs.right;
                     return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.gap || 0, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, gap: v } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
                       'surround-right',
                     )}</React.Fragment>;
@@ -4202,6 +4218,11 @@ const Configurator: React.FC = () => {
                       () => {
                         const newMiddle = [...middleGaps];
                         newMiddle[si.idx] = { ...newMiddle[si.idx], enabled: !newMiddle[si.idx].enabled };
+                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                      },
+                      (v) => {
+                        const newMiddle = [...middleGaps];
+                        newMiddle[si.idx] = { ...newMiddle[si.idx], gap: v };
                         setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
                       },
                       (v) => {
@@ -4233,6 +4254,7 @@ const Configurator: React.FC = () => {
             sizeMM: number,
             offset: number,
             onToggle: () => void,
+            onSizeChange: (val: number) => void,
             onOffsetChange: (val: number) => void,
             highlightKey: string,
           ) => (
@@ -4247,9 +4269,22 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 50px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
-                    <span style={{ fontSize: '10px', color: 'var(--theme-text)', padding: '0 2px' }}>{sizeMM}</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={sizeMM || ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
                   </div>
                   <div className={styles.frameItemInput} style={{ flex: 1 }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
@@ -4333,6 +4368,7 @@ const Configurator: React.FC = () => {
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)프레임',
                     mod.hasTopFrame !== false, mod.topFrameThickness || spaceInfo.frameSize?.top || 18, mod.topFrameOffset || 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
+                    (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                     `top-${mod.id}`,
                   )}</React.Fragment>;
@@ -4346,6 +4382,7 @@ const Configurator: React.FC = () => {
                   return <React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)프레임',
                     mod.hasBase !== false, spaceInfo.baseConfig?.height || 65, mod.baseFrameOffset || 0,
                     () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
+                    (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: v } }),
                     (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
                     `base-${mod.id}`,
                   )}</React.Fragment>;
