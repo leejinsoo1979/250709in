@@ -4289,6 +4289,30 @@ const Configurator: React.FC = () => {
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
               </div>
+              <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
+                <button
+                  style={{
+                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                    background: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
+                    color: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
+                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
+                >
+                  가구기준
+                </button>
+                <button
+                  style={{
+                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                    background: spaceInfo.surroundOffsetBase === 'door' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
+                    color: spaceInfo.surroundOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
+                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
+                >
+                  도어기준
+                </button>
+              </div>
               <div className={styles.subSetting}>
                 {sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
