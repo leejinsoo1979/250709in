@@ -137,7 +137,10 @@ export interface SpaceInfo {
   freeSurround?: FreeSurroundConfig;
 
   // 자유배치 도어 셋업 방식 (글로벌)
-  doorSetupMode?: 'default' | 'frame-cover';
+  doorSetupMode?: 'default' | 'frame-cover' | 'furniture-fit' | 'space-fit';
+  // 공간 레벨 도어 이격거리
+  doorTopGap?: number;
+  doorBottomGap?: number;
 }
 
 // 단내림 설정 인터페이스
