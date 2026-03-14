@@ -132,7 +132,7 @@ const FreePlacementDropZone: React.FC = () => {
     return Math.round(maxGap);
   }, [placedModules, spaceBounds]);
 
-  // ── 균등배치 모드: ON 시 유효공간을 가구 수로 나눠 균등 너비, 이격 0으로 배치 ──
+  // ── 균등배치 모드: ON 시 가구를 이격 없이 왼쪽부터 채움 (원래 너비 상한) ──
   useEffect(() => {
     if (!equalDistribution || !isFreePlacement || freeModules.length === 0) return;
 
@@ -152,15 +152,26 @@ const FreePlacementDropZone: React.FC = () => {
     // 좌→우 정렬 순서
     const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
 
-    // 각 가구를 균등 너비로 이격 없이 빈틈없이 배치
+    // 각 가구의 원래 너비(moduleWidth)를 상한으로 제한
+    // equalWidth가 moduleWidth보다 크면 moduleWidth 사용
+    const widths = sorted.map(mod => {
+      const origWidth = mod.moduleWidth || 450;
+      return Math.min(equalWidth, origWidth);
+    });
+
+    // 이격 없이 왼쪽부터 빈틈없이 배치
+    let currentX = effectiveStartX;
     sorted.forEach((mod, i) => {
-      const centerXmm = effectiveStartX + (i * equalWidth) + (equalWidth / 2);
+      const w = widths[i];
+      const centerXmm = currentX + (w / 2);
       const centerXcm = centerXmm * 0.01;
 
       updatePlacedModule(mod.id, {
-        freeWidth: equalWidth,
+        freeWidth: w,
         position: { ...mod.position, x: centerXcm },
       });
+
+      currentX += w;
     });
   }, [equalDistribution, freeModules.length, isFreePlacement]);
 
