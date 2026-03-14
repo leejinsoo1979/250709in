@@ -2075,9 +2075,8 @@ const Configurator: React.FC = () => {
               // 공간 설정
               if (designFile.spaceConfig) {
                 // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
-                const { lockedWallGaps: _lk, ...restSpaceConfig } = designFile.spaceConfig;
                 const spaceConfig = {
-                  ...restSpaceConfig,
+                  ...designFile.spaceConfig,
                   mainDoorCount: undefined,
                   droppedCeilingDoorCount: undefined,
                   customColumnCount: undefined
@@ -3348,7 +3347,7 @@ const Configurator: React.FC = () => {
                     droppedCeiling: {
                       enabled: true,
                       width: droppedWidth,
-                      dropHeight: 200,
+                      dropHeight: isFreeMode ? 100 : 200,
                       position: 'right'
                     },
                     droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
@@ -3497,8 +3496,10 @@ const Configurator: React.FC = () => {
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
-                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200) : (spaceInfo.height || 2400)}
-                    key={`main-height-${spaceInfo.height || 2400}-${isFreeMode ? spaceInfo.droppedCeiling?.dropHeight : 0}`}
+                    defaultValue={spaceInfo.height || 2400}
+                    key={`main-height-${spaceInfo.height || 2400}`}
+                    readOnly={isFreeMode}
+                    style={isFreeMode ? { opacity: 0.6, cursor: 'default' } : undefined}
                     onChange={(e) => {
                       // 숫자와 빈 문자열만 허용
                       const value = e.target.value;
@@ -3507,45 +3508,31 @@ const Configurator: React.FC = () => {
                       }
                     }}
                     onBlur={(e) => {
+                      if (isFreeMode) return; // 자유배치: 메인구간 높이는 공간설정에서 결정 (읽기전용)
                       const value = e.target.value;
                       const totalHeight = spaceInfo.height || 2400;
                       if (value === '') {
-                        const displayHeight = isFreeMode ? totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200) : totalHeight;
-                        e.target.value = displayHeight.toString();
+                        e.target.value = totalHeight.toString();
                         return;
                       }
 
                       const numValue = parseInt(value);
 
-                      if (isFreeMode) {
-                        // 자유배치: 메인구간 높이 입력 → dropHeight 조정
-                        const newDropHeight = totalHeight - numValue;
-                        const clampedDrop = Math.max(100, Math.min(500, newDropHeight));
-                        const clampedMainH = totalHeight - clampedDrop;
-                        e.target.value = clampedMainH.toString();
-                        handleSpaceInfoUpdate({
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            dropHeight: clampedDrop
-                          }
-                        });
+                      // 슬롯배치: 전체 높이 변경
+                      const minValue = 1800;
+                      const maxValue = 3000;
+                      if (numValue < minValue) {
+                        e.target.value = minValue.toString();
+                        handleSpaceInfoUpdate({ height: minValue });
+                      } else if (numValue > maxValue) {
+                        e.target.value = maxValue.toString();
+                        handleSpaceInfoUpdate({ height: maxValue });
                       } else {
-                        // 슬롯배치: 전체 높이 변경
-                        const minValue = 1800;
-                        const maxValue = 3000;
-                        if (numValue < minValue) {
-                          e.target.value = minValue.toString();
-                          handleSpaceInfoUpdate({ height: minValue });
-                        } else if (numValue > maxValue) {
-                          e.target.value = maxValue.toString();
-                          handleSpaceInfoUpdate({ height: maxValue });
-                        } else {
-                          handleSpaceInfoUpdate({ height: numValue });
-                        }
+                        handleSpaceInfoUpdate({ height: numValue });
                       }
                     }}
                     onKeyDown={(e) => {
+                      if (isFreeMode) return; // 자유배치: 읽기전용
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         (e.target as HTMLInputElement).blur();
@@ -3553,9 +3540,9 @@ const Configurator: React.FC = () => {
                         e.preventDefault();
 
                         const totalHeight = spaceInfo.height || 2400;
-                        const currentValue = parseInt(e.target.value) || (isFreeMode ? totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200) : totalHeight);
-                        const minValue = isFreeMode ? totalHeight - 500 : 1800;
-                        const maxValue = isFreeMode ? totalHeight - 100 : 3000;
+                        const currentValue = parseInt(e.target.value) || totalHeight;
+                        const minValue = 1800;
+                        const maxValue = 3000;
 
                         let newValue;
                         if (e.key === 'ArrowUp') {
@@ -3566,17 +3553,7 @@ const Configurator: React.FC = () => {
 
                         if (newValue !== currentValue) {
                           e.target.value = newValue.toString();
-                          if (isFreeMode) {
-                            handleSpaceInfoUpdate({
-                              droppedCeiling: {
-                                ...spaceInfo.droppedCeiling,
-                                enabled: true,
-                                dropHeight: totalHeight - newValue
-                              }
-                            });
-                          } else {
-                            handleSpaceInfoUpdate({ height: newValue });
-                          }
+                          handleSpaceInfoUpdate({ height: newValue });
                         }
                       }
                     }}
@@ -3684,8 +3661,8 @@ const Configurator: React.FC = () => {
                     min="1800"
                     max="2900"
                     step="10"
-                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-                    key={`dropped-height-${isFreeMode ? spaceInfo.height : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                    key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3697,16 +3674,24 @@ const Configurator: React.FC = () => {
                       const totalHeight = spaceInfo.height || 2400;
 
                       if (isFreeMode) {
-                        // 자유배치: 커튼박스 구간 높이 = 전체 높이 변경
+                        // 자유배치: 커튼박스 높이 = 메인높이 + dropHeight
+                        const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
                         if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                          e.target.value = totalHeight.toString();
+                          e.target.value = currentCurtainH.toString();
                           return;
                         }
-                        const newHeight = parseInt(inputValue);
-                        const minH = 1800, maxH = 3000;
-                        const clamped = Math.max(minH, Math.min(maxH, newHeight));
-                        e.target.value = clamped.toString();
-                        handleSpaceInfoUpdate({ height: clamped });
+                        const newCurtainH = parseInt(inputValue);
+                        // dropHeight = 커튼박스높이 - 메인높이
+                        const newDropHeight = newCurtainH - totalHeight;
+                        const clampedDrop = Math.max(50, Math.min(500, newDropHeight));
+                        e.target.value = (totalHeight + clampedDrop).toString();
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            dropHeight: clampedDrop
+                          }
+                        });
                       } else {
                         // 슬롯배치: 단내림 구간 높이 → dropHeight 조정
                         const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);

@@ -348,7 +348,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     }
     set((state) => {
       // installType 하이픈 문제 수정
-      const processedInfo = { ...info };
+      const { lockedWallGaps: _ignored, ...restInfo } = info;
+      const processedInfo = { ...restInfo };
       if (processedInfo.installType === 'built-in' as any) {
         processedInfo.installType = 'builtin';
       }
