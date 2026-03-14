@@ -2494,3 +2494,38 @@
   }
 }
 
+/* ── Mini Toggle Switch (서라운드/프레임 ON/OFF) ── */
+.miniToggle {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: var(--theme-background-secondary, #ccc);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+}
+
+.miniToggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.miniToggle.miniToggleActive {
+  background: var(--theme-primary);
+}
+
+.miniToggle.miniToggleActive::after {
+  transform: translateX(14px);
+}
+

@@ -4097,11 +4097,8 @@ const Configurator: React.FC = () => {
               <span className={styles.frameItemLabel} style={{ minWidth: '24px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}</span>
               <button
                 onClick={onToggle}
-                className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
-                style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-              >
-                {enabled ? 'ON' : 'OFF'}
-              </button>
+                className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
+              />
               {enabled ? (
                 <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                   <div className={styles.frameItemInput} style={{ flex: 1 }}>
@@ -4247,11 +4244,8 @@ const Configurator: React.FC = () => {
               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}{label}</span>
               <button
                 onClick={onToggle}
-                className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
-                style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-              >
-                {enabled ? 'ON' : 'OFF'}
-              </button>
+                className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
+              />
               {enabled ? (
                 <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                   <div className={styles.frameItemInput} style={{ flex: 1 }}>
