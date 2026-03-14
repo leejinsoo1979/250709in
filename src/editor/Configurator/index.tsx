@@ -4438,7 +4438,7 @@ const Configurator: React.FC = () => {
             <div style={{ marginTop: '8px' }}>
               <div className={doorSettingStyles.doorGapContainer}>
                 <div className={doorSettingStyles.doorGapField}>
-                  <label className={doorSettingStyles.doorGapLabel}>상단 ↑</label>
+                  <label className={doorSettingStyles.doorGapLabel}>상단 ↓</label>
                   <div className={doorSettingStyles.inputWithUnit}>
                     <input type="text" inputMode="numeric" value={doorTopGapInput}
                       onChange={(e) => handleDoorGapChange('doorTopGap', e.target.value)}
@@ -4449,7 +4449,7 @@ const Configurator: React.FC = () => {
                   </div>
                 </div>
                 <div className={doorSettingStyles.doorGapField}>
-                  <label className={doorSettingStyles.doorGapLabel}>하단 ↓</label>
+                  <label className={doorSettingStyles.doorGapLabel}>하단 ↑</label>
                   <div className={doorSettingStyles.inputWithUnit}>
                     <input type="text" inputMode="numeric" value={doorBottomGapInput}
                       onChange={(e) => handleDoorGapChange('doorBottomGap', e.target.value)}
