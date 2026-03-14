@@ -21,6 +21,7 @@ import { useUIStore } from '@/store/uiStore';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, getStandardDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { IoLockClosed, IoLockOpen } from 'react-icons/io5';
+import { isSurroundPanelId } from '@/data/modules/surroundPanels';
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
@@ -55,7 +56,7 @@ const DynamicLine: React.FC<{ points: number[]; color: string }> = ({ points, co
  */
 const FreePlacementDropZone: React.FC = () => {
   const { spaceInfo, setLockedWallGap } = useSpaceConfigStore();
-  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule, lastCustomDimensions, pendingCustomConfig } = useFurnitureStore();
+  const { selectedFurnitureId, placedModules, addModule, updatePlacedModule, lastCustomDimensions, pendingCustomConfig, surroundPanelWidths } = useFurnitureStore();
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
   const equalDistribution = useUIStore(state => state.equalDistribution);
@@ -177,10 +178,48 @@ const FreePlacementDropZone: React.FC = () => {
     });
   }, [equalDistribution, isFreePlacement]);
 
+  // ── 서라운드 패널 자동 배치 (선택 즉시 배치, 클릭 위치 불필요) ──
+  useEffect(() => {
+    if (!selectedFurnitureId || !isSurroundPanelId(selectedFurnitureId)) return;
+    if (!isFreePlacement) return;
+
+    const panelType = selectedFurnitureId.replace('surround-', '') as 'left' | 'right' | 'top';
+    const panelWidth = surroundPanelWidths[panelType] || 40;
+
+    const dims = {
+      width: panelWidth,
+      height: internalSpace.height,
+      depth: spaceInfo.depth,
+    };
+
+    const result = placeFurnitureFree({
+      moduleId: selectedFurnitureId,
+      xPositionMM: 0, // 서라운드 패널은 자동 위치 계산 (placeFurnitureFree 내부에서 무시)
+      spaceInfo,
+      dimensions: dims,
+      existingModules: placedModules,
+      skipCollisionCheck: true,
+    });
+
+    if (result.success && result.module) {
+      addModule(result.module);
+      console.log('✅ [FreePlacement] 서라운드 패널 배치:', result.module.id, panelType);
+    } else {
+      console.warn('❌ [FreePlacement] 서라운드 패널 배치 실패:', result.error);
+    }
+
+    // 배치 후 선택 해제
+    useFurnitureStore.getState().setFurniturePlacementMode(false);
+    useFurnitureStore.getState().setSelectedFurnitureId(null);
+  }, [selectedFurnitureId]);
+
   // 활성 가구 데이터 (클릭 선택 기반 - 자유배치는 currentDragData 미사용)
   const activeModuleId = selectedFurnitureId;
   const activeModuleData = useMemo(() => {
     if (!selectedFurnitureId) return null;
+
+    // 서라운드 패널은 자동 배치이므로 고스트 불필요 → null 반환
+    if (isSurroundPanelId(selectedFurnitureId)) return null;
 
     // 커스터마이징 가구 ID 처리
     if (isCustomizableModuleId(selectedFurnitureId)) {

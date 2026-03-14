@@ -19,6 +19,7 @@ import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
 import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
 import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 
 // 엔드패널 두께 상수
 const END_PANEL_THICKNESS = 18; // mm
@@ -2680,6 +2681,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
       }
     }
+  }
+
+  // ── 서라운드 패널: moduleData 불필요, 전용 메시로 렌더링 ──
+  if (placedModule.isSurroundPanel) {
+    return (
+      <group
+        userData={{ furnitureId: placedModule.id }}
+        position={[placedModule.position.x, placedModule.position.y, placedModule.position.z]}
+        onClick={(e) => {
+          e.stopPropagation();
+          (window as any).__r3fClickHandled = true;
+          useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
+          useUIStore.getState().setSelectedFurnitureId(placedModule.id);
+          useUIStore.getState().openFurnitureEditPopup(placedModule.id);
+        }}
+      >
+        <SurroundPanelMesh placedModule={placedModule} renderMode={renderMode} viewMode={viewMode} />
+      </group>
+    );
   }
 
   // moduleData가 없으면 빈 그룹 반환 (모든 Hook 호출 이후)

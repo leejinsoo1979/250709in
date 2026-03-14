@@ -17,6 +17,8 @@ import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shar
 import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
+import { isSurroundPanelId, getSurroundPanelType, SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
+import { getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 export interface PlaceFurnitureFreeParams {
   moduleId: string;
@@ -44,6 +46,11 @@ export interface PlaceFurnitureFreeResult {
  */
 export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurnitureFreeResult {
   const { moduleId, xPositionMM, spaceInfo, dimensions, existingModules } = params;
+
+  // ── 서라운드 패널 전용 배치 ──
+  if (isSurroundPanelId(moduleId)) {
+    return placeSurroundPanel(moduleId, spaceInfo, dimensions, existingModules);
+  }
 
   const internalSpace = calculateInternalSpace(spaceInfo);
   const moduleData = params.moduleData || getModuleById(moduleId, internalSpace, spaceInfo);
@@ -179,4 +186,95 @@ export function calculateYPosition(
   }
 
   return floorFinish + baseHeightMM * 0.01 + (heightMM * 0.01) / 2;
+}
+
+/**
+ * 서라운드 패널 배치 (좌/우/상단 자동 위치 계산)
+ */
+function placeSurroundPanel(
+  moduleId: string,
+  spaceInfo: SpaceInfo,
+  dimensions: { width: number; height: number; depth: number },
+  existingModules: PlacedModule[]
+): PlaceFurnitureFreeResult {
+  const panelType = getSurroundPanelType(moduleId);
+  if (!panelType) {
+    return { success: false, error: '잘못된 서라운드 패널 ID' };
+  }
+
+  // 중복 배치 방지: 같은 타입 1개만 허용
+  const alreadyPlaced = existingModules.some(
+    m => m.isSurroundPanel && m.surroundPanelType === panelType
+  );
+  if (alreadyPlaced) {
+    return { success: false, error: `${panelType} 패널은 이미 배치되어 있습니다` };
+  }
+
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  const spaceBounds = getInternalSpaceBoundsX(spaceInfo);
+  const panelWidth = dimensions.width; // 사용자 지정 폭
+
+  // 바닥 마감 높이
+  const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+
+  // 내경 높이 (패널 높이)
+  const panelHeight = internalSpace.height;
+  // 패널 깊이 = 공간 깊이
+  const panelDepth = spaceInfo.depth;
+
+  let xMM: number;
+  let yMM: number;
+  let freeW: number;
+  let freeH: number;
+  let freeD: number;
+
+  if (panelType === 'left') {
+    // 좌측 패널: 공간 좌측 벽에 붙임
+    xMM = spaceBounds.startX - panelWidth / 2; // 벽 바로 바깥쪽 (내경 왼쪽 경계 바로 왼쪽)
+    yMM = floorFinishMM + panelHeight / 2;
+    freeW = SURROUND_PANEL_THICKNESS; // 두께 = 가구 너비(X축)
+    freeH = panelHeight;
+    freeD = panelDepth;
+  } else if (panelType === 'right') {
+    // 우측 패널: 공간 우측 벽에 붙임
+    xMM = spaceBounds.endX + panelWidth / 2; // 내경 오른쪽 경계 바로 오른쪽
+    yMM = floorFinishMM + panelHeight / 2;
+    freeW = SURROUND_PANEL_THICKNESS;
+    freeH = panelHeight;
+    freeD = panelDepth;
+  } else {
+    // 상단 패널: 천장에 붙임, 좌우 패널 사이 너비
+    const leftPanel = existingModules.find(m => m.isSurroundPanel && m.surroundPanelType === 'left');
+    const rightPanel = existingModules.find(m => m.isSurroundPanel && m.surroundPanelType === 'right');
+    const leftEdge = leftPanel ? spaceBounds.startX - (leftPanel.surroundPanelWidth || 40) : spaceBounds.startX;
+    const rightEdge = rightPanel ? spaceBounds.endX + (rightPanel.surroundPanelWidth || 40) : spaceBounds.endX;
+    const topWidth = rightEdge - leftEdge;
+
+    xMM = (leftEdge + rightEdge) / 2;
+    yMM = floorFinishMM + panelHeight - panelWidth / 2; // 천장에서 폭/2 아래
+    freeW = topWidth;
+    freeH = SURROUND_PANEL_THICKNESS; // 두께 = Y축 높이
+    freeD = panelDepth;
+  }
+
+  const xThree = xMM * 0.01;
+  const yThree = yMM * 0.01;
+
+  const newModule: PlacedModule = {
+    id: uuidv4(),
+    moduleId,
+    baseModuleType: moduleId,
+    moduleWidth: freeW,
+    position: { x: xThree, y: yThree, z: 0 },
+    rotation: 0,
+    isFreePlacement: true,
+    isSurroundPanel: true,
+    surroundPanelType: panelType,
+    surroundPanelWidth: panelWidth,
+    freeWidth: freeW,
+    freeHeight: freeH,
+    freeDepth: freeD,
+  };
+
+  return { success: true, module: newModule };
 }
