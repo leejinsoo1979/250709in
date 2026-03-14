@@ -1561,7 +1561,7 @@ const FreePlacementDropZone: React.FC = () => {
                           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                           opacity: isLocked ? 1 : 0.5,
                           transition: 'all 0.2s ease',
-                          color: isLocked ? '#e53e3e' : themeColor,
+                          color: isLocked ? '#9b59b6' : themeColor,
                         }}
                         onMouseEnter={(e) => {
                           const el = e.currentTarget as HTMLDivElement;
