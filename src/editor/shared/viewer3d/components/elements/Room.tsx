@@ -20,7 +20,7 @@ import {
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
-import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -2547,7 +2547,6 @@ const Room: React.FC<RoomProps> = ({
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
-          const freeTopEnabled = spaceInfo.freeSurround?.top?.enabled ?? false;
 
           // 자유배치 모듈의 X 범위를 직접 계산 (topStripGroups와 독립적)
           const freeModules = placedModulesFromStore.filter(m => m.isFreePlacement);
@@ -2566,8 +2565,8 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 상부 프레임 스트립 */}
-              {freeTopEnabled && topStripGroups.flatMap((group) => {
+              {/* 상부 프레임 스트립 — 개별 가구의 hasTopFrame에 따라 렌더링 */}
+              {topStripGroups.flatMap((group) => {
                 const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
                 // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
                 const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
@@ -2586,7 +2585,16 @@ const Room: React.FC<RoomProps> = ({
                   const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
                   const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
                   const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
-                  const modFreeHeight = mod.freeHeight || internalSpaceHeight;
+                  let modFreeHeight = mod.freeHeight || internalSpaceHeight;
+
+                  // 개별 가구 상부프레임 두께 변경 시 가구 높이 조정 (FurnitureItem.tsx와 동일 로직)
+                  // 가구 높이가 줄어든 만큼 상부프레임이 늘어나야 함
+                  const modCategory = getModuleCategory(mod);
+                  if ((modCategory === 'full') && mod.topFrameThickness !== undefined) {
+                    const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                    const topFrameDelta = mod.topFrameThickness - globalTopFrame;
+                    modFreeHeight -= topFrameDelta;
+                  }
 
                   // 프레임 높이 = 천장에서 가구 상단까지의 거리
                   // 천장(heightMm) - 받침대(baseFrame) - 가구높이(freeHeight) = ceilingToBaseTop - freeHeight
