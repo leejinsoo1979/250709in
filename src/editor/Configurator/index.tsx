@@ -17,6 +17,7 @@ import { useProjectPermission } from '@/hooks/useProjectPermission';
 import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useHistoryStore } from '@/store/historyStore';
@@ -4242,83 +4243,155 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 상,하부프레임 */}
+        {/* 상,하부프레임 — 가구별 ON/OFF + 앞/뒤 옵셋 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>상,하부프레임</h3>
           </div>
-          <div className={styles.subSetting}>
-            {/* 상부프레임: ON/OFF + 앞/뒤 옵셋 (자유배치 모드) */}
-            {isFreeMode && (() => {
-              const fs = spaceInfo.freeSurround;
-              if (!fs) return null;
-              const topCfg = fs.top;
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                  <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>상</span>
-                  <button
-                    onClick={() => setSpaceInfo({ freeSurround: { ...fs, top: { ...topCfg, enabled: !topCfg.enabled } } })}
-                    className={`${styles.toggleButton} ${topCfg.enabled ? styles.toggleButtonActive : ''}`}
-                    style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-                  >
-                    {topCfg.enabled ? 'ON' : 'OFF'}
-                  </button>
-                  {topCfg.enabled ? (
-                    <>
-                      <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                        <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
-                        <input
-                          type="text" inputMode="numeric"
-                          value={topCfg.offset > 0 ? topCfg.offset : ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame('surround-top')}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v === '' ? 0 : parseInt(v, 10) } } });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                            setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v } } });
-                          }}
-                          className={styles.frameNumberInput}
-                        />
-                      </div>
-                      <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                        <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
-                        <input
-                          type="text" inputMode="numeric"
-                          value={topCfg.offset < 0 ? Math.abs(topCfg.offset) : ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame('surround-top')}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v === '' ? 0 : -parseInt(v, 10) } } });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                            setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v === -0 ? 0 : v } } });
-                          }}
-                          className={styles.frameNumberInput}
-                        />
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              );
-            })()}
-            {/* 하부프레임: 높이/깊이 */}
-            <BaseControls
-              spaceInfo={spaceInfo}
-              onUpdate={handleSpaceInfoUpdate}
-              disabled={hasSpecialDualFurniture}
-              renderMode="placement-only"
-            />
-          </div>
+          {/* 하부프레임 높이/깊이 (글로벌) */}
+          <BaseControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+            disabled={hasSpecialDualFurniture}
+            renderMode="placement-only"
+          />
+          {/* 가구별 상/하부프레임 ON/OFF + 앞/뒤 옵셋 */}
+          {isFreeMode && (() => {
+            const freeMods = placedModules.filter(m => m.isFreePlacement);
+            if (freeMods.length === 0) return null;
+            // X 좌표 기준 좌→우 정렬
+            const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
+            return (
+              <div className={styles.subSetting}>
+                {sorted.map((mod, idx) => {
+                  const cat = getModuleCategory(mod);
+                  const hasTop = cat === 'upper' || cat === 'full';
+                  const hasBase = cat === 'lower' || cat === 'full';
+                  const label = `가구${sorted.length > 1 ? idx + 1 : ''}`;
+                  return (
+                    <div key={mod.id} style={{ padding: '4px 0', borderBottom: idx < sorted.length - 1 ? '1px solid var(--theme-border-light, #eee)' : 'none' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>{label}</span>
+                      {/* 상부프레임 */}
+                      {hasTop && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0' }}>
+                          <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>상</span>
+                          <button
+                            onClick={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                            className={`${styles.toggleButton} ${(mod.hasTopFrame !== false) ? styles.toggleButtonActive : ''}`}
+                            style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
+                          >
+                            {(mod.hasTopFrame !== false) ? 'ON' : 'OFF'}
+                          </button>
+                          {(mod.hasTopFrame !== false) ? (
+                            <>
+                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                                <input
+                                  type="text" inputMode="numeric"
+                                  value={(mod.topFrameOffset || 0) > 0 ? mod.topFrameOffset : ''} placeholder="0"
+                                  onFocus={() => setHighlightedFrame('top')}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d+$/.test(v)) {
+                                      updatePlacedModule(mod.id, { topFrameOffset: v === '' ? 0 : parseInt(v, 10) });
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    setHighlightedFrame(null);
+                                    const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                                    updatePlacedModule(mod.id, { topFrameOffset: v });
+                                  }}
+                                  className={styles.frameNumberInput}
+                                />
+                              </div>
+                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                                <input
+                                  type="text" inputMode="numeric"
+                                  value={(mod.topFrameOffset || 0) < 0 ? Math.abs(mod.topFrameOffset!) : ''} placeholder="0"
+                                  onFocus={() => setHighlightedFrame('top')}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d+$/.test(v)) {
+                                      updatePlacedModule(mod.id, { topFrameOffset: v === '' ? 0 : -parseInt(v, 10) });
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    setHighlightedFrame(null);
+                                    const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                                    updatePlacedModule(mod.id, { topFrameOffset: v === -0 ? 0 : v });
+                                  }}
+                                  className={styles.frameNumberInput}
+                                />
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                      {/* 하부프레임 */}
+                      {hasBase && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0' }}>
+                          <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>하</span>
+                          <button
+                            onClick={() => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) })}
+                            className={`${styles.toggleButton} ${(mod.hasBase !== false) ? styles.toggleButtonActive : ''}`}
+                            style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
+                          >
+                            {(mod.hasBase !== false) ? 'ON' : 'OFF'}
+                          </button>
+                          {(mod.hasBase !== false) ? (
+                            <>
+                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                                <input
+                                  type="text" inputMode="numeric"
+                                  value={(mod.baseFrameOffset || 0) > 0 ? mod.baseFrameOffset : ''} placeholder="0"
+                                  onFocus={() => setHighlightedFrame('base')}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d+$/.test(v)) {
+                                      updatePlacedModule(mod.id, { baseFrameOffset: v === '' ? 0 : parseInt(v, 10) });
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    setHighlightedFrame(null);
+                                    const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                                    updatePlacedModule(mod.id, { baseFrameOffset: v });
+                                  }}
+                                  className={styles.frameNumberInput}
+                                />
+                              </div>
+                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                                <input
+                                  type="text" inputMode="numeric"
+                                  value={(mod.baseFrameOffset || 0) < 0 ? Math.abs(mod.baseFrameOffset!) : ''} placeholder="0"
+                                  onFocus={() => setHighlightedFrame('base')}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d+$/.test(v)) {
+                                      updatePlacedModule(mod.id, { baseFrameOffset: v === '' ? 0 : -parseInt(v, 10) });
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    setHighlightedFrame(null);
+                                    const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                                    updatePlacedModule(mod.id, { baseFrameOffset: v === -0 ? 0 : v });
+                                  }}
+                                  className={styles.frameNumberInput}
+                                />
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {/* 배치방식 */}

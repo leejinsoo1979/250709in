@@ -2570,11 +2570,9 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 상부 프레임 스트립 */}
               {freeTopEnabled && topStripGroups.flatMap((group) => {
-                const freeTopCfg = spaceInfo.freeSurround?.top;
                 const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
                 // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
                 const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
-                const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
                 const topSurrMat = highlightedFrame === 'surround-top'
                   ? createFrameMaterial('surround-top')
                   : (topFrameMaterial ?? createFrameMaterial('top'));
@@ -2582,7 +2580,7 @@ const Room: React.FC<RoomProps> = ({
                 // 각 모듈별 개별 상부프레임 생성
                 const isDoorBase = spaceInfo.surroundOffsetBase === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
-                return group.modules.map((mod) => {
+                return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
                   const bounds = getModuleBoundsX(mod);
                   // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
                   const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
@@ -2598,8 +2596,10 @@ const Room: React.FC<RoomProps> = ({
                   // 프레임 상단 = 천장에 맞추고 아래로 확장
                   const modFrameCenterY = panelStartY + height - modFrameHeight / 2;
 
+                  // 가구별 상부프레임 Z축 옵셋
+                  const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+
                   // 도어기준 + 공간맞춤 도어 + 도어가 있는 가구 → 상부프레임을 도어 두께만큼 뒤로
-                  // (도어가 상부프레임 영역까지 올라와 겹치므로)
                   const DOOR_THICKNESS_MM = 18;
                   const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                   const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
@@ -2618,7 +2618,7 @@ const Room: React.FC<RoomProps> = ({
                       position={[
                         mmToThreeUnits(modCenterXmm),
                         modFrameCenterY,
-                        topZPosition + topZOffset + topFrameZRetract
+                        topZPosition + modTopZOffset + topFrameZRetract
                       ]}
                       material={topSurrMat}
                       renderMode={renderMode}
@@ -3694,13 +3694,15 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {stripGroups.flatMap((group) => {
-                return group.modules.map((mod) => {
+                return group.modules.filter((mod) => mod.hasBase !== false).map((mod) => {
                   const bounds = getBaseFrameBoundsX(mod);
                   const modWidthMM = bounds.right - bounds.left;
                   const modCenterXmm = (bounds.left + bounds.right) / 2;
                   // 하부 섹션 깊이 축소 시 Z 오프셋 적용 (front 방향 축소 → 뒤로 이동)
                   const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
-                  const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM);
+                  // 가구별 하부프레임 Z축 옵셋
+                  const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+                  const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
