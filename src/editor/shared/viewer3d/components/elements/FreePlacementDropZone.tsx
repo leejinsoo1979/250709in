@@ -156,30 +156,25 @@ const FreePlacementDropZone: React.FC = () => {
     const singleCount = isDualArr.filter(d => !d).length;
     const dualCount = isDualArr.filter(d => d).length;
 
-    // 단위 너비 = 유효 공간 / (싱글 수 + 듀얼 수 × 2), 최대폭 제한
+    // 단위 너비 = 유효 공간 / (싱글 수 + 듀얼 수 × 2)
     const MAX_SINGLE = 600;
     const MAX_DUAL = 1200;
     const totalUnits = singleCount + dualCount * 2;
     if (totalUnits === 0) return;
-    const baseUnitWidth = Math.min(MAX_SINGLE, Math.floor(availableWidth / totalUnits));
+    const exactUnitWidth = availableWidth / totalUnits;
+    const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
 
-    // 나머지를 앞쪽 가구부터 1mm씩 분배하여 우측 이격 방지
-    const totalUsed = sorted.reduce((sum, _, i) => {
-      return sum + (isDualArr[i] ? Math.min(baseUnitWidth * 2, MAX_DUAL) : baseUnitWidth);
-    }, 0);
-    const remainder = Math.round(availableWidth - totalUsed);
-
-    // 이격 없이 빈틈없이 배치
+    // 각 가구의 정확한 너비를 소수점으로 계산 후, 누적 반올림으로 정수 배분
     let currentX = effectiveStartX;
-    let distributed = 0;
     sorted.forEach((mod, i) => {
-      let w = isDualArr[i] ? Math.min(baseUnitWidth * 2, MAX_DUAL) : baseUnitWidth;
-      // 나머지 1mm씩 앞쪽 가구에 분배
-      if (distributed < remainder) {
-        w += 1;
-        distributed += 1;
-      }
-      const centerXmm = currentX + (w / 2);
+      const exactW = isDualArr[i] ? Math.min(cappedUnitWidth * 2, MAX_DUAL) : cappedUnitWidth;
+      const nextX = currentX + exactW;
+      // 누적 반올림: 현재 위치와 다음 위치를 반올림하여 정수 너비 산출
+      const roundedCurrentX = Math.round(currentX);
+      const roundedNextX = Math.round(nextX);
+      const w = roundedNextX - roundedCurrentX;
+
+      const centerXmm = roundedCurrentX + (w / 2);
 
       updatePlacedModule(mod.id, {
         freeWidth: w,
@@ -187,7 +182,7 @@ const FreePlacementDropZone: React.FC = () => {
         position: { ...mod.position, x: centerXmm * 0.01 },
       });
 
-      currentX += w;
+      currentX = nextX;
     });
   }, [equalDistribution, isFreePlacement]);
 
