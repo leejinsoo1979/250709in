@@ -4104,8 +4104,8 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                  <div className={styles.frameItemInput} style={{ flex: 3 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
                       value={sizeMM || ''} placeholder="0"
@@ -4121,8 +4121,8 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
                       value={offset !== 0 ? offset : ''} placeholder="0"
@@ -4254,8 +4254,8 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                  <div className={styles.frameItemInput} style={{ flex: 3 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
                       value={sizeMM || ''} placeholder="0"
@@ -4271,8 +4271,8 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
                       value={offset !== 0 ? offset : ''} placeholder="0"
