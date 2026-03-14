@@ -4101,14 +4101,7 @@ const Configurator: React.FC = () => {
                     color: spaceInfo.surroundOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onClick={() => {
-                    console.log('🔧 도어기준 클릭! 현재값:', spaceInfo.surroundOffsetBase);
-                    setSpaceInfo({ surroundOffsetBase: 'door' });
-                    setTimeout(() => {
-                      const s = useSpaceConfigStore.getState().spaceInfo;
-                      console.log('🔧 store 확인:', s.surroundOffsetBase);
-                    }, 100);
-                  }}
+                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
                 >
                   도어기준
                 </button>
