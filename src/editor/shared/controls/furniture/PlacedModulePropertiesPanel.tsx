@@ -3014,19 +3014,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <h5 className={styles.sectionTitle}>좌우 이격거리</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측</label>
-                    <button
-                      onClick={() => updatePlacedModule(currentPlacedModule.id, { freeLeftGapLocked: !currentPlacedModule.freeLeftGapLocked })}
-                      title={currentPlacedModule.freeLeftGapLocked ? '잠금 해제' : '잠금 (너비 변경 시 이격 유지)'}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
-                        fontSize: '13px', lineHeight: 1, color: currentPlacedModule.freeLeftGapLocked ? 'var(--theme-primary, #2196F3)' : 'var(--theme-text-tertiary)',
-                      }}
-                    >
-                      {currentPlacedModule.freeLeftGapLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}
-                    </button>
-                  </div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측{currentPlacedModule.freeLeftGapLocked ? ' \uD83D\uDD12' : ''}</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -3066,19 +3054,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측</label>
-                    <button
-                      onClick={() => updatePlacedModule(currentPlacedModule.id, { freeRightGapLocked: !currentPlacedModule.freeRightGapLocked })}
-                      title={currentPlacedModule.freeRightGapLocked ? '잠금 해제' : '잠금 (너비 변경 시 이격 유지)'}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
-                        fontSize: '13px', lineHeight: 1, color: currentPlacedModule.freeRightGapLocked ? 'var(--theme-primary, #2196F3)' : 'var(--theme-text-tertiary)',
-                      }}
-                    >
-                      {currentPlacedModule.freeRightGapLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}
-                    </button>
-                  </div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측{currentPlacedModule.freeRightGapLocked ? ' \uD83D\uDD12' : ''}</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"

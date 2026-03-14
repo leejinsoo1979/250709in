@@ -1287,37 +1287,76 @@ const FreePlacementDropZone: React.FC = () => {
                 style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999 }}
                 zIndexRange={[9999, 10000]}
               >
-                <div
-                  style={{
-                    background: themeColor,
-                    color: 'white',
-                    padding: '1px 6px',
-                    borderRadius: '3px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                    transition: 'transform 0.15s, box-shadow 0.15s',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.12)';
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-                  }}
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                    e.nativeEvent.stopImmediatePropagation();
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.nativeEvent.stopImmediatePropagation();
-                    handleGapLabelClick(i, gap.width);
-                  }}
-                >
-                  {gap.width}mm
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                  {/* 잠금 아이콘 */}
+                  {gap.adjacentModuleId && (gap.gapType === 'left-wall' || gap.gapType === 'right-wall') && (() => {
+                    const mod = placedModules.find(m => m.id === gap.adjacentModuleId);
+                    if (!mod) return null;
+                    const isLocked = gap.gapType === 'left-wall' ? mod.freeLeftGapLocked : mod.freeRightGapLocked;
+                    return (
+                      <div
+                        style={{
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          lineHeight: 1,
+                          opacity: isLocked ? 1 : 0.5,
+                          transition: 'opacity 0.15s',
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
+                        onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.opacity = '0.5'; }}
+                        onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.nativeEvent.stopImmediatePropagation();
+                          const updates: Record<string, unknown> = {};
+                          if (gap.gapType === 'left-wall') {
+                            updates.freeLeftGapLocked = !isLocked;
+                            if (!isLocked) updates.freeLeftGap = gap.width; // 잠글 때 현재 값 저장
+                          } else {
+                            updates.freeRightGapLocked = !isLocked;
+                            if (!isLocked) updates.freeRightGap = gap.width; // 잠글 때 현재 값 저장
+                          }
+                          updatePlacedModule(gap.adjacentModuleId!, updates);
+                        }}
+                        title={isLocked ? '잠금 해제' : '잠금 (너비 변경 시 이격 유지)'}
+                      >
+                        {isLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}
+                      </div>
+                    );
+                  })()}
+                  {/* 치수 라벨 */}
+                  <div
+                    style={{
+                      background: themeColor,
+                      color: 'white',
+                      padding: '1px 6px',
+                      borderRadius: '3px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      transition: 'transform 0.15s, box-shadow 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.12)';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                    }}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                      handleGapLabelClick(i, gap.width);
+                    }}
+                  >
+                    {gap.width}mm
+                  </div>
                 </div>
               </Html>
             )}
