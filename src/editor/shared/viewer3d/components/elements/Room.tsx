@@ -2574,54 +2574,35 @@ const Room: React.FC<RoomProps> = ({
                     : topBottomFrameHeightMm;
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
 
-                // 모듈별 bounds + freeHeight 계산 후 X좌표 정렬
-                // freeHeight 미설정(0) → internalSpaceHeight를 기본값으로 사용
-                const modulesWithBounds = group.modules.map(m => ({
-                  module: m,
-                  bounds: getModuleBoundsX(m),
-                  freeHeight: m.freeHeight || internalSpaceHeight,
-                }));
-                modulesWithBounds.sort((a, b) => a.bounds.left - b.bounds.left);
+                // 각 모듈별 개별 상부프레임 생성
+                return group.modules.map((mod) => {
+                  const bounds = getModuleBoundsX(mod);
+                  const modWidthMM = bounds.right - bounds.left;
+                  const modCenterXmm = (bounds.left + bounds.right) / 2;
+                  const modFreeHeight = mod.freeHeight || internalSpaceHeight;
 
-                // 인접한 동일 높이 모듈을 세그먼트로 병합 (±1mm 허용)
-                const segments: { leftMM: number; rightMM: number; freeHeight: number }[] = [];
-                for (const item of modulesWithBounds) {
-                  const last = segments[segments.length - 1];
-                  if (last && Math.abs(item.freeHeight - last.freeHeight) <= 1) {
-                    last.rightMM = Math.max(last.rightMM, item.bounds.right);
-                  } else {
-                    segments.push({
-                      leftMM: item.bounds.left,
-                      rightMM: item.bounds.right,
-                      freeHeight: item.freeHeight,
-                    });
-                  }
-                }
-
-                return segments.map((seg, segIdx) => {
-                  const segWidthMM = seg.rightMM - seg.leftMM;
-                  const segCenterXmm = (seg.leftMM + seg.rightMM) / 2;
-                  const gapMM = (seg.freeHeight > 0 && seg.freeHeight < internalSpaceHeight)
-                    ? internalSpaceHeight - seg.freeHeight
+                  const gapMM = (modFreeHeight > 0 && modFreeHeight < internalSpaceHeight)
+                    ? internalSpaceHeight - modFreeHeight
                     : 0;
                   const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
-                  const segFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-                  const segTopY = panelStartY + height - segFrameHeight / 2;
+                  const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
+                  // 프레임 하단 = 가구 상판 위치 (freeHeight)
+                  const modFrameCenterY = panelStartY + mmToThreeUnits(modFreeHeight) + modFrameHeight / 2;
 
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
-                      key={`free-top-strip-${group.id}-seg${segIdx}`}
+                      key={`free-top-strip-${group.id}-${mod.id}`}
                       name="top-frame"
                       args={[
-                        mmToThreeUnits(segWidthMM),
-                        segFrameHeight,
+                        mmToThreeUnits(modWidthMM),
+                        modFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
-                        mmToThreeUnits(segCenterXmm),
-                        segTopY,
+                        mmToThreeUnits(modCenterXmm),
+                        modFrameCenterY,
                         topZPosition + topZOffset
                       ]}
                       material={topFrameMaterial ?? createFrameMaterial('top')}
