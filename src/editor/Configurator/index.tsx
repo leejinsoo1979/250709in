@@ -862,6 +862,7 @@ const Configurator: React.FC = () => {
         spaceConfig.mainDoorCount = undefined;
         spaceConfig.droppedCeilingDoorCount = undefined;
         spaceConfig.customColumnCount = undefined;
+        delete spaceConfig.lockedWallGaps; // 세션 전용
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
         // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
@@ -2074,8 +2075,9 @@ const Configurator: React.FC = () => {
               // 공간 설정
               if (designFile.spaceConfig) {
                 // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
+                const { lockedWallGaps: _lk, ...restSpaceConfig } = designFile.spaceConfig;
                 const spaceConfig = {
-                  ...designFile.spaceConfig,
+                  ...restSpaceConfig,
                   mainDoorCount: undefined,
                   droppedCeilingDoorCount: undefined,
                   customColumnCount: undefined
