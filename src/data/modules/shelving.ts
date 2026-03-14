@@ -129,32 +129,31 @@ const FURNITURE_SPECS = {
  * @param heightThreshold 안전선반 적용 임계 높이 (mm, 기본값: 2300)
  * @returns 안전선반이 적용된 섹션 구성
  */
+const SAFETY_SHELF_MIN_HANGING_HEIGHT = 1000; // 안전선반 적용 최소 hanging 섹션 높이 (mm)
+
 const applySafetyShelf = (
-  sections: SectionConfig[], 
-  totalHeight: number, 
-  safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION,
-  heightThreshold: number = FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD
+  sections: SectionConfig[],
+  totalHeight: number,
+  safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION
 ): SectionConfig[] => {
-  // 높이가 임계값 미만이면 그대로 반환 (2300mm 이상이면 안전선반 적용)
-  if (totalHeight < heightThreshold) return sections;
-  
   // 각 섹션의 시작 위치 계산하면서 안전선반 적용
   let currentPosition = 0;
-  
+
   return sections.map(section => {
     const sectionStart = currentPosition;
     const sectionEnd = currentPosition + section.height;
-    
+
     // 다음 섹션을 위해 위치 업데이트
     currentPosition += section.height;
-    
-    // 이 섹션이 hanging 타입이고, 안전선반 위치가 이 섹션 범위 내에 있는지 확인
-    if (section.type === 'hanging' && 
-        safetyPosition >= sectionStart && 
+
+    // hanging 섹션이고 높이가 1000mm 이상이고 안전선반 위치가 범위 내에 있는지 확인
+    if (section.type === 'hanging' &&
+        section.height >= SAFETY_SHELF_MIN_HANGING_HEIGHT &&
+        safetyPosition >= sectionStart &&
         safetyPosition < sectionEnd) {
-      
+
       const safetyPosInSection = safetyPosition - sectionStart;
-      
+
       // 이미 shelfPositions가 있으면 안전선반 위치 추가 (Type4 바닥판 보존하면서 안전선반 추가)
       if (section.shelfPositions && section.shelfPositions.length > 0) {
         return {
@@ -162,14 +161,14 @@ const applySafetyShelf = (
           shelfPositions: [...section.shelfPositions, safetyPosInSection]
         };
       }
-      
+
       return {
         ...section,
         count: 1, // 안전 선반 1개
         shelfPositions: [safetyPosInSection] // 섹션 내 위치
       };
     }
-    
+
     return section;
   });
 };
@@ -246,7 +245,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE1,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `하단 2단 서랍장 + 상단 옷장 (안전선반 포함)`
       : `하단 2단 서랍장 + 상단 옷장`,
     FURNITURE_SPECS.DEFAULT_DEPTH // 서랍+옷장 복합형 기본 깊이
@@ -267,6 +266,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
 const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.TYPE2_BOTTOM_HEIGHT;
   const topHeight = maxHeight - bottomHeight;
+  const hangingHeight = topHeight; // 안전선반 판단용 (상부 hanging 높이)
 
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
@@ -296,7 +296,7 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `하단 짧은옷장 + 상단 긴옷장 (안전선반 포함)`
       : `하단 짧은옷장 + 상단 긴옷장`
   );
@@ -347,7 +347,7 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE4,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `4단 서랍장 + 옷장 복합형 (안전선반 포함)`
       : `4단 서랍장 + 옷장 복합형`
   );
@@ -402,7 +402,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE1,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `듀얼 하단 2단 서랍장 + 상단 옷장 (안전선반 포함)`
       : `듀얼 하단 2단 서랍장 + 상단 옷장`
   );
@@ -423,6 +423,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.TYPE2_BOTTOM_HEIGHT;
   const topHeight = maxHeight - bottomHeight;
+  const hangingHeight = topHeight; // 안전선반 판단용 (상부 hanging 높이)
   
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
@@ -451,7 +452,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `듀얼 하단 짧은옷장 + 상단 긴옷장 (안전선반 포함)`
       : `듀얼 하단 짧은옷장 + 상단 긴옷장`
   );
@@ -502,7 +503,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE4,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `듀얼 4단 서랍장 + 옷장 복합형 (안전선반 포함)`
       : `듀얼 4단 서랍장 + 옷장 복합형`
   );
@@ -523,6 +524,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const leftDrawerWithFinishHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT; // 좌측 서랍장 + 마감 패널
   const leftHangingHeight = maxHeight - leftDrawerWithFinishHeight; // 좌측 옷장 높이
+  const hangingHeight = leftHangingHeight; // 안전선반 판단용
 
   // 좌측 섹션 (서랍+옷장)에 안전선반 적용
   const leftBaseSections: SectionConfig[] = [
@@ -565,7 +567,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     maxHeight,
     600, // 좌측 서랍+옷장 기본 깊이 (customDepth로 변경 가능)
     FURNITURE_SPECS.COLORS.STYLER,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `좌측 서랍+옷장 + 우측 스타일러장 (안전선반 포함)`
       : `좌측 서랍+옷장 + 우측 스타일러장`,
     600
@@ -593,6 +595,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomSectionHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT; // 하단부 총 높이
   const topHangingHeight = maxHeight - bottomSectionHeight; // 상단 옷장 높이
+  const hangingHeight = topHangingHeight; // 안전선반 판단용
   
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
@@ -603,7 +606,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.PANTSHANGER,
-    maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
+    hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
       ? `좌측 4단서랍+옷장 + 우측 바지걸이+옷장 (통합 안전선반)`
       : `좌측 4단서랍+옷장 + 우측 바지걸이+옷장`
   );
@@ -618,7 +621,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
       hasSharedMiddlePanel: true,
       middlePanelHeight: bottomSectionHeight, // 중단 패널 위치
       // 통합 안전선반: 상부 옷장이 좌우 동일 용도이므로 전체 폭 1개 패널
-      hasSharedSafetyShelf: maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD,
+      hasSharedSafetyShelf: hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT,
       safetyShelfHeight: FURNITURE_SPECS.SAFETY_SHELF_POSITION,
       leftSections: [
         { 
