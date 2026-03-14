@@ -851,8 +851,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               )}
             </FormControl>
 
-            {/* 단내림 설정 - 균등분할 모드에서만 표시 (자유배치 모드에서는 숨김) */}
-            {isEqualDivision && (<FormControl
+            {/* 단내림 설정 */}
+            {(<FormControl
               label={t('space.droppedCeiling')}
               expanded={expandedSections.has('droppedCeiling')}
               onToggle={() => toggleSection('droppedCeiling')}
