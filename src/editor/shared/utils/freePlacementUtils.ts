@@ -186,11 +186,21 @@ export function calcResizedPositionX(
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
   const halfNew = newWidthMm / 2;
 
-  // ── 붙어있는 쪽 고정 (기존 로직) ──
+  // ── 잠긴 이격 영역 경계 계산 ──
+  const lockedGaps = spaceInfo.lockedWallGaps;
+  const effectiveStartX = (lockedGaps?.left != null && lockedGaps.left > 0)
+    ? startX + lockedGaps.left : startX;
+  const effectiveEndX = (lockedGaps?.right != null && lockedGaps.right > 0)
+    ? endX - lockedGaps.right : endX;
+
+  // ── 붙어있는 쪽 고정 ──
   const SNAP_THRESHOLD = 3;
 
-  let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD;
-  let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD;
+  // 잠긴 영역 경계도 "벽"으로 취급
+  let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD
+    || Math.abs(oldBounds.left - effectiveStartX) <= SNAP_THRESHOLD;
+  let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD
+    || Math.abs(oldBounds.right - effectiveEndX) <= SNAP_THRESHOLD;
 
   for (const other of allModules) {
     if (other.id === module.id || !other.isFreePlacement) continue;
@@ -210,22 +220,9 @@ export function calcResizedPositionX(
     newCenterMm = currentCenterMm;
   }
 
+  // 잠긴 영역 침범 방지 (벽처럼 취급)
   let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
-
-  // 잠긴 이격 영역 침범 방지 (벽처럼 취급)
-  const lockedGaps = spaceInfo.lockedWallGaps;
-  if (lockedGaps?.left != null && lockedGaps.left > 0) {
-    const effectiveStart = startX + lockedGaps.left;
-    if (clampedMm - halfNew < effectiveStart) {
-      clampedMm = effectiveStart + halfNew;
-    }
-  }
-  if (lockedGaps?.right != null && lockedGaps.right > 0) {
-    const effectiveEnd = endX - lockedGaps.right;
-    if (clampedMm + halfNew > effectiveEnd) {
-      clampedMm = effectiveEnd - halfNew;
-    }
-  }
+  clampedMm = Math.max(effectiveStartX + halfNew, Math.min(effectiveEndX - halfNew, clampedMm));
 
   return clampedMm * 0.01;
 }
