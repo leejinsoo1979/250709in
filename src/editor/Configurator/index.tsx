@@ -4103,8 +4103,8 @@ const Configurator: React.FC = () => {
                 {enabled ? 'ON' : 'OFF'}
               </button>
               {enabled ? (
-                <>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 70px' }}>
+                <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: 3 }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
@@ -4121,8 +4121,8 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>앞</span>
                     <input
                       type="text" inputMode="numeric"
                       value={offset > 0 ? offset : ''} placeholder="0"
@@ -4138,8 +4138,8 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>뒤</span>
                     <input
                       type="text" inputMode="numeric"
                       value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
@@ -4156,7 +4156,7 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                </>
+                </div>
               ) : null}
             </div>
           );
@@ -4270,8 +4270,8 @@ const Configurator: React.FC = () => {
                 {enabled ? 'ON' : 'OFF'}
               </button>
               {enabled ? (
-                <>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 70px' }}>
+                <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: 3 }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
@@ -4288,8 +4288,8 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>앞</span>
                     <input
                       type="text" inputMode="numeric"
                       value={offset > 0 ? offset : ''} placeholder="0"
@@ -4305,8 +4305,8 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
-                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                  <div className={styles.frameItemInput} style={{ flex: 2 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>뒤</span>
                     <input
                       type="text" inputMode="numeric"
                       value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
@@ -4323,7 +4323,7 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                </>
+                </div>
               ) : null}
             </div>
           );
