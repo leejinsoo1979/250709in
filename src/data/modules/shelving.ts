@@ -135,8 +135,8 @@ const applySafetyShelf = (
   safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION,
   heightThreshold: number = FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD
 ): SectionConfig[] => {
-  // 높이가 임계값 이하면 그대로 반환
-  if (totalHeight <= heightThreshold) return sections;
+  // 높이가 임계값 미만이면 그대로 반환 (2300mm 이상이면 안전선반 적용)
+  if (totalHeight < heightThreshold) return sections;
   
   // 각 섹션의 시작 위치 계산하면서 안전선반 적용
   let currentPosition = 0;
