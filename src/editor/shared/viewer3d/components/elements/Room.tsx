@@ -766,17 +766,6 @@ const Room: React.FC<RoomProps> = ({
     let frameColor = materialConfig?.frameColor || defaultColor;
     let baseFrameTransparent = false;
 
-    const isHighlighted = frameType && highlightedFrame === frameType;
-
-    console.log(`🎨 Creating frame material for ${frameType}:`, {
-      frameType,
-      frameColor,
-      doorTexture: materialConfig?.doorTexture,
-      isHighlighted,
-      viewMode,
-      view2DTheme
-    });
-
     // 테마 색상 매핑
     const themeColorMap: Record<string, string> = {
       green: '#10b981',
@@ -812,25 +801,20 @@ const Room: React.FC<RoomProps> = ({
       olive: '#4C462C'
     };
 
-    // 프레임 강조 색상은 붉은색으로 고정
-    const highlightColor = '#ff3333';
-    const highlightEmissive = 0xff3333 >> 1; // 붉은색의 절반 밝기로 자체발광
-    const highlightOpacity = renderMode === 'wireframe' ? 0.6 : 0.6;
-
     const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(isHighlighted ? highlightColor : frameColor), // 강조 시 색상 변경
+      color: new THREE.Color(frameColor),
       metalness: 0.0,        // 완전 비금속 (도어와 동일)
       roughness: 0.6,        // 도어와 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
-      emissive: new THREE.Color(isHighlighted ? highlightEmissive : 0x000000),  // 강조 시 자체발광 추가
-      emissiveIntensity: isHighlighted ? 1.0 : 0.0, // 강조 시 발광 강도
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted || baseFrameTransparent,  // 강조 시에도 투명하게
-      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D 탑뷰에서 바닥프레임은 완전 투명
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || baseFrameTransparent,
+      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : 1.0,
     });
 
     // 프레임 텍스처 적용 (frameTexture만 사용)
     const frameTextureUrl = materialConfig?.frameTexture;
-    const shouldApplyTexture = !isHighlighted &&
+    const shouldApplyTexture =
       frameTextureUrl &&
       !(viewMode === '2D' && (frameType === 'top' || frameType === 'base'));
 
@@ -887,7 +871,7 @@ const Room: React.FC<RoomProps> = ({
     }
 
     return material;
-  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color, invalidate]);
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color, invalidate]);
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
@@ -907,7 +891,7 @@ const Room: React.FC<RoomProps> = ({
   const [, forceUpdate] = useState(0);
   const triggerRerender = useCallback(() => forceUpdate(v => v + 1), []);
 
-  const frameDeps = [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame] as const;
+  const frameDeps = [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture] as const;
 
   useEffect(() => {
     const mat = createFrameMaterial('base', triggerRerender);
@@ -961,9 +945,15 @@ const Room: React.FC<RoomProps> = ({
   //   return () => mat.dispose();
   // }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
 
-  // 하이라이트 전용 공유 material (개별 가구 프레임용)
+  // 하이라이트 전용 공유 material (프레임 + 서라운드 모두 지원)
   const highlightFrameMaterial = useMemo(() => {
-    if (!highlightedFrame || !highlightedFrame.startsWith('top-') && !highlightedFrame.startsWith('base-') && highlightedFrame !== 'surround-top') return null;
+    if (!highlightedFrame) return null;
+    // top-*, base-*, surround-top, surround-left, surround-right, surround-middle-* 모두 지원
+    const isHighlightTarget =
+      highlightedFrame.startsWith('top-') ||
+      highlightedFrame.startsWith('base-') ||
+      highlightedFrame.startsWith('surround-');
+    if (!isHighlightTarget) return null;
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color('#ff3333'),
       metalness: 0.0,
@@ -2658,8 +2648,8 @@ const Room: React.FC<RoomProps> = ({
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
-                const leftSurrMat = highlightedFrame === 'surround-left'
-                  ? createFrameMaterial('surround-left')
+                const leftSurrMat = highlightedFrame === 'surround-left' && highlightFrameMaterial
+                  ? highlightFrameMaterial
                   : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 if (method === 'ep') {
@@ -2751,8 +2741,8 @@ const Room: React.FC<RoomProps> = ({
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
-                const rightSurrMat = highlightedFrame === 'surround-right'
-                  ? createFrameMaterial('surround-right')
+                const rightSurrMat = highlightedFrame === 'surround-right' && highlightFrameMaterial
+                  ? highlightFrameMaterial
                   : (rightFrameMaterial ?? createFrameMaterial('right'));
 
                 if (method === 'ep') {
@@ -2854,8 +2844,8 @@ const Room: React.FC<RoomProps> = ({
                 // 전면패널: gap 전체 폭
                 const frontX = mmToThreeUnits(centerXmm);
                 const isMiddleHighlighted = highlightedFrame === `surround-middle-${idx}`;
-                const frameMat = isMiddleHighlighted
-                  ? createFrameMaterial(`surround-middle-${idx}`)
+                const frameMat = isMiddleHighlighted && highlightFrameMaterial
+                  ? highlightFrameMaterial
                   : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 return (
