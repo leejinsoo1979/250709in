@@ -1728,6 +1728,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const hasContent = !!elements;
       const subMeshes: React.ReactNode[] = [];
 
+      // 비움(elements === undefined) → 패널/내부요소 모두 스킵
+      if (!hasContent) {
+        return;
+      }
+
       // 측판 (좌/우)
       subMeshes.push(
         <BoxWithEdges
@@ -2281,12 +2286,19 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             view2DDirection,
           } as const;
 
+          // 비움(elements === undefined) 영역은 조절발 제거
+          const leftDeleted = !hs.leftElements;
+          const centerDeleted = !hs.centerElements;
+          const rightDeleted = !hs.rightElements;
+
           return (
             <group position={[footAlignOffset, 0, 0]}>
-              <group position={[leftCX, 0, leftFZ]}>
-                <AdjustableFootsRenderer width={leftOuterW} depth={leftFD} {...footProps} />
-              </group>
-              {is3Split && (() => {
+              {!leftDeleted && (
+                <group position={[leftCX, 0, leftFZ]}>
+                  <AdjustableFootsRenderer width={leftOuterW} depth={leftFD} {...footProps} />
+                </group>
+              )}
+              {is3Split && !centerDeleted && (() => {
                 const centerCX = -footWidth / 2 + leftOuterW + centerOuterW / 2;
                 const { fd: centerFD, fz: centerFZ } = getFootDepth('center');
                 return (
@@ -2295,9 +2307,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                   </group>
                 );
               })()}
-              <group position={[rightCX, 0, rightFZ]}>
-                <AdjustableFootsRenderer width={rightOuterW} depth={rightFD} {...footProps} />
-              </group>
+              {!rightDeleted && (
+                <group position={[rightCX, 0, rightFZ]}>
+                  <AdjustableFootsRenderer width={rightOuterW} depth={rightFD} {...footProps} />
+                </group>
+              )}
             </group>
           );
         }
