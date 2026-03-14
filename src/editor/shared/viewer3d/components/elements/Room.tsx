@@ -945,15 +945,8 @@ const Room: React.FC<RoomProps> = ({
   //   return () => mat.dispose();
   // }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
 
-  // 하이라이트 전용 공유 material (프레임 + 서라운드 모두 지원)
-  const highlightFrameMaterial = useMemo(() => {
-    if (!highlightedFrame) return null;
-    // top-*, base-*, surround-top, surround-left, surround-right, surround-middle-* 모두 지원
-    const isHighlightTarget =
-      highlightedFrame.startsWith('top-') ||
-      highlightedFrame.startsWith('base-') ||
-      highlightedFrame.startsWith('surround-');
-    if (!isHighlightTarget) return null;
+  // 하이라이트 material 생성 함수 — 호출마다 새 인스턴스 반환 (R3F material 변경 감지 보장)
+  const createHighlightMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color('#ff3333'),
       metalness: 0.0,
@@ -964,7 +957,7 @@ const Room: React.FC<RoomProps> = ({
       transparent: true,
       opacity: 0.6,
     });
-  }, [highlightedFrame]);
+  }, []);
 
   // MaterialFactory를 사용한 재질 생성 (자동 캐싱으로 성능 최적화)
   const frontToBackGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
@@ -2584,8 +2577,8 @@ const Room: React.FC<RoomProps> = ({
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
                   // 개별 가구 하이라이트 or 서라운드-top 하이라이트 or 기본 top material
                   const isThisTopHighlighted = highlightedFrame === `top-${mod.id}` || highlightedFrame === 'surround-top';
-                  const topSurrMat = isThisTopHighlighted && highlightFrameMaterial
-                    ? highlightFrameMaterial
+                  const topSurrMat = isThisTopHighlighted
+                    ? createHighlightMaterial()
                     : (topFrameMaterial ?? createFrameMaterial('top'));
                   const bounds = getModuleBoundsX(mod);
                   // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
@@ -2648,8 +2641,8 @@ const Room: React.FC<RoomProps> = ({
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
-                const leftSurrMat = highlightedFrame === 'surround-left' && highlightFrameMaterial
-                  ? highlightFrameMaterial
+                const leftSurrMat = highlightedFrame === 'surround-left'
+                  ? createHighlightMaterial()
                   : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 if (method === 'ep') {
@@ -2741,8 +2734,8 @@ const Room: React.FC<RoomProps> = ({
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
-                const rightSurrMat = highlightedFrame === 'surround-right' && highlightFrameMaterial
-                  ? highlightFrameMaterial
+                const rightSurrMat = highlightedFrame === 'surround-right'
+                  ? createHighlightMaterial()
                   : (rightFrameMaterial ?? createFrameMaterial('right'));
 
                 if (method === 'ep') {
@@ -2844,8 +2837,8 @@ const Room: React.FC<RoomProps> = ({
                 // 전면패널: gap 전체 폭
                 const frontX = mmToThreeUnits(centerXmm);
                 const isMiddleHighlighted = highlightedFrame === `surround-middle-${idx}`;
-                const frameMat = isMiddleHighlighted && highlightFrameMaterial
-                  ? highlightFrameMaterial
+                const frameMat = isMiddleHighlighted
+                  ? createHighlightMaterial()
                   : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 return (
@@ -3711,8 +3704,8 @@ const Room: React.FC<RoomProps> = ({
                   const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
                   // 개별 가구 하이라이트 or 기본 base material
                   const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
-                  const baseMat = isThisBaseHighlighted && highlightFrameMaterial
-                    ? highlightFrameMaterial
+                  const baseMat = isThisBaseHighlighted
+                    ? createHighlightMaterial()
                     : (baseFrameMaterial ?? createFrameMaterial('base'));
                   return (
                     <BoxWithEdges
