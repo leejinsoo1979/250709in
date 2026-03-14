@@ -3721,6 +3721,39 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* 커튼박스 마감 버튼 (자유배치 전용) */}
+            {isFreeMode && (() => {
+              const fs = spaceInfo.freeSurround;
+              const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
+              const hasFreeModules = placedModules.some(m => m.isFreePlacement && !m.isSurroundPanel);
+              return (
+                <button
+                  className={`${styles.toggleButton} ${isSurroundActive ? styles.toggleButtonActive : ''}`}
+                  disabled={!hasFreeModules}
+                  style={{ width: '100%', marginTop: '8px' }}
+                  onClick={() => {
+                    if (isSurroundActive) {
+                      setSpaceInfo({
+                        freeSurround: {
+                          left: { ...fs!.left, enabled: false },
+                          top: { ...fs!.top, enabled: false },
+                          right: { ...fs!.right, enabled: false },
+                          middle: fs!.middle?.map(m => ({ ...m, enabled: false })),
+                        }
+                      });
+                    } else {
+                      const result = generateSurround(spaceInfo, placedModules);
+                      if (result.success && result.config) {
+                        setSpaceInfo({ freeSurround: result.config });
+                      }
+                    }
+                  }}
+                >
+                  {isSurroundActive ? '커튼박스 마감 해제' : '커튼박스 마감'}
+                </button>
+              );
+            })()}
           </div>
         )}
 

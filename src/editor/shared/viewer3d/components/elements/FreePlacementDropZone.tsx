@@ -22,7 +22,7 @@ import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey,
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { IoLockClosed, IoLockOpen } from 'react-icons/io5';
 import { isSurroundPanelId } from '@/data/modules/surroundPanels';
-import { generateSurround } from '@/editor/shared/utils/surroundGenerator';
+
 
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
@@ -1455,74 +1455,6 @@ const FreePlacementDropZone: React.FC = () => {
           <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
         </mesh>
       ) : null}
-
-      {/* 커튼박스 구간 + 버튼 (구간분할 활성 + 가구 배치됨 + 서라운드 미생성) */}
-      {(() => {
-        if (!spaceInfo.droppedCeiling?.enabled) return null;
-        const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
-        if (freeModsForBtn.length === 0) return null;
-
-        // 서라운드가 이미 활성화되었는지 확인
-        const fs = spaceInfo.freeSurround;
-        const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
-        if (isSurroundActive) return null;
-
-        const pos = spaceInfo.droppedCeiling.position || 'right';
-        const totalWidth = spaceInfo.width || 2400;
-        const halfW = totalWidth / 2;
-        const curtainW = spaceInfo.droppedCeiling.width || 150;
-
-        const curtainCenterX = pos === 'right'
-          ? (halfW - curtainW / 2) * 0.01
-          : (-halfW + curtainW / 2) * 0.01;
-        const curtainCenterY = ((spaceInfo.height || 2400) * 0.01) / 2;
-
-        return (
-          <Html
-            position={[curtainCenterX, curtainCenterY, guideZPosition + 0.02]}
-            center
-            zIndexRange={[16000, 16001]}
-            style={{ pointerEvents: 'auto', background: 'none' }}
-          >
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                const result = generateSurround(spaceInfo, placedModules);
-                if (result.success && result.config) {
-                  setSpaceInfo({ freeSurround: result.config });
-                }
-              }}
-              style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(99, 102, 241, 0.85)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                userSelect: 'none',
-                lineHeight: 1,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.15)';
-                e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.85)';
-              }}
-              title="서라운드 마감"
-            >
-              +
-            </div>
-          </Html>
-        );
-      })()}
 
       {!isDraggingPlaced && remainingGaps.map((gap, i) => {
         const lineColor = themeColor;
