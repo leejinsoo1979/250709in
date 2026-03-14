@@ -4671,6 +4671,7 @@ const Configurator: React.FC = () => {
         <TabBar
           onTabSwitch={handleTabSwitch}
           onTabClose={handleTabClose}
+          onNewDesign={handleNewDesign}
         />
       )}
 

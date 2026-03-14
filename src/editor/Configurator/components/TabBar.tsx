@@ -5,9 +5,10 @@ import styles from './TabBar.module.css';
 interface TabBarProps {
   onTabSwitch: (tab: EditorTab) => void;
   onTabClose: (tab: EditorTab) => void;
+  onNewDesign?: () => void;
 }
 
-const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose }) => {
+const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign }) => {
   const openTabs = useUIStore((s) => s.openTabs);
   const activeTabId = useUIStore((s) => s.activeTabId);
 
@@ -43,6 +44,18 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose }) => {
           </button>
         </div>
       ))}
+      {onNewDesign && (
+        <button
+          className={styles.addTab}
+          onClick={onNewDesign}
+          title="새 디자인 추가"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M5 1V9M1 5H9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          <span>디자인</span>
+        </button>
+      )}
     </div>
   );
 };

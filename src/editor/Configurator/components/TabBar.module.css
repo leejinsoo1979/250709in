@@ -121,6 +121,30 @@
   color: var(--theme-text, #24292f);
 }
 
+/* + 디자인 버튼 */
+.addTab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-muted, #8c959f);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+}
+
+.addTab:hover {
+  background: var(--theme-background-secondary, #f6f8fa);
+  color: var(--theme-primary, #21b691);
+}
+
 /* 모바일에서는 탭 바 숨김 */
 @media (max-width: 767px) {
   .tabBar {
