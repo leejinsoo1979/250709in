@@ -164,15 +164,15 @@ const FreePlacementDropZone: React.FC = () => {
     const exactUnitWidth = availableWidth / totalUnits;
     const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
 
-    // 각 가구의 정확한 너비를 소수점으로 계산 후, 누적 반올림으로 정수 배분
+    // 각 가구의 정확한 너비를 소수점 1자리(0.1mm)로 균등 배분
     let currentX = effectiveStartX;
     sorted.forEach((mod, i) => {
       const exactW = isDualArr[i] ? Math.min(cappedUnitWidth * 2, MAX_DUAL) : cappedUnitWidth;
       const nextX = currentX + exactW;
-      // 누적 반올림: 현재 위치와 다음 위치를 반올림하여 정수 너비 산출
-      const roundedCurrentX = Math.round(currentX);
-      const roundedNextX = Math.round(nextX);
-      const w = roundedNextX - roundedCurrentX;
+      // 0.1mm 단위로 반올림
+      const roundedCurrentX = Math.round(currentX * 10) / 10;
+      const roundedNextX = Math.round(nextX * 10) / 10;
+      const w = Math.round((roundedNextX - roundedCurrentX) * 10) / 10;
 
       const centerXmm = roundedCurrentX + (w / 2);
 
