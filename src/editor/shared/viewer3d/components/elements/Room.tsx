@@ -2825,11 +2825,6 @@ const Room: React.FC<RoomProps> = ({
                   ? mmToThreeUnits(-spaceHalfW + dcWidthMM / 2)
                   : mmToThreeUnits(spaceHalfW - dcWidthMM / 2);
 
-                // 경계면 X (메인구간과 접하는 면)
-                const borderX = dcPos === 'left'
-                  ? mmToThreeUnits(-spaceHalfW + dcWidthMM - panelThickMM / 2)
-                  : mmToThreeUnits(spaceHalfW - dcWidthMM + panelThickMM / 2);
-
                 const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
 
                 // 전면패널: 가구 앞면 위치 (surroundZPosition 사용)
@@ -2837,25 +2832,14 @@ const Room: React.FC<RoomProps> = ({
                 const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
                 const frontPos: [number, number, number] = [dcCenterX, panelCenterY, frontZ];
 
-                // 경계면 측면패널: 벽(뒤)에서 가구 앞면까지 전체 깊이
-                const sideDepthMM = furnitureDepthMm;
-                const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, mmToThreeUnits(sideDepthMM)];
-                const sideCenterZ = furnitureZOffset; // 가구 깊이 중심
-                const sidePos: [number, number, number] = [borderX, panelCenterY, sideCenterZ];
-
                 const isCBHighlighted = highlightedFrame === 'curtain-box-finish';
 
                 return (
                   <group key="curtain-box-finish">
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-front"
                       args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-side"
-                      args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isCBHighlighted && (
-                      <>
-                        <mesh position={frontPos}><boxGeometry args={frontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
-                        <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
-                      </>
+                      <mesh position={frontPos}><boxGeometry args={frontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
                     )}
                   </group>
                 );
