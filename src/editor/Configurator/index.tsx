@@ -4071,16 +4071,14 @@ const Configurator: React.FC = () => {
           if (!fs) return null;
           const middleGaps = fs.middle || [];
 
-          // 서라운드 목록: 좌 → 중간들 → 상 → 우 (좌→우 순서)
+          // 서라운드 목록: 좌 → 중간들 → 우 (좌→우 순서)
           type SurroundItem =
             | { kind: 'left' }
             | { kind: 'right' }
-            | { kind: 'top' }
             | { kind: 'middle'; idx: number };
           const surroundItems: SurroundItem[] = [];
           surroundItems.push({ kind: 'left' });
           middleGaps.forEach((_m, i) => surroundItems.push({ kind: 'middle', idx: i }));
-          surroundItems.push({ kind: 'top' });
           surroundItems.push({ kind: 'right' });
 
           const renderOffsetRow = (
@@ -4093,7 +4091,7 @@ const Configurator: React.FC = () => {
             highlightKey: string,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num}</span>
+              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num > 0 ? num : ''}</span>
               <button
                 onClick={onToggle}
                 className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
@@ -4193,14 +4191,6 @@ const Configurator: React.FC = () => {
                       'surround-right',
                     )}</React.Fragment>;
                   }
-                  if (si.kind === 'top') {
-                    const d = fs.top;
-                    return <React.Fragment key="surround-top">{renderOffsetRow(num, '서라운드', d.enabled, d.offset,
-                      () => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, enabled: !d.enabled } } }),
-                      (v) => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, offset: v } } }),
-                      'surround-top',
-                    )}</React.Fragment>;
-                  }
                   if (si.kind === 'middle') {
                     const midCfg = middleGaps[si.idx];
                     return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(num, '서라운드', midCfg.enabled, midCfg.offset || 0,
@@ -4241,7 +4231,7 @@ const Configurator: React.FC = () => {
             highlightKey: string,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num}</span>
+              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num > 0 ? num : ''}</span>
               <button
                 onClick={onToggle}
                 className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
