@@ -185,8 +185,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   console.log('🎨🎨🎨 DoorModule materialConfig:', {
     doorTexture: materialConfig.doorTexture,
+    interiorTexture: materialConfig.interiorTexture,
     doorColor: materialConfig.doorColor,
-    propTextureUrl: textureUrl
+    propTextureUrl: textureUrl,
+    doorTexture_equals_interiorTexture: materialConfig.doorTexture === materialConfig.interiorTexture
   });
 
   // 색상 설정: color prop이 있으면 사용, 없으면 현재 spaceInfo의 도어 색상 사용
@@ -516,8 +518,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   useEffect(() => {
     // 도어 전용 텍스처만 사용 (내부재질 텍스처로 fallback하지 않음)
     // doorTexture가 명시적으로 설정된 경우에만 텍스처 적용, 그렇지 않으면 doorColor(단색) 사용
-    const doorTextureUrl = (materialConfig.doorTexture && materialConfig.doorTexture !== materialConfig.interiorTexture)
-      ? materialConfig.doorTexture : undefined;
+    const doorTextureUrl = materialConfig.doorTexture || undefined;
     const effectiveTextureUrl = doorTextureUrl;
 
     console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
