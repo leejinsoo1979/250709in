@@ -961,6 +961,21 @@ const Room: React.FC<RoomProps> = ({
   //   return () => mat.dispose();
   // }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
 
+  // 하이라이트 전용 공유 material (개별 가구 프레임용)
+  const highlightFrameMaterial = useMemo(() => {
+    if (!highlightedFrame || !highlightedFrame.startsWith('top-') && !highlightedFrame.startsWith('base-') && highlightedFrame !== 'surround-top') return null;
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#ff3333'),
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+      emissive: new THREE.Color(0xff3333 >> 1),
+      emissiveIntensity: 1.0,
+      transparent: true,
+      opacity: 0.6,
+    });
+  }, [highlightedFrame]);
+
   // MaterialFactory를 사용한 재질 생성 (자동 캐싱으로 성능 최적화)
   const frontToBackGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
   const horizontalGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
@@ -2578,12 +2593,10 @@ const Room: React.FC<RoomProps> = ({
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
                   // 개별 가구 하이라이트 or 서라운드-top 하이라이트 or 기본 top material
-                  const topModHighlightKey = `top-${mod.id}`;
-                  const topSurrMat = highlightedFrame === topModHighlightKey
-                    ? createFrameMaterial(topModHighlightKey)
-                    : highlightedFrame === 'surround-top'
-                      ? createFrameMaterial('surround-top')
-                      : (topFrameMaterial ?? createFrameMaterial('top'));
+                  const isThisTopHighlighted = highlightedFrame === `top-${mod.id}` || highlightedFrame === 'surround-top';
+                  const topSurrMat = isThisTopHighlighted && highlightFrameMaterial
+                    ? highlightFrameMaterial
+                    : (topFrameMaterial ?? createFrameMaterial('top'));
                   const bounds = getModuleBoundsX(mod);
                   // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
                   const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
@@ -3707,9 +3720,9 @@ const Room: React.FC<RoomProps> = ({
                   const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
                   const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
                   // 개별 가구 하이라이트 or 기본 base material
-                  const baseModHighlightKey = `base-${mod.id}`;
-                  const baseMat = highlightedFrame === baseModHighlightKey
-                    ? createFrameMaterial(baseModHighlightKey)
+                  const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
+                  const baseMat = isThisBaseHighlighted && highlightFrameMaterial
+                    ? highlightFrameMaterial
                     : (baseFrameMaterial ?? createFrameMaterial('base'));
                   return (
                     <BoxWithEdges
