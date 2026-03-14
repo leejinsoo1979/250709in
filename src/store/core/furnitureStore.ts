@@ -270,8 +270,40 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // (callback set()은 R3F Canvas 내부 컴포넌트 re-render를 트리거하지 않는 문제가 있음)
     const state = get();
 
+    // ── 잠긴 이격 강제 보정 ──
+    // position이 변경될 때, 잠긴 이격이 있으면 해당 쪽 위치를 강제 보정
+    let finalUpdates = updates;
+    const existingModule = state.placedModules.find(m => m.id === id);
+    if (existingModule?.isFreePlacement && updates.position) {
+      const merged = { ...existingModule, ...updates };
+      const hasLockedLeft = merged.freeLeftGapLocked && merged.freeLeftGap != null;
+      const hasLockedRight = merged.freeRightGapLocked && merged.freeRightGap != null;
+
+      if (hasLockedLeft || hasLockedRight) {
+        const spaceInfo = useSpaceConfigStore.getState();
+        const totalWidth = spaceInfo.width || 2400;
+        const halfW = totalWidth / 2;
+        const startX = -halfW;
+        const endX = halfW;
+        const widthMm = merged.freeWidth || merged.moduleWidth || 450;
+        const halfFW = widthMm / 2;
+        let posX = (updates.position as any).x as number;
+
+        if (hasLockedLeft) {
+          const fixedLeft = startX + (merged.freeLeftGap as number);
+          posX = (fixedLeft + halfFW) * 0.01;
+        }
+        if (hasLockedRight) {
+          const fixedRight = endX - (merged.freeRightGap as number);
+          posX = (fixedRight - halfFW) * 0.01;
+        }
+
+        finalUpdates = { ...updates, position: { ...(updates.position as any), x: posX } };
+      }
+    }
+
     // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
-    const checkTarget = state.placedModules.find(m => m.id === id);
+    const checkTarget = existingModule || state.placedModules.find(m => m.id === id);
     if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
       const targetModule = checkTarget;
       if (targetModule) {
@@ -340,7 +372,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           if (modulesToReplace.length === 0) {
             const newModules = state.placedModules.map(module =>
               module.id === id
-                ? { ...module, ...updates }
+                ? { ...module, ...finalUpdates }
                 : module
             );
             set({ placedModules: newModules });
@@ -354,7 +386,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             const filteredModules = state.placedModules.filter(m => !replaceIds.includes(m.id));
             const newModules = filteredModules.map(module =>
               module.id === id
-                ? { ...module, ...updates }
+                ? { ...module, ...finalUpdates }
                 : module
             );
             set({ placedModules: newModules });
@@ -368,7 +400,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // 충돌이 없으면 일반 업데이트
     const newModules = state.placedModules.map(module => {
       if (module.id === id) {
-        return { ...module, ...updates };
+        return { ...module, ...finalUpdates };
       }
       return module;
     });

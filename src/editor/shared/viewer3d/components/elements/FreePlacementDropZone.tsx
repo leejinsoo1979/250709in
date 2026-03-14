@@ -442,10 +442,8 @@ const FreePlacementDropZone: React.FC = () => {
     // full 카테고리만 단내림 높이 적용 (placeFurnitureFree와 동일 로직)
     if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined
       && activeCategory === 'full') {
-      console.log('👻 [ghostEffectiveHeight] 단내림 적용:', ghostDroppedZone.droppedInternalHeight, 'from', activeDimensions.height);
       return ghostDroppedZone.droppedInternalHeight;
     }
-    console.log('👻 [ghostEffectiveHeight] 기본 높이:', activeDimensions.height, 'zone:', ghostDroppedZone.zone, 'category:', activeCategory);
     return activeDimensions.height;
   }, [activeDimensions, ghostDroppedZone, activeCategory]);
 
