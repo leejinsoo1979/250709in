@@ -4370,7 +4370,7 @@ const Configurator: React.FC = () => {
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, mod.topFrameThickness || spaceInfo.frameSize?.top || 18, mod.topFrameOffset || 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                    (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
+                    (v) => { console.log('🔴 상부프레임 변경:', mod.id, 'topFrameThickness:', mod.topFrameThickness, '→', v); updatePlacedModule(mod.id, { topFrameThickness: v }); },
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                     `top-${mod.id}`,
                   )}</React.Fragment>;
