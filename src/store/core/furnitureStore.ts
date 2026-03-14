@@ -162,8 +162,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       // 자유배치 가구는 슬롯 충돌 체크 불필요 (X 좌표 기반 충돌 검사는 배치 시점에 이미 완료됨)
       if (module.isFreePlacement) {
+        const newModules = [...state.placedModules, module];
+        notifyR3F(newModules);
         return {
-          placedModules: [...state.placedModules, module]
+          placedModules: newModules
         };
       }
 
@@ -218,23 +220,28 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 교체될 가구들의 ID 목록
           const replaceIds = modulesToReplace.map(m => m.id);
 
+          const newModules = [
+            ...state.placedModules.filter(m => !replaceIds.includes(m.id)),
+            module
+          ];
+          notifyR3F(newModules);
           return {
-            placedModules: [
-              ...state.placedModules.filter(m => !replaceIds.includes(m.id)),
-              module
-            ]
+            placedModules: newModules
           };
         }
 
         // 모든 기존 가구와 공존 가능하면 추가
-
+        const newModules2 = [...state.placedModules, module];
+        notifyR3F(newModules2);
         return {
-          placedModules: [...state.placedModules, module]
+          placedModules: newModules2
         };
       }
 
+      const newModules3 = [...state.placedModules, module];
+      notifyR3F(newModules3);
       return {
-        placedModules: [...state.placedModules, module]
+        placedModules: newModules3
       };
     });
   },

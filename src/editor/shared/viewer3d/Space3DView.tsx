@@ -159,6 +159,34 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         return;
       }
 
+      // 자유배치 가구 복제 처리
+      if (furniture.isFreePlacement) {
+        const newId = `${furniture.moduleId}-free-${Date.now()}`;
+        const { adjustedPosition, adjustedWidth, columnSlotInfo, ...furnitureData } = furniture;
+        // 우측으로 50mm 오프셋하여 배치
+        const offsetX = 0.5; // 50mm in Three.js units
+        const newFurniture = {
+          ...furnitureData,
+          id: newId,
+          position: {
+            x: furniture.position.x + offsetX,
+            y: furniture.position.y,
+            z: furniture.position.z
+          }
+        };
+
+        console.log('복제 성공: 자유배치 가구', newId);
+        setSelectedPlacedModuleId(null);
+        setSelectedFurnitureId(null);
+        addModuleFn(newFurniture);
+        setTimeout(() => {
+          setSelectedPlacedModuleId(newId);
+          setSelectedFurnitureId(newId);
+          console.log('복제된 자유배치 가구 선택:', newId);
+        }, 100);
+        return;
+      }
+
       // 듀얼 가구인지 확인
       console.log('🔍 복제 - 가구 정보:', {
         id: furniture.id,
