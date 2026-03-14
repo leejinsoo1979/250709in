@@ -1796,7 +1796,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {(spaceInfo?.columns || []).map((column) => {
                 // 기둥이 단내림 영역에 있는지 확인
                 let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
-                if (spaceInfo.droppedCeiling?.enabled) {
+                if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
                   const totalWidth = spaceInfo.width;
                   const droppedWidth = spaceInfo.droppedCeiling.width || 900;
                   const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
@@ -1869,7 +1869,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {(spaceInfo?.walls || []).map((wall) => {
                 // 가벽이 단내림 영역에 있는지 확인
                 let wallHeight = wall.height;
-                if (spaceInfo.droppedCeiling?.enabled) {
+                if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
                   const totalWidth = spaceInfo.width;
                   const droppedWidth = spaceInfo.droppedCeiling.width || 900;
                   const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
@@ -1891,21 +1891,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     droppedEndX = rightBoundary;
                   }
 
-                  console.log('🏗️ 가벽 단내림 체크:', {
-                    wallId: wall.id,
-                    wallXMm,
-                    droppedStartX,
-                    droppedEndX,
-                    isInDroppedArea: wallXMm >= droppedStartX && wallXMm <= droppedEndX,
-                    originalHeight: wall.height,
-                    dropHeight,
-                    wallHeight
-                  });
-
                   // 가벽이 단내림 영역에 있으면 높이 조정
                   if (wallXMm >= droppedStartX && wallXMm <= droppedEndX) {
                     wallHeight = wall.height - dropHeight;
-                    console.log('🏗️ 가벽 높이 조정됨:', { wallId: wall.id, originalHeight: wall.height, adjustedHeight: wallHeight });
                   }
                 }
 
