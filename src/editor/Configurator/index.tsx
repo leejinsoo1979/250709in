@@ -4259,13 +4259,10 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 상,하부프레임 섹션 — 가구별 좌→우 순서 (서라운드 활성 시만) */}
+        {/* 상,하부프레임 섹션 — 가구별 좌→우 순서 (서라운드 무관하게 항상 표시) */}
         {isFreeMode && (() => {
-          const fs = spaceInfo.freeSurround;
-          if (!fs) return null;
-          const anyEnabled = fs.left?.enabled || fs.right?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
-          if (!anyEnabled) return null;
           const freeMods = placedModules.filter(m => m.isFreePlacement);
+          if (freeMods.length === 0) return null;
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
 
