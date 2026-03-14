@@ -123,7 +123,7 @@ const Configurator: React.FC = () => {
 
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();
-  const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
+  const { setSpaceInfo, spaceInfo, updateColumn, resetSpaceInfo } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules, updatePlacedModule } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
@@ -861,12 +861,10 @@ const Configurator: React.FC = () => {
         spaceConfig.mainDoorCount = undefined;
         spaceConfig.droppedCeilingDoorCount = undefined;
         spaceConfig.customColumnCount = undefined;
-        // 이전 프로젝트의 lockedWallGaps가 남지 않도록 — 데이터에 없으면 명시적 null로 덮어쓰기
-        if (!('lockedWallGaps' in spaceConfig) || spaceConfig.lockedWallGaps == null) {
-          spaceConfig.lockedWallGaps = undefined;
-        }
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
+        // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
+        resetSpaceInfo();
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
         setCurrentProjectId(projectId);
@@ -1520,6 +1518,7 @@ const Configurator: React.FC = () => {
 
             // 상태 업데이트
             setBasicInfo({ title: 'Untitled', location: '' });
+            resetSpaceInfo();
             setSpaceInfo(defaultSpaceConfig);
             setPlacedModules([]);
             setCurrentProjectId(result.id);
@@ -2073,10 +2072,8 @@ const Configurator: React.FC = () => {
                   droppedCeilingDoorCount: undefined,
                   customColumnCount: undefined
                 };
-                // 이전 디자인 파일의 lockedWallGaps가 남지 않도록 명시적 초기화
-                if (!('lockedWallGaps' in spaceConfig) || spaceConfig.lockedWallGaps == null) {
-                  spaceConfig.lockedWallGaps = undefined;
-                }
+                // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
+                resetSpaceInfo();
                 setSpaceInfo(spaceConfig);
 // console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
@@ -3563,7 +3560,7 @@ const Configurator: React.FC = () => {
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>{isFreeMode ? '서라운드 구간 사이즈' : '단내림 구간 사이즈'}</h3>
+              <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'}</h3>
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
