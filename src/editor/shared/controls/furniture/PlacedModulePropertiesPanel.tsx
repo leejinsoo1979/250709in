@@ -2855,7 +2855,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {/* 좌측 EP 옵셋 */}
                   {currentPlacedModule.hasLeftEndPanel && (() => {
                     const rawVal = currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
-                    const leftDir = rawVal >= 0 ? 'front' : 'back';
+                    const leftDir = rawVal > 0 ? 'front' : rawVal < 0 ? 'back' : 'front';
                     const leftAbs = Math.abs(rawVal);
                     return (
                       <div style={{ marginTop: '8px' }}>
@@ -2894,7 +2894,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: leftAbs });
+                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: Math.max(1, leftAbs) });
                             }}
                           >
                             앞에서
@@ -2907,7 +2907,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: -leftAbs });
+                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: -Math.max(1, leftAbs) });
                             }}
                           >
                             뒤에서
@@ -2919,7 +2919,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {/* 우측 EP 옵셋 */}
                   {currentPlacedModule.hasRightEndPanel && (() => {
                     const rawVal = currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
-                    const rightDir = rawVal >= 0 ? 'front' : 'back';
+                    const rightDir = rawVal > 0 ? 'front' : rawVal < 0 ? 'back' : 'front';
                     const rightAbs = Math.abs(rawVal);
                     return (
                       <div style={{ marginTop: '8px' }}>
@@ -2958,7 +2958,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: rightAbs });
+                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: Math.max(1, rightAbs) });
                             }}
                           >
                             앞에서
@@ -2971,7 +2971,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: -rightAbs });
+                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: -Math.max(1, rightAbs) });
                             }}
                           >
                             뒤에서
