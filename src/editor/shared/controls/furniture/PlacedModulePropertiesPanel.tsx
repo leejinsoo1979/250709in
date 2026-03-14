@@ -589,6 +589,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeWidthInput, setFreeWidthInput] = useState<string>('');
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
+  const [epDepthInput, setEpDepthInput] = useState<string>(''); // EP 깊이 로컬 버퍼
 
   // 섹션별 치수 상태 (자유배치 + customConfig 분할 가구용)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
@@ -877,6 +878,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
+
+        // EP 깊이 초기화
+        const epFurnitureDepth = currentPlacedModule.freeDepth ?? moduleData.dimensions.depth;
+        setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
 
         // 섹션별 치수 초기화 (customConfig가 있을 때)
         const cc = currentPlacedModule.customConfig;
@@ -2855,7 +2860,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {/* EP 깊이 */}
                   {(() => {
                     const furnitureDepth = currentPlacedModule.freeDepth ?? (moduleData ? moduleData.dimensions.depth : 580);
-                    const epDepthVal = currentPlacedModule.endPanelDepth ?? furnitureDepth;
                     return (
                       <div style={{ marginTop: '8px' }}>
                         <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 깊이</label>
@@ -2863,19 +2867,30 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={epDepthVal}
+                            value={epDepthInput}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? furnitureDepth : Math.max(50, Math.min(furnitureDepth, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { endPanelDepth: num });
+                                setEpDepthInput(v);
+                              }
+                            }}
+                            onBlur={() => {
+                              const val = parseInt(epDepthInput, 10);
+                              if (!isNaN(val) && val >= 50 && val <= furnitureDepth && currentPlacedModule) {
+                                updatePlacedModule(currentPlacedModule.id, { endPanelDepth: val });
+                                setEpDepthInput(val.toString());
+                              } else {
+                                const fallback = currentPlacedModule.endPanelDepth ?? furnitureDepth;
+                                setEpDepthInput(Math.round(fallback).toString());
                               }
                             }}
                             onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = epDepthVal;
+                                const cur = parseInt(epDepthInput, 10) || (currentPlacedModule.endPanelDepth ?? furnitureDepth);
                                 const next = Math.max(50, Math.min(furnitureDepth, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setEpDepthInput(next.toString());
                                 updatePlacedModule(currentPlacedModule.id, { endPanelDepth: next });
                               }
                             }}

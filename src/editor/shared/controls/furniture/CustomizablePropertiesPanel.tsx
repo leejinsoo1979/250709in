@@ -82,6 +82,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [hSplitInputs, setHSplitInputs] = useState<Record<string, string>>({});
   // 좌우 섹션분할 깊이 입력 - 키: "sIdx-left" / "sIdx-center" / "sIdx-right"
   const [hSplitDepthInputs, setHSplitDepthInputs] = useState<Record<string, string>>({});
+  // EP 깊이 로컬 버퍼
+  const [epDepthInput, setEpDepthInput] = useState<string>('');
 
   // 섹션 팝업 바깥 클릭 감지용 ref + 동적 위치 조정
   const sectionPopupRef = useRef<HTMLDivElement>(null);
@@ -166,6 +168,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const lD = placedModule.lowerSectionDepth ?? d;
       const uD = placedModule.upperSectionDepth ?? d;
       setSectionDepthInputs({ 0: lD.toString(), 1: uD.toString() });
+      // EP 깊이 초기화
+      setEpDepthInput(Math.round(placedModule.endPanelDepth ?? d).toString());
       // 원본 스냅샷 저장 (취소 시 복원용)
       setOriginalSnapshot({
         customConfig: placedModule.customConfig
@@ -4173,26 +4177,36 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     {/* EP 깊이 */}
                     {(() => {
                       const furnitureDepth = placedModule.freeDepth || 580;
-                      const epDepthVal = placedModule.endPanelDepth ?? furnitureDepth;
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 깊이</span>
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={epDepthVal}
+                            value={epDepthInput}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? furnitureDepth : Math.max(50, Math.min(furnitureDepth, parseInt(v, 10)));
-                                updatePlacedModule(moduleId, { endPanelDepth: num });
+                                setEpDepthInput(v);
+                              }
+                            }}
+                            onBlur={() => {
+                              const val = parseInt(epDepthInput, 10);
+                              if (!isNaN(val) && val >= 50 && val <= furnitureDepth) {
+                                updatePlacedModule(moduleId, { endPanelDepth: val });
+                                setEpDepthInput(val.toString());
+                              } else {
+                                const fallback = placedModule.endPanelDepth ?? furnitureDepth;
+                                setEpDepthInput(Math.round(fallback).toString());
                               }
                             }}
                             onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = epDepthVal;
+                                const cur = parseInt(epDepthInput, 10) || (placedModule.endPanelDepth ?? furnitureDepth);
                                 const next = Math.max(50, Math.min(furnitureDepth, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setEpDepthInput(next.toString());
                                 updatePlacedModule(moduleId, { endPanelDepth: next });
                               }
                             }}
