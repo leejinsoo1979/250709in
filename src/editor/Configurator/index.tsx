@@ -181,8 +181,11 @@ const Configurator: React.FC = () => {
     else setDoorBottomGapInput(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
-      // 글로벌 spaceInfo에만 저장 (DoorModule이 store에서 직접 읽음)
+      // 글로벌 spaceInfo에 저장
       setSpaceInfo({ [field]: num });
+      // R3F Canvas 내부 DoorModule 리렌더 트리거
+      // (R3F ConcurrentRoot에서 spaceConfigStore 변경이 전파 안 되는 문제 워크어라운드)
+      setPlacedModules([...placedModules]);
     }
   };
 
@@ -3721,18 +3724,7 @@ const Configurator: React.FC = () => {
               </div>
             </div>
 
-            {/* 커튼박스 마감 버튼 (자유배치 전용) */}
-            {isFreeMode && (
-              <button
-                className={`${styles.toggleButton} ${spaceInfo.curtainBoxFinished ? styles.toggleButtonActive : ''}`}
-                style={{ width: '100%', marginTop: '8px' }}
-                onClick={() => {
-                  setSpaceInfo({ curtainBoxFinished: !spaceInfo.curtainBoxFinished });
-                }}
-              >
-                {spaceInfo.curtainBoxFinished ? '커튼박스 마감 해제' : '커튼박스 마감'}
-              </button>
-            )}
+            {/* 커튼박스 마감은 서라운드 섹션에서 통합 관리 */}
           </div>
         )}
 
@@ -4095,12 +4087,10 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
-        {/* 서라운드 섹션 — 좌→우 순서 (좌/우/중간 중 하나라도 enabled일 때만 표시) */}
+        {/* 서라운드 섹션 — freeSurround 존재 시 항상 표시 */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
-          const anyEnabled = fs.left?.enabled || fs.right?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
-          if (!anyEnabled) return null;
           const middleGaps = fs.middle || [];
 
           // 서라운드 목록: 좌 → 중간들 → 우 (좌→우 순서)
