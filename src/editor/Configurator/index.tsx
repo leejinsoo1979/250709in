@@ -4124,9 +4124,52 @@ const Configurator: React.FC = () => {
                       {midCfg.enabled ? 'ON' : 'OFF'}
                     </button>
                     {midCfg.enabled ? (
-                      <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)' }}>
-                        {midCfg.gap}mm
-                      </span>
+                      <>
+                        <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                          <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={(midCfg.offset || 0) > 0 ? midCfg.offset : ''} placeholder="0"
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const newMiddle = [...middleGaps];
+                                newMiddle[idx] = { ...newMiddle[idx], offset: v === '' ? 0 : parseInt(v, 10) };
+                                setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                              const newMiddle = [...middleGaps];
+                              newMiddle[idx] = { ...newMiddle[idx], offset: v };
+                              setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
+                            }}
+                            className={styles.frameNumberInput}
+                          />
+                        </div>
+                        <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                          <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={(midCfg.offset || 0) < 0 ? Math.abs(midCfg.offset) : ''} placeholder="0"
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const newMiddle = [...middleGaps];
+                                newMiddle[idx] = { ...newMiddle[idx], offset: v === '' ? 0 : -parseInt(v, 10) };
+                                setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                              const newMiddle = [...middleGaps];
+                              newMiddle[idx] = { ...newMiddle[idx], offset: v === -0 ? 0 : v };
+                              setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
+                            }}
+                            className={styles.frameNumberInput}
+                          />
+                        </div>
+                      </>
                     ) : null}
                   </div>
                 ))}

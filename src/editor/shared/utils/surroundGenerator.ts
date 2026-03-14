@@ -71,6 +71,7 @@ export function generateSurround(
         leftX: Math.round(currentRight),
         rightX: Math.round(nextLeft),
         method,
+        offset: 0,
       });
     }
   }

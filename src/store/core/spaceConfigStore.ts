@@ -33,6 +33,7 @@ export interface FreeSurroundMiddle {
   leftX: number;     // 좌측 가구의 오른쪽 edge (mm)
   rightX: number;    // 우측 가구의 왼쪽 edge (mm)
   method: SurroundMethod;
+  offset: number;    // Z축 옵셋 (mm) — 양수=앞, 음수=뒤
 }
 
 export interface FreeSurroundConfig {

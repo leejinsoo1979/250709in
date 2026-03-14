@@ -2801,8 +2801,9 @@ const Room: React.FC<RoomProps> = ({
                 const surrCenterY = sideFrameStartY + surrH / 2;
                 const SIDE_DEPTH_MM = 40;
 
-                // 전면패널: gap 너비만큼 앞면 가림
-                const frontZ = topZPosition;
+                // 전면패널: gap 너비만큼 앞면 가림 (offset 반영)
+                const midZOffset = midCfg.offset ? mmToThreeUnits(midCfg.offset) : 0;
+                const frontZ = topZPosition + midZOffset;
                 // 좌측 측면패널: leftX(좌측 가구 오른쪽) + 18/2
                 const leftSideX = mmToThreeUnits(midCfg.leftX + END_PANEL_THICKNESS / 2);
                 const leftSideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
