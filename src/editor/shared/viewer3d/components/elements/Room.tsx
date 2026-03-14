@@ -2575,10 +2575,11 @@ const Room: React.FC<RoomProps> = ({
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
 
                 // 모듈별 bounds + freeHeight 계산 후 X좌표 정렬
+                // freeHeight 미설정(0) → internalSpaceHeight를 기본값으로 사용
                 const modulesWithBounds = group.modules.map(m => ({
                   module: m,
                   bounds: getModuleBoundsX(m),
-                  freeHeight: m.freeHeight || 0,
+                  freeHeight: m.freeHeight || internalSpaceHeight,
                 }));
                 modulesWithBounds.sort((a, b) => a.bounds.left - b.bounds.left);
 
