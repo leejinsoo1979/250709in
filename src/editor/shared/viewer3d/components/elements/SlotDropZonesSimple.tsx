@@ -41,7 +41,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const SLOT_DEBUG = true; // 디버깅 활성화
   const debugLog = (...args: any[]) => {
     if (SLOT_DEBUG) {
-      console.log(...args);
+// console.log(...args);
     }
   };
   const debugWarn = (...args: any[]) => {
@@ -173,7 +173,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-    console.log('🎯🎯🎯 [handleSlotDrop] 호출됨!');
+// console.log('🎯🎯🎯 [handleSlotDrop] 호출됨!');
 
     // 드롭 위치에서 마우스 좌표 계산
     const rect = canvasElement.getBoundingClientRect();
@@ -792,7 +792,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 듀얼 가구 여부는 이미 위에서 판단했으므로 재사용
 
       // 듀얼 가구가 영역 경계를 넘어가는지 체크
-      console.log('🔍🔍🔍 [경계 체크]', {
+// console.log('🔍🔍🔍 [경계 체크]', {
         isDual,
         zoneSlotIndex,
         targetZoneColumnCount: targetZone.columnCount,
@@ -2920,7 +2920,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 현재 활성 모듈 가져오기 (드래그 중이거나 선택된 모듈)
         let activeModuleData = currentDragData;
 
-        console.log('🔍 [Ghost] activeModuleData 생성 전:', {
+// console.log('🔍 [Ghost] activeModuleData 생성 전:', {
           hasCurrentDragData: !!currentDragData,
           selectedFurnitureId,
           hoveredSlotIndex,
@@ -2930,7 +2930,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // selectedFurnitureId가 있고 currentDragData가 없으면 selectedFurnitureId로부터 데이터 생성
         if (!activeModuleData && selectedFurnitureId) {
           const moduleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
-          console.log('🔍 [Ghost] moduleData 조회 결과:', {
+// console.log('🔍 [Ghost] moduleData 조회 결과:', {
             selectedFurnitureId,
             foundModuleData: !!moduleData,
             moduleDataId: moduleData?.id
@@ -2958,7 +2958,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             || activeModuleData.isDualSlot === true
             || (activeModuleData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
 
-          console.log('🔍 [Ghost] activeModuleData 있음, 듀얼 체크:', {
+// console.log('🔍 [Ghost] activeModuleData 있음, 듀얼 체크:', {
             moduleId: activeModuleData.moduleData.id,
             isDual,
             selectedFurnitureId,
@@ -2979,7 +2979,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 고스트 렌더링 여부 결정
         let shouldRenderGhost = false;
         if (activeModuleData) {
-          console.log('🔍 [Ghost] shouldRenderGhost 결정 시작:', {
+// console.log('🔍 [Ghost] shouldRenderGhost 결정 시작:', {
             hasCurrentDragData: !!currentDragData,
             selectedFurnitureId,
             hoveredSlotIndex,
@@ -2991,7 +2991,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           if (selectedFurnitureId) {
             const moduleIdForCheck = selectedFurnitureId || currentDragData?.moduleData?.id || activeModuleData?.moduleData?.id || '';
 
-            console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
+// console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
               selectedFurnitureId,
               currentDragDataId: currentDragData?.moduleData?.id,
               activeModuleDataId: activeModuleData?.moduleData?.id,
@@ -3007,7 +3007,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             } else {
               // 듀얼 가구일 때 겹치지 않도록 짝수 슬롯(0,2,4,...)에만 고스트 표시
               if (isDual && compareIndex % 2 !== 0) {
-                console.log('🚫 [Click Mode] 듀얼 가구 홀수 슬롯 제외:', { slotIndex: compareIndex });
+// console.log('🚫 [Click Mode] 듀얼 가구 홀수 슬롯 제외:', { slotIndex: compareIndex });
                 shouldRenderGhost = false;
               } else {
                 // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
@@ -3021,7 +3021,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   slotZone // targetZone
                 );
 
-                console.log('👻 [Click Mode] 슬롯 점유 체크:', {
+// console.log('👻 [Click Mode] 슬롯 점유 체크:', {
                   slotIndex: compareIndex,
                   slotZone,
                   isDual,
@@ -3167,7 +3167,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             targetWidth = slot1Width + slot2Width;
 
             if ((slot1Info?.hasColumn && slot1Info.adjustedWidth) || (slot2Info?.hasColumn && slot2Info.adjustedWidth)) {
-              console.log(`🏗️ [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
+// console.log(`🏗️ [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
                 슬롯1: { 인덱스: localIndex, 원본: targetZone.slotWidths?.[localIndex], 조정: slot1Width, 기둥: slot1Info?.hasColumn },
                 슬롯2: { 인덱스: localIndex + 1, 원본: targetZone.slotWidths?.[localIndex + 1], 조정: slot2Width, 기둥: slot2Info?.hasColumn },
                 총너비: targetWidth
@@ -3180,7 +3180,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // adjustedWidth가 있으면 우선 사용
             if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
               targetWidth = slotInfo.adjustedWidth;
-              console.log(`🏗️ [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
+// console.log(`🏗️ [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
                 슬롯인덱스: localIndex,
                 원본: targetZone.slotWidths?.[localIndex] || targetZone.columnWidth,
                 조정: targetWidth,
@@ -3243,7 +3243,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.adjustedWidth) {
             // 기둥이 있는 슬롯의 경우 adjustedWidth 사용
             targetWidth = targetSlotInfo.adjustedWidth;
-            console.log(`🏗️ [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 너비 조정:`, {
+// console.log(`🏗️ [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 너비 조정:`, {
               원본슬롯너비: indexing.columnWidth,
               기둥너비: targetSlotInfo.column?.width,
               조정된너비: targetWidth
@@ -3289,7 +3289,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 미리보기 위치 계산 - 실제 배치와 동일한 로직 사용
         let previewX = slotX;
 
-        console.log('👻 [Ghost Preview] Rendering module:', {
+// console.log('👻 [Ghost Preview] Rendering module:', {
           slotIndex,
           moduleId: moduleData.id,
           originalId: activeModuleData.moduleData.id,
@@ -3565,7 +3565,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.adjustedWidth) {
           // 듀얼 가구는 기둥 슬롯에 배치 불가
           if (isDual) {
-            console.log('👻 [Ghost Preview] 기둥 슬롯에 듀얼 가구는 미리보기 없음');
+// console.log('👻 [Ghost Preview] 기둥 슬롯에 듀얼 가구는 미리보기 없음');
             return null;
           }
 
@@ -3582,7 +3582,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
           // 공간이 부족한 경우 미리보기 표시 안함
           if (furnitureBounds.renderWidth < 150) {
-            console.log('👻 [Ghost Preview] 기둥 슬롯 공간 부족:', furnitureBounds.renderWidth, 'mm');
+// console.log('👻 [Ghost Preview] 기둥 슬롯 공간 부족:', furnitureBounds.renderWidth, 'mm');
             return null;
           }
 
@@ -3590,7 +3590,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           customWidth = furnitureBounds.renderWidth;
           adjustedPreviewX = furnitureBounds.center;
 
-          console.log(`👻 [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 조정 (calculateFurnitureBounds):`, {
+// console.log(`👻 [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 조정 (calculateFurnitureBounds):`, {
             원본슬롯너비: indexing.columnWidth,
             renderWidth: customWidth,
             center: adjustedPreviewX,
@@ -3622,7 +3622,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             customWidth = slot1Width + slot2Width;
 
             if ((slot1Info?.hasColumn && slot1Info.adjustedWidth) || (slot2Info?.hasColumn && slot2Info.adjustedWidth)) {
-              console.log(`👻 [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
+// console.log(`👻 [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
                 슬롯1: { 인덱스: localIdx, 조정: slot1Width, 기둥: slot1Info?.hasColumn },
                 슬롯2: { 인덱스: localIdx + 1, 조정: slot2Width, 기둥: slot2Info?.hasColumn },
                 총너비: customWidth
@@ -3634,7 +3634,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
             if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
               customWidth = slotInfo.adjustedWidth;
-              console.log(`👻 [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
+// console.log(`👻 [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
                 슬롯인덱스: localIdx,
                 조정된너비: customWidth,
                 기둥너비: slotInfo.column?.width
@@ -3741,7 +3741,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
 
         // 디버깅: 현재 배치된 모든 가구 정보 출력
-        console.log('🔍 [Front Space Debug] 배치된 가구 목록:', {
+// console.log('🔍 [Front Space Debug] 배치된 가구 목록:', {
           totalCount: placedModules.length,
           modules: placedModules.map(m => ({
             id: m.id,
@@ -3756,7 +3756,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const leftmostColumnSlot = Math.min(...columnSlotIndices);
         const rightmostColumnSlot = Math.max(...columnSlotIndices);
 
-        console.log('🔍 [Front Space Debug] 기둥 범위:', {
+// console.log('🔍 [Front Space Debug] 기둥 범위:', {
           columnSlotIndices,
           leftmostColumnSlot,
           rightmostColumnSlot
@@ -3776,7 +3776,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
         const hasBothSidesOutside = !!(leftOutsideFurniture && rightOutsideFurniture);
 
-        console.log('🔍 [Front Space Debug] 외부 가구 체크:', {
+// console.log('🔍 [Front Space Debug] 외부 가구 체크:', {
           leftSlotToCheck: leftmostColumnSlot - 1,
           hasLeftOutsideFurniture: !!leftOutsideFurniture,
           leftFurnitureInfo: leftOutsideFurniture ? { id: leftOutsideFurniture.id, slotIndex: leftOutsideFurniture.slotIndex } : null,
@@ -3788,7 +3788,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
         // 기둥 양옆에 가구가 없으면 빈 배열 반환
         if (!hasBothSidesOutside) {
-          console.log('🔍 [Front Space Debug] 기둥 양옆 외부에 가구 없음 - 고스트 표시 안함');
+// console.log('🔍 [Front Space Debug] 기둥 양옆 외부에 가구 없음 - 고스트 표시 안함');
           return null;
         }
 
@@ -3801,17 +3801,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return !frontSpaceFurniture;
         });
 
-        console.log('🔍 [Front Space Debug] availableSlots:', {
+// console.log('🔍 [Front Space Debug] availableSlots:', {
           count: availableSlots.length,
           slots: availableSlots.map(s => s.slotIndex)
         });
 
         if (availableSlots.length === 0) {
-          console.log('🔍 [Front Space Debug] 사용 가능한 슬롯 없음');
+// console.log('🔍 [Front Space Debug] 사용 가능한 슬롯 없음');
           return null;
         }
 
-        console.log('🟢 [Front Space Ghost] 기둥 앞 공간 고스트 렌더링:', {
+// console.log('🟢 [Front Space Ghost] 기둥 앞 공간 고스트 렌더링:', {
           availableSlots: availableSlots.map(s => ({
             slotIndex: s.slotIndex,
             frontSpace: s.frontSpace
@@ -3836,7 +3836,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             centerZ: (calculatedFrontSpaceDepth / 2) * 0.01
           };
 
-          console.log('🔍 [Front Space Render] 고스트 렌더링 데이터:', {
+// console.log('🔍 [Front Space Render] 고스트 렌더링 데이터:', {
             slotIndex: slotInfo.slotIndex,
             hasFrontSpace: !!slotInfo.frontSpace,
             frontSpaceCenterX: frontSpace.centerX,
@@ -3857,7 +3857,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const furnitureFrontZ = furnitureZOffset + furnitureDepth / 2;
           const frontSpaceZ = furnitureFrontZ - frontSpaceDepthThree / 2;
 
-          console.log('🔍 [Front Space Z] Z 위치 계산:', {
+// console.log('🔍 [Front Space Z] Z 위치 계산:', {
             panelDepthMm,
             furnitureDepthMm,
             frontSpaceDepth: frontSpace.depth,
@@ -3929,7 +3929,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     columnPlacementMode: 'beside' // 기둥 측면 배치 모드에서 사용
                   };
 
-                  console.log('🟢 기둥 앞 공간에 가구 배치:', {
+// console.log('🟢 기둥 앞 공간에 가구 배치:', {
                     moduleId: newModule.id,
                     slotIndex: slotInfo.slotIndex,
                     frontSpace,

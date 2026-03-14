@@ -170,7 +170,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
       const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 1300);
-      console.log('🎯 메인 구간 폭 계산 (DoorSlider):', {
+// console.log('🎯 메인 구간 폭 계산 (DoorSlider):', {
         totalWidth: width,
         droppedWidth: spaceInfo.droppedCeiling.width || 1300,
         mainZoneWidth
@@ -202,7 +202,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
       // 최대 가능 슬롯 개수 (400mm 제한)
       const maxPossibleSlots = Math.floor(normalAreaInternalWidth / MIN_SLOT_WIDTH);
       
-      console.log('🎯 슬롯 계산 (단내림 활성화):', {
+// console.log('🎯 슬롯 계산 (단내림 활성화):', {
         isForDroppedCeiling,
         구간: isForDroppedCeiling ? '단내림 구간' : '메인 구간',
         spaceWidth,
@@ -239,7 +239,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
   const isDroppedCeilingSlider = spaceInfo.droppedCeiling?.enabled && 
     width === (spaceInfo.droppedCeiling.width || 1300);
   
-  console.log('🔍 슬라이더 타입 확인:', {
+// console.log('🔍 슬라이더 타입 확인:', {
     width,
     droppedWidth: spaceInfo.droppedCeiling?.width,
     isDroppedCeilingSlider,
@@ -250,7 +250,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
   if (isDroppedCeilingSlider) {
     // 단내림 구간의 도어개수 슬라이더인 경우
     doorRange = calculateDoorRange(width, true); // 단내림 구간임을 명시
-    console.log('🎯 단내림 구간 도어개수 슬라이더:', {
+// console.log('🎯 단내림 구간 도어개수 슬라이더:', {
       width,
       droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
       doorRange,
@@ -261,7 +261,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
     // 메인 구간의 도어개수 슬라이더인 경우
     const mainZoneWidth = getMainZoneWidth();
     doorRange = calculateDoorRange(mainZoneWidth, false); // 메인 구간임을 명시
-    console.log('🎯 메인 구간 도어개수 슬라이더:', {
+// console.log('🎯 메인 구간 도어개수 슬라이더:', {
       mainZoneWidth,
       doorRange,
       value,
@@ -359,7 +359,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
       const minRequiredSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
       
       if (value < minRequiredSlots) {
-        console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 자동 조정: ${value} → ${minRequiredSlots}`);
+// console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 자동 조정: ${value} → ${minRequiredSlots}`);
         onChange(minRequiredSlots);
         return;
       }
@@ -375,7 +375,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
   const generateLabels = () => {
     const doorCount = maxDoors - minDoors + 1;
     
-    console.log('🎯 DoorSlider 라벨 생성:', {
+// console.log('🎯 DoorSlider 라벨 생성:', {
       minDoors,
       maxDoors,
       doorCount,
@@ -388,7 +388,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
       for (let i = minDoors; i <= maxDoors; i++) {
         labels.push(i);
       }
-      console.log('🎯 생성된 라벨:', labels);
+// console.log('🎯 생성된 라벨:', labels);
       return labels;
     } else {
       // 컬럼 수가 많으면 대표값들만 표시
@@ -407,7 +407,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
         labels.push(maxDoors);
       }
       
-      console.log('🎯 생성된 라벨:', labels);
+// console.log('🎯 생성된 라벨:', labels);
       return labels;
     }
   };
@@ -415,7 +415,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
   const labels = generateLabels();
   const sliderPosition = getSliderPosition(clampedValue);
   
-  console.log('🎯 DoorSlider 렌더링:', {
+// console.log('🎯 DoorSlider 렌더링:', {
     labels,
     sliderPosition,
     clampedValue,
@@ -611,7 +611,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
       const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 1300);
-      console.log('🎯 메인 구간 폭 계산 (RightPanel):', {
+// console.log('🎯 메인 구간 폭 계산 (RightPanel):', {
         totalWidth: width,
         droppedWidth: spaceInfo.droppedCeiling.width || 1300,
         mainZoneWidth
@@ -721,7 +721,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 // 단내림이 활성화된 경우 UIStore 업데이트 (균등분할 모드에서만)
                 if (spaceInfo.droppedCeiling?.enabled && isEqualDivision) {
                   const newTab = tab.id === 'placement' ? 'main' : 'dropped';
-                  console.log('🎯 RightPanel 탭 클릭 - activeDroppedCeilingTab 설정:', {
+// console.log('🎯 RightPanel 탭 클릭 - activeDroppedCeilingTab 설정:', {
                     clickedTabId: tab.id,
                     newActiveTab: newTab,
                     droppedEnabled: spaceInfo.droppedCeiling?.enabled
@@ -803,7 +803,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const indexing = calculateSpaceIndexing(tempSpaceInfo);
                     
                     if (indexing.optimizedGapConfig) {
-                      console.log('📏 공간 너비 변경 - 자동 이격거리 적용:', {
+// console.log('📏 공간 너비 변경 - 자동 이격거리 적용:', {
                         newWidth,
                         optimizedGap: indexing.optimizedGapConfig
                       });
@@ -878,7 +878,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const droppedInternalWidth = droppedWidth - frameThickness;
                     const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
                     
-                    console.log('🎯 단내림 활성화 시 도어개수 계산:', {
+// console.log('🎯 단내림 활성화 시 도어개수 계산:', {
                       droppedWidth,
                       frameThickness,
                       droppedInternalWidth,
@@ -1066,7 +1066,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {/* 바닥 마감재 - 띄워서 배치일 때는 숨김 */}
             {(() => {
               const isFloat = spaceInfo.baseConfig?.placementType === 'float' && (spaceInfo.baseConfig?.floatHeight || 0) > 0;
-              console.log('🔴🔴🔴 바닥마감재 메뉴 조건:', {
+// console.log('🔴🔴🔴 바닥마감재 메뉴 조건:', {
                 baseConfig: spaceInfo.baseConfig,
                 placementType: spaceInfo.baseConfig?.placementType,
                 floatHeight: spaceInfo.baseConfig?.floatHeight,
@@ -1176,7 +1176,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   <DoorSlider
                     value={spaceInfo.droppedCeilingDoorCount || 1}
                     onChange={(newValue) => {
-                      console.log('🎯 단내림 구간 도어 개수 변경:', newValue);
+// console.log('🎯 단내림 구간 도어 개수 변경:', newValue);
 
                       // 슬롯 개수에 맞춰 단내림 너비 자동 계산 (슬롯 1개 = 450mm)
                       const newWidth = newValue * 450;
@@ -1231,7 +1231,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   <DoorSlider
                     value={spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3}
                     onChange={(newValue) => {
-                      console.log('🎯 일반 구간 도어 개수 변경:', newValue);
+// console.log('🎯 일반 구간 도어 개수 변경:', newValue);
                       const updates: any = {
                         mainDoorCount: newValue
                       };

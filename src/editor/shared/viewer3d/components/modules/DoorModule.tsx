@@ -185,7 +185,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorColor: '#E0E0E0'  // 기본값 변경
   };
 
-  console.log('🎨🎨🎨 DoorModule materialConfig:', {
+// console.log('🎨🎨🎨 DoorModule materialConfig:', {
     doorTexture: materialConfig.doorTexture,
     interiorTexture: materialConfig.interiorTexture,
     doorColor: materialConfig.doorColor,
@@ -360,7 +360,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     freeEpReverseX = -(leftEp - rightEp) / 2; // 부모 offset의 반대
   }
 
-  console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
+// console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
     furnitureId,
     isLayoutModeFree,
     isFreePlacement_prop: isFreePlacement,
@@ -381,7 +381,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 스토어에서 가져온 값 우선, 없으면 props 사용
   const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
 
-  console.log('🔥 DoorModule - panelGrainDirections 소스:', {
+// console.log('🔥 DoorModule - panelGrainDirections 소스:', {
     furnitureId,
     fromStore: !!storePanelGrainDirections,
     fromProps: !!panelGrainDirections,
@@ -445,7 +445,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
           material.needsUpdate = true;
 
-          console.log(`🚪 ${doorSide} 텍스처 로드 완료:`, {
+// console.log(`🚪 ${doorSide} 텍스처 로드 완료:`, {
             hasMap: !!material.map,
             mapImage: material.map?.image?.src,
             color: material.color.getHexString(),
@@ -523,7 +523,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorTextureUrl = materialConfig.doorTexture || undefined;
     const effectiveTextureUrl = doorTextureUrl;
 
-    console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
+// console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
       doorTextureUrl,
       effectiveTextureUrl,
       doorColor,
@@ -542,23 +542,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (!isDragging && !isEditMode) {
       if (effectiveTextureUrl) {
         // 텍스처가 있으면 적용
-        console.log('🎨 도어 텍스처 적용 시작:', effectiveTextureUrl);
+// console.log('🎨 도어 텍스처 적용 시작:', effectiveTextureUrl);
 
         if (doorMaterialRef.current) {
-          console.log('🎨 싱글 도어에 텍스처 적용');
+// console.log('🎨 싱글 도어에 텍스처 적용');
           applyTextureToMaterial(doorMaterialRef.current, effectiveTextureUrl, '싱글', panelNames.single);
         }
         if (leftDoorMaterialRef.current) {
-          console.log('🎨 왼쪽 도어에 텍스처 적용');
+// console.log('🎨 왼쪽 도어에 텍스처 적용');
           applyTextureToMaterial(leftDoorMaterialRef.current, effectiveTextureUrl, '왼쪽', panelNames.left);
         }
         if (rightDoorMaterialRef.current) {
-          console.log('🎨 오른쪽 도어에 텍스처 적용');
+// console.log('🎨 오른쪽 도어에 텍스처 적용');
           applyTextureToMaterial(rightDoorMaterialRef.current, effectiveTextureUrl, '오른쪽', panelNames.right);
         }
       } else {
         // 텍스처가 없으면 제거 (색상 재질로 변경)
-        console.log('🗑️ 도어 텍스처 제거 (색상 재질로 변경)');
+// console.log('🗑️ 도어 텍스처 제거 (색상 재질로 변경)');
         [doorMaterialRef.current, leftDoorMaterialRef.current, rightDoorMaterialRef.current].forEach(mat => {
           if (mat && mat.map) {
             mat.map = null;
@@ -568,7 +568,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         });
       }
     } else {
-      console.log('⏭️ 도어 텍스처 적용 스킵:', {
+// console.log('⏭️ 도어 텍스처 적용 스킵:', {
         reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
       });
     }
@@ -594,14 +594,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     if (zone === 'dropped' && zoneInfo.dropped) {
       effectiveColumnWidth = zoneInfo.dropped.columnWidth;
-      console.log('🚪📏 단내림 구간 슬롯 너비 사용:', {
+// console.log('🚪📏 단내림 구간 슬롯 너비 사용:', {
         zone,
         droppedColumnWidth: zoneInfo.dropped.columnWidth,
         normalColumnWidth: indexing.columnWidth
       });
     } else if (zone === 'normal' && zoneInfo.normal) {
       effectiveColumnWidth = zoneInfo.normal.columnWidth;
-      console.log('🚪📏 메인 구간 슬롯 너비 사용:', {
+// console.log('🚪📏 메인 구간 슬롯 너비 사용:', {
         zone,
         normalColumnWidth: zoneInfo.normal.columnWidth
       });
@@ -622,12 +622,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   if (isFree) {
     // 자유배치: 슬롯 무시, store에서 가져온 freeWidth 또는 props moduleWidth 사용
     actualDoorWidth = storeFreeWidth || moduleWidth;
-    console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
+// console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
   } else {
     // 균등분할: originalSlotWidth가 있으면 무조건 사용 (커버도어)
     actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
 
-    console.log('🚪📏 도어 너비 계산:', {
+// console.log('🚪📏 도어 너비 계산:', {
       originalSlotWidth,
       moduleWidth,
       indexingColumnWidth: indexing.columnWidth,
@@ -648,7 +648,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
   
   // 도어 모듈 디버깅
-  console.log('🚪 DoorModule 렌더링:', {
+// console.log('🚪 DoorModule 렌더링:', {
     moduleWidth,
     originalSlotWidth,
     actualDoorWidth,
@@ -705,7 +705,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 상부장 도어 높이 = 캐비넷 높이 - 위쪽 간격 + 아래 확장
     actualDoorHeight = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
 
-    console.log('🚪🔴 상부장 도어 높이 계산:', {
+// console.log('🚪🔴 상부장 도어 높이 계산:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
       천장간격: UPPER_CABINET_TOP_GAP,
@@ -726,7 +726,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorHeight = lowerCabinetHeight + bottomExtension + LOWER_CABINET_TOP_EXTENSION;
 
     if (floatHeight > 0) {
-      console.log('🚪📐 하부장 플로팅 도어 높이 조정:', {
+// console.log('🚪📐 하부장 플로팅 도어 높이 조정:', {
         원래높이: lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION,
         하단확장제거: LOWER_CABINET_BOTTOM_EXTENSION,
         조정된높이: actualDoorHeight,
@@ -734,7 +734,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       });
     }
 
-    console.log('🚪📏 하부장 도어 높이:', {
+// console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
       캐비넷높이: lowerCabinetHeight,
       아래확장: LOWER_CABINET_BOTTOM_EXTENSION,
@@ -768,7 +768,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 가구에 맞춤: 실제 가구 높이 사용 (per-furniture topFrame 반영됨)
       tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
     }
-    console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight);
+// console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight);
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
@@ -806,7 +806,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
 
-    console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
+// console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
       doorBottomGapInput: doorBottomGap,
       baselineBottomGap,
       effectiveBottomGap,
@@ -827,7 +827,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
 
-    console.log('🚪📏 키큰장 actualDoorHeight:', {
+// console.log('🚪📏 키큰장 actualDoorHeight:', {
       doorTopLocal,
       doorBottomLocal,
       actualDoorHeight,
@@ -895,7 +895,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       actualDoorHeight = totalDoorHeight * sectionRatio - SECTION_GAP_HALF;
 
-      console.log('🚪📏 분할 모드 도어 높이 (천장/바닥 기준):', {
+// console.log('🚪📏 분할 모드 도어 높이 (천장/바닥 기준):', {
         sectionIndex,
         totalSections,
         fullSpaceHeight,
@@ -911,7 +911,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         설명: `계산된 도어 높이(${totalDoorHeight}) × 섹션 비율(${sectionRatio.toFixed(2)}) - 갭 감소(${SECTION_GAP_HALF}) = ${actualDoorHeight}mm`
       });
     } else {
-      console.log('🚪📏 병합 모드 도어 높이 (천장/바닥 기준):', {
+// console.log('🚪📏 병합 모드 도어 높이 (천장/바닥 기준):', {
         fullSpaceHeight,
         topFrameHeight: topFrameHeightValue,
         floorHeight: floorHeightValue,
@@ -947,7 +947,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     doorYPosition = mmToThreeUnits(doorCenter);
 
-    console.log('🚪🔴 상부장 도어 Y 위치:', {
+// console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
       캐비넷하단: cabinetBottom,
@@ -983,7 +983,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 플로팅 시 actualDoorHeight가 이미 줄어들었으므로, 도어 상단에서 절반 내려온 위치
     doorYPosition = doorTop - mmToThreeUnits(actualDoorHeight) / 2;
 
-    console.log('🚪📍 하부장 도어 Y 위치 (상단 고정, 하단만 조정):', {
+// console.log('🚪📍 하부장 도어 Y 위치 (상단 고정, 하단만 조정):', {
       moduleId: moduleData?.id,
       캐비넷높이: lowerCabinetHeight,
       캐비넷상단_mm: (cabinetTop / 0.01).toFixed(1),
@@ -1039,7 +1039,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // 도어 중심 = 하단에서 도어 높이의 절반만큼 위
         doorYPosition = mmToThreeUnits(sectionDoorBottom + sectionDoorHeight / 2);
 
-        console.log('🚪📍 하부 섹션 도어 Y 위치 (가구 기준):', {
+// console.log('🚪📍 하부 섹션 도어 Y 위치 (가구 기준):', {
           fullSpaceHeight,
           totalDoorHeight,
           totalSectionHeight,
@@ -1065,7 +1065,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         doorYPosition = mmToThreeUnits(doorCenter);
 
-        console.log('🚪📍 상부 섹션 도어 Y 위치 (가구 기준):', {
+// console.log('🚪📍 상부 섹션 도어 Y 위치 (가구 기준):', {
           fullSpaceHeight,
           totalDoorHeight,
           totalSectionHeight,
@@ -1108,7 +1108,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorYPosition += mmToThreeUnits(heightDiff / 2);
       }
 
-      console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
+// console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
         fullSpaceHeight,
         cabinetHeight: tallCabinetFurnitureHeight,
         doorTopGap,
@@ -1144,7 +1144,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 편집 모드 체크 로그
   useEffect(() => {
     if (isEditMode) {
-      console.log('🚪🔓 도어 편집 모드 활성화:', {
+// console.log('🚪🔓 도어 편집 모드 활성화:', {
         isEditMode,
         doorsOpen,
         shouldOpen: doorsOpen || isEditMode,
@@ -1231,14 +1231,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // slotCenterX가 제공되었는지 확인
   if (slotCenterX !== undefined && slotCenterX !== null) {
     // slotCenterX가 제공된 경우 그대로 사용
-    console.log(`🚪 도어 위치 사용 (제공된 slotCenterX):`, {
+// console.log(`🚪 도어 위치 사용 (제공된 slotCenterX):`, {
       slotIndex,
       slotCenterX,
       doorGroupX
     });
   } else {
     // slotCenterX가 제공되지 않은 경우 기본값 0 사용
-    console.log(`🚪 도어 위치 기본값 사용:`, {
+// console.log(`🚪 도어 위치 기본값 사용:`, {
       slotIndex,
       doorGroupX: 0
     });
@@ -1248,7 +1248,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const checkColumnAdjacent = () => {
     const columns = originalSpaceInfo.columns || [];
     if (columns.length === 0) {
-      console.log('🚪 기둥이 없음');
+// console.log('🚪 기둥이 없음');
       return { isNearColumn: false, columnSide: null };
     }
     
@@ -1257,7 +1257,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorLeftEdge = doorCenterX - mmToThreeUnits(actualDoorWidth / 2);
     const doorRightEdge = doorCenterX + mmToThreeUnits(actualDoorWidth / 2);
     
-    console.log('🚪 도어 위치 체크:', {
+// console.log('🚪 도어 위치 체크:', {
       doorCenterX,
       doorLeftEdge,
       doorRightEdge,
@@ -1278,7 +1278,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const leftDistance = Math.abs(doorLeftEdge - columnRightEdge);
       const rightDistance = Math.abs(doorRightEdge - columnLeftEdge);
       
-      console.log('🚪 기둥 거리 체크:', {
+// console.log('🚪 기둥 거리 체크:', {
         columnPosition: column.position,
         columnX,
         columnWidth: column.width,
@@ -1291,18 +1291,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       // 왼쪽에 기둥이 있는 경우
       if (leftDistance < threshold) {
-        console.log('🚪 왼쪽에 기둥 감지');
+// console.log('🚪 왼쪽에 기둥 감지');
         return { isNearColumn: true, columnSide: 'left' };
       }
       
       // 오른쪽에 기둥이 있는 경우
       if (rightDistance < threshold) {
-        console.log('🚪 오른쪽에 기둥 감지');
+// console.log('🚪 오른쪽에 기둥 감지');
         return { isNearColumn: true, columnSide: 'right' };
       }
     }
     
-    console.log('🚪 기둥 인접하지 않음');
+// console.log('🚪 기둥 인접하지 않음');
     return { isNearColumn: false, columnSide: null };
   };
   
@@ -1321,7 +1321,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 기둥이 오른쪽에 있으면 오른쪽 힌지 (도어가 왼쪽으로 열림 - 기둥 반대 방향으로 열림)
     adjustedHingePosition = columnCheck.columnSide as 'left' | 'right';
 
-    console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
+// console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
       originalHinge: hingePosition,
       adjustedHinge: adjustedHingePosition,
       columnSide: columnCheck.columnSide,
@@ -1331,7 +1331,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: '힌지는 기둥 쪽에 위치하여 도어가 기둥 반대방향으로 열림'
     });
   } else {
-    console.log('🚪 힌지 조정 안함:', {
+// console.log('🚪 힌지 조정 안함:', {
       isNearColumn: columnCheck.isNearColumn,
       columnSide: columnCheck.columnSide,
       isDoorModule,
@@ -1348,7 +1348,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
     const doorGap = 3;
 
-    console.log('[DoorDebug] dual-door slot widths', {
+// console.log('[DoorDebug] dual-door slot widths', {
       slotWidths,
       moduleWidth,
       effectiveColumnWidth,
@@ -1412,7 +1412,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
-    console.log('🚪 듀얼 도어 위치:', {
+// console.log('🚪 듀얼 도어 위치:', {
       totalWidth,
       slotWidths,
       leftDoorWidth,
@@ -2272,7 +2272,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     const doorWidthUnits = mmToThreeUnits(doorWidth);
 
-    console.log('🚪 싱글 도어 크기:', {
+// console.log('🚪 싱글 도어 크기:', {
       actualDoorWidth,
       doorWidth,
       originalSlotWidth,
@@ -2883,7 +2883,7 @@ export default React.memo(DoorModule, (prevProps, nextProps) => {
     prevMaterialConfig?.doorColor === nextMaterialConfig?.doorColor &&
     prevMaterialConfig?.doorTexture === nextMaterialConfig?.doorTexture;
 
-  console.log('🔍 DoorModule React.memo 비교:', {
+// console.log('🔍 DoorModule React.memo 비교:', {
     prevDoorTexture: prevMaterialConfig?.doorTexture,
     nextDoorTexture: nextMaterialConfig?.doorTexture,
     doorTextureChanged: prevMaterialConfig?.doorTexture !== nextMaterialConfig?.doorTexture,

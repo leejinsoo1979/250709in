@@ -61,7 +61,7 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
       
       // 키큰장 디버그
       if (module.moduleId.includes('tall') || module.moduleId.includes('pantry') || module.moduleId.includes('wardrobe')) {
-        console.log('🔦 키큰장 폭 계산:', {
+// console.log('🔦 키큰장 폭 계산:', {
           moduleId: module.moduleId,
           adjustedWidth: module.adjustedWidth,
           customWidth: module.customWidth,
@@ -149,7 +149,7 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
       : [];
     
     // 띄워서 배치 조명 그룹 생성
-    console.log('🔦 띄움 배치 조명 생성:', {
+// console.log('🔦 띄움 배치 조명 생성:', {
       isFloatingMode,
       floatHeight,
       floatHeightInThreeUnits: mmToThreeUnits(floatHeight),
@@ -211,7 +211,7 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
         const width = baseWidth * 1.2; // 상부장과 동일하게 1.2배 확장
         const centerX = (group.startX + group.endX) / 2;
         
-        console.log('🔦 띄워서 배치 조명 상세:', {
+// console.log('🔦 띄워서 배치 조명 상세:', {
           baseWidth,
           width,
           height: group.height,

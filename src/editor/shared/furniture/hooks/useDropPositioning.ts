@@ -107,13 +107,13 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
         const dualCenterMm = (leftColumnCenterMm + rightColumnCenterMm) / 2;
         targetPositionX = dualCenterMm * 0.01; // mm to Three.js
         targetColumn = dualPositionIndex;
-        console.log(`🎯 [${zone}] Dual furniture position:`, dualPositionIndex, targetPositionX);
+        // debug removed for perf
       } else {
         // 싱글가구: 단일 컬럼 중심에 배치
         const columnCenterMm = zoneStartX + (clampedColumnIndex * zoneColumnWidth) + (zoneColumnWidth / 2);
         targetPositionX = columnCenterMm * 0.01; // mm to Three.js
         targetColumn = clampedColumnIndex;
-        console.log(`🎯 [${zone}] Single furniture position:`, clampedColumnIndex, targetPositionX);
+        // debug removed for perf
       }
       
       return {
@@ -144,11 +144,11 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
           (indexing.threeUnitPositions[dualPositionIndex + 1] - indexing.threeUnitPositions[dualPositionIndex]) / 2;
       }
       targetColumn = dualPositionIndex;
-      console.log('🎯 Dual furniture position (슬롯 경계):', dualPositionIndex, targetPositionX);
+      // debug removed for perf
     } else {
       targetPositionX = indexing.threeUnitPositions[clampedColumnIndex];
       targetColumn = clampedColumnIndex;
-      console.log('🎯 Single furniture position:', clampedColumnIndex, targetPositionX);
+      // debug removed for perf
     }
     
     return {
@@ -178,7 +178,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
           const x = indexing.threeUnitDualPositions?.[i] ?? 
             indexing.threeUnitPositions[i] + 
             (indexing.threeUnitPositions[i + 1] - indexing.threeUnitPositions[i]) / 2;
-          console.log('✅ Found available dual slot at:', i);
+          // debug removed for perf
           return { column: i, x };
         }
       }
@@ -189,7 +189,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
           const x = indexing.threeUnitDualPositions?.[i] ?? 
             indexing.threeUnitPositions[i] + 
             (indexing.threeUnitPositions[i + 1] - indexing.threeUnitPositions[i]) / 2;
-          console.log('✅ Found available dual slot at:', i);
+          // debug removed for perf
           return { column: i, x };
         }
       }
@@ -200,7 +200,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       // 현재 위치부터 오른쪽으로 검색
       for (let i = targetColumn; i <= maxSingleIndex; i++) {
         if (!checkSlotOccupancy(i, false)) {
-          console.log('✅ Found available single slot at:', i);
+          // debug removed for perf
           return { column: i, x: indexing.threeUnitPositions[i] };
         }
       }
@@ -208,13 +208,13 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       // 오른쪽에서 찾지 못하면 왼쪽으로 검색
       for (let i = targetColumn - 1; i >= 0; i--) {
         if (!checkSlotOccupancy(i, false)) {
-          console.log('✅ Found available single slot at:', i);
+          // debug removed for perf
           return { column: i, x: indexing.threeUnitPositions[i] };
         }
       }
     }
     
-    console.log('❌ No available slots found');
+    // debug removed for perf
     return null;
   };
 

@@ -83,7 +83,7 @@ export const useFurnitureKeyboard = ({
           ? editingModule.isDualSlot
           : editingModule.moduleId.includes('dual-');
 
-        console.log('🔍 [useFurnitureKeyboard] 가구 타입 판별:', {
+// console.log('🔍 [useFurnitureKeyboard] 가구 타입 판별:', {
           moduleZone,
           columnWidth,
           furnitureWidth: moduleData.dimensions.width,
@@ -110,7 +110,7 @@ export const useFurnitureKeyboard = ({
           }
         }
 
-        console.log('🔍 [useFurnitureKeyboard] 슬롯 인덱스 찾기:', {
+// console.log('🔍 [useFurnitureKeyboard] 슬롯 인덱스 찾기:', {
           moduleZone,
           hasZones: !!indexing.zones,
           currentSlotIndex,
@@ -122,7 +122,7 @@ export const useFurnitureKeyboard = ({
         if (currentSlotIndex === -1) {
           // 슬롯 인덱스를 못 찾은 경우 placedModule의 slotIndex 사용 (fallback)
           currentSlotIndex = editingModule.slotIndex || 0;
-          console.log('⚠️ [useFurnitureKeyboard] 슬롯 위치를 못 찾아 저장된 slotIndex 사용:', currentSlotIndex);
+// console.log('⚠️ [useFurnitureKeyboard] 슬롯 위치를 못 찾아 저장된 slotIndex 사용:', currentSlotIndex);
         }
         
         switch (e.key) {
@@ -139,7 +139,7 @@ export const useFurnitureKeyboard = ({
             
           case 'ArrowLeft': {
             // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
-            console.log('⌨️ ArrowLeft 키 입력:', {
+// console.log('⌨️ ArrowLeft 키 입력:', {
               currentSlot: currentSlotIndex,
               editingModuleZone: editingModule.zone,
               hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
@@ -154,7 +154,7 @@ export const useFurnitureKeyboard = ({
               targetModuleId, // excludeModuleId로 전달
               editingModule.zone // 현재 zone 유지
             );
-            console.log('⌨️ ArrowLeft 결과:', { nextSlot });
+// console.log('⌨️ ArrowLeft 결과:', { nextSlot });
 
             if (nextSlot !== null) {
               let newX: number;
@@ -207,10 +207,10 @@ export const useFurnitureKeyboard = ({
                 // Column C (300mm) 특별 처리 - 깊이 조정
                 if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
                   customDepth = 730 - columnDepth; // 430mm
-                  console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
+// console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
                 }
                 
-                console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
+// console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
                   slotIndex: nextSlot,
                   columnDepth,
                   originalWidth: moduleData.dimensions.width,
@@ -266,7 +266,7 @@ export const useFurnitureKeyboard = ({
 
           case 'ArrowRight': {
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
-            console.log('⌨️ ArrowRight 키 입력:', {
+// console.log('⌨️ ArrowRight 키 입력:', {
               currentSlot: currentSlotIndex,
               editingModuleZone: editingModule.zone,
               hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
@@ -281,7 +281,7 @@ export const useFurnitureKeyboard = ({
               targetModuleId, // excludeModuleId로 전달
               editingModule.zone // 현재 zone 유지
             );
-            console.log('⌨️ ArrowRight 결과:', { nextSlot });
+// console.log('⌨️ ArrowRight 결과:', { nextSlot });
 
             if (nextSlot !== null) {
               let newX: number;
@@ -334,10 +334,10 @@ export const useFurnitureKeyboard = ({
                 // Column C (300mm) 특별 처리 - 깊이 조정
                 if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
                   customDepth = 730 - columnDepth; // 430mm
-                  console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
+// console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
                 }
                 
-                console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
+// console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
                   slotIndex: nextSlot,
                   columnDepth,
                   originalWidth: moduleData.dimensions.width,
@@ -510,10 +510,10 @@ export const useFurnitureKeyboard = ({
                   // Column C (300mm) 특별 처리 - 깊이 조정
                   if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
                     customDepth = 730 - columnDepth; // 430mm
-                    console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
+// console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
                   }
                   
-                  console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
+// console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
                     slotIndex: nextSlot,
                     columnDepth,
                     originalWidth: moduleData.dimensions.width,
@@ -608,10 +608,10 @@ export const useFurnitureKeyboard = ({
                   // Column C (300mm) 특별 처리 - 깊이 조정
                   if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
                     customDepth = 730 - columnDepth; // 430mm
-                    console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
+// console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
                   }
                   
-                  console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
+// console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
                     slotIndex: nextSlot,
                     columnDepth,
                     originalWidth: moduleData.dimensions.width,
@@ -653,7 +653,7 @@ export const useFurnitureKeyboard = ({
         if (e.key === 'Escape') {
           const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
           if (selectedFurnitureId) {
-            console.log('🔵 [useFurnitureKeyboard] ESC 키로 selectedFurnitureId 해제:', selectedFurnitureId);
+// console.log('🔵 [useFurnitureKeyboard] ESC 키로 selectedFurnitureId 해제:', selectedFurnitureId);
             setSelectedFurnitureId(null);
             e.preventDefault();
           }

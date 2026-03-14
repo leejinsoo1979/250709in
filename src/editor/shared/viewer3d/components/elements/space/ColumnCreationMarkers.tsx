@@ -223,7 +223,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
               e.stopPropagation();
               // 이벤트에 플래그 설정하여 전체 공간 클릭 핸들러가 중복 실행되지 않도록
               (e.nativeEvent as any).columnMarkerHandled = true;
-              console.log('🎯 + 아이콘 클릭됨:', xPosition);
+// console.log('🎯 + 아이콘 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -242,7 +242,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 1.0, 0.1]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 배경 클릭됨:', xPosition);
+// console.log('🎯 + 배경 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -265,7 +265,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             anchorY="middle"
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 텍스트 클릭됨:', xPosition);
+// console.log('🎯 + 텍스트 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -279,7 +279,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             rotation={[-Math.PI / 2, 0, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 바닥 원 클릭됨:', xPosition);
+// console.log('🎯 바닥 원 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -298,7 +298,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 0.5, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 가이드 라인 클릭됨:', xPosition);
+// console.log('🎯 가이드 라인 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}

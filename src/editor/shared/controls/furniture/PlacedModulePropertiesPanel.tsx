@@ -36,7 +36,7 @@ const getFurnitureImagePath = (moduleId: string) => {
   const imagePath = FURNITURE_ICONS[baseModuleType] || FURNITURE_ICONS['single-2drawer-hanging'];
   
   if (import.meta.env.DEV) {
-    console.log(`🖼️ [가구 팝업 이미지] ${moduleId} → ${baseModuleType} → ${imagePath}`);
+// console.log(`🖼️ [가구 팝업 이미지] ${moduleId} → ${baseModuleType} → ${imagePath}`);
   }
   return imagePath;
 };
@@ -1054,7 +1054,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
         // placedModule에 값이 없었다면 기본값을 실제로 저장
         if (currentPlacedModule.lowerSectionDepth === undefined || currentPlacedModule.upperSectionDepth === undefined) {
-          console.log('🔧 [섹션 깊이 초기화] 기본값을 placedModule에 저장:', { lowerDepth, upperDepth });
+// console.log('🔧 [섹션 깊이 초기화] 기본값을 placedModule에 저장:', { lowerDepth, upperDepth });
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
             upperSectionDepth: upperDepth,
@@ -1076,7 +1076,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
       
-      console.log('🔧 팝업 초기값 설정:', {
+// console.log('🔧 팝업 초기값 설정:', {
         moduleId: currentPlacedModule.moduleId,
         hasCustomDepth: currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null,
         customDepth: currentPlacedModule.customDepth,
@@ -1132,24 +1132,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {
-    console.log(`🔍 [가구 타입 확인] ${moduleData?.id}: 듀얼=${isDualFurniture}, 싱글=${isSingleFurniture}, 커버도어=${isCoverDoor}`);
-    console.log(`🚪 [도어 경첩 표시 조건] hasDoor=${hasDoor}, isSingleFurniture=${isSingleFurniture}, 표시여부=${hasDoor && isSingleFurniture}`);
-    console.log(`📐 [섹션 정보] sections.length=${sections.length}, isTwoSectionFurniture=${isTwoSectionFurniture}, showDetails=${showDetails}, sections=`, sections);
-    console.log(`🎯 [섹션 깊이 UI 표시 조건] !showDetails=${!showDetails}, isTwoSectionFurniture=${isTwoSectionFurniture}, 표시여부=${!showDetails && isTwoSectionFurniture}`);
-    console.log(`🔧 [도어 분할 UI 표시 조건] !showDetails=${!showDetails}, moduleData.hasDoor=${moduleData?.hasDoor}, hasDoor=${hasDoor}, isTwoSectionFurniture=${isTwoSectionFurniture}, 최종표시=${!showDetails && moduleData?.hasDoor && hasDoor && isTwoSectionFurniture}`);
-    console.log(`📋 [전체 modelConfig]`, moduleData?.modelConfig);
+// console.log(`🔍 [가구 타입 확인] ${moduleData?.id}: 듀얼=${isDualFurniture}, 싱글=${isSingleFurniture}, 커버도어=${isCoverDoor}`);
+// console.log(`🚪 [도어 경첩 표시 조건] hasDoor=${hasDoor}, isSingleFurniture=${isSingleFurniture}, 표시여부=${hasDoor && isSingleFurniture}`);
+// console.log(`📐 [섹션 정보] sections.length=${sections.length}, isTwoSectionFurniture=${isTwoSectionFurniture}, showDetails=${showDetails}, sections=`, sections);
+// console.log(`🎯 [섹션 깊이 UI 표시 조건] !showDetails=${!showDetails}, isTwoSectionFurniture=${isTwoSectionFurniture}, 표시여부=${!showDetails && isTwoSectionFurniture}`);
+// console.log(`🔧 [도어 분할 UI 표시 조건] !showDetails=${!showDetails}, moduleData.hasDoor=${moduleData?.hasDoor}, hasDoor=${hasDoor}, isTwoSectionFurniture=${isTwoSectionFurniture}, 최종표시=${!showDetails && moduleData?.hasDoor && hasDoor && isTwoSectionFurniture}`);
+// console.log(`📋 [전체 modelConfig]`, moduleData?.modelConfig);
   }
 
   // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음
   if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
-    console.log('📝 PlacedModulePropertiesPanel 렌더링 안 함:', {
+// console.log('📝 PlacedModulePropertiesPanel 렌더링 안 함:', {
       type: activePopup.type,
       id: activePopup.id
     });
     return null;
   }
 
-  console.log('📝 PlacedModulePropertiesPanel 렌더링됨:', {
+// console.log('📝 PlacedModulePropertiesPanel 렌더링됨:', {
     type: activePopup.type,
     id: activePopup.id
   });
@@ -1260,7 +1260,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       
       updatePlacedModule(activePopup.id, updateData);
       
-      console.log('📏 가구 너비 조정:', {
+// console.log('📏 가구 너비 조정:', {
         originalWidth: moduleData.dimensions.width,
         newWidth,
         columnPosition: slotInfo?.column?.position,
@@ -1487,34 +1487,34 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 섹션 깊이 입력 핸들러
   const handleLowerDepthChange = (value: string) => {
-    console.log('⬇️⬇️⬇️ [하부 섹션 깊이 변경 시작] value=', value, 'currentPlacedModule.id=', currentPlacedModule?.id);
+// console.log('⬇️⬇️⬇️ [하부 섹션 깊이 변경 시작] value=', value, 'currentPlacedModule.id=', currentPlacedModule?.id);
     setLowerDepthInput(value);
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
-    console.log('🔢 [숫자 파싱] numValue=', numValue, 'isValid=', !isNaN(numValue) && numValue > 0);
+// console.log('🔢 [숫자 파싱] numValue=', numValue, 'isValid=', !isNaN(numValue) && numValue > 0);
 
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
-      console.log('✅✅✅ [하부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
+// console.log('✅✅✅ [하부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
       setLowerSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: numValue });
-      console.log('💾 [updatePlacedModule 호출 완료]');
+// console.log('💾 [updatePlacedModule 호출 완료]');
     }
   };
 
   const handleUpperDepthChange = (value: string) => {
-    console.log('⬆️⬆️⬆️ [상부 섹션 깊이 변경 시작] value=', value, 'currentPlacedModule.id=', currentPlacedModule?.id);
+// console.log('⬆️⬆️⬆️ [상부 섹션 깊이 변경 시작] value=', value, 'currentPlacedModule.id=', currentPlacedModule?.id);
     setUpperDepthInput(value);
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
-    console.log('🔢 [숫자 파싱] numValue=', numValue, 'isValid=', !isNaN(numValue) && numValue > 0);
+// console.log('🔢 [숫자 파싱] numValue=', numValue, 'isValid=', !isNaN(numValue) && numValue > 0);
 
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
-      console.log('✅✅✅ [상부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
+// console.log('✅✅✅ [상부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
       setUpperSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: numValue });
-      console.log('💾 [updatePlacedModule 호출 완료]');
+// console.log('💾 [updatePlacedModule 호출 완료]');
     }
   };
 
@@ -2025,10 +2025,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 3D 뷰어 강조용: 패널 정보를 uiStore에 저장
                           if (newIndex !== null && currentPlacedModule && panel.name) {
                             const panelId = `${currentPlacedModule.id}-${panel.name}`;
-                            console.log('🎯 패널 강조 설정 (정보성):', panelId);
+// console.log('🎯 패널 강조 설정 (정보성):', panelId);
                             setHighlightedPanel(panelId);
                           } else {
-                            console.log('🎯 패널 강조 해제');
+// console.log('🎯 패널 강조 해제');
                             setHighlightedPanel(null);
                           }
                         }}
@@ -2047,7 +2047,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
                   // 디버그: 마이다 패널 정보 출력
                   if (panel.name.includes('마이다')) {
-                    console.log('🎯 마이다 패널:', {
+// console.log('🎯 마이다 패널:', {
                       name: panel.name,
                       width: panel.width,
                       height: panel.height,
@@ -2134,10 +2134,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         // 3D 뷰어 강조용: 패널 정보를 uiStore에 저장
                         if (newIndex !== null && currentPlacedModule && panel.name) {
                           const panelId = `${currentPlacedModule.id}-${panel.name}`;
-                          console.log('🎯 패널 강조 설정 (일반):', panelId);
+// console.log('🎯 패널 강조 설정 (일반):', panelId);
                           setHighlightedPanel(panelId);
                         } else {
-                          console.log('🎯 패널 강조 해제');
+// console.log('🎯 패널 강조 해제');
                           setHighlightedPanel(null);
                         }
                       }}
@@ -3147,7 +3147,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 섹션 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
           {!showDetails && isTwoSectionFurniture && (() => {
-            console.log('🎨 [섹션 깊이 UI 렌더링] lowerDepthInput=', lowerDepthInput, 'upperDepthInput=', upperDepthInput);
+// console.log('🎨 [섹션 깊이 UI 렌더링] lowerDepthInput=', lowerDepthInput, 'upperDepthInput=', upperDepthInput);
             return (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>섹션 깊이 설정</h5>
@@ -3301,12 +3301,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   onFocus={() => {
                     if (currentPlacedModule) {
                       const panelId = `${currentPlacedModule.id}-(하)상판`;
-                      console.log('🎯 하부장 상부패널 강조:', panelId);
+// console.log('🎯 하부장 상부패널 강조:', panelId);
                       setHighlightedPanel(panelId);
                     }
                   }}
                   onBlur={() => {
-                    console.log('🎯 패널 강조 해제');
+// console.log('🎯 패널 강조 해제');
                     setHighlightedPanel(null);
                   }}
                   onKeyDown={handleLowerTopOffsetKeyDown}

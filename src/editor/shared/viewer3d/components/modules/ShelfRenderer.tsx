@@ -135,7 +135,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         ? -innerWidth/2 - textOffset  // 좌측뷰: 가구 좌측 끝 밖으로
         : innerWidth/2 + textOffset;  // 우측뷰: 가구 우측 끝 밖으로
 
-      console.log('📏 ShelfRenderer getDimensionXPosition:',
+// console.log('📏 ShelfRenderer getDimensionXPosition:',
         `viewMode=${viewMode}`,
         `view2DDirection=${view2DDirection}`,
         `innerWidth=${innerWidth}`,
@@ -174,7 +174,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
   // 절대 위치 모드: 마감 패널 또는 절대 위치 지정
   if (isTopFinishPanel && shelfCount === 1) {
-    console.log('🔥 isTopFinishPanel 상판 렌더링:', { furnitureId, sectionType, innerHeight, yOffset });
+// console.log('🔥 isTopFinishPanel 상판 렌더링:', { furnitureId, sectionType, innerHeight, yOffset });
 
     // 2hanging 가구는 SingleType2에서 직접 렌더링하므로 여기서는 렌더링하지 않음
     const is2Hanging = furnitureId?.includes('2hanging');
@@ -322,7 +322,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   centerY: 0 // 섹션 중앙
                 });
 
-                console.log('🔵 ShelfRenderer 듀얼 측면뷰 - 섹션 전체 높이:', {
+// console.log('🔵 ShelfRenderer 듀얼 측면뷰 - 섹션 전체 높이:', {
                   furnitureId,
                   viewMode,
                   view2DDirection,
@@ -353,7 +353,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       const height = mmToThreeUnits(firstShelfBottomMm); // 바닥(0)부터 선반 하단까지 (Three.js 단위로 변환)
                       const centerY = (-innerHeight / 2) + height / 2;
 
-                    console.log('🔴 절대위치모드 - 첫 번째 칸:', {
+// console.log('🔴 절대위치모드 - 첫 번째 칸:', {
                       shelfPositions_0: shelfPositions[0],
                       basicThickness,
                       basicThickness_mm: basicThickness * 100,
@@ -504,7 +504,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
               // 상단 프레임 치수는 showTopFrameDimension이 true이고 3D/측면뷰/탑뷰가 아닐 때만 표시
               if (showTopFrameDimension && viewMode !== '3D' && !isSideView && !isTopView) {
-                console.log('🟣 상단 프레임 엔드포인트:', {
+// console.log('🟣 상단 프레임 엔드포인트:', {
                   'topFrameTopY_mm': topFrameTopY * 100,
                   'topFrameBottomY_mm': topFrameBottomY * 100,
                   '위점렌더링': 'O',
@@ -612,7 +612,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       compartmentTop = (innerHeight / 2) - basicThickness; // 상단 프레임 하단
 
                       // 디버깅: 상부섹션 높이 계산 로그
-                      console.log('🔍 ShelfRenderer 상부섹션 높이 계산:', {
+// console.log('🔍 ShelfRenderer 상부섹션 높이 계산:', {
                         furnitureId,
                         viewMode,
                         view2DDirection,
@@ -778,7 +778,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             const compartmentHeightMm = Math.round(compartmentHeight * 100);
             
             // 디버깅
-            console.log('🟢 균등분할모드 - 칸 높이:', {
+// console.log('🟢 균등분할모드 - 칸 높이:', {
               i,
               innerHeight,
               innerHeight_mm: innerHeight * 100,

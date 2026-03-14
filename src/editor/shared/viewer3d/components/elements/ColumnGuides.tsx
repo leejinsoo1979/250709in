@@ -55,7 +55,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
   useEffect(() => {
     // 디버깅 로그
-    console.log('🔍 현재 activeDroppedCeilingTab:', activeDroppedCeilingTab);
+// console.log('🔍 현재 activeDroppedCeilingTab:', activeDroppedCeilingTab);
   }, [activeDroppedCeilingTab]);
   
   // 단내림 정보 먼저 계산
@@ -102,7 +102,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const topFrameHeight = spaceInfo.frameSize?.top || 0;
   
   // 디버깅 로그 추가
-  console.log('🏗️ 단내림 정보:', {
+// console.log('🏗️ 단내림 정보:', {
     hasDroppedCeiling,
     droppedTotalHeight,
     droppedInternalHeight,
@@ -124,7 +124,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 전체 내경 정보와 비교
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
     
-    console.log('🔍🔍🔍 ColumnGuides - 슬롯 가이드 라인 경계:', {
+// console.log('🔍🔍🔍 ColumnGuides - 슬롯 가이드 라인 경계:', {
       전체인덱싱: {
         내경시작X: fullIndexing.internalStartX,
         내경너비: fullIndexing.internalWidth,
@@ -163,7 +163,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   
   // 디버깅 로그 추가
   React.useEffect(() => {
-    console.log('🎯 ColumnGuides - 슬롯 정보 업데이트:', {
+// console.log('🎯 ColumnGuides - 슬롯 정보 업데이트:', {
       customColumnCount: spaceInfo.customColumnCount,
       mainDoorCount: spaceInfo.mainDoorCount,
       droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
@@ -237,7 +237,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     : ceilingY;
   
   // 디버깅: 높이 계산 확인
-  console.log('📏 높이 계산:', {
+// console.log('📏 높이 계산:', {
     '전체 높이 (mm)': spaceInfo.height,
     '단차 (mm)': spaceInfo.droppedCeiling?.dropHeight,
     '단내림 전체 높이 (mm)': droppedTotalHeight,
@@ -287,7 +287,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     zoneType: string,
     slotWidths?: number[]
   ) => {
-    console.log('📐 renderSlotGuides 호출됨:', {
+// console.log('📐 renderSlotGuides 호출됨:', {
       zoneType,
       startX,
       width,
@@ -328,7 +328,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // slotWidths가 있으면 사용, 없으면 균등 분할
     // ColumnIndexer에서 이미 엔드패널을 고려한 값을 제공하므로 여기서는 추가 조정 불필요
     if (slotWidths && slotWidths.length === columnCount) {
-      console.log('📏 slotWidths 사용하여 경계 계산:', {
+// console.log('📏 slotWidths 사용하여 경계 계산:', {
         startX,
         slotWidths,
         totalWidth: slotWidths.reduce((a, b) => a + b, 0)
@@ -339,7 +339,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       }
     } else {
       // 기존 로직 유지 (호환성)
-      console.log('📏 균등 분할로 경계 계산:', {
+// console.log('📏 균등 분할로 경계 계산:', {
         startX,
         width,
         columnCount,
@@ -354,7 +354,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       }
     }
     
-    console.log('📏 최종 경계:', {
+// console.log('📏 최종 경계:', {
       firstBoundary: boundaries[0],
       lastBoundary: boundaries[boundaries.length - 1],
       totalBoundaries: boundaries.length,
@@ -380,7 +380,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     }
     
     // 경계 확인 로그
-    console.log(`📏 ${zoneType} 영역 경계:`, {
+// console.log(`📏 ${zoneType} 영역 경계:`, {
       startX_mm: startX,
       endX_mm: startX + width,
       width_mm: width,
@@ -401,7 +401,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       const zoneStartX = mmToThreeUnits(startX);
       const zoneEndX = mmToThreeUnits(startX + width);
       
-      console.log(`📐 ${zoneType} 수평 가이드 범위:`, {
+// console.log(`📐 ${zoneType} 수평 가이드 범위:`, {
         시작X_mm: startX,
         끝X_mm: startX + width,
         시작X_three: zoneStartX,
@@ -596,7 +596,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           // slotWidths가 있으면 사용 (이미 조정된 값)
           if (slotWidths && slotWidths[index] !== undefined) {
             rawWidth = slotWidths[index];
-            console.log(`🎯 슬롯 ${index} 너비 (slotWidths 사용):`, rawWidth);
+// console.log(`🎯 슬롯 ${index} 너비 (slotWidths 사용):`, rawWidth);
           } else {
             // slotWidths가 없으면 직접 계산
             if (spaceInfo.installType === 'freestanding') {
@@ -643,11 +643,11 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       });
     }
     
-    console.log(`📐 ${zoneType} 영역 가이드 개수:`, guides.length);
+// console.log(`📐 ${zoneType} 영역 가이드 개수:`, guides.length);
     return guides;
   };
 
-  console.log('🏗️ ColumnGuides 렌더링:', {
+// console.log('🏗️ ColumnGuides 렌더링:', {
     hasDroppedCeiling,
     activeDroppedCeilingTab,
     'zoneSlotInfo.dropped': zoneSlotInfo.dropped,

@@ -112,7 +112,7 @@ const PanelBCreationMarkers: React.FC<PanelBCreationMarkersProps> = ({ spaceInfo
       orientation: 'horizontal'
     };
     
-    console.log('🪵 새 패널B 생성:', newPanelB);
+// console.log('🪵 새 패널B 생성:', newPanelB);
     addPanelB(newPanelB);
   };
 
@@ -180,7 +180,7 @@ const PanelBCreationMarkers: React.FC<PanelBCreationMarkersProps> = ({ spaceInfo
             position={[0, 0.5, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 아이콘 클릭됨 (패널B):', xPosition);
+// console.log('🎯 + 아이콘 클릭됨 (패널B):', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreatePanelB([xPosition, 0, zPosition]);
             }}
@@ -199,7 +199,7 @@ const PanelBCreationMarkers: React.FC<PanelBCreationMarkersProps> = ({ spaceInfo
             position={[0, 0.5, 0.1]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 배경 클릭됨 (패널B):', xPosition);
+// console.log('🎯 + 배경 클릭됨 (패널B):', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreatePanelB([xPosition, 0, zPosition]);
             }}
@@ -222,7 +222,7 @@ const PanelBCreationMarkers: React.FC<PanelBCreationMarkersProps> = ({ spaceInfo
             anchorY="middle"
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 텍스트 클릭됨 (패널B):', xPosition);
+// console.log('🎯 + 텍스트 클릭됨 (패널B):', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreatePanelB([xPosition, 0, zPosition]);
             }}
@@ -236,7 +236,7 @@ const PanelBCreationMarkers: React.FC<PanelBCreationMarkersProps> = ({ spaceInfo
             rotation={[-Math.PI / 2, 0, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 바닥 원 클릭됨 (패널B):', xPosition);
+// console.log('🎯 바닥 원 클릭됨 (패널B):', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreatePanelB([xPosition, 0, zPosition]);
             }}
@@ -255,7 +255,7 @@ const PanelBCreationMarkers: React.FC<PanelBCreationMarkersProps> = ({ spaceInfo
             position={[0, 0.25, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 가이드 라인 클릭됨 (패널B):', xPosition);
+// console.log('🎯 가이드 라인 클릭됨 (패널B):', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreatePanelB([xPosition, 0, zPosition]);
             }}

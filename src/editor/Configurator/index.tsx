@@ -276,7 +276,7 @@ const Configurator: React.FC = () => {
       uiStore.setCameraMode('perspective');
       uiStore.setShowDimensions(false);
       uiStore.setShowDimensionsText(false);
-      console.log('📸 읽기 전용 모드: 3D 정면 뷰로 초기화 (섬네일과 동일)');
+// console.log('📸 읽기 전용 모드: 3D 정면 뷰로 초기화 (섬네일과 동일)');
     }
   }, [isReadOnly]);
 
@@ -293,7 +293,7 @@ const Configurator: React.FC = () => {
 
       try {
         hasGeneratedInitialThumbnailRef.current = true;
-        console.log('📸 최초 썸네일 자동 생성 시작');
+// console.log('📸 최초 썸네일 자동 생성 시작');
 
         const thumbnail = await captureProjectThumbnail();
         if (thumbnail) {
@@ -304,7 +304,7 @@ const Configurator: React.FC = () => {
             thumbnail: thumbnailBlob
           });
 
-          console.log('📸 최초 썸네일 자동 생성 완료');
+// console.log('📸 최초 썸네일 자동 생성 완료');
         }
       } catch (error) {
         console.error('📸 최초 썸네일 생성 실패:', error);
@@ -489,7 +489,7 @@ const Configurator: React.FC = () => {
       // D 키로 도어 열기/닫기 토글
       if (event.key === 'd' || event.key === 'D') {
         event.preventDefault();
-        console.log('🚪 D 키로 도어 토글 시도');
+// console.log('🚪 D 키로 도어 토글 시도');
         toggleDoors();
         return;
       }
@@ -499,7 +499,7 @@ const Configurator: React.FC = () => {
         const { selectedFurnitureId } = useUIStore.getState();
         if (selectedFurnitureId) {
           event.preventDefault();
-          console.log('🗑️ 키보드로 가구 삭제:', selectedFurnitureId);
+// console.log('🗑️ 키보드로 가구 삭제:', selectedFurnitureId);
           const { removeModule } = useFurnitureStore.getState();
           const { setSelectedFurnitureId } = useUIStore.getState();
           removeModule(selectedFurnitureId);
@@ -512,10 +512,10 @@ const Configurator: React.FC = () => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
         event.preventDefault();
         if (selectedColumnId) {
-          console.log('⌨️ 키보드 단축키로 기둥 편집 모달 열기:', selectedColumnId);
+// console.log('⌨️ 키보드 단축키로 기둥 편집 모달 열기:', selectedColumnId);
           openColumnEditModal(selectedColumnId);
         } else {
-          console.log('⚠️ 선택된 기둥이 없습니다.');
+// console.log('⚠️ 선택된 기둥이 없습니다.');
         }
         return;
       }
@@ -543,7 +543,7 @@ const Configurator: React.FC = () => {
           // 컬럼 위치 업데이트
           updateColumn(activePopup.id, { position: [newX, targetColumn.position[1], targetColumn.position[2]] });
 
-          console.log('⌨️ 컬럼 키보드 이동:', {
+// console.log('⌨️ 컬럼 키보드 이동:', {
             columnId: activePopup.id,
             direction: event.key,
             moveStep: moveStep,
@@ -609,7 +609,7 @@ const Configurator: React.FC = () => {
   // MaterialConfig 변경 모니터링
   useEffect(() => {
     if (spaceInfo.materialConfig) {
-      console.log('🔍 Configurator - MaterialConfig 변경 감지:', {
+// console.log('🔍 Configurator - MaterialConfig 변경 감지:', {
         interiorColor: spaceInfo.materialConfig.interiorColor,
         doorColor: spaceInfo.materialConfig.doorColor,
         interiorTexture: spaceInfo.materialConfig.interiorTexture,
@@ -796,8 +796,8 @@ const Configurator: React.FC = () => {
     module.moduleId.includes('dual-4drawer-pantshanger')
   );
 
-  console.log('🔧 Configurator - hasSpecialDualFurniture:', hasSpecialDualFurniture);
-  console.log('🔧 Configurator - placedModules:', placedModules);
+// console.log('🔧 Configurator - hasSpecialDualFurniture:', hasSpecialDualFurniture);
+// console.log('🔧 Configurator - placedModules:', placedModules);
 
   // 배치된 가구 중 도어가 있는 가구가 있는지 확인
   const hasDoorsInstalled = placedModules.some(module => module.hasDoor);
@@ -807,13 +807,13 @@ const Configurator: React.FC = () => {
     setLoading(true);
 
     // 프로젝트 로드 전에 store 초기화 (이전 데이터 제거)
-    console.log('🧹 프로젝트 로드 전 store 초기화');
+// console.log('🧹 프로젝트 로드 전 store 초기화');
     setPlacedModules([]);
 
     try {
-      console.log('🔄 프로젝트 로드 시작:', projectId);
+// console.log('🔄 프로젝트 로드 시작:', projectId);
       const { project, error } = await getProject(projectId);
-      console.log('📦 프로젝트 로드 결과:', { project, error });
+// console.log('📦 프로젝트 로드 결과:', { project, error });
 
       if (error) {
         console.error('❌ 프로젝트 로드 에러:', error);
@@ -823,7 +823,7 @@ const Configurator: React.FC = () => {
           alert('프로젝트를 불러오는데 실패했습니다: ' + error);
           navigate('/');
         } else {
-          console.log('👁️ 읽기 전용 모드 - 에러 무시');
+// console.log('👁️ 읽기 전용 모드 - 에러 무시');
         }
         return;
       }
@@ -835,7 +835,7 @@ const Configurator: React.FC = () => {
           title: projectTitle,
           location: project.projectData?.location || ''
         });
-        console.log('🔍 loadProject에서 설정한 title:', projectTitle);
+// console.log('🔍 loadProject에서 설정한 title:', projectTitle);
         // installType 하이픈 문제 수정
         const spaceConfig = { ...project.spaceConfig };
         if (spaceConfig.installType === 'built-in') {
@@ -861,7 +861,7 @@ const Configurator: React.FC = () => {
         spaceConfig.mainDoorCount = undefined;
         spaceConfig.droppedCeilingDoorCount = undefined;
         spaceConfig.customColumnCount = undefined;
-        console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
+// console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
@@ -869,7 +869,7 @@ const Configurator: React.FC = () => {
 
         // 프로젝트 소유자 정보 설정
         if (project.userId) {
-          console.log('👤 프로젝트 소유자 정보:', {
+// console.log('👤 프로젝트 소유자 정보:', {
             projectUserId: project.userId,
             currentUserId: user?.uid,
             isOwner: user && project.userId === user.uid,
@@ -881,7 +881,7 @@ const Configurator: React.FC = () => {
 
           // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
           if (user && project.userId === user.uid) {
-            console.log('📸 현재 사용자 Auth 정보:', {
+// console.log('📸 현재 사용자 Auth 정보:', {
               uid: user.uid,
               displayName: user.displayName,
               email: user.email,
@@ -894,7 +894,7 @@ const Configurator: React.FC = () => {
               name: user.displayName || user.email || '소유자',
               photoURL: user.photoURL || undefined
             };
-            console.log('👑 소유자 정보 설정 (현재 사용자):', ownerData);
+// console.log('👑 소유자 정보 설정 (현재 사용자):', ownerData);
             setProjectOwner(ownerData);
           } else {
             // 다른 사용자의 프로젝트인 경우 저장된 정보 사용
@@ -903,19 +903,19 @@ const Configurator: React.FC = () => {
               name: project.userName || project.userEmail || '소유자',
               photoURL: project.userPhotoURL
             };
-            console.log('👑 소유자 정보 설정 (저장된 정보):', ownerData);
+// console.log('👑 소유자 정보 설정 (저장된 정보):', ownerData);
             setProjectOwner(ownerData);
           }
         }
 
         // 디자인파일명 설정은 별도 useEffect에서 처리됨
 
-        console.log('✅ 프로젝트 로드 성공:', project.title);
-        console.log('🪑 배치된 가구 개수:', project.furniture?.placedModules?.length || 0);
-        console.log('🎨 로드된 materialConfig:', project.spaceConfig.materialConfig);
+// console.log('✅ 프로젝트 로드 성공:', project.title);
+// console.log('🪑 배치된 가구 개수:', project.furniture?.placedModules?.length || 0);
+// console.log('🎨 로드된 materialConfig:', project.spaceConfig.materialConfig);
 
         // 프로젝트 로드 후 derivedSpaceStore 명시적 재계산
-        console.log('🔄 [프로젝트 로드 후] derivedSpaceStore 강제 재계산');
+// console.log('🔄 [프로젝트 로드 후] derivedSpaceStore 강제 재계산');
         derivedSpaceStore.recalculateFromSpaceInfo(project.spaceConfig);
 
         // 프로젝트 로드 후 isDirty 초기화 (로드 시 설정된 dirty 플래그 리셋)
@@ -931,7 +931,7 @@ const Configurator: React.FC = () => {
         alert('프로젝트 로드 중 오류가 발생했습니다.');
         navigate('/');
       } else {
-        console.log('👁️ 읽기 전용 모드 - 에러 무시');
+// console.log('👁️ 읽기 전용 모드 - 에러 무시');
       }
     } finally {
       setLoading(false);
@@ -977,18 +977,18 @@ const Configurator: React.FC = () => {
 
   // 디자인 파일 저장 (프로젝트가 아닌 디자인 파일로 저장)
   const saveProject = async () => {
-    console.log('💾 [DEBUG] saveProject 함수 시작');
+// console.log('💾 [DEBUG] saveProject 함수 시작');
 
     // 중복 저장 방지
     if (saveInProgressRef.current) {
-      console.log('⚠️ 저장이 이미 진행 중 - 중복 호출 무시');
+// console.log('⚠️ 저장이 이미 진행 중 - 중복 호출 무시');
       return;
     }
     saveInProgressRef.current = true;
 
     // 읽기 전용 모드에서는 저장 불가
     if (isReadOnly) {
-      console.log('🚫 읽기 전용 모드 - 저장 차단');
+// console.log('🚫 읽기 전용 모드 - 저장 차단');
       alert('읽기 전용 모드에서는 저장할 수 없습니다.');
       saveInProgressRef.current = false;
       return;
@@ -1002,25 +1002,25 @@ const Configurator: React.FC = () => {
     const effectiveProjectId = currentProjectId || urlProjectId;
     const effectiveDesignFileId = currentDesignFileId || urlDesignFileId;
 
-    console.log('💾 [DEBUG] 현재 프로젝트 ID:', currentProjectId);
-    console.log('💾 [DEBUG] URL 프로젝트 ID:', urlProjectId);
-    console.log('💾 [DEBUG] 사용할 프로젝트 ID:', effectiveProjectId);
-    console.log('💾 [DEBUG] 현재 디자인파일 ID:', currentDesignFileId);
-    console.log('💾 [DEBUG] URL 디자인파일 ID:', urlDesignFileId);
-    console.log('💾 [DEBUG] 사용할 디자인파일 ID:', effectiveDesignFileId);
-    console.log('💾 [DEBUG] Firebase 설정:', isFirebaseConfigured());
-    console.log('💾 [DEBUG] 사용자 상태:', !!user);
-    console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
+// console.log('💾 [DEBUG] 현재 프로젝트 ID:', currentProjectId);
+// console.log('💾 [DEBUG] URL 프로젝트 ID:', urlProjectId);
+// console.log('💾 [DEBUG] 사용할 프로젝트 ID:', effectiveProjectId);
+// console.log('💾 [DEBUG] 현재 디자인파일 ID:', currentDesignFileId);
+// console.log('💾 [DEBUG] URL 디자인파일 ID:', urlDesignFileId);
+// console.log('💾 [DEBUG] 사용할 디자인파일 ID:', effectiveDesignFileId);
+// console.log('💾 [DEBUG] Firebase 설정:', isFirebaseConfigured());
+// console.log('💾 [DEBUG] 사용자 상태:', !!user);
+// console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
 
     // Firebase 연결 및 인증 상태 테스트
     try {
       const { db, auth } = await import('@/firebase/config');
-      console.log('💾 [DEBUG] Firestore db 객체:', !!db);
-      console.log('💾 [DEBUG] Auth 객체:', !!auth);
+// console.log('💾 [DEBUG] Firestore db 객체:', !!db);
+// console.log('💾 [DEBUG] Auth 객체:', !!auth);
 
       // 현재 인증 상태 확인
       const currentAuthUser = auth.currentUser;
-      console.log('💾 [DEBUG] auth.currentUser:', {
+// console.log('💾 [DEBUG] auth.currentUser:', {
         exists: !!currentAuthUser,
         uid: currentAuthUser?.uid,
         email: currentAuthUser?.email
@@ -1030,7 +1030,7 @@ const Configurator: React.FC = () => {
       if (currentAuthUser) {
         try {
           const token = await currentAuthUser.getIdToken();
-          console.log('💾 [DEBUG] 사용자 토큰 획득 성공');
+// console.log('💾 [DEBUG] 사용자 토큰 획득 성공');
         } catch (tokenError) {
           console.error('💾 [ERROR] 토큰 획득 실패:', tokenError);
         }
@@ -1058,8 +1058,8 @@ const Configurator: React.FC = () => {
     setSaveStatus('idle');
 
     try {
-      console.log('💾 [DEBUG] 저장할 basicInfo:', basicInfo);
-      console.log('💾 [DEBUG] 저장할 spaceInfo 요약:', {
+// console.log('💾 [DEBUG] 저장할 basicInfo:', basicInfo);
+// console.log('💾 [DEBUG] 저장할 spaceInfo 요약:', {
         width: spaceInfo.width,
         height: spaceInfo.height,
         materialConfig: spaceInfo.materialConfig
@@ -1067,7 +1067,7 @@ const Configurator: React.FC = () => {
 
       // furnitureStore의 현재 상태 직접 확인
       const currentFurnitureState = useFurnitureStore.getState().placedModules;
-      console.log('💾 [DEBUG] furnitureStore 현재 상태:', {
+// console.log('💾 [DEBUG] furnitureStore 현재 상태:', {
         storeCount: currentFurnitureState.length,
         propCount: placedModules.length,
         같은가: currentFurnitureState === placedModules,
@@ -1079,8 +1079,8 @@ const Configurator: React.FC = () => {
         }))
       });
 
-      console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
-      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
+// console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
+// console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
         const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
         return {
           id: m.id,
@@ -1100,10 +1100,10 @@ const Configurator: React.FC = () => {
       try {
         thumbnail = await captureProjectThumbnail();
         if (!thumbnail) {
-          console.log('💾 [DEBUG] 3D 캔버스 캡처 실패, 기본 썸네일 생성');
+// console.log('💾 [DEBUG] 3D 캔버스 캡처 실패, 기본 썸네일 생성');
           thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
         }
-        console.log('💾 [DEBUG] 썸네일 생성 완료');
+// console.log('💾 [DEBUG] 썸네일 생성 완료');
       } catch (thumbnailError) {
         console.error('💾 [DEBUG] 썸네일 생성 실패:', thumbnailError);
         thumbnail = null;
@@ -1112,12 +1112,12 @@ const Configurator: React.FC = () => {
       const firebaseConfigured = isFirebaseConfigured();
 
       if (firebaseConfigured && user) {
-        console.log('💾 [DEBUG] Firebase 저장 모드 진입');
+// console.log('💾 [DEBUG] Firebase 저장 모드 진입');
 
         try {
           // 디자인 파일이 있으면 디자인 파일 업데이트, 없으면 새로 생성
           if (effectiveDesignFileId) {
-            console.log('💾 [DEBUG] 기존 디자인 파일 업데이트');
+// console.log('💾 [DEBUG] 기존 디자인 파일 업데이트');
             const { updateDesignFile } = await import('@/firebase/projects');
 
             const updatePayload = {
@@ -1130,7 +1130,7 @@ const Configurator: React.FC = () => {
               thumbnail: thumbnail
             };
 
-            console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
+// console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
               name: updatePayload.name,
               spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
               furnitureCount: updatePayload.furniture.placedModules.length,
@@ -1150,7 +1150,7 @@ const Configurator: React.FC = () => {
               })
             });
 
-            console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', effectiveDesignFileId);
+// console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', effectiveDesignFileId);
 
             if (!effectiveDesignFileId) {
               console.error('💾 [ERROR] 디자인 파일 ID가 없습니다!');
@@ -1161,7 +1161,7 @@ const Configurator: React.FC = () => {
             }
 
             const result = await updateDesignFile(effectiveDesignFileId, updatePayload);
-            console.log('💾 [DEBUG] updateDesignFile 결과:', result);
+// console.log('💾 [DEBUG] updateDesignFile 결과:', result);
 
             if (result.error) {
               console.error('💾 [ERROR] 디자인 파일 업데이트 실패:', result.error);
@@ -1170,7 +1170,7 @@ const Configurator: React.FC = () => {
               alert('디자인 파일 저장에 실패했습니다: ' + result.error);
             } else {
               // 디자인 파일 저장 성공 후 프로젝트도 업데이트 (공유 링크와 미리보기 모달에서 가구가 보이도록)
-              console.log('💾 프로젝트에도 가구 데이터 저장 시작');
+// console.log('💾 프로젝트에도 가구 데이터 저장 시작');
               try {
                 const projectUpdateResult = await updateProject(effectiveProjectId, {
                   furniture: {
@@ -1182,7 +1182,7 @@ const Configurator: React.FC = () => {
                 if (projectUpdateResult.error) {
                   console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateResult.error);
                 } else {
-                  console.log('✅ 프로젝트에도 가구 데이터 저장 완료');
+// console.log('✅ 프로젝트에도 가구 데이터 저장 완료');
                 }
               } catch (projectUpdateError) {
                 console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateError);
@@ -1192,7 +1192,7 @@ const Configurator: React.FC = () => {
               useProjectStore.getState().markAsSaved();
               useSpaceConfigStore.getState().markAsSaved();
               useFurnitureStore.getState().markAsSaved();
-              console.log('✅ 디자인 파일 저장 성공');
+// console.log('✅ 디자인 파일 저장 성공');
 
               // URL에 프로젝트명과 디자인파일명 유지 (새로고침 시에도 유지)
               const currentParams = new URLSearchParams(window.location.search);
@@ -1214,11 +1214,11 @@ const Configurator: React.FC = () => {
               if (urlNeedsUpdate) {
                 const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
                 window.history.replaceState({}, '', newUrl);
-                console.log('🔗 저장 후 URL 업데이트:', newUrl);
+// console.log('🔗 저장 후 URL 업데이트:', newUrl);
               }
 
               // BroadcastChannel로 디자인 파일 업데이트 알림 (readonly 모드에서는 전송하지 않음)
-              console.log('💾 [DEBUG] BroadcastChannel 전송 체크:', { isReadOnly, mode: searchParams.get('mode') });
+// console.log('💾 [DEBUG] BroadcastChannel 전송 체크:', { isReadOnly, mode: searchParams.get('mode') });
               if (!isReadOnly) {
                 try {
                   const channel = new BroadcastChannel('project-updates');
@@ -1228,17 +1228,17 @@ const Configurator: React.FC = () => {
                     designFileId: effectiveDesignFileId,
                     timestamp: Date.now()
                   });
-                  console.log('📡 디자인 파일 업데이트 알림 전송');
+// console.log('📡 디자인 파일 업데이트 알림 전송');
                   channel.close();
                 } catch (broadcastError) {
                   console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
                 }
               } else {
-                console.log('🚫 readonly 모드 - BroadcastChannel 전송 건너뜀');
+// console.log('🚫 readonly 모드 - BroadcastChannel 전송 건너뜀');
               }
             }
           } else {
-            console.log('💾 [DEBUG] 새 디자인 파일 생성');
+// console.log('💾 [DEBUG] 새 디자인 파일 생성');
             const { createDesignFile } = await import('@/firebase/projects');
             const { id: designFileId, error } = await createDesignFile({
               name: basicInfo.title || '새 디자인',
@@ -1257,7 +1257,7 @@ const Configurator: React.FC = () => {
               alert('디자인 파일 생성에 실패했습니다: ' + error);
             } else if (designFileId) {
               // 디자인 파일 생성 성공 후 프로젝트도 업데이트 (공유 링크와 미리보기 모달에서 가구가 보이도록)
-              console.log('💾 프로젝트에도 가구 데이터 저장 시작');
+// console.log('💾 프로젝트에도 가구 데이터 저장 시작');
               try {
                 const projectUpdateResult = await updateProject(effectiveProjectId, {
                   furniture: {
@@ -1269,7 +1269,7 @@ const Configurator: React.FC = () => {
                 if (projectUpdateResult.error) {
                   console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateResult.error);
                 } else {
-                  console.log('✅ 프로젝트에도 가구 데이터 저장 완료');
+// console.log('✅ 프로젝트에도 가구 데이터 저장 완료');
                 }
               } catch (projectUpdateError) {
                 console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateError);
@@ -1281,7 +1281,7 @@ const Configurator: React.FC = () => {
               useProjectStore.getState().markAsSaved();
               useSpaceConfigStore.getState().markAsSaved();
               useFurnitureStore.getState().markAsSaved();
-              console.log('✅ 새 디자인 파일 생성 및 저장 성공');
+// console.log('✅ 새 디자인 파일 생성 및 저장 성공');
 
               // 첫 저장 후 탭에 designFileId 반영
               if (effectiveProjectId) {
@@ -1303,7 +1303,7 @@ const Configurator: React.FC = () => {
                     designFileId: designFileId,
                     timestamp: Date.now()
                   });
-                  console.log('📡 새 디자인 파일 생성 알림 전송');
+// console.log('📡 새 디자인 파일 생성 알림 전송');
                   channel.close();
                 } catch (broadcastError) {
                   console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
@@ -1319,7 +1319,7 @@ const Configurator: React.FC = () => {
                 params.set('designFileName', encodeURIComponent(basicInfo.title));
               }
               navigate(`/configurator?${params.toString()}`, { replace: true });
-              console.log('🔗 새 디자인 파일 생성 후 URL 업데이트');
+// console.log('🔗 새 디자인 파일 생성 후 URL 업데이트');
             }
           }
 
@@ -1332,7 +1332,7 @@ const Configurator: React.FC = () => {
                 projectId: effectiveProjectId,
                 timestamp: Date.now()
               });
-              console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
+// console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
               channel.close();
             } catch (broadcastError) {
               console.warn('💾 [WARN] BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
@@ -1346,7 +1346,7 @@ const Configurator: React.FC = () => {
 
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
-        console.log('💾 [DEBUG] Firebase 인증 필요');
+// console.log('💾 [DEBUG] Firebase 인증 필요');
         setSaveStatus('error');
         alert('저장하려면 로그인이 필요합니다.');
         setTimeout(() => setSaveStatus('idle'), 3000);
@@ -1356,7 +1356,7 @@ const Configurator: React.FC = () => {
       setSaveStatus('error');
       alert('프로젝트 저장 중 예상치 못한 오류가 발생했습니다: ' + outerError.message);
     } finally {
-      console.log('💾 [DEBUG] saveProject 완료, 저장 상태 해제');
+// console.log('💾 [DEBUG] saveProject 완료, 저장 상태 해제');
       setSaving(false);
       saveInProgressRef.current = false;
     }
@@ -1442,18 +1442,18 @@ const Configurator: React.FC = () => {
 
   // 새 프로젝트 생성 함수
   const handleNewProject = async () => {
-    console.log('🆕 [DEBUG] handleNewProject 함수 시작');
+// console.log('🆕 [DEBUG] handleNewProject 함수 시작');
 
     try {
       const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
-      console.log('🆕 [DEBUG] 사용자 확인 응답:', confirmed);
+// console.log('🆕 [DEBUG] 사용자 확인 응답:', confirmed);
 
       if (!confirmed) {
-        console.log('🆕 [DEBUG] 사용자가 취소함');
+// console.log('🆕 [DEBUG] 사용자가 취소함');
         return;
       }
 
-      console.log('🆕 [DEBUG] 새 프로젝트 생성 시작');
+// console.log('🆕 [DEBUG] 새 프로젝트 생성 시작');
       setSaving(true);
 
       // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거)
@@ -1470,25 +1470,25 @@ const Configurator: React.FC = () => {
         columns: []
       };
 
-      console.log('🆕 [DEBUG] 기본 설정 준비됨:', defaultSpaceConfig);
+// console.log('🆕 [DEBUG] 기본 설정 준비됨:', defaultSpaceConfig);
 
       // 썸네일 생성
       let thumbnail;
       try {
         thumbnail = generateDefaultThumbnail(defaultSpaceConfig, 0);
-        console.log('🆕 [DEBUG] 썸네일 생성 성공');
+// console.log('🆕 [DEBUG] 썸네일 생성 성공');
       } catch (thumbnailError) {
         console.error('🆕 [DEBUG] 썸네일 생성 실패:', thumbnailError);
         thumbnail = null;
       }
 
       const firebaseConfigured = isFirebaseConfigured();
-      console.log('🆕 [DEBUG] Firebase 설정 확인:', firebaseConfigured);
-      console.log('🆕 [DEBUG] 사용자 로그인 상태:', !!user);
-      console.log('🆕 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
+// console.log('🆕 [DEBUG] Firebase 설정 확인:', firebaseConfigured);
+// console.log('🆕 [DEBUG] 사용자 로그인 상태:', !!user);
+// console.log('🆕 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
 
       if (firebaseConfigured && user) {
-        console.log('🆕 [DEBUG] Firebase 모드로 진행');
+// console.log('🆕 [DEBUG] Firebase 모드로 진행');
 
         try {
           const projectData = {
@@ -1501,9 +1501,9 @@ const Configurator: React.FC = () => {
             ...(thumbnail && { thumbnail })
           };
 
-          console.log('🆕 [DEBUG] createProject 호출 시작, 정리된 데이터:', projectData);
+// console.log('🆕 [DEBUG] createProject 호출 시작, 정리된 데이터:', projectData);
           const result = await createProject(projectData);
-          console.log('🆕 [DEBUG] createProject 결과:', result);
+// console.log('🆕 [DEBUG] createProject 결과:', result);
 
           if (result.error) {
             console.error('🆕 [ERROR] Firebase 프로젝트 생성 실패:', result.error);
@@ -1512,7 +1512,7 @@ const Configurator: React.FC = () => {
           }
 
           if (result.id) {
-            console.log('🆕 [DEBUG] Firebase 프로젝트 생성 성공:', result.id);
+// console.log('🆕 [DEBUG] Firebase 프로젝트 생성 성공:', result.id);
 
             // 상태 업데이트
             setBasicInfo({ title: 'Untitled', location: '' });
@@ -1526,7 +1526,7 @@ const Configurator: React.FC = () => {
             // URL 업데이트
             navigate(`/configurator?projectId=${result.id}`, { replace: true });
 
-            console.log('✅ 새 Firebase 프로젝트 "Untitled" 생성 완료:', result.id);
+// console.log('✅ 새 Firebase 프로젝트 "Untitled" 생성 완료:', result.id);
             alert('새 프로젝트가 생성되었습니다!');
           } else {
             console.error('🆕 [ERROR] projectId가 반환되지 않음');
@@ -1537,14 +1537,14 @@ const Configurator: React.FC = () => {
           alert('Firebase 연결 중 오류가 발생했습니다: ' + firebaseError.message);
         }
       } else {
-        console.log('🆕 [ERROR] Firebase 인증 필요');
+// console.log('🆕 [ERROR] Firebase 인증 필요');
         alert('새 프로젝트를 생성하려면 로그인이 필요합니다.');
       }
     } catch (outerError) {
       console.error('🆕 [ERROR] handleNewProject 최상위 예외:', outerError);
       alert('새 프로젝트 생성 중 예상치 못한 오류가 발생했습니다: ' + outerError.message);
     } finally {
-      console.log('🆕 [DEBUG] handleNewProject 완료, 저장 상태 해제');
+// console.log('🆕 [DEBUG] handleNewProject 완료, 저장 상태 해제');
       setSaving(false);
     }
   };
@@ -1560,7 +1560,7 @@ const Configurator: React.FC = () => {
         let thumbnail = await captureProjectThumbnail();
 
         if (!thumbnail) {
-          console.log('📸 3D 캔버스 캡처 실패, 기본 썸네일 생성');
+// console.log('📸 3D 캔버스 캡처 실패, 기본 썸네일 생성');
           thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
         }
 
@@ -1616,11 +1616,11 @@ const Configurator: React.FC = () => {
             // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
 
-            console.log('✅ 디자인 파일 다른이름으로 저장 성공:', newTitle);
+// console.log('✅ 디자인 파일 다른이름으로 저장 성공:', newTitle);
             alert(`"${newTitle}" 디자인 파일로 저장되었습니다!`);
           }
         } else {
-          console.log('💾 [ERROR] Firebase 인증 필요');
+// console.log('💾 [ERROR] Firebase 인증 필요');
           setSaveStatus('error');
           alert('저장하려면 로그인이 필요합니다.');
         }
@@ -1671,9 +1671,9 @@ const Configurator: React.FC = () => {
             return;
           }
 
-          console.log('✅ 프로젝트 이름 변경 성공:', newName);
+// console.log('✅ 프로젝트 이름 변경 성공:', newName);
         } else {
-          console.log('💾 [ERROR] Firebase 인증 필요');
+// console.log('💾 [ERROR] Firebase 인증 필요');
           // 실패 시 이전 이름으로 복원
           setBasicInfo({ ...basicInfo, title: oldName });
           alert('프로젝트 이름을 변경하려면 로그인이 필요합니다.');
@@ -1691,7 +1691,7 @@ const Configurator: React.FC = () => {
 
   // 디자인 파일명 변경 핸들러
   const handleDesignFileNameChange = async (newName: string) => {
-    console.log('📝 디자인파일명 변경 시작:', {
+// console.log('📝 디자인파일명 변경 시작:', {
       oldName: currentDesignFileName,
       newName,
       currentDesignFileId
@@ -1701,7 +1701,7 @@ const Configurator: React.FC = () => {
 
     // 즉시 UI 업데이트
     setCurrentDesignFileName(newName);
-    console.log('✅ currentDesignFileName 상태 업데이트:', newName);
+// console.log('✅ currentDesignFileName 상태 업데이트:', newName);
 
     // 탭 이름도 업데이트
     if (currentProjectId && currentDesignFileId) {
@@ -1714,7 +1714,7 @@ const Configurator: React.FC = () => {
     currentParams.set('designFileName', encodeURIComponent(newName));
     const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
     window.history.replaceState({}, '', newUrl);
-    console.log('🔗 디자인파일명 변경 후 URL 업데이트:', newUrl);
+// console.log('🔗 디자인파일명 변경 후 URL 업데이트:', newUrl);
 
     // 디자인 파일이 저장된 상태라면 자동 저장
     if (currentDesignFileId) {
@@ -1742,7 +1742,7 @@ const Configurator: React.FC = () => {
             return;
           }
 
-          console.log('✅ 디자인 파일명 변경 성공:', newName);
+// console.log('✅ 디자인 파일명 변경 성공:', newName);
 
           // BroadcastChannel로 대시보드에 알림 (readonly 모드에서는 전송하지 않음)
           if (!isReadOnly) {
@@ -1759,7 +1759,7 @@ const Configurator: React.FC = () => {
                 designFileId: effectiveDesignFileId,
                 timestamp: Date.now()
               });
-              console.log('📡 디자인 파일명 변경 알림 전송:', {
+// console.log('📡 디자인 파일명 변경 알림 전송:', {
                 projectId: effectiveProjectId,
                 designFileId: effectiveDesignFileId
               });
@@ -1769,7 +1769,7 @@ const Configurator: React.FC = () => {
             }
           }
         } else {
-          console.log('💾 [ERROR] Firebase 인증 필요');
+// console.log('💾 [ERROR] Firebase 인증 필요');
           // 실패 시 이전 이름으로 복원
           setCurrentDesignFileName(oldName);
           const prevParams = new URLSearchParams(window.location.search);
@@ -1795,19 +1795,19 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
 
-    console.log('🔍 URL에서 가져온 designFileName:', designFileName);
-    console.log('🔍 현재 currentDesignFileName:', currentDesignFileName);
+// console.log('🔍 URL에서 가져온 designFileName:', designFileName);
+// console.log('🔍 현재 currentDesignFileName:', currentDesignFileName);
 
     // URL에 designFileName이 있으면 설정
     if (designFileName) {
       const decodedFileName = decodeURIComponent(designFileName);
       setCurrentDesignFileName(decodedFileName);
-      console.log('📝 URL 파라미터로 디자인파일명 설정:', decodedFileName);
+// console.log('📝 URL 파라미터로 디자인파일명 설정:', decodedFileName);
     }
     // currentDesignFileName이 이미 있으면 유지 (덮어쓰지 않음)
     else if (!currentDesignFileName) {
       setCurrentDesignFileName('새 디자인');
-      console.log('📝 기본값으로 디자인파일명 설정: 새 디자인');
+// console.log('📝 기본값으로 디자인파일명 설정: 새 디자인');
     }
   }, [searchParams]);
 
@@ -1818,7 +1818,7 @@ const Configurator: React.FC = () => {
       const internalSpace = calculateInternalSpace(spaceInfo);
       const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
 
-      console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
+// console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
         currentColumnCount: spaceInfo.customColumnCount,
         defaultColumnCount,
         internalWidth: internalSpace.width
@@ -1826,7 +1826,7 @@ const Configurator: React.FC = () => {
 
       // 현재 컬럼 수가 기본값과 다르면 리셋
       if (spaceInfo.customColumnCount !== defaultColumnCount) {
-        console.log('🔧 [Configurator] Resetting column count to default:', defaultColumnCount);
+// console.log('🔧 [Configurator] Resetting column count to default:', defaultColumnCount);
         setSpaceInfo({
           customColumnCount: defaultColumnCount,
           mainDoorCount: undefined,
@@ -1855,16 +1855,16 @@ const Configurator: React.FC = () => {
 
     // readonly 모드에서 이미 로드됐으면 재실행 방지 (무한 루프 방지)
     if (mode === 'readonly' && hasLoadedInReadonlyRef.current) {
-      console.log('✅ readonly 모드 - 이미 로드 완료, useEffect 재실행 건너뜀 (무한 루프 방지)');
+// console.log('✅ readonly 모드 - 이미 로드 완료, useEffect 재실행 건너뜀 (무한 루프 방지)');
       return;
     }
 
     // 읽기 전용 모드는 useMemo로 계산됨 (상태 업데이트 제거로 리로드 루프 방지)
     if (mode === 'readonly') {
-      console.log('👁️ 읽기 전용 모드 활성화 (useMemo로 처리됨)');
+// console.log('👁️ 읽기 전용 모드 활성화 (useMemo로 처리됨)');
     }
 
-    console.log('🔍 useEffect 실행:', {
+// console.log('🔍 useEffect 실행:', {
       urlProjectId: projectId,
       urlDesignFileId: designFileId,
       urlDesignFileName,
@@ -1878,7 +1878,7 @@ const Configurator: React.FC = () => {
     // URL에 designFileName이 있으면 즉시 설정 (최우선순위)
     if (urlDesignFileName) {
       const decodedFileName = decodeURIComponent(urlDesignFileName);
-      console.log('🔗 URL에서 디자인파일명 바로 설정:', decodedFileName);
+// console.log('🔗 URL에서 디자인파일명 바로 설정:', decodedFileName);
       setCurrentDesignFileName(decodedFileName);
     }
 
@@ -1889,7 +1889,7 @@ const Configurator: React.FC = () => {
     const hasLoadedData = placedModules.length > 0 || spaceInfo.width > 0;
 
     if (isSameProject && isSameDesignFile && hasLoadedData && !skipLoad && mode !== 'new-design') {
-      console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음 (CNC에서 복귀)');
+// console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음 (CNC에서 복귀)');
 
       // ID만 동기화
       if (projectId !== currentProjectId) setCurrentProjectId(projectId);
@@ -1904,22 +1904,22 @@ const Configurator: React.FC = () => {
       // 프로젝트 ID가 변경된 경우에만 상태 업데이트
       if (projectId && projectId !== currentProjectId) {
         setCurrentProjectId(projectId);
-        console.log('📝 프로젝트 ID 업데이트:', projectId);
+// console.log('📝 프로젝트 ID 업데이트:', projectId);
       }
 
       // designFileId가 변경된 경우에만 상태 업데이트
       if (designFileId && designFileId !== currentDesignFileId) {
         setCurrentDesignFileId(designFileId);
-        console.log('📝 디자인파일 ID 업데이트:', designFileId);
+// console.log('📝 디자인파일 ID 업데이트:', designFileId);
       }
     } else {
-      console.log('👁️ readonly 모드 - ID 상태 업데이트 건너뜀 (리로드 루프 방지)');
+// console.log('👁️ readonly 모드 - ID 상태 업데이트 건너뜀 (리로드 루프 방지)');
     }
 
     if (projectId) {
       if (skipLoad || isNewDesign) {
         // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 또는 CNC에서 복귀 - 이미 스토어에 데이터가 설정되어 있음
-        console.log('✅ skipLoad=true 또는 design=new - 기존 스토어 데이터 유지');
+// console.log('✅ skipLoad=true 또는 design=new - 기존 스토어 데이터 유지');
 
         // skipLoad 파라미터를 URL에서 제거 (새로고침 시 정상 로드되도록)
         if (skipLoad) {
@@ -1939,16 +1939,16 @@ const Configurator: React.FC = () => {
         }, 500); // 로딩 화면이 보이도록 약간의 지연
       } else if (mode === 'new-design') {
         // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
-        console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
+// console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
 
         // 프로젝트명만 가져와서 헤더에 표시하기 위해
         getProject(projectId).then(({ project, error }) => {
           if (project && !error) {
-            console.log('🔍 setBasicInfo 호출 전 basicInfo:', basicInfo);
-            console.log('🔍 설정할 프로젝트명:', project.title);
+// console.log('🔍 setBasicInfo 호출 전 basicInfo:', basicInfo);
+// console.log('🔍 설정할 프로젝트명:', project.title);
 
             setBasicInfo({ title: project.title });
-            console.log('📝 프로젝트명 설정:', project.title);
+// console.log('📝 프로젝트명 설정:', project.title);
 
             // 읽기 전용 모드에서는 URL 변경 금지
             if (mode !== 'readonly') {
@@ -1958,10 +1958,10 @@ const Configurator: React.FC = () => {
                 currentParams.set('projectName', encodeURIComponent(project.title));
                 const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
                 window.history.replaceState({}, '', newUrl);
-                console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+// console.log('🔗 URL에 프로젝트명 추가:', newUrl);
               }
             } else {
-              console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
+// console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
             }
           }
           setLoading(false);
@@ -1970,14 +1970,14 @@ const Configurator: React.FC = () => {
         // readonly 모드에서 이미 로드된 디자인이면 재로드하지 않음 (2중 렌더링 방지)
         const isAlreadyLoaded = designFileId === currentDesignFileId && (placedModules.length > 0 || spaceInfo.width > 0);
         if (isAlreadyLoaded && mode === 'readonly') {
-          console.log('✅ readonly 모드 - 이미 로드된 디자인 재사용 (2중 렌더링 방지):', designFileId);
+// console.log('✅ readonly 모드 - 이미 로드된 디자인 재사용 (2중 렌더링 방지):', designFileId);
           setLoading(false);
           return;
         }
 
         // designFileId가 있는 경우 디자인 파일 데이터 로드
         const isReadOnlyMode = mode === 'readonly';
-        console.log('📂 디자인파일 데이터 로드 시작:', {
+// console.log('📂 디자인파일 데이터 로드 시작:', {
           designFileId,
           projectId,
           isReadOnlyMode,
@@ -1987,16 +1987,16 @@ const Configurator: React.FC = () => {
 
         // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
-          console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
+// console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
           getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
             // readonly 모드에서는 데이터 로드 전에 ref 먼저 설정 (setState 리렌더링 차단)
             if (mode === 'readonly') {
               hasLoadedInReadonlyRef.current = true;
-              console.log('✅ readonly 모드 - ref 먼저 설정 (setState 리렌더링 차단)');
+// console.log('✅ readonly 모드 - ref 먼저 설정 (setState 리렌더링 차단)');
             }
 
             if (designFile && !error) {
-              console.log('✅ 디자인파일 로드 성공:', {
+// console.log('✅ 디자인파일 로드 성공:', {
                 id: designFile.id,
                 name: designFile.name,
                 projectId: designFile.projectId,
@@ -2009,11 +2009,11 @@ const Configurator: React.FC = () => {
                 const { project, error: projectError } = await getProjectByIdPublic(designFile.projectId);
                 if (project && !projectError) {
                   setBasicInfo({ title: project.title });
-                  console.log('📝 프로젝트 데이터 설정:', project.title);
+// console.log('📝 프로젝트 데이터 설정:', project.title);
 
                   // 프로젝트 소유자 정보 설정
                   if (project.userId) {
-                    console.log('👤 [디자인파일] 프로젝트 소유자 정보:', {
+// console.log('👤 [디자인파일] 프로젝트 소유자 정보:', {
                       projectUserId: project.userId,
                       currentUserId: user?.uid,
                       isOwner: user && project.userId === user.uid,
@@ -2030,7 +2030,7 @@ const Configurator: React.FC = () => {
                         name: user.displayName || user.email || '소유자',
                         photoURL: user.photoURL || undefined
                       };
-                      console.log('👑 [디자인파일] 소유자 정보 설정 (현재 사용자):', ownerData);
+// console.log('👑 [디자인파일] 소유자 정보 설정 (현재 사용자):', ownerData);
                       setProjectOwner(ownerData);
                     } else {
                       // 다른 사용자의 프로젝트인 경우 저장된 정보 사용
@@ -2039,7 +2039,7 @@ const Configurator: React.FC = () => {
                         name: project.userName || project.userEmail || '소유자',
                         photoURL: project.userPhotoURL
                       };
-                      console.log('👑 [디자인파일] 소유자 정보 설정 (저장된 정보):', ownerData);
+// console.log('👑 [디자인파일] 소유자 정보 설정 (저장된 정보):', ownerData);
                       setProjectOwner(ownerData);
                     }
                   }
@@ -2052,10 +2052,10 @@ const Configurator: React.FC = () => {
                       currentParams.set('projectName', encodeURIComponent(project.title));
                       const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
                       window.history.replaceState({}, '', newUrl);
-                      console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+// console.log('🔗 URL에 프로젝트명 추가:', newUrl);
                     }
                   } else {
-                    console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
+// console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
                   }
                 }
               }
@@ -2070,7 +2070,7 @@ const Configurator: React.FC = () => {
                   customColumnCount: undefined
                 };
                 setSpaceInfo(spaceConfig);
-                console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
+// console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
 
               // 가구 배치 데이터 설정
@@ -2083,7 +2083,7 @@ const Configurator: React.FC = () => {
                   m.moduleId?.includes('lower-cabinet')
                 );
 
-                console.log('🗄️ [Configurator] 불러온 상하부장 데이터:', {
+// console.log('🗄️ [Configurator] 불러온 상하부장 데이터:', {
                   totalModules: designFile.furniture.placedModules.length,
                   upperCabinets: upperCabinets.length,
                   lowerCabinets: lowerCabinets.length,
@@ -2106,7 +2106,7 @@ const Configurator: React.FC = () => {
                 }));
 
                 setPlacedModules(modulesWithBaseType);
-                console.log('🪑 가구 배치 데이터 설정:', {
+// console.log('🪑 가구 배치 데이터 설정:', {
                   count: modulesWithBaseType.length,
                   modules: modulesWithBaseType.map(m => ({
                     id: m.id,
@@ -2120,11 +2120,11 @@ const Configurator: React.FC = () => {
               } else {
                 // 가구 데이터가 없는 경우 빈 배열로 초기화
                 setPlacedModules([]);
-                console.log('🪑 가구 배치 데이터 초기화 (빈 디자인)');
+// console.log('🪑 가구 배치 데이터 초기화 (빈 디자인)');
               }
 
               // 디자인파일 이름 설정
-              console.log('🔍 디자인파일 이름 체크:', {
+// console.log('🔍 디자인파일 이름 체크:', {
                 hasName: !!designFile.name,
                 name: designFile.name,
                 designFileKeys: Object.keys(designFile),
@@ -2133,7 +2133,7 @@ const Configurator: React.FC = () => {
 
               if (designFile.name) {
                 setCurrentDesignFileName(designFile.name);
-                console.log('📝 디자인파일명 설정:', designFile.name);
+// console.log('📝 디자인파일명 설정:', designFile.name);
 
                 // 디자인 파일 로드 성공 → 탭 추가 (확정된 이름 사용)
                 if (projectId && designFileId) {
@@ -2153,10 +2153,10 @@ const Configurator: React.FC = () => {
                     currentParams.set('designFileName', encodeURIComponent(designFile.name));
                     const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
                     window.history.replaceState({}, '', newUrl);
-                    console.log('🔗 URL에 디자인파일명 추가:', newUrl);
+// console.log('🔗 URL에 디자인파일명 추가:', newUrl);
                   }
                 } else {
-                  console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
+// console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
                 }
               } else {
                 console.error('❌ 디자인파일에 name 필드가 없습니다!');
@@ -2195,7 +2195,7 @@ const Configurator: React.FC = () => {
               }
               // 공간 설정 미완료 감지 → 팝업 표시
               if ((designFile as any).isSpaceConfigured === false && mode !== 'readonly') {
-                console.log('⚠️ 공간 설정 미완료 디자인 감지 → 공간 설정 팝업 표시');
+// console.log('⚠️ 공간 설정 미완료 디자인 감지 → 공간 설정 팝업 표시');
                 setShowSpaceConfigPopup(true);
               }
             } else {
@@ -2222,19 +2222,19 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     // readonly 모드에서는 협업자 정보 조회 건너뛰기
     if (isReadOnly) {
-      console.log('👁️ readonly 모드 - 협업자 정보 조회 건너뜀');
+// console.log('👁️ readonly 모드 - 협업자 정보 조회 건너뜀');
       return;
     }
 
     if (currentProjectId && currentDesignFileId) {
-      console.log('🔍 협업자 정보 조회 시작:', { projectId: currentProjectId, designFileId: currentDesignFileId });
+// console.log('🔍 협업자 정보 조회 시작:', { projectId: currentProjectId, designFileId: currentDesignFileId });
       getProjectCollaborators(currentProjectId)
         .then((collabs) => {
           // 현재 디자인 파일에 접근 권한이 있는 협업자만 필터링
           const filteredCollabs = collabs.filter(collab =>
             collab.designFileIds && collab.designFileIds.includes(currentDesignFileId)
           );
-          console.log('✅ 협업자 정보 조회 성공:', {
+// console.log('✅ 협업자 정보 조회 성공:', {
             전체: collabs.length,
             현재파일: filteredCollabs.length,
             협업자: filteredCollabs
@@ -2286,7 +2286,7 @@ const Configurator: React.FC = () => {
 
       // URL에 디자인파일 정보가 있으면 폴더 lookup 완전히 skip
       if (urlDesignFileName || urlDesignFileId) {
-        console.log('⏭️ URL에 디자인파일 정보가 있어서 폴더 lookup skip:', {
+// console.log('⏭️ URL에 디자인파일 정보가 있어서 폴더 lookup skip:', {
           urlDesignFileName,
           urlDesignFileId
         });
@@ -2297,7 +2297,7 @@ const Configurator: React.FC = () => {
 
       // 이미 디자인파일명이 설정되어 있으면 폴더에서 찾지 않음
       if (currentDesignFileName && currentDesignFileName !== '새로운 디자인') {
-        console.log('📝 디자인파일명이 이미 설정되어 있음:', currentDesignFileName);
+// console.log('📝 디자인파일명이 이미 설정되어 있음:', currentDesignFileName);
         return;
       }
 
@@ -2312,7 +2312,7 @@ const Configurator: React.FC = () => {
             if (folder.children && folder.children.length > 0) {
               const firstDesignFile = folder.children[0];
               if (firstDesignFile && firstDesignFile.name) {
-                console.log('📝 폴더에서 찾은 디자인파일명:', firstDesignFile.name);
+// console.log('📝 폴더에서 찾은 디자인파일명:', firstDesignFile.name);
                 setCurrentDesignFileName(firstDesignFile.name);
                 return;
               }
@@ -2360,7 +2360,7 @@ const Configurator: React.FC = () => {
         JSON.stringify(prevWithoutMaterial.floorFinish) !== JSON.stringify(currentWithoutMaterial.floorFinish);
 
       if (hasStructuralChange) {
-        console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
+// console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
           width: prevWithoutMaterial.width !== currentWithoutMaterial.width,
           height: prevWithoutMaterial.height !== currentWithoutMaterial.height,
           depth: prevWithoutMaterial.depth !== currentWithoutMaterial.depth,
@@ -2381,7 +2381,7 @@ const Configurator: React.FC = () => {
 
   // derivedSpaceStore 재계산 (구조적 변경 시만 실행)
   useEffect(() => {
-    console.log('🔄 derivedSpaceStore 재계산:', {
+// console.log('🔄 derivedSpaceStore 재계산:', {
       customColumnCount: spaceInfo.customColumnCount,
       mainDoorCount: spaceInfo.mainDoorCount,
       width: spaceInfo.width
@@ -2426,12 +2426,12 @@ const Configurator: React.FC = () => {
 
   // 공간 설정 업데이트 핸들러
   const handleSpaceInfoUpdate = (updates: Partial<typeof spaceInfo>) => {
-    console.log('🔧 handleSpaceInfoUpdate called with:', updates);
-    console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
+// console.log('🔧 handleSpaceInfoUpdate called with:', updates);
+// console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
 
     // baseConfig.depth 업데이트 감지
     if (updates.baseConfig?.depth !== undefined) {
-      console.log('📏 Configurator - baseConfig.depth 업데이트:', {
+// console.log('📏 Configurator - baseConfig.depth 업데이트:', {
         이전값: spaceInfo.baseConfig?.depth,
         새값: updates.baseConfig.depth,
         전체baseConfig: updates.baseConfig
@@ -2440,7 +2440,7 @@ const Configurator: React.FC = () => {
 
     // mainDoorCount 업데이트 감지
     if (updates.mainDoorCount !== undefined) {
-      console.log('🚪 mainDoorCount 업데이트:', {
+// console.log('🚪 mainDoorCount 업데이트:', {
         이전값: spaceInfo.mainDoorCount,
         새값: updates.mainDoorCount,
         단내림활성화: spaceInfo.droppedCeiling?.enabled
@@ -2450,12 +2450,12 @@ const Configurator: React.FC = () => {
     // 단내림 설정 변경 감지
     const isDroppedCeilingUpdate = updates.droppedCeiling !== undefined;
     if (isDroppedCeilingUpdate) {
-      console.log('🔄 단내림 설정 변경 감지:', updates.droppedCeiling);
+// console.log('🔄 단내림 설정 변경 감지:', updates.droppedCeiling);
     }
 
     // surroundType 업데이트 시 디버깅
     if (updates.surroundType) {
-      console.log('🔧 Configurator - surroundType update:', {
+// console.log('🔧 Configurator - surroundType update:', {
         previous: spaceInfo.surroundType,
         new: updates.surroundType,
         willUpdateStore: true
@@ -2529,7 +2529,7 @@ const Configurator: React.FC = () => {
       }
 
       finalUpdates.frameSize = newFrameSize;
-      console.log('🔧 서라운드 타입 변경에 따른 프레임 초기화:', {
+// console.log('🔧 서라운드 타입 변경에 따른 프레임 초기화:', {
         surroundType: updates.surroundType,
         installType: currentInstallType,
         frameSize: newFrameSize,
@@ -2552,14 +2552,14 @@ const Configurator: React.FC = () => {
       }
 
       finalUpdates.frameSize = newFrameSize;
-      console.log('🔧 세미스탠딩 프레임 자동 업데이트:', newFrameSize);
+// console.log('🔧 세미스탠딩 프레임 자동 업데이트:', newFrameSize);
     }
 
     // 설치 타입 변경 시 wallConfig와 프레임 설정 자동 업데이트
     if (updates.installType) {
       // wallConfig가 함께 전달되었으면 그대로 사용, 아니면 자동 설정
       if (updates.wallConfig) {
-        console.log('🔧 InstallTypeControls에서 전달된 wallConfig 사용:', updates.wallConfig);
+// console.log('🔧 InstallTypeControls에서 전달된 wallConfig 사용:', updates.wallConfig);
         finalUpdates.wallConfig = updates.wallConfig;
       } else {
         // wallConfig 자동 설정
@@ -2575,7 +2575,7 @@ const Configurator: React.FC = () => {
             finalUpdates.wallConfig = { left: false, right: false };
             break;
         }
-        console.log('🔧 자동 설정된 wallConfig:', finalUpdates.wallConfig);
+// console.log('🔧 자동 설정된 wallConfig:', finalUpdates.wallConfig);
       }
 
       // 프레임 설정
@@ -2640,7 +2640,7 @@ const Configurator: React.FC = () => {
 
       finalUpdates.frameSize = newFrameSize;
 
-      console.log('🔧 설치타입 변경에 따른 wallConfig 및 프레임 자동 업데이트:', {
+// console.log('🔧 설치타입 변경에 따른 wallConfig 및 프레임 자동 업데이트:', {
         installType: updates.installType,
         wallConfig: finalUpdates.wallConfig,
         frameSize: finalUpdates.frameSize
@@ -2672,14 +2672,14 @@ const Configurator: React.FC = () => {
 
     // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
     if (updates.customColumnCount !== undefined) {
-      console.log('🚨🚨🚨 customColumnCount 업데이트:', {
+// console.log('🚨🚨🚨 customColumnCount 업데이트:', {
         요청값: updates.customColumnCount,
         현재값: spaceInfo.customColumnCount,
         finalUpdates_before: finalUpdates
       });
       // 사용자가 설정한 값을 그대로 사용
       finalUpdates = { ...finalUpdates, customColumnCount: updates.customColumnCount };
-      console.log('🚨🚨🚨 finalUpdates after:', finalUpdates);
+// console.log('🚨🚨🚨 finalUpdates after:', finalUpdates);
     }
 
     // 단내림이 활성화된 경우 메인 구간의 도어 개수 자동 조정
@@ -2696,7 +2696,7 @@ const Configurator: React.FC = () => {
       // 현재 도어 개수를 유지하되, 최소 필요 개수 이상으로 조정
       const currentDoorCount = getCurrentColumnCount();
       const adjustedMainDoorCount = Math.max(minRequiredSlots, currentDoorCount);
-      console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 설정: ${currentDoorCount} → ${adjustedMainDoorCount}`);
+// console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 설정: ${currentDoorCount} → ${adjustedMainDoorCount}`);
       finalUpdates = { ...finalUpdates, mainDoorCount: adjustedMainDoorCount };
 
       // 단내림 구간 도어개수 기본값 설정
@@ -2706,7 +2706,7 @@ const Configurator: React.FC = () => {
       const droppedMaxSlots = Math.max(droppedMinSlots, Math.floor(droppedInternalWidth / 400));
       const droppedDefaultCount = droppedMinSlots;
 
-      console.log(`🔧 단내림 활성화 시 단내림 구간 도어개수 기본값 설정: ${droppedDefaultCount}`, {
+// console.log(`🔧 단내림 활성화 시 단내림 구간 도어개수 기본값 설정: ${droppedDefaultCount}`, {
         droppedWidth,
         droppedInternalWidth,
         droppedMinSlots,
@@ -2730,7 +2730,7 @@ const Configurator: React.FC = () => {
       const currentDoorCount = spaceInfo.droppedCeilingDoorCount || 2;
       if (currentDoorCount < newDoorRange.min || currentDoorCount > newDoorRange.max) {
         const adjustedDoorCount = Math.max(newDoorRange.min, Math.min(newDoorRange.max, currentDoorCount));
-        console.log(`🔧 단내림 폭 변경 시 도어개수 자동 조정: ${currentDoorCount} → ${adjustedDoorCount}`);
+// console.log(`🔧 단내림 폭 변경 시 도어개수 자동 조정: ${currentDoorCount} → ${adjustedDoorCount}`);
         finalUpdates = { ...finalUpdates, droppedCeilingDoorCount: adjustedDoorCount };
       }
     }
@@ -2740,7 +2740,7 @@ const Configurator: React.FC = () => {
     // gapConfig를 덮어쓰면 middle/top 등 추가 필드가 유실됨 → 비활성화
     // if (spaceInfo.surroundType === 'no-surround' && ...) { ... }
 
-    console.log('🔧 최종 업데이트 적용:', {
+// console.log('🔧 최종 업데이트 적용:', {
       updates: finalUpdates,
       hasWallConfig: !!finalUpdates.wallConfig,
       wallConfig: finalUpdates.wallConfig,
@@ -2752,18 +2752,18 @@ const Configurator: React.FC = () => {
     const isInstallTypeChanged = finalUpdates.installType !== undefined &&
       finalUpdates.installType !== spaceInfo.installType;
 
-    console.log('🚨🚨🚨 setSpaceInfo 호출 직전:', finalUpdates);
-    console.log('📏 baseConfig.depth 전달 확인:', {
+// console.log('🚨🚨🚨 setSpaceInfo 호출 직전:', finalUpdates);
+// console.log('📏 baseConfig.depth 전달 확인:', {
       finalUpdates_baseConfig: finalUpdates.baseConfig,
       depth: finalUpdates.baseConfig?.depth
     });
     setSpaceInfo(finalUpdates);
-    console.log('🚨🚨🚨 setSpaceInfo 호출 완료');
+// console.log('🚨🚨🚨 setSpaceInfo 호출 완료');
 
     // Store 업데이트 직후 확인
     setTimeout(() => {
       const currentStore = useSpaceConfigStore.getState();
-      console.log('📏 Store 업데이트 후 확인:', {
+// console.log('📏 Store 업데이트 후 확인:', {
         baseConfig: currentStore.baseConfig,
         depth: currentStore.baseConfig?.depth
       });
@@ -2771,7 +2771,7 @@ const Configurator: React.FC = () => {
 
     // 단내림 설정 변경 시 강제로 3D 뷰 업데이트
     if (isDroppedCeilingUpdate) {
-      console.log('🔄 단내림 설정 변경으로 3D 뷰 강제 업데이트');
+// console.log('🔄 단내림 설정 변경으로 3D 뷰 강제 업데이트');
       // 강제로 뷰 모드를 다시 설정하여 리렌더링 트리거
       setTimeout(() => {
         setViewMode(viewMode);
@@ -2780,7 +2780,7 @@ const Configurator: React.FC = () => {
 
     // installType 변경 시 가구 너비 재계산
     if (isInstallTypeChanged && placedModules.length > 0) {
-      console.log('🔧 InstallType 변경 - 가구 너비 재계산');
+// console.log('🔧 InstallType 변경 - 가구 너비 재계산');
       // 약간의 지연을 두어 SpaceInfo가 먼저 업데이트되도록 함
       setTimeout(() => {
         const newSpaceInfo = { ...spaceInfo, ...finalUpdates };
@@ -2791,7 +2791,7 @@ const Configurator: React.FC = () => {
 
   // 도어 설치/제거 핸들러
   const handleDoorInstallation = () => {
-    console.log('🚪 도어 설치/제거 핸들러 호출:', {
+// console.log('🚪 도어 설치/제거 핸들러 호출:', {
       hasDoorsInstalled,
       placedModulesCount: placedModules.length,
       doorsOpen
@@ -2799,11 +2799,11 @@ const Configurator: React.FC = () => {
 
     if (hasDoorsInstalled) {
       // 도어 제거: 모든 가구에서 도어 제거
-      console.log('🚪 도어 제거 시도');
+// console.log('🚪 도어 제거 시도');
       setAllDoors(false);
     } else {
       // 도어 설치: 모든 가구에 도어 설치 (닫힌 상태로 설치)
-      console.log('🚪 도어 설치 시도');
+// console.log('🚪 도어 설치 시도');
       setAllDoors(true);
 
       // 도어 설치 시 닫힌 상태로 유지
@@ -2821,11 +2821,11 @@ const Configurator: React.FC = () => {
 
     // 가구가 없고, 디자인 파일 ID가 있으면 빈 디자인으로 간주
     if (!hasContent && currentDesignFileId && currentProjectId) {
-      console.log('🗑️ 빈 디자인 파일 삭제:', currentDesignFileId);
+// console.log('🗑️ 빈 디자인 파일 삭제:', currentDesignFileId);
       try {
         const { deleteDesignFile } = await import('@/firebase/projects');
         await deleteDesignFile(currentDesignFileId, currentProjectId);
-        console.log('✅ 빈 디자인 파일 삭제 완료');
+// console.log('✅ 빈 디자인 파일 삭제 완료');
       } catch (error) {
         console.error('❌ 빈 디자인 파일 삭제 실패:', error);
       }
@@ -2848,21 +2848,21 @@ const Configurator: React.FC = () => {
   };
 
   const handleConvert = () => {
-    console.log('도면 편집기 열기');
+// console.log('도면 편집기 열기');
     setShowPDFPreview(true);
   };
 
   const handleLogout = () => {
     // 읽기 전용 모드에서는 로그아웃 불가
     if (isReadOnly) {
-      console.log('👁️ 읽기 전용 모드 - 로그아웃 차단');
+// console.log('👁️ 읽기 전용 모드 - 로그아웃 차단');
       return;
     }
     navigate('/login');
   };
 
   const handleProfile = () => {
-    console.log('프로필');
+// console.log('프로필');
   };
 
   // FileTree 토글 핸들러
@@ -2929,7 +2929,7 @@ const Configurator: React.FC = () => {
 
   // 3D 모델 내보내기 핸들러
   const handleExport3D = async (format: ExportFormat) => {
-    console.log(`🔧 ${format.toUpperCase()} 내보내기 시작...`);
+// console.log(`🔧 ${format.toUpperCase()} 내보내기 시작...`);
 
     if (!sceneRef.current) {
       alert('3D 씬이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -2937,7 +2937,7 @@ const Configurator: React.FC = () => {
       return;
     }
 
-    console.log('✅ Scene ref 확인:', {
+// console.log('✅ Scene ref 확인:', {
       scene: sceneRef.current,
       childrenCount: sceneRef.current?.children?.length,
       children: sceneRef.current?.children
@@ -2954,13 +2954,13 @@ const Configurator: React.FC = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `${projectName}-${timestamp}.${format}`;
 
-    console.log(`📦 ${format.toUpperCase()} 파일 생성:`, filename);
+// console.log(`📦 ${format.toUpperCase()} 파일 생성:`, filename);
 
     const result = await exportTo3D(sceneRef.current, format, filename);
 
     if (result.success) {
       alert(`${format.toUpperCase()} 파일이 다운로드되었습니다: ${filename}`);
-      console.log(`✅ ${format.toUpperCase()} 내보내기 성공`);
+// console.log(`✅ ${format.toUpperCase()} 내보내기 성공`);
     } else {
       alert(`${format.toUpperCase()} 내보내기 실패: ${result.error}`);
       console.error(`❌ ${format.toUpperCase()} 내보내기 실패:`, result.error);
@@ -4484,15 +4484,15 @@ const Configurator: React.FC = () => {
   }
 
   // 디버깅용 로그
-  console.log('🔍 Configurator basicInfo.title:', basicInfo.title);
-  console.log('🔍 currentProjectId:', currentProjectId);
-  console.log('🔍 currentDesignFileName:', currentDesignFileName);
-  console.log('🔍 basicInfo.title:', basicInfo.title);
+// console.log('🔍 Configurator basicInfo.title:', basicInfo.title);
+// console.log('🔍 currentProjectId:', currentProjectId);
+// console.log('🔍 currentDesignFileName:', currentDesignFileName);
+// console.log('🔍 basicInfo.title:', basicInfo.title);
 
   // 전역 함수 노출 (디버깅용) - window 객체에 직접 할당
   if (typeof window !== 'undefined') {
     (window as any).testSaveProject = async () => {
-      console.log('💾💾💾 [테스트] 직접 저장 함수 호출');
+// console.log('💾💾💾 [테스트] 직접 저장 함수 호출');
       await saveProject();
     };
 
@@ -4512,7 +4512,7 @@ const Configurator: React.FC = () => {
           return;
         }
 
-        console.log('📁 현재 프로젝트의 디자인 파일 목록:');
+// console.log('📁 현재 프로젝트의 디자인 파일 목록:');
         console.table(designFiles.map(f => ({
           ID: f.id,
           이름: f.name,
@@ -4535,13 +4535,13 @@ const Configurator: React.FC = () => {
 
       if (!designFileId) {
         console.error('❌ 삭제할 디자인 파일 ID를 입력하세요');
-        console.log('💡 사용법: window.deleteDesignFile("파일ID")');
-        console.log('💡 파일 목록 확인: window.listDesignFiles()');
+// console.log('💡 사용법: window.deleteDesignFile("파일ID")');
+// console.log('💡 파일 목록 확인: window.listDesignFiles()');
         return;
       }
 
       if (!confirm(`정말로 이 디자인 파일을 삭제하시겠습니까?\nID: ${designFileId}`)) {
-        console.log('❌ 삭제 취소됨');
+// console.log('❌ 삭제 취소됨');
         return;
       }
 
@@ -4554,16 +4554,16 @@ const Configurator: React.FC = () => {
           return;
         }
 
-        console.log('✅ 디자인 파일 삭제 성공:', designFileId);
-        console.log('🔄 페이지를 새로고침하세요');
+// console.log('✅ 디자인 파일 삭제 성공:', designFileId);
+// console.log('🔄 페이지를 새로고침하세요');
       } catch (error) {
         console.error('❌ 디자인 파일 삭제 중 오류:', error);
       }
     };
 
-    console.log('💾 테스트: 브라우저 콘솔에서 window.testSaveProject()를 실행해보세요');
-    console.log('📁 파일 목록: window.listDesignFiles()');
-    console.log('🗑️ 파일 삭제: window.deleteDesignFile("파일ID")');
+// console.log('💾 테스트: 브라우저 콘솔에서 window.testSaveProject()를 실행해보세요');
+// console.log('📁 파일 목록: window.listDesignFiles()');
+// console.log('🗑️ 파일 삭제: window.deleteDesignFile("파일ID")');
   }
 
   return (
@@ -4887,7 +4887,7 @@ const Configurator: React.FC = () => {
               onShowAxisToggle={toggleAxis}
               showFurniture={showFurniture}
               onShowFurnitureToggle={() => {
-                console.log('🎯 Configurator toggle - current:', showFurniture, '-> new:', !showFurniture);
+// console.log('🎯 Configurator toggle - current:', showFurniture, '-> new:', !showFurniture);
                 setShowFurniture(!showFurniture);
               }}
               doorsOpen={doorsOpen}
@@ -5478,7 +5478,7 @@ const Configurator: React.FC = () => {
               onPrevious={() => { }}
               onClose={() => setShowSpaceConfigPopup(false)}
               onComplete={() => {
-                console.log('✅ 공간 설정 팝업 완료');
+// console.log('✅ 공간 설정 팝업 완료');
                 setShowSpaceConfigPopup(false);
               }}
             />

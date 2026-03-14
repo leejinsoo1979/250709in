@@ -101,14 +101,24 @@ const FreePlacementDropZone: React.FC = () => {
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
   const spaceBounds = useMemo(() => getInternalSpaceBoundsX(spaceInfo), [spaceInfo]);
 
+  // 자유배치 모듈 및 정렬된 bounds 캐싱 (드래그 중 반복 계산 방지)
+  const freeModules = useMemo(() => placedModules.filter(m => m.isFreePlacement), [placedModules]);
+  const sortedBoundsWithId = useMemo(() =>
+    freeModules.map(m => ({ id: m.id, ...getModuleBoundsX(m) })).sort((a, b) => a.left - b.left),
+    [freeModules]
+  );
+  const sortedBoundsCache = useMemo(() =>
+    sortedBoundsWithId.map(({ id, ...rest }) => rest),
+    [sortedBoundsWithId]
+  );
+
   // 남은 최대 빈 공간 계산 (이미 배치된 가구를 제외한 최대 연속 빈 공간)
   const maxRemainingWidth = useMemo(() => {
     const { startX, endX } = spaceBounds;
     const totalAvailable = endX - startX;
-    const freeModules = placedModules.filter(m => m.isFreePlacement);
     if (freeModules.length === 0) return totalAvailable;
 
-    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+    const bounds = sortedBoundsCache;
     let maxGap = 0;
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left > startX) maxGap = Math.max(maxGap, bounds[0].left - startX);
@@ -257,9 +267,8 @@ const FreePlacementDropZone: React.FC = () => {
     }
     clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
 
-    // 배치된 가구의 X범위
-    const freeModules = placedModules.filter(m => m.isFreePlacement);
-    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+    // 배치된 가구의 X범위 (캐싱된 값 사용)
+    const bounds = sortedBoundsCache;
 
     // 스냅 포인트 수집: 벽 + 가구 가장자리
     const snapPoints: number[] = [];
@@ -461,9 +470,8 @@ const FreePlacementDropZone: React.FC = () => {
     const ghostRight = hoverXmm + activeDimensions.width / 2;
     const { startX, endX } = spaceBounds;
 
-    // 배치된 가구의 X범위
-    const freeModules = placedModules.filter(m => m.isFreePlacement);
-    const bounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+    // 배치된 가구의 X범위 (캐싱된 값 사용)
+    const bounds = sortedBoundsCache;
 
     // 왼쪽 이격: 고스트 왼쪽 가장자리 ~ 가장 가까운 왼쪽 장애물
     let leftObstacle = startX;
@@ -578,10 +586,9 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 남은 공간 사이즈 계산 (배치된 가구 사이의 갭)
   const remainingGaps = useMemo(() => {
-    const freeModules = placedModules.filter(m => m.isFreePlacement);
     if (freeModules.length === 0) return [];
 
-    // 모든 가구의 X범위를 구해서 왼쪽부터 정렬
+    // 모든 가구의 X범위를 구해서 왼쪽부터 정렬 (캐싱된 bounds + id 추가)
     const bounds = freeModules.map(m => ({
       ...getModuleBoundsX(m),
       id: m.id,
@@ -803,9 +810,9 @@ const FreePlacementDropZone: React.FC = () => {
       clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
     }
 
-    // 자기 자신 제외한 가구의 X범위
-    const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== moduleId);
-    const bounds = otherModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+    // 자기 자신 제외한 가구의 X범위 (캐싱된 bounds에서 필터)
+    const otherModules = freeModules.filter(m => m.id !== moduleId);
+    const bounds = sortedBoundsWithId.filter(b => b.id !== moduleId);
 
     let snapped = false;
 
@@ -842,7 +849,7 @@ const FreePlacementDropZone: React.FC = () => {
     const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
 
     return { x: Math.round(clampedX), snapped, colliding };
-  }, [placedModules, spaceInfo, spaceBounds]);
+  }, [freeModules, sortedBoundsWithId, spaceInfo, spaceBounds]);
 
   // 배치된 가구 마우스 드래그 시작
   const handlePlacedPointerDown = useCallback((e: any, moduleId: string) => {

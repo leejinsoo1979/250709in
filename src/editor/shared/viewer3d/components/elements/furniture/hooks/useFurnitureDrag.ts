@@ -64,7 +64,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     if (isDualFurniture) {
       // 듀얼 가구는 2개 슬롯 차지
       occupiedSlots = [newSlotIndex, newSlotIndex + 1];
-      console.log('🔄 듀얼 가구 이동 - 2개 슬롯 차지:', occupiedSlots);
+// console.log('🔄 듀얼 가구 이동 - 2개 슬롯 차지:', occupiedSlots);
     } else {
       // 싱글 가구는 1개 슬롯 차지
       occupiedSlots = [newSlotIndex];
@@ -72,7 +72,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
     // 기둥이 있는 슬롯의 경우 기존 가구와 공존 가능하므로 충돌 감지 제외
     if (targetSlotInfo && targetSlotInfo.hasColumn) {
-      console.log('🎯 기둥 슬롯 - 충돌 감지 제외');
+// console.log('🎯 기둥 슬롯 - 충돌 감지 제외');
       return [];
     }
 
@@ -97,7 +97,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       // 상부장과 하부장은 같은 슬롯에 공존 가능
       if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
-        console.log('✅ 상부장-하부장 공존 가능 (useFurnitureDrag):', {
+// console.log('✅ 상부장-하부장 공존 가능 (useFurnitureDrag):', {
           이동하는가구: { id: movingModuleId, category: movingCategory },
           기존가구: { id: module.id, category: existingCategory }
         });
@@ -119,7 +119,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
-        console.log('💥 충돌 감지:', {
+// console.log('💥 충돌 감지:', {
           이동하는가구: {
             id: movingModuleId,
             category: movingCategory,
@@ -275,7 +275,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           : fullIndexing.zones?.normal;
 
         if (!zoneData) {
-          console.log('❌ Zone 데이터를 찾을 수 없음:', currentModule.zone);
+// console.log('❌ Zone 데이터를 찾을 수 없음:', currentModule.zone);
           return;
         }
 
@@ -372,7 +372,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const columnSlots = analyzeColumnSlots(spaceInfo);
       const targetSlotInfo = columnSlots[globalSlotIndex];
 
-      console.log('🔍 [useFurnitureDrag] targetSlotInfo 확인:', {
+// console.log('🔍 [useFurnitureDrag] targetSlotInfo 확인:', {
         zone: currentModule.zone,
         slotIndex,
         globalSlotIndex,
@@ -385,14 +385,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // 기둥이 있는 슬롯으로 이동하는 경우
         if (isDualFurniture) {
           // 듀얼 가구는 기둥 슬롯에 배치 불가 - 이동 취소
-          console.log('❌ 듀얼 가구는 기둥 슬롯에 배치 불가');
+// console.log('❌ 듀얼 가구는 기둥 슬롯에 배치 불가');
           return;
         }
         
         // 싱글 가구인 경우 사용 가능한 공간 확인
         const availableWidth = targetSlotInfo.adjustedWidth || targetSlotInfo.availableWidth;
         if (availableWidth < 150) {
-          console.log('❌ 기둥 슬롯에 공간 부족:', availableWidth, 'mm');
+// console.log('❌ 기둥 슬롯에 공간 부족:', availableWidth, 'mm');
           return;
         }
       }
@@ -404,7 +404,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       
       // 듀얼 가구가 차지할 슬롯 범위 로그
       if (isDualFurniture) {
-        console.log('🎯 듀얼 가구 이동 시도:', {
+// console.log('🎯 듀얼 가구 이동 시도:', {
           moduleId: currentModule.moduleId,
           fromSlot: currentModule.slotIndex,
           toSlot: collisionCheckIndex,
@@ -416,7 +416,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const collidingModules = detectFurnitureCollisions(draggingModuleId, collisionCheckIndex, targetSlotInfo);
       if (collidingModules.length > 0) {
         // 충돌하는 가구가 있으면 이동 취소
-        console.log('❌ 충돌 감지: 다른 가구가 이미 배치되어 있음', collidingModules);
+// console.log('❌ 충돌 감지: 다른 가구가 이미 배치되어 있음', collidingModules);
         return;
       }
 
@@ -458,7 +458,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       let adjustedPosition = { x: finalX, y: yPosition, z: currentModule.position.z };
 
-      console.log('🎯 드래그 중 위치 계산:', {
+// console.log('🎯 드래그 중 위치 계산:', {
         moduleId: currentModule.id,
         currentPositionY: currentModule.position.y,
         adjustedPositionY: adjustedPosition.y,
@@ -486,7 +486,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           if (targetSlotInfo.intrusionDirection === 'from-left') {
             // 기둥이 왼쪽에서 침범: 가구를 오른쪽으로 밀어냄
             adjustedPosition.x = furnitureBounds.center;
-            console.log('🔀 왼쪽 침범 - 위치 조정:', {
+// console.log('🔀 왼쪽 침범 - 위치 조정:', {
               originalX: finalX,
               adjustedX: adjustedPosition.x,
               bounds: furnitureBounds
@@ -494,7 +494,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           } else if (targetSlotInfo.intrusionDirection === 'from-right') {
             // 기둥이 오른쪽에서 침범: 가구를 왼쪽으로 밀어냄
             adjustedPosition.x = furnitureBounds.center;
-            console.log('🔁 오른쪽 침범 - 위치 조정:', {
+// console.log('🔁 오른쪽 침범 - 위치 조정:', {
               originalX: finalX,
               adjustedX: adjustedPosition.x,
               bounds: furnitureBounds
@@ -502,7 +502,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           } else if (targetSlotInfo.intrusionDirection === 'center') {
             // 중앙 침범
             adjustedPosition.x = furnitureBounds.center;
-            console.log('🟡 중앙 침범 - 위치 조정:', {
+// console.log('🟡 중앙 침범 - 위치 조정:', {
               originalX: finalX,
               adjustedX: adjustedPosition.x,
               bounds: furnitureBounds
@@ -515,7 +515,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           // Column C (300mm) 특별 처리 - 깊이 조정
           if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
             newCustomDepth = 730 - columnDepth; // 430mm
-            console.log('🟣 Column C 깊이 조정:', newCustomDepth, 'mm');
+// console.log('🟣 Column C 깊이 조정:', newCustomDepth, 'mm');
           }
         }
         
@@ -533,7 +533,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           newAdjustedWidth = furnitureBounds.renderWidth;
           adjustedPosition.x = furnitureBounds.center;
           newCustomDepth = undefined;
-          console.log('🟢 Column A 처리: 폭 조정만', {
+// console.log('🟢 Column A 처리: 폭 조정만', {
             adjustedWidth: newAdjustedWidth,
             adjustedX: adjustedPosition.x
           });
@@ -569,7 +569,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         customWidth: (() => {
           // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
           if (targetSlotInfo && targetSlotInfo.hasColumn) {
-            console.log('✅ 기둥 슬롯 → customWidth = undefined, adjustedWidth =', newAdjustedWidth);
+// console.log('✅ 기둥 슬롯 → customWidth = undefined, adjustedWidth =', newAdjustedWidth);
             return undefined; // 기둥 슬롯에서는 adjustedWidth만 사용
           }
           // zone별로 다른 슬롯 너비 사용
@@ -618,12 +618,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           
           // fallback: 평균 슬롯 너비
           const fallbackWidth = globalIndexing.columnWidth;
-          console.log('⚠️ customWidth fallback:', fallbackWidth);
+// console.log('⚠️ customWidth fallback:', fallbackWidth);
           return fallbackWidth;
         })()
       };
 
-      console.log('📦 [useFurnitureDrag] endData 생성:', {
+// console.log('📦 [useFurnitureDrag] endData 생성:', {
         zone: currentModule.zone,
         adjustedWidth: endData.adjustedWidth,
         customWidth: endData.customWidth,

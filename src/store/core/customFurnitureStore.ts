@@ -110,7 +110,7 @@ export const useCustomFurnitureStore = create<CustomFurnitureState>()(
           customFurnitures: [...state.customFurnitures, furniture],
           error: null,
         }));
-        console.log('✅ 커스텀 가구 추가:', furniture.name);
+// console.log('✅ 커스텀 가구 추가:', furniture.name);
       },
 
       // 커스텀 가구 제거
@@ -120,7 +120,7 @@ export const useCustomFurnitureStore = create<CustomFurnitureState>()(
           selectedCustomFurnitureId:
             state.selectedCustomFurnitureId === id ? null : state.selectedCustomFurnitureId,
         }));
-        console.log('🗑️ 커스텀 가구 제거:', id);
+// console.log('🗑️ 커스텀 가구 제거:', id);
       },
 
       // 커스텀 가구 업데이트
@@ -159,7 +159,7 @@ export const useCustomFurnitureStore = create<CustomFurnitureState>()(
           selectedCustomFurnitureId: null,
           error: null,
         });
-        console.log('🗑️ 모든 커스텀 가구 삭제');
+// console.log('🗑️ 모든 커스텀 가구 삭제');
       },
     }),
     {

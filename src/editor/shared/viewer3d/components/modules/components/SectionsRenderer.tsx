@@ -178,7 +178,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       return;
     }
 
-    console.log('📏 치수 변경 요청:', {
+// console.log('📏 치수 변경 요청:', {
       placedFurnitureId,
       sectionIndex,
       newInternalHeight
@@ -204,7 +204,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       return;
     }
 
-    console.log('✅ 섹션 높이 업데이트 성공:', result);
+// console.log('✅ 섹션 높이 업데이트 성공:', result);
 
     // 가구 스토어 업데이트
     updatePlacedModule(placedFurnitureId, {
@@ -223,7 +223,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       }
     });
 
-    console.log('🎉 가구 업데이트 완료!');
+// console.log('🎉 가구 업데이트 완료!');
   }, [placedFurnitureId, placedModules, updatePlacedModule, basicThickness]);
   
   // 상하부장 여부 확인 (upper-cabinet, lower-cabinet 패턴)
@@ -434,14 +434,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {/* 섹션 내경 치수 표시 - 2단 옷장은 하부 섹션만 표시 (상부는 안전선반 있을 때만), 듀얼 타입 중복 방지 */}
           {(() => {
             // 모든 가구에서 furnitureId 확인
-            console.log('🔵 SectionsRenderer furnitureId 체크:', { furnitureId, index });
+// console.log('🔵 SectionsRenderer furnitureId 체크:', { furnitureId, index });
 
             const is2HangingFurniture = furnitureId?.includes('2hanging');
             const isDualFurniture = furnitureId?.includes('dual');
 
             // 듀얼 가구 디버깅
             if (isDualFurniture) {
-              console.log('🔴 듀얼 가구 감지:', { furnitureId, index, isDualFurniture });
+// console.log('🔴 듀얼 가구 감지:', { furnitureId, index, isDualFurniture });
             }
             const hasTwoSections = allSections.length === 2;
             // 2hanging의 상부 섹션에 안전선반이 있으면 치수 표시
@@ -455,7 +455,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             const isLowerCabinet = furnitureId?.includes('lower-cabinet');
             const isUpperOrLowerCabinet = isUpperCabinet || isLowerCabinet;
 
-            console.log('🔍 SectionsRenderer 내경치수 체크:', {
+// console.log('🔍 SectionsRenderer 내경치수 체크:', {
               furnitureId,
               isUpperCabinet,
               isLowerCabinet,
@@ -471,7 +471,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
             // 2hanging만 로그
             if (furnitureId?.includes('2hanging')) {
-              console.log(`🚨 섹션${index} | furnitureId: ${furnitureId} | hasSafetyShelf: ${hasSafetyShelf} | shouldShow: ${shouldShow} | shouldHide2HangingUpper: ${shouldHide2HangingUpper}`);
+// console.log(`🚨 섹션${index} | furnitureId: ${furnitureId} | hasSafetyShelf: ${hasSafetyShelf} | shouldShow: ${shouldShow} | shouldHide2HangingUpper: ${shouldHide2HangingUpper}`);
             }
             
             return shouldShow && (
@@ -486,7 +486,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                 // 2hanging 디버그
                 if (furnitureId?.includes('2hanging')) {
-                  console.log(`📏 섹션${index} 치수 계산 | type: ${section.type} | shelfPositions:`, section.shelfPositions, `| hasSafetyShelf: ${hasSafetyShelf}`);
+// console.log(`📏 섹션${index} 치수 계산 | type: ${section.type} | shelfPositions:`, section.shelfPositions, `| hasSafetyShelf: ${hasSafetyShelf}`);
                 }
 
                 if (section.type === 'hanging') {
@@ -511,7 +511,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       // sectionBottomY = 상부섹션 영역 시작점 (섹션 경계)
                       bottomY = sectionBottomY;
 
-                      console.log('🔴🔴🔴 상부섹션 hanging bottomY:', {
+// console.log('🔴🔴🔴 상부섹션 hanging bottomY:', {
                         furnitureId,
                         index,
                         sectionBottomY,
@@ -525,7 +525,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                       // 2D 우측뷰에서 상부섹션 치수가이드를 36mm 아래로 확장
                       if (view2DDirection === 'right') {
-                        console.log('🟢 SectionsRenderer: 우측뷰 상부섹션 36mm 확장', {
+// console.log('🟢 SectionsRenderer: 우측뷰 상부섹션 36mm 확장', {
                           view2DDirection,
                           index,
                           originalBottomY: bottomY,
@@ -541,7 +541,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   
                   // 디버깅: hanging 섹션의 치수 계산 확인
                   if (section.type === 'hanging') {
-                    console.log('🔍 Hanging 섹션 치수 계산:', {
+// console.log('🔍 Hanging 섹션 치수 계산:', {
                       index,
                       sectionType: section.type,
                       hasShelfPositions: !!(section.shelfPositions && section.shelfPositions.length > 0),
@@ -567,7 +567,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 띄움배치 시 상부섹션은 18mm 확장
                     const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
 
-                    console.log('🟢🟢🟢 [SectionsRenderer] 정면뷰 상부섹션 topY 계산:', {
+// console.log('🟢🟢🟢 [SectionsRenderer] 정면뷰 상부섹션 topY 계산:', {
                       furnitureId,
                       index,
                       lowerSectionTopOffsetMm,
@@ -592,7 +592,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       const isDualFurniture = furnitureId?.includes('dual');
 
-                      console.log('🔵🔵🔵 [SectionsRenderer] 안전선반 없는 경우:', {
+// console.log('🔵🔵🔵 [SectionsRenderer] 안전선반 없는 경우:', {
                         furnitureId,
                         is2HangingUpperSection,
                         isDualFurniture,
@@ -613,15 +613,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       if (is2HangingUpperSection && isDualFurniture) {
                         // 듀얼 가구: sectionTopY가 측판 상단
                         topY = sectionTopY - basicThickness + floatingAdjustment;
-                        console.log('🟡 듀얼 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
+// console.log('🟡 듀얼 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else if (is2HangingUpperSection) {
                         // 싱글 가구: bottomY + sectionHeight
                         topY = bottomY + sectionHeight + floatingAdjustment;
-                        console.log('🟡 싱글 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
+// console.log('🟡 싱글 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness + floatingAdjustment;
-                        console.log('🟡 일반 케이스 - topY:', topY, 'topY_mm:', topY * 100);
+// console.log('🟡 일반 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       }
                     }
                   } else {
@@ -655,7 +655,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   actualInternalHeight = (topY - bottomY) / 0.01;
 
                   if (index > 0) {
-                    console.log('🔴🔴🔴 상부섹션 drawer bottomY:', {
+// console.log('🔴🔴🔴 상부섹션 drawer bottomY:', {
                       furnitureId,
                       index,
                       sectionBottomY,
@@ -668,7 +668,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     });
                   }
 
-                  console.log('📏 DRAWER 섹션 치수:', {
+// console.log('📏 DRAWER 섹션 치수:', {
                     index,
                     height,
                     basicThickness,
@@ -701,7 +701,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 const centerY = (topY + bottomY) / 2;
 
                 // 치수 디버깅
-                console.log('📏 섹션 내경 치수:', {
+// console.log('📏 섹션 내경 치수:', {
                   furnitureId,
                   sectionIndex: index,
                   actualInternalHeight: Math.round(actualInternalHeight)
@@ -733,7 +733,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 안전선반 위 칸의 내경
                     topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
 
-                    console.log('🔵 안전선반 위 칸 렌더링:', {
+// console.log('🔵 안전선반 위 칸 렌더링:', {
                       furnitureId,
                       sectionIndex: index,
                       totalSections: allSections.length,

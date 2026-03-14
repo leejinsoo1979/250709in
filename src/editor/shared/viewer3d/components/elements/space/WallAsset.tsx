@@ -32,7 +32,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
   onRemove,
   spaceInfo
 }) => {
-  console.log('🎯 WallAsset 렌더링:', { id, height, position });
+// console.log('🎯 WallAsset 렌더링:', { id, height, position });
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -82,62 +82,62 @@ const WallAsset: React.FC<WallAssetProps> = ({
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
     
-    console.log('🎯 가벽 클릭 이벤트 발생:', id);
+// console.log('🎯 가벽 클릭 이벤트 발생:', id);
     
     // 드래그 중이거나 움직임이 있었으면 클릭 무시
     if (isDragging || hasMoved) {
-      console.log('🎯 드래그 중이거나 움직임이 있었으므로 클릭 무시');
+// console.log('🎯 드래그 중이거나 움직임이 있었으므로 클릭 무시');
       return;
     }
 
     // 클릭 시간이 너무 길면 드래그로 간주
     const clickDuration = Date.now() - pointerDownTime;
     if (clickDuration > 200) {
-      console.log('🎯 클릭 시간이 너무 길어서 무시:', clickDuration);
+// console.log('🎯 클릭 시간이 너무 길어서 무시:', clickDuration);
       return;
     }
 
     // 클릭 - 가벽 선택 및 가벽 팝업 열기
-    console.log('🎯 가벽 클릭 - 가벽 선택 및 팝업 열기:', id);
-    console.log('🎯 현재 selectedWallId:', selectedWallId);
+// console.log('🎯 가벽 클릭 - 가벽 선택 및 팝업 열기:', id);
+// console.log('🎯 현재 selectedWallId:', selectedWallId);
     
     // 가벽 선택 및 가벽 팝업 열기
     setSelectedWallId(id);
     openWallPopup(id);
     
-    console.log('✅ setSelectedWallId 및 openWallPopup 호출됨:', id);
-    console.log('✅ 변경 후 selectedWallId:', id);
+// console.log('✅ setSelectedWallId 및 openWallPopup 호출됨:', id);
+// console.log('✅ 변경 후 selectedWallId:', id);
   };
 
   // 더블 클릭 처리 - 편집 모달 열기
   const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
     
-    console.log('🎯 가벽 더블클릭 이벤트 발생:', id);
+// console.log('🎯 가벽 더블클릭 이벤트 발생:', id);
     
     // 드래그 중이거나 움직임이 있었으면 더블클릭 무시
     if (isDragging || hasMoved) {
-      console.log('🎯 드래그 중이거나 움직임이 있었으므로 더블클릭 무시');
+// console.log('🎯 드래그 중이거나 움직임이 있었으므로 더블클릭 무시');
       return;
     }
 
     // 더블 클릭 - 가벽 선택 및 편집 모달 열기
-    console.log('🎯 가벽 더블 클릭 - 가벽 선택 및 편집 모달 열기:', id);
-    console.log('🎯 현재 selectedWallId:', selectedWallId);
+// console.log('🎯 가벽 더블 클릭 - 가벽 선택 및 편집 모달 열기:', id);
+// console.log('🎯 현재 selectedWallId:', selectedWallId);
     
     // 가벽 선택 및 편집 모달 열기
     setSelectedWallId(id);
     openWallEditModal(id);
     
-    console.log('✅ setSelectedWallId 및 openWallEditModal 호출됨:', id);
-    console.log('✅ 변경 후 selectedWallId:', id);
+// console.log('✅ setSelectedWallId 및 openWallEditModal 호출됨:', id);
+// console.log('✅ 변경 후 selectedWallId:', id);
   };
 
   // 포인터 다운 처리
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     
-    console.log('🎯 가벽 포인터 다운:', id);
+// console.log('🎯 가벽 포인터 다운:', id);
     
     setPointerDownTime(Date.now());
     setHasMoved(false);
@@ -154,7 +154,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
       if (moveDistance > moveThreshold && !hasMoved) {
-        console.log('🎯 가벽 드래그 시작 감지:', moveDistance);
+// console.log('🎯 가벽 드래그 시작 감지:', moveDistance);
         setHasMoved(true);
         setIsDragging(true);
         
@@ -185,7 +185,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
         zPosition // Z는 뒷벽에 고정
       ];
       
-      console.log('🎯 가벽 드래그 위치 업데이트:', {
+// console.log('🎯 가벽 드래그 위치 업데이트:', {
         id,
         oldPosition: position,
         newPosition: boundedPosition,
@@ -200,7 +200,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
     };
     
     const handleGlobalPointerUp = () => {
-      console.log('🎯 가벽 포인터 업:', id, 'hasMoved:', hasMoved);
+// console.log('🎯 가벽 포인터 업:', id, 'hasMoved:', hasMoved);
       
       // 드래그 중이었다면 카메라 컨트롤 재활성화
       if (hasMoved) {
@@ -224,7 +224,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
   // 우클릭으로 삭제
   const handleContextMenu = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    console.log('🎯 가벽 우클릭 - 삭제 확인');
+// console.log('🎯 가벽 우클릭 - 삭제 확인');
     if (window.confirm('가벽을 삭제하시겠습니까?')) {
       onRemove?.(id);
     }

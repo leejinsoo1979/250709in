@@ -27,7 +27,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
-  console.log('🔵🔵🔵 SlotPlacementIndicators 렌더링:', { selectedFurnitureId, placedModulesCount: placedModules.length });
+// console.log('🔵🔵🔵 SlotPlacementIndicators 렌더링:', { selectedFurnitureId, placedModulesCount: placedModules.length });
 
   // 선택된 가구 정보 가져오기 (My캐비넷 모듈은 pendingPlacement로 합성)
   const selectedModuleData = useMemo(() => {
@@ -84,7 +84,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         zone: 'normal' as const,
         index: idx
       }));
-      console.log('🔵 [SlotIndicators] 단내림 없음 - 슬롯 위치:', positions);
+// console.log('🔵 [SlotIndicators] 단내림 없음 - 슬롯 위치:', positions);
       return positions;
     }
 
@@ -98,7 +98,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         index: idx
       }));
       allPositions.push(...normalPositions);
-      console.log('🔵 [SlotIndicators] Normal 영역 슬롯:', normalPositions);
+// console.log('🔵 [SlotIndicators] Normal 영역 슬롯:', normalPositions);
     }
 
     // dropped 영역
@@ -109,11 +109,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         index: idx
       }));
       allPositions.push(...droppedPositions);
-      console.log('🔵 [SlotIndicators] Dropped 영역 슬롯:', droppedPositions);
+// console.log('🔵 [SlotIndicators] Dropped 영역 슬롯:', droppedPositions);
     }
 
     // position 정렬하지 않음 - zone별로 slotIndex 순서대로 유지
-    console.log('🔵 [SlotIndicators] 전체 슬롯 위치:', allPositions);
+// console.log('🔵 [SlotIndicators] 전체 슬롯 위치:', allPositions);
     return allPositions;
   }, [indexing, spaceInfo.droppedCeiling?.enabled]);
 
@@ -131,7 +131,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const baseHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
     const floatHeightMm = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
 
-    console.log('🟠 [SlotIndicators] availableSlots 계산 시작:', {
+// console.log('🟠 [SlotIndicators] availableSlots 계산 시작:', {
       isDualFurniture,
       allSlotPositions,
       placedModulesCount: placedModules.length,
@@ -149,7 +149,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight // 전체 높이 - 내려온 높이
           : spaceInfo.height;
 
-        console.log('🔴 [SlotIndicators] 상부장 Y 위치 계산:', {
+// console.log('🔴 [SlotIndicators] 상부장 Y 위치 계산:', {
           zone,
           전체높이: spaceInfo.height,
           단내림내려온높이: spaceInfo.droppedCeiling?.dropHeight,
@@ -175,7 +175,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       const slotData = allSlotPositions[i];
       const slotIndex = slotData.index;
 
-      console.log('🟠 [SlotIndicators] 슬롯 체크 시작:', { i, slotIndex, zone: slotData.zone });
+// console.log('🟠 [SlotIndicators] 슬롯 체크 시작:', { i, slotIndex, zone: slotData.zone });
 
       // isDualFurniture와 slotIndex로 슬롯 사용 가능 여부 확인
       const available = isSlotAvailable(
@@ -189,7 +189,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       );
 
       if (!available) {
-        console.log('🔍 [SlotIndicators] 슬롯 사용 불가:', { slotIndex, zone: slotData.zone });
+// console.log('🔍 [SlotIndicators] 슬롯 사용 불가:', { slotIndex, zone: slotData.zone });
         continue; // 슬롯 사용 불가
       }
 
@@ -234,11 +234,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   }, [selectedModuleData, isDualFurniture, indexing, placedModules, spaceInfo]);
 
   if (!selectedFurnitureId || !selectedModuleData || isFreePlacement) {
-    console.log('🔵 SlotPlacementIndicators - 렌더링 안함:', { selectedFurnitureId, selectedModuleData: !!selectedModuleData });
+// console.log('🔵 SlotPlacementIndicators - 렌더링 안함:', { selectedFurnitureId, selectedModuleData: !!selectedModuleData });
     return null;
   }
 
-  console.log('🔵🔵🔵 SlotPlacementIndicators - 아이콘 렌더링:', { availableSlotsCount: availableSlots.length, availableSlots });
+// console.log('🔵🔵🔵 SlotPlacementIndicators - 아이콘 렌더링:', { availableSlotsCount: availableSlots.length, availableSlots });
 
   return (
     <>
@@ -257,11 +257,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             onClick={(e) => {
               e.stopPropagation();
               (window as any).__r3fClickHandled = true;
-              console.log('🔵 [SlotIndicators] + 아이콘 클릭:', { slotIndex: slot.slotIndex, zone: slot.zone });
-              console.log('🔵 [SlotIndicators] onSlotClick 함수:', onSlotClick);
-              console.log('🔵 [SlotIndicators] onSlotClick 호출 시작');
+// console.log('🔵 [SlotIndicators] + 아이콘 클릭:', { slotIndex: slot.slotIndex, zone: slot.zone });
+// console.log('🔵 [SlotIndicators] onSlotClick 함수:', onSlotClick);
+// console.log('🔵 [SlotIndicators] onSlotClick 호출 시작');
               onSlotClick(slot.slotIndex, slot.zone);
-              console.log('🔵 [SlotIndicators] onSlotClick 호출 완료');
+// console.log('🔵 [SlotIndicators] onSlotClick 호출 완료');
             }}
             style={{
               width: '32px',

@@ -89,7 +89,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   const snapBoxSize = useMemo(() => {
     const baseSize = 20; // 2mm의 10배 스케일로 계산 (화면상 적당한 크기)
     const size = baseSize / currentZoom;
-    console.log('📦 사각형 크기:', size, 'zoom:', currentZoom);
+// console.log('📦 사각형 크기:', size, 'zoom:', currentZoom);
     return size;
   }, [currentZoom]);
 
@@ -219,9 +219,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   // 씬의 모든 꼭지점 추출 (캐싱)
   const sceneVertices = useMemo(() => {
     if (!isMeasureMode) return [];
-    console.log(`📐 씬 꼭지점 추출 중... (viewDirection: ${viewDirection})`);
+// console.log(`📐 씬 꼭지점 추출 중... (viewDirection: ${viewDirection})`);
     const vertices = extractVertices(scene);
-    console.log(`📐 총 ${vertices.length}개 꼭지점 발견`);
+// console.log(`📐 총 ${vertices.length}개 꼭지점 발견`);
     return vertices;
   }, [scene, isMeasureMode, viewDirection]);
 
@@ -299,7 +299,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
     const rawPoint: MeasurePoint = [intersection.x, intersection.y, intersection.z];
 
-    console.log(`🎯 레이캐스트 결과: view=${viewDirection} point=[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`);
+// console.log(`🎯 레이캐스트 결과: view=${viewDirection} point=[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`);
 
     // 지우개 모드인 경우
     if (isEraserMode) {
@@ -342,7 +342,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         : rawPoint;
 
       const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], normalizedMousePos, viewDirection);
-      console.log('🔧 가이드 오프셋 조정:', {
+// console.log('🔧 가이드 오프셋 조정:', {
         start: `[${measurePoints[0][0].toFixed(2)}, ${measurePoints[0][1].toFixed(2)}, ${measurePoints[0][2].toFixed(2)}]`,
         end: `[${measurePoints[1][0].toFixed(2)}, ${measurePoints[1][1].toFixed(2)}, ${measurePoints[1][2].toFixed(2)}]`,
         mousePos: `[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`,
@@ -376,7 +376,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     // 지우개 모드인 경우
     if (isEraserMode) {
       if (hoveredMeasureLineId) {
-        console.log('🗑️ 측정선 삭제:', hoveredMeasureLineId);
+// console.log('🗑️ 측정선 삭제:', hoveredMeasureLineId);
         removeMeasureLine(hoveredMeasureLineId);
         setHoveredMeasureLineId(null);
       }
@@ -410,7 +410,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const guidePoints = calculateGuidePoints(start, end, finalOffset, viewDirection);
         const distance = calculateDistance(start, end, viewDirection, guidePoints.start, guidePoints.end);
 
-        console.log('📏 측정 라인 추가:', {
+// console.log('📏 측정 라인 추가:', {
           start: `[${start[0].toFixed(2)}, ${start[1].toFixed(2)}, ${start[2].toFixed(2)}]`,
           end: `[${end[0].toFixed(2)}, ${end[1].toFixed(2)}, ${end[2].toFixed(2)}]`,
           distance,
@@ -438,7 +438,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
     // 첫 번째 클릭: 시작점 저장
     if (!measurePoints) {
-      console.log('📍 시작점 설정:', hoverPoint);
+// console.log('📍 시작점 설정:', hoverPoint);
       // 뷰 방향에 따라 좌표 정규화 (뷰 평면에 강제)
       const normalizedPoint: MeasurePoint = viewDirection === 'front'
         ? [hoverPoint[0], hoverPoint[1], 0]  // 정면: Z=0 강제
@@ -449,14 +449,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         : viewDirection === 'right'
         ? [0, hoverPoint[1], hoverPoint[2]]  // 우측: X=0 강제
         : hoverPoint;
-      console.log('📍 정규화된 시작점:', normalizedPoint);
+// console.log('📍 정규화된 시작점:', normalizedPoint);
       setMeasureStartPoint(normalizedPoint);
       return;
     }
 
     // 두 번째 클릭: 끝점 저장하고 가이드 조정 모드 진입
     if (measurePoints[1] === null) {
-      console.log('📍 끝점 설정:', hoverPoint);
+// console.log('📍 끝점 설정:', hoverPoint);
       // 뷰 방향에 따라 좌표 정규화 (뷰 평면에 강제)
       const normalizedPoint: MeasurePoint = viewDirection === 'front'
         ? [hoverPoint[0], hoverPoint[1], 0]  // 정면: Z=0 강제
@@ -467,7 +467,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         : viewDirection === 'right'
         ? [0, hoverPoint[1], hoverPoint[2]]  // 우측: X=0 강제
         : hoverPoint;
-      console.log('📍 정규화된 끝점:', normalizedPoint);
+// console.log('📍 정규화된 끝점:', normalizedPoint);
       setMeasureEndPoint(normalizedPoint);
       setIsAdjustingGuide(true);
       // 가이드 오프셋은 마우스 이동 시 업데이트됨 - 초기값은 끝점과 동일
@@ -483,7 +483,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
       // ESC: 현재 측정 취소
       if (event.key === 'Escape') {
-        console.log('❌ ESC: 측정 취소');
+// console.log('❌ ESC: 측정 취소');
         clearMeasurePoints();
         setIsAdjustingGuide(false);
         setGuideOffset([0, 0, 0]);
@@ -496,7 +496,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         event.stopImmediatePropagation(); // 같은 레벨의 다른 리스너도 중단
         if (measureLines.length > 0) {
           const lastLine = measureLines[measureLines.length - 1];
-          console.log('🔙 Ctrl+Z: 마지막 측정 라인 삭제', lastLine.id);
+// console.log('🔙 Ctrl+Z: 마지막 측정 라인 삭제', lastLine.id);
           useUIStore.getState().removeMeasureLine(lastLine.id);
         }
         return false; // 완전 차단
@@ -510,7 +510,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   // 시점 변경 시 측정 모드 자동 종료
   useEffect(() => {
     if (isMeasureMode) {
-      console.log('🔄 시점 변경 감지 - 측정 모드 종료');
+// console.log('🔄 시점 변경 감지 - 측정 모드 종료');
       setMeasureMode(false);
       clearMeasurePoints();
     }
@@ -650,7 +650,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
           {/* 호버점 마커 - 스냅되면 노란 네모만 표시 */}
           {isSnapped && (() => {
-            console.log(`🎯 측정 중 마커: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped}`);
+// console.log(`🎯 측정 중 마커: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped}`);
 
             return (
               <Line
@@ -775,7 +775,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
       {/* 호버 커서 (측정 시작 전) - 측정 모드일 때만 표시 */}
       {isMeasureMode && !measurePoints && hoverPoint && isSnapped && (() => {
-        console.log(`🖱️ 호버 커서: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped} boxSize=${snapBoxSize.toFixed(4)}`);
+// console.log(`🖱️ 호버 커서: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped} boxSize=${snapBoxSize.toFixed(4)}`);
 
         return (
           <Line

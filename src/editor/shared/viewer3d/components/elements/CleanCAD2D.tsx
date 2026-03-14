@@ -157,7 +157,7 @@ const EditableLabel: React.FC<{
           isolation: 'isolate'
         }}
         onClick={(e) => {
-          console.log('🖱️ 라벨 클릭됨:', { columnId, side, currentValue });
+// console.log('🖱️ 라벨 클릭됨:', { columnId, side, currentValue });
           e.preventDefault();
           e.stopPropagation();
           e.nativeEvent?.preventDefault();
@@ -166,7 +166,7 @@ const EditableLabel: React.FC<{
           handleColumnDistanceEdit(columnId, side, currentValue);
         }}
         onMouseDown={(e) => {
-          console.log('🖱️ 마우스 다운:', { columnId, side, currentValue });
+// console.log('🖱️ 마우스 다운:', { columnId, side, currentValue });
           e.preventDefault();
           e.stopPropagation();
           e.nativeEvent?.preventDefault();
@@ -174,7 +174,7 @@ const EditableLabel: React.FC<{
           e.nativeEvent?.stopImmediatePropagation();
         }}
         onMouseUp={(e) => {
-          console.log('🖱️ 마우스 업:', { columnId, side, currentValue });
+// console.log('🖱️ 마우스 업:', { columnId, side, currentValue });
           e.preventDefault();
           e.stopPropagation();
           e.nativeEvent?.preventDefault();
@@ -182,7 +182,7 @@ const EditableLabel: React.FC<{
           e.nativeEvent?.stopImmediatePropagation();
         }}
         onTouchStart={(e) => {
-          console.log('👆 터치 시작:', { columnId, side, currentValue });
+// console.log('👆 터치 시작:', { columnId, side, currentValue });
           e.preventDefault();
           e.stopPropagation();
           handleColumnDistanceEdit(columnId, side, currentValue);
@@ -260,7 +260,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const indexing = calculateSpaceIndexing(spaceInfo);
 
   // 디버깅 로그 추가
-  console.log('🔴 CleanCAD2D - indexing:', {
+// console.log('🔴 CleanCAD2D - indexing:', {
     columnCount: indexing.columnCount,
     columnWidth: indexing.columnWidth,
     internalWidth: indexing.internalWidth,
@@ -291,7 +291,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
-  console.log('🎯 CleanCAD2D 전체 렌더링:', {
+// console.log('🎯 CleanCAD2D 전체 렌더링:', {
     showDimensionsProp,
     showDimensionsFromStore,
     showDimensions,
@@ -313,7 +313,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 가구 높이 계산을 useMemo로 메모이제이션 - placedModules 변경 시 자동 업데이트
   const furnitureHeights = useMemo(() => {
-    console.log('🔄 furnitureHeights 재계산 중...', { furnitureHeightKeys });
+// console.log('🔄 furnitureHeights 재계산 중...', { furnitureHeightKeys });
 
     const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     const topFrameHeight = frameSize.top ?? 0;
@@ -359,7 +359,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       ? maxUpperCabinetHeightMm - (floatHeight - bottomFrameHeight)
       : 0;
 
-    console.log('✅ furnitureHeights 계산 완료:', {
+// console.log('✅ furnitureHeights 계산 완료:', {
       maxLowerCabinetHeightMm,
       maxUpperCabinetHeightMm,
       adjustedUpperCabinetHeightMm,
@@ -470,7 +470,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 기둥 간격 편집 핸들러
   const handleColumnDistanceEdit = (columnId: string, side: 'left' | 'right' | 'width', currentValue: number) => {
-    console.log('🖱️ 기둥 간격 편집 시작:', { columnId, side, currentValue });
+// console.log('🖱️ 기둥 간격 편집 시작:', { columnId, side, currentValue });
     
     // 기존 편집 모드 먼저 해제
     if (editingColumnId) {
@@ -495,7 +495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     
     if (!column) return;
 
-    console.log('✅ 편집 완료:', { columnId: editingColumnId, side: editingSide, value });
+// console.log('✅ 편집 완료:', { columnId: editingColumnId, side: editingSide, value });
 
     const spaceWidthM = spaceInfo.width * 0.01;
     const columnWidthM = column.width * 0.01;
@@ -519,7 +519,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   };
 
   const handleEditCancel = () => {
-    console.log('❌ 편집 취소');
+// console.log('❌ 편집 취소');
     setEditingColumnId(null);
     setEditingSide(null);
     setEditingValue('');
@@ -1014,7 +1014,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
   
   // 디버깅 로그
-  console.log('🔍 CleanCAD2D Debug:', {
+// console.log('🔍 CleanCAD2D Debug:', {
     spaceWidth: spaceInfo.width,
     droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
     droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
@@ -1040,9 +1040,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 뷰 방향별 치수선 렌더링
   const renderDimensions = () => {
     // showDimensions가 false이면 렌더링 안 함
-    console.log('🔵 renderDimensions called:', { showDimensions, currentViewDirection });
+// console.log('🔵 renderDimensions called:', { showDimensions, currentViewDirection });
     if (!showDimensions) {
-      console.log('❌ showDimensions is false, returning null');
+// console.log('❌ showDimensions is false, returning null');
       return null;
     }
 
@@ -4219,7 +4219,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const extraFurnitureZ = rightDimensionZ + mmToThreeUnits(40);
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
 
-            console.log('📐 [좌측뷰] 치수 렌더링:', {
+// console.log('📐 [좌측뷰] 치수 렌더링:', {
               isFloating,
               floatHeight,
               maxLowerCabinetHeightMm,
@@ -4524,7 +4524,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
           const lowerDepth = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
 
-          console.log('📏📏📏 [좌측뷰 깊이 치수] module.id=', module.id, 'upperSectionDepth=', module.upperSectionDepth, 'lowerSectionDepth=', module.lowerSectionDepth, 'upperDepth=', upperDepth, 'lowerDepth=', lowerDepth);
+// console.log('📏📏📏 [좌측뷰 깊이 치수] module.id=', module.id, 'upperSectionDepth=', module.upperSectionDepth, 'lowerSectionDepth=', module.lowerSectionDepth, 'upperDepth=', upperDepth, 'lowerDepth=', lowerDepth);
 
           // 상부 치수용 (기본값: 상부섹션 깊이)
           const actualDepth = upperDepth;
@@ -4710,7 +4710,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {(() => {
                       const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                      console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
+// console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
                         surroundType: spaceInfo.surroundType,
                         installType: spaceInfo.installType,
                         wallConfig: spaceInfo.wallConfig,
@@ -5170,7 +5170,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const extraFurnitureZ = leftDimensionZ + mmToThreeUnits(40);
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
 
-            console.log('📐 [우측뷰] 치수 렌더링:', {
+// console.log('📐 [우측뷰] 치수 렌더링:', {
               isFloating,
               floatHeight,
               maxLowerCabinetHeightMm,
@@ -6458,7 +6458,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const leftDimensionX = spaceXOffset - mmToThreeUnits(200);
               
               // 디버깅을 위한 로그
-              console.log('🔍 [상단뷰 치수] 배치된 가구들:', placedModules.map(m => ({
+// console.log('🔍 [상단뷰 치수] 배치된 가구들:', placedModules.map(m => ({
                 id: m.id,
                 moduleId: m.moduleId,
                 customDepth: m.customDepth,
@@ -6477,17 +6477,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 );
                 
                 if (!moduleData) {
-                  console.log('❌ [상단뷰 치수] 모듈 데이터 없음:', module.moduleId);
+// console.log('❌ [상단뷰 치수] 모듈 데이터 없음:', module.moduleId);
                   return;
                 }
                 
                 const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-                console.log(`📏 [상단뷰 치수] 가구 ${module.id}:`);
-                console.log(`  - moduleId: ${module.moduleId}`);
-                console.log(`  - customDepth: ${module.customDepth}`);
-                console.log(`  - moduleData.dimensions.depth: ${moduleData.dimensions.depth}`);
-                console.log(`  - moduleData.defaultDepth: ${moduleData.defaultDepth}`);
-                console.log(`  - 최종 사용 깊이: ${actualDepthMm}mm`);
+// console.log(`📏 [상단뷰 치수] 가구 ${module.id}:`);
+// console.log(`  - moduleId: ${module.moduleId}`);
+// console.log(`  - customDepth: ${module.customDepth}`);
+// console.log(`  - moduleData.dimensions.depth: ${moduleData.dimensions.depth}`);
+// console.log(`  - moduleData.defaultDepth: ${moduleData.defaultDepth}`);
+// console.log(`  - 최종 사용 깊이: ${actualDepthMm}mm`);
                 
                 // 실제 가구 위치 계산 (FurnitureItem.tsx와 완전히 동일한 방식, 실제 공간 깊이 사용)
                 const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이
@@ -6508,7 +6508,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const furnitureBackZ = furnitureZ - depth/2;
                 const furnitureFrontZ = furnitureZ + depth/2;
                 
-                console.log(`📐 [상단뷰 치수] 가구 ${module.id}: 뒷면Z=${furnitureBackZ.toFixed(3)}, 앞면Z=${furnitureFrontZ.toFixed(3)}`);
+// console.log(`📐 [상단뷰 치수] 가구 ${module.id}: 뒷면Z=${furnitureBackZ.toFixed(3)}, 앞면Z=${furnitureFrontZ.toFixed(3)}`);
                 
                 minBackZ = Math.min(minBackZ, furnitureBackZ);
                 maxFrontZ = Math.max(maxFrontZ, furnitureFrontZ);
@@ -6538,7 +6538,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               });
               
               // @ts-ignore
-              console.log(`🏆 [상단뷰 치수] 가장 깊은 가구: ${deepestModule?.module?.id}, 깊이: ${deepestModuleDepthMm}mm`);
+// console.log(`🏆 [상단뷰 치수] 가장 깊은 가구: ${deepestModule?.module?.id}, 깊이: ${deepestModuleDepthMm}mm`);
               
               // 좌측 프레임 앞면 위치 계산 (실제 공간 깊이 사용)
               const panelDepthMm = spaceInfo.depth || 600;
@@ -6557,9 +6557,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 좌측 프레임 앞면 위치 (도어 앞면에서 프레임 두께만큼 더 앞쪽)
               const leftFrameFrontZ = doorFrontZ + frameThickness;
               
-              console.log(`🏠 [상단뷰 치수] spaceZOffset: ${spaceZOffset.toFixed(3)}`);
-              console.log(`🏠 [상단뷰 치수] furnitureZOffset: ${furnitureZOffset.toFixed(3)}`);
-              console.log(`🏠 [상단뷰 치수] doorFrontZ: ${doorFrontZ.toFixed(3)}`);
+// console.log(`🏠 [상단뷰 치수] spaceZOffset: ${spaceZOffset.toFixed(3)}`);
+// console.log(`🏠 [상단뷰 치수] furnitureZOffset: ${furnitureZOffset.toFixed(3)}`);
+// console.log(`🏠 [상단뷰 치수] doorFrontZ: ${doorFrontZ.toFixed(3)}`);
               
               // 가장 깊은 가구의 앞면과 뒷면 위치 계산
               let deepestModuleBackZ = spaceZOffset; // 기본값: 뒷벽
@@ -6591,10 +6591,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 좌측 프레임 앞면에서 가장 깊은 가구 뒷면까지의 실제 거리 계산 (mm 단위)
               const actualDistanceMm = Math.round((leftFrameFrontZ - deepestModuleBackZ) / 0.01);
               
-              console.log(`📏 [상단뷰 치수] 좌측 프레임 앞면 Z: ${leftFrameFrontZ.toFixed(3)}`);
-              console.log(`📏 [상단뷰 치수] 가장 깊은 가구 뒷면 Z: ${deepestModuleBackZ.toFixed(3)}`);
-              console.log(`📏 [상단뷰 치수] Z 차이: ${(leftFrameFrontZ - deepestModuleBackZ).toFixed(3)}`);
-              console.log(`📏 [상단뷰 치수] 실제 거리: ${actualDistanceMm}mm`);
+// console.log(`📏 [상단뷰 치수] 좌측 프레임 앞면 Z: ${leftFrameFrontZ.toFixed(3)}`);
+// console.log(`📏 [상단뷰 치수] 가장 깊은 가구 뒷면 Z: ${deepestModuleBackZ.toFixed(3)}`);
+// console.log(`📏 [상단뷰 치수] Z 차이: ${(leftFrameFrontZ - deepestModuleBackZ).toFixed(3)}`);
+// console.log(`📏 [상단뷰 치수] 실제 거리: ${actualDistanceMm}mm`);
               
               return (
                 <>
@@ -6870,22 +6870,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const leftDepth = mmToThreeUnits(leftDepthMm);
                 const rightDepth = mmToThreeUnits(rightDepthMm);
                 
-                console.log('🔍 [스타일러장 디버깅]');
-                console.log('- 모듈ID:', moduleData.id);
-                console.log('- actualDepthMm (좌측):', leftDepthMm);
-                console.log('- rightAbsoluteDepth (우측):', rightDepthMm);
-                console.log('- leftDepth (Three.js):', leftDepth);
-                console.log('- rightDepth (Three.js):', rightDepth);
-                console.log('- furnitureZOffset:', furnitureZOffset);
-                console.log('- furnitureDepth:', furnitureDepth);
-                console.log('- doorThickness:', doorThickness);
+// console.log('🔍 [스타일러장 디버깅]');
+// console.log('- 모듈ID:', moduleData.id);
+// console.log('- actualDepthMm (좌측):', leftDepthMm);
+// console.log('- rightAbsoluteDepth (우측):', rightDepthMm);
+// console.log('- leftDepth (Three.js):', leftDepth);
+// console.log('- rightDepth (Three.js):', rightDepth);
+// console.log('- furnitureZOffset:', furnitureZOffset);
+// console.log('- furnitureDepth:', furnitureDepth);
+// console.log('- doorThickness:', doorThickness);
                 
                 // 우측 가구의 실제 배치 위치 (깊이 차이 반영) - DualType5와 동일하게 계산
                 // DualType5에서는 우측이 660mm로 더 깊으므로, 우측 뒷면이 더 뒤로 나와야 함
                 const rightFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - rightDepth/2;
                 furnitureBackZ = rightFurnitureZ - rightDepth/2;
-                console.log('- rightFurnitureZ (가구 중심, 수정된 계산):', rightFurnitureZ);
-                console.log('- furnitureBackZ (가구 뒷면, 수정된 계산):', furnitureBackZ);
+// console.log('- rightFurnitureZ (가구 중심, 수정된 계산):', rightFurnitureZ);
+// console.log('- furnitureBackZ (가구 뒷면, 수정된 계산):', furnitureBackZ);
               } else {
                 // 좌우 깊이가 동일한 경우: FurnitureItem.tsx와 동일
                 const depth = mmToThreeUnits(actualDepthMm);
@@ -7309,7 +7309,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return null;
   };
 
-  console.log('🎨 CleanCAD2D 최종 렌더링:', {
+// console.log('🎨 CleanCAD2D 최종 렌더링:', {
     currentViewDirection,
     showDimensions,
     hasColumns: !!spaceInfo.columns,
