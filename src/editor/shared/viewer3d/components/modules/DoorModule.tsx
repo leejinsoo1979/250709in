@@ -346,6 +346,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 자유배치에서 실제 사용할 높이: props internalHeight > store freeHeight > 기본값
   const effectiveInternalHeight = internalHeight || storeFreeHeight;
 
+  // 자유배치 EP 보정: 도어 너비 축소 + X 위치 보정
+  const freeEpLeftThk = (isFree && storePlacedModule?.hasLeftEndPanel && !storePlacedModule?.customConfig)
+    ? (storePlacedModule?.endPanelThickness || 18) : 0;
+  const freeEpRightThk = (isFree && storePlacedModule?.hasRightEndPanel && !storePlacedModule?.customConfig)
+    ? (storePlacedModule?.endPanelThickness || 18) : 0;
+  const freeEpWidthReduction = freeEpLeftThk + freeEpRightThk;
+  const freeEpXOffset = (freeEpLeftThk - freeEpRightThk) / 2 * 0.01; // mm → Three.js 단위
+
   console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
     furnitureId,
     isLayoutModeFree,
@@ -609,8 +617,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   if (isFree) {
     // 자유배치: 슬롯 무시, store에서 가져온 freeWidth 또는 props moduleWidth 사용
-    actualDoorWidth = storeFreeWidth || moduleWidth;
-    console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
+    // EP 두께만큼 도어 너비 축소 (가구 본체와 동일)
+    actualDoorWidth = (storeFreeWidth || moduleWidth) - freeEpWidthReduction;
+    console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, freeEpWidthReduction, freeEpXOffset, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
   } else {
     // 균등분할: originalSlotWidth가 있으면 무조건 사용 (커버도어)
     actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
@@ -1185,7 +1194,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
 
   // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
-  let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  // 자유배치 EP offset 적용
+  let doorGroupX = (slotCenterX || 0) + freeEpXOffset; // 원래 슬롯 중심 X 좌표 + EP 보정 (Three.js 단위)
   
   // slotCenterX가 제공되었는지 확인
   if (slotCenterX !== undefined && slotCenterX !== null) {
