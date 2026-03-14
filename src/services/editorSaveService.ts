@@ -2,13 +2,14 @@
  * 에디터에서 작업한 내용을 완벽한 DB 구조로 저장하는 서비스
  */
 
-import { 
-  ProjectData, 
-  SpaceConfiguration, 
+import {
+  ProjectData,
+  SpaceConfiguration,
   CustomLayoutConfiguration,
   UpdateProjectData,
-  CreateProjectData 
+  CreateProjectData
 } from '@/types/project';
+import { DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { 
   createProject, 
   updateProject, 
@@ -409,9 +410,9 @@ export const loadEditorProject = async (projectId: string): Promise<{
         // 단내림 설정 추가
         droppedCeiling: projectData.spaceConfig?.droppedCeiling || {
           enabled: false,
-          position: 'right',
-          width: 900,
-          dropHeight: 200
+          position: DEFAULT_DROPPED_CEILING_VALUES.POSITION,
+          width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+          dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
         },
         mainDoorCount: projectData.spaceConfig?.mainDoorCount || 0,
         droppedCeilingDoorCount: projectData.spaceConfig?.droppedCeilingDoorCount || 0

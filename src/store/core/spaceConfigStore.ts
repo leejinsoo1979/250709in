@@ -76,9 +76,10 @@ export interface MaterialConfig {
   frameTexture?: string;     // 프레임 재질 텍스처 이미지 경로
 }
 
-// 단내림 기본값 상수
+// 단내림/커튼박스 기본값 상수
 export const DEFAULT_DROPPED_CEILING_VALUES = {
-  WIDTH: 1200,
+  WIDTH: 900,           // 슬롯모드 기본 폭
+  WIDTH_FREE: 150,      // 자유배치모드 기본 폭
   DROP_HEIGHT: 200,
   POSITION: 'right' as const
 };

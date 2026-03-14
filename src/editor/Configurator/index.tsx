@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { TbRulerMeasure } from 'react-icons/tb';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 import { generateSurround } from '@/editor/shared/utils/surroundGenerator';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -4833,8 +4833,8 @@ const Configurator: React.FC = () => {
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
                         ...spaceInfo.droppedCeiling,
-                        width: 900,
-                        dropHeight: 200,
+                        width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+                        dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT,
                       };
                     }
                     handleSpaceInfoUpdate(updates);
