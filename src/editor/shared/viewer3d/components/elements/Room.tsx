@@ -2832,20 +2832,22 @@ const Room: React.FC<RoomProps> = ({
                 const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
 
                 // L자 구조: 전면패널 + 경계면 측면패널 (서라운드와 동일 구조)
-                const cbZOffset = cbSurround?.offset ? mmToThreeUnits(cbSurround.offset) : 0;
+                const cbOffsetMM = cbSurround?.offset || 0;
+                const cbZOffset = mmToThreeUnits(cbOffsetMM);
                 const frontZ = surroundZPosition + cbZOffset;
-                const SIDE_DEPTH_MM = 40; // 측면패널 깊이 (서라운드와 동일)
+                const SIDE_BASE_DEPTH_MM = 40; // 측면패널 기본 깊이
+                const sideDepthMM = SIDE_BASE_DEPTH_MM + cbOffsetMM; // offset만큼 측면 확장
 
                 // 전면패널: 커튼박스 전체 폭, 가구 앞면 위치
                 const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
                 const frontPos: [number, number, number] = [dcCenterX, panelCenterY, frontZ];
 
-                // 경계면 측면패널: 18mm 두께, 전면 뒤쪽으로 40mm 깊이
+                // 경계면 측면패널: 18mm 두께, 전면 뒤쪽으로 (40 + offset)mm 깊이
                 const borderX = dcPos === 'left'
                   ? mmToThreeUnits(-spaceHalfW + dcWidthMM - panelThickMM / 2)
                   : mmToThreeUnits(spaceHalfW - dcWidthMM + panelThickMM / 2);
-                const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
-                const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, mmToThreeUnits(SIDE_DEPTH_MM)];
+                const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(sideDepthMM) / 2;
+                const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, mmToThreeUnits(sideDepthMM)];
                 const sidePos: [number, number, number] = [borderX, panelCenterY, sideZ];
 
                 const isCBHighlighted = highlightedFrame === 'curtain-box-finish';
