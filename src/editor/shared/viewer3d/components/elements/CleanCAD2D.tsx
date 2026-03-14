@@ -5084,7 +5084,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             lineWidth={1}
           />
           
-          {/* 단내림/커튼박스 높이 연장선 - 구간분할이 있는 경우에만 표시 */}
+          {/* 단내림/커튼박스 높이 연장선 - 커튼박스가 있는 경우에만 표시 */}
           {spaceInfo.droppedCeiling?.enabled && (
             <Line
               points={[

@@ -26,7 +26,7 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
   let startX = -halfW;
   let endX = halfW;
 
-  // 자유배치 구간분할: 서라운드구간 제외
+  // 자유배치 커튼박스: 커튼박스 구간 제외
   if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.droppedCeiling?.enabled) {
     const surroundWidth = spaceInfo.droppedCeiling.width || 0;
     if (spaceInfo.droppedCeiling.position === 'left') {
@@ -125,7 +125,7 @@ export function detectDroppedZone(
     return { zone: 'normal' };
   }
 
-  // 자유배치모드: 구간분할은 bounds 축소로 처리, 높이 조정 없음
+  // 자유배치모드: 커튼박스는 bounds 축소로 처리, 높이 조정 없음
   if (spaceInfo.layoutMode === 'free-placement') {
     return { zone: 'normal' };
   }

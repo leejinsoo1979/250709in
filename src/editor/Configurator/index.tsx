@@ -3301,7 +3301,7 @@ const Configurator: React.FC = () => {
         {(<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>{isFreeMode ? '구간 분할' : '단내림'}</h3>
+            <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : '단내림'}</h3>
           </div>
 
           <div className={styles.toggleButtonGroup}>

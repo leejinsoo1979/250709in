@@ -85,7 +85,7 @@ export function generateSurround(
   const leftMethod = determineSurroundMethod(leftGap);
   const rightMethod = determineSurroundMethod(rightGap);
 
-  // 구간분할(커튼박스) 활성 시, 커튼박스 쪽 서라운드는 불필요 (벽으로 막혀있음)
+  // 커튼박스 활성 시, 커튼박스 쪽 서라운드는 불필요 (벽으로 막혀있음)
   const hasCurtainBox = spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode === 'free-placement';
   const curtainBoxPosition = spaceInfo.droppedCeiling?.position || 'right';
   const skipLeft = hasCurtainBox && curtainBoxPosition === 'left';

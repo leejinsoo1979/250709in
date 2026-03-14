@@ -68,7 +68,7 @@ const DroppedCeilingSpace: React.FC<DroppedCeilingSpaceProps> = ({ spaceInfo }) 
   const frameY = (droppedAreaHeight - frameThickness) / 2;
   const wallY = droppedAreaHeight / 2;
 
-  // 자유배치모드: 서라운드구간은 벽(Room.tsx)이 전체 높이로 렌더링하므로 추가 표현 불필요
+  // 자유배치모드: 커튼박스 구간은 벽(Room.tsx)이 전체 높이로 렌더링하므로 추가 표현 불필요
   const isFreeMode = spaceInfo.layoutMode === 'free-placement';
   if (isFreeMode) {
     return null;
