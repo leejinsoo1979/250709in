@@ -3310,7 +3310,8 @@ const Configurator: React.FC = () => {
               className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
               onClick={() => {
                 // 단내림 비활성화
-                clearAllModules(); // 가구 제거
+                clearAllModules();
+                setSpaceInfo({ freeSurround: undefined }); // 서라운드도 초기화
                 handleSpaceInfoUpdate({
                   droppedCeiling: {
                     ...spaceInfo.droppedCeiling,
@@ -3330,7 +3331,8 @@ const Configurator: React.FC = () => {
               onClick={() => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   // 단내림 활성화
-                  clearAllModules(); // 가구 제거
+                  clearAllModules();
+                setSpaceInfo({ freeSurround: undefined }); // 서라운드도 초기화
 
                   const totalWidth = spaceInfo.width || 4800;
                   const droppedWidth = isFreeMode ? 150 : 900; // 자유배치: 커튼박스 150mm, 슬롯: 단내림 900mm
@@ -4809,6 +4811,7 @@ const Configurator: React.FC = () => {
                     if (placedModules.length > 0) {
                       if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
                       clearAllModules();
+                      setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'equal-division' };
                     // 자유배치→슬롯 전환 시 기존 커튼박스가 켜져 있으면 단내림 기본값으로 변경
@@ -4831,6 +4834,7 @@ const Configurator: React.FC = () => {
                     if (placedModules.length > 0) {
                       if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
                       clearAllModules();
+                      setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
                     // 슬롯→자유배치 전환 시 커튼박스 기본값: 없음
