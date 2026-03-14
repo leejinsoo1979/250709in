@@ -746,6 +746,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         ? ['lower', 'middle', 'upper']
         : ['lower', 'upper'];
       sections.forEach((section, sIdx) => {
+        // 비활성(비움) 섹션은 아이콘 스킵
+        if (section.enabled === false) return;
         // 섹션별 너비/정렬 오프셋 반영
         const sectionW = section.width ? mmToUnit(section.width) : effectiveW;
         const iconAlignOffset = calculateAlignOffset(sectionW, effectiveW, section.align || 'center');
@@ -755,6 +757,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     } else {
       // 단일 섹션에서도 서브분할 고려
       const section = sections[0];
+      // 비활성(비움) 섹션은 아이콘 스킵
+      if (section?.enabled === false) return null;
       // 섹션별 너비/정렬 오프셋 반영
       const singleSectionW = section?.width ? mmToUnit(section.width) : effectiveW;
       const singleAlignOffset = calculateAlignOffset(singleSectionW, effectiveW, section?.align || 'center');
