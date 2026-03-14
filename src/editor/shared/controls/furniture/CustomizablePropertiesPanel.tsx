@@ -3378,7 +3378,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
               }}
               onBlur={(e) => {
                 const val = parseInt(e.target.value) || 0;
-                const clamped = Math.max(0, Math.min(500, val));
+                const maxRaise = section.height || 500;
+                const clamped = Math.max(0, Math.min(maxRaise, val));
                 const sections = [...config.sections];
                 sections[sIdx] = { ...sections[sIdx], bottomPanelRaise: clamped };
                 applyConfig({ ...config, sections });
