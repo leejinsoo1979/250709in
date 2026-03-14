@@ -132,7 +132,7 @@ const FreePlacementDropZone: React.FC = () => {
     return Math.round(maxGap);
   }, [placedModules, spaceBounds]);
 
-  // ── 균등배치 모드: ON 시 가구 원래 너비 유지, 이격을 균등 분배 ──
+  // ── 균등배치 모드: ON 시 유효공간을 가구 수로 나눠 균등 너비, 이격 0으로 배치 ──
   useEffect(() => {
     if (!equalDistribution || !isFreePlacement || freeModules.length === 0) return;
 
@@ -146,31 +146,21 @@ const FreePlacementDropZone: React.FC = () => {
 
     if (availableWidth <= 0) return;
 
+    const count = freeModules.length;
+    const equalWidth = Math.round((availableWidth / count) * 10) / 10;
+
     // 좌→우 정렬 순서
     const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
 
-    // 각 가구의 원래 너비 합산
-    const totalFurnitureWidth = sorted.reduce((sum, mod) => {
-      return sum + (mod.freeWidth || mod.moduleWidth || 450);
-    }, 0);
-
-    // 남은 공간을 균등 이격으로 분배 (가구 사이 + 양쪽 끝)
-    const gapCount = sorted.length + 1; // 양쪽 벽 포함
-    const remainingSpace = availableWidth - totalFurnitureWidth;
-    const equalGap = remainingSpace > 0 ? Math.round((remainingSpace / gapCount) * 10) / 10 : 0;
-
-    // 각 가구 위치 재배치 (너비 유지, 이격 균등)
-    let currentX = effectiveStartX + equalGap;
-    sorted.forEach((mod) => {
-      const modWidth = mod.freeWidth || mod.moduleWidth || 450;
-      const centerXmm = currentX + (modWidth / 2);
+    // 각 가구를 균등 너비로 이격 없이 빈틈없이 배치
+    sorted.forEach((mod, i) => {
+      const centerXmm = effectiveStartX + (i * equalWidth) + (equalWidth / 2);
       const centerXcm = centerXmm * 0.01;
 
       updatePlacedModule(mod.id, {
+        freeWidth: equalWidth,
         position: { ...mod.position, x: centerXcm },
       });
-
-      currentX += modWidth + equalGap;
     });
   }, [equalDistribution, freeModules.length, isFreePlacement]);
 
