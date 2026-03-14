@@ -2871,57 +2871,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 };
 
-// React.memo로 최적화: spaceInfo의 materialConfig 중 doorColor/doorTexture만 변경되었을 때만 리렌더링
-export default React.memo(DoorModule, (prevProps, nextProps) => {
-  // spaceInfo의 materialConfig.doorColor와 doorTexture만 비교
-  const prevMaterialConfig = prevProps.spaceInfo?.materialConfig;
-  const nextMaterialConfig = nextProps.spaceInfo?.materialConfig;
-
-  // 도어 관련 속성만 비교
-  const doorPropsEqual =
-    prevProps.color === nextProps.color &&
-    prevProps.textureUrl === nextProps.textureUrl &&
-    prevMaterialConfig?.doorColor === nextMaterialConfig?.doorColor &&
-    prevMaterialConfig?.doorTexture === nextMaterialConfig?.doorTexture;
-
-// console.log('🔍 DoorModule React.memo 비교:', {
-    // prevDoorTexture: prevMaterialConfig?.doorTexture,
-    // nextDoorTexture: nextMaterialConfig?.doorTexture,
-    // doorTextureChanged: prevMaterialConfig?.doorTexture !== nextMaterialConfig?.doorTexture,
-    // doorPropsEqual,
-    // willRerender: !doorPropsEqual
-  // });
-
-  // 기타 중요한 props 비교
-  const otherPropsEqual =
-    prevProps.moduleWidth === nextProps.moduleWidth &&
-    prevProps.moduleDepth === nextProps.moduleDepth &&
-    prevProps.hingePosition === nextProps.hingePosition &&
-    prevProps.isDragging === nextProps.isDragging &&
-    prevProps.isEditMode === nextProps.isEditMode &&
-    prevProps.hasDoor === nextProps.hasDoor &&
-    prevProps.doorWidth === nextProps.doorWidth &&
-    prevProps.originalSlotWidth === nextProps.originalSlotWidth &&
-    prevProps.slotCenterX === nextProps.slotCenterX &&
-    prevProps.slotIndex === nextProps.slotIndex &&
-    prevProps.doorTopGap === nextProps.doorTopGap &&
-    prevProps.doorBottomGap === nextProps.doorBottomGap &&
-    prevProps.doorSplit === nextProps.doorSplit &&
-    prevProps.sectionHeightsMm === nextProps.sectionHeightsMm &&
-    prevProps.sectionIndex === nextProps.sectionIndex &&
-    prevProps.totalSections === nextProps.totalSections &&
-    prevProps.upperDoorTopGap === nextProps.upperDoorTopGap &&
-    prevProps.upperDoorBottomGap === nextProps.upperDoorBottomGap &&
-    prevProps.lowerDoorTopGap === nextProps.lowerDoorTopGap &&
-    prevProps.lowerDoorBottomGap === nextProps.lowerDoorBottomGap &&
-    prevProps.furnitureId === nextProps.furnitureId &&
-    prevProps.internalHeight === nextProps.internalHeight &&
-    prevProps.isFreePlacement === nextProps.isFreePlacement &&
-    prevProps.topFrameThickness === nextProps.topFrameThickness;
-
-  // panelGrainDirections 객체 비교
-  const panelGrainDirectionsEqual = JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
-
-  // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
-  return doorPropsEqual && otherPropsEqual && panelGrainDirectionsEqual;
-}); 
+// React.memo 커스텀 비교 제거 — 내부에서 useSpaceConfigStore 구독 중이므로
+// zustand이 doorTopGap/doorBottomGap 변경 시 직접 리렌더 트리거
+export default React.memo(DoorModule);
