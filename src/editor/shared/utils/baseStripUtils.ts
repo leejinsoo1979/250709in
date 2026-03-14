@@ -28,7 +28,7 @@ const MERGE_TOLERANCE_MM = 1;
  * 하부 섹션 깊이 축소에 따른 Z 오프셋 (mm)
  * 양수 = 뒤로, 음수 = 앞으로
  */
-function getLowerDepthZOffsetMM(module: PlacedModule): number {
+export function getLowerDepthZOffsetMM(module: PlacedModule): number {
   const fullDepth = module.freeDepth || 580;
   const lowerDepth = module.lowerSectionDepth;
   if (!lowerDepth || lowerDepth >= fullDepth) return 0;
@@ -42,7 +42,7 @@ function getLowerDepthZOffsetMM(module: PlacedModule): number {
 /**
  * 걸래받이용 X 범위 계산 — 하부 섹션의 개별 너비/정렬을 반영
  */
-function getBaseFrameBoundsX(module: PlacedModule): { left: number; right: number; category: 'full' | 'upper' | 'lower' } {
+export function getBaseFrameBoundsX(module: PlacedModule): { left: number; right: number; category: 'full' | 'upper' | 'lower' } {
   const fullBounds = getModuleBoundsX(module);
 
   // EP(엔드패널) 적용: 본체 너비 축소 + 비대칭 오프셋

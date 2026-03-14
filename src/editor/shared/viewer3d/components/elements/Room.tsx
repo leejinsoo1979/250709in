@@ -19,7 +19,7 @@ import {
   calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { computeBaseStripGroups, computeTopStripGroups } from '@/editor/shared/utils/baseStripUtils';
+import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
 import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
@@ -3682,7 +3682,7 @@ const Room: React.FC<RoomProps> = ({
           END_PANEL_THICKNESS
         });
 
-        // 자유배치 모드: 가구별 세그먼트로 걸래받이 렌더링
+        // 자유배치 모드: 가구별 개별 하부프레임 렌더링 (상부프레임과 동일 패턴)
         if (isFreePlacement) {
           const stripGroups = computeBaseStripGroups(placedModulesFromStore);
           if (stripGroups.length === 0) return null;
@@ -3693,32 +3693,36 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {stripGroups.map((group, idx) => {
-                const widthMM = group.rightMM - group.leftMM;
-                const centerXmm = (group.leftMM + group.rightMM) / 2;
-                // 하부 섹션 깊이 축소 시 Z 오프셋 적용 (front 방향 축소 → 뒤로 이동)
-                const baseZPosition = baseZBase - mmToThreeUnits(group.depthZOffsetMM || 0);
-                return (
-                  <BoxWithEdges
-                    hideEdges={hideEdges}
-                    isOuterFrame
-                    key={`free-base-strip-${group.id}`}
-                    name="base-frame"
-                    args={[
-                      mmToThreeUnits(widthMM),
-                      visualBaseFrameHeight,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      mmToThreeUnits(centerXmm),
-                      panelStartY + floatHeight + visualBaseFrameHeight / 2,
-                      baseZPosition
-                    ]}
-                    material={baseFrameMaterial ?? createFrameMaterial('base')}
-                    renderMode={renderMode}
-                    shadowEnabled={shadowEnabled}
-                  />
-                );
+              {stripGroups.flatMap((group) => {
+                return group.modules.map((mod) => {
+                  const bounds = getBaseFrameBoundsX(mod);
+                  const modWidthMM = bounds.right - bounds.left;
+                  const modCenterXmm = (bounds.left + bounds.right) / 2;
+                  // 하부 섹션 깊이 축소 시 Z 오프셋 적용 (front 방향 축소 → 뒤로 이동)
+                  const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
+                  const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM);
+                  return (
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key={`free-base-strip-${group.id}-${mod.id}`}
+                      name="base-frame"
+                      args={[
+                        mmToThreeUnits(modWidthMM),
+                        visualBaseFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[
+                        mmToThreeUnits(modCenterXmm),
+                        panelStartY + floatHeight + visualBaseFrameHeight / 2,
+                        baseZPosition
+                      ]}
+                      material={baseFrameMaterial ?? createFrameMaterial('base')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  );
+                });
               })}
             </>
           );

@@ -4121,8 +4121,8 @@ const Configurator: React.FC = () => {
                       >
                         {d.enabled ? 'ON' : 'OFF'}
                       </button>
-                      {/* ON일 때: 앞/뒤 옵셋 — frameItemInput 컨테이너로 테두리 표시 */}
-                      {d.enabled ? (
+                      {/* ON일 때: 앞/뒤 옵셋 — 상부(top)는 상,하부프레임 섹션으로 이동됨 */}
+                      {d.enabled && key !== 'top' ? (
                         <>
                           <div className={styles.frameItemInput} style={{ flex: 1 }}>
                             <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
@@ -4243,12 +4243,63 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 걸레받이 높이/깊이 */}
+        {/* 상,하부프레임 높이/깊이 + 상부프레임 옵셋 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>걸레받이</h3>
+            <h3 className={styles.sectionTitle}>상,하부프레임</h3>
           </div>
+          {/* 상부프레임 옵셋 (자유배치 모드에서만) */}
+          {isFreeMode && spaceInfo.freeSurround?.top?.enabled && (() => {
+            const topCfg = spaceInfo.freeSurround!.top;
+            return (
+              <div className={styles.subSetting}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                  <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>상</span>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={topCfg.offset > 0 ? topCfg.offset : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame('surround-top')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) {
+                          setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v === '' ? 0 : parseInt(v, 10) } } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                        setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v } } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={topCfg.offset < 0 ? Math.abs(topCfg.offset) : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame('surround-top')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) {
+                          setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v === '' ? 0 : -parseInt(v, 10) } } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                        setSpaceInfo({ freeSurround: { ...spaceInfo.freeSurround!, top: { ...topCfg, offset: v === -0 ? 0 : v } } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           <BaseControls
             spaceInfo={spaceInfo}
             onUpdate={handleSpaceInfoUpdate}
