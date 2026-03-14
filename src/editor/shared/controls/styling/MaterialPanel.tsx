@@ -476,7 +476,7 @@ const MaterialPanel: React.FC = () => {
             setMaterialTab('frame');
           }}
         >
-          <span className={styles.tabLabel}>프레임</span>
+          <span className={styles.tabLabel}>마감판</span>
         </button>
       </div>
 
