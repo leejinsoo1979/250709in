@@ -1880,6 +1880,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.freeWidth
     : (actualModuleData?.dimensions.width || 0);
   let doorXOffset = 0;
+
+  // 자유배치 EP 보정: 도어 너비 축소 + X 위치 보정 (가구 본체와 동일하게)
+  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+    const epThk = placedModule.endPanelThickness || 18;
+    const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
+    const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
+    doorWidth -= (leftEp + rightEp);
+    doorXOffset = (leftEp - rightEp) / 2 * 0.01; // mm → Three.js 단위
+  }
   let originalSlotWidthForDoor = originalSlotWidthMm;
 
   // 상하부장 인접 시 도어 확장 비활성화 (엔드패널이 공간을 채우므로)
