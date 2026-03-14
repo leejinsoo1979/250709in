@@ -618,7 +618,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 자유배치: 슬롯 무시, store에서 가져온 freeWidth 또는 props moduleWidth 사용
     // EP 두께만큼 도어 너비 축소 (가구 본체와 동일)
     actualDoorWidth = (storeFreeWidth || moduleWidth) - freeEpWidthReduction;
-    console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, freeEpWidthReduction, freeEpXOffset, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
+    console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, freeEpWidthReduction, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
   } else {
     // 균등분할: originalSlotWidth가 있으면 무조건 사용 (커버도어)
     actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
