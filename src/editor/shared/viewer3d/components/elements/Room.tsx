@@ -2194,7 +2194,7 @@ const Room: React.FC<RoomProps> = ({
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                         : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(5))  // 단내림 상부: 가구 앞면에서 5mm 앞
                   ]}
-                  material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
@@ -3408,7 +3408,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                   ]}
                   position={[0, 0, 0]} // group 내에서 원점에 배치
-                  material={topSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={topSubFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
 
                   shadowEnabled={shadowEnabled}
