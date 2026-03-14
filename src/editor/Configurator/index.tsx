@@ -4810,7 +4810,16 @@ const Configurator: React.FC = () => {
                       if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
                       clearAllModules();
                     }
-                    handleSpaceInfoUpdate({ layoutMode: 'equal-division' });
+                    const updates: Record<string, unknown> = { layoutMode: 'equal-division' };
+                    // 자유배치→슬롯 전환 시 기존 커튼박스가 켜져 있으면 단내림 기본값으로 변경
+                    if (spaceInfo.droppedCeiling?.enabled) {
+                      updates.droppedCeiling = {
+                        ...spaceInfo.droppedCeiling,
+                        width: 900,
+                        dropHeight: 200,
+                      };
+                    }
+                    handleSpaceInfoUpdate(updates);
                   }}
                 >
                   슬롯배치
@@ -4823,7 +4832,16 @@ const Configurator: React.FC = () => {
                       if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
                       clearAllModules();
                     }
-                    handleSpaceInfoUpdate({ layoutMode: 'free-placement' });
+                    const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
+                    // 슬롯→자유배치 전환 시 기존 단내림이 켜져 있으면 커튼박스 기본값으로 변경
+                    if (spaceInfo.droppedCeiling?.enabled) {
+                      updates.droppedCeiling = {
+                        ...spaceInfo.droppedCeiling,
+                        width: 150,
+                        dropHeight: 100,
+                      };
+                    }
+                    handleSpaceInfoUpdate(updates);
                   }}
                 >
                   자유배치
