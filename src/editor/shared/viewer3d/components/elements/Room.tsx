@@ -2574,8 +2574,11 @@ const Room: React.FC<RoomProps> = ({
                 // 각 모듈별 개별 상부프레임 생성
                 return group.modules.map((mod) => {
                   const bounds = getModuleBoundsX(mod);
-                  const modWidthMM = bounds.right - bounds.left;
-                  const modCenterXmm = (bounds.left + bounds.right) / 2;
+                  // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
+                  const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
+                  const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
+                  const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
+                  const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
                   const modFreeHeight = mod.freeHeight || internalSpaceHeight;
 
                   // 프레임 높이 = 천장에서 가구 상단까지의 거리
