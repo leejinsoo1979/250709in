@@ -2558,10 +2558,13 @@ const Room: React.FC<RoomProps> = ({
           const minLeftMM = hasFreeMods ? Math.min(...allModuleBounds.map(b => b.left)) : 0;
           const maxRightMM = hasFreeMods ? Math.max(...allModuleBounds.map(b => b.right)) : 0;
 
-          // 도어기준 시 도어 앞면까지의 추가 옵셋 (도어 전면 = 가구 앞면 + 23mm)
-          const DOOR_PROTRUSION_MM = 23; // 도어 gap(14mm) + 도어 두께 절반(9mm)
+          // 도어기준 시: 서라운드 앞면 = 도어 앞면
+          // 도어 앞면 = furnitureZOffset + furnitureDepth/2 + 3mm (door gap 계산상)
+          // 서라운드 앞면 (가구기준) = furnitureZOffset + furnitureDepth/2
+          // 차이 = 3mm (doorDepthOffset 14mm + doorHalfThickness 9mm - doorThickness 20mm)
+          const DOOR_FRONT_OFFSET_MM = 3;
           const doorBaseOffset = spaceInfo.surroundOffsetBase === 'door'
-            ? mmToThreeUnits(DOOR_PROTRUSION_MM)
+            ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
           const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) + doorBaseOffset;
