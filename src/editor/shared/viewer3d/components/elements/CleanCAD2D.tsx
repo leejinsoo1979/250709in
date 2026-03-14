@@ -307,7 +307,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 가구 높이 배열을 추출하여 깊은 비교를 위한 의존성으로 사용
   const furnitureHeightKeys = useMemo(
-    () => placedModules.map(m => `${m.id}-${m.moduleId}-${m.customHeight || 0}`).join(','),
+    () => placedModules.map(m => `${m.id}-${m.moduleId}-${m.freeHeight || 0}-${m.customHeight || 0}`).join(','),
     [placedModules]
   );
 
@@ -333,16 +333,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     if (placedModules.length > 0) {
       placedModules.forEach(module => {
         const moduleData = getModuleById(module.moduleId);
-        if (moduleData) {
-          const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+        const isCustomizable = module.moduleId.startsWith('customizable-');
+        if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
 
-          // 상하부장 분류
-          if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
-            maxLowerCabinetHeightMm = moduleHeight;
-          }
-          if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
-            maxUpperCabinetHeightMm = moduleHeight;
-          }
+        const moduleHeight = module.freeHeight
+          ?? module.customHeight
+          ?? moduleData?.dimensions.height
+          ?? (module.customConfig?.totalHeight || 2000);
+
+        // 상하부장 분류
+        const category = moduleData?.category
+          ?? (module.moduleId.includes('-upper-') ? 'upper'
+            : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+        if (category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
+          maxLowerCabinetHeightMm = moduleHeight;
+        }
+        if (category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
+          maxUpperCabinetHeightMm = moduleHeight;
         }
       });
     }
@@ -2665,9 +2672,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           placedModules.forEach(module => {
             const moduleData = getModuleById(module.moduleId);
-            if (!moduleData) return;
+            const isCustomizable = module.moduleId.startsWith('customizable-');
 
-            const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+            // customizable 가구는 getModuleById가 null → fallback 처리
+            if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
+
+            // freeHeight 우선 → customHeight → moduleData 순서로 높이 결정
+            const moduleHeight = module.freeHeight
+              ?? module.customHeight
+              ?? moduleData?.dimensions.height
+              ?? (module.customConfig?.totalHeight || 2000);
             // 띄움배치 시에는 floatHeight를 기준으로, 아니면 bottomFrameTopY를 기준으로
             const furnitureStartY = isFloating ? mmToThreeUnits(floatHeight) : bottomFrameTopY;
             const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
@@ -2681,11 +2695,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               tallestModuleTopY = moduleTopY;
             }
 
-            // 상하부장 분류
-            if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
+            // 상하부장 분류 (customizable 가구는 moduleId에서 카테고리 추출)
+            const category = moduleData?.category
+              ?? (module.moduleId.includes('-upper-') ? 'upper'
+                : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+            if (category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
               maxLowerCabinetHeightMm = moduleHeight;
             }
-            if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
+            if (category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
               maxUpperCabinetHeightMm = moduleHeight;
             }
           });
@@ -4152,18 +4169,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const moduleData = getModuleById(module.moduleId);
-                if (moduleData) {
-                  const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+                const isCustomizable = module.moduleId.startsWith('customizable-');
+                if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
+
+                const moduleHeight = module.freeHeight
+                  ?? module.customHeight
+                  ?? moduleData?.dimensions.height
+                  ?? (module.customConfig?.totalHeight || 2000);
                   // 띄움배치 시에는 바닥재 + floatHeight를 기준으로, 아니면 bottomFrameTopY를 기준으로
-                  const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
-                  const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
-                  if (moduleTopY > maxFurnitureTop) {
-                    maxFurnitureTop = moduleTopY;
-                  }
-                  if (moduleHeight > maxModuleHeightMm) {
-                    maxModuleHeightMm = moduleHeight;
-                    tallestModuleTopY = moduleTopY;
-                  }
+                const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
+                const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
+                if (moduleTopY > maxFurnitureTop) {
+                  maxFurnitureTop = moduleTopY;
+                }
+                if (moduleHeight > maxModuleHeightMm) {
+                  maxModuleHeightMm = moduleHeight;
+                  tallestModuleTopY = moduleTopY;
                 }
               });
             }
@@ -5099,18 +5120,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const moduleData = getModuleById(module.moduleId);
-                if (moduleData) {
-                  const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+                const isCustomizable = module.moduleId.startsWith('customizable-');
+                if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
+
+                const moduleHeight = module.freeHeight
+                  ?? module.customHeight
+                  ?? moduleData?.dimensions.height
+                  ?? (module.customConfig?.totalHeight || 2000);
                   // 띄움배치 시에는 바닥재 + floatHeight를 기준으로, 아니면 bottomFrameTopY를 기준으로
-                  const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
-                  const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
-                  if (moduleTopY > maxFurnitureTop) {
-                    maxFurnitureTop = moduleTopY;
-                  }
-                  if (moduleHeight > maxModuleHeightMm) {
-                    maxModuleHeightMm = moduleHeight;
-                    tallestModuleTopY = moduleTopY;
-                  }
+                const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
+                const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
+                if (moduleTopY > maxFurnitureTop) {
+                  maxFurnitureTop = moduleTopY;
+                }
+                if (moduleHeight > maxModuleHeightMm) {
+                  maxModuleHeightMm = moduleHeight;
+                  tallestModuleTopY = moduleTopY;
                 }
               });
             }
