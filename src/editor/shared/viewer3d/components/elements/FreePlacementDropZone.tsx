@@ -1459,14 +1459,21 @@ const FreePlacementDropZone: React.FC = () => {
       {/* 배치 후 남은 공간 사이즈 표시 (드래그 중에는 editingDistanceGuides가 대신 표시) */}
       {/* 커튼박스 구간 + 버튼 (구간분할 활성 + 가구 배치됨 + 서라운드 미생성) */}
       {(() => {
-        if (!isFreePlacement) return null;
-        if (!spaceInfo.droppedCeiling?.enabled) return null;
-        const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
-        if (freeModules.length === 0) return null;
-
-        // 이미 서라운드가 활성화되어 있으면 표시 안 함
+        const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const fs = spaceInfo.freeSurround;
         const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
+
+        console.log('🔵 [CurtainBoxBtn] 조건체크:', {
+          isFreePlacement,
+          droppedEnabled: spaceInfo.droppedCeiling?.enabled,
+          freeModCount: freeModsForBtn.length,
+          isSurroundActive,
+          freeSurround: fs,
+        });
+
+        if (!isFreePlacement) return null;
+        if (!spaceInfo.droppedCeiling?.enabled) return null;
+        if (freeModsForBtn.length === 0) return null;
         if (isSurroundActive) return null;
 
         const totalWidth = spaceInfo.width || 2400;
