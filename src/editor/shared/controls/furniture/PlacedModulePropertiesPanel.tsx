@@ -590,6 +590,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
   const [epDepthInput, setEpDepthInput] = useState<string>(''); // EP 깊이 로컬 버퍼
+  const [leftGapInput, setLeftGapInput] = useState<string>('0'); // 좌측 이격 로컬 버퍼
+  const [rightGapInput, setRightGapInput] = useState<string>('0'); // 우측 이격 로컬 버퍼
 
   // 섹션별 치수 상태 (자유배치 + customConfig 분할 가구용)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
@@ -882,6 +884,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // EP 깊이 초기화
         const epFurnitureDepth = currentPlacedModule.freeDepth ?? moduleData.dimensions.depth;
         setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
+
+        // 좌우 이격거리 초기화
+        setLeftGapInput((currentPlacedModule.freeLeftGap ?? 0).toString());
+        setRightGapInput((currentPlacedModule.freeRightGap ?? 0).toString());
 
         // 섹션별 치수 초기화 (customConfig가 있을 때)
         const cc = currentPlacedModule.customConfig;
@@ -2984,23 +2990,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={currentPlacedModule.freeLeftGap ?? 0}
+                      value={leftGapInput}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || /^\d*\.?\d{0,1}$/.test(v)) {
-                          const num = v === '' ? 0 : parseFloat(v);
-                          if (!isNaN(num)) {
-                            const snapped = Math.round(num * 2) / 2; // 0.5 단위
-                            updatePlacedModule(currentPlacedModule.id, { freeLeftGap: Math.max(0, snapped) });
-                          }
+                          setLeftGapInput(v);
+                        }
+                      }}
+                      onBlur={() => {
+                        const num = parseFloat(leftGapInput);
+                        if (!isNaN(num) && num >= 0) {
+                          const snapped = Math.round(num * 2) / 2;
+                          updatePlacedModule(currentPlacedModule.id, { freeLeftGap: snapped });
+                          setLeftGapInput(snapped.toString());
+                        } else {
+                          setLeftGapInput((currentPlacedModule.freeLeftGap ?? 0).toString());
                         }
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = currentPlacedModule.freeLeftGap ?? 0;
                           const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 0.5 : -0.5));
                           updatePlacedModule(currentPlacedModule.id, { freeLeftGap: next });
+                          setLeftGapInput(next.toString());
                         }
                       }}
                       className={`${styles.depthInput} furniture-depth-input`}
@@ -3016,23 +3030,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={currentPlacedModule.freeRightGap ?? 0}
+                      value={rightGapInput}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || /^\d*\.?\d{0,1}$/.test(v)) {
-                          const num = v === '' ? 0 : parseFloat(v);
-                          if (!isNaN(num)) {
-                            const snapped = Math.round(num * 2) / 2; // 0.5 단위
-                            updatePlacedModule(currentPlacedModule.id, { freeRightGap: Math.max(0, snapped) });
-                          }
+                          setRightGapInput(v);
+                        }
+                      }}
+                      onBlur={() => {
+                        const num = parseFloat(rightGapInput);
+                        if (!isNaN(num) && num >= 0) {
+                          const snapped = Math.round(num * 2) / 2;
+                          updatePlacedModule(currentPlacedModule.id, { freeRightGap: snapped });
+                          setRightGapInput(snapped.toString());
+                        } else {
+                          setRightGapInput((currentPlacedModule.freeRightGap ?? 0).toString());
                         }
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = currentPlacedModule.freeRightGap ?? 0;
                           const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 0.5 : -0.5));
                           updatePlacedModule(currentPlacedModule.id, { freeRightGap: next });
+                          setRightGapInput(next.toString());
                         }
                       }}
                       className={`${styles.depthInput} furniture-depth-input`}
