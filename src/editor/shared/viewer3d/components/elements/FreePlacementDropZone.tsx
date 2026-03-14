@@ -161,12 +161,24 @@ const FreePlacementDropZone: React.FC = () => {
     const MAX_DUAL = 1200;
     const totalUnits = singleCount + dualCount * 2;
     if (totalUnits === 0) return;
-    const unitWidth = Math.min(MAX_SINGLE, Math.floor(availableWidth / totalUnits));
+    const baseUnitWidth = Math.min(MAX_SINGLE, Math.floor(availableWidth / totalUnits));
+
+    // 나머지를 앞쪽 가구부터 1mm씩 분배하여 우측 이격 방지
+    const totalUsed = sorted.reduce((sum, _, i) => {
+      return sum + (isDualArr[i] ? Math.min(baseUnitWidth * 2, MAX_DUAL) : baseUnitWidth);
+    }, 0);
+    const remainder = Math.round(availableWidth - totalUsed);
 
     // 이격 없이 빈틈없이 배치
     let currentX = effectiveStartX;
+    let distributed = 0;
     sorted.forEach((mod, i) => {
-      const w = isDualArr[i] ? Math.min(unitWidth * 2, MAX_DUAL) : unitWidth;
+      let w = isDualArr[i] ? Math.min(baseUnitWidth * 2, MAX_DUAL) : baseUnitWidth;
+      // 나머지 1mm씩 앞쪽 가구에 분배
+      if (distributed < remainder) {
+        w += 1;
+        distributed += 1;
+      }
       const centerXmm = currentX + (w / 2);
 
       updatePlacedModule(mod.id, {
