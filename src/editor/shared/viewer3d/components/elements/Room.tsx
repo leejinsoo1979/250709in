@@ -2558,37 +2558,13 @@ const Room: React.FC<RoomProps> = ({
           const minLeftMM = hasFreeMods ? Math.min(...allModuleBounds.map(b => b.left)) : 0;
           const maxRightMM = hasFreeMods ? Math.max(...allModuleBounds.map(b => b.right)) : 0;
 
-          // 도어기준 시: 서라운드 앞면 = 도어 앞면
-          // 도어 앞면 = furnitureZOffset + furnitureDepth/2 + 3mm (door gap 계산상)
-          // 서라운드 앞면 (가구기준) = furnitureZOffset + furnitureDepth/2
-          // 차이 = 3mm (doorDepthOffset 14mm + doorHalfThickness 9mm - doorThickness 20mm)
-          const DOOR_FRONT_OFFSET_MM = 3;
+          // 도어기준 시: 서라운드 앞면 = 도어 앞면 (실측 diff = 23mm)
+          const DOOR_FRONT_OFFSET_MM = 23;
           const doorBaseOffset = spaceInfo.surroundOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
           const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) + doorBaseOffset;
-
-          // 디버깅: 서라운드 vs 도어 Z축 비교
-          if (hasFreeMods) {
-            const surroundFrontZ = topZPosition + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-            // 도어 위치: furnitureZ + doorDepth/2 + doorThickness/2
-            // furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness(20mm) - depth/2
-            // doorDepth/2 = (depth + 28mm) / 2
-            // doorFront = furnitureZOffset + furnitureDepth/2 - 20 - depth/2 + (depth+28)/2 + 9
-            //           = furnitureZOffset + furnitureDepth/2 - 20 + 14 + 9
-            //           = furnitureZOffset + furnitureDepth/2 + 3
-            const doorFrontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3);
-            console.log('🔧 서라운드 Z 디버그:', {
-              surroundOffsetBase: spaceInfo.surroundOffsetBase,
-              doorBaseOffsetMM: spaceInfo.surroundOffsetBase === 'door' ? DOOR_FRONT_OFFSET_MM : 0,
-              surroundFrontZ: surroundFrontZ.toFixed(4),
-              doorFrontZ: doorFrontZ.toFixed(4),
-              diff: (doorFrontZ - surroundFrontZ).toFixed(4),
-              furnitureZOffset: furnitureZOffset.toFixed(4),
-              furnitureDepthHalf: (furnitureDepth / 2).toFixed(4),
-            });
-          }
 
           return (
             <>
