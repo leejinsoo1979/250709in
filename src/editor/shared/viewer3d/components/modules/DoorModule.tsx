@@ -580,9 +580,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 원본 spaceInfo 가져오기 (zone별로 분리되지 않은 전체 공간 정보)
   const { spaceInfo: originalSpaceInfo } = useSpaceConfigStore();
 
-  // doorTopGap/doorBottomGap: 개별 가구 값 → 글로벌 spaceInfo 값 → 기본값 순서로 fallback
-  const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 5;
-  const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 25;
+  // doorTopGap/doorBottomGap: 글로벌 spaceInfo 값 우선 → 기본값
+  // (글로벌 값이 도어 셋팅 UI에서 일괄 설정되므로 항상 글로벌 우선)
+  const doorTopGap = originalSpaceInfo.doorTopGap ?? 5;
+  const doorBottomGap = originalSpaceInfo.doorBottomGap ?? 25;
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);

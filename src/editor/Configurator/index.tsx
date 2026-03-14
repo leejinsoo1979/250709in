@@ -181,13 +181,8 @@ const Configurator: React.FC = () => {
     else setDoorBottomGapInput(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
-      console.log(`🚪 [도어갭변경] ${field}=${num}, 도어가구수=${placedModules.filter(m => m.hasDoor).length}`);
+      // 글로벌 spaceInfo에만 저장 (DoorModule이 store에서 직접 읽음)
       setSpaceInfo({ [field]: num });
-      // 모든 도어 가구에 일괄 적용
-      placedModules.filter(m => m.hasDoor).forEach(m => {
-        console.log(`🚪 [도어갭적용] ${m.id}: ${field}=${num}, 기존값=${(m as any)[field]}`);
-        updatePlacedModule(m.id, { [field]: num });
-      });
     }
   };
 
