@@ -152,11 +152,12 @@ const FreePlacementDropZone: React.FC = () => {
     // 좌→우 정렬 순서
     const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
 
-    // 각 가구의 원래 너비(moduleWidth)를 상한으로 제한
-    // equalWidth가 moduleWidth보다 크면 moduleWidth 사용
+    // 싱글/듀얼별 너비 제한 적용
     const widths = sorted.map(mod => {
-      const origWidth = mod.moduleWidth || 450;
-      return Math.min(equalWidth, origWidth);
+      const isDual = mod.isDualSlot === true;
+      const minW = isDual ? 800 : 400;
+      const maxW = isDual ? 1200 : 600;
+      return Math.max(minW, Math.min(maxW, equalWidth));
     });
 
     // 이격 없이 왼쪽부터 빈틈없이 배치
