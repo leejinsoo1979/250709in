@@ -2853,75 +2853,133 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                   </div>
                   {/* 좌측 EP 옵셋 */}
-                  {currentPlacedModule.hasLeftEndPanel && (
-                    <div style={{ marginTop: '8px' }}>
-                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
-                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
-                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: next });
-                            }
-                          }}
-                          className={styles.dimensionInput}
-                          style={{ width: '50px', textAlign: 'center' }}
-                        />
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
-                        <span className={styles.unit}>mm</span>
+                  {currentPlacedModule.hasLeftEndPanel && (() => {
+                    const rawVal = currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
+                    const leftDir = rawVal >= 0 ? 'front' : 'back';
+                    const leftAbs = Math.abs(rawVal);
+                    return (
+                      <div style={{ marginTop: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={leftAbs}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
+                                const sign = leftDir === 'front' ? 1 : -1;
+                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: abs * sign });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const abs = Math.max(0, Math.min(50, leftAbs + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const sign = leftDir === 'front' ? 1 : -1;
+                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: abs * sign });
+                              }
+                            }}
+                            className={styles.dimensionInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                          <button
+                            style={{
+                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                              background: leftDir === 'front' ? '#4A90D9' : '#fff',
+                              color: leftDir === 'front' ? '#fff' : '#666',
+                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => {
+                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: leftAbs });
+                            }}
+                          >
+                            앞에서
+                          </button>
+                          <button
+                            style={{
+                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                              background: leftDir === 'back' ? '#4A90D9' : '#fff',
+                              color: leftDir === 'back' ? '#fff' : '#666',
+                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => {
+                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: -leftAbs });
+                            }}
+                          >
+                            뒤에서
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {/* 우측 EP 옵셋 */}
-                  {currentPlacedModule.hasRightEndPanel && (
-                    <div style={{ marginTop: '8px' }}>
-                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
-                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
-                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: next });
-                            }
-                          }}
-                          className={styles.dimensionInput}
-                          style={{ width: '50px', textAlign: 'center' }}
-                        />
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
-                        <span className={styles.unit}>mm</span>
+                  {currentPlacedModule.hasRightEndPanel && (() => {
+                    const rawVal = currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
+                    const rightDir = rawVal >= 0 ? 'front' : 'back';
+                    const rightAbs = Math.abs(rawVal);
+                    return (
+                      <div style={{ marginTop: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={rightAbs}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
+                                const sign = rightDir === 'front' ? 1 : -1;
+                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: abs * sign });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const abs = Math.max(0, Math.min(50, rightAbs + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const sign = rightDir === 'front' ? 1 : -1;
+                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: abs * sign });
+                              }
+                            }}
+                            className={styles.dimensionInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                          <button
+                            style={{
+                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                              background: rightDir === 'front' ? '#4A90D9' : '#fff',
+                              color: rightDir === 'front' ? '#fff' : '#666',
+                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => {
+                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: rightAbs });
+                            }}
+                          >
+                            앞에서
+                          </button>
+                          <button
+                            style={{
+                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                              background: rightDir === 'back' ? '#4A90D9' : '#fff',
+                              color: rightDir === 'back' ? '#fff' : '#666',
+                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onClick={() => {
+                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: -rightAbs });
+                            }}
+                          >
+                            뒤에서
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>범위: -50mm ~ 50mm</span>
                 </>
               )}

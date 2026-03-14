@@ -4171,78 +4171,133 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                     </div>
                     {/* 좌측 EP 옵셋 */}
-                    {placedModule.hasLeftEndPanel && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '0' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>좌 EP</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
-                              updatePlacedModule(moduleId, { leftEndPanelOffset: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(moduleId, { leftEndPanelOffset: next });
-                            }
-                          }}
-                          style={{
-                            width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
-                            borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                            background: 'var(--theme-background)', color: 'var(--theme-text)',
-                          }}
-                        />
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
-                      </div>
-                    )}
+                    {placedModule.hasLeftEndPanel && (() => {
+                      const rawVal = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                      const leftDir = rawVal >= 0 ? 'front' : 'back';
+                      const leftAbs = Math.abs(rawVal);
+                      return (
+                        <div style={{ marginTop: '4px' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={leftAbs}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
+                                  const sign = leftDir === 'front' ? 1 : -1;
+                                  updatePlacedModule(moduleId, { leftEndPanelOffset: abs * sign });
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const abs = Math.max(0, Math.min(50, leftAbs + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const sign = leftDir === 'front' ? 1 : -1;
+                                  updatePlacedModule(moduleId, { leftEndPanelOffset: abs * sign });
+                                }
+                              }}
+                              style={{
+                                width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                                borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                                background: 'var(--theme-background)', color: 'var(--theme-text)',
+                              }}
+                            />
+                            <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            <button
+                              style={{
+                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                                background: leftDir === 'front' ? '#4A90D9' : '#fff',
+                                color: leftDir === 'front' ? '#fff' : '#666',
+                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                              }}
+                              onClick={() => updatePlacedModule(moduleId, { leftEndPanelOffset: leftAbs })}
+                            >
+                              앞에서
+                            </button>
+                            <button
+                              style={{
+                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                                background: leftDir === 'back' ? '#4A90D9' : '#fff',
+                                color: leftDir === 'back' ? '#fff' : '#666',
+                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                              }}
+                              onClick={() => updatePlacedModule(moduleId, { leftEndPanelOffset: -leftAbs })}
+                            >
+                              뒤에서
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     {/* 우측 EP 옵셋 */}
-                    {placedModule.hasRightEndPanel && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '0' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>우 EP</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
-                              updatePlacedModule(moduleId, { rightEndPanelOffset: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(moduleId, { rightEndPanelOffset: next });
-                            }
-                          }}
-                          style={{
-                            width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
-                            borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                            background: 'var(--theme-background)', color: 'var(--theme-text)',
-                          }}
-                        />
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
-                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
-                      </div>
-                    )}
-                    <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>범위: -50mm ~ 50mm</span>
+                    {placedModule.hasRightEndPanel && (() => {
+                      const rawVal = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                      const rightDir = rawVal >= 0 ? 'front' : 'back';
+                      const rightAbs = Math.abs(rawVal);
+                      return (
+                        <div style={{ marginTop: '4px' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={rightAbs}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
+                                  const sign = rightDir === 'front' ? 1 : -1;
+                                  updatePlacedModule(moduleId, { rightEndPanelOffset: abs * sign });
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const abs = Math.max(0, Math.min(50, rightAbs + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const sign = rightDir === 'front' ? 1 : -1;
+                                  updatePlacedModule(moduleId, { rightEndPanelOffset: abs * sign });
+                                }
+                              }}
+                              style={{
+                                width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                                borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                                background: 'var(--theme-background)', color: 'var(--theme-text)',
+                              }}
+                            />
+                            <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            <button
+                              style={{
+                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                                background: rightDir === 'front' ? '#4A90D9' : '#fff',
+                                color: rightDir === 'front' ? '#fff' : '#666',
+                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                              }}
+                              onClick={() => updatePlacedModule(moduleId, { rightEndPanelOffset: rightAbs })}
+                            >
+                              앞에서
+                            </button>
+                            <button
+                              style={{
+                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
+                                background: rightDir === 'back' ? '#4A90D9' : '#fff',
+                                color: rightDir === 'back' ? '#fff' : '#666',
+                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                              }}
+                              onClick={() => updatePlacedModule(moduleId, { rightEndPanelOffset: -rightAbs })}
+                            >
+                              뒤에서
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
