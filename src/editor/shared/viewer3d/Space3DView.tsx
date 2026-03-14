@@ -26,6 +26,7 @@ import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import SlotPlacementIndicators from './components/elements/SlotPlacementIndicators';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FreePlacementDropZone from './components/elements/FreePlacementDropZone';
+import { getModuleBoundsX, getInternalSpaceBoundsX, checkFreeCollision, getModuleCategory } from '../utils/freePlacementUtils';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
@@ -163,26 +164,59 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       if (furniture.isFreePlacement) {
         const newId = `${furniture.moduleId}-free-${Date.now()}`;
         const { adjustedPosition, adjustedWidth, columnSlotInfo, ...furnitureData } = furniture;
-        // 우측으로 50mm 오프셋하여 배치
-        const offsetX = 0.5; // 50mm in Three.js units
+
+        // 겹치지 않는 위치 찾기
+        const widthMm = furniture.freeWidth || furniture.moduleWidth || 450;
+        const currentXmm = furniture.position.x * 100;
+        const spaceBounds = getInternalSpaceBoundsX(activeSpaceInfo);
+        const category = getModuleCategory(furniture);
+        const halfW = widthMm / 2;
+
+        // 우측 → 좌측 순으로 빈 공간 탐색 (1mm 단위)
+        let targetXmm: number | null = null;
+
+        // 우측 탐색: 원본 오른쪽 끝부터
+        for (let x = currentXmm + widthMm; x <= spaceBounds.endX - halfW; x += 1) {
+          const testBounds = { left: x - halfW, right: x + halfW, category };
+          if (!checkFreeCollision(latestPlacedModules, testBounds)) {
+            targetXmm = x;
+            break;
+          }
+        }
+
+        // 우측에 공간 없으면 좌측 탐색
+        if (targetXmm === null) {
+          for (let x = currentXmm - widthMm; x >= spaceBounds.startX + halfW; x -= 1) {
+            const testBounds = { left: x - halfW, right: x + halfW, category };
+            if (!checkFreeCollision(latestPlacedModules, testBounds)) {
+              targetXmm = x;
+              break;
+            }
+          }
+        }
+
+        if (targetXmm === null) {
+          console.log('복제 실패: 자유배치 빈 공간이 없습니다');
+          return;
+        }
+
         const newFurniture = {
           ...furnitureData,
           id: newId,
           position: {
-            x: furniture.position.x + offsetX,
+            x: targetXmm * 0.01, // mm → Three.js units
             y: furniture.position.y,
             z: furniture.position.z
           }
         };
 
-        console.log('복제 성공: 자유배치 가구', newId);
+        console.log('복제 성공: 자유배치 가구', newId, '위치:', targetXmm, 'mm');
         setSelectedPlacedModuleId(null);
         setSelectedFurnitureId(null);
         addModuleFn(newFurniture);
         setTimeout(() => {
           setSelectedPlacedModuleId(newId);
           setSelectedFurnitureId(newId);
-          console.log('복제된 자유배치 가구 선택:', newId);
         }, 100);
         return;
       }
