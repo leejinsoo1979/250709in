@@ -2888,9 +2888,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
                           <button
                             style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                              background: leftDir === 'front' ? '#4A90D9' : '#fff',
-                              color: leftDir === 'front' ? '#fff' : '#666',
+                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                              background: leftDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                              color: leftDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
@@ -2901,9 +2901,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           </button>
                           <button
                             style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                              background: leftDir === 'back' ? '#4A90D9' : '#fff',
-                              color: leftDir === 'back' ? '#fff' : '#666',
+                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                              background: leftDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                              color: leftDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
@@ -2952,9 +2952,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
                           <button
                             style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                              background: rightDir === 'front' ? '#4A90D9' : '#fff',
-                              color: rightDir === 'front' ? '#fff' : '#666',
+                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                              background: rightDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                              color: rightDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
@@ -2965,9 +2965,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           </button>
                           <button
                             style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                              background: rightDir === 'back' ? '#4A90D9' : '#fff',
-                              color: rightDir === 'back' ? '#fff' : '#666',
+                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                              background: rightDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                              color: rightDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
                               fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                             }}
                             onClick={() => {
@@ -3062,7 +3062,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   style={{
                     flex: 1,
                     padding: '10px 12px',
-                    border: columnPlacementMode === 'beside' ? '2px solid var(--theme-primary)' : '1px solid #ddd',
+                    border: columnPlacementMode === 'beside' ? '2px solid var(--theme-primary)' : '1px solid var(--theme-border)',
                     borderRadius: '8px',
                     backgroundColor: columnPlacementMode === 'beside' ? 'var(--theme-primary-light, #e8f5e9)' : '#fff',
                     cursor: 'pointer',
@@ -3079,7 +3079,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   style={{
                     flex: 1,
                     padding: '10px 12px',
-                    border: columnPlacementMode === 'front' ? '2px solid var(--theme-primary)' : '1px solid #ddd',
+                    border: columnPlacementMode === 'front' ? '2px solid var(--theme-primary)' : '1px solid var(--theme-border)',
                     borderRadius: '8px',
                     backgroundColor: columnPlacementMode === 'front' ? 'var(--theme-primary-light, #e8f5e9)' : '#fff',
                     cursor: 'pointer',
@@ -3140,9 +3140,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
                     <button
                       style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                        background: lowerDepthDirection === 'front' ? '#4A90D9' : '#fff',
-                        color: lowerDepthDirection === 'front' ? '#fff' : '#666',
+                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: lowerDepthDirection === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                        color: lowerDepthDirection === 'front' ? '#fff' : 'var(--theme-text-secondary)',
                         fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                       }}
                       onClick={() => {
@@ -3156,9 +3156,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </button>
                     <button
                       style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                        background: lowerDepthDirection === 'back' ? '#4A90D9' : '#fff',
-                        color: lowerDepthDirection === 'back' ? '#fff' : '#666',
+                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: lowerDepthDirection === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                        color: lowerDepthDirection === 'back' ? '#fff' : 'var(--theme-text-secondary)',
                         fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                       }}
                       onClick={() => {
@@ -3206,9 +3206,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
                     <button
                       style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                        background: upperDepthDirection === 'front' ? '#4A90D9' : '#fff',
-                        color: upperDepthDirection === 'front' ? '#fff' : '#666',
+                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: upperDepthDirection === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                        color: upperDepthDirection === 'front' ? '#fff' : 'var(--theme-text-secondary)',
                         fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                       }}
                       onClick={() => {
@@ -3222,9 +3222,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </button>
                     <button
                       style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                        background: upperDepthDirection === 'back' ? '#4A90D9' : '#fff',
-                        color: upperDepthDirection === 'back' ? '#fff' : '#666',
+                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: upperDepthDirection === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                        color: upperDepthDirection === 'back' ? '#fff' : 'var(--theme-text-secondary)',
                         fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                       }}
                       onClick={() => {
