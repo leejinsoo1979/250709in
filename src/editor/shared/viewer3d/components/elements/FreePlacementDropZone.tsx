@@ -1331,10 +1331,10 @@ const FreePlacementDropZone: React.FC = () => {
               <Html
                 position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
                 center
-                style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999 }}
+                style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999, background: 'transparent' }}
                 zIndexRange={[9999, 10000]}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', background: 'transparent' }}>
                   {/* 잠금 아이콘 */}
                   {gap.adjacentModuleId && (gap.gapType === 'left-wall' || gap.gapType === 'right-wall') && (() => {
                     const mod = placedModules.find(m => m.id === gap.adjacentModuleId);
@@ -1350,6 +1350,7 @@ const FreePlacementDropZone: React.FC = () => {
                           opacity: isLocked ? 1 : 0.4,
                           transition: 'opacity 0.15s',
                           color: isLocked ? themeColor : '#999',
+                          background: 'transparent',
                         }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
                         onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.opacity = '0.4'; }}
@@ -1369,7 +1370,7 @@ const FreePlacementDropZone: React.FC = () => {
                         }}
                         title={isLocked ? '잠금 해제' : '잠금'}
                       >
-                        {isLocked ? <IoLockClosed size={14} /> : <IoLockOpen size={14} />}
+                        {isLocked ? <IoLockClosed size={20} /> : <IoLockOpen size={20} />}
                       </div>
                     );
                   })()}
