@@ -316,10 +316,16 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         {isFreePlacement && (
           <div className={styles.segmentedControl}>
             <button
-              className={`${styles.segmentButton} ${styles.segmentIconText} ${equalDistribution ? styles.segmentAccentActive : ''}`}
-              onClick={toggleEqualDistribution}
+              className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
+              onClick={() => { if (equalDistribution) toggleEqualDistribution(); }}
             >
-              균등배치
+              자유
+            </button>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentAccent} ${equalDistribution ? styles.segmentAccentActive : ''}`}
+              onClick={() => { if (!equalDistribution) toggleEqualDistribution(); }}
+            >
+              균등
             </button>
           </div>
         )}
