@@ -186,21 +186,30 @@ export function calcResizedPositionX(
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
   const halfNew = newWidthMm / 2;
 
-  // ── 잠금 우선: lockedWallGaps가 있으면 잠긴 쪽 고정 ──
+  // ── 잠금 우선: 이 가구가 잠긴 벽에 인접한 경우만 적용 ──
   const lockedGaps = spaceInfo.lockedWallGaps;
   const hasLeftLock = lockedGaps?.left != null;
   const hasRightLock = lockedGaps?.right != null;
 
-  if (hasLeftLock && !hasRightLock) {
+  // 이 가구가 가장 왼쪽/오른쪽인지 확인 (잠금에 인접한 가구만 잠금 적용)
+  const isLeftmost = hasLeftLock && !allModules.some(m =>
+    m.id !== module.id && m.isFreePlacement &&
+    getModuleBoundsX(m).left < oldBounds.left
+  );
+  const isRightmost = hasRightLock && !allModules.some(m =>
+    m.id !== module.id && m.isFreePlacement &&
+    getModuleBoundsX(m).right > oldBounds.right
+  );
+
+  if (isLeftmost && !isRightmost) {
     const fixedLeft = startX + lockedGaps.left!;
     return (fixedLeft + halfNew) * 0.01;
   }
-  if (hasRightLock && !hasLeftLock) {
+  if (isRightmost && !isLeftmost) {
     const fixedRight = endX - lockedGaps.right!;
     return (fixedRight - halfNew) * 0.01;
   }
-  if (hasLeftLock && hasRightLock) {
-    // 양쪽 잠금 → 중심 고정
+  if (isLeftmost && isRightmost) {
     return module.position.x;
   }
 
