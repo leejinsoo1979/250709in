@@ -2572,12 +2572,9 @@ const Room: React.FC<RoomProps> = ({
                 const isDoorBase = spaceInfo.surroundOffsetBase === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
-                  // 개별 가구 하이라이트 or 서라운드-top 하이라이트 or 기본 top material
+                  // 개별 가구 하이라이트 or 서라운드-top 하이라이트
                   const isThisTopHighlighted = highlightedFrame === `top-${mod.id}` || highlightedFrame === 'surround-top';
-                  if (highlightedFrame) console.log(`🔴 TOP frame [${mod.id}]:`, { highlightedFrame, key: `top-${mod.id}`, match: isThisTopHighlighted });
-                  const topSurrMat = isThisTopHighlighted
-                    ? createHighlightMaterial()
-                    : (topFrameMaterial ?? createFrameMaterial('top'));
+                  const topSurrMat = topFrameMaterial ?? createFrameMaterial('top');
                   const bounds = getModuleBoundsX(mod);
                   // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
                   const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
@@ -2615,26 +2612,36 @@ const Room: React.FC<RoomProps> = ({
                   const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                   const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
+                  const topArgs: [number, number, number] = [
+                    mmToThreeUnits(modWidthMM),
+                    modFrameHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ];
+                  const topPos: [number, number, number] = [
+                    mmToThreeUnits(modCenterXmm),
+                    modFrameCenterY,
+                    topZPosition + modTopZOffset + topFrameZRetract
+                  ];
+
                   return (
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key={`free-top-strip-${group.id}-${mod.id}`}
-                      name="top-frame"
-                      args={[
-                        mmToThreeUnits(modWidthMM),
-                        modFrameHeight,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        mmToThreeUnits(modCenterXmm),
-                        modFrameCenterY,
-                        topZPosition + modTopZOffset + topFrameZRetract
-                      ]}
-                      material={topSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <React.Fragment key={`free-top-strip-${group.id}-${mod.id}`}>
+                      <BoxWithEdges
+                        hideEdges={hideEdges}
+                        isOuterFrame
+                        name="top-frame"
+                        args={topArgs}
+                        position={topPos}
+                        material={topSurrMat}
+                        renderMode={renderMode}
+                        shadowEnabled={shadowEnabled}
+                      />
+                      {isThisTopHighlighted && (
+                        <mesh position={topPos}>
+                          <boxGeometry args={topArgs} />
+                          <primitive object={highlightOverlayMaterial} attach="material" />
+                        </mesh>
+                      )}
+                    </React.Fragment>
                   );
                 });
               })}
@@ -3606,30 +3613,36 @@ const Room: React.FC<RoomProps> = ({
                   const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
                   // 개별 가구 하이라이트 or 기본 base material
                   const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
-                  if (highlightedFrame) console.log(`🔴 BASE frame [${mod.id}]:`, { highlightedFrame, key: `base-${mod.id}`, match: isThisBaseHighlighted });
-                  const baseMat = isThisBaseHighlighted
-                    ? createHighlightMaterial()
-                    : (baseFrameMaterial ?? createFrameMaterial('base'));
+                  const baseMat = baseFrameMaterial ?? createFrameMaterial('base');
+                  const baseArgs: [number, number, number] = [
+                    mmToThreeUnits(modWidthMM),
+                    visualBaseFrameHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ];
+                  const basePos: [number, number, number] = [
+                    mmToThreeUnits(modCenterXmm),
+                    panelStartY + floatHeight + visualBaseFrameHeight / 2,
+                    baseZPosition
+                  ];
                   return (
+                    <React.Fragment key={`free-base-strip-${group.id}-${mod.id}`}>
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
-                      key={`free-base-strip-${group.id}-${mod.id}`}
                       name="base-frame"
-                      args={[
-                        mmToThreeUnits(modWidthMM),
-                        visualBaseFrameHeight,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        mmToThreeUnits(modCenterXmm),
-                        panelStartY + floatHeight + visualBaseFrameHeight / 2,
-                        baseZPosition
-                      ]}
+                      args={baseArgs}
+                      position={basePos}
                       material={baseMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
+                    {isThisBaseHighlighted && (
+                      <mesh position={basePos}>
+                        <boxGeometry args={baseArgs} />
+                        <primitive object={highlightOverlayMaterial} attach="material" />
+                      </mesh>
+                    )}
+                    </React.Fragment>
                   );
                 });
               })}
