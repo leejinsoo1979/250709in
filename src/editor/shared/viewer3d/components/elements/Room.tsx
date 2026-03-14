@@ -2555,7 +2555,7 @@ const Room: React.FC<RoomProps> = ({
 
           // 도어기준 시: 서라운드 앞면 = 도어 앞면 (실측 diff = 23mm)
           const DOOR_FRONT_OFFSET_MM = 23;
-          const doorBaseOffset = spaceInfo.surroundOffsetBase === 'door'
+          const doorBaseOffset = (spaceInfo.frameOffsetBase ?? spaceInfo.surroundOffsetBase) === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
           const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
@@ -2569,7 +2569,7 @@ const Room: React.FC<RoomProps> = ({
                 // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
                 const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
                 // 각 모듈별 개별 상부프레임 생성
-                const isDoorBase = spaceInfo.surroundOffsetBase === 'door';
+                const isDoorBase = (spaceInfo.frameOffsetBase ?? spaceInfo.surroundOffsetBase) === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
                   // 개별 가구 하이라이트 or 서라운드-top 하이라이트
@@ -4040,6 +4040,8 @@ export default React.memo(Room, (prevProps, nextProps) => {
 
   // surroundOffsetBase 비교 (서라운드 옵셋 기준 변경)
   if (prevSpace.surroundOffsetBase !== nextSpace.surroundOffsetBase) return false;
+  // frameOffsetBase 비교 (상하부프레임 옵셋 기준 변경)
+  if (prevSpace.frameOffsetBase !== nextSpace.frameOffsetBase) return false;
 
   // 가구 배치 비교
   const prevModules = prevProps.placedModules || [];

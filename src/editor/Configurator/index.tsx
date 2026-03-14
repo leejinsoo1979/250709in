@@ -4300,22 +4300,22 @@ const Configurator: React.FC = () => {
                 <button
                   style={{
                     flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                    background: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
-                    color: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
+                    background: (spaceInfo.frameOffsetBase || 'furniture') === 'furniture' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
+                    color: (spaceInfo.frameOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
+                  onClick={() => setSpaceInfo({ frameOffsetBase: 'furniture' })}
                 >
                   가구에 맞춤
                 </button>
                 <button
                   style={{
                     flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                    background: spaceInfo.surroundOffsetBase === 'door' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
-                    color: spaceInfo.surroundOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
+                    background: spaceInfo.frameOffsetBase === 'door' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
+                    color: spaceInfo.frameOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
+                  onClick={() => setSpaceInfo({ frameOffsetBase: 'door' })}
                 >
                   도어에 맞춤
                 </button>

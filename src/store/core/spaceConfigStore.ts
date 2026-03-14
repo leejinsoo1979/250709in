@@ -137,6 +137,8 @@ export interface SpaceInfo {
   freeSurround?: FreeSurroundConfig;
   // 서라운드 옵셋 기준: 'furniture' = 가구 앞면 기준, 'door' = 도어 앞면 기준
   surroundOffsetBase?: 'furniture' | 'door';
+  // 상하부프레임 옵셋 기준 (서라운드와 독립)
+  frameOffsetBase?: 'furniture' | 'door';
 
   // 자유배치 도어 셋업 방식 (글로벌)
   doorSetupMode?: 'default' | 'frame-cover' | 'furniture-fit' | 'space-fit';
