@@ -1151,18 +1151,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 가구 높이 계산 (Y 위치 계산 전에 필요)
-  // 자유배치 모드에서는 사용자 지정 치수를 우선 사용
-  let furnitureHeightMm = (placedModule.isFreePlacement && placedModule.freeHeight)
-    ? placedModule.freeHeight
-    : (actualModuleData?.dimensions.height || 0);
-
-  // 개별 가구 상부프레임 두께 변경 시 가구 높이 조정 (키큰장만)
-  // 상부프레임이 커지면 가구 높이가 줄어들고, 상부섹션이 그 변화를 흡수
-  // (useBaseFurniture.ts의 modelConfig 스케일링 로직이 서랍은 고정, 나머지 섹션만 조정)
-  if (isTallCabinetForY && placedModule.topFrameThickness !== undefined) {
-    const globalTopFrame = spaceInfo.frameSize?.top || 30;
-    const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
-    furnitureHeightMm -= topFrameDelta;
+  // 자유배치 키큰장: 프레임 변경에 자동 연동 — internalSpace.height 기반 + 개별 topFrame 보정
+  // 자유배치 상/하부장: freeHeight 고정 (프레임 변경과 무관한 독립 높이)
+  // 슬롯 기반: actualModuleData.dimensions.height (이미 internalSpace 반영)
+  let furnitureHeightMm: number;
+  if (placedModule.isFreePlacement && isTallCabinetForY) {
+    // 키큰장: 현재 내경 높이를 기반으로 (글로벌 프레임 변경에 자동 연동)
+    furnitureHeightMm = internalSpace.height;
+    // 개별 가구 상부프레임 두께 변경 시 추가 보정
+    if (placedModule.topFrameThickness !== undefined) {
+      const globalTopFrame = spaceInfo.frameSize?.top || 30;
+      const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
+      furnitureHeightMm -= topFrameDelta;
+    }
+  } else if (placedModule.isFreePlacement && placedModule.freeHeight) {
+    furnitureHeightMm = placedModule.freeHeight;
+  } else {
+    furnitureHeightMm = actualModuleData?.dimensions.height || 0;
   }
 
   // customSections는 placedModule에 직접 저장된 것만 사용

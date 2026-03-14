@@ -2580,15 +2580,20 @@ const Room: React.FC<RoomProps> = ({
                   const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
                   const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
                   const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
-                  let modFreeHeight = mod.freeHeight || internalSpaceHeight;
-
-                  // 개별 가구 상부프레임 두께 변경 시 가구 높이 조정 (FurnitureItem.tsx와 동일 로직)
-                  // 가구 높이가 줄어든 만큼 상부프레임이 늘어나야 함
+                  // 키큰장: 현재 내경 높이 기반 (프레임 변경에 자동 연동)
+                  // 상/하부장: freeHeight 고정
                   const modCategory = getModuleCategory(mod);
-                  if ((modCategory === 'full') && mod.topFrameThickness !== undefined) {
-                    const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                    const topFrameDelta = mod.topFrameThickness - globalTopFrame;
-                    modFreeHeight -= topFrameDelta;
+                  let modFreeHeight: number;
+                  if (modCategory === 'full') {
+                    modFreeHeight = internalSpaceHeight;
+                    // 개별 가구 상부프레임 두께 보정
+                    if (mod.topFrameThickness !== undefined) {
+                      const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                      const topFrameDelta = mod.topFrameThickness - globalTopFrame;
+                      modFreeHeight -= topFrameDelta;
+                    }
+                  } else {
+                    modFreeHeight = mod.freeHeight || internalSpaceHeight;
                   }
 
                   // 프레임 높이 = 천장에서 가구 상단까지의 거리
@@ -2634,6 +2639,7 @@ const Room: React.FC<RoomProps> = ({
               {spaceInfo.freeSurround?.left?.enabled && hasFreeMods && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
                 const method = leftCfg.method || 'none';
+                console.log('🔍 [Room] LEFT surround:', { enabled: leftCfg.enabled, method, gap: leftCfg.gap, highlightedFrame });
                 if (method === 'none') return null;
                 const gapMM = leftCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
@@ -2729,6 +2735,7 @@ const Room: React.FC<RoomProps> = ({
               {spaceInfo.freeSurround?.right?.enabled && hasFreeMods && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
                 const method = rightCfg.method || 'none';
+                console.log('🔍 [Room] RIGHT surround:', { enabled: rightCfg.enabled, method, gap: rightCfg.gap, highlightedFrame });
                 if (method === 'none') return null;
                 const gapMM = rightCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
