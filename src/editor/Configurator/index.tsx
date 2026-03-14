@@ -4081,9 +4081,10 @@ const Configurator: React.FC = () => {
           middleGaps.forEach((_m, i) => surroundItems.push({ kind: 'middle', idx: i }));
           surroundItems.push({ kind: 'right' });
 
+          const toAlpha = (n: number) => String.fromCharCode(64 + n); // 1→A, 2→B, ...
           const renderOffsetRow = (
             num: number,
-            label: string,
+            _label: string,
             enabled: boolean,
             sizeMM: number,
             offset: number,
@@ -4093,7 +4094,7 @@ const Configurator: React.FC = () => {
             highlightKey: string,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num > 0 ? num : ''}</span>
+              <span className={styles.frameItemLabel} style={{ minWidth: '24px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}</span>
               <button
                 onClick={onToggle}
                 className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
@@ -4259,7 +4260,7 @@ const Configurator: React.FC = () => {
             highlightKey: string,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}{num > 0 ? num : ''}</span>
+              <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}{label}</span>
               <button
                 onClick={onToggle}
                 className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
@@ -4365,7 +4366,7 @@ const Configurator: React.FC = () => {
                   if (cat !== 'upper' && cat !== 'full') return null;
                   topNum++;
                   const tn = topNum;
-                  return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)프레임',
+                  return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, mod.topFrameThickness || spaceInfo.frameSize?.top || 18, mod.topFrameOffset || 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                     (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
@@ -4379,7 +4380,7 @@ const Configurator: React.FC = () => {
                   if (cat !== 'lower' && cat !== 'full') return null;
                   baseNum++;
                   const bn = baseNum;
-                  return <React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)프레임',
+                  return <React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)',
                     mod.hasBase !== false, spaceInfo.baseConfig?.height || 65, mod.baseFrameOffset || 0,
                     () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
                     (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: v } }),
