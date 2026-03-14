@@ -3286,8 +3286,8 @@ const Configurator: React.FC = () => {
 
         {/* 자유배치 모드에서는 이격거리 불필요 — 제거됨 */}
 
-        {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
-        <div className={styles.configSection}>
+        {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 (자유배치 모드에서는 숨김) */}
+        {!isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>단내림</h3>
@@ -3386,10 +3386,10 @@ const Configurator: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
+        </div>)}
 
-        {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
-        {spaceInfo.droppedCeiling?.enabled && (
+        {/* 단내림이 있을 때 메인구간 사이즈 표시 (자유배치 모드에서는 숨김) */}
+        {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
@@ -3550,8 +3550,8 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
-        {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 */}
-        {spaceInfo.droppedCeiling?.enabled && (
+        {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 (자유배치 모드에서는 숨김) */}
+        {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
