@@ -136,14 +136,14 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         : innerWidth/2 + textOffset;  // 우측뷰: 가구 우측 끝 밖으로
 
 // console.log('📏 ShelfRenderer getDimensionXPosition:',
-        `viewMode=${viewMode}`,
-        `view2DDirection=${view2DDirection}`,
-        `innerWidth=${innerWidth}`,
-        `forText=${forText}`,
-        `textOffset=${textOffset}`,
-        `xPos=${xPos}`,
-        `furnitureId=${furnitureId}`
-      );
+        // `viewMode=${viewMode}`,
+        // `view2DDirection=${view2DDirection}`,
+        // `innerWidth=${innerWidth}`,
+        // `forText=${forText}`,
+        // `textOffset=${textOffset}`,
+        // `xPos=${xPos}`,
+        // `furnitureId=${furnitureId}`
+      // );
 
       return xPos;
     }
@@ -323,15 +323,15 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 });
 
 // console.log('🔵 ShelfRenderer 듀얼 측면뷰 - 섹션 전체 높이:', {
-                  furnitureId,
-                  viewMode,
-                  view2DDirection,
-                  innerHeight,
-                  innerHeight_mm: innerHeight * 100,
-                  basicThickness,
-                  basicThickness_mm: basicThickness * 100,
-                  표시될값: Math.round(innerHeight * 100)
-                });
+                  // furnitureId,
+                  // viewMode,
+                  // view2DDirection,
+                  // innerHeight,
+                  // innerHeight_mm: innerHeight * 100,
+                  // basicThickness,
+                  // basicThickness_mm: basicThickness * 100,
+                  // 표시될값: Math.round(innerHeight * 100)
+                // });
               } else {
                 // 기존 로직: 개별 칸 높이 계산
 
@@ -613,19 +613,19 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
                       // 디버깅: 상부섹션 높이 계산 로그
 // console.log('🔍 ShelfRenderer 상부섹션 높이 계산:', {
-                        furnitureId,
-                        viewMode,
-                        view2DDirection,
-                        innerHeight,
-                        innerHeight_mm: innerHeight * 100,
-                        basicThickness,
-                        basicThickness_mm: basicThickness * 100,
-                        lastShelfPos,
-                        compartmentBottom,
-                        compartmentTop,
-                        compartmentHeight_mm: (compartmentTop - compartmentBottom) * 100,
-                        표시될값: Math.round((compartmentTop - compartmentBottom) * 100)
-                      });
+                        // furnitureId,
+                        // viewMode,
+                        // view2DDirection,
+                        // innerHeight,
+                        // innerHeight_mm: innerHeight * 100,
+                        // basicThickness,
+                        // basicThickness_mm: basicThickness * 100,
+                        // lastShelfPos,
+                        // compartmentBottom,
+                        // compartmentTop,
+                        // compartmentHeight_mm: (compartmentTop - compartmentBottom) * 100,
+                        // 표시될값: Math.round((compartmentTop - compartmentBottom) * 100)
+                      // });
                     } else {
                       // 중간 칸: 현재 선반 상단부터 다음 선반 하단까지
                       const currentShelfPos = shelfPositions[i - 1];
@@ -779,16 +779,16 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             
             // 디버깅
 // console.log('🟢 균등분할모드 - 칸 높이:', {
-              i,
-              innerHeight,
-              innerHeight_mm: innerHeight * 100,
-              shelfSpacing,
-              shelfSpacing_mm: shelfSpacing * 100,
-              compartmentHeight,
-              compartmentHeight_mm: compartmentHeight * 100,
-              compartmentHeightMm,
-              표시될값: compartmentHeightMm
-            });
+              // i,
+              // innerHeight,
+              // innerHeight_mm: innerHeight * 100,
+              // shelfSpacing,
+              // shelfSpacing_mm: shelfSpacing * 100,
+              // compartmentHeight,
+              // compartmentHeight_mm: compartmentHeight * 100,
+              // compartmentHeightMm,
+              // 표시될값: compartmentHeightMm
+            // });
             
             // 각 칸의 상단 Y 좌표 계산
             const compartmentTopY = compartmentBottomY + compartmentHeight;

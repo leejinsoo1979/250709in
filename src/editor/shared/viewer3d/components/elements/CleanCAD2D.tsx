@@ -292,16 +292,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
 // console.log('🎯 CleanCAD2D 전체 렌더링:', {
-    showDimensionsProp,
-    showDimensionsFromStore,
-    showDimensions,
-    viewDirection,
-    isStep2,
-    surroundType: spaceInfo.surroundType,
-    installType: spaceInfo.installType,
-    wallConfig: spaceInfo.wallConfig,
-    '좌우치수표시조건': !isStep2
-  });
+    // showDimensionsProp,
+    // showDimensionsFromStore,
+    // showDimensions,
+    // viewDirection,
+    // isStep2,
+    // surroundType: spaceInfo.surroundType,
+    // installType: spaceInfo.installType,
+    // wallConfig: spaceInfo.wallConfig,
+    // '좌우치수표시조건': !isStep2
+  // });
   const { updateColumn, setSpaceInfo } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
 
@@ -360,12 +360,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       : 0;
 
 // console.log('✅ furnitureHeights 계산 완료:', {
-      maxLowerCabinetHeightMm,
-      maxUpperCabinetHeightMm,
-      adjustedUpperCabinetHeightMm,
-      isFloating,
-      floatHeight
-    });
+      // maxLowerCabinetHeightMm,
+      // maxUpperCabinetHeightMm,
+      // adjustedUpperCabinetHeightMm,
+      // isFloating,
+      // floatHeight
+    // });
 
     return {
       maxLowerCabinetHeightMm,
@@ -4220,13 +4220,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
 
 // console.log('📐 [좌측뷰] 치수 렌더링:', {
-              isFloating,
-              floatHeight,
-              maxLowerCabinetHeightMm,
-              adjustedUpperCabinetHeightMm,
-              floorFinishHeightMm,
-              bottomFrameHeight
-            });
+              // isFloating,
+              // floatHeight,
+              // maxLowerCabinetHeightMm,
+              // adjustedUpperCabinetHeightMm,
+              // floorFinishHeightMm,
+              // bottomFrameHeight
+            // });
 
             return (
               <>
@@ -5171,13 +5171,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
 
 // console.log('📐 [우측뷰] 치수 렌더링:', {
-              isFloating,
-              floatHeight,
-              maxLowerCabinetHeightMm,
-              adjustedUpperCabinetHeightMm,
-              floorFinishHeightMm,
-              bottomFrameHeight
-            });
+              // isFloating,
+              // floatHeight,
+              // maxLowerCabinetHeightMm,
+              // adjustedUpperCabinetHeightMm,
+              // floorFinishHeightMm,
+              // bottomFrameHeight
+            // });
 
             return (
               <>
@@ -7310,12 +7310,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   };
 
 // console.log('🎨 CleanCAD2D 최종 렌더링:', {
-    currentViewDirection,
-    showDimensions,
-    hasColumns: !!spaceInfo.columns,
-    columnCount: spaceInfo.columns?.length,
-    shouldRenderColumns: currentViewDirection === 'front'
-  });
+    // currentViewDirection,
+    // showDimensions,
+    // hasColumns: !!spaceInfo.columns,
+    // columnCount: spaceInfo.columns?.length,
+    // shouldRenderColumns: currentViewDirection === 'front'
+  // });
 
   return (
     <group 

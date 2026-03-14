@@ -361,20 +361,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
 // console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
-    furnitureId,
-    isLayoutModeFree,
-    isFreePlacement_prop: isFreePlacement,
-    storePlacedModule_exists: !!storePlacedModule,
-    storePlacedModule_isFreePlacement: storePlacedModule?.isFreePlacement,
-    isFree,
-    storeFreeWidth,
-    storeFreeHeight,
-    internalHeight,
-    effectiveInternalHeight,
-    moduleWidth,
-    originalSlotWidth,
-    moduleDataId: moduleData?.id
-  });
+    // furnitureId,
+    // isLayoutModeFree,
+    // isFreePlacement_prop: isFreePlacement,
+    // storePlacedModule_exists: !!storePlacedModule,
+    // storePlacedModule_isFreePlacement: storePlacedModule?.isFreePlacement,
+    // isFree,
+    // storeFreeWidth,
+    // storeFreeHeight,
+    // internalHeight,
+    // effectiveInternalHeight,
+    // moduleWidth,
+    // originalSlotWidth,
+    // moduleDataId: moduleData?.id
+  // });
 
   const storePanelGrainDirections = storePlacedModule?.panelGrainDirections;
 
@@ -382,13 +382,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
 
 // console.log('🔥 DoorModule - panelGrainDirections 소스:', {
-    furnitureId,
-    fromStore: !!storePanelGrainDirections,
-    fromProps: !!panelGrainDirections,
-    final: activePanelGrainDirections,
-    storePanelGrainDirections,
-    propsPanelGrainDirections: panelGrainDirections
-  });
+    // furnitureId,
+    // fromStore: !!storePanelGrainDirections,
+    // fromProps: !!panelGrainDirections,
+    // final: activePanelGrainDirections,
+    // storePanelGrainDirections,
+    // propsPanelGrainDirections: panelGrainDirections
+  // });
 
   // 텍스처 적용 함수 (성능 최적화)
   const getDoorPanelName = useCallback((doorSide: 'single' | 'left' | 'right') => {
@@ -524,13 +524,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const effectiveTextureUrl = doorTextureUrl;
 
 // console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
-      doorTextureUrl,
-      effectiveTextureUrl,
-      doorColor,
-      isDragging,
-      isEditMode,
-      willApplyTexture: !isDragging && !isEditMode && !!effectiveTextureUrl
-    });
+      // doorTextureUrl,
+      // effectiveTextureUrl,
+      // doorColor,
+      // isDragging,
+      // isEditMode,
+      // willApplyTexture: !isDragging && !isEditMode && !!effectiveTextureUrl
+    // });
 
     const panelNames = {
       single: getDoorPanelName('single'),
@@ -595,16 +595,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (zone === 'dropped' && zoneInfo.dropped) {
       effectiveColumnWidth = zoneInfo.dropped.columnWidth;
 // console.log('🚪📏 단내림 구간 슬롯 너비 사용:', {
-        zone,
-        droppedColumnWidth: zoneInfo.dropped.columnWidth,
-        normalColumnWidth: indexing.columnWidth
-      });
+        // zone,
+        // droppedColumnWidth: zoneInfo.dropped.columnWidth,
+        // normalColumnWidth: indexing.columnWidth
+      // });
     } else if (zone === 'normal' && zoneInfo.normal) {
       effectiveColumnWidth = zoneInfo.normal.columnWidth;
 // console.log('🚪📏 메인 구간 슬롯 너비 사용:', {
-        zone,
-        normalColumnWidth: zoneInfo.normal.columnWidth
-      });
+        // zone,
+        // normalColumnWidth: zoneInfo.normal.columnWidth
+      // });
     }
   }
 
@@ -628,16 +628,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
 
 // console.log('🚪📏 도어 너비 계산:', {
-      originalSlotWidth,
-      moduleWidth,
-      indexingColumnWidth: indexing.columnWidth,
-      effectiveColumnWidth,
-      isDualFurniture,
-      계산된도어너비: isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth,
-      actualDoorWidth,
-      zone: (spaceInfo as any).zone,
-      설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : (isDualFurniture ? '듀얼 도어 (슬롯너비 x 2)' : '싱글 도어')
-    });
+      // originalSlotWidth,
+      // moduleWidth,
+      // indexingColumnWidth: indexing.columnWidth,
+      // effectiveColumnWidth,
+      // isDualFurniture,
+      // 계산된도어너비: isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth,
+      // actualDoorWidth,
+      // zone: (spaceInfo as any).zone,
+      // 설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : (isDualFurniture ? '듀얼 도어 (슬롯너비 x 2)' : '싱글 도어')
+    // });
 
     // 노서라운드 모드에서 도어 크기 처리
     if (originalSpaceInfo.surroundType === 'no-surround') {
@@ -649,17 +649,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 도어 모듈 디버깅
 // console.log('🚪 DoorModule 렌더링:', {
-    moduleWidth,
-    originalSlotWidth,
-    actualDoorWidth,
-    isDualFurniture,
-    indexingColumnWidth: indexing.columnWidth,
-    slotCenterX,
-    moduleDataId: moduleData?.id,
-    isDynamic: moduleData?.isDynamic,
-    spaceInfoZone: (spaceInfo as any).zone,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
-  });
+    // moduleWidth,
+    // originalSlotWidth,
+    // actualDoorWidth,
+    // isDualFurniture,
+    // indexingColumnWidth: indexing.columnWidth,
+    // slotCenterX,
+    // moduleDataId: moduleData?.id,
+    // isDynamic: moduleData?.isDynamic,
+    // spaceInfoZone: (spaceInfo as any).zone,
+    // droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+  // });
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -828,12 +828,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
 
 // console.log('🚪📏 키큰장 actualDoorHeight:', {
-      doorTopLocal,
-      doorBottomLocal,
-      actualDoorHeight,
-      floatHeight,
-      설명: '상단 - 하단 = 도어 높이'
-    });
+      // doorTopLocal,
+      // doorBottomLocal,
+      // actualDoorHeight,
+      // floatHeight,
+      // 설명: '상단 - 하단 = 도어 높이'
+    // });
 
     const resolveSectionHeightsForDoor = () => {
       if (sectionHeightsMm?.length === totalSections) {
@@ -896,33 +896,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       actualDoorHeight = totalDoorHeight * sectionRatio - SECTION_GAP_HALF;
 
 // console.log('🚪📏 분할 모드 도어 높이 (천장/바닥 기준):', {
-        sectionIndex,
-        totalSections,
-        fullSpaceHeight,
-        tallCabinetFurnitureHeight,
-        sectionHeightsMm: resolvedSectionHeightsMm,
-        totalSectionHeight,
-        sectionRatio,
-        doorTopGap,
-        doorBottomGap,
-        totalDoorHeight,
-        sectionGapReduction: SECTION_GAP_HALF,
-        actualDoorHeight,
-        설명: `계산된 도어 높이(${totalDoorHeight}) × 섹션 비율(${sectionRatio.toFixed(2)}) - 갭 감소(${SECTION_GAP_HALF}) = ${actualDoorHeight}mm`
-      });
+        // sectionIndex,
+        // totalSections,
+        // fullSpaceHeight,
+        // tallCabinetFurnitureHeight,
+        // sectionHeightsMm: resolvedSectionHeightsMm,
+        // totalSectionHeight,
+        // sectionRatio,
+        // doorTopGap,
+        // doorBottomGap,
+        // totalDoorHeight,
+        // sectionGapReduction: SECTION_GAP_HALF,
+        // actualDoorHeight,
+        // 설명: `계산된 도어 높이(${totalDoorHeight}) × 섹션 비율(${sectionRatio.toFixed(2)}) - 갭 감소(${SECTION_GAP_HALF}) = ${actualDoorHeight}mm`
+      // });
     } else {
 // console.log('🚪📏 병합 모드 도어 높이 (천장/바닥 기준):', {
-        fullSpaceHeight,
-        topFrameHeight: topFrameHeightValue,
-        floorHeight: floorHeightValue,
-        baseHeight: baseHeightValue,
-        furnitureHeight: tallCabinetFurnitureHeight,
-        doorTopGap,
-        doorBottomGap,
-        effectiveBottomGap,
-        actualDoorHeight,
-        설명: `도어 상단/하단 로컬 좌표 차이 = ${actualDoorHeight}mm`
-      });
+        // fullSpaceHeight,
+        // topFrameHeight: topFrameHeightValue,
+        // floorHeight: floorHeightValue,
+        // baseHeight: baseHeightValue,
+        // furnitureHeight: tallCabinetFurnitureHeight,
+        // doorTopGap,
+        // doorBottomGap,
+        // effectiveBottomGap,
+        // actualDoorHeight,
+        // 설명: `도어 상단/하단 로컬 좌표 차이 = ${actualDoorHeight}mm`
+      // });
     }
   }
   
@@ -1040,20 +1040,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorYPosition = mmToThreeUnits(sectionDoorBottom + sectionDoorHeight / 2);
 
 // console.log('🚪📍 하부 섹션 도어 Y 위치 (가구 기준):', {
-          fullSpaceHeight,
-          totalDoorHeight,
-          totalSectionHeight,
-          sectionRatio,
-          sectionDoorHeight,
-          doorBottomLocal: sectionDoorBottom,
-          doorTopLocal: sectionDoorTop,
-          doorCenter,
-          doorTopGap,
-          doorBottomGap,
-          doorYPosition,
-          doorYPosition_mm: doorYPosition / 0.01,
-          설명: `가구 하단(${doorBottomLocal.toFixed(2)}mm) ~ ${sectionDoorTop.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
-        });
+          // fullSpaceHeight,
+          // totalDoorHeight,
+          // totalSectionHeight,
+          // sectionRatio,
+          // sectionDoorHeight,
+          // doorBottomLocal: sectionDoorBottom,
+          // doorTopLocal: sectionDoorTop,
+          // doorCenter,
+          // doorTopGap,
+          // doorBottomGap,
+          // doorYPosition,
+          // doorYPosition_mm: doorYPosition / 0.01,
+          // 설명: `가구 하단(${doorBottomLocal.toFixed(2)}mm) ~ ${sectionDoorTop.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
+        // });
       } else {
         // 상부 섹션 도어: 가구 상단 기준으로 계산
         const sectionRatio = resolvedSectionHeightsMm[1] / totalSectionHeight;
@@ -1066,20 +1066,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorYPosition = mmToThreeUnits(doorCenter);
 
 // console.log('🚪📍 상부 섹션 도어 Y 위치 (가구 기준):', {
-          fullSpaceHeight,
-          totalDoorHeight,
-          totalSectionHeight,
-          sectionRatio,
-          sectionDoorHeight,
-          doorTopLocal: sectionDoorTop,
-          doorBottomLocal: sectionDoorBottom,
-          doorCenter,
-          doorTopGap,
-          doorBottomGap,
-          doorYPosition,
-          doorYPosition_mm: doorYPosition / 0.01,
-          설명: `가구 상단(${doorTopLocal.toFixed(2)}mm) ~ ${sectionDoorBottom.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
-        });
+          // fullSpaceHeight,
+          // totalDoorHeight,
+          // totalSectionHeight,
+          // sectionRatio,
+          // sectionDoorHeight,
+          // doorTopLocal: sectionDoorTop,
+          // doorBottomLocal: sectionDoorBottom,
+          // doorCenter,
+          // doorTopGap,
+          // doorBottomGap,
+          // doorYPosition,
+          // doorYPosition_mm: doorYPosition / 0.01,
+          // 설명: `가구 상단(${doorTopLocal.toFixed(2)}mm) ~ ${sectionDoorBottom.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
+        // });
       }
 
       // 공간에 맞춤 모드: 섹션 분할 도어도 Y 위치 보정 필요
@@ -1109,17 +1109,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
 
 // console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
-        fullSpaceHeight,
-        cabinetHeight: tallCabinetFurnitureHeight,
-        doorTopGap,
-        doorBottomGap,
-        floatHeight,
-        도어하단_mm: doorBottom.toFixed(1),
-        도어상단_mm: doorTop.toFixed(1),
-        도어높이_mm: actualDoorHeight.toFixed(1),
-        도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
-        설명: `도어 하단 ${doorBottom.toFixed(1)}mm에서 도어 높이 절반(${(actualDoorHeight / 2).toFixed(1)}mm) 만큼 위`
-      });
+        // fullSpaceHeight,
+        // cabinetHeight: tallCabinetFurnitureHeight,
+        // doorTopGap,
+        // doorBottomGap,
+        // floatHeight,
+        // 도어하단_mm: doorBottom.toFixed(1),
+        // 도어상단_mm: doorTop.toFixed(1),
+        // 도어높이_mm: actualDoorHeight.toFixed(1),
+        // 도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
+        // 설명: `도어 하단 ${doorBottom.toFixed(1)}mm에서 도어 높이 절반(${(actualDoorHeight / 2).toFixed(1)}mm) 만큼 위`
+      // });
     }
   }
 
@@ -1145,11 +1145,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   useEffect(() => {
     if (isEditMode) {
 // console.log('🚪🔓 도어 편집 모드 활성화:', {
-        isEditMode,
-        doorsOpen,
-        shouldOpen: doorsOpen || isEditMode,
-        moduleId: moduleData?.id
-      });
+        // isEditMode,
+        // doorsOpen,
+        // shouldOpen: doorsOpen || isEditMode,
+        // moduleId: moduleData?.id
+      // });
     }
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
@@ -1232,16 +1232,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   if (slotCenterX !== undefined && slotCenterX !== null) {
     // slotCenterX가 제공된 경우 그대로 사용
 // console.log(`🚪 도어 위치 사용 (제공된 slotCenterX):`, {
-      slotIndex,
-      slotCenterX,
-      doorGroupX
-    });
+      // slotIndex,
+      // slotCenterX,
+      // doorGroupX
+    // });
   } else {
     // slotCenterX가 제공되지 않은 경우 기본값 0 사용
 // console.log(`🚪 도어 위치 기본값 사용:`, {
-      slotIndex,
-      doorGroupX: 0
-    });
+      // slotIndex,
+      // doorGroupX: 0
+    // });
   }
 
   // 기둥 옆에 있는지 확인하여 힌지 위치 자동 조정
@@ -1258,12 +1258,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorRightEdge = doorCenterX + mmToThreeUnits(actualDoorWidth / 2);
     
 // console.log('🚪 도어 위치 체크:', {
-      doorCenterX,
-      doorLeftEdge,
-      doorRightEdge,
-      actualDoorWidth,
-      slotCenterX
-    });
+      // doorCenterX,
+      // doorLeftEdge,
+      // doorRightEdge,
+      // actualDoorWidth,
+      // slotCenterX
+    // });
     
     // 각 기둥과의 거리 체크
     for (const column of columns) {
@@ -1349,15 +1349,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = 3;
 
 // console.log('[DoorDebug] dual-door slot widths', {
-      slotWidths,
-      moduleWidth,
-      effectiveColumnWidth,
-      originalSlotWidth,
-      zone: (spaceInfo as any).zone,
-      slotIndex,
-      isFree,
-      actualDoorWidth
-    });
+      // slotWidths,
+      // moduleWidth,
+      // effectiveColumnWidth,
+      // originalSlotWidth,
+      // zone: (spaceInfo as any).zone,
+      // slotIndex,
+      // isFree,
+      // actualDoorWidth
+    // });
 
     if (isFree) {
       // 자유배치: actualDoorWidth(= storeFreeWidth)를 그대로 사용, 좌우 균등 분할
@@ -1413,17 +1413,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
 // console.log('🚪 듀얼 도어 위치:', {
-      totalWidth,
-      slotWidths,
-      leftDoorWidth,
-      rightDoorWidth,
-      mode: slotWidths ? '개별 슬롯 너비' : '균등분할 (fallback)',
-      leftXOffset: leftXOffset.toFixed(3),
-      rightXOffset: rightXOffset.toFixed(3),
-      leftHingeX: leftHingeX.toFixed(3),
-      rightHingeX: rightHingeX.toFixed(3),
-      doorGroupX: doorGroupX
-    });
+      // totalWidth,
+      // slotWidths,
+      // leftDoorWidth,
+      // rightDoorWidth,
+      // mode: slotWidths ? '개별 슬롯 너비' : '균등분할 (fallback)',
+      // leftXOffset: leftXOffset.toFixed(3),
+      // rightXOffset: rightXOffset.toFixed(3),
+      // leftHingeX: leftHingeX.toFixed(3),
+      // rightHingeX: rightHingeX.toFixed(3),
+      // doorGroupX: doorGroupX
+    // });
 
     // 측면뷰에서 선택된 슬롯 확인
     // 듀얼 도어는 전체가 하나의 컴포넌트이므로 slotIndex로 현재 슬롯 판단
@@ -2273,12 +2273,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorWidthUnits = mmToThreeUnits(doorWidth);
 
 // console.log('🚪 싱글 도어 크기:', {
-      actualDoorWidth,
-      doorWidth,
-      originalSlotWidth,
-      fallbackColumnWidth: indexing.columnWidth,
-      moduleDataId: moduleData?.id
-    });
+      // actualDoorWidth,
+      // doorWidth,
+      // originalSlotWidth,
+      // fallbackColumnWidth: indexing.columnWidth,
+      // moduleDataId: moduleData?.id
+    // });
 
     // 조정된 힌지 위치 사용
     const hingeAxisOffset = adjustedHingePosition === 'left'

@@ -524,13 +524,13 @@ const Room: React.FC<RoomProps> = ({
     // wallConfig: spaceInfo.wallConfig,
     // '오른쪽듀얼체크': placedModulesFromStore.filter(m => {
       // const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
-      return isDual && m.slotIndex === indexingDebug.columnCount - 2;
-    }).map(m => ({
-      moduleId: m.moduleId,
-      slotIndex: m.slotIndex,
-      isDualSlot: m.isDualSlot
-    }))
-  });
+      // return isDual && m.slotIndex === indexingDebug.columnCount - 2;
+    // }).map(m => ({
+      // moduleId: m.moduleId,
+      // slotIndex: m.slotIndex,
+      // isDualSlot: m.isDualSlot
+    // }))
+  // });
 
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
@@ -543,33 +543,33 @@ const Room: React.FC<RoomProps> = ({
       };
     }
 // console.log('🔍 Room Component - spaceInfo:', {
-      roomId,
-      surroundType: spaceInfo.surroundType,
-      installType: spaceInfo.installType,
-      frameSize: spaceInfo.frameSize,
-      showFrame,
-      'showFrame prop value': showFrame,
-      timestamp: new Date().toISOString()
-    });
+      // roomId,
+      // surroundType: spaceInfo.surroundType,
+      // installType: spaceInfo.installType,
+      // frameSize: spaceInfo.frameSize,
+      // showFrame,
+      // 'showFrame prop value': showFrame,
+      // timestamp: new Date().toISOString()
+    // });
     const { width: widthMm, height: heightMm } = calculateRoomDimensions(spaceInfo);
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
     const furnitureDepthMm = calculateFurnitureDepth(placedModules, spaceInfo); // 가구/프레임용 (동적 계산, 노서라운드 고려)
 
 // console.log('🎯 frameThickness 계산 전 체크:', {
-      hasLeftFurniture,
-      hasRightFurniture,
-      surroundType: spaceInfo.surroundType
-    });
+      // hasLeftFurniture,
+      // hasRightFurniture,
+      // surroundType: spaceInfo.surroundType
+    // });
 
     // hasLeftFurniture와 hasRightFurniture는 이미 단내림을 고려하여 계산됨 (line 360, 400)
     const frameThicknessMm = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 // console.log('🔥 calculateDimensionsAndFrames 내부 - frameThicknessMm 계산 직후:', {
-      frameThicknessMm,
-      wallConfig: spaceInfo.wallConfig,
-      installType: spaceInfo.installType,
-      surroundType: spaceInfo.surroundType
-    });
+      // frameThicknessMm,
+      // wallConfig: spaceInfo.wallConfig,
+      // installType: spaceInfo.installType,
+      // surroundType: spaceInfo.surroundType
+    // });
     const baseFrameMm = calculateBaseFrameWidth(spaceInfo);
     const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
     const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
@@ -596,11 +596,11 @@ const Room: React.FC<RoomProps> = ({
 
     // mm를 Three.js 단위로 변환
 // console.log('🔥 calculateDimensionsAndFrames - 변환 직전:', {
-      'frameThicknessMm.left': frameThicknessMm.left,
-      'frameThicknessMm.right': frameThicknessMm.right,
-      'mmToThreeUnits(frameThicknessMm.left)': mmToThreeUnits(frameThicknessMm.left),
-      'mmToThreeUnits(frameThicknessMm.right)': mmToThreeUnits(frameThicknessMm.right)
-    });
+      // 'frameThicknessMm.left': frameThicknessMm.left,
+      // 'frameThicknessMm.right': frameThicknessMm.right,
+      // 'mmToThreeUnits(frameThicknessMm.left)': mmToThreeUnits(frameThicknessMm.left),
+      // 'mmToThreeUnits(frameThicknessMm.right)': mmToThreeUnits(frameThicknessMm.right)
+    // });
     return {
       width: mmToThreeUnits(widthMm),
       height: mmToThreeUnits(heightMm),
@@ -645,18 +645,18 @@ const Room: React.FC<RoomProps> = ({
 
   // 디버깅을 위한 로그
 // console.log('🎯 Room - dimensions 디버깅:', {
-    frameThicknessMm,
-    frameThickness,
-    wallConfig: spaceInfo.wallConfig,
-    installType: spaceInfo.installType,
-    surroundType: spaceInfo.surroundType,
-    '계산된_엔드패널': {
-      좌측mm: frameThicknessMm.left,
-      우측mm: frameThicknessMm.right,
-      좌측Three: frameThickness.left,
-      우측Three: frameThickness.right
-    }
-  });
+    // frameThicknessMm,
+    // frameThickness,
+    // wallConfig: spaceInfo.wallConfig,
+    // installType: spaceInfo.installType,
+    // surroundType: spaceInfo.surroundType,
+    // '계산된_엔드패널': {
+      // 좌측mm: frameThicknessMm.left,
+      // 우측mm: frameThicknessMm.right,
+      // 좌측Three: frameThickness.left,
+      // 우측Three: frameThickness.right
+    // }
+  // });
 
   // 기둥 분절 계산을 메모이제이션 (dimensions 정의 이후로 이동)
   const frameSegments = useMemo(() => {
@@ -1195,16 +1195,16 @@ const Room: React.FC<RoomProps> = ({
                 const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
 // console.log('🔍 왼쪽 벽 단내림 조건 체크:', {
-                  'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
-                  hasDroppedCeiling,
-                  isLeftDropped,
-                  dropHeight,
-                  condition: hasDroppedCeiling && isLeftDropped,
-                  'spaceInfo.height': spaceInfo.height,
-                  'droppedHeight(mm)': spaceInfo.height - dropHeight,
-                  'height(Three.js)': height / 0.01,
-                  'droppedHeight(Three.js)': (spaceInfo.height - dropHeight) * 0.01
-                });
+                  // 'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
+                  // hasDroppedCeiling,
+                  // isLeftDropped,
+                  // dropHeight,
+                  // condition: hasDroppedCeiling && isLeftDropped,
+                  // 'spaceInfo.height': spaceInfo.height,
+                  // 'droppedHeight(mm)': spaceInfo.height - dropHeight,
+                  // 'height(Three.js)': height / 0.01,
+                  // 'droppedHeight(Three.js)': (spaceInfo.height - dropHeight) * 0.01
+                // });
 
                 // 왼쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
                 if (hasDroppedCeiling && isLeftDropped) {
@@ -1266,14 +1266,14 @@ const Room: React.FC<RoomProps> = ({
                 const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
 // console.log('🔍 오른쪽 벽 단내림 조건 체크:', {
-                  'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
-                  hasDroppedCeiling,
-                  isRightDropped,
-                  dropHeight,
-                  condition: hasDroppedCeiling && isRightDropped,
-                  viewMode,
-                  '벽 렌더링 조건': (viewMode === '3D' || viewMode === '3d')
-                });
+                  // 'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
+                  // hasDroppedCeiling,
+                  // isRightDropped,
+                  // dropHeight,
+                  // condition: hasDroppedCeiling && isRightDropped,
+                  // viewMode,
+                  // '벽 렌더링 조건': (viewMode === '3D' || viewMode === '3d')
+                // });
 
                 // 오른쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
                 if (hasDroppedCeiling && isRightDropped) {
@@ -1398,25 +1398,25 @@ const Room: React.FC<RoomProps> = ({
               : xOffset + normalAreaWidth / 2;
 
 // console.log('🔥 천장 분할 계산:', {
-              hasDroppedCeiling,
-              surroundType: spaceInfo.surroundType,
-              installType: spaceInfo.installType,
-              wallConfig: spaceInfo.wallConfig,
-              leftReduction,
-              rightReduction,
-              droppedWidth: droppedWidth / 0.01,
-              droppedAreaWidth: droppedAreaWidth / 0.01,
-              normalAreaWidth: normalAreaWidth / 0.01,
-              droppedAreaX,
-              normalAreaX,
-              droppedCeilingHeight: droppedCeilingHeight / 0.01,
-              totalWidth: width / 0.01,
-              calculatedTotal: (droppedAreaWidth + normalAreaWidth + mmToThreeUnits(leftReduction) + mmToThreeUnits(rightReduction)) / 0.01,
-              '일반 천장 Y좌표(mm)': (panelStartY + height) / 0.01,
-              '단내림 천장 Y좌표(mm)': (panelStartY + height - droppedCeilingHeight) / 0.01,
-              '천장 높이 차이(mm)': droppedCeilingHeight / 0.01,
-              '200mm 분절 확인': droppedCeilingHeight / 0.01 === 200 ? '✅' : '❌'
-            });
+              // hasDroppedCeiling,
+              // surroundType: spaceInfo.surroundType,
+              // installType: spaceInfo.installType,
+              // wallConfig: spaceInfo.wallConfig,
+              // leftReduction,
+              // rightReduction,
+              // droppedWidth: droppedWidth / 0.01,
+              // droppedAreaWidth: droppedAreaWidth / 0.01,
+              // normalAreaWidth: normalAreaWidth / 0.01,
+              // droppedAreaX,
+              // normalAreaX,
+              // droppedCeilingHeight: droppedCeilingHeight / 0.01,
+              // totalWidth: width / 0.01,
+              // calculatedTotal: (droppedAreaWidth + normalAreaWidth + mmToThreeUnits(leftReduction) + mmToThreeUnits(rightReduction)) / 0.01,
+              // '일반 천장 Y좌표(mm)': (panelStartY + height) / 0.01,
+              // '단내림 천장 Y좌표(mm)': (panelStartY + height - droppedCeilingHeight) / 0.01,
+              // '천장 높이 차이(mm)': droppedCeilingHeight / 0.01,
+              // '200mm 분절 확인': droppedCeilingHeight / 0.01 === 200 ? '✅' : '❌'
+            // });
 
             // 단내림 경계벽 X 위치 계산
             const boundaryWallX = (() => {
@@ -2034,18 +2034,18 @@ const Room: React.FC<RoomProps> = ({
         }
 
 // console.log('🔴🔴🔴 [한쪽벽모드] 왼쪽 프레임/엔드패널 렌더링 체크:', {
-          showFrame,
-          frameThicknessLeft: frameThickness.left,
-          frameThicknessLeftMm: frameThicknessMm.left,
-          condition: showFrame && frameThickness.left > 0,
-          surroundType: spaceInfo.surroundType,
-          installType: spaceInfo.installType,
-          wallConfigLeft: wallConfig?.left,
-          wallConfigRight: wallConfig?.right,
-          '렌더링여부': willRender,
-          '예상타입': elementType,
-          hasLeftFurniture
-        });
+          // showFrame,
+          // frameThicknessLeft: frameThickness.left,
+          // frameThicknessLeftMm: frameThicknessMm.left,
+          // condition: showFrame && frameThickness.left > 0,
+          // surroundType: spaceInfo.surroundType,
+          // installType: spaceInfo.installType,
+          // wallConfigLeft: wallConfig?.left,
+          // wallConfigRight: wallConfig?.right,
+          // '렌더링여부': willRender,
+          // '예상타입': elementType,
+          // hasLeftFurniture
+        // });
 
         return null;
       })()}
@@ -2284,18 +2284,18 @@ const Room: React.FC<RoomProps> = ({
         }
 
 // console.log('🔵🔵🔵 [한쪽벽모드] 오른쪽 프레임/엔드패널 렌더링 체크:', {
-          showFrame,
-          frameThicknessRight: frameThickness.right,
-          frameThicknessRightMm: frameThicknessMm.right,
-          condition: showFrame && frameThickness.right > 0,
-          surroundType: spaceInfo.surroundType,
-          installType: spaceInfo.installType,
-          wallConfigLeft: wallConfig?.left,
-          wallConfigRight: wallConfig?.right,
-          '렌더링여부': willRender,
-          '예상타입': elementType,
-          hasRightFurniture
-        });
+          // showFrame,
+          // frameThicknessRight: frameThickness.right,
+          // frameThicknessRightMm: frameThicknessMm.right,
+          // condition: showFrame && frameThickness.right > 0,
+          // surroundType: spaceInfo.surroundType,
+          // installType: spaceInfo.installType,
+          // wallConfigLeft: wallConfig?.left,
+          // wallConfigRight: wallConfig?.right,
+          // '렌더링여부': willRender,
+          // '예상타입': elementType,
+          // hasRightFurniture
+        // });
 
         return null;
       })()}
@@ -2388,27 +2388,27 @@ const Room: React.FC<RoomProps> = ({
             endPanelX = furnitureRightEdge;
 
 // console.log('🔍 엔드패널 X 계산:', {
-              customWidthMm,
-              actualFurnitureWidth,
-              furnitureX,
-              furnitureRightEdge,
-              endPanelX
-            });
+              // customWidthMm,
+              // actualFurnitureWidth,
+              // furnitureX,
+              // furnitureRightEdge,
+              // endPanelX
+            // });
           }
 
 // console.log('🔍 단내림 오른쪽 엔드패널 위치 계산:', {
-            droppedZone,
-            droppedBoundaries,
-            droppedStartSlot,
-            droppedLastSlot,
-            droppedRightFurniture: droppedRightFurniture ? {
-              slotIndex: droppedRightFurniture.slotIndex,
-              positionX: droppedRightFurniture.position.x,
-              customWidth: droppedRightFurniture.customWidth
-            } : null,
-            endPanelX,
-            hasRightFurniture
-          });
+            // droppedZone,
+            // droppedBoundaries,
+            // droppedStartSlot,
+            // droppedLastSlot,
+            // droppedRightFurniture: droppedRightFurniture ? {
+              // slotIndex: droppedRightFurniture.slotIndex,
+              // positionX: droppedRightFurniture.position.x,
+              // customWidth: droppedRightFurniture.customWidth
+            // } : null,
+            // endPanelX,
+            // hasRightFurniture
+          // });
 
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {

@@ -179,10 +179,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     }
 
 // console.log('📏 치수 변경 요청:', {
-      placedFurnitureId,
-      sectionIndex,
-      newInternalHeight
-    });
+      // placedFurnitureId,
+      // sectionIndex,
+      // newInternalHeight
+    // });
 
     // 배치된 가구 찾기
     const placedModule = placedModules.find(m => m.id === placedFurnitureId);
@@ -456,12 +456,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             const isUpperOrLowerCabinet = isUpperCabinet || isLowerCabinet;
 
 // console.log('🔍 SectionsRenderer 내경치수 체크:', {
-              furnitureId,
-              isUpperCabinet,
-              isLowerCabinet,
-              isUpperOrLowerCabinet,
-              category
-            });
+              // furnitureId,
+              // isUpperCabinet,
+              // isLowerCabinet,
+              // isUpperOrLowerCabinet,
+              // category
+            // });
 
             const shouldShow = !isUpperOrLowerCabinet && !hideSectionDimensions && showDimensions && showDimensionsText &&
                               viewMode !== '3D' &&
@@ -512,25 +512,25 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       bottomY = sectionBottomY;
 
 // console.log('🔴🔴🔴 상부섹션 hanging bottomY:', {
-                        furnitureId,
-                        index,
-                        sectionBottomY,
-                        'sectionBottomY_mm': sectionBottomY * 100,
-                        bottomY,
-                        'bottomY_mm': bottomY * 100,
-                        '섹션영역시작': '정확히 sectionBottomY',
-                        view2DDirection,
-                        viewMode
-                      });
+                        // furnitureId,
+                        // index,
+                        // sectionBottomY,
+                        // 'sectionBottomY_mm': sectionBottomY * 100,
+                        // bottomY,
+                        // 'bottomY_mm': bottomY * 100,
+                        // '섹션영역시작': '정확히 sectionBottomY',
+                        // view2DDirection,
+                        // viewMode
+                      // });
 
                       // 2D 우측뷰에서 상부섹션 치수가이드를 36mm 아래로 확장
                       if (view2DDirection === 'right') {
 // console.log('🟢 SectionsRenderer: 우측뷰 상부섹션 36mm 확장', {
-                          view2DDirection,
-                          index,
-                          originalBottomY: bottomY,
-                          adjustedBottomY: bottomY - 0.36
-                        });
+                          // view2DDirection,
+                          // index,
+                          // originalBottomY: bottomY,
+                          // adjustedBottomY: bottomY - 0.36
+                        // });
                         bottomY -= 0.36;
                       }
                     } else {
@@ -542,19 +542,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 디버깅: hanging 섹션의 치수 계산 확인
                   if (section.type === 'hanging') {
 // console.log('🔍 Hanging 섹션 치수 계산:', {
-                      index,
-                      sectionType: section.type,
-                      hasShelfPositions: !!(section.shelfPositions && section.shelfPositions.length > 0),
-                      shelfPositions: section.shelfPositions,
-                      sectionBottomY,
-                      sectionTopY,
-                      bottomY,
-                      basicThickness,
-                      basicThickness_mm: basicThickness * 100,
-                      height,
-                      calculatedHeight: section.calculatedHeight,
-                      sectionHeight
-                    });
+                      // index,
+                      // sectionType: section.type,
+                      // hasShelfPositions: !!(section.shelfPositions && section.shelfPositions.length > 0),
+                      // shelfPositions: section.shelfPositions,
+                      // sectionBottomY,
+                      // sectionTopY,
+                      // bottomY,
+                      // basicThickness,
+                      // basicThickness_mm: basicThickness * 100,
+                      // height,
+                      // calculatedHeight: section.calculatedHeight,
+                      // sectionHeight
+                    // });
                   }
                   
                   // 상단 가이드선 위치 결정
@@ -568,14 +568,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
 
 // console.log('🟢🟢🟢 [SectionsRenderer] 정면뷰 상부섹션 topY 계산:', {
-                      furnitureId,
-                      index,
-                      lowerSectionTopOffsetMm,
-                      isFloating,
-                      isLastSection,
-                      floatingAdjustment,
-                      'floatingAdjustment_mm': floatingAdjustment * 100
-                    });
+                      // furnitureId,
+                      // index,
+                      // lowerSectionTopOffsetMm,
+                      // isFloating,
+                      // isLastSection,
+                      // floatingAdjustment,
+                      // 'floatingAdjustment_mm': floatingAdjustment * 100
+                    // });
 
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
                     if (hasSafetyShelf) {
@@ -593,22 +593,22 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       const isDualFurniture = furnitureId?.includes('dual');
 
 // console.log('🔵🔵🔵 [SectionsRenderer] 안전선반 없는 경우:', {
-                        furnitureId,
-                        is2HangingUpperSection,
-                        isDualFurniture,
-                        sectionTopY,
-                        'sectionTopY_mm': sectionTopY * 100,
-                        bottomY,
-                        'bottomY_mm': bottomY * 100,
-                        sectionHeight,
-                        'sectionHeight_mm': sectionHeight * 100,
-                        'height/2': height/2,
-                        'height/2_mm': height/2 * 100,
-                        basicThickness,
-                        'basicThickness_mm': basicThickness * 100,
-                        floatingAdjustment,
-                        'floatingAdjustment_mm': floatingAdjustment * 100
-                      });
+                        // furnitureId,
+                        // is2HangingUpperSection,
+                        // isDualFurniture,
+                        // sectionTopY,
+                        // 'sectionTopY_mm': sectionTopY * 100,
+                        // bottomY,
+                        // 'bottomY_mm': bottomY * 100,
+                        // sectionHeight,
+                        // 'sectionHeight_mm': sectionHeight * 100,
+                        // 'height/2': height/2,
+                        // 'height/2_mm': height/2 * 100,
+                        // basicThickness,
+                        // 'basicThickness_mm': basicThickness * 100,
+                        // floatingAdjustment,
+                        // 'floatingAdjustment_mm': floatingAdjustment * 100
+                      // });
 
                       if (is2HangingUpperSection && isDualFurniture) {
                         // 듀얼 가구: sectionTopY가 측판 상단
@@ -656,32 +656,32 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                   if (index > 0) {
 // console.log('🔴🔴🔴 상부섹션 drawer bottomY:', {
-                      furnitureId,
-                      index,
-                      sectionBottomY,
-                      'sectionBottomY_mm': sectionBottomY * 100,
-                      bottomY,
-                      'bottomY_mm': bottomY * 100,
-                      '섹션영역시작': '정확히 sectionBottomY',
-                      view2DDirection,
-                      viewMode
-                    });
+                      // furnitureId,
+                      // index,
+                      // sectionBottomY,
+                      // 'sectionBottomY_mm': sectionBottomY * 100,
+                      // bottomY,
+                      // 'bottomY_mm': bottomY * 100,
+                      // '섹션영역시작': '정확히 sectionBottomY',
+                      // view2DDirection,
+                      // viewMode
+                    // });
                   }
 
 // console.log('📏 DRAWER 섹션 치수:', {
-                    index,
-                    height,
-                    basicThickness,
-                    sectionHeight,
-                    sectionCenterY,
-                    sectionBottomY,
-                    sectionTopY,
-                    bottomY,
-                    topY,
-                    'bottomY_mm': bottomY * 100,
-                    'topY_mm': topY * 100,
-                    'internal_mm': actualInternalHeight
-                  });
+                    // index,
+                    // height,
+                    // basicThickness,
+                    // sectionHeight,
+                    // sectionCenterY,
+                    // sectionBottomY,
+                    // sectionTopY,
+                    // bottomY,
+                    // topY,
+                    // 'bottomY_mm': bottomY * 100,
+                    // 'topY_mm': topY * 100,
+                    // 'internal_mm': actualInternalHeight
+                  // });
                 } else {
                   // 다른 타입은 기본값 사용
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
@@ -702,10 +702,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                 // 치수 디버깅
 // console.log('📏 섹션 내경 치수:', {
-                  furnitureId,
-                  sectionIndex: index,
-                  actualInternalHeight: Math.round(actualInternalHeight)
-                });
+                  // furnitureId,
+                  // sectionIndex: index,
+                  // actualInternalHeight: Math.round(actualInternalHeight)
+                // });
 
                 // 현재 섹션의 hover 상태에 따른 색상
                 const isHovered = hoveredSectionIndex === index;
@@ -734,13 +734,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
 
 // console.log('🔵 안전선반 위 칸 렌더링:', {
-                      furnitureId,
-                      sectionIndex: index,
-                      totalSections: allSections.length,
-                      isLastSection: index === allSections.length - 1,
-                      topCompartmentHeight: Math.round(topCompartmentHeight),
-                      safetyShelfPositionMm
-                    });
+                      // furnitureId,
+                      // sectionIndex: index,
+                      // totalSections: allSections.length,
+                      // isLastSection: index === allSections.length - 1,
+                      // topCompartmentHeight: Math.round(topCompartmentHeight),
+                      // safetyShelfPositionMm
+                    // });
                   }
                 }
 

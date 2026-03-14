@@ -103,19 +103,19 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   
   // 디버깅 로그 추가
 // console.log('🏗️ 단내림 정보:', {
-    hasDroppedCeiling,
-    droppedTotalHeight,
-    droppedInternalHeight,
-    'internalSpace.height': internalSpace.height,
-    'internalSpace.startY': internalSpace.startY,
-    'spaceInfo.height': spaceInfo.height,
-    'spaceInfo.droppedCeiling?.dropHeight': spaceInfo.droppedCeiling?.dropHeight,
-    topFrameHeight,
-    '계산된 droppedInternalHeight': droppedInternalHeight,
-    '예상 천장 위치 (droppedTotalHeight - topFrameHeight)': droppedTotalHeight - topFrameHeight,
-    droppedWidth,
-    isLeftDropped
-  });
+    // hasDroppedCeiling,
+    // droppedTotalHeight,
+    // droppedInternalHeight,
+    // 'internalSpace.height': internalSpace.height,
+    // 'internalSpace.startY': internalSpace.startY,
+    // 'spaceInfo.height': spaceInfo.height,
+    // 'spaceInfo.droppedCeiling?.dropHeight': spaceInfo.droppedCeiling?.dropHeight,
+    // topFrameHeight,
+    // '계산된 droppedInternalHeight': droppedInternalHeight,
+    // '예상 천장 위치 (droppedTotalHeight - topFrameHeight)': droppedTotalHeight - topFrameHeight,
+    // droppedWidth,
+    // isLeftDropped
+  // });
   
   // 영역별 슬롯 정보 계산
   const zoneSlotInfo = React.useMemo(() => {
@@ -288,24 +288,24 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     slotWidths?: number[]
   ) => {
 // console.log('📐 renderSlotGuides 호출됨:', {
-      zoneType,
-      startX,
-      width,
-      endX: startX + width,
-      columnCount,
-      columnWidth,
-      ceilingY,
-      floorY,
-      backZ,
-      frontZ,
-      'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
-      'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
-      'hasDroppedCeiling': hasDroppedCeiling,
-      'spaceInfo.surroundType': spaceInfo.surroundType,
-      'spaceInfo.installType': spaceInfo.installType,
-      'spaceInfo.wallConfig': spaceInfo.wallConfig,
-      'slotWidths': slotWidths
-    });
+      // zoneType,
+      // startX,
+      // width,
+      // endX: startX + width,
+      // columnCount,
+      // columnWidth,
+      // ceilingY,
+      // floorY,
+      // backZ,
+      // frontZ,
+      // 'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
+      // 'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
+      // 'hasDroppedCeiling': hasDroppedCeiling,
+      // 'spaceInfo.surroundType': spaceInfo.surroundType,
+      // 'spaceInfo.installType': spaceInfo.installType,
+      // 'spaceInfo.wallConfig': spaceInfo.wallConfig,
+      // 'slotWidths': slotWidths
+    // });
     
     const guides = [];
     
@@ -329,10 +329,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // ColumnIndexer에서 이미 엔드패널을 고려한 값을 제공하므로 여기서는 추가 조정 불필요
     if (slotWidths && slotWidths.length === columnCount) {
 // console.log('📏 slotWidths 사용하여 경계 계산:', {
-        startX,
-        slotWidths,
-        totalWidth: slotWidths.reduce((a, b) => a + b, 0)
-      });
+        // startX,
+        // slotWidths,
+        // totalWidth: slotWidths.reduce((a, b) => a + b, 0)
+      // });
       for (let i = 0; i < columnCount; i++) {
         currentX += slotWidths[i];
         boundaries.push(mmToThreeUnits(currentX));
@@ -340,11 +340,11 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     } else {
       // 기존 로직 유지 (호환성)
 // console.log('📏 균등 분할로 경계 계산:', {
-        startX,
-        width,
-        columnCount,
-        columnWidth
-      });
+        // startX,
+        // width,
+        // columnCount,
+        // columnWidth
+      // });
       for (let i = 1; i <= columnCount; i++) {
         if (i === columnCount) {
           boundaries.push(mmToThreeUnits(startX + width));
@@ -648,16 +648,16 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   };
 
 // console.log('🏗️ ColumnGuides 렌더링:', {
-    hasDroppedCeiling,
-    activeDroppedCeilingTab,
-    'zoneSlotInfo.dropped': zoneSlotInfo.dropped,
-    'zoneSlotInfo.normal': zoneSlotInfo.normal,
-    showDimensions,
-    viewMode,
-    'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
-    'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
-    'columnCount': columnCount
-  });
+    // hasDroppedCeiling,
+    // activeDroppedCeilingTab,
+    // 'zoneSlotInfo.dropped': zoneSlotInfo.dropped,
+    // 'zoneSlotInfo.normal': zoneSlotInfo.normal,
+    // showDimensions,
+    // viewMode,
+    // 'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
+    // 'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
+    // 'columnCount': columnCount
+  // });
 
   // 투명 메쉬 렌더링 함수
   const renderTransparentMeshes = (

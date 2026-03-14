@@ -1978,12 +1978,12 @@ const Configurator: React.FC = () => {
         // designFileId가 있는 경우 디자인 파일 데이터 로드
         const isReadOnlyMode = mode === 'readonly';
 // console.log('📂 디자인파일 데이터 로드 시작:', {
-          designFileId,
-          projectId,
-          isReadOnlyMode,
-          currentDesignFileId,
-          currentProjectId
-        });
+//           designFileId,
+//           projectId,
+//           isReadOnlyMode,
+//           currentDesignFileId,
+//           currentProjectId
+//         });
 
         // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
@@ -2287,9 +2287,9 @@ const Configurator: React.FC = () => {
       // URL에 디자인파일 정보가 있으면 폴더 lookup 완전히 skip
       if (urlDesignFileName || urlDesignFileId) {
 // console.log('⏭️ URL에 디자인파일 정보가 있어서 폴더 lookup skip:', {
-          urlDesignFileName,
-          urlDesignFileId
-        });
+//           urlDesignFileName,
+//           urlDesignFileId
+//         });
         return;
       }
 
@@ -2707,11 +2707,11 @@ const Configurator: React.FC = () => {
       const droppedDefaultCount = droppedMinSlots;
 
 // console.log(`🔧 단내림 활성화 시 단내림 구간 도어개수 기본값 설정: ${droppedDefaultCount}`, {
-        droppedWidth,
-        droppedInternalWidth,
-        droppedMinSlots,
-        droppedMaxSlots
-      });
+//         droppedWidth,
+//         droppedInternalWidth,
+//         droppedMinSlots,
+//         droppedMaxSlots
+//       });
 
       finalUpdates = { ...finalUpdates, droppedCeilingDoorCount: droppedDefaultCount };
     }
@@ -2792,10 +2792,10 @@ const Configurator: React.FC = () => {
   // 도어 설치/제거 핸들러
   const handleDoorInstallation = () => {
 // console.log('🚪 도어 설치/제거 핸들러 호출:', {
-      hasDoorsInstalled,
-      placedModulesCount: placedModules.length,
-      doorsOpen
-    });
+//       hasDoorsInstalled,
+//       placedModulesCount: placedModules.length,
+//       doorsOpen
+//     });
 
     if (hasDoorsInstalled) {
       // 도어 제거: 모든 가구에서 도어 제거

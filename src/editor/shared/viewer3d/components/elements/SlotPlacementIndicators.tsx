@@ -132,11 +132,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const floatHeightMm = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
 
 // console.log('🟠 [SlotIndicators] availableSlots 계산 시작:', {
-      isDualFurniture,
-      allSlotPositions,
-      placedModulesCount: placedModules.length,
-      placedModules: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone, id: m.moduleId }))
-    });
+      // isDualFurniture,
+      // allSlotPositions,
+      // placedModulesCount: placedModules.length,
+      // placedModules: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone, id: m.moduleId }))
+    // });
 
     // Y 위치 계산 함수 - zone에 따라 다른 높이 적용
     const calculateYPosition = (zone: 'normal' | 'dropped'): number => {
@@ -150,16 +150,16 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           : spaceInfo.height;
 
 // console.log('🔴 [SlotIndicators] 상부장 Y 위치 계산:', {
-          zone,
-          전체높이: spaceInfo.height,
-          단내림내려온높이: spaceInfo.droppedCeiling?.dropHeight,
-          단내림천장높이: (spaceInfo.droppedCeiling?.enabled && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight !== undefined)
-            ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight
-            : undefined,
-          사용된천장높이: ceilingHeight,
-          상부프레임: topFrameHeightMm,
-          상부장높이: furnitureHeightMm
-        });
+          // zone,
+          // 전체높이: spaceInfo.height,
+          // 단내림내려온높이: spaceInfo.droppedCeiling?.dropHeight,
+          // 단내림천장높이: (spaceInfo.droppedCeiling?.enabled && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight !== undefined)
+            // ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight
+            // : undefined,
+          // 사용된천장높이: ceilingHeight,
+          // 상부프레임: topFrameHeightMm,
+          // 상부장높이: furnitureHeightMm
+        // });
 
         // 상부장 상단 Y = 천장 높이 - 상부프레임 높이
         const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
@@ -190,8 +190,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
       if (!available) {
 // console.log('🔍 [SlotIndicators] 슬롯 사용 불가:', { slotIndex, zone: slotData.zone });
-        // continue; // 슬롯 사용 불가
-      // }
+        continue; // 슬롯 사용 불가
+      }
 
       // zone에 따른 Y 위치 계산
       const yPosition = calculateYPosition(slotData.zone);

@@ -793,13 +793,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
       // 듀얼 가구가 영역 경계를 넘어가는지 체크
 // console.log('🔍🔍🔍 [경계 체크]', {
-        isDual,
-        zoneSlotIndex,
-        targetZoneColumnCount: targetZone.columnCount,
-        '다음슬롯인덱스': zoneSlotIndex + 1,
-        '경계넘음': zoneSlotIndex + 1 >= targetZone.columnCount,
-        zone: zoneToUse
-      });
+        // isDual,
+        // zoneSlotIndex,
+        // targetZoneColumnCount: targetZone.columnCount,
+        // '다음슬롯인덱스': zoneSlotIndex + 1,
+        // '경계넘음': zoneSlotIndex + 1 >= targetZone.columnCount,
+        // zone: zoneToUse
+      // });
 
       if (isDual && zoneSlotIndex + 1 >= targetZone.columnCount) {
         console.error('❌❌❌ 듀얼 가구 배치 불가: zone 경계를 침범합니다');
@@ -2931,10 +2931,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         if (!activeModuleData && selectedFurnitureId) {
           const moduleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
 // console.log('🔍 [Ghost] moduleData 조회 결과:', {
-            selectedFurnitureId,
-            foundModuleData: !!moduleData,
-            moduleDataId: moduleData?.id
-          });
+            // selectedFurnitureId,
+            // foundModuleData: !!moduleData,
+            // moduleDataId: moduleData?.id
+          // });
           if (moduleData) {
             activeModuleData = {
               type: 'furniture',
@@ -2992,14 +2992,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             const moduleIdForCheck = selectedFurnitureId || currentDragData?.moduleData?.id || activeModuleData?.moduleData?.id || '';
 
 // console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
-              selectedFurnitureId,
-              currentDragDataId: currentDragData?.moduleData?.id,
-              activeModuleDataId: activeModuleData?.moduleData?.id,
-              moduleIdForCheck,
-              hoveredSlotIndex,
-              slotIndex: compareIndex,
-              slotZone
-            });
+              // selectedFurnitureId,
+              // currentDragDataId: currentDragData?.moduleData?.id,
+              // activeModuleDataId: activeModuleData?.moduleData?.id,
+              // moduleIdForCheck,
+              // hoveredSlotIndex,
+              // slotIndex: compareIndex,
+              // slotZone
+            // });
 
             if (!moduleIdForCheck) {
               console.error('❌ [Click Mode] moduleId가 없습니다!');
@@ -3290,11 +3290,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let previewX = slotX;
 
 // console.log('👻 [Ghost Preview] Rendering module:', {
-          slotIndex,
-          moduleId: moduleData.id,
-          originalId: activeModuleData.moduleData.id,
-          dimensions: moduleData.dimensions
-        });
+          // slotIndex,
+          // moduleId: moduleData.id,
+          // originalId: activeModuleData.moduleData.id,
+          // dimensions: moduleData.dimensions
+        // });
 
         if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 구간
@@ -3757,10 +3757,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const rightmostColumnSlot = Math.max(...columnSlotIndices);
 
 // console.log('🔍 [Front Space Debug] 기둥 범위:', {
-          columnSlotIndices,
-          leftmostColumnSlot,
-          rightmostColumnSlot
-        });
+          // columnSlotIndices,
+          // leftmostColumnSlot,
+          // rightmostColumnSlot
+        // });
 
         // 기둥 양옆(기둥 외부)에 가구가 있는지 확인
         // 기둥 왼쪽 끝 바깥 슬롯에 가구가 있는지
@@ -3858,13 +3858,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const frontSpaceZ = furnitureFrontZ - frontSpaceDepthThree / 2;
 
 // console.log('🔍 [Front Space Z] Z 위치 계산:', {
-            panelDepthMm,
-            furnitureDepthMm,
-            frontSpaceDepth: frontSpace.depth,
-            furnitureZOffset,
-            furnitureFrontZ,
-            frontSpaceZ
-          });
+            // panelDepthMm,
+            // furnitureDepthMm,
+            // frontSpaceDepth: frontSpace.depth,
+            // furnitureZOffset,
+            // furnitureFrontZ,
+            // frontSpaceZ
+          // });
 
           // Y축 위치 (바닥)
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';

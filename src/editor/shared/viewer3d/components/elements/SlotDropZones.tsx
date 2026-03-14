@@ -164,10 +164,10 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       const newModuleData = getModuleById(newModuleId, internalSpace, spaceInfo);
       newCategory = newModuleData?.category;
 // console.log('🔍 detectNewFurnitureCollisions - 새 가구 카테고리:', {
-        newModuleId,
-        newCategory,
-        newModuleData: newModuleData ? '있음' : '없음'
-      });
+        // newModuleId,
+        // newCategory,
+        // newModuleData: newModuleData ? '있음' : '없음'
+      // });
     } else {
       console.warn('⚠️ detectNewFurnitureCollisions - newModuleId가 없음');
     }
@@ -343,11 +343,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       zoneSlotIndex = slotIndex;
 
 // console.log('🎯 드롭 영역 확인:', {
-        zone,
-        zoneSlotIndex,
-        activeTab: activeDroppedCeilingTab,
-        isSurround
-      });
+        // zone,
+        // zoneSlotIndex,
+        // activeTab: activeDroppedCeilingTab,
+        // isSurround
+      // });
     }
     
     // 듀얼/싱글 가구 판별
@@ -357,16 +357,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     const targetSlotInfo = columnSlots[zoneSlotIndex];
     
 // console.log('🎯 드롭 시도:', {
-      slotIndex,
-      zoneSlotIndex,
-      zone,
-      hasColumn: targetSlotInfo?.hasColumn,
-      columnId: targetSlotInfo?.column?.id,
-      isDual,
-      moduleId: dragData.moduleData.id,
-      columnSlots_length: columnSlots.length,
-      targetSlotInfo
-    });
+      // slotIndex,
+      // zoneSlotIndex,
+      // zone,
+      // hasColumn: targetSlotInfo?.hasColumn,
+      // columnId: targetSlotInfo?.column?.id,
+      // isDual,
+      // moduleId: dragData.moduleData.id,
+      // columnSlots_length: columnSlots.length,
+      // targetSlotInfo
+    // });
     
     // 이동 중인 가구의 ID 찾기 (기존 가구를 이동하는 경우)
     const excludeModuleId = currentDragData?.placedModuleId || undefined;
@@ -473,10 +473,10 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 듀얼 가구가 기둥에 침범당하면 배치 불가
     if (isDual && targetSlotInfo && targetSlotInfo.hasColumn) {
 // console.log('🚫 듀얼 가구가 기둥 슬롯에 배치 시도됨 - 배치 불가:', {
-        slotIndex,
-        columnId: targetSlotInfo.column?.id,
-        reason: '듀얼 가구는 기둥이 있는 슬롯에 배치할 수 없음'
-      });
+        // slotIndex,
+        // columnId: targetSlotInfo.column?.id,
+        // reason: '듀얼 가구는 기둥이 있는 슬롯에 배치할 수 없음'
+      // });
       showAlert('듀얼 가구는 기둥이 있는 슬롯에 배치할 수 없습니다.', { title: '배치 불가' });
       return false;
     }
@@ -519,11 +519,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       // Column C 첫 번째 가구는 원래 깊이 사용
       customDepth = currentCustomDepth || actualModuleData.defaultDepth || actualModuleData.dimensions.depth || 600;
 // console.log('🔵 Column C 첫 번째 가구 깊이 설정:', {
-        currentCustomDepth,
-        defaultDepth: actualModuleData.defaultDepth,
-        dimensionsDepth: actualModuleData.dimensions.depth,
-        finalCustomDepth: customDepth
-      });
+        // currentCustomDepth,
+        // defaultDepth: actualModuleData.defaultDepth,
+        // dimensionsDepth: actualModuleData.dimensions.depth,
+        // finalCustomDepth: customDepth
+      // });
     } else {
       customDepth = currentCustomDepth || getDefaultDepth(actualModuleData);
     }
@@ -609,15 +609,15 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       );
       
 // console.log('🏗️ 기둥 슬롯의 사용 가능한 공간:', {
-        zoneSlotIndex,
-        spacesCount: availableSpaces.length,
-        spaces: availableSpaces.map(s => ({
-          type: s.type,
-          position: s.position,
-          maxWidth: s.maxWidth,
-          customDepth: s.customDepth
-        }))
-      });
+        // zoneSlotIndex,
+        // spacesCount: availableSpaces.length,
+        // spaces: availableSpaces.map(s => ({
+          // type: s.type,
+          // position: s.position,
+          // maxWidth: s.maxWidth,
+          // customDepth: s.customDepth
+        // }))
+      // });
       
       // 비어있는 공간만 필터링
       const emptySpaces = availableSpaces.filter(s => !s.isOccupied);
@@ -683,16 +683,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           }
           
 // console.log('🔵 Column C 깊이 기반 배치:', {
-            slotIndex,
-            bestSpaceType: bestSpace.type,
-            위치: {
-              x: bestSpace.position.x.toFixed(3),
-              z: bestSpace.position.z.toFixed(3)
-            },
-            existingModulesCount: existingModulesInSlot.length,
-            shouldHaveDoor,
-            customDepth: bestSpace.customDepth
-          });
+            // slotIndex,
+            // bestSpaceType: bestSpace.type,
+            // 위치: {
+              // x: bestSpace.position.x.toFixed(3),
+              // z: bestSpace.position.z.toFixed(3)
+            // },
+            // existingModulesCount: existingModulesInSlot.length,
+            // shouldHaveDoor,
+            // customDepth: bestSpace.customDepth
+          // });
         } else {
           // 일반 슬롯의 경우 - 기존 로직
           existingModulesInSlot = placedModules.filter(m => m.slotIndex === slotIndex);
@@ -819,19 +819,19 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         
         // 모듈 추가
 // console.log('🎯 Column C 가구 추가:', {
-          slotIndex,
-          서브슬롯타입: bestSpace.type,
-          위치: {
-            x: newModule.position.x.toFixed(3),
-            y: newModule.position.y.toFixed(3),
-            z: newModule.position.z.toFixed(3)
-          },
-          너비: newModule.adjustedWidth,
-          customWidth: newModule.customWidth,
-          moduleId: newModule.moduleId,
-          도어: newModule.hasDoor,
-          isSplit: newModule.isSplit
-        });
+          // slotIndex,
+          // 서브슬롯타입: bestSpace.type,
+          // 위치: {
+            // x: newModule.position.x.toFixed(3),
+            // y: newModule.position.y.toFixed(3),
+            // z: newModule.position.z.toFixed(3)
+          // },
+          // 너비: newModule.adjustedWidth,
+          // customWidth: newModule.customWidth,
+          // moduleId: newModule.moduleId,
+          // 도어: newModule.hasDoor,
+          // isSplit: newModule.isSplit
+        // });
         
         addModule(newModule);
         setCurrentDragData(null);
@@ -893,11 +893,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       const columnDepth = targetSlotInfo.column.depth;
       
 // console.log('🔍 기둥 정보 확인:', {
-        slotIndex,
-        columnDepth,
-        columnWidth: targetSlotInfo.column.width,
-        columnId: targetSlotInfo.column.id
-      });
+        // slotIndex,
+        // columnDepth,
+        // columnWidth: targetSlotInfo.column.width,
+        // columnId: targetSlotInfo.column.id
+      // });
       
       // 기둥 타입별 처리 로직
       const SHALLOW_THRESHOLD = 200; // 기둥A (150mm)
@@ -909,26 +909,26 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         // 기둥A (150mm): 깊이 조정 가능
         columnProcessingMethod = 'depth-adjustment';
 // console.log('🏛️ 기둥A 처리 모드:', {
-          zoneSlotIndex,
-          columnDepth: columnDepth + 'mm',
-          method: '깊이 조정 (가구가 얕아짐)'
-        });
+          // zoneSlotIndex,
+          // columnDepth: columnDepth + 'mm',
+          // method: '깊이 조정 (가구가 얕아짐)'
+        // });
       } else if (columnDepth <= MEDIUM_THRESHOLD) {
         // 기둥C (300mm): 폭 조정만
         columnProcessingMethod = 'width-adjustment';
 // console.log('🏛️ 기둥C 처리 모드:', {
-          zoneSlotIndex,
-          columnDepth: columnDepth + 'mm',
-          method: '폭 조정 (가구가 좁아짐)'
-        });
+          // zoneSlotIndex,
+          // columnDepth: columnDepth + 'mm',
+          // method: '폭 조정 (가구가 좁아짐)'
+        // });
       } else {
         // 기둥B (730mm): 폭 조정만
         columnProcessingMethod = 'width-adjustment';
 // console.log('🏛️ 기둥B 처리 모드:', {
-          zoneSlotIndex,
-          columnDepth: columnDepth + 'mm',
-          method: '폭 조정 (가구가 좁아짐)'
-        });
+          // zoneSlotIndex,
+          // columnDepth: columnDepth + 'mm',
+          // method: '폭 조정 (가구가 좁아짐)'
+        // });
       }
       
       // Column C의 깊이 조정을 위한 변수
@@ -1160,11 +1160,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       const canAddFrontCabinet = frontSpaceMm >= 150;
       
 // console.log('🏗️ 기둥 앞면 캐비넷 배치 검토:', {
-        frontSpaceMm,
-        canAddFrontCabinet,
-        columnDepth: column.depth,
-        adjustedDepth
-      });
+        // frontSpaceMm,
+        // canAddFrontCabinet,
+        // columnDepth: column.depth,
+        // adjustedDepth
+      // });
       
       // 모듈 생성
       const modules = [];
@@ -1465,11 +1465,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       }
 
 // console.log('🎯 [SlotDropZones] Click & Place 클릭 감지:', {
-        furniturePlacementMode,
-        currentDragData: currentDragData?.moduleData?.id,
-        clientX: e.clientX,
-        clientY: e.clientY
-      });
+        // furniturePlacementMode,
+        // currentDragData: currentDragData?.moduleData?.id,
+        // clientX: e.clientX,
+        // clientY: e.clientY
+      // });
 
       const canvas = target as HTMLCanvasElement;
       

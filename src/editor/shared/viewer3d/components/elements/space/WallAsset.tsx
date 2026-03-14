@@ -186,13 +186,13 @@ const WallAsset: React.FC<WallAssetProps> = ({
       ];
       
 // console.log('🎯 가벽 드래그 위치 업데이트:', {
-        id,
-        oldPosition: position,
-        newPosition: boundedPosition,
-        spaceWidth,
-        worldX,
-        moveDistance
-      });
+        // id,
+        // oldPosition: position,
+        // newPosition: boundedPosition,
+        // spaceWidth,
+        // worldX,
+        // moveDistance
+      // });
       
       if (onPositionChange && !isNaN(boundedPosition[0]) && !isNaN(boundedPosition[1]) && !isNaN(boundedPosition[2])) {
         onPositionChange(id, boundedPosition);

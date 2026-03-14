@@ -203,15 +203,15 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
       const maxPossibleSlots = Math.floor(normalAreaInternalWidth / MIN_SLOT_WIDTH);
       
 // console.log('🎯 슬롯 계산 (단내림 활성화):', {
-        isForDroppedCeiling,
-        구간: isForDroppedCeiling ? '단내림 구간' : '메인 구간',
-        spaceWidth,
-        normalAreaInternalWidth,
-        minRequiredSlots,
-        maxPossibleSlots,
-        maxSlotWidth: MAX_SLOT_WIDTH,
-        minSlotWidth: MIN_SLOT_WIDTH
-      });
+        // isForDroppedCeiling,
+        // 구간: isForDroppedCeiling ? '단내림 구간' : '메인 구간',
+        // spaceWidth,
+        // normalAreaInternalWidth,
+        // minRequiredSlots,
+        // maxPossibleSlots,
+        // maxSlotWidth: MAX_SLOT_WIDTH,
+        // minSlotWidth: MIN_SLOT_WIDTH
+      // });
       
       return {
         min: Math.max(1, minRequiredSlots),
@@ -262,11 +262,11 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
     const mainZoneWidth = getMainZoneWidth();
     doorRange = calculateDoorRange(mainZoneWidth, false); // 메인 구간임을 명시
 // console.log('🎯 메인 구간 도어개수 슬라이더:', {
-      mainZoneWidth,
-      doorRange,
-      value,
-      isDroppedCeilingSlider
-    });
+      // mainZoneWidth,
+      // doorRange,
+      // value,
+      // isDroppedCeilingSlider
+    // });
   }
   
   const minDoors = doorRange.min;
@@ -376,11 +376,11 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
     const doorCount = maxDoors - minDoors + 1;
     
 // console.log('🎯 DoorSlider 라벨 생성:', {
-      minDoors,
-      maxDoors,
-      doorCount,
-      clampedValue
-    });
+      // minDoors,
+      // maxDoors,
+      // doorCount,
+      // clampedValue
+    // });
     
     if (doorCount <= 8) {
       // 컬럼 수가 8개 이하면 모든 값 표시
@@ -416,12 +416,12 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
   const sliderPosition = getSliderPosition(clampedValue);
   
 // console.log('🎯 DoorSlider 렌더링:', {
-    labels,
-    sliderPosition,
-    clampedValue,
-    minDoors,
-    maxDoors
-  });
+    // labels,
+    // sliderPosition,
+    // clampedValue,
+    // minDoors,
+    // maxDoors
+  // });
   
   return (
     <div className={styles.doorSlider} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -804,9 +804,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     
                     if (indexing.optimizedGapConfig) {
 // console.log('📏 공간 너비 변경 - 자동 이격거리 적용:', {
-                        newWidth,
-                        optimizedGap: indexing.optimizedGapConfig
-                      });
+                        // newWidth,
+                        // optimizedGap: indexing.optimizedGapConfig
+                      // });
                       setSpaceInfo({ gapConfig: indexing.optimizedGapConfig });
                     }
                   }
@@ -879,12 +879,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
                     
 // console.log('🎯 단내림 활성화 시 도어개수 계산:', {
-                      droppedWidth,
-                      frameThickness,
-                      droppedInternalWidth,
-                      droppedDoorCount,
-                      계산식: `Math.ceil(${droppedInternalWidth} / 600) = ${Math.ceil(droppedInternalWidth / 600)}`
-                    });
+                      // droppedWidth,
+                      // frameThickness,
+                      // droppedInternalWidth,
+                      // droppedDoorCount,
+                      // 계산식: `Math.ceil(${droppedInternalWidth} / 600) = ${Math.ceil(droppedInternalWidth / 600)}`
+                    // });
                     
                     const updates: any = {
                       droppedCeiling: {

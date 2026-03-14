@@ -150,12 +150,12 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
     
     // 띄워서 배치 조명 그룹 생성
 // console.log('🔦 띄움 배치 조명 생성:', {
-      isFloatingMode,
-      floatHeight,
-      floatHeightInThreeUnits: mmToThreeUnits(floatHeight),
-      lightY: mmToThreeUnits(floatHeight / 2),
-      floatingModulesCount: floatingModules.length
-    });
+      // isFloatingMode,
+      // floatHeight,
+      // floatHeightInThreeUnits: mmToThreeUnits(floatHeight),
+      // lightY: mmToThreeUnits(floatHeight / 2),
+      // floatingModulesCount: floatingModules.length
+    // });
     
     const floatingLightGroups = isFloatingMode && floatingModules.length > 0
       ? createLightGroups(
@@ -212,14 +212,14 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
         const centerX = (group.startX + group.endX) / 2;
         
 // console.log('🔦 띄워서 배치 조명 상세:', {
-          baseWidth,
-          width,
-          height: group.height,
-          heightInMM: group.height / 0.01, // Three.js units를 mm로 역변환
-          y: group.y,
-          z: group.z,
-          depth: group.depth
-        });
+          // baseWidth,
+          // width,
+          // height: group.height,
+          // heightInMM: group.height / 0.01, // Three.js units를 mm로 역변환
+          // y: group.y,
+          // z: group.z,
+          // depth: group.depth
+        // });
         
         return (
           <React.Fragment key={`floating-light-${index}`}>

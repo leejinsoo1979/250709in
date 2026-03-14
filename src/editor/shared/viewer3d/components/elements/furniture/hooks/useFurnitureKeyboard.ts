@@ -84,13 +84,13 @@ export const useFurnitureKeyboard = ({
           : editingModule.moduleId.includes('dual-');
 
 // console.log('🔍 [useFurnitureKeyboard] 가구 타입 판별:', {
-          moduleZone,
-          columnWidth,
-          furnitureWidth: moduleData.dimensions.width,
-          isDualFurniture,
-          isDualSlot: editingModule.isDualSlot,
-          hasZones: !!indexing.zones
-        });
+          // moduleZone,
+          // columnWidth,
+          // furnitureWidth: moduleData.dimensions.width,
+          // isDualFurniture,
+          // isDualSlot: editingModule.isDualSlot,
+          // hasZones: !!indexing.zones
+        // });
 
         let currentSlotIndex = -1;
 
@@ -111,13 +111,13 @@ export const useFurnitureKeyboard = ({
         }
 
 // console.log('🔍 [useFurnitureKeyboard] 슬롯 인덱스 찾기:', {
-          moduleZone,
-          hasZones: !!indexing.zones,
-          currentSlotIndex,
-          positionX: editingModule.position.x,
-          positionsCount: positionsToSearch?.length,
-          dualPositionsCount: dualPositionsToSearch?.length
-        });
+          // moduleZone,
+          // hasZones: !!indexing.zones,
+          // currentSlotIndex,
+          // positionX: editingModule.position.x,
+          // positionsCount: positionsToSearch?.length,
+          // dualPositionsCount: dualPositionsToSearch?.length
+        // });
 
         if (currentSlotIndex === -1) {
           // 슬롯 인덱스를 못 찾은 경우 placedModule의 slotIndex 사용 (fallback)
