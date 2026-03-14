@@ -2835,7 +2835,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         onChange={(e) => {
                           const v = e.target.value;
                           if (v === '' || /^\d+$/.test(v)) {
-                            const num = v === '' ? 18 : Math.max(15, Math.min(25, parseInt(v, 10)));
+                            const num = v === '' ? 18 : Math.max(10, Math.min(50, parseInt(v, 10)));
                             updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
                           }
                         }}
@@ -2843,7 +2843,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = currentPlacedModule.endPanelThickness ?? 18;
-                            const next = Math.max(15, Math.min(25, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                            const next = Math.max(10, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                             updatePlacedModule(currentPlacedModule.id, { endPanelThickness: next });
                           }
                         }}
@@ -2852,11 +2852,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <span className={styles.unit}>mm</span>
                     </div>
                   </div>
+                  {/* EP 깊이 */}
+                  {(() => {
+                    const furnitureDepth = currentPlacedModule.freeDepth ?? (moduleData ? moduleData.dimensions.depth : 580);
+                    const epDepthVal = currentPlacedModule.endPanelDepth ?? furnitureDepth;
+                    return (
+                      <div style={{ marginTop: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 깊이</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={epDepthVal}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? furnitureDepth : Math.max(50, Math.min(furnitureDepth, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { endPanelDepth: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = epDepthVal;
+                                const next = Math.max(50, Math.min(furnitureDepth, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { endPanelDepth: next });
+                              }
+                            }}
+                            className={styles.dimensionInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {/* 좌측 EP 옵셋 */}
                   {currentPlacedModule.hasLeftEndPanel && (() => {
                     const rawVal = currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
-                    const leftDir = rawVal > 0 ? 'front' : rawVal < 0 ? 'back' : 'front';
-                    const leftAbs = Math.abs(rawVal);
                     return (
                       <div style={{ marginTop: '8px' }}>
                         <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</label>
@@ -2864,63 +2896,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={leftAbs}
+                            value={rawVal}
                             onChange={(e) => {
                               const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
-                                const sign = leftDir === 'front' ? 1 : -1;
-                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: abs * sign });
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                const num = (v === '' || v === '-') ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
                               }
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const abs = Math.max(0, Math.min(50, leftAbs + (e.key === 'ArrowUp' ? 1 : -1)));
-                                const sign = leftDir === 'front' ? 1 : -1;
-                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: abs * sign });
+                                const next = Math.max(-50, Math.min(50, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: next });
                               }
                             }}
                             className={styles.dimensionInput}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                          <button
-                            style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                              background: leftDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                              color: leftDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                            onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: Math.max(1, leftAbs) });
-                            }}
-                          >
-                            앞에서
-                          </button>
-                          <button
-                            style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                              background: leftDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                              color: leftDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                            onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: -Math.max(1, leftAbs) });
-                            }}
-                          >
-                            뒤에서
-                          </button>
-                        </div>
+                        <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 / - 뒤</span>
                       </div>
                     );
                   })()}
                   {/* 우측 EP 옵셋 */}
                   {currentPlacedModule.hasRightEndPanel && (() => {
                     const rawVal = currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
-                    const rightDir = rawVal > 0 ? 'front' : rawVal < 0 ? 'back' : 'front';
-                    const rightAbs = Math.abs(rawVal);
                     return (
                       <div style={{ marginTop: '8px' }}>
                         <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</label>
@@ -2928,59 +2929,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={rightAbs}
+                            value={rawVal}
                             onChange={(e) => {
                               const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
-                                const sign = rightDir === 'front' ? 1 : -1;
-                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: abs * sign });
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                const num = (v === '' || v === '-') ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
                               }
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const abs = Math.max(0, Math.min(50, rightAbs + (e.key === 'ArrowUp' ? 1 : -1)));
-                                const sign = rightDir === 'front' ? 1 : -1;
-                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: abs * sign });
+                                const next = Math.max(-50, Math.min(50, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: next });
                               }
                             }}
                             className={styles.dimensionInput}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                          <button
-                            style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                              background: rightDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                              color: rightDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                            onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: Math.max(1, rightAbs) });
-                            }}
-                          >
-                            앞에서
-                          </button>
-                          <button
-                            style={{
-                              flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                              background: rightDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                              color: rightDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                              fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                            onClick={() => {
-                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: -Math.max(1, rightAbs) });
-                            }}
-                          >
-                            뒤에서
-                          </button>
-                        </div>
+                        <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 / - 뒤</span>
                       </div>
                     );
                   })()}
-                  <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>범위: -50mm ~ 50mm</span>
                 </>
               )}
             </div>
