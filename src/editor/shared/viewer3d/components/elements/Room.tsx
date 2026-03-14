@@ -2813,11 +2813,11 @@ const Room: React.FC<RoomProps> = ({
                 const dcPos = spaceInfo.droppedCeiling!.position || 'right';
                 const dcWidthMM = spaceInfo.droppedCeiling!.width || 150;
                 const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 100;
-                const dcTotalH = height + dcDropH; // 커튼박스 전체 높이(mm)
+                const dcTotalH = heightMm + dcDropH; // 커튼박스 전체 높이(mm)
                 const panelThickMM = 18;
 
                 const panelH = mmToThreeUnits(dcTotalH);
-                const panelCenterY = panelStartY + panelH / 2;
+                const panelCenterY = panelH / 2; // 바닥(0)부터 커튼박스 천장까지
 
                 // 커튼박스 구간 중심 X
                 const spaceHalfW = (spaceInfo.width || 2400) / 2;
@@ -2831,17 +2831,17 @@ const Room: React.FC<RoomProps> = ({
                   : mmToThreeUnits(spaceHalfW - dcWidthMM + panelThickMM / 2);
 
                 const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
-                const frontZ = surroundZPosition;
 
-                // 전면패널: 커튼박스 폭 × 전체높이 × 18mm
+                // 전면패널: 가구 앞면 위치 (surroundZPosition 사용)
+                const frontZ = surroundZPosition;
                 const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
                 const frontPos: [number, number, number] = [dcCenterX, panelCenterY, frontZ];
 
-                // 경계면 측면패널: 18mm × 전체높이 × 40mm (안쪽으로)
-                const sideDepthMM = 40;
+                // 경계면 측면패널: 벽(뒤)에서 가구 앞면까지 전체 깊이
+                const sideDepthMM = furnitureDepthMm;
                 const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, mmToThreeUnits(sideDepthMM)];
-                const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(sideDepthMM) / 2;
-                const sidePos: [number, number, number] = [borderX, panelCenterY, sideZ];
+                const sideCenterZ = furnitureZOffset; // 가구 깊이 중심
+                const sidePos: [number, number, number] = [borderX, panelCenterY, sideCenterZ];
 
                 const isCBHighlighted = highlightedFrame === 'curtain-box-finish';
 
