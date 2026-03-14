@@ -4324,32 +4324,31 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
               <div className={styles.subSetting}>
+                {/* 상부프레임 먼저 */}
                 {sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
-                  const hasTop = cat === 'upper' || cat === 'full';
-                  const hasBaseFrame = cat === 'lower' || cat === 'full';
-                  const rows: React.ReactNode[] = [];
-                  if (hasTop) {
-                    topNum++;
-                    const tn = topNum;
-                    rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)프레임',
-                      mod.hasTopFrame !== false, mod.topFrameThickness || spaceInfo.frameSize?.top || 18, mod.topFrameOffset || 0,
-                      () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                      (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
-                      `top-${mod.id}`,
-                    )}</React.Fragment>);
-                  }
-                  if (hasBaseFrame) {
-                    baseNum++;
-                    const bn = baseNum;
-                    rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)프레임',
-                      mod.hasBase !== false, spaceInfo.baseConfig?.height || 65, mod.baseFrameOffset || 0,
-                      () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
-                      (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
-                      `base-${mod.id}`,
-                    )}</React.Fragment>);
-                  }
-                  return <React.Fragment key={`frame-${mod.id}`}>{rows}</React.Fragment>;
+                  if (cat !== 'upper' && cat !== 'full') return null;
+                  topNum++;
+                  const tn = topNum;
+                  return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)프레임',
+                    mod.hasTopFrame !== false, mod.topFrameThickness || spaceInfo.frameSize?.top || 18, mod.topFrameOffset || 0,
+                    () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
+                    (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
+                    `top-${mod.id}`,
+                  )}</React.Fragment>;
+                })}
+                {/* 하부프레임 */}
+                {sorted.map((mod) => {
+                  const cat = getModuleCategory(mod);
+                  if (cat !== 'lower' && cat !== 'full') return null;
+                  baseNum++;
+                  const bn = baseNum;
+                  return <React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)프레임',
+                    mod.hasBase !== false, spaceInfo.baseConfig?.height || 65, mod.baseFrameOffset || 0,
+                    () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
+                    (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
+                    `base-${mod.id}`,
+                  )}</React.Fragment>;
                 })}
               </div>
             </div>
