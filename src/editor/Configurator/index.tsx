@@ -4362,21 +4362,7 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 하부프레임 높이/깊이 (글로벌) */}
-        {isFreeMode && (
-          <div className={styles.configSection}>
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>하부프레임 설정</h3>
-            </div>
-            <BaseControls
-              spaceInfo={spaceInfo}
-              onUpdate={handleSpaceInfoUpdate}
-              disabled={hasSpecialDualFurniture}
-              renderMode="placement-only"
-            />
-          </div>
-        )}
+        {/* 하부프레임 높이/깊이 (글로벌) — 자유배치에서는 상하부프레임 섹션에서 개별 설정 가능하므로 숨김 */}
 
         {/* 도어 셋팅: 자유배치 + 도어 가구 존재 시 */}
         {showDoorSetup && (
