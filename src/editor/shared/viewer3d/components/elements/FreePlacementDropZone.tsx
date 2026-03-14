@@ -1458,20 +1458,20 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 커튼박스 구간 + 버튼 (구간분할 활성 + 가구 배치됨 + 서라운드 미생성) */}
       {(() => {
-        const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
-        const fs = spaceInfo.freeSurround;
-        const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
-
-        console.log(`🔵 [+BTN] dropped=${!!spaceInfo.droppedCeiling?.enabled} mods=${freeModsForBtn.length} surroundActive=${isSurroundActive} fs=${!!fs}`);
-
         if (!spaceInfo.droppedCeiling?.enabled) return null;
+        const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         if (freeModsForBtn.length === 0) return null;
-        if (isSurroundActive) return null;
+
+        // 커튼박스 쪽 서라운드 패널이 이미 배치되었는지 확인
+        const pos = spaceInfo.droppedCeiling.position || 'right';
+        const hasCurtainBoxSurroundPanel = placedModules.some(m =>
+          m.isSurroundPanel && m.surroundPanelType === (pos === 'right' ? 'right' : 'left')
+        );
+        if (hasCurtainBoxSurroundPanel) return null;
 
         const totalWidth = spaceInfo.width || 2400;
         const halfW = totalWidth / 2;
         const curtainW = spaceInfo.droppedCeiling.width || 150;
-        const pos = spaceInfo.droppedCeiling.position || 'right';
 
         // 커튼박스 구간 중심 X (mm → Three.js)
         const curtainCenterX = pos === 'right'
