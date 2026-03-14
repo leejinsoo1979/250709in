@@ -1556,7 +1556,7 @@ const FreePlacementDropZone: React.FC = () => {
                           width: '28px',
                           height: '28px',
                           borderRadius: '50%',
-                          border: `2px solid ${isLocked ? '#e53e3e' : themeColor}`,
+                          border: `2px solid ${isLocked ? '#9b59b6' : themeColor}`,
                           backgroundColor: '#ffffff',
                           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                           opacity: isLocked ? 1 : 0.5,
