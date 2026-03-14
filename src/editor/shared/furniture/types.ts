@@ -194,6 +194,11 @@ export interface PlacedModule {
   doorOverlayRight?: number;  // 도어 우측 확장 (mm, 기본값: 0)
   doorOverlayTop?: number;    // 도어 상단 확장 (mm, 기본값: 0)
   doorOverlayBottom?: number; // 도어 하단 확장 (mm, 기본값: 0)
+
+  // 서라운드 패널 속성
+  isSurroundPanel?: boolean;              // 서라운드 패널 여부
+  surroundPanelType?: 'left' | 'right' | 'top';  // 패널 방향
+  surroundPanelWidth?: number;            // 패널 폭 (mm, 사용자 지정)
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입
