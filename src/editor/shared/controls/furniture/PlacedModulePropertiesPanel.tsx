@@ -10,7 +10,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
-import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcResizedPositionX, getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -2238,9 +2238,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          const newX = currentPlacedModule.isFreePlacement
-                            ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
-                            : currentPlacedModule.position.x;
+                          let newX: number;
+                          if (currentPlacedModule.isFreePlacement && (currentPlacedModule.freeLeftGapLocked || currentPlacedModule.freeRightGapLocked)) {
+                            const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+                            if (currentPlacedModule.freeLeftGapLocked && !currentPlacedModule.freeRightGapLocked) {
+                              const leftGap = currentPlacedModule.freeLeftGap ?? 0;
+                              newX = (startX + leftGap + val / 2) * 0.01;
+                            } else if (currentPlacedModule.freeRightGapLocked && !currentPlacedModule.freeLeftGapLocked) {
+                              const rightGap = currentPlacedModule.freeRightGap ?? 0;
+                              newX = (endX - rightGap - val / 2) * 0.01;
+                            } else {
+                              // 양쪽 잠금 → 중심 고정
+                              newX = currentPlacedModule.position.x;
+                            }
+                          } else {
+                            newX = currentPlacedModule.isFreePlacement
+                              ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
+                              : currentPlacedModule.position.x;
+                          }
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: val,
                             moduleWidth: val,
@@ -2288,9 +2303,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeWidthInput(next.toString());
                           if (currentPlacedModule) {
-                            const newX = currentPlacedModule.isFreePlacement
-                              ? calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo)
-                              : currentPlacedModule.position.x;
+                            let newX: number;
+                            if (currentPlacedModule.isFreePlacement && (currentPlacedModule.freeLeftGapLocked || currentPlacedModule.freeRightGapLocked)) {
+                              const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+                              if (currentPlacedModule.freeLeftGapLocked && !currentPlacedModule.freeRightGapLocked) {
+                                const leftGap = currentPlacedModule.freeLeftGap ?? 0;
+                                newX = (startX + leftGap + next / 2) * 0.01;
+                              } else if (currentPlacedModule.freeRightGapLocked && !currentPlacedModule.freeLeftGapLocked) {
+                                const rightGap = currentPlacedModule.freeRightGap ?? 0;
+                                newX = (endX - rightGap - next / 2) * 0.01;
+                              } else {
+                                newX = currentPlacedModule.position.x;
+                              }
+                            } else {
+                              newX = currentPlacedModule.isFreePlacement
+                                ? calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo)
+                                : currentPlacedModule.position.x;
+                            }
                             updatePlacedModule(currentPlacedModule.id, {
                               freeWidth: next,
                               moduleWidth: next,
@@ -2985,7 +3014,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <h5 className={styles.sectionTitle}>좌우 이격거리</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측</label>
+                    <button
+                      onClick={() => updatePlacedModule(currentPlacedModule.id, { freeLeftGapLocked: !currentPlacedModule.freeLeftGapLocked })}
+                      title={currentPlacedModule.freeLeftGapLocked ? '잠금 해제' : '잠금 (너비 변경 시 이격 유지)'}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
+                        fontSize: '13px', lineHeight: 1, color: currentPlacedModule.freeLeftGapLocked ? 'var(--theme-primary, #2196F3)' : 'var(--theme-text-tertiary)',
+                      }}
+                    >
+                      {currentPlacedModule.freeLeftGapLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}
+                    </button>
+                  </div>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -3025,7 +3066,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측</label>
+                    <button
+                      onClick={() => updatePlacedModule(currentPlacedModule.id, { freeRightGapLocked: !currentPlacedModule.freeRightGapLocked })}
+                      title={currentPlacedModule.freeRightGapLocked ? '잠금 해제' : '잠금 (너비 변경 시 이격 유지)'}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
+                        fontSize: '13px', lineHeight: 1, color: currentPlacedModule.freeRightGapLocked ? 'var(--theme-primary, #2196F3)' : 'var(--theme-text-tertiary)',
+                      }}
+                    >
+                      {currentPlacedModule.freeRightGapLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}
+                    </button>
+                  </div>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"

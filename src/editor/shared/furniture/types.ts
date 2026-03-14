@@ -136,6 +136,8 @@ export interface PlacedModule {
   baseFrameOffset?: number;  // 자유배치 하부프레임 Z축 옵셋 (mm, 양수=앞, 음수=뒤)
   freeLeftGap?: number;      // 자유배치 노서라운드 좌측 이격거리 (mm)
   freeRightGap?: number;     // 자유배치 노서라운드 우측 이격거리 (mm)
+  freeLeftGapLocked?: boolean;  // 좌측 이격 잠금 (너비 변경 시 유지)
+  freeRightGapLocked?: boolean; // 우측 이격 잠금 (너비 변경 시 유지)
 
   // 엔드패널(EP) 설정
   hasLeftEndPanel?: boolean;     // 좌측 EP 표시 여부
