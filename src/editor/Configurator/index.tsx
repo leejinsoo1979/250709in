@@ -3332,7 +3332,7 @@ const Configurator: React.FC = () => {
                   clearAllModules(); // 가구 제거
 
                   const totalWidth = spaceInfo.width || 4800;
-                  const droppedWidth = 900; // 단내림 기본 폭
+                  const droppedWidth = isFreeMode ? 150 : 900; // 자유배치: 커튼박스 150mm, 슬롯: 단내림 900mm
                   const mainWidth = totalWidth - droppedWidth;
                   const mainRange = calculateDoorRange(mainWidth);
                   const currentCount = getCurrentColumnCount();
@@ -3350,7 +3350,7 @@ const Configurator: React.FC = () => {
                       dropHeight: isFreeMode ? 100 : 200,
                       position: 'right'
                     },
-                    droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
+                    droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
                   });
                   setActiveRightPanelTab('placement');
