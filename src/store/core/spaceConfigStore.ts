@@ -303,12 +303,6 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
   // 정수 슬롯 너비를 위한 초기 자동 조정
   const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(baseConfig);
   if (adjustmentResult.adjustmentMade) {
-    console.log('🎯 초기값 슬롯 정수화 자동 조정:', {
-      슬롯너비: adjustmentResult.slotWidth,
-      프레임크기: adjustmentResult.adjustedSpaceInfo.frameSize,
-      이격거리: adjustmentResult.adjustedSpaceInfo.gapConfig,
-      조정여부: adjustmentResult.adjustmentMade
-    });
     return adjustmentResult.adjustedSpaceInfo;
   }
 
@@ -329,7 +323,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   
   // 공간 정보 설정
   setSpaceInfo: (info) => {
-    console.log('🏪 [Store] setSpaceInfo 호출:', {
+// console.log('🏪 [Store] setSpaceInfo 호출:', {
       customColumnCount: info.customColumnCount,
       width: info.width,
       surroundType: info.surroundType,
@@ -339,7 +333,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     });
     // baseConfig.depth 업데이트 감지
     if (info.baseConfig?.depth !== undefined) {
-      console.log('📏 [Store] baseConfig.depth 업데이트 감지:', {
+// console.log('📏 [Store] baseConfig.depth 업데이트 감지:', {
         새값: info.baseConfig.depth,
         전체baseConfig: info.baseConfig
       });
@@ -407,7 +401,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
             tempSpaceInfo.layoutMode = preservedLayoutMode;
           }
 
-          console.log('🎯 슬롯 정수화 자동 조정 완료:', {
+// console.log('🎯 슬롯 정수화 자동 조정 완료:', {
             슬롯너비: adjustmentResult.slotWidth,
             프레임크기: tempSpaceInfo.frameSize,
             이격거리: tempSpaceInfo.gapConfig,
@@ -427,7 +421,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       ) {
         const furnitureState = useFurnitureStore.getState();
         if (furnitureState.placedModules.length > 0) {
-          console.log('🧹 단내림 위치 변경 → 배치된 가구 초기화', {
+// console.log('🧹 단내림 위치 변경 → 배치된 가구 초기화', {
             이전위치: previousDropped.position,
             새로운위치: nextDropped.position,
             초기화가구수: furnitureState.placedModules.length
@@ -443,7 +437,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         isDirty: true,
       };
       
-      console.log('🏪🏪🏪 [Store] 최종 spaceInfo:', {
+// console.log('🏪🏪🏪 [Store] 최종 spaceInfo:', {
         customColumnCount: newState.spaceInfo.customColumnCount,
         width: newState.spaceInfo.width,
         baseConfig: newState.spaceInfo.baseConfig,
@@ -451,7 +445,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       });
       // wallConfig 업데이트 디버그
       if (processedInfo.wallConfig) {
-        console.log('🏪 SpaceConfigStore - wallConfig 업데이트:', {
+// console.log('🏪 SpaceConfigStore - wallConfig 업데이트:', {
           이전: state.spaceInfo.wallConfig,
           새로운: processedInfo.wallConfig,
           최종: newState.spaceInfo.wallConfig
