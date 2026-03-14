@@ -4158,7 +4158,7 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
                 >
-                  가구기준
+                  가구에 맞춤
                 </button>
                 <button
                   style={{
@@ -4169,7 +4169,7 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
                 >
-                  도어기준
+                  도어에 맞춤
                 </button>
               </div>
               <div className={styles.subSetting}>
@@ -4306,7 +4306,7 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
                 >
-                  가구기준
+                  가구에 맞춤
                 </button>
                 <button
                   style={{
@@ -4317,7 +4317,7 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
                 >
-                  도어기준
+                  도어에 맞춤
                 </button>
               </div>
               <div className={styles.subSetting}>
