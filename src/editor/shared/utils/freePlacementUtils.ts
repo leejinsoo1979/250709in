@@ -184,44 +184,50 @@ export function calcResizedPositionX(
 ): number {
   const oldBounds = getModuleBoundsX(module);
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+  const halfNew = newWidthMm / 2;
 
-  const SNAP_THRESHOLD = 3; // 3mm 이내면 "붙어있다"로 판단
+  // ── 잠금 우선: lockedWallGaps가 있으면 잠긴 쪽 고정 ──
+  const lockedGaps = spaceInfo.lockedWallGaps;
+  const hasLeftLock = lockedGaps?.left != null;
+  const hasRightLock = lockedGaps?.right != null;
 
-  // 왼쪽에 뭔가 붙어있는지 확인 (벽 또는 다른 가구)
+  if (hasLeftLock && !hasRightLock) {
+    const fixedLeft = startX + lockedGaps.left!;
+    return (fixedLeft + halfNew) * 0.01;
+  }
+  if (hasRightLock && !hasLeftLock) {
+    const fixedRight = endX - lockedGaps.right!;
+    return (fixedRight - halfNew) * 0.01;
+  }
+  if (hasLeftLock && hasRightLock) {
+    // 양쪽 잠금 → 중심 고정
+    return module.position.x;
+  }
+
+  // ── 잠금 없음: 붙어있는 쪽 고정 (기존 로직) ──
+  const SNAP_THRESHOLD = 3;
+
   let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD;
-  // 오른쪽에 뭔가 붙어있는지 확인 (벽 또는 다른 가구)
   let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD;
 
-  // 다른 가구의 경계와 비교
   for (const other of allModules) {
-    if (other.id === module.id) continue;
-    if (!other.isFreePlacement) continue;
+    if (other.id === module.id || !other.isFreePlacement) continue;
     const otherBounds = getModuleBoundsX(other);
-    if (Math.abs(oldBounds.left - otherBounds.right) <= SNAP_THRESHOLD) {
-      leftAttached = true;
-    }
-    if (Math.abs(oldBounds.right - otherBounds.left) <= SNAP_THRESHOLD) {
-      rightAttached = true;
-    }
+    if (Math.abs(oldBounds.left - otherBounds.right) <= SNAP_THRESHOLD) leftAttached = true;
+    if (Math.abs(oldBounds.right - otherBounds.left) <= SNAP_THRESHOLD) rightAttached = true;
   }
 
   const currentCenterMm = module.position.x * 100;
   let newCenterMm: number;
 
   if (leftAttached && !rightAttached) {
-    // 왼쪽 고정 → 오른쪽으로만 확장
-    const fixedLeft = oldBounds.left;
-    newCenterMm = fixedLeft + newWidthMm / 2;
+    newCenterMm = oldBounds.left + halfNew;
   } else if (rightAttached && !leftAttached) {
-    // 오른쪽 고정 → 왼쪽으로만 확장
-    const fixedRight = oldBounds.right;
-    newCenterMm = fixedRight - newWidthMm / 2;
+    newCenterMm = oldBounds.right - halfNew;
   } else {
-    // 양쪽 다 붙어있거나, 양쪽 다 안 붙어있으면 → 중심 고정
     newCenterMm = currentCenterMm;
   }
 
-  // 공간 경계 내로 클램핑
   const clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
-  return clampedMm * 0.01; // Three.js 단위로 변환
+  return clampedMm * 0.01;
 }

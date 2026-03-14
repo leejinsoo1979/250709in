@@ -10,7 +10,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
-import { calcResizedPositionX, getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -2238,25 +2238,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          let newX: number;
-                          const lockedGaps = spaceInfo.lockedWallGaps;
-                          const hasLeftLock = lockedGaps?.left != null;
-                          const hasRightLock = lockedGaps?.right != null;
-                          if (currentPlacedModule.isFreePlacement && (hasLeftLock || hasRightLock)) {
-                            const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-                            if (hasLeftLock && !hasRightLock) {
-                              newX = (startX + lockedGaps.left! + val / 2) * 0.01;
-                            } else if (hasRightLock && !hasLeftLock) {
-                              newX = (endX - lockedGaps.right! - val / 2) * 0.01;
-                            } else {
-                              // 양쪽 잠금 → 중심 고정
-                              newX = currentPlacedModule.position.x;
-                            }
-                          } else {
-                            newX = currentPlacedModule.isFreePlacement
-                              ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
-                              : currentPlacedModule.position.x;
-                          }
+                          const newX = currentPlacedModule.isFreePlacement
+                            ? calcResizedPositionX(currentPlacedModule, val, placedModules, spaceInfo)
+                            : currentPlacedModule.position.x;
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: val,
                             moduleWidth: val,
@@ -2304,24 +2288,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeWidthInput(next.toString());
                           if (currentPlacedModule) {
-                            let newX: number;
-                            const lockedGapsKey = spaceInfo.lockedWallGaps;
-                            const hasLeftLockKey = lockedGapsKey?.left != null;
-                            const hasRightLockKey = lockedGapsKey?.right != null;
-                            if (currentPlacedModule.isFreePlacement && (hasLeftLockKey || hasRightLockKey)) {
-                              const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-                              if (hasLeftLockKey && !hasRightLockKey) {
-                                newX = (startX + lockedGapsKey.left! + next / 2) * 0.01;
-                              } else if (hasRightLockKey && !hasLeftLockKey) {
-                                newX = (endX - lockedGapsKey.right! - next / 2) * 0.01;
-                              } else {
-                                newX = currentPlacedModule.position.x;
-                              }
-                            } else {
-                              newX = currentPlacedModule.isFreePlacement
-                                ? calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo)
-                                : currentPlacedModule.position.x;
-                            }
+                            const newX = currentPlacedModule.isFreePlacement
+                              ? calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo)
+                              : currentPlacedModule.position.x;
                             updatePlacedModule(currentPlacedModule.id, {
                               freeWidth: next,
                               moduleWidth: next,
