@@ -23,11 +23,20 @@ export interface FurnitureBoundsX {
 export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number; endX: number } {
   const totalWidth = spaceInfo.width || 2400;
   const halfW = totalWidth / 2;
-  // 자유배치에서는 이격거리 적용하지 않음 — 전체 공간을 그대로 사용
-  return {
-    startX: -halfW,
-    endX: halfW,
-  };
+  let startX = -halfW;
+  let endX = halfW;
+
+  // 자유배치 구간분할: 서라운드구간 제외
+  if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.droppedCeiling?.enabled) {
+    const surroundWidth = spaceInfo.droppedCeiling.width || 0;
+    if (spaceInfo.droppedCeiling.position === 'left') {
+      startX += surroundWidth;
+    } else {
+      endX -= surroundWidth;
+    }
+  }
+
+  return { startX, endX };
 }
 
 /**
@@ -111,6 +120,11 @@ export function detectDroppedZone(
   furnitureWidthMM?: number
 ): { zone: 'normal' | 'dropped'; droppedInternalHeight?: number } {
   if (!spaceInfo.droppedCeiling?.enabled) {
+    return { zone: 'normal' };
+  }
+
+  // 자유배치모드: 구간분할은 bounds 축소로 처리, 높이 조정 없음
+  if (spaceInfo.layoutMode === 'free-placement') {
     return { zone: 'normal' };
   }
 

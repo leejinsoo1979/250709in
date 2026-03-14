@@ -1208,17 +1208,9 @@ const Room: React.FC<RoomProps> = ({
 
                 // 왼쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
                 if (hasDroppedCeiling && isLeftDropped) {
-                  // 단내림 벽 높이 = 전체 높이 - 단내림 높이차 (바닥부터 시작)
-                  const droppedWallHeight = height - droppedCeilingHeight;
+                  // 자유배치모드: 서라운드구간 벽은 전체 높이
+                  const droppedWallHeight = isFreePlacement ? height : (height - droppedCeilingHeight);
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
-
-// console.log('🔴 왼쪽 단내림 벽 렌더링:', {
-                    // '전체 높이': height / 0.01,
-                    // '단내림 높이차': droppedCeilingHeight / 0.01,
-                    // '단내림 벽 높이': droppedWallHeight / 0.01,
-                    // 'panelStartY': panelStartY,
-                    // 'droppedCenterY': droppedCenterY
-                  // });
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1277,17 +1269,9 @@ const Room: React.FC<RoomProps> = ({
 
                 // 오른쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
                 if (hasDroppedCeiling && isRightDropped) {
-                  // 단내림 벽 높이 = 전체 높이 - 단내림 높이차 (바닥부터 시작)
-                  const droppedWallHeight = height - droppedCeilingHeight;
+                  // 자유배치모드: 서라운드구간 벽은 전체 높이
+                  const droppedWallHeight = isFreePlacement ? height : (height - droppedCeilingHeight);
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
-
-// console.log('🔵 오른쪽 단내림 벽 렌더링:', {
-                    // '전체 높이': height / 0.01,
-                    // '단내림 높이차': droppedCeilingHeight / 0.01,
-                    // '단내림 벽 높이': droppedWallHeight / 0.01,
-                    // 'panelStartY': panelStartY,
-                    // 'droppedCenterY': droppedCenterY
-                  // });
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1418,10 +1402,10 @@ const Room: React.FC<RoomProps> = ({
               // '200mm 분절 확인': droppedCeilingHeight / 0.01 === 200 ? '✅' : '❌'
             // });
 
-            // 단내림 경계벽 X 위치 계산
+            // 단내림 경계벽 X 위치 계산 — 자유배치에서는 이격 없음
             const boundaryWallX = (() => {
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-              const BOUNDARY_OFFSET = 3; // mm
+              const BOUNDARY_OFFSET = isFreePlacement ? 0 : 3; // mm
               if (isLeftDropped) {
                 return mmToThreeUnits(zoneInfo.normal.startX - BOUNDARY_OFFSET);
               } else {

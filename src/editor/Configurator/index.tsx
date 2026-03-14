@@ -3298,7 +3298,7 @@ const Configurator: React.FC = () => {
         {(<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>단내림</h3>
+            <h3 className={styles.sectionTitle}>{isFreeMode ? '구간 분할' : '단내림'}</h3>
           </div>
 
           <div className={styles.toggleButtonGroup}>
@@ -3563,7 +3563,7 @@ const Configurator: React.FC = () => {
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
+              <h3 className={styles.sectionTitle}>{isFreeMode ? '서라운드 구간 사이즈' : '단내림 구간 사이즈'}</h3>
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
