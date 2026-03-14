@@ -1973,8 +1973,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 />
               )}
 
-              {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용) */}
-              {showDimensions && showDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
+              {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용, 자유배치모드 제외) */}
+              {showDimensions && showDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && spaceInfo?.layoutMode !== 'free-placement' && (
                 <CADDimensions2D
                   viewDirection={view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
@@ -2402,8 +2402,8 @@ const QuadrantContent: React.FC<{
         />
       )}
 
-      {/* 측면뷰 전용 치수 표시 - 4분할 뷰에서도 표시 (isStep2 조건 제거) */}
-      {showDimensions && showDimensionsText && (viewDirection === 'left' || viewDirection === 'right') && (
+      {/* 측면뷰 전용 치수 표시 - 4분할 뷰에서도 표시 (isStep2 조건 제거, 자유배치모드 제외) */}
+      {showDimensions && showDimensionsText && (viewDirection === 'left' || viewDirection === 'right') && spaceInfo?.layoutMode !== 'free-placement' && (
         <CADDimensions2D
           viewDirection={viewDirection}
           showDimensions={dimensionDisplayEnabled}
