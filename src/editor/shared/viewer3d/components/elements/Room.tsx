@@ -2577,6 +2577,8 @@ const Room: React.FC<RoomProps> = ({
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
 
                 // 각 모듈별 개별 상부프레임 생성
+                const isDoorBase = spaceInfo.surroundOffsetBase === 'door';
+                const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
                 return group.modules.map((mod) => {
                   const bounds = getModuleBoundsX(mod);
                   // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
@@ -2593,6 +2595,12 @@ const Room: React.FC<RoomProps> = ({
                   // 프레임 상단 = 천장에 맞추고 아래로 확장
                   const modFrameCenterY = panelStartY + height - modFrameHeight / 2;
 
+                  // 도어기준 + 공간맞춤 도어 + 도어가 있는 가구 → 상부프레임을 도어 두께만큼 뒤로
+                  // (도어가 상부프레임 영역까지 올라와 겹치므로)
+                  const DOOR_THICKNESS_MM = 18;
+                  const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
+                  const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
+
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -2607,7 +2615,7 @@ const Room: React.FC<RoomProps> = ({
                       position={[
                         mmToThreeUnits(modCenterXmm),
                         modFrameCenterY,
-                        topZPosition + topZOffset
+                        topZPosition + topZOffset + topFrameZRetract
                       ]}
                       material={topFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
