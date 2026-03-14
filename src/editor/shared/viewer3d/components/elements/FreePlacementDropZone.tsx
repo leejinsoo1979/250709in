@@ -574,8 +574,45 @@ const FreePlacementDropZone: React.FC = () => {
   }, [hoverXmm, activeDimensions, ghostYThree, ghostZPosition]);
 
   // 남은 공간 사이즈 계산 (배치된 가구 사이의 갭)
+  type GapInfo = {
+    startX: number; endX: number; width: number;
+    centerX: number; centerY: number;
+    adjacentModuleId: string | null;
+    leftModuleId?: string | null;
+    isWallGap: 'left' | 'right' | null;
+    gapType: 'left-wall' | 'right-wall' | 'between';
+    anchorX: number;
+  };
+
   const remainingGaps = useMemo(() => {
-    if (freeModules.length === 0) return [];
+    const { startX, endX } = spaceBounds;
+    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01;
+
+    // 가구가 없어도 잠금이 있으면 벽 갭 표시
+    if (freeModules.length === 0) {
+      const lockedGaps = spaceInfo.lockedWallGaps;
+      if (!lockedGaps?.left && !lockedGaps?.right) return [] as GapInfo[];
+      const result: GapInfo[] = [];
+      if (lockedGaps?.left != null) {
+        result.push({
+          startX, endX: startX + lockedGaps.left,
+          width: Math.round(lockedGaps.left),
+          centerX: ((startX + startX + lockedGaps.left) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: null, isWallGap: 'left', gapType: 'left-wall', anchorX: startX,
+        });
+      }
+      if (lockedGaps?.right != null) {
+        result.push({
+          startX: endX - lockedGaps.right, endX,
+          width: Math.round(lockedGaps.right),
+          centerX: ((endX - lockedGaps.right + endX) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: null, isWallGap: 'right', gapType: 'right-wall', anchorX: endX,
+        });
+      }
+      return result;
+    }
 
     // 모든 가구의 X범위를 구해서 왼쪽부터 정렬 (캐싱된 bounds + id 추가)
     const bounds = freeModules.map(m => ({
@@ -583,19 +620,7 @@ const FreePlacementDropZone: React.FC = () => {
       id: m.id,
     })).sort((a, b) => a.left - b.left);
 
-    const gaps: Array<{
-      startX: number; endX: number; width: number;
-      centerX: number; centerY: number;
-      adjacentModuleId: string | null; // 이격거리 변경 시 이동할 가구 (기본: 오른쪽)
-      leftModuleId?: string | null; // between 갭의 왼쪽 가구 ID
-      isWallGap: 'left' | 'right' | null; // 벽과의 갭인 경우
-      gapType: 'left-wall' | 'right-wall' | 'between'; // 갭 유형
-      anchorX: number; // 갭 기준점 (가구 이동 계산용, mm)
-    }> = [];
-    const { startX, endX } = spaceBounds;
-
-    // Y 위치: 모든 갭을 상단 치수선 위치에 표시 (CleanCAD2D의 slotDimensionY와 동일)
-    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01; // spaceHeight + DIM_GAP
+    const gaps: GapInfo[] = [];
 
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left - startX > 0.5) {
