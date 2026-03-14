@@ -233,21 +233,25 @@ const FreePlacementDropZone: React.FC = () => {
     const halfWidth = widthMm / 2;
     const { startX, endX } = spaceBounds;
 
-    // 잠긴 이격 구간을 가상 벽으로 처리 (새 가구 배치 시)
+    // 잠긴 이격 구간 침범 방지 (새 가구 배치 시)
+    // 잠긴 가구의 실제 위치 기준으로 잠긴 영역(벽~가구 끝) 차단
     let effectiveStartX = startX;
     let effectiveEndX = endX;
     for (const m of placedModules) {
       if (!m.isFreePlacement) continue;
+      const mBounds = getModuleBoundsX(m);
       if (m.freeLeftGapLocked && m.freeLeftGap != null && m.freeLeftGap > 0) {
-        const lockedWall = startX + m.freeLeftGap;
-        if (clampedX > lockedWall) {
-          effectiveStartX = Math.max(effectiveStartX, lockedWall);
+        // 잠긴 영역: startX ~ 가구 왼쪽 끝
+        const lockedZoneEnd = mBounds.left;
+        if (clampedX - halfWidth < lockedZoneEnd && clampedX > startX) {
+          effectiveStartX = Math.max(effectiveStartX, lockedZoneEnd);
         }
       }
       if (m.freeRightGapLocked && m.freeRightGap != null && m.freeRightGap > 0) {
-        const lockedWall = endX - m.freeRightGap;
-        if (clampedX < lockedWall) {
-          effectiveEndX = Math.min(effectiveEndX, lockedWall);
+        // 잠긴 영역: 가구 오른쪽 끝 ~ endX
+        const lockedZoneStart = mBounds.right;
+        if (clampedX + halfWidth > lockedZoneStart && clampedX < endX) {
+          effectiveEndX = Math.min(effectiveEndX, lockedZoneStart);
         }
       }
     }
@@ -737,29 +741,46 @@ const FreePlacementDropZone: React.FC = () => {
     const halfWidth = widthMm / 2;
     const { startX, endX } = spaceBounds;
 
-    // 잠긴 이격 구간을 가상 벽으로 처리 — 이동 중인 가구 자신의 잠금은 무시
+    // ── 자기 자신의 잠긴 이격 처리 ──
+    // 좌측 잠금: 좌측 끝(left edge)이 startX + lockedGap에 고정
+    if (movingModule.freeLeftGapLocked && movingModule.freeLeftGap != null) {
+      const fixedLeft = startX + movingModule.freeLeftGap;
+      clampedX = fixedLeft + halfWidth;
+    }
+    // 우측 잠금: 우측 끝(right edge)이 endX - lockedGap에 고정
+    if (movingModule.freeRightGapLocked && movingModule.freeRightGap != null) {
+      const fixedRight = endX - movingModule.freeRightGap;
+      clampedX = fixedRight - halfWidth;
+    }
+
+    // ── 다른 가구의 잠긴 이격 → 해당 영역 침범 불가 ──
     let effectiveStartX = startX;
     let effectiveEndX = endX;
     for (const m of placedModules) {
       if (m.id === moduleId || !m.isFreePlacement) continue;
+      const mBounds = getModuleBoundsX(m);
       if (m.freeLeftGapLocked && m.freeLeftGap != null && m.freeLeftGap > 0) {
-        const lockedWall = startX + m.freeLeftGap;
-        // 이동 가구가 잠긴 구간의 오른쪽에 있으면 effectiveStartX를 확장
-        if (clampedX > lockedWall) {
-          effectiveStartX = Math.max(effectiveStartX, lockedWall);
+        // 잠긴 영역: startX ~ m의 왼쪽 끝 (= startX + freeLeftGap)
+        const lockedZoneEnd = mBounds.left; // 가구의 왼쪽 끝이 잠긴 영역의 경계
+        if (clampedX - halfWidth < lockedZoneEnd && clampedX + halfWidth > startX) {
+          // 이동 가구가 잠긴 영역에 침범 → 영역 오른쪽으로 밀어냄
+          effectiveStartX = Math.max(effectiveStartX, lockedZoneEnd);
         }
       }
       if (m.freeRightGapLocked && m.freeRightGap != null && m.freeRightGap > 0) {
-        const lockedWall = endX - m.freeRightGap;
-        // 이동 가구가 잠긴 구간의 왼쪽에 있으면 effectiveEndX를 축소
-        if (clampedX < lockedWall) {
-          effectiveEndX = Math.min(effectiveEndX, lockedWall);
+        // 잠긴 영역: m의 오른쪽 끝 ~ endX (= endX - freeRightGap)
+        const lockedZoneStart = mBounds.right; // 가구의 오른쪽 끝이 잠긴 영역의 경계
+        if (clampedX + halfWidth > lockedZoneStart && clampedX - halfWidth < endX) {
+          // 이동 가구가 잠긴 영역에 침범 → 영역 왼쪽으로 밀어냄
+          effectiveEndX = Math.min(effectiveEndX, lockedZoneStart);
         }
       }
     }
 
-    // 잠긴 이격 경계 내로 클램핑
-    clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
+    // 잠긴 이격 경계 내로 클램핑 (자기 자신 잠금이 없는 경우만)
+    if (!movingModule.freeLeftGapLocked && !movingModule.freeRightGapLocked) {
+      clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
+    }
 
     // 자기 자신 제외한 가구의 X범위
     const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== moduleId);
@@ -768,7 +789,8 @@ const FreePlacementDropZone: React.FC = () => {
     let snapped = false;
 
     // 키보드 이동 시에는 스냅 건너뜀 (정확한 1mm 이동)
-    if (!skipSnap) {
+    // 자기 자신이 잠겨있으면 스냅도 건너뜀
+    if (!skipSnap && !movingModule.freeLeftGapLocked && !movingModule.freeRightGapLocked) {
       // 스냅 포인트 수집
       const snapPoints: number[] = [];
       snapPoints.push(effectiveStartX + halfWidth);
@@ -787,8 +809,6 @@ const FreePlacementDropZone: React.FC = () => {
       if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
     }
 
-    // 잠긴 이격 경계 내로 재클램핑
-    clampedX = Math.max(effectiveStartX + halfWidth, Math.min(effectiveEndX - halfWidth, clampedX));
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
 
     // 충돌 체크 (자기 자신 제외)
@@ -1349,7 +1369,7 @@ const FreePlacementDropZone: React.FC = () => {
                           justifyContent: 'center',
                           opacity: isLocked ? 1 : 0.4,
                           transition: 'opacity 0.15s',
-                          color: isLocked ? themeColor : '#999',
+                          color: isLocked ? '#e53e3e' : themeColor,
                           background: 'transparent',
                         }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
