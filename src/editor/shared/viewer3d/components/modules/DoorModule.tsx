@@ -758,11 +758,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 공간에 맞춤(space-fit): 항상 공간 높이 기준으로 도어 높이 계산
     // 가구에 맞춤(furniture-fit): 자유배치 시 effectiveInternalHeight(가구 높이) 사용
     const doorSetupMode = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+    const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
     if (doorSetupMode === 'space-fit') {
-      tallCabinetFurnitureHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
+      tallCabinetFurnitureHeight = spaceBasedHeight;
     } else {
-      tallCabinetFurnitureHeight = effectiveInternalHeight || (fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue);
+      tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
     }
+    console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight);
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
