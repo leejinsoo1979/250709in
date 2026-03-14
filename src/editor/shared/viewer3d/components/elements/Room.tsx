@@ -2586,8 +2586,8 @@ const Room: React.FC<RoomProps> = ({
                     : 0;
                   const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
                   const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-                  // 프레임 하단 = 가구 상판 위치 (freeHeight)
-                  const modFrameCenterY = panelStartY + mmToThreeUnits(modFreeHeight) + modFrameHeight / 2;
+                  // 프레임 상단 = 천장에 맞추고 아래로 확장
+                  const modFrameCenterY = panelStartY + height - modFrameHeight / 2;
 
                   return (
                     <BoxWithEdges
