@@ -77,6 +77,8 @@ export function checkFreeCollision(
   for (const existing of existingModules) {
     if (excludeId && existing.id === excludeId) continue;
     if (!existing.isFreePlacement) continue;
+    // 서라운드 패널은 별도 공간이므로 충돌 체크 제외
+    if (existing.isSurroundPanel) continue;
 
     const existBounds = getModuleBoundsX(existing);
 

@@ -11,6 +11,7 @@ import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetai
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -1153,6 +1154,89 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     // type: activePopup.type,
     // id: activePopup.id
   // });
+
+  // ── 서라운드 패널 전용 속성 패널 ──
+  if (currentPlacedModule?.isSurroundPanel) {
+    const panelTypeLabel = currentPlacedModule.surroundPanelType === 'left' ? '좌측 패널'
+      : currentPlacedModule.surroundPanelType === 'right' ? '우측 패널' : '상단 패널';
+    const currentWidth = currentPlacedModule.surroundPanelWidth || 40;
+    const isTopPanel = currentPlacedModule.surroundPanelType === 'top';
+    const widthMin = 18;
+    const widthMax = isTopPanel ? 100 : 200;
+
+    const handleSurroundWidthChange = (value: string) => {
+      const num = parseInt(value, 10);
+      if (isNaN(num)) return;
+      const clamped = Math.max(widthMin, Math.min(widthMax, num));
+      updatePlacedModule(currentPlacedModule.id, {
+        surroundPanelWidth: clamped,
+        ...(isTopPanel ? { freeHeight: SURROUND_PANEL_THICKNESS } : { freeWidth: SURROUND_PANEL_THICKNESS }),
+      });
+    };
+
+    return (
+      <div className={styles.overlay}>
+        <div className={styles.panel}>
+          <div className={styles.header}>
+            <div className={styles.headerTabs}>
+              <button className={`${styles.tabButton} ${styles.activeTab}`}>
+                서라운드 패널
+              </button>
+            </div>
+            <button className={styles.closeButton} onClick={() => closeAllPopups()} aria-label="닫기"></button>
+          </div>
+          <div className={styles.content}>
+            <div className={styles.moduleInfo}>
+              <div className={styles.moduleDetails}>
+                <h4 className={styles.moduleName}>{panelTypeLabel}</h4>
+                <div className={styles.property}>
+                  <span className={styles.propertyValue}>
+                    두께: {SURROUND_PANEL_THICKNESS}mm (고정) / 폭: {currentWidth}mm
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.propertySection}>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>패널 폭 (mm)</span>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={currentWidth}
+                    min={widthMin}
+                    max={widthMax}
+                    onChange={(e) => handleSurroundWidthChange(e.target.value)}
+                    style={{ width: 70, textAlign: 'right' }}
+                  />
+                  <span>mm</span>
+                </div>
+              </div>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>두께</span>
+                <span className={styles.propertyValue}>{SURROUND_PANEL_THICKNESS}mm (고정)</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '12px 0', borderTop: '1px solid var(--theme-border, #eee)' }}>
+              <button
+                className={`${styles.deleteButton}`}
+                onClick={() => {
+                  if (activePopup.id) {
+                    removeModule(activePopup.id);
+                    closeAllPopups();
+                  }
+                }}
+                style={{ width: '100%' }}
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 모듈 데이터가 없으면 렌더링하지 않음
   if (!currentPlacedModule || !moduleData) {
