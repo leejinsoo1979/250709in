@@ -105,10 +105,10 @@ export const useBaseFurniture = (
     shelfCount: 0
   };
 
-  // freeHeight 변경 시 sections 높이를 비례 조정한 modelConfig 생성
+  // freeHeight 변경 시 sections 높이를 조정한 modelConfig 생성
   // shelving.ts에서: dimensions.height = maxHeight = sections 합 (판재 두께 포함)
   // FurnitureItem에서: dimensions.height = freeHeight로 오버라이드
-  // 따라서: sections 합(=원래 dimensions.height) vs 현재 dimensions.height(=freeHeight)로 비교
+  // drawer 섹션은 고정(하드웨어 제약), 나머지 섹션만 높이 변화를 흡수
   const modelConfig = useMemo(() => {
     if (!originalModelConfig.sections || originalModelConfig.sections.length === 0) {
       return originalModelConfig;
@@ -130,15 +130,41 @@ export const useBaseFurniture = (
       return originalModelConfig;
     }
 
-    // 비율 계산: 새 높이 / 원래 높이 (sections 합 기준, 판재 두께 포함)
-    const preciseRatio = renderHeightMm / originalSectionsTotal;
-    const scaledSections = originalModelConfig.sections.map((section: SectionConfig) => ({
-      ...section,
-      height: section.heightType === 'absolute'
-        ? Math.round(section.height * preciseRatio)
-        : section.height,
-      shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * preciseRatio))
-    }));
+    // drawer 섹션은 고정, 나머지 섹션만 높이 변화 흡수
+    const drawerTotal = originalModelConfig.sections.reduce((sum: number, s: SectionConfig) => {
+      return sum + (s.heightType === 'absolute' && s.type === 'drawer' ? s.height : 0);
+    }, 0);
+    const nonDrawerTotal = originalSectionsTotal - drawerTotal;
+    const hasDrawerSections = drawerTotal > 0 && nonDrawerTotal > 0;
+
+    const scaledSections = originalModelConfig.sections.map((section: SectionConfig) => {
+      if (section.heightType !== 'absolute') {
+        return section;
+      }
+
+      if (hasDrawerSections) {
+        // drawer 섹션 고정, non-drawer 섹션만 조정
+        if (section.type === 'drawer') {
+          return section; // 서랍은 고정
+        }
+        // non-drawer 섹션: 잔여 높이를 비례 배분
+        const remainingHeight = renderHeightMm - drawerTotal;
+        const nonDrawerRatio = remainingHeight / nonDrawerTotal;
+        return {
+          ...section,
+          height: Math.round(section.height * nonDrawerRatio),
+          shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * nonDrawerRatio))
+        };
+      } else {
+        // drawer 섹션이 없으면 기존처럼 전체 비례 조정
+        const preciseRatio = renderHeightMm / originalSectionsTotal;
+        return {
+          ...section,
+          height: Math.round(section.height * preciseRatio),
+          shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * preciseRatio))
+        };
+      }
+    });
 
     return {
       ...originalModelConfig,

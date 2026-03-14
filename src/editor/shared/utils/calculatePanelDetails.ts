@@ -142,11 +142,28 @@ export const calculatePanelDetails = (
         sectionName = '';
       }
 
-      // 실제 섹션 높이 계산 (전체 높이 기준, freeHeight 비례 스케일링 적용)
+      // 실제 섹션 높이 계산 (drawer 고정, non-drawer만 높이 변화 흡수)
       let sectionHeightMm;
       if (section.heightType === 'absolute') {
-        // 절대값은 정의된 값에 비례 스케일링 적용
-        sectionHeightMm = Math.round((section.height || 0) * heightRatio);
+        // drawer 섹션은 고정, non-drawer 섹션만 높이 변화 흡수
+        const drawerTotal = sections
+          .filter(s => s.heightType === 'absolute' && s.type === 'drawer')
+          .reduce((sum, s) => sum + (s.height || 0), 0);
+        const nonDrawerTotal = totalFixedHeight - drawerTotal;
+        const hasDrawerSections = drawerTotal > 0 && nonDrawerTotal > 0;
+
+        if (hasDrawerSections && section.type === 'drawer') {
+          // 서랍 섹션은 고정
+          sectionHeightMm = section.height || 0;
+        } else if (hasDrawerSections) {
+          // non-drawer 섹션: 잔여 높이를 비례 배분
+          const remainingForNonDrawer = height - drawerTotal;
+          const nonDrawerRatio = remainingForNonDrawer / nonDrawerTotal;
+          sectionHeightMm = Math.round((section.height || 0) * nonDrawerRatio);
+        } else {
+          // drawer 섹션이 없으면 기존처럼 전체 비례 조정
+          sectionHeightMm = Math.round((section.height || 0) * heightRatio);
+        }
       } else {
         // 비율 섹션은 남은 높이에서 계산
         const variableSections = sections.filter(s => s.heightType !== 'absolute');
@@ -314,10 +331,11 @@ export const calculatePanelDetails = (
         for (let i = 0; i < section.count; i++) {
           const drawerNum = i + 1;
 
-          // 개별 서랍 높이 (drawerHeights 배열에서 가져오거나 균등 분할, freeHeight 비례 적용)
+          // 개별 서랍 높이 (drawerHeights 배열에서 가져오거나 균등 분할)
+          // drawer 섹션은 고정이므로 heightRatio 적용하지 않음
           let individualDrawerHeight;
           if (drawerHeights && drawerHeights[i]) {
-            individualDrawerHeight = Math.round(drawerHeights[i] * heightRatio);
+            individualDrawerHeight = drawerHeights[i];
           } else {
             // 균등 분할 (전체 섹션 높이 - 칸막이 두께) / 서랍 개수
             individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
