@@ -4080,10 +4080,12 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
-        {/* 서라운드 섹션 — 좌→우 순서 */}
+        {/* 서라운드 섹션 — 좌→우 순서 (하나라도 enabled일 때만 표시) */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
+          const anyEnabled = fs.left?.enabled || fs.right?.enabled || fs.top?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
+          if (!anyEnabled) return null;
           const middleGaps = fs.middle || [];
 
           // 서라운드 목록: 좌 → 중간들 → 우 (좌→우 순서)
@@ -4250,10 +4252,12 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 상,하부프레임 섹션 — 가구별 좌→우 순서 */}
+        {/* 상,하부프레임 섹션 — 가구별 좌→우 순서 (서라운드 활성 시만) */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
+          const anyEnabled = fs.left?.enabled || fs.right?.enabled || fs.top?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
+          if (!anyEnabled) return null;
           const freeMods = placedModules.filter(m => m.isFreePlacement);
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
