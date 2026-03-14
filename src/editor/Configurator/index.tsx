@@ -4833,12 +4833,11 @@ const Configurator: React.FC = () => {
                       clearAllModules();
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
-                    // 슬롯→자유배치 전환 시 기존 단내림이 켜져 있으면 커튼박스 기본값으로 변경
+                    // 슬롯→자유배치 전환 시 커튼박스 기본값: 없음
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
                         ...spaceInfo.droppedCeiling,
-                        width: 150,
-                        dropHeight: 100,
+                        enabled: false,
                       };
                     }
                     handleSpaceInfoUpdate(updates);
