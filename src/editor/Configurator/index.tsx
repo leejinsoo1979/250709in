@@ -3683,7 +3683,7 @@ const Configurator: React.FC = () => {
                         const newCurtainH = parseInt(inputValue);
                         // dropHeight = 커튼박스높이 - 메인높이
                         const newDropHeight = newCurtainH - totalHeight;
-                        const clampedDrop = Math.max(50, Math.min(500, newDropHeight));
+                        const clampedDrop = Math.max(10, Math.min(500, newDropHeight));
                         e.target.value = (totalHeight + clampedDrop).toString();
                         handleSpaceInfoUpdate({
                           droppedCeiling: {
