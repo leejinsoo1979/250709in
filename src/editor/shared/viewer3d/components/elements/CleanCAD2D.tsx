@@ -13,7 +13,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
-import { calculateFrameThickness, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
+import { calculateFrameThickness, calculateInternalSpace, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
@@ -2648,18 +2648,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
           
-          // 자유배치 시 맨 오른쪽 가구의 topFrameThickness 사용 (우측 치수선이니까)
+          // 상부프레임 = 공간높이 - 받침대 - 맨 오른쪽 가구 높이 (실제 렌더링과 동일)
           const globalTopFrame = frameSize.top ?? 0;
+          const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
           const freeMods = placedModules.filter(m => m.isFreePlacement);
           const rightmostMod = freeMods.length > 0
             ? freeMods.reduce((r, m) => m.position.x > r.position.x ? m : r)
             : null;
+          const internalHeight = calculateInternalSpace(spaceInfo).height;
+          const rightmostFurnitureHeight = rightmostMod
+            ? (rightmostMod.freeHeight || internalHeight)
+            : 0;
           const topFrameHeight = rightmostMod
-            ? (rightmostMod.topFrameThickness ?? globalTopFrame)
+            ? Math.max(0, spaceInfo.height - bottomFrameHeight - rightmostFurnitureHeight - floatHeight)
             : globalTopFrame; // 상부 프레임 높이
-          const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
           const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
-          const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
+          const cabinetPlacementHeight = rightmostMod
+            ? rightmostFurnitureHeight  // 가구가 있으면 가구 높이가 캐비넷 영역
+            : Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0);
 
           const floorFinishH = floorFinishHeightMmGlobal; // 바닥마감재 높이 (mm)
           const bottomY = mmToThreeUnits(floatHeight); // 바닥 시작점

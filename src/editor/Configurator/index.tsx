@@ -4327,10 +4327,18 @@ const Configurator: React.FC = () => {
                   if (cat !== 'upper' && cat !== 'full') return null;
                   topNum++;
                   const tn = topNum;
+                  // 실제 렌더링되는 상부프레임 높이 = 공간높이 - 받침대 - 가구높이
+                  const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                  const modHeight = mod.freeHeight || calculateInternalSpace(spaceInfo).height;
+                  const actualTopFrameSize = Math.max(0, spaceInfo.height - baseH - modHeight);
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
-                    mod.hasTopFrame !== false, mod.topFrameThickness ?? spaceInfo.frameSize?.top ?? 18, mod.topFrameOffset ?? 0,
+                    mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                    (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
+                    (v) => {
+                      // size 변경 → 가구 높이를 역산: freeHeight = 공간높이 - 받침대 - 새 topFrame
+                      const newFreeHeight = Math.max(100, spaceInfo.height - baseH - v);
+                      updatePlacedModule(mod.id, { topFrameThickness: v, freeHeight: newFreeHeight });
+                    },
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                     `top-${mod.id}`,
                   )}</React.Fragment>;
