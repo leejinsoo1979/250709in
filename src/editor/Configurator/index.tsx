@@ -861,6 +861,10 @@ const Configurator: React.FC = () => {
         spaceConfig.mainDoorCount = undefined;
         spaceConfig.droppedCeilingDoorCount = undefined;
         spaceConfig.customColumnCount = undefined;
+        // 이전 프로젝트의 lockedWallGaps가 남지 않도록 — 데이터에 없으면 명시적 null로 덮어쓰기
+        if (!('lockedWallGaps' in spaceConfig) || spaceConfig.lockedWallGaps == null) {
+          spaceConfig.lockedWallGaps = undefined;
+        }
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
         setSpaceInfo(spaceConfig);
@@ -2069,6 +2073,10 @@ const Configurator: React.FC = () => {
                   droppedCeilingDoorCount: undefined,
                   customColumnCount: undefined
                 };
+                // 이전 디자인 파일의 lockedWallGaps가 남지 않도록 명시적 초기화
+                if (!('lockedWallGaps' in spaceConfig) || spaceConfig.lockedWallGaps == null) {
+                  spaceConfig.lockedWallGaps = undefined;
+                }
                 setSpaceInfo(spaceConfig);
 // console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
