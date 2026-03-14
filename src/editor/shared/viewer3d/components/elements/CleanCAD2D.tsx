@@ -2613,6 +2613,75 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         />
       </group>}
 
+      {/* 자유배치 커튼박스: 커튼박스 측 전체 높이(height + dropHeight) 치수선 */}
+      {showDimensions && isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
+        const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
+        const totalH = spaceInfo.height + dropH;
+        const totalHThree = mmToThreeUnits(totalH);
+        const isLeftCurtain = spaceInfo.droppedCeiling.position === 'left';
+        // 커튼박스가 좌측이면 좌측 외측, 우측이면 우측 외측에 치수선 표시
+        const dimX = isLeftCurtain
+          ? leftDimensionX + leftOffset - mmToThreeUnits(100)                          // 기존 좌측 치수선보다 더 바깥쪽
+          : mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(120);        // 우측 바깥쪽
+        const midY = totalHThree / 2;
+        return (
+          <group>
+            {/* 전체 치수선 (바닥 ~ 커튼박스 천장) */}
+            <NativeLine name="dimension_line"
+              points={[[dimX, 0, 0.002], [dimX, totalHThree, 0.002]]}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+            />
+            {/* 하단 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([dimX, 0, 0.002], [dimX, 0.05, 0.002])}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+            />
+            {/* 상단 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([dimX, totalHThree, 0.002], [dimX, totalHThree - 0.05, 0.002])}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+            />
+            {/* 전체 높이 텍스트 */}
+            <Text
+              renderOrder={1000} depthTest={false}
+              position={[dimX + (isLeftCurtain ? -mmToThreeUnits(60) : mmToThreeUnits(60)), midY, 0.01]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center" anchorY="middle"
+              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+              rotation={[0, 0, -Math.PI / 2]}
+            >
+              {totalH}
+            </Text>
+
+            {/* 연장선: 커튼박스 천장 → 치수선 */}
+            {isLeftCurtain ? (
+              <NativeLine name="dimension_line"
+                points={[[leftOffset, totalHThree, 0.001], [dimX + mmToThreeUnits(20), totalHThree, 0.001]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+            ) : (
+              <NativeLine name="dimension_line"
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, totalHThree, 0.001], [dimX - mmToThreeUnits(20), totalHThree, 0.001]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+            )}
+            {/* 연장선: 바닥 → 치수선 */}
+            {isLeftCurtain ? (
+              <NativeLine name="dimension_line"
+                points={[[leftOffset, 0, 0.001], [dimX + mmToThreeUnits(20), 0, 0.001]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+            ) : (
+              <NativeLine name="dimension_line"
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [dimX - mmToThreeUnits(20), 0, 0.001]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+            )}
+          </group>
+        );
+      })()}
+
       {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) — 자유배치모드에서는 가구 배치 후 표시 */}
       {showDimensions && (!isFreePlacement || placedModules.length > 0) && (
       <group>
@@ -5095,6 +5164,54 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={1}
             />
           )}
+
+          {/* 자유배치 커튼박스: 전체 높이(height + dropHeight) 치수선 — 좌측뷰 */}
+          {isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
+            const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
+            const totalH = spaceInfo.height + dropH;
+            const totalHThree = mmToThreeUnits(totalH);
+            const dimX = rightDimensionX + mmToThreeUnits(100); // 기존 우측 치수선보다 더 바깥쪽
+            const zPos = spaceZOffset - mmToThreeUnits(200);
+            const midY = totalHThree / 2;
+            return (
+              <>
+                {/* 전체 치수선 (바닥 ~ 커튼박스 천장) */}
+                <Line
+                  points={[[dimX, 0, zPos], [dimX, totalHThree, zPos]]}
+                  color={dimensionColor} lineWidth={1}
+                />
+                {/* 하단 화살표 */}
+                <Line
+                  points={createArrowHead([dimX, 0, zPos], [dimX, 0.05, zPos])}
+                  color={dimensionColor} lineWidth={1}
+                />
+                {/* 상단 화살표 */}
+                <Line
+                  points={createArrowHead([dimX, totalHThree, zPos], [dimX, totalHThree - 0.05, zPos])}
+                  color={dimensionColor} lineWidth={1}
+                />
+                {/* 전체 높이 텍스트 */}
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    renderOrder={1000} depthTest={false}
+                    position={[dimX + mmToThreeUnits(60), midY, zPos]}
+                    fontSize={largeFontSize}
+                    color={textColor}
+                    anchorX="center" anchorY="middle"
+                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {totalH}
+                  </Text>
+                )}
+                {/* 연장선: 커튼박스 천장 → 치수선 */}
+                <Line
+                  points={[[actualSpaceWidth, totalHThree, spaceZOffset], [actualSpaceWidth, totalHThree, zPos + mmToThreeUnits(20)]]}
+                  color={dimensionColor} lineWidth={1}
+                />
+              </>
+            );
+          })()}
         </group>}
 
         {/* 좌측 3구간 높이 치수선 */}
