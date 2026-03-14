@@ -2834,25 +2834,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
 
-              {/* 1-1. 받침대 깊이 - 받침대가 있고 좌우측면뷰에서만 표시 (정면뷰에서는 숨김) */}
-              {bottomFrameHeight > 0 && view2DDirection !== 'front' && (
-              <group>
-                <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + bottomFrameHeight) - mmToThreeUnits(10), 0.01]}
-                  fontSize={baseFontSize * 0.8}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  outlineWidth={textOutlineWidth}
-                  outlineColor={textOutlineColor}
-                  rotation={[0, 0, -Math.PI / 2]}
-                >
-                  (D{bottomFrameDepth})
-                </Text>
-              </group>
-              )}
+              {/* 받침대 깊이 (D값) — 공간 깊이(그라데이션 메쉬)일 뿐 설계와 무관하므로 표시하지 않음 */}
               
               {/* 2. 캐비넷/가구 높이 또는 상부섹션 높이 */}
               {/* 띄움 배치가 아니거나 상하부장 분리되지 않은 경우: 통합 가구 높이 표시 */}
