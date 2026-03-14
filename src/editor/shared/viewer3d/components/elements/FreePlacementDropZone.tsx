@@ -149,9 +149,9 @@ const FreePlacementDropZone: React.FC = () => {
     // 좌→우 정렬 순서
     const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
 
-    // 각 가구의 싱글/듀얼별 min/max 계산
+    // 각 가구의 싱글/듀얼별 min/max 계산 (isDualSlot 우선, moduleId 폴백)
     const limits = sorted.map(mod => {
-      const isDual = mod.isDualSlot === true;
+      const isDual = mod.isDualSlot === true || mod.moduleId?.includes('dual-');
       return { min: isDual ? 800 : 400, max: isDual ? 1200 : 600 };
     });
 
