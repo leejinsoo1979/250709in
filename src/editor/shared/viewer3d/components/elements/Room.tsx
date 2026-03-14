@@ -2584,7 +2584,8 @@ const Room: React.FC<RoomProps> = ({
                   const gapMM = (modFreeHeight > 0 && modFreeHeight < internalSpaceHeight)
                     ? internalSpaceHeight - modFreeHeight
                     : 0;
-                  const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
+                  // gap이 있으면 gap만큼만 (가구 상판과 겹치지 않도록), 없으면 기본 두께
+                  const totalFrameHeightMM = gapMM > 0 ? gapMM : baseFrameThicknessMM;
                   const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
                   // 프레임 상단 = 천장에 맞추고 아래로 확장
                   const modFrameCenterY = panelStartY + height - modFrameHeight / 2;
