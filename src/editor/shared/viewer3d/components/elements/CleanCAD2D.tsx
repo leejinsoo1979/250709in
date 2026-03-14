@@ -1597,30 +1597,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                   >
                     {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
-                          leftReduction = 0;
-                          rightReduction = 0;
-                        }
+                      // 자유배치: 이격거리 없이 순수 너비 사용
+                      if (isFreePlacement) {
+                        return Math.round(mainWidth);
                       }
-
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       return Math.round(zoneSlotInfo.normal.width);
@@ -1657,30 +1637,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                   >
                     {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
-                          leftReduction = 0;
-                          rightReduction = 0;
-                        }
+                      // 자유배치: 이격거리 없이 순수 너비 사용
+                      if (isFreePlacement) {
+                        return Math.round(droppedWidth);
                       }
-
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
@@ -3844,13 +3804,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
+                      // 자유배치: 이격거리 없이 순수 너비 사용
+                      if (isFreePlacement) {
+                        return Math.round(mainWidth);
+                      }
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       return Math.round(zoneSlotInfo.normal.width);
                     })()}
                   </Text>
                 )}
-                
+
                 {/* 단내림 구간 치수선 */}
                 <Line
                   points={[[droppedStartX, spaceHeight, subDimensionZ], [droppedEndX, spaceHeight, subDimensionZ]]}
@@ -3905,6 +3869,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
+                      // 자유배치: 이격거리 없이 순수 너비 사용
+                      if (isFreePlacement) {
+                        return Math.round(droppedWidth);
+                      }
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
@@ -6026,12 +5994,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
+                      // 자유배치: 이격거리 없이 순수 너비 사용
+                      if (isFreePlacement) {
+                        return Math.round(mainWidth);
+                      }
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       return Math.round(zoneSlotInfo.normal.width);
                     })()}
                   </Text>
-                  
+
                   {/* 단내림 구간 치수선 */}
                   <Line
                     points={[[droppedStartX, spaceHeight, subDimensionZ], [droppedEndX, spaceHeight, subDimensionZ]]}
@@ -6085,6 +6057,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
+                      // 자유배치: 이격거리 없이 순수 너비 사용
+                      if (isFreePlacement) {
+                        return Math.round(droppedWidth);
+                      }
                       // ColumnIndexer의 실제 계산된 너비 사용
                       const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
