@@ -2235,9 +2235,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
         const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
 
-        // 좌우분할(horizontalSplit) + 좌/우 개별 깊이가 다른 경우 → 발판 분리
+        // 좌우분할(horizontalSplit) → 각 섹션마다 조절발 분리
         const hs = lowerSection?.horizontalSplit;
-        if (hs && (hs.leftDepth || hs.rightDepth)) {
+        if (hs) {
           const totalInnerWMm = (footWidth - 2 * t) / 0.01;
           const leftInnerWMm = hs.position;
           const leftOuterW = mmToUnit(leftInnerWMm + 2 * panelThickness);
