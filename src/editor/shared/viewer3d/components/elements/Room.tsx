@@ -4095,6 +4095,9 @@ export default React.memo(Room, (prevProps, nextProps) => {
   // freeSurround 비교 (자유배치 서라운드 토글)
   if (JSON.stringify(prevSpace.freeSurround) !== JSON.stringify(nextSpace.freeSurround)) return false;
 
+  // surroundOffsetBase 비교 (서라운드 옵셋 기준 변경)
+  if (prevSpace.surroundOffsetBase !== nextSpace.surroundOffsetBase) return false;
+
   // 가구 배치 비교
   const prevModules = prevProps.placedModules || [];
   const nextModules = nextProps.placedModules || [];
