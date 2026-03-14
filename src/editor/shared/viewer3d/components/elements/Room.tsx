@@ -2638,8 +2638,8 @@ const Room: React.FC<RoomProps> = ({
               {/* 자유배치 좌측 서라운드 — L자 (전면에서 이격 가림) */}
               {spaceInfo.freeSurround?.left?.enabled && hasFreeMods && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
-                const method = leftCfg.method || 'none';
-                console.log('🔍 [Room] LEFT surround:', { enabled: leftCfg.enabled, method, gap: leftCfg.gap, highlightedFrame });
+                // method 미설정 시 gap 기반 자동 결정 (gap > 2 → lshape)
+                const method = leftCfg.method || ((leftCfg.gap && leftCfg.gap > 2) ? 'lshape' : 'none');
                 if (method === 'none') return null;
                 const gapMM = leftCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
@@ -2734,8 +2734,8 @@ const Room: React.FC<RoomProps> = ({
               {/* 자유배치 우측 서라운드 — L자 (전면에서 이격 가림) */}
               {spaceInfo.freeSurround?.right?.enabled && hasFreeMods && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
-                const method = rightCfg.method || 'none';
-                console.log('🔍 [Room] RIGHT surround:', { enabled: rightCfg.enabled, method, gap: rightCfg.gap, highlightedFrame });
+                // method 미설정 시 gap 기반 자동 결정
+                const method = rightCfg.method || ((rightCfg.gap && rightCfg.gap > 2) ? 'lshape' : 'none');
                 if (method === 'none') return null;
                 const gapMM = rightCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
@@ -2828,7 +2828,9 @@ const Room: React.FC<RoomProps> = ({
 
               {/* 자유배치 중간 gap 서라운드 — 가구 사이 빈 공간 가림 */}
               {spaceInfo.freeSurround?.middle?.map((midCfg, idx) => {
-                if (!midCfg.enabled || midCfg.method === 'none') return null;
+                // method 미설정 시 gap 기반 자동 결정
+                const midMethod = midCfg.method || ((midCfg.gap && midCfg.gap > 2) ? 'lshape' : 'none');
+                if (!midCfg.enabled || midMethod === 'none') return null;
                 const gapMM = midCfg.gap;
                 const centerXmm = (midCfg.leftX + midCfg.rightX) / 2;
                 const surrH = adjustedPanelHeight;

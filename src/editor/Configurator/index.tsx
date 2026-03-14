@@ -4921,12 +4921,13 @@ const Configurator: React.FC = () => {
                 const isActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
 
                 if (isActive) {
-                  // 서라운드 제거 — setSpaceInfo 직접 호출
+                  // 서라운드 비활성화 — 기존 middle 데이터 유지하면서 enabled만 false
                   setSpaceInfo({
                     freeSurround: {
-                      left: { enabled: false, size: 18, offset: 0 },
-                      top: { enabled: false, size: 30, offset: 0 },
-                      right: { enabled: false, size: 18, offset: 0 },
+                      left: { ...fs!.left, enabled: false },
+                      top: { ...fs!.top, enabled: false },
+                      right: { ...fs!.right, enabled: false },
+                      middle: fs!.middle?.map(m => ({ ...m, enabled: false })),
                     }
                   });
                   return;
