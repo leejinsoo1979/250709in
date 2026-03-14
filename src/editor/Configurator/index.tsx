@@ -181,9 +181,11 @@ const Configurator: React.FC = () => {
     else setDoorBottomGapInput(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
+      console.log(`🚪 [도어갭변경] ${field}=${num}, 도어가구수=${placedModules.filter(m => m.hasDoor).length}`);
       setSpaceInfo({ [field]: num });
       // 모든 도어 가구에 일괄 적용
       placedModules.filter(m => m.hasDoor).forEach(m => {
+        console.log(`🚪 [도어갭적용] ${m.id}: ${field}=${num}, 기존값=${(m as any)[field]}`);
         updatePlacedModule(m.id, { [field]: num });
       });
     }
@@ -4098,11 +4100,11 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
-        {/* 서라운드 섹션 — 좌→우 순서 (하나라도 enabled일 때만 표시) */}
+        {/* 서라운드 섹션 — 좌→우 순서 (좌/우/중간 중 하나라도 enabled일 때만 표시) */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
-          const anyEnabled = fs.left?.enabled || fs.right?.enabled || fs.top?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
+          const anyEnabled = fs.left?.enabled || fs.right?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
           if (!anyEnabled) return null;
           const middleGaps = fs.middle || [];
 
@@ -4274,7 +4276,7 @@ const Configurator: React.FC = () => {
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
-          const anyEnabled = fs.left?.enabled || fs.right?.enabled || fs.top?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
+          const anyEnabled = fs.left?.enabled || fs.right?.enabled || (fs.middle?.some(m => m.enabled) ?? false);
           if (!anyEnabled) return null;
           const freeMods = placedModules.filter(m => m.isFreePlacement);
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
