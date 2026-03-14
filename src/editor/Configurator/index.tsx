@@ -4104,7 +4104,7 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 70px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
@@ -4271,7 +4271,7 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <>
-                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 70px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
