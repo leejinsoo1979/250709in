@@ -1458,11 +1458,19 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 커튼박스 구간 + 버튼 (구간분할 활성 + 가구 배치됨 + 서라운드 미생성) */}
       {(() => {
-        if (!spaceInfo.droppedCeiling?.enabled) return null;
         const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
-        if (freeModsForBtn.length === 0) return null;
         const fs = spaceInfo.freeSurround;
         const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
+
+        console.log('🔵 [+BTN]', {
+          dropped: !!spaceInfo.droppedCeiling?.enabled,
+          mods: freeModsForBtn.length,
+          surroundActive: isSurroundActive,
+          fs: !!fs,
+        });
+
+        if (!spaceInfo.droppedCeiling?.enabled) return null;
+        if (freeModsForBtn.length === 0) return null;
         if (isSurroundActive) return null;
 
         const totalWidth = spaceInfo.width || 2400;
