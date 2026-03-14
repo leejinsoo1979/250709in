@@ -39,13 +39,13 @@
 }
 
 .tabTrigger:hover {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--theme-background-secondary, #f5f5f5);
+  color: var(--theme-text-primary, #333);
 }
 
 .tabTrigger[data-state="active"] {
-  background: #2196F3;
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-text-on-primary, #fff);
 }
 
 .implementationToggle {
@@ -103,7 +103,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #e0e0e0;
-  border-top-color: #2196F3;
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -147,8 +147,8 @@
 
 .retryButton {
   padding: 8px 16px;
-  background: #2196F3;
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-text-on-primary, #fff);
   border: none;
   border-radius: 4px;
   font-size: 14px;

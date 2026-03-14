@@ -72,8 +72,8 @@
 
 .resetButton {
   padding: 6px 12px;
-  background: #2196F3;
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-text-on-primary, #fff);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -137,9 +137,9 @@
 }
 
 .toolButton.active {
-  background: #2196F3;
-  color: white;
-  border-color: #2196F3;
+  background: var(--theme-primary);
+  color: var(--theme-text-on-primary, #fff);
+  border-color: var(--theme-primary);
 }
 
 /* Info panel */

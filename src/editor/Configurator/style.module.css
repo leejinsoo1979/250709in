@@ -795,9 +795,9 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1.5px solid #d1d5db;
-  background: rgba(255, 255, 255, 0.92);
-  color: #6b7280;
+  border: 1.5px solid var(--theme-border, #d1d5db);
+  background: color-mix(in srgb, var(--theme-background-primary, #fff) 92%, transparent);
+  color: var(--theme-text-muted, #6b7280);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -964,15 +964,15 @@
 
 /* 3D 모드 전용 도어 버튼 스타일 */
 .viewerDoorButton3D {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
+  background: var(--theme-background-primary, #fff) !important;
+  background-color: var(--theme-background-primary, #fff) !important;
   background-image: none !important;
-  border: 1px solid #cccccc !important;
+  border: 1px solid var(--theme-border, #cccccc) !important;
   border-radius: 20px !important;
   padding: 8px 16px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
-  color: #666666 !important;
+  color: var(--theme-text-secondary, #666666) !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   min-width: 60px !important;
@@ -987,23 +987,23 @@
 }
 
 .viewerDoorButton3D:hover {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  border-color: #007AFF !important;
-  color: #007AFF !important;
+  background: var(--theme-background-primary, #fff) !important;
+  background-color: var(--theme-background-primary, #fff) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-primary) !important;
 }
 
 .viewerDoorButton3D.active {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  border: 2px solid #007AFF !important;
-  color: #007AFF !important;
+  background: var(--theme-background-primary, #fff) !important;
+  background-color: var(--theme-background-primary, #fff) !important;
+  border: 2px solid var(--theme-primary) !important;
+  color: var(--theme-primary) !important;
   font-weight: 600 !important;
 }
 
 .viewerDoorButton3D.active:hover {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
+  background: var(--theme-background-primary, #fff) !important;
+  background-color: var(--theme-background-primary, #fff) !important;
 }
 
 /* 우측 패널 */

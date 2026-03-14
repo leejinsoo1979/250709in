@@ -35,10 +35,10 @@
   --color-text: #333333;
   --color-text-secondary: #666666;
   --color-primary: #4CAF50;
-  --color-info: #2196F3;
-  --color-info-background: rgba(33, 150, 243, 0.1);
-  --color-info-border: rgba(33, 150, 243, 0.3);
-  --color-info-text: #1976D2;
+  --color-info: var(--theme-primary, #2196F3);
+  --color-info-background: color-mix(in srgb, var(--theme-primary, #2196F3) 10%, transparent);
+  --color-info-border: color-mix(in srgb, var(--theme-primary, #2196F3) 30%, transparent);
+  --color-info-text: var(--theme-primary, #1976D2);
 }
 
 /* 다크 모드 */
@@ -51,9 +51,9 @@
     --color-text: #ffffff;
     --color-text-secondary: #aaaaaa;
     --color-primary: #4CAF50;
-    --color-info: #64B5F6;
-    --color-info-background: rgba(100, 181, 246, 0.1);
-    --color-info-border: rgba(100, 181, 246, 0.3);
-    --color-info-text: #90CAF9;
+    --color-info: var(--theme-primary, #64B5F6);
+    --color-info-background: color-mix(in srgb, var(--theme-primary, #64B5F6) 10%, transparent);
+    --color-info-border: color-mix(in srgb, var(--theme-primary, #64B5F6) 30%, transparent);
+    --color-info-text: var(--theme-primary, #90CAF9);
   }
 }
