@@ -4081,6 +4081,31 @@ const Configurator: React.FC = () => {
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>서라운드</h3>
               </div>
+              {/* 서라운드 옵셋 기준 선택: 가구기준 / 도어기준 */}
+              <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
+                <button
+                  style={{
+                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                    background: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? '#4A90D9' : 'var(--theme-background)',
+                    color: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
+                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
+                >
+                  가구기준
+                </button>
+                <button
+                  style={{
+                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                    background: spaceInfo.surroundOffsetBase === 'door' ? '#4A90D9' : 'var(--theme-background)',
+                    color: spaceInfo.surroundOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
+                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
+                >
+                  도어기준
+                </button>
+              </div>
               <div className={styles.subSetting}>
                 {sides.map(({ key, label }) => {
                   const d = fs![key];
@@ -4257,29 +4282,22 @@ const Configurator: React.FC = () => {
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
             </div>
-            <div className={doorSettingStyles.doorTabSelector}>
+            <div className={styles.toggleButtonGroup}>
               <button
-                className={`${doorSettingStyles.doorTab} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? doorSettingStyles.activeDoorTab : ''}`}
+                className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
                 onClick={() => setSpaceInfo({ doorSetupMode: 'furniture-fit' })}
               >
                 가구에 맞춤
-                <span className={doorSettingStyles.doorTabSubtitle}>각 가구 높이 기준</span>
               </button>
               <button
-                className={`${doorSettingStyles.doorTab} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? doorSettingStyles.activeDoorTab : ''}`}
+                className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
                 onClick={() => setSpaceInfo({ doorSetupMode: 'space-fit' })}
               >
                 공간에 맞춤
-                <span className={doorSettingStyles.doorTabSubtitle}>공간 높이 기준</span>
               </button>
             </div>
 
             <div style={{ marginTop: '8px' }}>
-              <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '0 0 12px 0' }}>
-                {doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover'
-                  ? '공간 높이 기준 상/하 이격거리 (mm)'
-                  : '가구 높이 기준 상/하 이격거리 (mm)'}
-              </p>
               <div className={doorSettingStyles.doorGapContainer}>
                 <div className={doorSettingStyles.doorGapField}>
                   <label className={doorSettingStyles.doorGapLabel}>상단 ↑</label>
