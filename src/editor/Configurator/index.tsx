@@ -163,9 +163,13 @@ const Configurator: React.FC = () => {
   const [newDesignProjectId, setNewDesignProjectId] = useState<string | null>(null);
   const [isCreatingNewDesign, setIsCreatingNewDesign] = useState(false);
 
-  // 선택된 자유배치 가구의 도어 셋팅
-  const selectedDoorModule = selectedFurnitureId
-    ? placedModules.find(m => m.id === selectedFurnitureId && m.isFreePlacement && m.hasDoor)
+  // 도어 셋팅 대상: 자유배치 모드 + 도어 달린 가구가 있으면 표시
+  const doorModules = placedModules.filter(m => m.hasDoor);
+  const isFreeLayoutMode = (spaceInfo.layoutMode || 'equal-division') === 'free-placement';
+  const selectedDoorModule = isFreeLayoutMode && doorModules.length > 0
+    ? (selectedFurnitureId
+        ? doorModules.find(m => m.id === selectedFurnitureId) || doorModules[0]
+        : doorModules[0])
     : null;
 
   const [cfgDoorMode, setCfgDoorMode] = useState<'auto' | 'manual'>(selectedDoorModule?.doorSettingMode || 'auto');
