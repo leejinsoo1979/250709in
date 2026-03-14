@@ -786,6 +786,46 @@
   border-color: var(--theme-primary);
 }
 
+/* 균등배치 토글 버튼 (자유배치 모드 뷰어 좌측) */
+.equalDistributionToggle {
+  position: absolute;
+  top: 20px;
+  left: 16px;
+  z-index: 100;
+}
+
+.equalDistributionBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--theme-background-primary, #ffffff);
+  border: 1px solid var(--theme-border, #e1e5e9);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.equalDistributionBtn:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+.equalDistributionBtn.active {
+  background: var(--theme-primary);
+  color: #ffffff;
+  border-color: var(--theme-primary);
+}
+
+.equalDistributionBtn.active:hover {
+  background: var(--theme-primary-hover, var(--theme-primary));
+  border-color: var(--theme-primary-hover, var(--theme-primary));
+}
+
 /* 슬롯 가이드 도움말 ? 아이콘 */
 .slotGuideHelpButton {
   position: absolute;

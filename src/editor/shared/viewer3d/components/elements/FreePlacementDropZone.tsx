@@ -58,6 +58,7 @@ const FreePlacementDropZone: React.FC = () => {
   const { selectedFurnitureId, placedModules, addModule, updatePlacedModule, lastCustomDimensions, pendingCustomConfig } = useFurnitureStore();
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
+  const equalDistribution = useUIStore(state => state.equalDistribution);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
@@ -130,6 +131,36 @@ const FreePlacementDropZone: React.FC = () => {
     maxGap = Math.max(maxGap, endX - bounds[bounds.length - 1].right);
     return Math.round(maxGap);
   }, [placedModules, spaceBounds]);
+
+  // ── 균등배치 모드: ON 시 가구를 균등 너비로 재배치 ──
+  useEffect(() => {
+    if (!equalDistribution || !isFreePlacement || freeModules.length === 0) return;
+
+    const { startX, endX } = spaceBounds;
+    const lockedWallGaps = spaceInfo.lockedWallGaps;
+
+    // 잠긴 이격 영역 제외한 유효 공간
+    const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
+    const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
+    const availableWidth = effectiveEndX - effectiveStartX;
+
+    if (availableWidth <= 0 || freeModules.length === 0) return;
+
+    const equalWidth = Math.round((availableWidth / freeModules.length) * 10) / 10;
+
+    // 좌→우 정렬 순서로 배치
+    const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
+
+    sorted.forEach((mod, i) => {
+      const centerXmm = effectiveStartX + (i * equalWidth) + (equalWidth / 2);
+      const centerXcm = centerXmm * 0.01;
+
+      updatePlacedModule(mod.id, {
+        freeWidth: equalWidth,
+        position: { ...mod.position, x: centerXcm },
+      });
+    });
+  }, [equalDistribution, freeModules.length, isFreePlacement]);
 
   // 활성 가구 데이터 (클릭 선택 기반 - 자유배치는 currentDragData 미사용)
   const activeModuleId = selectedFurnitureId;

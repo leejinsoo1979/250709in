@@ -129,6 +129,9 @@ const Configurator: React.FC = () => {
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
 
+  const equalDistribution = useUIStore(s => s.equalDistribution);
+  const toggleEqualDistribution = useUIStore(s => s.toggleEqualDistribution);
+
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
     // readonly 모드일 때는 좌측 사이드바 접힌 상태로 시작
@@ -4946,6 +4949,18 @@ const Configurator: React.FC = () => {
                   }}
                 >
                   Open
+                </button>
+              </div>
+            )}
+            {/* 균등배치 토글 (자유배치 모드에서만 표시) */}
+            {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
+              <div className={styles.equalDistributionToggle}>
+                <button
+                  className={`${styles.equalDistributionBtn} ${equalDistribution ? styles.active : ''}`}
+                  onClick={toggleEqualDistribution}
+                  title={equalDistribution ? '균등배치 해제' : '균등배치 적용'}
+                >
+                  {equalDistribution ? '균등배치 ON' : '균등배치 OFF'}
                 </button>
               </div>
             )}

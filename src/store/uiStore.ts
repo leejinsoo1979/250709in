@@ -281,6 +281,11 @@ interface UIState {
   setEraserMode: (enabled: boolean) => void;
   setHoveredMeasureLineId: (id: string | null) => void;
 
+  // 균등배치 모드
+  equalDistribution: boolean;
+  setEqualDistribution: (enabled: boolean) => void;
+  toggleEqualDistribution: () => void;
+
   resetUI: () => void;
 }
 
@@ -336,6 +341,7 @@ const initialUIState = {
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
+  equalDistribution: false,  // 기본값: 균등배치 비활성화
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
   layoutBuilderRevision: 0,
   designExitSaveRequest: false,  // 기본값: 저장 후 종료 요청 없음
@@ -735,6 +741,13 @@ export const useUIStore = create<UIState>()(
 
       setHoveredMeasureLineId: (id) =>
         set({ hoveredMeasureLineId: id }),
+
+      // 균등배치 모드 액션들
+      setEqualDistribution: (enabled) =>
+        set({ equalDistribution: enabled }),
+
+      toggleEqualDistribution: () =>
+        set((state) => ({ equalDistribution: !state.equalDistribution })),
 
       setLayoutBuilderOpen: (open) =>
         set((state) => ({
