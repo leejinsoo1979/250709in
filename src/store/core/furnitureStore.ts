@@ -272,9 +272,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
     }
 
-    set((state) => ({
-      placedModules: state.placedModules.filter(m => m.id !== id)
-    }));
+    set((state) => {
+      const remaining = state.placedModules.filter(m => m.id !== id);
+      // 가구가 모두 삭제되면 서라운드도 함께 초기화
+      if (remaining.length === 0) {
+        useSpaceConfigStore.getState().setSpaceInfo({ freeSurround: undefined });
+      }
+      return { placedModules: remaining };
+    });
   },
 
   // 모듈 이동 함수 (기존 Context 로직과 동일)
