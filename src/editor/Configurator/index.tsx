@@ -44,6 +44,7 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery, { type ModuleType } from '@/editor/shared/controls/furniture/ModuleGallery';
 import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModulePropertiesPanel';
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
+import doorSettingStyles from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel.module.css';
 import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFurnitureLibrary';
 import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurnitureUpload';
 import CustomizableFurnitureLibrary from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
@@ -122,7 +123,7 @@ const Configurator: React.FC = () => {
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();
   const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
-  const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
+  const { setPlacedModules, placedModules, setAllDoors, clearAllModules, updatePlacedModule } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
