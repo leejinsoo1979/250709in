@@ -818,8 +818,8 @@ const FreePlacementDropZone: React.FC = () => {
       }
       newZone = 'dropped';
     } else {
-      // normal zone: 원래 높이 복원
-      effectiveHeight = originalHeight;
+      // normal zone: 사용자가 설정한 freeHeight 유지, 없으면 원래 높이 사용
+      effectiveHeight = mod.freeHeight || originalHeight;
       newZone = 'normal';
     }
 
