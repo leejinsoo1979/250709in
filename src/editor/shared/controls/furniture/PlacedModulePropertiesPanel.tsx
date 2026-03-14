@@ -2983,19 +2983,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       value={currentPlacedModule.freeLeftGap ?? 0}
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) {
-                          updatePlacedModule(currentPlacedModule.id, { freeLeftGap: v === '' ? 0 : parseInt(v, 10) });
+                        if (v === '' || /^\d*\.?\d{0,1}$/.test(v)) {
+                          const num = v === '' ? 0 : parseFloat(v);
+                          if (!isNaN(num)) {
+                            const snapped = Math.round(num * 2) / 2; // 0.5 단위
+                            updatePlacedModule(currentPlacedModule.id, { freeLeftGap: Math.max(0, snapped) });
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = currentPlacedModule.freeLeftGap ?? 0;
-                          const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                          const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 0.5 : -0.5));
                           updatePlacedModule(currentPlacedModule.id, { freeLeftGap: next });
                         }
                       }}
@@ -3011,19 +3015,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       value={currentPlacedModule.freeRightGap ?? 0}
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) {
-                          updatePlacedModule(currentPlacedModule.id, { freeRightGap: v === '' ? 0 : parseInt(v, 10) });
+                        if (v === '' || /^\d*\.?\d{0,1}$/.test(v)) {
+                          const num = v === '' ? 0 : parseFloat(v);
+                          if (!isNaN(num)) {
+                            const snapped = Math.round(num * 2) / 2; // 0.5 단위
+                            updatePlacedModule(currentPlacedModule.id, { freeRightGap: Math.max(0, snapped) });
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = currentPlacedModule.freeRightGap ?? 0;
-                          const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                          const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 0.5 : -0.5));
                           updatePlacedModule(currentPlacedModule.id, { freeRightGap: next });
                         }
                       }}
