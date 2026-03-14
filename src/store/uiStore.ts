@@ -363,7 +363,7 @@ export const useUIStore = create<UIState>()(
     (set, get) => {
       // 스토어 생성 시 앱 테마 읽기
       const appTheme = getAppTheme();
-      console.log('🔄 UIStore 초기화 - 앱 테마:', appTheme);
+// console.log('🔄 UIStore 초기화 - 앱 테마:', appTheme);
       
       return {
         ...initialUIState,
@@ -378,10 +378,6 @@ export const useUIStore = create<UIState>()(
         })),
         
       setActiveDroppedCeilingTab: (tab) => {
-        console.log('🔧 UIStore - setActiveDroppedCeilingTab 호출:', {
-          oldTab: useUIStore.getState().activeDroppedCeilingTab,
-          newTab: tab
-        });
         set({ activeDroppedCeilingTab: tab });
       },
       
@@ -413,7 +409,7 @@ export const useUIStore = create<UIState>()(
       toggleDimensions: () =>
         set((state) => {
           const nextValue = !state.showDimensions;
-          console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', nextValue);
+// console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', nextValue);
 
           if (!nextValue) {
             return {
@@ -504,7 +500,7 @@ export const useUIStore = create<UIState>()(
         set({ showAll: show }),
       
       setShowFurniture: (show) => {
-        console.log('💾 UIStore.setShowFurniture called - new value:', show);
+// console.log('💾 UIStore.setShowFurniture called - new value:', show);
         set({ showFurniture: show });
       },
 
@@ -525,7 +521,7 @@ export const useUIStore = create<UIState>()(
       
       // 가구 편집 팝업 열기 (다른 모든 팝업 닫기)
       openFurnitureEditPopup: (moduleId) => {
-        console.log('🔹 openFurnitureEditPopup 호출:', {
+// console.log('🔹 openFurnitureEditPopup 호출:', {
           moduleId,
           현재상태: get().highlightedCompartment
         });
