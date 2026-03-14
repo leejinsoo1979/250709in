@@ -3388,8 +3388,8 @@ const Configurator: React.FC = () => {
           )}
         </div>)}
 
-        {/* 단내림이 있을 때 메인구간 사이즈 표시 (자유배치 모드에서는 숨김) */}
-        {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
+        {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
+        {spaceInfo.droppedCeiling?.enabled && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
@@ -3550,8 +3550,8 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
-        {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 (자유배치 모드에서는 숨김) */}
-        {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
+        {/* 단내림 구간 사이즈 */}
+        {spaceInfo.droppedCeiling?.enabled && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
