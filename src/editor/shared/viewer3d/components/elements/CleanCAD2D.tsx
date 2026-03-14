@@ -1735,8 +1735,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
 
-                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
-                {(() => {
+                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 (자유배치에서는 숨김) */}
+                {!isFreePlacement && (() => {
                   // ColumnIndexer에서 계산된 boundaryGap 사용
                   const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                   const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
@@ -3933,8 +3933,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.5}
                 />
                 
-                {/* 경계면 이격거리 치수선 */}
-                {(() => {
+                {/* 경계면 이격거리 치수선 (자유배치에서는 숨김) */}
+                {!isFreePlacement && (() => {
                   // ColumnIndexer에서 계산된 boundaryGap 사용
                   const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                   const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
