@@ -4186,7 +4186,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 <button className={`${styles.footerButton} ${styles.secondaryButton}`} onClick={handleCancel}>
                   취소
                 </button>
-                <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={closeAllPopups}>
+                <button className={`${styles.footerButton} ${styles.primaryButton}`} onClick={() => { setLayoutBuilderOpen(false); closeAllPopups(); }}>
                   확인
                 </button>
               </div>
