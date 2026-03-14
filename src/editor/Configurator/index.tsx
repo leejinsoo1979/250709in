@@ -4182,7 +4182,7 @@ const Configurator: React.FC = () => {
                   const num = idx + 1;
                   if (si.kind === 'left') {
                     const d = fs.left;
-                    return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.size || 18, d.offset,
+                    return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.gap || 0, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
                       'surround-left',
@@ -4190,7 +4190,7 @@ const Configurator: React.FC = () => {
                   }
                   if (si.kind === 'right') {
                     const d = fs.right;
-                    return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.size || 18, d.offset,
+                    return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.gap || 0, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
                       'surround-right',
