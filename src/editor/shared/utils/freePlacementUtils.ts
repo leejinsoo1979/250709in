@@ -186,11 +186,18 @@ export function calcResizedPositionX(
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
   const halfNew = newWidthMm / 2;
 
+  // ── 잠긴 이격 경계 ──
+  const lockedGaps = spaceInfo.lockedWallGaps;
+  const effStart = (lockedGaps?.left != null) ? startX + lockedGaps.left : startX;
+  const effEnd = (lockedGaps?.right != null) ? endX - lockedGaps.right : endX;
+
   // ── 붙어있는 쪽 고정 ──
   const SNAP_THRESHOLD = 3;
 
-  let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD;
-  let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD;
+  let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD
+    || (lockedGaps?.left != null && Math.abs(oldBounds.left - effStart) <= SNAP_THRESHOLD);
+  let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD
+    || (lockedGaps?.right != null && Math.abs(oldBounds.right - effEnd) <= SNAP_THRESHOLD);
 
   for (const other of allModules) {
     if (other.id === module.id || !other.isFreePlacement) continue;
@@ -213,9 +220,6 @@ export function calcResizedPositionX(
   let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
 
   // 잠긴 이격 영역 침범 방지
-  const lockedGaps = spaceInfo.lockedWallGaps;
-  const effStart = (lockedGaps?.left != null) ? startX + lockedGaps.left : startX;
-  const effEnd = (lockedGaps?.right != null) ? endX - lockedGaps.right : endX;
   clampedMm = Math.max(effStart + halfNew, Math.min(effEnd - halfNew, clampedMm));
 
   return clampedMm * 0.01;
