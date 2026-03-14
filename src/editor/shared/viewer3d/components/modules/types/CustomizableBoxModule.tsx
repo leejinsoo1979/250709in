@@ -42,6 +42,7 @@ interface CustomizableBoxModuleProps {
   hasLeftEndPanel?: boolean; // 좌측 엔드패널 표시 여부
   hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
   endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
+  endPanelDepth?: number; // 엔드패널 깊이 (mm, 기본값: 가구 깊이)
   leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm, 기본값: 0)
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm, 기본값: 0)
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
@@ -230,6 +231,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   hasLeftEndPanel = false,
   hasRightEndPanel = false,
   endPanelThickness: endPanelThicknessProp,
+  endPanelDepth: endPanelDepthProp,
   leftEndPanelOffset: leftEndPanelOffsetProp = 0,
   rightEndPanelOffset: rightEndPanelOffsetProp = 0,
   isEditable = true,
@@ -2360,13 +2362,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const epYOffset = -footExtension / 2;
         const leftEpOffsetZ = mmToUnit(leftEndPanelOffsetProp);
         const rightEpOffsetZ = mmToUnit(rightEndPanelOffsetProp);
+        const epDActual = endPanelDepthProp ? mmToUnit(endPanelDepthProp) : D;
         return (
           <>
             {hasLeftEndPanel && (
               <EndPanelWithTexture
                 width={leftEP}
                 height={epH}
-                depth={D}
+                depth={epDActual}
                 position={[-(W / 2) + leftEP / 2, epYOffset, leftEpOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
@@ -2377,7 +2380,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               <EndPanelWithTexture
                 width={rightEP}
                 height={epH}
-                depth={D}
+                depth={epDActual}
                 position={[(W / 2) - rightEP / 2, epYOffset, rightEpOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}

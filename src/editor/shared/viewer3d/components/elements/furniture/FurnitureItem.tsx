@@ -3055,6 +3055,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   hasLeftEndPanel={placedModule.hasLeftEndPanel}
                   hasRightEndPanel={placedModule.hasRightEndPanel}
                   endPanelThickness={placedModule.endPanelThickness}
+                  endPanelDepth={placedModule.endPanelDepth}
                   leftEndPanelOffset={placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset}
                   rightEndPanelOffset={placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset}
                   doorSplit={placedModule.doorSplit}
@@ -3115,7 +3116,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const epW = mmToThreeUnits(epThicknessMm);
               const leftEpOffsetZ = mmToThreeUnits(placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
               const rightEpOffsetZ = mmToThreeUnits(placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
-              const epD = depth;
+              const epDepthMm = placedModule.endPanelDepth ?? (actualDepthMm || 580);
+              const epD = mmToThreeUnits(epDepthMm);
 
               // EP는 바닥(Y=0)부터 천장(공간 높이)까지
               const spaceH = mmToThreeUnits(spaceInfo.height); // 공간 전체 높이
@@ -3343,7 +3345,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 엔드패널 위치 계산
         const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
-        const endPanelDepth = depth; // 가구와 동일한 깊이
+        const epDepthMmSlot = placedModule.endPanelDepth ?? (actualDepthMm || 580);
+        const endPanelDepth = mmToThreeUnits(epDepthMmSlot);
 
         // 엔드패널 X 위치 계산 (가구의 줄어든 너비 고려)
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
