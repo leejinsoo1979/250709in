@@ -674,6 +674,14 @@ const FreePlacementDropZone: React.FC = () => {
         if (gap.gapType === 'left-wall' && mod.freeLeftGapLocked) return;
         if (gap.gapType === 'right-wall' && mod.freeRightGapLocked) return;
       }
+      // between 갭: 양쪽 가구 모두 잠겨있으면 편집 차단
+      if (gap.gapType === 'between') {
+        const rightMod = mod;
+        const leftMod = gap.leftModuleId ? placedModules.find(m => m.id === gap.leftModuleId) : null;
+        const rightLocked = rightMod && (rightMod.freeLeftGapLocked || rightMod.freeRightGapLocked);
+        const leftLocked = leftMod && (leftMod.freeLeftGapLocked || leftMod.freeRightGapLocked);
+        if (rightLocked && leftLocked) return;
+      }
     }
     setEditingGapIndex(index);
     setEditingGapValue(Math.round(currentWidth).toString());
@@ -712,10 +720,14 @@ const FreePlacementDropZone: React.FC = () => {
       if (rightLocked && gap.leftModuleId) {
         const leftMod = placedModules.find(m => m.id === gap.leftModuleId);
         const leftLocked = leftMod && (leftMod.freeLeftGapLocked || leftMod.freeRightGapLocked);
-        if (!leftLocked) {
-          moveModuleId = gap.leftModuleId;
-          moveDirection = 'reverse'; // 왼쪽 가구를 이동
+        if (leftLocked) {
+          // 양쪽 다 잠김 → 편집 불가
+          setEditingGapIndex(null);
+          setEditingGapValue('');
+          return;
         }
+        moveModuleId = gap.leftModuleId;
+        moveDirection = 'reverse'; // 왼쪽 가구를 이동
       }
     }
 
