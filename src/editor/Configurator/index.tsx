@@ -3311,7 +3311,6 @@ const Configurator: React.FC = () => {
               onClick={() => {
                 // 단내림 비활성화
                 clearAllModules();
-                setSpaceInfo({ freeSurround: undefined }); // 서라운드도 초기화
                 handleSpaceInfoUpdate({
                   droppedCeiling: {
                     ...spaceInfo.droppedCeiling,
@@ -3332,7 +3331,6 @@ const Configurator: React.FC = () => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   // 단내림 활성화
                   clearAllModules();
-                setSpaceInfo({ freeSurround: undefined }); // 서라운드도 초기화
 
                   const totalWidth = spaceInfo.width || 4800;
                   const droppedWidth = isFreeMode ? 150 : 900; // 자유배치: 커튼박스 150mm, 슬롯: 단내림 900mm
