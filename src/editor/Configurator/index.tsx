@@ -4085,6 +4085,7 @@ const Configurator: React.FC = () => {
             num: number,
             label: string,
             enabled: boolean,
+            sizeMM: number,
             offset: number,
             onToggle: () => void,
             onOffsetChange: (val: number) => void,
@@ -4101,6 +4102,10 @@ const Configurator: React.FC = () => {
               </button>
               {enabled ? (
                 <>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 50px' }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 2px', flexShrink: 0 }}>size</span>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text)', padding: '0 2px' }}>{sizeMM}</span>
+                  </div>
                   <div className={styles.frameItemInput} style={{ flex: 1 }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
                     <input
@@ -4177,7 +4182,7 @@ const Configurator: React.FC = () => {
                   const num = idx + 1;
                   if (si.kind === 'left') {
                     const d = fs.left;
-                    return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.offset,
+                    return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.size || 18, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
                       'surround-left',
@@ -4185,7 +4190,7 @@ const Configurator: React.FC = () => {
                   }
                   if (si.kind === 'right') {
                     const d = fs.right;
-                    return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.offset,
+                    return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.size || 18, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
                       'surround-right',
@@ -4193,7 +4198,7 @@ const Configurator: React.FC = () => {
                   }
                   if (si.kind === 'middle') {
                     const midCfg = middleGaps[si.idx];
-                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(num, '서라운드', midCfg.enabled, midCfg.offset || 0,
+                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(num, '서라운드', midCfg.enabled, midCfg.gap || 0, midCfg.offset || 0,
                       () => {
                         const newMiddle = [...middleGaps];
                         newMiddle[si.idx] = { ...newMiddle[si.idx], enabled: !newMiddle[si.idx].enabled };
@@ -4328,7 +4333,7 @@ const Configurator: React.FC = () => {
                     topNum++;
                     const tn = topNum;
                     rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)프레임',
-                      mod.hasTopFrame !== false, mod.freeWidth || mod.moduleWidth || 450, mod.topFrameOffset || 0,
+                      mod.hasTopFrame !== false, mod.freeHeight || 720, mod.topFrameOffset || 0,
                       () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                       (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                       `top-${mod.id}`,
@@ -4338,7 +4343,7 @@ const Configurator: React.FC = () => {
                     baseNum++;
                     const bn = baseNum;
                     rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)프레임',
-                      mod.hasBase !== false, mod.freeWidth || mod.moduleWidth || 450, mod.baseFrameOffset || 0,
+                      mod.hasBase !== false, mod.freeHeight || 720, mod.baseFrameOffset || 0,
                       () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
                       (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
                       `base-${mod.id}`,
