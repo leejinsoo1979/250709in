@@ -1081,19 +1081,19 @@ const Configurator: React.FC = () => {
 
 // console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
 // console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
-        const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
-        return {
-          id: m.id,
-          moduleId: m.moduleId,
-          category: moduleData?.category || 'unknown',
-          slotIndex: m.slotIndex,
-          position: m.position,
-          zone: m.zone,
-          hasDoor: m.hasDoor,
-          customDepth: m.customDepth,
-          customWidth: m.customWidth
-        };
-      }));
+//         const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
+//         return {
+//           id: m.id,
+//           moduleId: m.moduleId,
+//           category: moduleData?.category || 'unknown',
+//           slotIndex: m.slotIndex,
+//           position: m.position,
+//           zone: m.zone,
+//           hasDoor: m.hasDoor,
+//           customDepth: m.customDepth,
+//           customWidth: m.customWidth
+//         };
+//       }));
 
       // 썸네일 생성
       let thumbnail;
