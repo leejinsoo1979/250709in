@@ -2638,8 +2638,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         />
       </group>}
 
-      {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
-      {showDimensions && (
+      {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) — 자유배치모드에서는 가구 배치 후 표시 */}
+      {showDimensions && (!isFreePlacement || placedModules.length > 0) && (
       <group>
         {(() => {
           const rightDimensionX = mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(200); // 우측 치수선 위치 (균형감을 위해 200으로 고정)
