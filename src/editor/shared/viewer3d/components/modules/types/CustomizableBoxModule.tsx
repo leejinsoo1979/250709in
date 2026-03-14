@@ -42,7 +42,8 @@ interface CustomizableBoxModuleProps {
   hasLeftEndPanel?: boolean; // 좌측 엔드패널 표시 여부
   hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
   endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
-  endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0)
+  leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm, 기본값: 0)
+  rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm, 기본값: 0)
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -229,7 +230,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   hasLeftEndPanel = false,
   hasRightEndPanel = false,
   endPanelThickness: endPanelThicknessProp,
-  endPanelOffset: endPanelOffsetProp = 0,
+  leftEndPanelOffset: leftEndPanelOffsetProp = 0,
+  rightEndPanelOffset: rightEndPanelOffsetProp = 0,
   isEditable = true,
   onPointerDown,
   onPointerMove,
@@ -2356,7 +2358,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const footExtension = mmToUnit(baseHeightMm + baseDepthMm);
         const epH = H + footExtension;
         const epYOffset = -footExtension / 2;
-        const epOffsetZ = mmToUnit(endPanelOffsetProp);
+        const leftEpOffsetZ = mmToUnit(leftEndPanelOffsetProp);
+        const rightEpOffsetZ = mmToUnit(rightEndPanelOffsetProp);
         return (
           <>
             {hasLeftEndPanel && (
@@ -2364,7 +2367,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 width={leftEP}
                 height={epH}
                 depth={D}
-                position={[-(W / 2) + leftEP / 2, epYOffset, epOffsetZ]}
+                position={[-(W / 2) + leftEP / 2, epYOffset, leftEpOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
                 useFrameColor={spaceInfo.layoutMode === 'free-placement'}
@@ -2375,7 +2378,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 width={rightEP}
                 height={epH}
                 depth={D}
-                position={[(W / 2) - rightEP / 2, epYOffset, epOffsetZ]}
+                position={[(W / 2) - rightEP / 2, epYOffset, rightEpOffsetZ]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
                 useFrameColor={spaceInfo.layoutMode === 'free-placement'}

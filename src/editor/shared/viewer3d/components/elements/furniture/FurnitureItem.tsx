@@ -3026,7 +3026,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   hasLeftEndPanel={placedModule.hasLeftEndPanel}
                   hasRightEndPanel={placedModule.hasRightEndPanel}
                   endPanelThickness={placedModule.endPanelThickness}
-                  endPanelOffset={placedModule.endPanelOffset}
+                  leftEndPanelOffset={placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset}
+                  rightEndPanelOffset={placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset}
                   doorSplit={placedModule.doorSplit}
                   upperDoorTopGap={placedModule.upperDoorTopGap}
                   upperDoorBottomGap={placedModule.upperDoorBottomGap}
@@ -3081,9 +3082,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               if (!hasLeft && !hasRight) return null;
 
               const epThicknessMm = placedModule.endPanelThickness || 18;
-              const epOffsetMm = placedModule.endPanelOffset ?? 0;
               const epW = mmToThreeUnits(epThicknessMm);
-              const epOffsetZ = mmToThreeUnits(epOffsetMm);
+              const leftEpOffsetZ = mmToThreeUnits(placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
+              const rightEpOffsetZ = mmToThreeUnits(placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
               const epD = depth;
 
               // EP는 바닥(Y=0)부터 천장(공간 높이)까지
@@ -3100,7 +3101,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={epD}
-                      position={[-(width / 2) - epW / 2, epYRelative, epOffsetZ]}
+                      position={[-(width / 2) - epW / 2, epYRelative, leftEpOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
                       useFrameColor={placedModule.isFreePlacement}
@@ -3111,7 +3112,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={epD}
-                      position={[(width / 2) + epW / 2, epYRelative, epOffsetZ]}
+                      position={[(width / 2) + epW / 2, epYRelative, rightEpOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
                       useFrameColor={placedModule.isFreePlacement}
@@ -3372,14 +3373,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const furnitureTopY = finalYPosition + height / 2; // 가구 상단 Y
         const extendedEndPanelHeight = furnitureTopY; // 바닥(0)부터 가구 상단까지
         const endPanelYPosition = extendedEndPanelHeight / 2; // 중심 Y
-        const slotEpOffsetZ = mmToThreeUnits(placedModule.endPanelOffset ?? 0);
+        const getSlotEpOffsetZ = (side: string) => {
+          const mm = side === 'left'
+            ? (placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0)
+            : (placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
+          return mmToThreeUnits(mm);
+        };
 
         return (
           <>
             {endPanelXPositions.map((panel, index) => (
               <group
                 key={`endpanel-group-${placedModule.id}-${panel.side}-${index}`}
-                position={[panel.x, endPanelYPosition, furnitureZ + slotEpOffsetZ]}
+                position={[panel.x, endPanelYPosition, furnitureZ + getSlotEpOffsetZ(panel.side)]}
               >
                 <EndPanelWithTexture
                   width={endPanelWidth}

@@ -70,7 +70,9 @@ interface BoxModuleProps {
   hasLeftEndPanel?: boolean; // 좌측 엔드패널 표시 여부
   hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
   endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
-  endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0)
+  endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0) — 하위호환
+  leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm)
+  rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm)
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
   isCustomizable?: boolean; // 커스터마이징 가구 여부
@@ -139,7 +141,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   hasLeftEndPanel, // 좌측 엔드패널
   hasRightEndPanel, // 우측 엔드패널
   endPanelThickness, // 엔드패널 두께 (mm)
-  endPanelOffset, // 엔드패널 Z축 옵셋 (mm)
+  endPanelOffset, // 엔드패널 Z축 옵셋 (mm) — 하위호환
+  leftEndPanelOffset, // 좌측 EP 개별 옵셋 (mm)
+  rightEndPanelOffset, // 우측 EP 개별 옵셋 (mm)
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
   isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
@@ -229,7 +233,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           hasLeftEndPanel={hasLeftEndPanel}
           hasRightEndPanel={hasRightEndPanel}
           endPanelThickness={endPanelThickness}
-          endPanelOffset={endPanelOffset}
+          leftEndPanelOffset={leftEndPanelOffset ?? endPanelOffset}
+          rightEndPanelOffset={rightEndPanelOffset ?? endPanelOffset}
           isEditable={_isCustomizable}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
