@@ -21,8 +21,7 @@ export type RightPanelTab = 'placement' | 'module';
 
 export const ModuleContent: React.FC = () => {
   const { activePopup } = useUIStore();
-  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
+  const { spaceInfo } = useSpaceConfigStore();
 
   // column 팝업이 활성화되었으면 기둥 속성 표시
   if (activePopup.type === 'column' && activePopup.id) {
@@ -31,48 +30,6 @@ export const ModuleContent: React.FC = () => {
       return <ColumnProperties columnId={activePopup.id} />;
     }
     return <div className={styles.placeholder}></div>;
-  }
-
-  // 자유배치 모드에서 도어가 있는 가구가 하나라도 있으면 도어 셋업 방식 표시
-  const isFreePlacementMode = spaceInfo.layoutMode === 'free-placement';
-  const hasDoorModules = isFreePlacementMode && placedModules.some(m => m.isFreePlacement && m.hasDoor);
-
-  if (hasDoorModules) {
-    const currentMode = spaceInfo.doorSetupMode || 'default';
-
-    return (
-      <div style={{ padding: '16px' }}>
-        <div className={doorStyles.propertySection}>
-          <h5 className={doorStyles.sectionTitle}>도어 셋업</h5>
-          <div className={doorStyles.doorTabSelector}>
-            <button
-              className={`${doorStyles.doorTab} ${currentMode === 'default' ? doorStyles.activeDoorTab : ''}`}
-              onClick={() => setSpaceInfo({ doorSetupMode: 'default' })}
-            >
-              기본
-              <span className={doorStyles.doorTabSubtitle}>가구에 맞춤</span>
-            </button>
-            <button
-              className={`${doorStyles.doorTab} ${currentMode === 'frame-cover' ? doorStyles.activeDoorTab : ''}`}
-              onClick={() => setSpaceInfo({ doorSetupMode: 'frame-cover' })}
-            >
-              프레임 커버
-              <span className={doorStyles.doorTabSubtitle}>도어 높이 통일</span>
-            </button>
-          </div>
-          {currentMode === 'default' && (
-            <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '0' }}>
-              각 가구 높이에 맞게 도어가 개별 적용됩니다.
-            </p>
-          )}
-          {currentMode === 'frame-cover' && (
-            <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '0' }}>
-              상부 프레임을 가리도록 모든 도어 높이가 통일됩니다.
-            </p>
-          )}
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -1169,6 +1126,37 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   step={1}
                   unit="mm"
                 />
+              </FormControl>
+            )}
+
+            {/* 자유배치 도어 셋업 방식 (도어가 달린 가구가 있을 때만) */}
+            {spaceInfo.layoutMode === 'free-placement' && placedModules.some(m => m.isFreePlacement && m.hasDoor) && (
+              <FormControl
+                label="도어 셋업"
+                expanded={expandedSections.has('doorSetup')}
+                onToggle={() => toggleSection('doorSetup')}
+              >
+                <div className={doorStyles.doorTabSelector}>
+                  <button
+                    className={`${doorStyles.doorTab} ${(spaceInfo.doorSetupMode || 'default') === 'default' ? doorStyles.activeDoorTab : ''}`}
+                    onClick={() => setSpaceInfo({ doorSetupMode: 'default' })}
+                  >
+                    기본
+                    <span className={doorStyles.doorTabSubtitle}>가구에 맞춤</span>
+                  </button>
+                  <button
+                    className={`${doorStyles.doorTab} ${spaceInfo.doorSetupMode === 'frame-cover' ? doorStyles.activeDoorTab : ''}`}
+                    onClick={() => setSpaceInfo({ doorSetupMode: 'frame-cover' })}
+                  >
+                    프레임 커버
+                    <span className={doorStyles.doorTabSubtitle}>도어 높이 통일</span>
+                  </button>
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '4px 0 0 0' }}>
+                  {(spaceInfo.doorSetupMode || 'default') === 'default'
+                    ? '각 가구 높이에 맞게 도어가 개별 적용됩니다.'
+                    : '상부 프레임을 가리도록 모든 도어 높이가 통일됩니다.'}
+                </p>
               </FormControl>
             )}
           </div>
