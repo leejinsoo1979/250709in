@@ -54,7 +54,6 @@ import MyCabinetGallery from '@/editor/shared/controls/furniture/MyCabinetGaller
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
-import SurroundPanelGallery from '@/editor/shared/controls/furniture/SurroundPanelGallery';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 import ConvertModal from './components/ConvertModal';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
@@ -3069,7 +3068,9 @@ const Configurator: React.FC = () => {
       case 'etc':
         return (
           <div className={styles.sidebarPanel}>
-            <SurroundPanelGallery />
+            <div style={{ padding: 24, color: 'var(--theme-text-tertiary)', textAlign: 'center' }}>
+              준비중입니다
+            </div>
           </div>
         );
       case 'upload':
