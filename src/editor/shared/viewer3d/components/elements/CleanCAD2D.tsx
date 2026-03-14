@@ -6306,17 +6306,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           // 가구 본래 깊이 사용 (customDepth는 기둥 조정값이므로 무시)
           const actualDepthMm = moduleData.dimensions.depth;
-          const moduleWidthMm = moduleData.dimensions.width;
+          const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
           const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
 
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
           const rightX = module.position.x + moduleWidth / 2;
-          
+
           // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
           const panelDepthMm = spaceInfo.depth || 600;
           const furnitureDepthMm = Math.min(panelDepthMm, 600);
           const doorThicknessMm = 20;
-          
+
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const doorThickness = mmToThreeUnits(doorThicknessMm);
@@ -6454,12 +6454,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             // 가구 본래 깊이 사용 (customDepth는 기둥 조정값이므로 무시)
             const actualDepthMm = moduleData.dimensions.depth;
-            const moduleWidthMm = moduleData.dimensions.width;
+            const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
             const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
-            
+
             const moduleWidth = mmToThreeUnits(moduleWidthMm);
             const leftX = module.position.x - moduleWidth / 2;
-            
+
             // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
         const panelDepthMm = spaceInfo.depth || 600;
         const furnitureDepthMm = Math.min(panelDepthMm, 600);
@@ -6781,8 +6781,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           if (!moduleData) return null;
 
-          // 기둥에 의해 조정된 너비와 위치 사용 (customWidth 우선)
-          const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
+          // 자유배치 가구는 freeWidth 우선, 그 외 customWidth/adjustedWidth/기본너비
+          const actualWidth = (module.isFreePlacement && module.freeWidth)
+            ? module.freeWidth
+            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
           const moduleWidth = mmToThreeUnits(actualWidth);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
           const actualPositionX = module.adjustedPosition?.x || module.position.x;
@@ -6825,12 +6827,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 rotation={[-Math.PI / 2, 0, 0]}
               >
                 {(() => {
-                  const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-                  if (isDual) {
-                    const w = Math.floor(actualWidth * 2) / 2;
-                    return w % 1 === 0 ? w : w.toFixed(1);
-                  }
-                  return Math.floor(actualWidth);
+                  const w = Math.round(actualWidth * 10) / 10;
+                  return w % 1 === 0 ? w : w.toFixed(1);
                 })()}
               </Text>
 
@@ -6949,7 +6947,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             // FurnitureItem.tsx와 완전히 동일한 계산
             const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-            const moduleWidthMm = moduleData.dimensions.width;
+            const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
             const moduleWidth = mmToThreeUnits(moduleWidthMm);
             const leftX = module.position.x - moduleWidth / 2;
             const rightX = module.position.x + moduleWidth / 2;
@@ -7108,8 +7106,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (!moduleData || !moduleData.hasDoor) return null;
           
           const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-          // 기둥에 의해 조정된 너비 사용 (customWidth는 Column C용, adjustedWidth는 일반 기둥용)
-          const actualWidthMm = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
+          // 자유배치 가구는 freeWidth 우선, 기둥 조정 너비 사용
+          const actualWidthMm = (module.isFreePlacement && module.freeWidth)
+            ? module.freeWidth
+            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
           const moduleWidth = mmToThreeUnits(actualWidthMm);
           const leftX = module.position.x - moduleWidth / 2;
           const rightX = module.position.x + moduleWidth / 2;
