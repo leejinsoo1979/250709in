@@ -597,7 +597,8 @@ const FreePlacementDropZone: React.FC = () => {
     const gaps: Array<{
       startX: number; endX: number; width: number;
       centerX: number; centerY: number;
-      adjacentModuleId: string | null; // 이격거리 변경 시 이동할 가구
+      adjacentModuleId: string | null; // 이격거리 변경 시 이동할 가구 (기본: 오른쪽)
+      leftModuleId?: string | null; // between 갭의 왼쪽 가구 ID
       isWallGap: 'left' | 'right' | null; // 벽과의 갭인 경우
       gapType: 'left-wall' | 'right-wall' | 'between'; // 갭 유형
       anchorX: number; // 갭 기준점 (가구 이동 계산용, mm)
@@ -635,6 +636,7 @@ const FreePlacementDropZone: React.FC = () => {
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
+          leftModuleId: bounds[i].id,
           isWallGap: null,
           gapType: 'between',
           anchorX: gapStart,
@@ -664,13 +666,22 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 이격거리 편집 시작
   const handleGapLabelClick = useCallback((index: number, currentWidth: number) => {
+    // 잠긴 이격은 편집 불가
+    const gap = remainingGaps[index];
+    if (gap) {
+      const mod = placedModules.find(m => m.id === gap.adjacentModuleId);
+      if (mod) {
+        if (gap.gapType === 'left-wall' && mod.freeLeftGapLocked) return;
+        if (gap.gapType === 'right-wall' && mod.freeRightGapLocked) return;
+      }
+    }
     setEditingGapIndex(index);
     setEditingGapValue(Math.round(currentWidth).toString());
     setTimeout(() => {
       gapInputRef.current?.focus();
       gapInputRef.current?.select();
     }, 100);
-  }, []);
+  }, [remainingGaps, placedModules]);
 
   // 이격거리 편집 확정 - 가구 위치 이동
   const handleGapEditSubmit = useCallback(() => {
@@ -689,7 +700,26 @@ const FreePlacementDropZone: React.FC = () => {
       return;
     }
 
-    const targetModule = placedModules.find(m => m.id === gap.adjacentModuleId);
+    const { startX, endX } = spaceBounds;
+
+    // 이동할 가구 결정 — between 갭에서 오른쪽 가구가 잠겨있으면 왼쪽 가구를 이동
+    let moveModuleId = gap.adjacentModuleId;
+    let moveDirection: 'default' | 'reverse' = 'default';
+
+    if (gap.gapType === 'between') {
+      const rightMod = placedModules.find(m => m.id === gap.adjacentModuleId);
+      const rightLocked = rightMod && (rightMod.freeLeftGapLocked || rightMod.freeRightGapLocked);
+      if (rightLocked && gap.leftModuleId) {
+        const leftMod = placedModules.find(m => m.id === gap.leftModuleId);
+        const leftLocked = leftMod && (leftMod.freeLeftGapLocked || leftMod.freeRightGapLocked);
+        if (!leftLocked) {
+          moveModuleId = gap.leftModuleId;
+          moveDirection = 'reverse'; // 왼쪽 가구를 이동
+        }
+      }
+    }
+
+    const targetModule = placedModules.find(m => m.id === moveModuleId);
     if (!targetModule) {
       setEditingGapIndex(null);
       setEditingGapValue('');
@@ -698,53 +728,24 @@ const FreePlacementDropZone: React.FC = () => {
 
     const moduleWidthMm = targetModule.freeWidth || 0;
     const halfWidth = moduleWidthMm / 2;
-    const { startX, endX } = spaceBounds;
 
     let newCenterXmm: number;
     if (gap.gapType === 'left-wall') {
-      // 왼쪽 벽에서 newGapMm 만큼 떨어지게
       newCenterXmm = startX + newGapMm + halfWidth;
     } else if (gap.gapType === 'right-wall') {
-      // 오른쪽 벽에서 newGapMm 만큼 떨어지게
       newCenterXmm = endX - newGapMm - halfWidth;
+    } else if (moveDirection === 'reverse') {
+      // between 역방향: 오른쪽 가구의 왼쪽 끝에서 newGapMm 만큼 왼쪽으로
+      const rightMod = placedModules.find(m => m.id === gap.adjacentModuleId);
+      const rightLeft = rightMod ? getModuleBoundsX(rightMod).left : gap.endX;
+      newCenterXmm = rightLeft - newGapMm - halfWidth;
     } else {
-      // between: 왼쪽 가구의 오른쪽 끝(anchorX)에서 newGapMm 만큼 떨어지게
+      // between 기본: 왼쪽 가구의 오른쪽 끝에서 newGapMm 만큼 오른쪽으로
       newCenterXmm = gap.anchorX + newGapMm + halfWidth;
     }
 
-    // 잠긴 이격 제한: 이 가구 자체의 잠긴 이격이 있으면 해당 쪽 위치 고정
-    if (targetModule.freeLeftGapLocked && targetModule.freeLeftGap != null) {
-      const fixedLeft = startX + targetModule.freeLeftGap;
-      const minCenter = fixedLeft + halfWidth;
-      if (newCenterXmm < minCenter) newCenterXmm = minCenter;
-    }
-    if (targetModule.freeRightGapLocked && targetModule.freeRightGap != null) {
-      const fixedRight = endX - targetModule.freeRightGap;
-      const maxCenter = fixedRight - halfWidth;
-      if (newCenterXmm > maxCenter) newCenterXmm = maxCenter;
-    }
-
-    // 다른 가구의 잠긴 이격 영역 침범 방지
-    for (const m of placedModules) {
-      if (m.id === targetModule.id || !m.isFreePlacement) continue;
-      const mBounds = getModuleBoundsX(m);
-      if (m.freeLeftGapLocked && m.freeLeftGap != null && m.freeLeftGap > 0) {
-        const lockedZoneEnd = mBounds.left;
-        if (newCenterXmm - halfWidth < lockedZoneEnd && newCenterXmm + halfWidth > startX) {
-          newCenterXmm = Math.max(newCenterXmm, lockedZoneEnd + halfWidth);
-        }
-      }
-      if (m.freeRightGapLocked && m.freeRightGap != null && m.freeRightGap > 0) {
-        const lockedZoneStart = mBounds.right;
-        if (newCenterXmm + halfWidth > lockedZoneStart && newCenterXmm - halfWidth < endX) {
-          newCenterXmm = Math.min(newCenterXmm, lockedZoneStart - halfWidth);
-        }
-      }
-    }
-
     const clampedX = clampToSpaceBoundsX(newCenterXmm, moduleWidthMm, spaceInfo);
-
-    updatePlacedModule(gap.adjacentModuleId, {
+    updatePlacedModule(moveModuleId, {
       position: { ...targetModule.position, x: clampedX * 0.01 },
     });
 
