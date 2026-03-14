@@ -270,35 +270,54 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // (callback set()은 R3F Canvas 내부 컴포넌트 re-render를 트리거하지 않는 문제가 있음)
     const state = get();
 
-    // ── 잠긴 이격 강제 보정 ──
-    // position이 변경될 때, 잠긴 이격이 있으면 해당 쪽 위치를 강제 보정
+    // ── 공간 레벨 잠긴 이격 강제 보정 ──
+    // position이 변경될 때, 공간 레벨 벽 잠금이 있으면 해당 쪽 위치를 강제 보정
     let finalUpdates = updates;
     const existingModule = state.placedModules.find(m => m.id === id);
     if (existingModule?.isFreePlacement && updates.position) {
-      const merged = { ...existingModule, ...updates };
-      const hasLockedLeft = merged.freeLeftGapLocked && merged.freeLeftGap != null;
-      const hasLockedRight = merged.freeRightGapLocked && merged.freeRightGap != null;
+      const spaceState = useSpaceConfigStore.getState();
+      const lockedWallGaps = spaceState.spaceInfo.lockedWallGaps;
+      const hasLockedLeft = lockedWallGaps?.left != null;
+      const hasLockedRight = lockedWallGaps?.right != null;
 
       if (hasLockedLeft || hasLockedRight) {
-        const spaceInfo = useSpaceConfigStore.getState();
-        const totalWidth = spaceInfo.width || 2400;
+        const totalWidth = spaceState.spaceInfo.width || 2400;
         const halfW = totalWidth / 2;
         const startX = -halfW;
         const endX = halfW;
+        const merged = { ...existingModule, ...updates };
         const widthMm = merged.freeWidth || merged.moduleWidth || 450;
         const halfFW = widthMm / 2;
         let posX = (updates.position as any).x as number;
+        let corrected = false;
 
-        if (hasLockedLeft) {
-          const fixedLeft = startX + (merged.freeLeftGap as number);
+        // 가장 왼쪽 가구인지 확인
+        const currentLeftEdge = posX * 100 - halfFW;
+        const isLeftmost = hasLockedLeft && !state.placedModules.some(m =>
+          m.id !== id && m.isFreePlacement &&
+          (m.position.x * 100 - (m.freeWidth || m.moduleWidth || 450) / 2) < currentLeftEdge
+        );
+        if (isLeftmost) {
+          const fixedLeft = startX + lockedWallGaps.left!;
           posX = (fixedLeft + halfFW) * 0.01;
-        }
-        if (hasLockedRight) {
-          const fixedRight = endX - (merged.freeRightGap as number);
-          posX = (fixedRight - halfFW) * 0.01;
+          corrected = true;
         }
 
-        finalUpdates = { ...updates, position: { ...(updates.position as any), x: posX } };
+        // 가장 오른쪽 가구인지 확인
+        const currentRightEdge = posX * 100 + halfFW;
+        const isRightmost = hasLockedRight && !state.placedModules.some(m =>
+          m.id !== id && m.isFreePlacement &&
+          (m.position.x * 100 + (m.freeWidth || m.moduleWidth || 450) / 2) > currentRightEdge
+        );
+        if (isRightmost) {
+          const fixedRight = endX - lockedWallGaps.right!;
+          posX = (fixedRight - halfFW) * 0.01;
+          corrected = true;
+        }
+
+        if (corrected) {
+          finalUpdates = { ...updates, position: { ...(updates.position as any), x: posX } };
+        }
       }
     }
 
