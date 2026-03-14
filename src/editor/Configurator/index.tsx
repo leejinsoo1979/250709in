@@ -4334,7 +4334,11 @@ const Configurator: React.FC = () => {
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                    (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
+                    (v) => {
+                      // 상부프레임 size 변경 → freeHeight 역산 (가구 높이 조정)
+                      const newFreeHeight = Math.max(100, spaceInfo.height - baseH - v);
+                      updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
+                    },
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                     `top-${mod.id}`,
                   )}</React.Fragment>;
