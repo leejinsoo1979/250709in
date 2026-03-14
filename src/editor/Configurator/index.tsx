@@ -3286,8 +3286,8 @@ const Configurator: React.FC = () => {
 
         {/* 자유배치 모드에서는 이격거리 불필요 — 제거됨 */}
 
-        {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 (자유배치 모드에서는 숨김) */}
-        {!isFreeMode && (<div className={styles.configSection}>
+        {/* 단내림 설정 */}
+        {(<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>단내림</h3>
