@@ -2564,49 +2564,71 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {/* 상부 프레임 스트립 */}
-              {freeTopEnabled && topStripGroups.map((group) => {
-                const widthMM = group.rightMM - group.leftMM;
-                const centerXmm = (group.leftMM + group.rightMM) / 2;
+              {freeTopEnabled && topStripGroups.flatMap((group) => {
                 const freeTopCfg = spaceInfo.freeSurround?.top;
-
-                // 가구 freeHeight가 줄어들면 → 상부프레임이 줄어든 만큼 아래로 확장
-                // 원래 배치 높이 = 내부공간 높이 (calculateInternalSpace)
                 const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
                 const baseFrameThicknessMM = group.thicknessMM > 0
                   ? group.thicknessMM
                   : freeTopCfg?.enabled
                     ? freeTopCfg.size
                     : topBottomFrameHeightMm;
-                const gapMM = (group.minFreeHeightMM > 0 && group.minFreeHeightMM < internalSpaceHeight)
-                  ? internalSpaceHeight - group.minFreeHeightMM
-                  : 0;
-                const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
-                const groupFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-
-                const groupTopY = panelStartY + height - groupFrameHeight / 2;
-                // Z축 옵셋: 양수=앞으로, 음수=뒤로 (가구 앞면 기준)
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
-                return (
-                  <BoxWithEdges
-                    hideEdges={hideEdges}
-                    isOuterFrame
-                    key={`free-top-strip-${group.id}`}
-                    name="top-frame"
-                    args={[
-                      mmToThreeUnits(widthMM),
-                      groupFrameHeight,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      mmToThreeUnits(centerXmm),
-                      groupTopY,
-                      topZPosition + topZOffset
-                    ]}
-                    material={topFrameMaterial ?? createFrameMaterial('top')}
-                    renderMode={renderMode}
-                    shadowEnabled={shadowEnabled}
-                  />
-                );
+
+                // 모듈별 bounds + freeHeight 계산 후 X좌표 정렬
+                const modulesWithBounds = group.modules.map(m => ({
+                  module: m,
+                  bounds: getModuleBoundsX(m),
+                  freeHeight: m.freeHeight || 0,
+                }));
+                modulesWithBounds.sort((a, b) => a.bounds.left - b.bounds.left);
+
+                // 인접한 동일 높이 모듈을 세그먼트로 병합 (±1mm 허용)
+                const segments: { leftMM: number; rightMM: number; freeHeight: number }[] = [];
+                for (const item of modulesWithBounds) {
+                  const last = segments[segments.length - 1];
+                  if (last && Math.abs(item.freeHeight - last.freeHeight) <= 1) {
+                    last.rightMM = Math.max(last.rightMM, item.bounds.right);
+                  } else {
+                    segments.push({
+                      leftMM: item.bounds.left,
+                      rightMM: item.bounds.right,
+                      freeHeight: item.freeHeight,
+                    });
+                  }
+                }
+
+                return segments.map((seg, segIdx) => {
+                  const segWidthMM = seg.rightMM - seg.leftMM;
+                  const segCenterXmm = (seg.leftMM + seg.rightMM) / 2;
+                  const gapMM = (seg.freeHeight > 0 && seg.freeHeight < internalSpaceHeight)
+                    ? internalSpaceHeight - seg.freeHeight
+                    : 0;
+                  const totalFrameHeightMM = baseFrameThicknessMM + gapMM;
+                  const segFrameHeight = mmToThreeUnits(totalFrameHeightMM);
+                  const segTopY = panelStartY + height - segFrameHeight / 2;
+
+                  return (
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      key={`free-top-strip-${group.id}-seg${segIdx}`}
+                      name="top-frame"
+                      args={[
+                        mmToThreeUnits(segWidthMM),
+                        segFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[
+                        mmToThreeUnits(segCenterXmm),
+                        segTopY,
+                        topZPosition + topZOffset
+                      ]}
+                      material={topFrameMaterial ?? createFrameMaterial('top')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  );
+                });
               })}
 
               {/* 자유배치 좌측 서라운드 — L자 (전면에서 이격 가림) */}
