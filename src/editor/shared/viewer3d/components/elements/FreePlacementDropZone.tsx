@@ -1456,24 +1456,13 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
-      {/* 배치 후 남은 공간 사이즈 표시 (드래그 중에는 editingDistanceGuides가 대신 표시) */}
       {/* 커튼박스 구간 + 버튼 (구간분할 활성 + 가구 배치됨 + 서라운드 미생성) */}
       {(() => {
+        if (!spaceInfo.droppedCeiling?.enabled) return null;
         const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
+        if (freeModsForBtn.length === 0) return null;
         const fs = spaceInfo.freeSurround;
         const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
-
-        console.log('🔵 [CurtainBoxBtn] 조건체크:', {
-          isFreePlacement,
-          droppedEnabled: spaceInfo.droppedCeiling?.enabled,
-          freeModCount: freeModsForBtn.length,
-          isSurroundActive,
-          freeSurround: fs,
-        });
-
-        if (!isFreePlacement) return null;
-        if (!spaceInfo.droppedCeiling?.enabled) return null;
-        if (freeModsForBtn.length === 0) return null;
         if (isSurroundActive) return null;
 
         const totalWidth = spaceInfo.width || 2400;
@@ -1486,17 +1475,19 @@ const FreePlacementDropZone: React.FC = () => {
           ? (halfW - curtainW / 2) * 0.01
           : (-halfW + curtainW / 2) * 0.01;
 
-        const internalSpace = calculateInternalSpace(spaceInfo);
-        const curtainCenterY = internalSpace.height * 0.01 / 2;
+        const spaceHeight = (spaceInfo.height || 2400) * 0.01;
+        const curtainCenterY = spaceHeight / 2;
 
         return (
           <Html
-            position={[curtainCenterX, curtainCenterY, 0.05]}
+            position={[curtainCenterX, curtainCenterY, guideZPosition + 0.02]}
             center
-            zIndexRange={[11000, 11001]}
+            zIndexRange={[16000, 16001]}
+            style={{ pointerEvents: 'auto' }}
           >
             <div
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 const result = generateSurround(spaceInfo, placedModules);
                 if (result.success && result.config) {
                   setSpaceInfo({ freeSurround: result.config });
