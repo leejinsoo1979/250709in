@@ -346,6 +346,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 자유배치에서 실제 사용할 높이: props internalHeight > store freeHeight > 기본값
   const effectiveInternalHeight = internalHeight || storeFreeHeight;
 
+  // 자유배치 EP 역보정: 부모 group이 freeEpOffsetX만큼 밀렸으므로 도어는 반대로 되돌림
+  // (도어는 원래 freeWidth 크기 그대로, 가구 중심에 위치해야 함)
+  let freeEpReverseX = 0;
+  if (isFree && storePlacedModule && !storePlacedModule.customConfig) {
+    const epThk = (storePlacedModule.endPanelThickness || 18) * 0.01; // mm → Three.js
+    const leftEp = storePlacedModule.hasLeftEndPanel ? epThk : 0;
+    const rightEp = storePlacedModule.hasRightEndPanel ? epThk : 0;
+    freeEpReverseX = -(leftEp - rightEp) / 2; // 부모 offset의 반대
+  }
+
   console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
     furnitureId,
     isLayoutModeFree,
@@ -1185,8 +1195,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
 
   // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
-  // (자유배치 EP offset은 부모 group position에서 이미 적용됨)
-  let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  // 자유배치 EP: 부모 group이 밀린 만큼 도어를 역방향으로 되돌림
+  let doorGroupX = (slotCenterX || 0) + freeEpReverseX;
   
   // slotCenterX가 제공되었는지 확인
   if (slotCenterX !== undefined && slotCenterX !== null) {
