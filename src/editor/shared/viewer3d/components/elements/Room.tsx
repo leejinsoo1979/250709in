@@ -2575,6 +2575,9 @@ const Room: React.FC<RoomProps> = ({
                 // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
                 const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
+                const topSurrMat = highlightedFrame === 'surround-top'
+                  ? createFrameMaterial('surround-top')
+                  : (topFrameMaterial ?? createFrameMaterial('top'));
 
                 // 각 모듈별 개별 상부프레임 생성
                 const isDoorBase = spaceInfo.surroundOffsetBase === 'door';
@@ -2617,7 +2620,7 @@ const Room: React.FC<RoomProps> = ({
                         modFrameCenterY,
                         topZPosition + topZOffset + topFrameZRetract
                       ]}
-                      material={topFrameMaterial ?? createFrameMaterial('top')}
+                      material={topSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2639,6 +2642,9 @@ const Room: React.FC<RoomProps> = ({
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
+                const leftSurrMat = highlightedFrame === 'surround-left'
+                  ? createFrameMaterial('surround-left')
+                  : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 if (method === 'ep') {
                   return (
@@ -2657,7 +2663,7 @@ const Room: React.FC<RoomProps> = ({
                         surrCenterY,
                         frontZ
                       ]}
-                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      material={leftSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2690,7 +2696,7 @@ const Room: React.FC<RoomProps> = ({
                         surrCenterY,
                         sideZ
                       ]}
-                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      material={leftSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2709,7 +2715,7 @@ const Room: React.FC<RoomProps> = ({
                         surrCenterY,
                         frontZ
                       ]}
-                      material={leftFrameMaterial ?? createFrameMaterial('left')}
+                      material={leftSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2729,6 +2735,9 @@ const Room: React.FC<RoomProps> = ({
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
+                const rightSurrMat = highlightedFrame === 'surround-right'
+                  ? createFrameMaterial('surround-right')
+                  : (rightFrameMaterial ?? createFrameMaterial('right'));
 
                 if (method === 'ep') {
                   return (
@@ -2747,7 +2756,7 @@ const Room: React.FC<RoomProps> = ({
                         surrCenterY,
                         frontZ
                       ]}
-                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      material={rightSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2781,7 +2790,7 @@ const Room: React.FC<RoomProps> = ({
                         surrCenterY,
                         sideZ
                       ]}
-                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      material={rightSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2800,7 +2809,7 @@ const Room: React.FC<RoomProps> = ({
                         surrCenterY,
                         frontZ
                       ]}
-                      material={rightFrameMaterial ?? createFrameMaterial('right')}
+                      material={rightSurrMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
@@ -2828,9 +2837,9 @@ const Room: React.FC<RoomProps> = ({
                 const rightSideZ = leftSideZ;
                 // 전면패널: gap 전체 폭
                 const frontX = mmToThreeUnits(centerXmm);
-                const isMiddleHighlighted = highlightedFrame === `middle-${idx}`;
+                const isMiddleHighlighted = highlightedFrame === `surround-middle-${idx}`;
                 const frameMat = isMiddleHighlighted
-                  ? createFrameMaterial(`middle-${idx}`)
+                  ? createFrameMaterial(`surround-middle-${idx}`)
                   : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 return (

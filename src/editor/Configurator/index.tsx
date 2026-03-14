@@ -4129,7 +4129,7 @@ const Configurator: React.FC = () => {
                             <input
                               type="text" inputMode="numeric"
                               value={d.offset > 0 ? d.offset : ''} placeholder="0"
-                              onFocus={() => setHighlightedFrame(key)}
+                              onFocus={() => setHighlightedFrame(`surround-${key}`)}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
@@ -4149,7 +4149,7 @@ const Configurator: React.FC = () => {
                             <input
                               type="text" inputMode="numeric"
                               value={d.offset < 0 ? Math.abs(d.offset) : ''} placeholder="0"
-                              onFocus={() => setHighlightedFrame(key)}
+                              onFocus={() => setHighlightedFrame(`surround-${key}`)}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
@@ -4191,7 +4191,7 @@ const Configurator: React.FC = () => {
                           <input
                             type="text" inputMode="numeric"
                             value={(midCfg.offset || 0) > 0 ? midCfg.offset : ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`middle-${idx}`)}
+                            onFocus={() => setHighlightedFrame(`surround-middle-${idx}`)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
@@ -4215,7 +4215,7 @@ const Configurator: React.FC = () => {
                           <input
                             type="text" inputMode="numeric"
                             value={(midCfg.offset || 0) < 0 ? Math.abs(midCfg.offset) : ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`middle-${idx}`)}
+                            onFocus={() => setHighlightedFrame(`surround-middle-${idx}`)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
