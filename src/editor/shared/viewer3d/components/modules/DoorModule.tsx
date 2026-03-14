@@ -2250,23 +2250,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = 3;
     let doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
 
-    // EP 앞으로 돌출 시 경첩 반대쪽에서 EP 두께만큼 축소
-    let epTrimShiftX = 0; // 도어 X 위치 보정값
+    // EP 앞으로 돌출 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
+    let epTrimLeft = 0; // 좌측 EP 돌출로 줄어든 mm
+    let epTrimRight = 0; // 우측 EP 돌출로 줄어든 mm
     if (isFree && storePlacedModule) {
       const epThickMm = storePlacedModule.endPanelThickness || 18;
       const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
       const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
-      const hasLeft = storePlacedModule.hasLeftEndPanel && leftOffset > 0;
-      const hasRight = storePlacedModule.hasRightEndPanel && rightOffset > 0;
 
-      if (adjustedHingePosition === 'left') {
-        // 경첩 좌측 → 우측 EP 앞돌출 시 우측에서 줄임
-        if (hasRight) { doorWidth -= epThickMm; epTrimShiftX = -mmToThreeUnits(epThickMm) / 2; }
-      } else {
-        // 경첩 우측 → 좌측 EP 앞돌출 시 좌측에서 줄임
-        if (hasLeft) { doorWidth -= epThickMm; epTrimShiftX = mmToThreeUnits(epThickMm) / 2; }
+      if (storePlacedModule.hasLeftEndPanel && leftOffset > 0) {
+        doorWidth -= epThickMm;
+        epTrimLeft = epThickMm;
+      }
+      if (storePlacedModule.hasRightEndPanel && rightOffset > 0) {
+        doorWidth -= epThickMm;
+        epTrimRight = epThickMm;
       }
     }
+    // X 위치 보정: 좌측 trim은 오른쪽으로, 우측 trim은 왼쪽으로 밀기
+    const epTrimShiftX = mmToThreeUnits(epTrimLeft - epTrimRight) / 2;
 
     const doorWidthUnits = mmToThreeUnits(doorWidth);
 
