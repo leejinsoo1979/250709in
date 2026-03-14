@@ -945,15 +945,10 @@ const Room: React.FC<RoomProps> = ({
   //   return () => mat.dispose();
   // }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
 
-  // 하이라이트 material 생성 함수 — 호출마다 새 인스턴스 반환 (R3F material 변경 감지 보장)
+  // 하이라이트 material 생성 함수 — MeshBasicMaterial 사용 (BoxWithEdges 2D 투명화 우회)
   const createHighlightMaterial = useCallback(() => {
-    return new THREE.MeshStandardMaterial({
+    return new THREE.MeshBasicMaterial({
       color: new THREE.Color('#ff3333'),
-      metalness: 0.0,
-      roughness: 0.6,
-      envMapIntensity: 0.0,
-      emissive: new THREE.Color(0xff3333 >> 1),
-      emissiveIntensity: 1.0,
       transparent: true,
       opacity: 0.6,
     });
