@@ -4118,10 +4118,14 @@ const Configurator: React.FC = () => {
           middleGaps.forEach((_m, i) => surroundItems.push({ kind: 'middle', idx: i }));
           surroundItems.push({ kind: 'right' });
 
-          const toAlpha = (n: number) => String.fromCharCode(64 + n); // 1→A, 2→B, ...
+          const droppedPos = spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.position : null;
+          const getSurroundLabel = (kind: string) => {
+            if (kind === 'left') return droppedPos === 'left' ? '커튼박스' : '좌측';
+            if (kind === 'right') return droppedPos === 'right' ? '커튼박스' : '우측';
+            return '중간';
+          };
           const renderOffsetRow = (
-            num: number,
-            _label: string,
+            label: string,
             enabled: boolean,
             sizeMM: number,
             offset: number,
@@ -4131,7 +4135,7 @@ const Configurator: React.FC = () => {
             highlightKey: string,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '24px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}</span>
+              <span className={styles.frameItemLabel} style={{ minWidth: '44px', textAlign: 'left', margin: 0, fontSize: '11px' }}>{label}</span>
               <button
                 onClick={onToggle}
                 className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
@@ -4224,11 +4228,10 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
               <div className={styles.subSetting}>
-                {surroundItems.map((si, idx) => {
-                  const num = idx + 1;
+                {surroundItems.map((si) => {
                   if (si.kind === 'left') {
                     const d = fs.left;
-                    return <React.Fragment key="surround-left">{renderOffsetRow(num, '서라운드', d.enabled, d.gap || 0, d.offset,
+                    return <React.Fragment key="surround-left">{renderOffsetRow(getSurroundLabel('left'), d.enabled, d.gap || 0, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, gap: v } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
@@ -4237,7 +4240,7 @@ const Configurator: React.FC = () => {
                   }
                   if (si.kind === 'right') {
                     const d = fs.right;
-                    return <React.Fragment key="surround-right">{renderOffsetRow(num, '서라운드', d.enabled, d.gap || 0, d.offset,
+                    return <React.Fragment key="surround-right">{renderOffsetRow(getSurroundLabel('right'), d.enabled, d.gap || 0, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, gap: v } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
@@ -4246,7 +4249,7 @@ const Configurator: React.FC = () => {
                   }
                   if (si.kind === 'middle') {
                     const midCfg = middleGaps[si.idx];
-                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(num, '서라운드', midCfg.enabled, midCfg.gap || 0, midCfg.offset || 0,
+                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(`중간${middleGaps.length > 1 ? si.idx + 1 : ''}`, midCfg.enabled, midCfg.gap || 0, midCfg.offset || 0,
                       () => {
                         const newMiddle = [...middleGaps];
                         newMiddle[si.idx] = { ...newMiddle[si.idx], enabled: !newMiddle[si.idx].enabled };
