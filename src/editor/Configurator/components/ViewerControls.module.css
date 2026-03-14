@@ -182,6 +182,7 @@
   color: var(--theme-text-secondary);
 }
 
+.segmentButton:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .segmentButton:active { transform: scale(0.97); }
 
 /* Neutral active */
