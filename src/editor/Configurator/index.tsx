@@ -125,7 +125,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -161,6 +161,57 @@ const Configurator: React.FC = () => {
   const [newDesignProjects, setNewDesignProjects] = useState<ProjectSummary[]>([]);
   const [newDesignProjectId, setNewDesignProjectId] = useState<string | null>(null);
   const [isCreatingNewDesign, setIsCreatingNewDesign] = useState(false);
+
+  // 선택된 자유배치 가구의 도어 셋팅
+  const selectedDoorModule = selectedFurnitureId
+    ? placedModules.find(m => m.id === selectedFurnitureId && m.isFreePlacement && m.hasDoor)
+    : null;
+
+  const [cfgDoorMode, setCfgDoorMode] = useState<'auto' | 'manual'>(selectedDoorModule?.doorSettingMode || 'auto');
+  const [cfgDoorOL, setCfgDoorOL] = useState(String(selectedDoorModule?.doorOverlayLeft || 0));
+  const [cfgDoorOR, setCfgDoorOR] = useState(String(selectedDoorModule?.doorOverlayRight || 0));
+  const [cfgDoorOT, setCfgDoorOT] = useState(String(selectedDoorModule?.doorOverlayTop || 0));
+  const [cfgDoorOB, setCfgDoorOB] = useState(String(selectedDoorModule?.doorOverlayBottom || 0));
+
+  useEffect(() => {
+    if (selectedDoorModule) {
+      setCfgDoorMode(selectedDoorModule.doorSettingMode || 'auto');
+      setCfgDoorOL(String(selectedDoorModule.doorOverlayLeft || 0));
+      setCfgDoorOR(String(selectedDoorModule.doorOverlayRight || 0));
+      setCfgDoorOT(String(selectedDoorModule.doorOverlayTop || 0));
+      setCfgDoorOB(String(selectedDoorModule.doorOverlayBottom || 0));
+    }
+  }, [selectedFurnitureId, selectedDoorModule?.doorSettingMode]);
+
+  const handleCfgDoorModeChange = (mode: 'auto' | 'manual') => {
+    setCfgDoorMode(mode);
+    if (selectedDoorModule) {
+      if (mode === 'auto') {
+        setCfgDoorOL('0'); setCfgDoorOR('0'); setCfgDoorOT('0'); setCfgDoorOB('0');
+        updatePlacedModule(selectedDoorModule.id, {
+          doorSettingMode: 'auto', doorOverlayLeft: 0, doorOverlayRight: 0, doorOverlayTop: 0, doorOverlayBottom: 0,
+        });
+      } else {
+        updatePlacedModule(selectedDoorModule.id, { doorSettingMode: 'manual' });
+      }
+    }
+  };
+
+  const handleCfgDoorOverlay = (dir: 'left' | 'right' | 'top' | 'bottom', val: string) => {
+    const setters: Record<string, (v: string) => void> = { left: setCfgDoorOL, right: setCfgDoorOR, top: setCfgDoorOT, bottom: setCfgDoorOB };
+    setters[dir](val);
+    const num = parseFloat(val);
+    if (!isNaN(num) && selectedDoorModule) {
+      const key = { left: 'doorOverlayLeft', right: 'doorOverlayRight', top: 'doorOverlayTop', bottom: 'doorOverlayBottom' }[dir];
+      updatePlacedModule(selectedDoorModule.id, { [key]: num });
+    }
+  };
+
+  const handleCfgDoorBlur = (dir: 'left' | 'right' | 'top' | 'bottom') => {
+    const inputs: Record<string, string> = { left: cfgDoorOL, right: cfgDoorOR, top: cfgDoorOT, bottom: cfgDoorOB };
+    const setters: Record<string, (v: string) => void> = { left: setCfgDoorOL, right: setCfgDoorOR, top: setCfgDoorOT, bottom: setCfgDoorOB };
+    if (isNaN(parseFloat(inputs[dir]))) setters[dir]('0');
+  };
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
