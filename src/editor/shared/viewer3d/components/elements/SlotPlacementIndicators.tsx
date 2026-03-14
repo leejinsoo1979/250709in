@@ -190,8 +190,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
       if (!available) {
 // console.log('🔍 [SlotIndicators] 슬롯 사용 불가:', { slotIndex, zone: slotData.zone });
-        continue; // 슬롯 사용 불가
-      }
+        // continue; // 슬롯 사용 불가
+      // }
 
       // zone에 따른 Y 위치 계산
       const yPosition = calculateYPosition(slotData.zone);

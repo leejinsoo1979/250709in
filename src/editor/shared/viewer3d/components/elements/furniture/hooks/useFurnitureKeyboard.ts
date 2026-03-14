@@ -140,10 +140,10 @@ export const useFurnitureKeyboard = ({
           case 'ArrowLeft': {
             // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
 // console.log('⌨️ ArrowLeft 키 입력:', {
-              currentSlot: currentSlotIndex,
-              editingModuleZone: editingModule.zone,
-              hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
-            });
+              // currentSlot: currentSlotIndex,
+              // editingModuleZone: editingModule.zone,
+              // hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
+            // });
             const nextSlot = findNextAvailableSlot(
               currentSlotIndex,
               'left',
@@ -211,12 +211,12 @@ export const useFurnitureKeyboard = ({
                 }
                 
 // console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
-                  slotIndex: nextSlot,
-                  columnDepth,
-                  originalWidth: moduleData.dimensions.width,
-                  adjustedWidth,
-                  adjustedPosition
-                });
+                  // slotIndex: nextSlot,
+                  // columnDepth,
+                  // originalWidth: moduleData.dimensions.width,
+                  // adjustedWidth,
+                  // adjustedPosition
+                // });
               }
 
               // customWidth 계산 - zone별 slotWidths 사용
@@ -267,10 +267,10 @@ export const useFurnitureKeyboard = ({
           case 'ArrowRight': {
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
 // console.log('⌨️ ArrowRight 키 입력:', {
-              currentSlot: currentSlotIndex,
-              editingModuleZone: editingModule.zone,
-              hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
-            });
+              // currentSlot: currentSlotIndex,
+              // editingModuleZone: editingModule.zone,
+              // hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
+            // });
             const nextSlot = findNextAvailableSlot(
               currentSlotIndex,
               'right',
@@ -338,12 +338,12 @@ export const useFurnitureKeyboard = ({
                 }
                 
 // console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
-                  slotIndex: nextSlot,
-                  columnDepth,
-                  originalWidth: moduleData.dimensions.width,
-                  adjustedWidth,
-                  adjustedPosition
-                });
+                  // slotIndex: nextSlot,
+                  // columnDepth,
+                  // originalWidth: moduleData.dimensions.width,
+                  // adjustedWidth,
+                  // adjustedPosition
+                // });
               }
 
               // customWidth 계산 - zone별 slotWidths 사용
@@ -514,12 +514,12 @@ export const useFurnitureKeyboard = ({
                   }
                   
 // console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
-                    slotIndex: nextSlot,
-                    columnDepth,
-                    originalWidth: moduleData.dimensions.width,
-                    adjustedWidth,
-                    adjustedPosition
-                  });
+                    // slotIndex: nextSlot,
+                    // columnDepth,
+                    // originalWidth: moduleData.dimensions.width,
+                    // adjustedWidth,
+                    // adjustedPosition
+                  // });
                 }
                 
                 // customWidth 계산
@@ -612,12 +612,12 @@ export const useFurnitureKeyboard = ({
                   }
                   
 // console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
-                    slotIndex: nextSlot,
-                    columnDepth,
-                    originalWidth: moduleData.dimensions.width,
-                    adjustedWidth,
-                    adjustedPosition
-                  });
+                    // slotIndex: nextSlot,
+                    // columnDepth,
+                    // originalWidth: moduleData.dimensions.width,
+                    // adjustedWidth,
+                    // adjustedPosition
+                  // });
                 }
                 
                 // customWidth 계산

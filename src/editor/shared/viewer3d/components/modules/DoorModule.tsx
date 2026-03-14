@@ -186,12 +186,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   };
 
 // console.log('🎨🎨🎨 DoorModule materialConfig:', {
-    doorTexture: materialConfig.doorTexture,
-    interiorTexture: materialConfig.interiorTexture,
-    doorColor: materialConfig.doorColor,
-    propTextureUrl: textureUrl,
-    doorTexture_equals_interiorTexture: materialConfig.doorTexture === materialConfig.interiorTexture
-  });
+    // doorTexture: materialConfig.doorTexture,
+    // interiorTexture: materialConfig.interiorTexture,
+    // doorColor: materialConfig.doorColor,
+    // propTextureUrl: textureUrl,
+    // doorTexture_equals_interiorTexture: materialConfig.doorTexture === materialConfig.interiorTexture
+  // });
 
   // 색상 설정: color prop이 있으면 사용, 없으면 현재 spaceInfo의 도어 색상 사용
   let doorColor = color || materialConfig.doorColor;
@@ -446,14 +446,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           material.needsUpdate = true;
 
 // console.log(`🚪 ${doorSide} 텍스처 로드 완료:`, {
-            hasMap: !!material.map,
-            mapImage: material.map?.image?.src,
-            color: material.color.getHexString(),
-            toneMapped: material.toneMapped,
-            roughness: material.roughness,
-            isOakTexture: isOakTexture(textureUrl),
-            isCabinetTexture1: isCabinetTexture1(textureUrl)
-          });
+            // hasMap: !!material.map,
+            // mapImage: material.map?.image?.src,
+            // color: material.color.getHexString(),
+            // toneMapped: material.toneMapped,
+            // roughness: material.roughness,
+            // isOakTexture: isOakTexture(textureUrl),
+            // isCabinetTexture1: isCabinetTexture1(textureUrl)
+          // });
           
           // 강제 리렌더링을 위해 다음 프레임에서 한번 더 업데이트
           requestAnimationFrame(() => {
@@ -546,15 +546,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         if (doorMaterialRef.current) {
 // console.log('🎨 싱글 도어에 텍스처 적용');
-          applyTextureToMaterial(doorMaterialRef.current, effectiveTextureUrl, '싱글', panelNames.single);
+          // applyTextureToMaterial(doorMaterialRef.current, effectiveTextureUrl, '싱글', panelNames.single);
         }
         if (leftDoorMaterialRef.current) {
 // console.log('🎨 왼쪽 도어에 텍스처 적용');
-          applyTextureToMaterial(leftDoorMaterialRef.current, effectiveTextureUrl, '왼쪽', panelNames.left);
+          // applyTextureToMaterial(leftDoorMaterialRef.current, effectiveTextureUrl, '왼쪽', panelNames.left);
         }
         if (rightDoorMaterialRef.current) {
 // console.log('🎨 오른쪽 도어에 텍스처 적용');
-          applyTextureToMaterial(rightDoorMaterialRef.current, effectiveTextureUrl, '오른쪽', panelNames.right);
+          // applyTextureToMaterial(rightDoorMaterialRef.current, effectiveTextureUrl, '오른쪽', panelNames.right);
         }
       } else {
         // 텍스처가 없으면 제거 (색상 재질로 변경)
@@ -569,8 +569,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
     } else {
 // console.log('⏭️ 도어 텍스처 적용 스킵:', {
-        reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
-      });
+        // reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
+      // });
     }
   }, [materialConfig.doorTexture, materialConfig.interiorTexture, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
   
@@ -706,13 +706,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorHeight = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
 
 // console.log('🚪🔴 상부장 도어 높이 계산:', {
-      moduleId: moduleData?.id,
-      캐비넷높이: upperCabinetHeight,
-      천장간격: UPPER_CABINET_TOP_GAP,
-      아래확장: UPPER_CABINET_BOTTOM_EXTENSION,
-      도어높이: actualDoorHeight,
-      설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
-    });
+      // moduleId: moduleData?.id,
+      // 캐비넷높이: upperCabinetHeight,
+      // 천장간격: UPPER_CABINET_TOP_GAP,
+      // 아래확장: UPPER_CABINET_BOTTOM_EXTENSION,
+      // 도어높이: actualDoorHeight,
+      // 설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
+    // });
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치, 아래로 확장
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
@@ -727,22 +727,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     if (floatHeight > 0) {
 // console.log('🚪📐 하부장 플로팅 도어 높이 조정:', {
-        원래높이: lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION,
-        하단확장제거: LOWER_CABINET_BOTTOM_EXTENSION,
-        조정된높이: actualDoorHeight,
-        설명: '띄움배치 시 하단 확장 제거하여 키큰장 도어 하단과 일치'
-      });
+        // 원래높이: lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION,
+        // 하단확장제거: LOWER_CABINET_BOTTOM_EXTENSION,
+        // 조정된높이: actualDoorHeight,
+        // 설명: '띄움배치 시 하단 확장 제거하여 키큰장 도어 하단과 일치'
+      // });
     }
 
 // console.log('🚪📏 하부장 도어 높이:', {
-      moduleId: moduleData?.id,
-      캐비넷높이: lowerCabinetHeight,
-      아래확장: LOWER_CABINET_BOTTOM_EXTENSION,
-      위확장: LOWER_CABINET_TOP_EXTENSION,
-      actualDoorHeight,
-      type: '하부장',
-      설명: '하부장 상단과 일치, 아래로 60mm 확장'
-    });
+      // moduleId: moduleData?.id,
+      // 캐비넷높이: lowerCabinetHeight,
+      // 아래확장: LOWER_CABINET_BOTTOM_EXTENSION,
+      // 위확장: LOWER_CABINET_TOP_EXTENSION,
+      // actualDoorHeight,
+      // type: '하부장',
+      // 설명: '하부장 상단과 일치, 아래로 60mm 확장'
+    // });
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
     // fullSpaceHeight는 zone prop에 따라 단내림 구간 높이 또는 일반 구간 높이 사용
@@ -807,20 +807,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorTopLocal = cabinetTopLocal - extraTopGap;
 
 // console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
-      doorBottomGapInput: doorBottomGap,
-      baselineBottomGap,
-      effectiveBottomGap,
-      extraBottomGap,
-      doorTopGapInput: doorTopGap,
-      extraTopGap,
-      cabinetBottomLocal,
-      cabinetTopLocal,
-      doorBottomLocal,
-      doorTopLocal,
-      placementType,
-      floatHeight,
-      설명: '띄움배치 시 baselineBottomGap에 이미 floatHeight 반영됨'
-    });
+      // doorBottomGapInput: doorBottomGap,
+      // baselineBottomGap,
+      // effectiveBottomGap,
+      // extraBottomGap,
+      // doorTopGapInput: doorTopGap,
+      // extraTopGap,
+      // cabinetBottomLocal,
+      // cabinetTopLocal,
+      // doorBottomLocal,
+      // doorTopLocal,
+      // placementType,
+      // floatHeight,
+      // 설명: '띄움배치 시 baselineBottomGap에 이미 floatHeight 반영됨'
+    // });
 
     // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
     // 별도의 doorBottomLocal 조정 불필요
@@ -948,15 +948,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorYPosition = mmToThreeUnits(doorCenter);
 
 // console.log('🚪🔴 상부장 도어 Y 위치:', {
-      moduleId: moduleData?.id,
-      캐비넷높이: upperCabinetHeight,
-      캐비넷하단: cabinetBottom,
-      도어하단: doorBottom,
-      도어높이: doorHeightMm,
-      도어중심: doorCenter,
-      doorYPosition,
-      설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
-    });
+      // moduleId: moduleData?.id,
+      // 캐비넷높이: upperCabinetHeight,
+      // 캐비넷하단: cabinetBottom,
+      // 도어하단: doorBottom,
+      // 도어높이: doorHeightMm,
+      // 도어중심: doorCenter,
+      // doorYPosition,
+      // 설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
+    // });
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치하고 아래로 확장
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 아래쪽 확장
@@ -984,19 +984,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorYPosition = doorTop - mmToThreeUnits(actualDoorHeight) / 2;
 
 // console.log('🚪📍 하부장 도어 Y 위치 (상단 고정, 하단만 조정):', {
-      moduleId: moduleData?.id,
-      캐비넷높이: lowerCabinetHeight,
-      캐비넷상단_mm: (cabinetTop / 0.01).toFixed(1),
-      캐비넷하단_mm: (cabinetBottom / 0.01).toFixed(1),
-      도어상단_mm: (doorTop / 0.01).toFixed(1),
-      도어높이_mm: actualDoorHeight,
-      플로팅높이_mm: floatHeight,
-      도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
-      위확장: LOWER_CABINET_TOP_EXTENSION,
-      위치조정: DOOR_POSITION_ADJUSTMENT,
-      type: '하부장',
-      설명: '도어 상단 고정(' + (doorTop / 0.01).toFixed(1) + 'mm), 하단은 플로팅만큼 올라감'
-    });
+      // moduleId: moduleData?.id,
+      // 캐비넷높이: lowerCabinetHeight,
+      // 캐비넷상단_mm: (cabinetTop / 0.01).toFixed(1),
+      // 캐비넷하단_mm: (cabinetBottom / 0.01).toFixed(1),
+      // 도어상단_mm: (doorTop / 0.01).toFixed(1),
+      // 도어높이_mm: actualDoorHeight,
+      // 플로팅높이_mm: floatHeight,
+      // 도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
+      // 위확장: LOWER_CABINET_TOP_EXTENSION,
+      // 위치조정: DOOR_POSITION_ADJUSTMENT,
+      // type: '하부장',
+      // 설명: '도어 상단 고정(' + (doorTop / 0.01).toFixed(1) + 'mm), 하단은 플로팅만큼 올라감'
+    // });
   } else {
     // 키큰장 도어 Y 위치 계산
     // Y=0은 Three.js 바닥 기준
@@ -1279,15 +1279,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const rightDistance = Math.abs(doorRightEdge - columnLeftEdge);
       
 // console.log('🚪 기둥 거리 체크:', {
-        columnPosition: column.position,
-        columnX,
-        columnWidth: column.width,
-        columnLeftEdge,
-        columnRightEdge,
-        leftDistance: leftDistance / 0.01, // mm로 변환
-        rightDistance: rightDistance / 0.01, // mm로 변환
-        threshold: threshold / 0.01 // mm로 변환
-      });
+        // columnPosition: column.position,
+        // columnX,
+        // columnWidth: column.width,
+        // columnLeftEdge,
+        // columnRightEdge,
+        // leftDistance: leftDistance / 0.01, // mm로 변환
+        // rightDistance: rightDistance / 0.01, // mm로 변환
+        // threshold: threshold / 0.01 // mm로 변환
+      // });
       
       // 왼쪽에 기둥이 있는 경우
       if (leftDistance < threshold) {
@@ -1322,21 +1322,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     adjustedHingePosition = columnCheck.columnSide as 'left' | 'right';
 
 // console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
-      originalHinge: hingePosition,
-      adjustedHinge: adjustedHingePosition,
-      columnSide: columnCheck.columnSide,
-      doorCenterX: slotCenterX,
-      moduleData,
-      isDoorModule,
-      note: '힌지는 기둥 쪽에 위치하여 도어가 기둥 반대방향으로 열림'
-    });
+      // originalHinge: hingePosition,
+      // adjustedHinge: adjustedHingePosition,
+      // columnSide: columnCheck.columnSide,
+      // doorCenterX: slotCenterX,
+      // moduleData,
+      // isDoorModule,
+      // note: '힌지는 기둥 쪽에 위치하여 도어가 기둥 반대방향으로 열림'
+    // });
   } else {
 // console.log('🚪 힌지 조정 안함:', {
-      isNearColumn: columnCheck.isNearColumn,
-      columnSide: columnCheck.columnSide,
-      isDoorModule,
-      moduleData
-    });
+      // isNearColumn: columnCheck.isNearColumn,
+      // columnSide: columnCheck.columnSide,
+      // isDoorModule,
+      // moduleData
+    // });
   }
 
   if (isDualFurniture) {
@@ -2884,12 +2884,12 @@ export default React.memo(DoorModule, (prevProps, nextProps) => {
     prevMaterialConfig?.doorTexture === nextMaterialConfig?.doorTexture;
 
 // console.log('🔍 DoorModule React.memo 비교:', {
-    prevDoorTexture: prevMaterialConfig?.doorTexture,
-    nextDoorTexture: nextMaterialConfig?.doorTexture,
-    doorTextureChanged: prevMaterialConfig?.doorTexture !== nextMaterialConfig?.doorTexture,
-    doorPropsEqual,
-    willRerender: !doorPropsEqual
-  });
+    // prevDoorTexture: prevMaterialConfig?.doorTexture,
+    // nextDoorTexture: nextMaterialConfig?.doorTexture,
+    // doorTextureChanged: prevMaterialConfig?.doorTexture !== nextMaterialConfig?.doorTexture,
+    // doorPropsEqual,
+    // willRerender: !doorPropsEqual
+  // });
 
   // 기타 중요한 props 비교
   const otherPropsEqual =

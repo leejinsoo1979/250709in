@@ -62,12 +62,12 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
       // 키큰장 디버그
       if (module.moduleId.includes('tall') || module.moduleId.includes('pantry') || module.moduleId.includes('wardrobe')) {
 // console.log('🔦 키큰장 폭 계산:', {
-          moduleId: module.moduleId,
-          adjustedWidth: module.adjustedWidth,
-          customWidth: module.customWidth,
-          dimensionsWidth: moduleData.dimensions.width,
-          finalWidth: width
-        });
+          // moduleId: module.moduleId,
+          // adjustedWidth: module.adjustedWidth,
+          // customWidth: module.customWidth,
+          // dimensionsWidth: moduleData.dimensions.width,
+          // finalWidth: width
+        // });
       }
       
       // X 위치 계산

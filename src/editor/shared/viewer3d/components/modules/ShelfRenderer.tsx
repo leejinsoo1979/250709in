@@ -354,14 +354,14 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       const centerY = (-innerHeight / 2) + height / 2;
 
 // console.log('🔴 절대위치모드 - 첫 번째 칸:', {
-                      shelfPositions_0: shelfPositions[0],
-                      basicThickness,
-                      basicThickness_mm: basicThickness * 100,
-                      firstShelfBottomMm,
-                      height,
-                      height_mm: height * 100,
-                      표시될값: Math.round(height * 100)
-                    });
+                      // shelfPositions_0: shelfPositions[0],
+                      // basicThickness,
+                      // basicThickness_mm: basicThickness * 100,
+                      // firstShelfBottomMm,
+                      // height,
+                      // height_mm: height * 100,
+                      // 표시될값: Math.round(height * 100)
+                    // });
 
                       compartmentHeights.push({
                         height,
@@ -505,11 +505,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               // 상단 프레임 치수는 showTopFrameDimension이 true이고 3D/측면뷰/탑뷰가 아닐 때만 표시
               if (showTopFrameDimension && viewMode !== '3D' && !isSideView && !isTopView) {
 // console.log('🟣 상단 프레임 엔드포인트:', {
-                  'topFrameTopY_mm': topFrameTopY * 100,
-                  'topFrameBottomY_mm': topFrameBottomY * 100,
-                  '위점렌더링': 'O',
-                  '아래점렌더링': 'O'
-                });
+                  // 'topFrameTopY_mm': topFrameTopY * 100,
+                  // 'topFrameBottomY_mm': topFrameBottomY * 100,
+                  // '위점렌더링': 'O',
+                  // '아래점렌더링': 'O'
+                // });
                 shelfThicknessElements.push(
                 <group key="top-frame-thickness">
                   {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 */}

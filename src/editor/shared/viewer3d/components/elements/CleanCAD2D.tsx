@@ -261,12 +261,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 디버깅 로그 추가
 // console.log('🔴 CleanCAD2D - indexing:', {
-    columnCount: indexing.columnCount,
-    columnWidth: indexing.columnWidth,
-    internalWidth: indexing.internalWidth,
-    mainDoorCount: spaceInfo.mainDoorCount,
-    customColumnCount: spaceInfo.customColumnCount
-  });
+    // columnCount: indexing.columnCount,
+    // columnWidth: indexing.columnWidth,
+    // internalWidth: indexing.internalWidth,
+    // mainDoorCount: spaceInfo.mainDoorCount,
+    // customColumnCount: spaceInfo.customColumnCount
+  // });
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModules.some(module => {
       // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
@@ -1015,15 +1015,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   // 디버깅 로그
 // console.log('🔍 CleanCAD2D Debug:', {
-    spaceWidth: spaceInfo.width,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-    droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
-    droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
-    frameSize,
-    leftOffset,
-    normalBoundsWidth: spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0),
-    droppedBoundsWidth: spaceInfo.droppedCeiling?.width || 0
-  });
+    // spaceWidth: spaceInfo.width,
+    // droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    // droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+    // droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+    // frameSize,
+    // leftOffset,
+    // normalBoundsWidth: spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0),
+    // droppedBoundsWidth: spaceInfo.droppedCeiling?.width || 0
+  // });
   
   // 화살표 생성 함수
   const createArrowHead = (start: [number, number, number], end: [number, number, number], size = 0.015) => {
@@ -4711,12 +4711,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {(() => {
                       const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 // console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
-                        surroundType: spaceInfo.surroundType,
-                        installType: spaceInfo.installType,
-                        wallConfig: spaceInfo.wallConfig,
-                        frameThickness,
-                        droppedPosition: spaceInfo.droppedCeiling.position
-                      });
+                        // surroundType: spaceInfo.surroundType,
+                        // installType: spaceInfo.installType,
+                        // wallConfig: spaceInfo.wallConfig,
+                        // frameThickness,
+                        // droppedPosition: spaceInfo.droppedCeiling.position
+                      // });
                       
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -6459,11 +6459,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               // 디버깅을 위한 로그
 // console.log('🔍 [상단뷰 치수] 배치된 가구들:', placedModules.map(m => ({
-                id: m.id,
-                moduleId: m.moduleId,
-                customDepth: m.customDepth,
-                position: m.position
-              })));
+                // id: m.id,
+                // moduleId: m.moduleId,
+                // customDepth: m.customDepth,
+                // position: m.position
+              // })));
               
               // 모든 배치된 가구의 실제 앞면과 뒷면 위치를 계산하여 최대 범위 찾기
               let minBackZ = Infinity;

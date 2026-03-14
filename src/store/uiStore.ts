@@ -522,9 +522,9 @@ export const useUIStore = create<UIState>()(
       // 가구 편집 팝업 열기 (다른 모든 팝업 닫기)
       openFurnitureEditPopup: (moduleId) => {
 // console.log('🔹 openFurnitureEditPopup 호출:', {
-          moduleId,
-          현재상태: get().highlightedCompartment
-        });
+//           moduleId,
+//           현재상태: get().highlightedCompartment
+//         });
         set({ 
           activePopup: { type: 'furnitureEdit', id: moduleId },
           highlightedCompartment: moduleId,

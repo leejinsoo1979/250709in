@@ -2921,11 +2921,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let activeModuleData = currentDragData;
 
 // console.log('🔍 [Ghost] activeModuleData 생성 전:', {
-          hasCurrentDragData: !!currentDragData,
-          selectedFurnitureId,
-          hoveredSlotIndex,
-          slotIndex
-        });
+          // hasCurrentDragData: !!currentDragData,
+          // selectedFurnitureId,
+          // hoveredSlotIndex,
+          // slotIndex
+        // });
 
         // selectedFurnitureId가 있고 currentDragData가 없으면 selectedFurnitureId로부터 데이터 생성
         if (!activeModuleData && selectedFurnitureId) {
@@ -2959,11 +2959,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             || (activeModuleData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
 
 // console.log('🔍 [Ghost] activeModuleData 있음, 듀얼 체크:', {
-            moduleId: activeModuleData.moduleData.id,
-            isDual,
-            selectedFurnitureId,
-            hoveredSlotIndex
-          });
+            // moduleId: activeModuleData.moduleData.id,
+            // isDual,
+            // selectedFurnitureId,
+            // hoveredSlotIndex
+          // });
         }
 
         // 해당 슬롯에 이미 배치된 모듈 찾기 (띄움 높이를 재사용하기 위해)
@@ -2980,11 +2980,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let shouldRenderGhost = false;
         if (activeModuleData) {
 // console.log('🔍 [Ghost] shouldRenderGhost 결정 시작:', {
-            hasCurrentDragData: !!currentDragData,
-            selectedFurnitureId,
-            hoveredSlotIndex,
-            slotIndex
-          });
+            // hasCurrentDragData: !!currentDragData,
+            // selectedFurnitureId,
+            // hoveredSlotIndex,
+            // slotIndex
+          // });
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
 
           // 클릭 모드: selectedFurnitureId가 있으면 클릭 모드 (섬네일 클릭)
@@ -3022,12 +3022,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 );
 
 // console.log('👻 [Click Mode] 슬롯 점유 체크:', {
-                  slotIndex: compareIndex,
-                  slotZone,
-                  isDual,
-                  available,
-                  moduleIdForCheck
-                });
+                  // slotIndex: compareIndex,
+                  // slotZone,
+                  // isDual,
+                  // available,
+                  // moduleIdForCheck
+                // });
 
                 shouldRenderGhost = available;
               }
@@ -3168,10 +3168,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
             if ((slot1Info?.hasColumn && slot1Info.adjustedWidth) || (slot2Info?.hasColumn && slot2Info.adjustedWidth)) {
 // console.log(`🏗️ [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
-                슬롯1: { 인덱스: localIndex, 원본: targetZone.slotWidths?.[localIndex], 조정: slot1Width, 기둥: slot1Info?.hasColumn },
-                슬롯2: { 인덱스: localIndex + 1, 원본: targetZone.slotWidths?.[localIndex + 1], 조정: slot2Width, 기둥: slot2Info?.hasColumn },
-                총너비: targetWidth
-              });
+                // 슬롯1: { 인덱스: localIndex, 원본: targetZone.slotWidths?.[localIndex], 조정: slot1Width, 기둥: slot1Info?.hasColumn },
+                // 슬롯2: { 인덱스: localIndex + 1, 원본: targetZone.slotWidths?.[localIndex + 1], 조정: slot2Width, 기둥: slot2Info?.hasColumn },
+                // 총너비: targetWidth
+              // });
             }
           } else {
             // 싱글 가구: 해당 슬롯의 너비
@@ -3181,11 +3181,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
               targetWidth = slotInfo.adjustedWidth;
 // console.log(`🏗️ [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
-                슬롯인덱스: localIndex,
-                원본: targetZone.slotWidths?.[localIndex] || targetZone.columnWidth,
-                조정: targetWidth,
-                기둥너비: slotInfo.column?.width
-              });
+                // 슬롯인덱스: localIndex,
+                // 원본: targetZone.slotWidths?.[localIndex] || targetZone.columnWidth,
+                // 조정: targetWidth,
+                // 기둥너비: slotInfo.column?.width
+              // });
             } else {
               targetWidth = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
             }
@@ -3244,10 +3244,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 기둥이 있는 슬롯의 경우 adjustedWidth 사용
             targetWidth = targetSlotInfo.adjustedWidth;
 // console.log(`🏗️ [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 너비 조정:`, {
-              원본슬롯너비: indexing.columnWidth,
-              기둥너비: targetSlotInfo.column?.width,
-              조정된너비: targetWidth
-            });
+              // 원본슬롯너비: indexing.columnWidth,
+              // 기둥너비: targetSlotInfo.column?.width,
+              // 조정된너비: targetWidth
+            // });
           } else if (isDual && hoveredSlotIndex < indexing.columnCount - 1) {
             // 듀얼 가구: 두 슬롯의 너비 합
             targetWidth = indexing.columnWidth * 2;
@@ -3591,13 +3591,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           adjustedPreviewX = furnitureBounds.center;
 
 // console.log(`👻 [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 조정 (calculateFurnitureBounds):`, {
-            원본슬롯너비: indexing.columnWidth,
-            renderWidth: customWidth,
-            center: adjustedPreviewX,
-            기둥너비: targetSlotInfo.column?.width,
-            furniturePosition: targetSlotInfo.furniturePosition,
-            furnitureBounds
-          });
+            // 원본슬롯너비: indexing.columnWidth,
+            // renderWidth: customWidth,
+            // center: adjustedPreviewX,
+            // 기둥너비: targetSlotInfo.column?.width,
+            // furniturePosition: targetSlotInfo.furniturePosition,
+            // furnitureBounds
+          // });
         } else if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 구간에서 커스텀 너비 계산 (기둥 조정 포함)
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
@@ -3623,10 +3623,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
             if ((slot1Info?.hasColumn && slot1Info.adjustedWidth) || (slot2Info?.hasColumn && slot2Info.adjustedWidth)) {
 // console.log(`👻 [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
-                슬롯1: { 인덱스: localIdx, 조정: slot1Width, 기둥: slot1Info?.hasColumn },
-                슬롯2: { 인덱스: localIdx + 1, 조정: slot2Width, 기둥: slot2Info?.hasColumn },
-                총너비: customWidth
-              });
+                // 슬롯1: { 인덱스: localIdx, 조정: slot1Width, 기둥: slot1Info?.hasColumn },
+                // 슬롯2: { 인덱스: localIdx + 1, 조정: slot2Width, 기둥: slot2Info?.hasColumn },
+                // 총너비: customWidth
+              // });
             }
           } else {
             // 싱글 가구: 해당 슬롯의 너비 (기둥 조정 포함)
@@ -3635,10 +3635,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
               customWidth = slotInfo.adjustedWidth;
 // console.log(`👻 [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
-                슬롯인덱스: localIdx,
-                조정된너비: customWidth,
-                기둥너비: slotInfo.column?.width
-              });
+                // 슬롯인덱스: localIdx,
+                // 조정된너비: customWidth,
+                // 기둥너비: slotInfo.column?.width
+              // });
             } else {
               customWidth = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
             }
@@ -3742,14 +3742,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
         // 디버깅: 현재 배치된 모든 가구 정보 출력
 // console.log('🔍 [Front Space Debug] 배치된 가구 목록:', {
-          totalCount: placedModules.length,
-          modules: placedModules.map(m => ({
-            id: m.id,
-            slotIndex: m.slotIndex,
-            hasColumnSlotInfo: !!m.columnSlotInfo,
-            spaceType: m.columnSlotInfo?.spaceType
-          }))
-        });
+          // totalCount: placedModules.length,
+          // modules: placedModules.map(m => ({
+            // id: m.id,
+            // slotIndex: m.slotIndex,
+            // hasColumnSlotInfo: !!m.columnSlotInfo,
+            // spaceType: m.columnSlotInfo?.spaceType
+          // }))
+        // });
 
         // 기둥이 차지하는 슬롯 범위 계산 (같은 기둥 ID를 가진 모든 슬롯)
         const columnSlotIndices = frontSpaceSlots.map(s => s.slotIndex);
@@ -3777,14 +3777,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const hasBothSidesOutside = !!(leftOutsideFurniture && rightOutsideFurniture);
 
 // console.log('🔍 [Front Space Debug] 외부 가구 체크:', {
-          leftSlotToCheck: leftmostColumnSlot - 1,
-          hasLeftOutsideFurniture: !!leftOutsideFurniture,
-          leftFurnitureInfo: leftOutsideFurniture ? { id: leftOutsideFurniture.id, slotIndex: leftOutsideFurniture.slotIndex } : null,
-          rightSlotToCheck: rightmostColumnSlot + 1,
-          hasRightOutsideFurniture: !!rightOutsideFurniture,
-          rightFurnitureInfo: rightOutsideFurniture ? { id: rightOutsideFurniture.id, slotIndex: rightOutsideFurniture.slotIndex } : null,
-          hasBothSidesOutside
-        });
+          // leftSlotToCheck: leftmostColumnSlot - 1,
+          // hasLeftOutsideFurniture: !!leftOutsideFurniture,
+          // leftFurnitureInfo: leftOutsideFurniture ? { id: leftOutsideFurniture.id, slotIndex: leftOutsideFurniture.slotIndex } : null,
+          // rightSlotToCheck: rightmostColumnSlot + 1,
+          // hasRightOutsideFurniture: !!rightOutsideFurniture,
+          // rightFurnitureInfo: rightOutsideFurniture ? { id: rightOutsideFurniture.id, slotIndex: rightOutsideFurniture.slotIndex } : null,
+          // hasBothSidesOutside
+        // });
 
         // 기둥 양옆에 가구가 없으면 빈 배열 반환
         if (!hasBothSidesOutside) {
@@ -3802,9 +3802,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
 
 // console.log('🔍 [Front Space Debug] availableSlots:', {
-          count: availableSlots.length,
-          slots: availableSlots.map(s => s.slotIndex)
-        });
+          // count: availableSlots.length,
+          // slots: availableSlots.map(s => s.slotIndex)
+        // });
 
         if (availableSlots.length === 0) {
 // console.log('🔍 [Front Space Debug] 사용 가능한 슬롯 없음');
@@ -3812,12 +3812,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
 
 // console.log('🟢 [Front Space Ghost] 기둥 앞 공간 고스트 렌더링:', {
-          availableSlots: availableSlots.map(s => ({
-            slotIndex: s.slotIndex,
-            frontSpace: s.frontSpace
-          })),
-          moduleId: moduleIdForFront
-        });
+          // availableSlots: availableSlots.map(s => ({
+            // slotIndex: s.slotIndex,
+            // frontSpace: s.frontSpace
+          // })),
+          // moduleId: moduleIdForFront
+        // });
 
         return availableSlots.map(slotInfo => {
           // frontSpace가 없으면 기본값 계산 (Column C 기준: 730 - 300 = 430mm)
@@ -3837,12 +3837,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           };
 
 // console.log('🔍 [Front Space Render] 고스트 렌더링 데이터:', {
-            slotIndex: slotInfo.slotIndex,
-            hasFrontSpace: !!slotInfo.frontSpace,
-            frontSpaceCenterX: frontSpace.centerX,
-            frontSpaceDepth: frontSpace.depth,
-            columnDepth
-          });
+            // slotIndex: slotInfo.slotIndex,
+            // hasFrontSpace: !!slotInfo.frontSpace,
+            // frontSpaceCenterX: frontSpace.centerX,
+            // frontSpaceDepth: frontSpace.depth,
+            // columnDepth
+          // });
 
           // Z축 위치 계산 - 일반 캐비닛 영역 내에서 앞쪽에 배치
           const panelDepthMm = spaceInfo.depth || 730;
@@ -3930,13 +3930,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   };
 
 // console.log('🟢 기둥 앞 공간에 가구 배치:', {
-                    moduleId: newModule.id,
-                    slotIndex: slotInfo.slotIndex,
-                    frontSpace,
-                    position: newModule.position,
-                    customDepth: newModule.customDepth,
-                    customWidth: newModule.customWidth
-                  });
+                    // moduleId: newModule.id,
+                    // slotIndex: slotInfo.slotIndex,
+                    // frontSpace,
+                    // position: newModule.position,
+                    // customDepth: newModule.customDepth,
+                    // customWidth: newModule.customWidth
+                  // });
 
                   // 가구 추가
                   addModule(newModule);

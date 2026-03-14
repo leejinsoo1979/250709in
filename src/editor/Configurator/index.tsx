@@ -544,13 +544,13 @@ const Configurator: React.FC = () => {
           updateColumn(activePopup.id, { position: [newX, targetColumn.position[1], targetColumn.position[2]] });
 
 // console.log('⌨️ 컬럼 키보드 이동:', {
-            columnId: activePopup.id,
-            direction: event.key,
-            moveStep: moveStep,
-            stepSize: event.shiftKey ? '50mm (빠름)' : '5mm (정밀)',
-            oldX: currentX,
-            newX
-          });
+            // columnId: activePopup.id,
+            // direction: event.key,
+            // moveStep: moveStep,
+            // stepSize: event.shiftKey ? '50mm (빠름)' : '5mm (정밀)',
+            // oldX: currentX,
+            // newX
+          // });
         }
       }
     };
@@ -610,15 +610,15 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     if (spaceInfo.materialConfig) {
 // console.log('🔍 Configurator - MaterialConfig 변경 감지:', {
-        interiorColor: spaceInfo.materialConfig.interiorColor,
-        doorColor: spaceInfo.materialConfig.doorColor,
-        interiorTexture: spaceInfo.materialConfig.interiorTexture,
-        doorTexture: spaceInfo.materialConfig.doorTexture,
-        isCabinetTexture1: {
-          interior: spaceInfo.materialConfig.interiorTexture?.includes('cabinet texture1'),
-          door: spaceInfo.materialConfig.doorTexture?.includes('cabinet texture1')
-        }
-      });
+        // interiorColor: spaceInfo.materialConfig.interiorColor,
+        // doorColor: spaceInfo.materialConfig.doorColor,
+        // interiorTexture: spaceInfo.materialConfig.interiorTexture,
+        // doorTexture: spaceInfo.materialConfig.doorTexture,
+        // isCabinetTexture1: {
+          // interior: spaceInfo.materialConfig.interiorTexture?.includes('cabinet texture1'),
+          // door: spaceInfo.materialConfig.doorTexture?.includes('cabinet texture1')
+        // }
+      // });
     }
   }, [spaceInfo.materialConfig]);
 
@@ -870,24 +870,24 @@ const Configurator: React.FC = () => {
         // 프로젝트 소유자 정보 설정
         if (project.userId) {
 // console.log('👤 프로젝트 소유자 정보:', {
-            projectUserId: project.userId,
-            currentUserId: user?.uid,
-            isOwner: user && project.userId === user.uid,
-            userName: project.userName,
-            userEmail: project.userEmail,
-            userPhotoURL: project.userPhotoURL,
-            currentUserPhotoURL: user?.photoURL
-          });
+            // projectUserId: project.userId,
+            // currentUserId: user?.uid,
+            // isOwner: user && project.userId === user.uid,
+            // userName: project.userName,
+            // userEmail: project.userEmail,
+            // userPhotoURL: project.userPhotoURL,
+            // currentUserPhotoURL: user?.photoURL
+          // });
 
           // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
           if (user && project.userId === user.uid) {
 // console.log('📸 현재 사용자 Auth 정보:', {
-              uid: user.uid,
-              displayName: user.displayName,
-              email: user.email,
-              photoURL: user.photoURL,
-              providerData: user.providerData
-            });
+              // uid: user.uid,
+              // displayName: user.displayName,
+              // email: user.email,
+              // photoURL: user.photoURL,
+              // providerData: user.providerData
+            // });
 
             const ownerData = {
               userId: user.uid,
@@ -989,7 +989,7 @@ const Configurator: React.FC = () => {
     // 읽기 전용 모드에서는 저장 불가
     if (isReadOnly) {
 // console.log('🚫 읽기 전용 모드 - 저장 차단');
-      alert('읽기 전용 모드에서는 저장할 수 없습니다.');
+      // alert('읽기 전용 모드에서는 저장할 수 없습니다.');
       saveInProgressRef.current = false;
       return;
     }
@@ -1021,10 +1021,10 @@ const Configurator: React.FC = () => {
       // 현재 인증 상태 확인
       const currentAuthUser = auth.currentUser;
 // console.log('💾 [DEBUG] auth.currentUser:', {
-        exists: !!currentAuthUser,
-        uid: currentAuthUser?.uid,
-        email: currentAuthUser?.email
-      });
+        // exists: !!currentAuthUser,
+        // uid: currentAuthUser?.uid,
+        // email: currentAuthUser?.email
+      // });
 
       // 토큰 확인
       if (currentAuthUser) {
@@ -1060,24 +1060,24 @@ const Configurator: React.FC = () => {
     try {
 // console.log('💾 [DEBUG] 저장할 basicInfo:', basicInfo);
 // console.log('💾 [DEBUG] 저장할 spaceInfo 요약:', {
-        width: spaceInfo.width,
-        height: spaceInfo.height,
-        materialConfig: spaceInfo.materialConfig
-      });
+        // width: spaceInfo.width,
+        // height: spaceInfo.height,
+        // materialConfig: spaceInfo.materialConfig
+      // });
 
       // furnitureStore의 현재 상태 직접 확인
       const currentFurnitureState = useFurnitureStore.getState().placedModules;
 // console.log('💾 [DEBUG] furnitureStore 현재 상태:', {
-        storeCount: currentFurnitureState.length,
-        propCount: placedModules.length,
-        같은가: currentFurnitureState === placedModules,
-        storeModules: currentFurnitureState.map(m => ({
-          id: m.id,
-          moduleId: m.moduleId,
-          isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
-          isLowerCabinet: m.moduleId?.includes('lower-cabinet')
-        }))
-      });
+        // storeCount: currentFurnitureState.length,
+        // propCount: placedModules.length,
+        // 같은가: currentFurnitureState === placedModules,
+        // storeModules: currentFurnitureState.map(m => ({
+          // id: m.id,
+          // moduleId: m.moduleId,
+          // isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
+          // isLowerCabinet: m.moduleId?.includes('lower-cabinet')
+        // }))
+      // });
 
 // console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
 // console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
@@ -1131,24 +1131,24 @@ const Configurator: React.FC = () => {
             };
 
 // console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
-              name: updatePayload.name,
-              spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
-              furnitureCount: updatePayload.furniture.placedModules.length,
-              hasThumbnail: !!updatePayload.thumbnail,
-              furnitureDetails: updatePayload.furniture.placedModules.map(m => {
-                const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
-                return {
-                  id: m.id,
-                  moduleId: m.moduleId,
-                  category: moduleData?.category || 'unknown',
-                  slotIndex: m.slotIndex,
-                  zone: m.zone,
-                  hasDoor: m.hasDoor,
-                  isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
-                  isLowerCabinet: m.moduleId?.includes('lower-cabinet')
-                };
-              })
-            });
+              // name: updatePayload.name,
+              // spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
+              // furnitureCount: updatePayload.furniture.placedModules.length,
+              // hasThumbnail: !!updatePayload.thumbnail,
+              // furnitureDetails: updatePayload.furniture.placedModules.map(m => {
+                // const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
+                // return {
+                  // id: m.id,
+                  // moduleId: m.moduleId,
+                  // category: moduleData?.category || 'unknown',
+                  // slotIndex: m.slotIndex,
+                  // zone: m.zone,
+                  // hasDoor: m.hasDoor,
+                  // isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
+                  // isLowerCabinet: m.moduleId?.includes('lower-cabinet')
+                // };
+              // })
+            // });
 
 // console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', effectiveDesignFileId);
 
@@ -1527,7 +1527,7 @@ const Configurator: React.FC = () => {
             navigate(`/configurator?projectId=${result.id}`, { replace: true });
 
 // console.log('✅ 새 Firebase 프로젝트 "Untitled" 생성 완료:', result.id);
-            alert('새 프로젝트가 생성되었습니다!');
+            // alert('새 프로젝트가 생성되었습니다!');
           } else {
             console.error('🆕 [ERROR] projectId가 반환되지 않음');
             alert('프로젝트 ID를 받지 못했습니다. 다시 시도해주세요.');
@@ -1538,7 +1538,7 @@ const Configurator: React.FC = () => {
         }
       } else {
 // console.log('🆕 [ERROR] Firebase 인증 필요');
-        alert('새 프로젝트를 생성하려면 로그인이 필요합니다.');
+        // alert('새 프로젝트를 생성하려면 로그인이 필요합니다.');
       }
     } catch (outerError) {
       console.error('🆕 [ERROR] handleNewProject 최상위 예외:', outerError);
@@ -1617,7 +1617,7 @@ const Configurator: React.FC = () => {
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
 
 // console.log('✅ 디자인 파일 다른이름으로 저장 성공:', newTitle);
-            alert(`"${newTitle}" 디자인 파일로 저장되었습니다!`);
+            // alert(`"${newTitle}" 디자인 파일로 저장되었습니다!`);
           }
         } else {
 // console.log('💾 [ERROR] Firebase 인증 필요');
@@ -1692,10 +1692,10 @@ const Configurator: React.FC = () => {
   // 디자인 파일명 변경 핸들러
   const handleDesignFileNameChange = async (newName: string) => {
 // console.log('📝 디자인파일명 변경 시작:', {
-      oldName: currentDesignFileName,
-      newName,
-      currentDesignFileId
-    });
+      // oldName: currentDesignFileName,
+      // newName,
+      // currentDesignFileId
+    // });
 
     const oldName = currentDesignFileName;
 
@@ -1760,9 +1760,9 @@ const Configurator: React.FC = () => {
                 timestamp: Date.now()
               });
 // console.log('📡 디자인 파일명 변경 알림 전송:', {
-                projectId: effectiveProjectId,
-                designFileId: effectiveDesignFileId
-              });
+                // projectId: effectiveProjectId,
+                // designFileId: effectiveDesignFileId
+              // });
               channel.close();
             } catch (broadcastError) {
               console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
@@ -1819,10 +1819,10 @@ const Configurator: React.FC = () => {
       const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
 
 // console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
-        currentColumnCount: spaceInfo.customColumnCount,
-        defaultColumnCount,
-        internalWidth: internalSpace.width
-      });
+        // currentColumnCount: spaceInfo.customColumnCount,
+        // defaultColumnCount,
+        // internalWidth: internalSpace.width
+      // });
 
       // 현재 컬럼 수가 기본값과 다르면 리셋
       if (spaceInfo.customColumnCount !== defaultColumnCount) {
@@ -1865,15 +1865,15 @@ const Configurator: React.FC = () => {
     }
 
 // console.log('🔍 useEffect 실행:', {
-      urlProjectId: projectId,
-      urlDesignFileId: designFileId,
-      urlDesignFileName,
-      mode,
-      isReadOnly: mode === 'readonly',
-      currentProjectId,
-      currentDesignFileId,
-      placedModulesCount: placedModules.length
-    });
+      // urlProjectId: projectId,
+      // urlDesignFileId: designFileId,
+      // urlDesignFileName,
+      // mode,
+      // isReadOnly: mode === 'readonly',
+      // currentProjectId,
+      // currentDesignFileId,
+      // placedModulesCount: placedModules.length
+    // });
 
     // URL에 designFileName이 있으면 즉시 설정 (최우선순위)
     if (urlDesignFileName) {
@@ -1997,12 +1997,12 @@ const Configurator: React.FC = () => {
 
             if (designFile && !error) {
 // console.log('✅ 디자인파일 로드 성공:', {
-                id: designFile.id,
-                name: designFile.name,
-                projectId: designFile.projectId,
-                furnitureCount: designFile.furniture?.placedModules?.length || 0,
-                spaceConfig: !!designFile.spaceConfig
-              });
+                // id: designFile.id,
+                // name: designFile.name,
+                // projectId: designFile.projectId,
+                // furnitureCount: designFile.furniture?.placedModules?.length || 0,
+                // spaceConfig: !!designFile.spaceConfig
+              // });
 
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
@@ -2014,14 +2014,14 @@ const Configurator: React.FC = () => {
                   // 프로젝트 소유자 정보 설정
                   if (project.userId) {
 // console.log('👤 [디자인파일] 프로젝트 소유자 정보:', {
-                      projectUserId: project.userId,
-                      currentUserId: user?.uid,
-                      isOwner: user && project.userId === user.uid,
-                      userName: project.userName,
-                      userEmail: project.userEmail,
-                      userPhotoURL: project.userPhotoURL,
-                      currentUserPhotoURL: user?.photoURL
-                    });
+                      // projectUserId: project.userId,
+                      // currentUserId: user?.uid,
+                      // isOwner: user && project.userId === user.uid,
+                      // userName: project.userName,
+                      // userEmail: project.userEmail,
+                      // userPhotoURL: project.userPhotoURL,
+                      // currentUserPhotoURL: user?.photoURL
+                    // });
 
                     // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
                     if (user && project.userId === user.uid) {
@@ -2084,20 +2084,20 @@ const Configurator: React.FC = () => {
                 );
 
 // console.log('🗄️ [Configurator] 불러온 상하부장 데이터:', {
-                  totalModules: designFile.furniture.placedModules.length,
-                  upperCabinets: upperCabinets.length,
-                  lowerCabinets: lowerCabinets.length,
-                  upperDetails: upperCabinets.map(m => ({
-                    id: m.id,
-                    moduleId: m.moduleId,
-                    slotIndex: m.slotIndex
-                  })),
-                  lowerDetails: lowerCabinets.map(m => ({
-                    id: m.id,
-                    moduleId: m.moduleId,
-                    slotIndex: m.slotIndex
-                  }))
-                });
+                  // totalModules: designFile.furniture.placedModules.length,
+                  // upperCabinets: upperCabinets.length,
+                  // lowerCabinets: lowerCabinets.length,
+                  // upperDetails: upperCabinets.map(m => ({
+                    // id: m.id,
+                    // moduleId: m.moduleId,
+                    // slotIndex: m.slotIndex
+                  // })),
+                  // lowerDetails: lowerCabinets.map(m => ({
+                    // id: m.id,
+                    // moduleId: m.moduleId,
+                    // slotIndex: m.slotIndex
+                  // }))
+                // });
 
                 // baseModuleType이 없는 경우 추가
                 const modulesWithBaseType = designFile.furniture.placedModules.map(m => ({
@@ -2107,16 +2107,16 @@ const Configurator: React.FC = () => {
 
                 setPlacedModules(modulesWithBaseType);
 // console.log('🪑 가구 배치 데이터 설정:', {
-                  count: modulesWithBaseType.length,
-                  modules: modulesWithBaseType.map(m => ({
-                    id: m.id,
-                    moduleId: m.moduleId,
-                    baseModuleType: m.baseModuleType,
-                    slotIndex: m.slotIndex,
-                    zone: m.zone,
-                    position: m.position
-                  }))
-                });
+                  // count: modulesWithBaseType.length,
+                  // modules: modulesWithBaseType.map(m => ({
+                    // id: m.id,
+                    // moduleId: m.moduleId,
+                    // baseModuleType: m.baseModuleType,
+                    // slotIndex: m.slotIndex,
+                    // zone: m.zone,
+                    // position: m.position
+                  // }))
+                // });
               } else {
                 // 가구 데이터가 없는 경우 빈 배열로 초기화
                 setPlacedModules([]);
@@ -2125,11 +2125,11 @@ const Configurator: React.FC = () => {
 
               // 디자인파일 이름 설정
 // console.log('🔍 디자인파일 이름 체크:', {
-                hasName: !!designFile.name,
-                name: designFile.name,
-                designFileKeys: Object.keys(designFile),
-                fullDesignFile: designFile
-              });
+                // hasName: !!designFile.name,
+                // name: designFile.name,
+                // designFileKeys: Object.keys(designFile),
+                // fullDesignFile: designFile
+              // });
 
               if (designFile.name) {
                 setCurrentDesignFileName(designFile.name);
@@ -2235,10 +2235,10 @@ const Configurator: React.FC = () => {
             collab.designFileIds && collab.designFileIds.includes(currentDesignFileId)
           );
 // console.log('✅ 협업자 정보 조회 성공:', {
-            전체: collabs.length,
-            현재파일: filteredCollabs.length,
-            협업자: filteredCollabs
-          });
+            // 전체: collabs.length,
+            // 현재파일: filteredCollabs.length,
+            // 협업자: filteredCollabs
+          // });
           setCollaborators(filteredCollabs);
         })
         .catch((error) => {
@@ -2361,16 +2361,16 @@ const Configurator: React.FC = () => {
 
       if (hasStructuralChange) {
 // console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
-          width: prevWithoutMaterial.width !== currentWithoutMaterial.width,
-          height: prevWithoutMaterial.height !== currentWithoutMaterial.height,
-          depth: prevWithoutMaterial.depth !== currentWithoutMaterial.depth,
-          customColumnCount: prevWithoutMaterial.customColumnCount !== currentWithoutMaterial.customColumnCount,
-          droppedCeiling: JSON.stringify(prevWithoutMaterial.droppedCeiling) !== JSON.stringify(currentWithoutMaterial.droppedCeiling),
-          mainDoorCount: prevWithoutMaterial.mainDoorCount !== currentWithoutMaterial.mainDoorCount,
-          droppedCeilingDoorCount: prevWithoutMaterial.droppedCeilingDoorCount !== currentWithoutMaterial.droppedCeilingDoorCount,
-          prevDroppedCeiling: prevWithoutMaterial.droppedCeiling,
-          currentDroppedCeiling: currentWithoutMaterial.droppedCeiling
-        });
+          // width: prevWithoutMaterial.width !== currentWithoutMaterial.width,
+          // height: prevWithoutMaterial.height !== currentWithoutMaterial.height,
+          // depth: prevWithoutMaterial.depth !== currentWithoutMaterial.depth,
+          // customColumnCount: prevWithoutMaterial.customColumnCount !== currentWithoutMaterial.customColumnCount,
+          // droppedCeiling: JSON.stringify(prevWithoutMaterial.droppedCeiling) !== JSON.stringify(currentWithoutMaterial.droppedCeiling),
+          // mainDoorCount: prevWithoutMaterial.mainDoorCount !== currentWithoutMaterial.mainDoorCount,
+          // droppedCeilingDoorCount: prevWithoutMaterial.droppedCeilingDoorCount !== currentWithoutMaterial.droppedCeilingDoorCount,
+          // prevDroppedCeiling: prevWithoutMaterial.droppedCeiling,
+          // currentDroppedCeiling: currentWithoutMaterial.droppedCeiling
+        // });
         updateFurnitureForNewSpace(previousSpaceInfo, spaceInfo);
       }
 
@@ -2382,10 +2382,10 @@ const Configurator: React.FC = () => {
   // derivedSpaceStore 재계산 (구조적 변경 시만 실행)
   useEffect(() => {
 // console.log('🔄 derivedSpaceStore 재계산:', {
-      customColumnCount: spaceInfo.customColumnCount,
-      mainDoorCount: spaceInfo.mainDoorCount,
-      width: spaceInfo.width
-    });
+      // customColumnCount: spaceInfo.customColumnCount,
+      // mainDoorCount: spaceInfo.mainDoorCount,
+      // width: spaceInfo.width
+    // });
     derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
   }, [
     spaceInfo.width,
@@ -2432,19 +2432,19 @@ const Configurator: React.FC = () => {
     // baseConfig.depth 업데이트 감지
     if (updates.baseConfig?.depth !== undefined) {
 // console.log('📏 Configurator - baseConfig.depth 업데이트:', {
-        이전값: spaceInfo.baseConfig?.depth,
-        새값: updates.baseConfig.depth,
-        전체baseConfig: updates.baseConfig
-      });
+        // 이전값: spaceInfo.baseConfig?.depth,
+        // 새값: updates.baseConfig.depth,
+        // 전체baseConfig: updates.baseConfig
+      // });
     }
 
     // mainDoorCount 업데이트 감지
     if (updates.mainDoorCount !== undefined) {
 // console.log('🚪 mainDoorCount 업데이트:', {
-        이전값: spaceInfo.mainDoorCount,
-        새값: updates.mainDoorCount,
-        단내림활성화: spaceInfo.droppedCeiling?.enabled
-      });
+        // 이전값: spaceInfo.mainDoorCount,
+        // 새값: updates.mainDoorCount,
+        // 단내림활성화: spaceInfo.droppedCeiling?.enabled
+      // });
     }
 
     // 단내림 설정 변경 감지
@@ -2456,10 +2456,10 @@ const Configurator: React.FC = () => {
     // surroundType 업데이트 시 디버깅
     if (updates.surroundType) {
 // console.log('🔧 Configurator - surroundType update:', {
-        previous: spaceInfo.surroundType,
-        new: updates.surroundType,
-        willUpdateStore: true
-      });
+        // previous: spaceInfo.surroundType,
+        // new: updates.surroundType,
+        // willUpdateStore: true
+      // });
     }
 
     let finalUpdates = { ...updates };
@@ -2530,11 +2530,11 @@ const Configurator: React.FC = () => {
 
       finalUpdates.frameSize = newFrameSize;
 // console.log('🔧 서라운드 타입 변경에 따른 프레임 초기화:', {
-        surroundType: updates.surroundType,
-        installType: currentInstallType,
-        frameSize: newFrameSize,
-        gapConfig: finalUpdates.gapConfig
-      });
+        // surroundType: updates.surroundType,
+        // installType: currentInstallType,
+        // frameSize: newFrameSize,
+        // gapConfig: finalUpdates.gapConfig
+      // });
     }
 
     // 세미스탠딩에서 벽 위치 변경 시 프레임 설정 자동 업데이트
@@ -2641,10 +2641,10 @@ const Configurator: React.FC = () => {
       finalUpdates.frameSize = newFrameSize;
 
 // console.log('🔧 설치타입 변경에 따른 wallConfig 및 프레임 자동 업데이트:', {
-        installType: updates.installType,
-        wallConfig: finalUpdates.wallConfig,
-        frameSize: finalUpdates.frameSize
-      });
+        // installType: updates.installType,
+        // wallConfig: finalUpdates.wallConfig,
+        // frameSize: finalUpdates.frameSize
+      // });
     }
 
     // 폭(width)이 변경되었을 때 도어 개수 자동 조정
@@ -2673,10 +2673,10 @@ const Configurator: React.FC = () => {
     // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
     if (updates.customColumnCount !== undefined) {
 // console.log('🚨🚨🚨 customColumnCount 업데이트:', {
-        요청값: updates.customColumnCount,
-        현재값: spaceInfo.customColumnCount,
-        finalUpdates_before: finalUpdates
-      });
+        // 요청값: updates.customColumnCount,
+        // 현재값: spaceInfo.customColumnCount,
+        // finalUpdates_before: finalUpdates
+      // });
       // 사용자가 설정한 값을 그대로 사용
       finalUpdates = { ...finalUpdates, customColumnCount: updates.customColumnCount };
 // console.log('🚨🚨🚨 finalUpdates after:', finalUpdates);
@@ -2741,12 +2741,12 @@ const Configurator: React.FC = () => {
     // if (spaceInfo.surroundType === 'no-surround' && ...) { ... }
 
 // console.log('🔧 최종 업데이트 적용:', {
-      updates: finalUpdates,
-      hasWallConfig: !!finalUpdates.wallConfig,
-      wallConfig: finalUpdates.wallConfig,
-      customColumnCount: finalUpdates.customColumnCount,
-      gapConfig: finalUpdates.gapConfig
-    });
+      // updates: finalUpdates,
+      // hasWallConfig: !!finalUpdates.wallConfig,
+      // wallConfig: finalUpdates.wallConfig,
+      // customColumnCount: finalUpdates.customColumnCount,
+      // gapConfig: finalUpdates.gapConfig
+    // });
 
     // installType 변경 감지
     const isInstallTypeChanged = finalUpdates.installType !== undefined &&
@@ -2754,9 +2754,9 @@ const Configurator: React.FC = () => {
 
 // console.log('🚨🚨🚨 setSpaceInfo 호출 직전:', finalUpdates);
 // console.log('📏 baseConfig.depth 전달 확인:', {
-      finalUpdates_baseConfig: finalUpdates.baseConfig,
-      depth: finalUpdates.baseConfig?.depth
-    });
+      // finalUpdates_baseConfig: finalUpdates.baseConfig,
+      // depth: finalUpdates.baseConfig?.depth
+    // });
     setSpaceInfo(finalUpdates);
 // console.log('🚨🚨🚨 setSpaceInfo 호출 완료');
 
@@ -2764,9 +2764,9 @@ const Configurator: React.FC = () => {
     setTimeout(() => {
       const currentStore = useSpaceConfigStore.getState();
 // console.log('📏 Store 업데이트 후 확인:', {
-        baseConfig: currentStore.baseConfig,
-        depth: currentStore.baseConfig?.depth
-      });
+        // baseConfig: currentStore.baseConfig,
+        // depth: currentStore.baseConfig?.depth
+      // });
     }, 0);
 
     // 단내림 설정 변경 시 강제로 3D 뷰 업데이트
@@ -2938,10 +2938,10 @@ const Configurator: React.FC = () => {
     }
 
 // console.log('✅ Scene ref 확인:', {
-      scene: sceneRef.current,
-      childrenCount: sceneRef.current?.children?.length,
-      children: sceneRef.current?.children
-    });
+      // scene: sceneRef.current,
+      // childrenCount: sceneRef.current?.children?.length,
+      // children: sceneRef.current?.children
+    // });
 
     if (!canExport(sceneRef.current)) {
       alert('내보낼 3D 모델이 없습니다.');

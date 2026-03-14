@@ -171,10 +171,10 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
       const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 1300);
 // console.log('🎯 메인 구간 폭 계산 (DoorSlider):', {
-        totalWidth: width,
-        droppedWidth: spaceInfo.droppedCeiling.width || 1300,
-        mainZoneWidth
-      });
+        // totalWidth: width,
+        // droppedWidth: spaceInfo.droppedCeiling.width || 1300,
+        // mainZoneWidth
+      // });
       return mainZoneWidth;
     }
     return width;
@@ -240,23 +240,23 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
     width === (spaceInfo.droppedCeiling.width || 1300);
   
 // console.log('🔍 슬라이더 타입 확인:', {
-    width,
-    droppedWidth: spaceInfo.droppedCeiling?.width,
-    isDroppedCeilingSlider,
-    enabled: spaceInfo.droppedCeiling?.enabled
-  });
+    // width,
+    // droppedWidth: spaceInfo.droppedCeiling?.width,
+    // isDroppedCeilingSlider,
+    // enabled: spaceInfo.droppedCeiling?.enabled
+  // });
   
   let doorRange;
   if (isDroppedCeilingSlider) {
     // 단내림 구간의 도어개수 슬라이더인 경우
     doorRange = calculateDoorRange(width, true); // 단내림 구간임을 명시
 // console.log('🎯 단내림 구간 도어개수 슬라이더:', {
-      width,
-      droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
-      doorRange,
-      value,
-      isDroppedCeilingSlider
-    });
+      // width,
+      // droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+      // doorRange,
+      // value,
+      // isDroppedCeilingSlider
+    // });
   } else {
     // 메인 구간의 도어개수 슬라이더인 경우
     const mainZoneWidth = getMainZoneWidth();
@@ -612,10 +612,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
       const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 1300);
 // console.log('🎯 메인 구간 폭 계산 (RightPanel):', {
-        totalWidth: width,
-        droppedWidth: spaceInfo.droppedCeiling.width || 1300,
-        mainZoneWidth
-      });
+        // totalWidth: width,
+        // droppedWidth: spaceInfo.droppedCeiling.width || 1300,
+        // mainZoneWidth
+      // });
       return mainZoneWidth;
     }
     return width;
@@ -722,10 +722,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 if (spaceInfo.droppedCeiling?.enabled && isEqualDivision) {
                   const newTab = tab.id === 'placement' ? 'main' : 'dropped';
 // console.log('🎯 RightPanel 탭 클릭 - activeDroppedCeilingTab 설정:', {
-                    clickedTabId: tab.id,
-                    newActiveTab: newTab,
-                    droppedEnabled: spaceInfo.droppedCeiling?.enabled
-                  });
+                    // clickedTabId: tab.id,
+                    // newActiveTab: newTab,
+                    // droppedEnabled: spaceInfo.droppedCeiling?.enabled
+                  // });
                   setActiveDroppedCeilingTab(newTab);
                 }
               }}
@@ -1067,12 +1067,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {(() => {
               const isFloat = spaceInfo.baseConfig?.placementType === 'float' && (spaceInfo.baseConfig?.floatHeight || 0) > 0;
 // console.log('🔴🔴🔴 바닥마감재 메뉴 조건:', {
-                baseConfig: spaceInfo.baseConfig,
-                placementType: spaceInfo.baseConfig?.placementType,
-                floatHeight: spaceInfo.baseConfig?.floatHeight,
-                isFloat,
-                shouldShow: !isFloat
-              });
+                // baseConfig: spaceInfo.baseConfig,
+                // placementType: spaceInfo.baseConfig?.placementType,
+                // floatHeight: spaceInfo.baseConfig?.floatHeight,
+                // isFloat,
+                // shouldShow: !isFloat
+              // });
               return !isFloat;
             })() && (
               <FormControl

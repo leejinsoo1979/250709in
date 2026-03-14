@@ -125,38 +125,38 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
     
 // console.log('🔍🔍🔍 ColumnGuides - 슬롯 가이드 라인 경계:', {
-      전체인덱싱: {
-        내경시작X: fullIndexing.internalStartX,
-        내경너비: fullIndexing.internalWidth,
-        슬롯너비: fullIndexing.columnWidth
-      },
-      영역별정보: {
-        메인: {
-          시작X: info.normal.startX,
-          너비: info.normal.width,
-          끝X: info.normal.startX + info.normal.width,
-          슬롯너비: info.normal.columnWidth,
-          slotWidths: info.normal.slotWidths,
-          '🎯 Three.js 단위': {
-            시작X_three: info.normal.startX * 0.01,
-            끝X_three: (info.normal.startX + info.normal.width) * 0.01,
-            중심X_three: (info.normal.startX + info.normal.width/2) * 0.01
-          }
-        },
-        단내림: info.dropped ? {
-          시작X: info.dropped.startX,
-          너비: info.dropped.width,
-          끝X: info.dropped.startX + info.dropped.width,
-          슬롯너비: info.dropped.columnWidth,
-          slotWidths: info.dropped.slotWidths
-        } : null
-      },
-      갭체크: info.dropped ? {
-        '메인끝-단내림시작': (info.dropped.startX - (info.normal.startX + info.normal.width))
-      } : null,
-      'spaceInfo.surroundType': spaceInfo.surroundType,
-      'spaceInfo.installType': spaceInfo.installType
-    });
+      // 전체인덱싱: {
+        // 내경시작X: fullIndexing.internalStartX,
+        // 내경너비: fullIndexing.internalWidth,
+        // 슬롯너비: fullIndexing.columnWidth
+      // },
+      // 영역별정보: {
+        // 메인: {
+          // 시작X: info.normal.startX,
+          // 너비: info.normal.width,
+          // 끝X: info.normal.startX + info.normal.width,
+          // 슬롯너비: info.normal.columnWidth,
+          // slotWidths: info.normal.slotWidths,
+          // '🎯 Three.js 단위': {
+            // 시작X_three: info.normal.startX * 0.01,
+            // 끝X_three: (info.normal.startX + info.normal.width) * 0.01,
+            // 중심X_three: (info.normal.startX + info.normal.width/2) * 0.01
+          // }
+        // },
+        // 단내림: info.dropped ? {
+          // 시작X: info.dropped.startX,
+          // 너비: info.dropped.width,
+          // 끝X: info.dropped.startX + info.dropped.width,
+          // 슬롯너비: info.dropped.columnWidth,
+          // slotWidths: info.dropped.slotWidths
+        // } : null
+      // },
+      // 갭체크: info.dropped ? {
+        // '메인끝-단내림시작': (info.dropped.startX - (info.normal.startX + info.normal.width))
+      // } : null,
+      // 'spaceInfo.surroundType': spaceInfo.surroundType,
+      // 'spaceInfo.installType': spaceInfo.installType
+    // });
     
     return info;
   }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount]);
@@ -164,23 +164,23 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 디버깅 로그 추가
   React.useEffect(() => {
 // console.log('🎯 ColumnGuides - 슬롯 정보 업데이트:', {
-      customColumnCount: spaceInfo.customColumnCount,
-      mainDoorCount: spaceInfo.mainDoorCount,
-      droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
-      hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
-      zoneSlotInfo: {
-        normal: zoneSlotInfo.normal ? {
-          columnCount: zoneSlotInfo.normal.columnCount,
-          columnWidth: zoneSlotInfo.normal.columnWidth,
-          width: zoneSlotInfo.normal.width
-        } : null,
-        dropped: zoneSlotInfo.dropped ? {
-          columnCount: zoneSlotInfo.dropped.columnCount,
-          columnWidth: zoneSlotInfo.dropped.columnWidth,
-          width: zoneSlotInfo.dropped.width
-        } : null
-      }
-    });
+      // customColumnCount: spaceInfo.customColumnCount,
+      // mainDoorCount: spaceInfo.mainDoorCount,
+      // droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
+      // hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
+      // zoneSlotInfo: {
+        // normal: zoneSlotInfo.normal ? {
+          // columnCount: zoneSlotInfo.normal.columnCount,
+          // columnWidth: zoneSlotInfo.normal.columnWidth,
+          // width: zoneSlotInfo.normal.width
+        // } : null,
+        // dropped: zoneSlotInfo.dropped ? {
+          // columnCount: zoneSlotInfo.dropped.columnCount,
+          // columnWidth: zoneSlotInfo.dropped.columnWidth,
+          // width: zoneSlotInfo.dropped.width
+        // } : null
+      // }
+    // });
   }, [spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount, spaceInfo.droppedCeiling, zoneSlotInfo]);
   
   // 1개 컬럼인 경우 가이드 표시 불필요 (단내림 활성화 시에는 표시)
@@ -238,18 +238,18 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   
   // 디버깅: 높이 계산 확인
 // console.log('📏 높이 계산:', {
-    '전체 높이 (mm)': spaceInfo.height,
-    '단차 (mm)': spaceInfo.droppedCeiling?.dropHeight,
-    '단내림 전체 높이 (mm)': droppedTotalHeight,
-    '상부프레임 (mm)': topFrameHeight,
-    '단내림 천장 위치 (mm)': droppedTotalHeight - topFrameHeight,
-    'Three.js 단위': {
-      floorY,
-      ceilingY,
-      droppedCeilingY,
-      furnitureStartY
-    }
-  });
+    // '전체 높이 (mm)': spaceInfo.height,
+    // '단차 (mm)': spaceInfo.droppedCeiling?.dropHeight,
+    // '단내림 전체 높이 (mm)': droppedTotalHeight,
+    // '상부프레임 (mm)': topFrameHeight,
+    // '단내림 천장 위치 (mm)': droppedTotalHeight - topFrameHeight,
+    // 'Three.js 단위': {
+      // floorY,
+      // ceilingY,
+      // droppedCeilingY,
+      // furnitureStartY
+    // }
+  // });
   
   // 단내림 경계 X 좌표 계산
   let droppedBoundaryX = null;
@@ -355,20 +355,20 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     }
     
 // console.log('📏 최종 경계:', {
-      firstBoundary: boundaries[0],
-      lastBoundary: boundaries[boundaries.length - 1],
-      totalBoundaries: boundaries.length,
-      expectedEndX: mmToThreeUnits(startX + width),
-      actualEndX: boundaries[boundaries.length - 1],
-      '엔드패널 체크': {
-        surroundType: spaceInfo.surroundType,
-        installType: spaceInfo.installType,
-        wallConfig: spaceInfo.wallConfig,
-        '우측 엔드패널 있음': spaceInfo.surroundType === 'no-surround' && 
-          (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && 
-          !spaceInfo.wallConfig?.right
-      }
-    });
+      // firstBoundary: boundaries[0],
+      // lastBoundary: boundaries[boundaries.length - 1],
+      // totalBoundaries: boundaries.length,
+      // expectedEndX: mmToThreeUnits(startX + width),
+      // actualEndX: boundaries[boundaries.length - 1],
+      // '엔드패널 체크': {
+        // surroundType: spaceInfo.surroundType,
+        // installType: spaceInfo.installType,
+        // wallConfig: spaceInfo.wallConfig,
+        // '우측 엔드패널 있음': spaceInfo.surroundType === 'no-surround' && 
+          // (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && 
+          // !spaceInfo.wallConfig?.right
+      // }
+    // });
     
     // 슬롯 중심 위치 계산
     const positions = [];
@@ -381,15 +381,15 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     
     // 경계 확인 로그
 // console.log(`📏 ${zoneType} 영역 경계:`, {
-      startX_mm: startX,
-      endX_mm: startX + width,
-      width_mm: width,
-      boundaries_three: [boundaries[0], boundaries[boundaries.length - 1]],
-      expectedEndX_three: mmToThreeUnits(startX + width),
-      actualEndX_three: boundaries[boundaries.length - 1],
-      '반올림오차_mm': width - (columnWidth * columnCount),
-      '마지막슬롯너비_mm': (columnCount > 0) ? (startX + width) - (startX + (columnCount - 1) * columnWidth) : 0
-    });
+      // startX_mm: startX,
+      // endX_mm: startX + width,
+      // width_mm: width,
+      // boundaries_three: [boundaries[0], boundaries[boundaries.length - 1]],
+      // expectedEndX_three: mmToThreeUnits(startX + width),
+      // actualEndX_three: boundaries[boundaries.length - 1],
+      // '반올림오차_mm': width - (columnWidth * columnCount),
+      // '마지막슬롯너비_mm': (columnCount > 0) ? (startX + width) - (startX + (columnCount - 1) * columnWidth) : 0
+    // });
     
     // 내경 공간의 실제 경계 계산
     const internalStartX = mmToThreeUnits(internalSpace.startX);
@@ -402,14 +402,14 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       const zoneEndX = mmToThreeUnits(startX + width);
       
 // console.log(`📐 ${zoneType} 수평 가이드 범위:`, {
-        시작X_mm: startX,
-        끝X_mm: startX + width,
-        시작X_three: zoneStartX,
-        끝X_three: zoneEndX,
-        내경시작_three: internalStartX,
-        내경끝_three: internalEndX,
-        프레임정보: spaceInfo.frameSize
-      });
+        // 시작X_mm: startX,
+        // 끝X_mm: startX + width,
+        // 시작X_three: zoneStartX,
+        // 끝X_three: zoneEndX,
+        // 내경시작_three: internalStartX,
+        // 내경끝_three: internalEndX,
+        // 프레임정보: spaceInfo.frameSize
+      // });
       
       // 2D 정면 뷰에서도 단내림이 있는 경우 각 영역의 실제 경계 사용
       // 단내림이 없는 경우에만 내경 범위로 클리핑

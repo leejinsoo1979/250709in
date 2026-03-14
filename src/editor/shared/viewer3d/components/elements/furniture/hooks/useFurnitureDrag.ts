@@ -98,9 +98,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 상부장과 하부장은 같은 슬롯에 공존 가능
       if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
 // console.log('✅ 상부장-하부장 공존 가능 (useFurnitureDrag):', {
-          이동하는가구: { id: movingModuleId, category: movingCategory },
-          기존가구: { id: module.id, category: existingCategory }
-        });
+          // 이동하는가구: { id: movingModuleId, category: movingCategory },
+          // 기존가구: { id: module.id, category: existingCategory }
+        // });
         return; // 충돌로 간주하지 않음
       }
 
@@ -120,19 +120,19 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
 // console.log('💥 충돌 감지:', {
-          이동하는가구: {
-            id: movingModuleId,
-            category: movingCategory,
-            isDual: isDualFurniture,
-            targetSlots: occupiedSlots
-          },
-          기존가구: {
-            id: module.id,
-            category: existingCategory,
-            isDual: isModuleDual,
-            occupiedSlots: moduleSlots
-          }
-        });
+          // 이동하는가구: {
+            // id: movingModuleId,
+            // category: movingCategory,
+            // isDual: isDualFurniture,
+            // targetSlots: occupiedSlots
+          // },
+          // 기존가구: {
+            // id: module.id,
+            // category: existingCategory,
+            // isDual: isModuleDual,
+            // occupiedSlots: moduleSlots
+          // }
+        // });
         collidingModules.push(module.id);
       }
     });
@@ -373,13 +373,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const targetSlotInfo = columnSlots[globalSlotIndex];
 
 // console.log('🔍 [useFurnitureDrag] targetSlotInfo 확인:', {
-        zone: currentModule.zone,
-        slotIndex,
-        globalSlotIndex,
-        targetSlotInfo,
-        hasColumn: targetSlotInfo?.hasColumn,
-        columnSlotsLength: columnSlots.length
-      });
+        // zone: currentModule.zone,
+        // slotIndex,
+        // globalSlotIndex,
+        // targetSlotInfo,
+        // hasColumn: targetSlotInfo?.hasColumn,
+        // columnSlotsLength: columnSlots.length
+      // });
 
       if (targetSlotInfo && targetSlotInfo.hasColumn) {
         // 기둥이 있는 슬롯으로 이동하는 경우
@@ -405,12 +405,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 듀얼 가구가 차지할 슬롯 범위 로그
       if (isDualFurniture) {
 // console.log('🎯 듀얼 가구 이동 시도:', {
-          moduleId: currentModule.moduleId,
-          fromSlot: currentModule.slotIndex,
-          toSlot: collisionCheckIndex,
-          occupiedSlots: [collisionCheckIndex, collisionCheckIndex + 1],
-          zone: currentModule.zone
-        });
+          // moduleId: currentModule.moduleId,
+          // fromSlot: currentModule.slotIndex,
+          // toSlot: collisionCheckIndex,
+          // occupiedSlots: [collisionCheckIndex, collisionCheckIndex + 1],
+          // zone: currentModule.zone
+        // });
       }
       
       const collidingModules = detectFurnitureCollisions(draggingModuleId, collisionCheckIndex, targetSlotInfo);
@@ -459,12 +459,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       let adjustedPosition = { x: finalX, y: yPosition, z: currentModule.position.z };
 
 // console.log('🎯 드래그 중 위치 계산:', {
-        moduleId: currentModule.id,
-        currentPositionY: currentModule.position.y,
-        adjustedPositionY: adjustedPosition.y,
-        floatMode: spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float',
-        floatHeight: spaceInfo.baseConfig?.floatHeight
-      });
+        // moduleId: currentModule.id,
+        // currentPositionY: currentModule.position.y,
+        // adjustedPositionY: adjustedPosition.y,
+        // floatMode: spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float',
+        // floatHeight: spaceInfo.baseConfig?.floatHeight
+      // });
       
       if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
         const columnDepth = targetSlotInfo.column.depth;
@@ -487,26 +487,26 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
             // 기둥이 왼쪽에서 침범: 가구를 오른쪽으로 밀어냄
             adjustedPosition.x = furnitureBounds.center;
 // console.log('🔀 왼쪽 침범 - 위치 조정:', {
-              originalX: finalX,
-              adjustedX: adjustedPosition.x,
-              bounds: furnitureBounds
-            });
+              // originalX: finalX,
+              // adjustedX: adjustedPosition.x,
+              // bounds: furnitureBounds
+            // });
           } else if (targetSlotInfo.intrusionDirection === 'from-right') {
             // 기둥이 오른쪽에서 침범: 가구를 왼쪽으로 밀어냄
             adjustedPosition.x = furnitureBounds.center;
 // console.log('🔁 오른쪽 침범 - 위치 조정:', {
-              originalX: finalX,
-              adjustedX: adjustedPosition.x,
-              bounds: furnitureBounds
-            });
+              // originalX: finalX,
+              // adjustedX: adjustedPosition.x,
+              // bounds: furnitureBounds
+            // });
           } else if (targetSlotInfo.intrusionDirection === 'center') {
             // 중앙 침범
             adjustedPosition.x = furnitureBounds.center;
 // console.log('🟡 중앙 침범 - 위치 조정:', {
-              originalX: finalX,
-              adjustedX: adjustedPosition.x,
-              bounds: furnitureBounds
-            });
+              // originalX: finalX,
+              // adjustedX: adjustedPosition.x,
+              // bounds: furnitureBounds
+            // });
           }
           
           // 크기 조정
@@ -534,9 +534,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           adjustedPosition.x = furnitureBounds.center;
           newCustomDepth = undefined;
 // console.log('🟢 Column A 처리: 폭 조정만', {
-            adjustedWidth: newAdjustedWidth,
-            adjustedX: adjustedPosition.x
-          });
+            // adjustedWidth: newAdjustedWidth,
+            // adjustedX: adjustedPosition.x
+          // });
         }
       }
       
@@ -624,12 +624,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       };
 
 // console.log('📦 [useFurnitureDrag] endData 생성:', {
-        zone: currentModule.zone,
-        adjustedWidth: endData.adjustedWidth,
-        customWidth: endData.customWidth,
-        customDepth: endData.customDepth,
-        slotIndex: endData.slotIndex
-      });
+        // zone: currentModule.zone,
+        // adjustedWidth: endData.adjustedWidth,
+        // customWidth: endData.customWidth,
+        // customDepth: endData.customDepth,
+        // slotIndex: endData.slotIndex
+      // });
 
       // 드래그 끝날 때 사용할 데이터 저장
       setDragEndData(endData);

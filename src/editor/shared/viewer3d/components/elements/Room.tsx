@@ -336,14 +336,14 @@ const Room: React.FC<RoomProps> = ({
   React.useEffect(() => {
     if (!isSpaceInfoValid) return;
 // console.log('🏠🏠🏠 Room 컴포넌트 렌더링:', {
-      roomId: roomId.substring(0, 20),
-      viewMode,
-      placedModulesProp: !!placedModules,
-      placedModulesCount: placedModules?.length,
-      activeZone,
-      droppedCeiling: spaceInfo?.droppedCeiling,
-      timestamp: Date.now()
-    });
+      // roomId: roomId.substring(0, 20),
+      // viewMode,
+      // placedModulesProp: !!placedModules,
+      // placedModulesCount: placedModules?.length,
+      // activeZone,
+      // droppedCeiling: spaceInfo?.droppedCeiling,
+      // timestamp: Date.now()
+    // });
   });
 
   // 노서라운드 모드에서 엔드패널이 생성되는 위치 확인
@@ -382,13 +382,13 @@ const Room: React.FC<RoomProps> = ({
     }
 
 // console.log('🔍 엔드패널 생성 위치:', {
-      노서라운드모드: spaceInfo.surroundType === 'no-surround',
-      설치타입: spaceInfo.installType,
-      엔드패널슬롯: endPanelSlots,
-      왼쪽엔드패널: hasLeftEndPanel,
-      오른쪽엔드패널: hasRightEndPanel,
-      전체슬롯수: columnCount
-    });
+      // 노서라운드모드: spaceInfo.surroundType === 'no-surround',
+      // 설치타입: spaceInfo.installType,
+      // 엔드패널슬롯: endPanelSlots,
+      // 왼쪽엔드패널: hasLeftEndPanel,
+      // 오른쪽엔드패널: hasRightEndPanel,
+      // 전체슬롯수: columnCount
+    // });
 
     return {
       left: hasLeftEndPanel,
@@ -436,13 +436,13 @@ const Room: React.FC<RoomProps> = ({
 
       if (isAtLeftEdge) {
 // console.log('🟢 공간 왼쪽 끝 가구 감지:', {
-          slotIndex: module.slotIndex,
-          zone: module.zone,
-          isDualSlot: module.isDualSlot,
-          isDual,
-          moduleId: module.moduleId,
-          droppedPosition
-        });
+          // slotIndex: module.slotIndex,
+          // zone: module.zone,
+          // isDualSlot: module.isDualSlot,
+          // isDual,
+          // moduleId: module.moduleId,
+          // droppedPosition
+        // });
       }
       return isAtLeftEdge;
     });
@@ -477,15 +477,15 @@ const Room: React.FC<RoomProps> = ({
 
       if (isAtRightEdge) {
 // console.log('🔴 공간 오른쪽 끝 가구 감지:', {
-          slotIndex: module.slotIndex,
-          zone: module.zone,
-          isDualSlot: module.isDualSlot,
-          isDual,
-          moduleId: module.moduleId,
-          lastSlotIndex,
-          columnCount: indexingForCheck.columnCount,
-          droppedPosition
-        });
+          // slotIndex: module.slotIndex,
+          // zone: module.zone,
+          // isDualSlot: module.isDualSlot,
+          // isDual,
+          // moduleId: module.moduleId,
+          // lastSlotIndex,
+          // columnCount: indexingForCheck.columnCount,
+          // droppedPosition
+        // });
       }
       return isAtRightEdge;
     });
@@ -500,30 +500,30 @@ const Room: React.FC<RoomProps> = ({
   placedModulesFromStore.forEach(module => {
     const isDual = module.isDualSlot || module.moduleId.includes('dual-');
 // console.log('📦 가구 정보:', {
-      moduleId: module.moduleId,
-      slotIndex: module.slotIndex,
-      isDualSlot: module.isDualSlot,
-      isDual,
-      '듀얼판단근거': module.isDualSlot ? 'isDualSlot속성' : (module.moduleId.includes('dual-') ? 'moduleId에dual포함' : '싱글'),
-      '차지하는슬롯': isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex],
-      '왼쪽끝인가': module.slotIndex === 0 || (isDual && module.slotIndex === 1),
-      '오른쪽끝인가': module.slotIndex === lastSlotIndex || (isDual && module.slotIndex === indexingDebug.columnCount - 2),
-      lastSlotIndex,
-      columnCount: indexingDebug.columnCount
-    });
+      // moduleId: module.moduleId,
+      // slotIndex: module.slotIndex,
+      // isDualSlot: module.isDualSlot,
+      // isDual,
+      // '듀얼판단근거': module.isDualSlot ? 'isDualSlot속성' : (module.moduleId.includes('dual-') ? 'moduleId에dual포함' : '싱글'),
+      // '차지하는슬롯': isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex],
+      // '왼쪽끝인가': module.slotIndex === 0 || (isDual && module.slotIndex === 1),
+      // '오른쪽끝인가': module.slotIndex === lastSlotIndex || (isDual && module.slotIndex === indexingDebug.columnCount - 2),
+      // lastSlotIndex,
+      // columnCount: indexingDebug.columnCount
+    // });
   });
 
 // console.log('🔍 Room - 엔드패널 렌더링 최종 결과:', {
-    surroundType: spaceInfo.surroundType,
-    placedModulesCount: placedModulesFromStore.length,
-    hasLeftFurniture,
-    hasRightFurniture,
-    columnCount: indexingDebug.columnCount,
-    lastSlotIndex,
-    installType: spaceInfo.installType,
-    wallConfig: spaceInfo.wallConfig,
-    '오른쪽듀얼체크': placedModulesFromStore.filter(m => {
-      const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
+    // surroundType: spaceInfo.surroundType,
+    // placedModulesCount: placedModulesFromStore.length,
+    // hasLeftFurniture,
+    // hasRightFurniture,
+    // columnCount: indexingDebug.columnCount,
+    // lastSlotIndex,
+    // installType: spaceInfo.installType,
+    // wallConfig: spaceInfo.wallConfig,
+    // '오른쪽듀얼체크': placedModulesFromStore.filter(m => {
+      // const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
       return isDual && m.slotIndex === indexingDebug.columnCount - 2;
     }).map(m => ({
       moduleId: m.moduleId,
@@ -576,23 +576,23 @@ const Room: React.FC<RoomProps> = ({
 
     // 노서라운드 프레임 디버그
 // console.log('🔍 Room - 프레임 계산 결과:', {
-      surroundType: spaceInfo.surroundType,
-      installType: spaceInfo.installType,
-      wallConfig: spaceInfo.wallConfig,
-      frameThicknessMm,
-      topBottomFrameHeightMm,
-      baseFrameHeightMm,
-      baseFrameMm,
-      isNoSurround: spaceInfo.surroundType === 'no-surround',
-      isBuiltin: spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in',
-      isSemistanding: spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing',
-      shouldHideAllFrames: spaceInfo.surroundType === 'no-surround',
-      '예상 프레임': spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')
-        ? (spaceInfo.wallConfig?.left
-          ? '좌측: 0mm (벽있음), 우측: 18mm (엔드패널)'
-          : '좌측: 18mm (엔드패널), 우측: 0mm (벽있음)')
-        : '서라운드 또는 다른 타입'
-    });
+      // surroundType: spaceInfo.surroundType,
+      // installType: spaceInfo.installType,
+      // wallConfig: spaceInfo.wallConfig,
+      // frameThicknessMm,
+      // topBottomFrameHeightMm,
+      // baseFrameHeightMm,
+      // baseFrameMm,
+      // isNoSurround: spaceInfo.surroundType === 'no-surround',
+      // isBuiltin: spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in',
+      // isSemistanding: spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing',
+      // shouldHideAllFrames: spaceInfo.surroundType === 'no-surround',
+      // '예상 프레임': spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')
+        // ? (spaceInfo.wallConfig?.left
+          // ? '좌측: 0mm (벽있음), 우측: 18mm (엔드패널)'
+          // : '좌측: 18mm (엔드패널), 우측: 0mm (벽있음)')
+        // : '서라운드 또는 다른 타입'
+    // });
 
     // mm를 Three.js 단위로 변환
 // console.log('🔥 calculateDimensionsAndFrames - 변환 직전:', {
@@ -1050,19 +1050,19 @@ const Room: React.FC<RoomProps> = ({
   // 벽 여부 확인
   const { wallConfig = { left: true, right: true } } = spaceInfo;
 // console.log('🏠 Room - 노서라운드 프레임 체크:', {
-    installType: spaceInfo.installType,
-    surroundType: spaceInfo.surroundType,
-    isNoSurround: spaceInfo.surroundType === 'no-surround',
-    isBuiltin: spaceInfo.installType === 'builtin',
-    isSemistanding: spaceInfo.installType === 'semistanding',
-    wallConfig,
-    frameThicknessMm,
-    frameThickness,
-    leftPanel: frameThickness.left > 0 ? `${frameThicknessMm.left}mm` : 'none',
-    rightPanel: frameThickness.right > 0 ? `${frameThicknessMm.right}mm` : 'none',
-    shouldHaveEndPanelLeft: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'semistanding' && !wallConfig?.left,
-    shouldHaveEndPanelRight: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'semistanding' && !wallConfig?.right
-  });
+    // installType: spaceInfo.installType,
+    // surroundType: spaceInfo.surroundType,
+    // isNoSurround: spaceInfo.surroundType === 'no-surround',
+    // isBuiltin: spaceInfo.installType === 'builtin',
+    // isSemistanding: spaceInfo.installType === 'semistanding',
+    // wallConfig,
+    // frameThicknessMm,
+    // frameThickness,
+    // leftPanel: frameThickness.left > 0 ? `${frameThicknessMm.left}mm` : 'none',
+    // rightPanel: frameThickness.right > 0 ? `${frameThicknessMm.right}mm` : 'none',
+    // shouldHaveEndPanelLeft: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'semistanding' && !wallConfig?.left,
+    // shouldHaveEndPanelRight: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'semistanding' && !wallConfig?.right
+  // });
 
   // 내부 공간 계산 (세로 가이드 선 위치 확인용)
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -1090,19 +1090,19 @@ const Room: React.FC<RoomProps> = ({
   if (spaceInfo.installType === 'freestanding' ||
     (spaceInfo.installType === 'semistanding' && (!wallConfig?.left || !wallConfig?.right))) {
 // console.log('🔍 노서라운드 엔드패널 계산:', {
-      가구깊이mm: furnitureDepthMm,
-      공간깊이mm: panelDepthMm,
-      roomBackZ,
-      frameEndZ,
-      slotFloorDepth,
-      slotFloorDepth_mm: slotFloorDepth / 0.01,
-      surroundEndPanelDepth_mm: surroundEndPanelDepth / 0.01,
-      noSurroundEndPanelDepth_mm: noSurroundEndPanelDepth / 0.01,
-      surroundEndPanelZ,
-      noSurroundEndPanelZ,
-      끝점: frameEndZ - mmToThreeUnits(20),
-      가구와공간뒷벽차이: (spaceBackWallZ - backZ) / 0.01
-    });
+      // 가구깊이mm: furnitureDepthMm,
+      // 공간깊이mm: panelDepthMm,
+      // roomBackZ,
+      // frameEndZ,
+      // slotFloorDepth,
+      // slotFloorDepth_mm: slotFloorDepth / 0.01,
+      // surroundEndPanelDepth_mm: surroundEndPanelDepth / 0.01,
+      // noSurroundEndPanelDepth_mm: noSurroundEndPanelDepth / 0.01,
+      // surroundEndPanelZ,
+      // noSurroundEndPanelZ,
+      // 끝점: frameEndZ - mmToThreeUnits(20),
+      // 가구와공간뒷벽차이: (spaceBackWallZ - backZ) / 0.01
+    // });
   }
 
   // 한쪽벽모드 엔드패널/프레임 개수 카운팅
@@ -1213,12 +1213,12 @@ const Room: React.FC<RoomProps> = ({
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
 // console.log('🔴 왼쪽 단내림 벽 렌더링:', {
-                    '전체 높이': height / 0.01,
-                    '단내림 높이차': droppedCeilingHeight / 0.01,
-                    '단내림 벽 높이': droppedWallHeight / 0.01,
-                    'panelStartY': panelStartY,
-                    'droppedCenterY': droppedCenterY
-                  });
+                    // '전체 높이': height / 0.01,
+                    // '단내림 높이차': droppedCeilingHeight / 0.01,
+                    // '단내림 벽 높이': droppedWallHeight / 0.01,
+                    // 'panelStartY': panelStartY,
+                    // 'droppedCenterY': droppedCenterY
+                  // });
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1282,12 +1282,12 @@ const Room: React.FC<RoomProps> = ({
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
 // console.log('🔵 오른쪽 단내림 벽 렌더링:', {
-                    '전체 높이': height / 0.01,
-                    '단내림 높이차': droppedCeilingHeight / 0.01,
-                    '단내림 벽 높이': droppedWallHeight / 0.01,
-                    'panelStartY': panelStartY,
-                    'droppedCenterY': droppedCenterY
-                  });
+                    // '전체 높이': height / 0.01,
+                    // '단내림 높이차': droppedCeilingHeight / 0.01,
+                    // '단내림 벽 높이': droppedWallHeight / 0.01,
+                    // 'panelStartY': panelStartY,
+                    // 'droppedCenterY': droppedCenterY
+                  // });
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1923,14 +1923,14 @@ const Room: React.FC<RoomProps> = ({
         );
 
 // console.log('🎯 Floor mesh Y calculation:', {
-          internalSpace_startY: internalSpace.startY,
-          baseFrameHeightMm,
-          floorFinishHeightMm,
-          floatHeight,
-          floorY,
-          baseConfig: spaceInfo.baseConfig,
-          panelStartY
-        });
+          // internalSpace_startY: internalSpace.startY,
+          // baseFrameHeightMm,
+          // floorFinishHeightMm,
+          // floatHeight,
+          // floorY,
+          // baseConfig: spaceInfo.baseConfig,
+          // panelStartY
+        // });
 
         // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
         const hasDeepColumns = columns.some(column => column.depth >= 730);
@@ -2058,10 +2058,10 @@ const Room: React.FC<RoomProps> = ({
       })}
       {effectiveShowFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasLeftFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
 // console.log('🔥🔥🔥 [좌측 프레임/엔드패널 메인 렌더링 블록]', {
-          surroundType: spaceInfo.surroundType,
-          wallConfigLeft: wallConfig?.left,
-          isEndPanel: !wallConfig?.left
-        });
+          // surroundType: spaceInfo.surroundType,
+          // wallConfigLeft: wallConfig?.left,
+          // isEndPanel: !wallConfig?.left
+        // });
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -2204,14 +2204,14 @@ const Room: React.FC<RoomProps> = ({
         // 하지만 명시적으로 체크하여 중복 방지
         if (!(hasDroppedCeiling && isLeftDropped)) {
 // console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
-            frameThicknessLeft: frameThickness.left,
-            wallConfigLeft: wallConfig?.left,
-            surroundType: spaceInfo.surroundType,
-            installType: spaceInfo.installType,
-            hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
-            깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
-            위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
-          });
+            // frameThicknessLeft: frameThickness.left,
+            // wallConfigLeft: wallConfig?.left,
+            // surroundType: spaceInfo.surroundType,
+            // installType: spaceInfo.installType,
+            // hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
+            // 깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
+            // 위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
+          // });
 
           // 렌더링 카운터 증가
           if (typeof window !== 'undefined' && window.renderCounter) {
@@ -2305,18 +2305,18 @@ const Room: React.FC<RoomProps> = ({
         const condition3 = !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'));
         const finalCondition = condition1 && condition2 && condition3;
 // console.log('🔵🔵🔵 [오른쪽 프레임 렌더링 조건 체크]', {
-          condition1_showFrame_thickness: condition1,
-          condition2_surroundOrFreestandingOrFurniture: condition2,
-          condition3_not2DSide: condition3,
-          finalCondition,
-          showFrame,
-          frameThicknessRight: frameThickness.right,
-          surroundType: spaceInfo.surroundType,
-          installType: spaceInfo.installType,
-          hasRightFurniture,
-          viewMode,
-          view2DDirection
-        });
+          // condition1_showFrame_thickness: condition1,
+          // condition2_surroundOrFreestandingOrFurniture: condition2,
+          // condition3_not2DSide: condition3,
+          // finalCondition,
+          // showFrame,
+          // frameThicknessRight: frameThickness.right,
+          // surroundType: spaceInfo.surroundType,
+          // installType: spaceInfo.installType,
+          // hasRightFurniture,
+          // viewMode,
+          // view2DDirection
+        // });
         return null;
       })()}
       {effectiveShowFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
@@ -2871,14 +2871,14 @@ const Room: React.FC<RoomProps> = ({
             if ((columns.length === 0 || !hasDeepColumns) && !hasDroppedCeiling) {
               // 기둥도 없고 단내림도 없으면 기존처럼 하나의 프레임으로 렌더링
 // console.log('🔧 상부프레임 엔드패널 조정:', {
-                원래너비: normalZone.width,
-                조정된너비: frameWidth,
-                왼쪽엔드패널: endPanelPositions.left,
-                오른쪽엔드패널: endPanelPositions.right,
-                frameStartX,
-                frameEndX,
-                frameX
-              });
+                // 원래너비: normalZone.width,
+                // 조정된너비: frameWidth,
+                // 왼쪽엔드패널: endPanelPositions.left,
+                // 오른쪽엔드패널: endPanelPositions.right,
+                // frameStartX,
+                // frameEndX,
+                // frameX
+              // });
 
               return (
                 <BoxWithEdges
@@ -2994,24 +2994,24 @@ const Room: React.FC<RoomProps> = ({
               const normalX = normalStartX + normalFrameWidth / 2;
 
 // console.log('🔥 상부 프레임 너비 상세 계산:', {
-                전체너비mm: width / 0.01,
-                frameWidth_mm: frameWidth / 0.01,
-                droppedWidth_mm: droppedWidth / 0.01,
-                leftReduction,
-                rightReduction,
-                메인구간프레임너비_mm: normalFrameWidth / 0.01,
-                단내림구간프레임너비_mm: droppedFrameWidth / 0.01,
-                단내림위치: isLeftDropped ? '왼쪽' : '오른쪽',
-                위치정보: {
-                  normalStartX_mm: normalStartX / 0.01,
-                  droppedStartX_mm: droppedStartX / 0.01,
-                  경계점_mm: (isLeftDropped ? normalStartX : droppedStartX) / 0.01
-                },
-                계산검증: {
-                  '단내림+메인': (droppedFrameWidth + normalFrameWidth) / 0.01,
-                  '전체내부너비': (mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(leftReduction + rightReduction)) / 0.01
-                }
-              });
+                // 전체너비mm: width / 0.01,
+                // frameWidth_mm: frameWidth / 0.01,
+                // droppedWidth_mm: droppedWidth / 0.01,
+                // leftReduction,
+                // rightReduction,
+                // 메인구간프레임너비_mm: normalFrameWidth / 0.01,
+                // 단내림구간프레임너비_mm: droppedFrameWidth / 0.01,
+                // 단내림위치: isLeftDropped ? '왼쪽' : '오른쪽',
+                // 위치정보: {
+                  // normalStartX_mm: normalStartX / 0.01,
+                  // droppedStartX_mm: droppedStartX / 0.01,
+                  // 경계점_mm: (isLeftDropped ? normalStartX : droppedStartX) / 0.01
+                // },
+                // 계산검증: {
+                  // '단내림+메인': (droppedFrameWidth + normalFrameWidth) / 0.01,
+                  // '전체내부너비': (mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(leftReduction + rightReduction)) / 0.01
+                // }
+              // });
 
               // 측면뷰에서 선택된 슬롯이 어느 zone에 있는지 확인
               const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
@@ -3089,11 +3089,11 @@ const Room: React.FC<RoomProps> = ({
             const adjustedFrameEndX = frameEndX;
 
 // console.log('🔧 상부프레임 분절 엔드패널 조정:', {
-              조정된시작: adjustedFrameStartX,
-              조정된끝: adjustedFrameEndX,
-              왼쪽엔드패널: endPanelPositions.left,
-              오른쪽엔드패널: endPanelPositions.right
-            });
+              // 조정된시작: adjustedFrameStartX,
+              // 조정된끝: adjustedFrameEndX,
+              // 왼쪽엔드패널: endPanelPositions.left,
+              // 오른쪽엔드패널: endPanelPositions.right
+            // });
 
             // 기둥들을 X 위치 기준으로 정렬
             const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
@@ -3163,12 +3163,12 @@ const Room: React.FC<RoomProps> = ({
                 console.warn(`⚠️ Top frame segment ${index} - material not ready, using default`);
               } else {
 // console.log(`🎨 Top frame segment ${index} material:`, {
-                  hasTopFrameMaterial: !!topFrameMaterial,
-                  materialType: topFrameMaterial?.type,
-                  materialColor: topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color.getHexString() : 'unknown',
-                  materialTexture: topFrameMaterial && 'map' in topFrameMaterial ? !!(topFrameMaterial as any).map : false,
-                  segmentWidth: segment.width
-                });
+                  // hasTopFrameMaterial: !!topFrameMaterial,
+                  // materialType: topFrameMaterial?.type,
+                  // materialColor: topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color.getHexString() : 'unknown',
+                  // materialTexture: topFrameMaterial && 'map' in topFrameMaterial ? !!(topFrameMaterial as any).map : false,
+                  // segmentWidth: segment.width
+                // });
               }
 
               return (
@@ -3590,11 +3590,11 @@ const Room: React.FC<RoomProps> = ({
         return true;
       })() && (() => {
 // console.log('🎯 베이스프레임 높이 확인:', {
-          '최종_높이': baseFrameHeightMm,
-          baseFrameHeight_ThreeUnits: baseFrameHeight,
-          spaceInfo_baseConfig: spaceInfo.baseConfig,
-          END_PANEL_THICKNESS
-        });
+          // '최종_높이': baseFrameHeightMm,
+          // baseFrameHeight_ThreeUnits: baseFrameHeight,
+          // spaceInfo_baseConfig: spaceInfo.baseConfig,
+          // END_PANEL_THICKNESS
+        // });
 
         // 자유배치 모드: 가구별 개별 하부프레임 렌더링 (상부프레임과 동일 패턴)
         if (isFreePlacement) {
@@ -3741,14 +3741,14 @@ const Room: React.FC<RoomProps> = ({
                 if (columns.length === 0 || !hasDeepColumns) {
                   // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
 // console.log('🔧 하부프레임 엔드패널 조정:', {
-                    원래너비: renderZone.width,
-                    조정된너비: frameWidth,
-                    왼쪽엔드패널: endPanelPositions.left,
-                    오른쪽엔드패널: endPanelPositions.right,
-                    frameStartX,
-                    frameEndX,
-                    frameX
-                  });
+                    // 원래너비: renderZone.width,
+                    // 조정된너비: frameWidth,
+                    // 왼쪽엔드패널: endPanelPositions.left,
+                    // 오른쪽엔드패널: endPanelPositions.right,
+                    // frameStartX,
+                    // frameEndX,
+                    // frameX
+                  // });
 
                   return (
                     <BoxWithEdges
@@ -3789,11 +3789,11 @@ const Room: React.FC<RoomProps> = ({
                 const adjustedFrameEndXCalc = frameEndX;
 
 // console.log('🔧 하부프레임 분절 엔드패널 조정:', {
-                  조정된시작: adjustedFrameStartXCalc,
-                  조정된끝: adjustedFrameEndXCalc,
-                  왼쪽엔드패널: endPanelPositions.left,
-                  오른쪽엔드패널: endPanelPositions.right
-                });
+                  // 조정된시작: adjustedFrameStartXCalc,
+                  // 조정된끝: adjustedFrameEndXCalc,
+                  // 왼쪽엔드패널: endPanelPositions.left,
+                  // 오른쪽엔드패널: endPanelPositions.right
+                // });
 
                 // 기둥들을 X 위치 기준으로 정렬
                 const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
@@ -3865,14 +3865,14 @@ const Room: React.FC<RoomProps> = ({
                     console.warn(`⚠️ Base frame segment ${segmentIndex} - material not ready, using default`);
                   } else {
 // console.log(`🎨 Base frame segment ${segmentIndex} material:`, {
-                      hasBaseFrameMaterial: !!baseFrameMaterial,
-                      materialType: baseFrameMaterial?.type,
-                      materialColor: baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color.getHexString() : 'unknown',
-                      materialTexture: baseFrameMaterial && 'map' in baseFrameMaterial ? !!(baseFrameMaterial as any).map : false,
-                      doorColor: materialConfig?.doorColor,
-                      doorTexture: materialConfig?.doorTexture,
-                      segmentWidth: segment.width
-                    });
+                      // hasBaseFrameMaterial: !!baseFrameMaterial,
+                      // materialType: baseFrameMaterial?.type,
+                      // materialColor: baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color.getHexString() : 'unknown',
+                      // materialTexture: baseFrameMaterial && 'map' in baseFrameMaterial ? !!(baseFrameMaterial as any).map : false,
+                      // doorColor: materialConfig?.doorColor,
+                      // doorTexture: materialConfig?.doorTexture,
+                      // segmentWidth: segment.width
+                    // });
                   }
 
                   return (

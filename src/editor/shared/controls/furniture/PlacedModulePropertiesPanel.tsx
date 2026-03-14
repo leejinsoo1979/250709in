@@ -1077,16 +1077,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       }
       
 // console.log('🔧 팝업 초기값 설정:', {
-        moduleId: currentPlacedModule.moduleId,
-        hasCustomDepth: currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null,
-        customDepth: currentPlacedModule.customDepth,
-        defaultDepth: getDefaultDepth(moduleData),
-        finalDepth: initialDepth,
-        hasCustomWidth: currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null,
-        customWidth: currentPlacedModule.customWidth,
-        defaultWidth: moduleData.dimensions.width,
-        finalWidth: initialWidth
-      });
+        // moduleId: currentPlacedModule.moduleId,
+        // hasCustomDepth: currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null,
+        // customDepth: currentPlacedModule.customDepth,
+        // defaultDepth: getDefaultDepth(moduleData),
+        // finalDepth: initialDepth,
+        // hasCustomWidth: currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null,
+        // customWidth: currentPlacedModule.customWidth,
+        // defaultWidth: moduleData.dimensions.width,
+        // finalWidth: initialWidth
+      // });
     }
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
@@ -1143,16 +1143,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음
   if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
 // console.log('📝 PlacedModulePropertiesPanel 렌더링 안 함:', {
-      type: activePopup.type,
-      id: activePopup.id
-    });
+      // type: activePopup.type,
+      // id: activePopup.id
+    // });
     return null;
   }
 
 // console.log('📝 PlacedModulePropertiesPanel 렌더링됨:', {
-    type: activePopup.type,
-    id: activePopup.id
-  });
+    // type: activePopup.type,
+    // id: activePopup.id
+  // });
 
   // 모듈 데이터가 없으면 렌더링하지 않음
   if (!currentPlacedModule || !moduleData) {
@@ -1261,11 +1261,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       updatePlacedModule(activePopup.id, updateData);
       
 // console.log('📏 가구 너비 조정:', {
-        originalWidth: moduleData.dimensions.width,
-        newWidth,
-        columnPosition: slotInfo?.column?.position,
-        customDepth: currentPlacedModule.customDepth
-      });
+        // originalWidth: moduleData.dimensions.width,
+        // newWidth,
+        // columnPosition: slotInfo?.column?.position,
+        // customDepth: currentPlacedModule.customDepth
+      // });
     }
   };
 
@@ -2048,13 +2048,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   // 디버그: 마이다 패널 정보 출력
                   if (panel.name.includes('마이다')) {
 // console.log('🎯 마이다 패널:', {
-                      name: panel.name,
-                      width: panel.width,
-                      height: panel.height,
-                      defaultDirection,
-                      currentDirection,
-                      storedDirection: currentPlacedModule?.panelGrainDirections?.[panel.name]
-                    });
+                      // name: panel.name,
+                      // width: panel.width,
+                      // height: panel.height,
+                      // defaultDirection,
+                      // currentDirection,
+                      // storedDirection: currentPlacedModule?.panelGrainDirections?.[panel.name]
+                    // });
                   }
 
                   // 결 방향에 따라 W/L 레이블 결정
