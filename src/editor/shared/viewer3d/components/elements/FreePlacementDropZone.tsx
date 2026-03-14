@@ -1546,13 +1546,26 @@ const FreePlacementDropZone: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          opacity: isLocked ? 1 : 0.4,
-                          transition: 'opacity 0.15s',
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          border: `2px solid ${isLocked ? '#e53e3e' : themeColor}`,
+                          backgroundColor: '#ffffff',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                          opacity: isLocked ? 1 : 0.5,
+                          transition: 'all 0.2s ease',
                           color: isLocked ? '#e53e3e' : themeColor,
-                          background: 'transparent',
                         }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
-                        onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLDivElement).style.opacity = '0.4'; }}
+                        onMouseEnter={(e) => {
+                          const el = e.currentTarget as HTMLDivElement;
+                          el.style.opacity = '1';
+                          el.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          const el = e.currentTarget as HTMLDivElement;
+                          if (!isLocked) el.style.opacity = '0.5';
+                          el.style.transform = 'scale(1)';
+                        }}
                         onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1561,7 +1574,7 @@ const FreePlacementDropZone: React.FC = () => {
                         }}
                         title={isLocked ? '잠금 해제' : '잠금'}
                       >
-                        {isLocked ? <IoLockClosed size={20} /> : <IoLockOpen size={20} />}
+                        {isLocked ? <IoLockClosed size={14} /> : <IoLockOpen size={14} />}
                       </div>
                     );
                   })()}
