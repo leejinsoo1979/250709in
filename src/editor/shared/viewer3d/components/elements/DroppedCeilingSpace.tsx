@@ -68,18 +68,10 @@ const DroppedCeilingSpace: React.FC<DroppedCeilingSpaceProps> = ({ spaceInfo }) 
   const frameY = (droppedAreaHeight - frameThickness) / 2;
   const wallY = droppedAreaHeight / 2;
 
-  // 자유배치모드: 서라운드구간에 반투명 벽 패널 렌더링
+  // 자유배치모드: 서라운드구간은 벽(Room.tsx)이 전체 높이로 렌더링하므로 추가 표현 불필요
   const isFreeMode = spaceInfo.layoutMode === 'free-placement';
   if (isFreeMode) {
-    const wallHeight = threeSpaceHeight;
-    return (
-      <group>
-        <mesh position={[centerX, wallHeight / 2, -threeDepth / 2]}>
-          <boxGeometry args={[threeWidth, wallHeight, threeDepth]} />
-          <meshStandardMaterial color="#d4c5b0" transparent opacity={0.3} side={THREE.DoubleSide} />
-        </mesh>
-      </group>
-    );
+    return null;
   }
 
   return (
