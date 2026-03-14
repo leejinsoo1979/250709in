@@ -3411,6 +3411,7 @@ const Configurator: React.FC = () => {
                     step="10"
                     defaultValue={(() => {
                       const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
+                      if (isFreeMode) return Math.round(mainOuter);
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
                       const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
@@ -3418,7 +3419,7 @@ const Configurator: React.FC = () => {
                       const internal = pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight;
                       return Math.round(internal);
                     })()}
-                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}
+                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3487,8 +3488,8 @@ const Configurator: React.FC = () => {
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                   <input
                     type="text"
-                    defaultValue={spaceInfo.height || 2400}
-                    key={`main-height-${spaceInfo.height || 2400}`}
+                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200) : (spaceInfo.height || 2400)}
+                    key={`main-height-${spaceInfo.height || 2400}-${isFreeMode ? spaceInfo.droppedCeiling?.dropHeight : 0}`}
                     onChange={(e) => {
                       // 숫자와 빈 문자열만 허용
                       const value = e.target.value;
@@ -3498,25 +3499,41 @@ const Configurator: React.FC = () => {
                     }}
                     onBlur={(e) => {
                       const value = e.target.value;
+                      const totalHeight = spaceInfo.height || 2400;
                       if (value === '') {
-                        // 빈 값인 경우 기존 값으로 되돌림
-                        e.target.value = (spaceInfo.height || 2400).toString();
+                        const displayHeight = isFreeMode ? totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200) : totalHeight;
+                        e.target.value = displayHeight.toString();
                         return;
                       }
 
                       const numValue = parseInt(value);
-                      const minValue = 1800;
-                      const maxValue = 3000;
 
-                      // 범위 검증
-                      if (numValue < minValue) {
-                        e.target.value = minValue.toString();
-                        handleSpaceInfoUpdate({ height: minValue });
-                      } else if (numValue > maxValue) {
-                        e.target.value = maxValue.toString();
-                        handleSpaceInfoUpdate({ height: maxValue });
+                      if (isFreeMode) {
+                        // 자유배치: 메인구간 높이 입력 → dropHeight 조정
+                        const newDropHeight = totalHeight - numValue;
+                        const clampedDrop = Math.max(100, Math.min(500, newDropHeight));
+                        const clampedMainH = totalHeight - clampedDrop;
+                        e.target.value = clampedMainH.toString();
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            dropHeight: clampedDrop
+                          }
+                        });
                       } else {
-                        handleSpaceInfoUpdate({ height: numValue });
+                        // 슬롯배치: 전체 높이 변경
+                        const minValue = 1800;
+                        const maxValue = 3000;
+                        if (numValue < minValue) {
+                          e.target.value = minValue.toString();
+                          handleSpaceInfoUpdate({ height: minValue });
+                        } else if (numValue > maxValue) {
+                          e.target.value = maxValue.toString();
+                          handleSpaceInfoUpdate({ height: maxValue });
+                        } else {
+                          handleSpaceInfoUpdate({ height: numValue });
+                        }
                       }
                     }}
                     onKeyDown={(e) => {
@@ -3526,9 +3543,10 @@ const Configurator: React.FC = () => {
                       } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                         e.preventDefault();
 
-                        const currentValue = parseInt(e.target.value) || (spaceInfo.height || 2400);
-                        const minValue = 1800;
-                        const maxValue = 3000;
+                        const totalHeight = spaceInfo.height || 2400;
+                        const currentValue = parseInt(e.target.value) || (isFreeMode ? totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200) : totalHeight);
+                        const minValue = isFreeMode ? totalHeight - 500 : 1800;
+                        const maxValue = isFreeMode ? totalHeight - 100 : 3000;
 
                         let newValue;
                         if (e.key === 'ArrowUp') {
@@ -3539,12 +3557,22 @@ const Configurator: React.FC = () => {
 
                         if (newValue !== currentValue) {
                           e.target.value = newValue.toString();
-                          handleSpaceInfoUpdate({ height: newValue });
+                          if (isFreeMode) {
+                            handleSpaceInfoUpdate({
+                              droppedCeiling: {
+                                ...spaceInfo.droppedCeiling,
+                                enabled: true,
+                                dropHeight: totalHeight - newValue
+                              }
+                            });
+                          } else {
+                            handleSpaceInfoUpdate({ height: newValue });
+                          }
                         }
                       }
                     }}
                     className={`${styles.input} ${styles.inputWithUnitField}`}
-                    placeholder="1800-3000"
+                    placeholder={isFreeMode ? '' : '1800-3000'}
                   />
                   <span className={styles.unit}>mm</span>
                 </div>
@@ -3573,13 +3601,14 @@ const Configurator: React.FC = () => {
                     step="10"
                     defaultValue={(() => {
                       const droppedOuter = spaceInfo.droppedCeiling?.width || 900;
+                      if (isFreeMode) return Math.round(droppedOuter);
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
                       const internal = pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft;
                       return Math.round(internal);
                     })()}
-                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}
+                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3637,7 +3666,7 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-              {/* 단내림 구간 높이 */}
+              {/* 단내림/커튼박스 구간 높이 */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
                 <div className={styles.inputWithUnit} style={{ flex: 1 }}>
@@ -3646,8 +3675,8 @@ const Configurator: React.FC = () => {
                     min="1800"
                     max="2900"
                     step="10"
-                    defaultValue={(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-                    key={`dropped-height-${(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                    key={`dropped-height-${isFreeMode ? spaceInfo.height : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -3657,47 +3686,36 @@ const Configurator: React.FC = () => {
                     onBlur={(e) => {
                       const inputValue = e.target.value;
                       const totalHeight = spaceInfo.height || 2400;
-                      const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
 
-                      // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
-                      if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                        e.target.value = currentDroppedHeight.toString();
-                        return;
-                      }
-
-                      const droppedHeight = parseInt(inputValue);
-                      const newDropHeight = totalHeight - droppedHeight;
-
-                      // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정 (단차 높이는 100~500mm)
-                      if (newDropHeight < 100) {
-                        const validDroppedHeight = totalHeight - 100;
-                        e.target.value = validDroppedHeight.toString();
-                        handleSpaceInfoUpdate({
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            dropHeight: 100
-                          }
-                        });
-                      } else if (newDropHeight > 500) {
-                        const validDroppedHeight = totalHeight - 500;
-                        e.target.value = validDroppedHeight.toString();
-                        handleSpaceInfoUpdate({
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            dropHeight: 500
-                          }
-                        });
+                      if (isFreeMode) {
+                        // 자유배치: 커튼박스 구간 높이 = 전체 높이 변경
+                        if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                          e.target.value = totalHeight.toString();
+                          return;
+                        }
+                        const newHeight = parseInt(inputValue);
+                        const minH = 1800, maxH = 3000;
+                        const clamped = Math.max(minH, Math.min(maxH, newHeight));
+                        e.target.value = clamped.toString();
+                        handleSpaceInfoUpdate({ height: clamped });
                       } else {
-                        // 유효한 값이면 그대로 적용
-                        handleSpaceInfoUpdate({
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            dropHeight: newDropHeight
-                          }
-                        });
+                        // 슬롯배치: 단내림 구간 높이 → dropHeight 조정
+                        const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
+                        if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                          e.target.value = currentDroppedHeight.toString();
+                          return;
+                        }
+                        const droppedHeight = parseInt(inputValue);
+                        const newDropHeight = totalHeight - droppedHeight;
+                        if (newDropHeight < 100) {
+                          e.target.value = (totalHeight - 100).toString();
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 100 } });
+                        } else if (newDropHeight > 500) {
+                          e.target.value = (totalHeight - 500).toString();
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 500 } });
+                        } else {
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDropHeight } });
+                        }
                       }
                     }}
                     className={`${styles.input} ${styles.inputWithUnitField}`}
