@@ -3727,12 +3727,10 @@ const Configurator: React.FC = () => {
             {/* 커튼박스 마감 버튼 (자유배치 전용) */}
             {isFreeMode && (
               <button
-                style={{ width: '100%', marginTop: '8px', padding: '8px', background: spaceInfo.curtainBoxFinished ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-surface, #f0f0f0)', color: spaceInfo.curtainBoxFinished ? '#fff' : 'var(--theme-text, #333)', border: '2px solid var(--theme-primary, #4a90d9)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newVal = !spaceInfo.curtainBoxFinished;
-                  console.log('🔵 [커튼박스마감 버튼]', { before: spaceInfo.curtainBoxFinished, after: newVal });
-                  handleSpaceInfoUpdate({ curtainBoxFinished: newVal } as any);
+                className={`${styles.toggleButton} ${spaceInfo.curtainBoxFinished ? styles.toggleButtonActive : ''}`}
+                style={{ width: '100%', marginTop: '8px' }}
+                onClick={() => {
+                  setSpaceInfo({ curtainBoxFinished: !spaceInfo.curtainBoxFinished });
                 }}
               >
                 {spaceInfo.curtainBoxFinished ? '커튼박스 마감 해제' : '커튼박스 마감'}
@@ -5009,7 +5007,7 @@ const Configurator: React.FC = () => {
               </div>
             )}
             <Space3DView
-              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}`}
+              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}`}
               spaceInfo={spaceInfo}
               viewMode={viewMode}
               setViewMode={setViewMode}
