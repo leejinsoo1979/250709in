@@ -1068,8 +1068,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   const renderFrontView = () => (
     <group position={[0, 0, zOffset]} renderOrder={9999}>
-      {/* 단내림 구간 표시 (기둥처럼) - 2D 모드에서만 */}
-      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== '3D' && (() => {
+      {/* 단내림 구간 표시 (해칭) - 2D 모드, 슬롯배치에서만 (자유배치는 경계선만 표시) */}
+      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== '3D' && !isFreePlacement && (() => {
         const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
         const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
         const totalHeight = mmToThreeUnits(spaceInfo.height);
