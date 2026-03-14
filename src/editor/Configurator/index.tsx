@@ -4121,7 +4121,7 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
                     <input
                       type="text" inputMode="numeric"
@@ -4138,7 +4138,7 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
                     <input
                       type="text" inputMode="numeric"
@@ -4288,7 +4288,7 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
                     <input
                       type="text" inputMode="numeric"
@@ -4305,7 +4305,7 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                  <div className={styles.frameItemInput} style={{ flex: '0 0 55px' }}>
                     <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
                     <input
                       type="text" inputMode="numeric"
