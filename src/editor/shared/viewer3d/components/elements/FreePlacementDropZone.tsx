@@ -1462,31 +1462,27 @@ const FreePlacementDropZone: React.FC = () => {
         const freeModsForBtn = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         if (freeModsForBtn.length === 0) return null;
 
-        // 커튼박스 쪽 서라운드 패널이 이미 배치되었는지 확인
-        const pos = spaceInfo.droppedCeiling.position || 'right';
-        const hasCurtainBoxSurroundPanel = placedModules.some(m =>
-          m.isSurroundPanel && m.surroundPanelType === (pos === 'right' ? 'right' : 'left')
-        );
-        if (hasCurtainBoxSurroundPanel) return null;
+        // 서라운드가 이미 활성화되었는지 확인
+        const fs = spaceInfo.freeSurround;
+        const isSurroundActive = fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
+        if (isSurroundActive) return null;
 
+        const pos = spaceInfo.droppedCeiling.position || 'right';
         const totalWidth = spaceInfo.width || 2400;
         const halfW = totalWidth / 2;
         const curtainW = spaceInfo.droppedCeiling.width || 150;
 
-        // 커튼박스 구간 중심 X (mm → Three.js)
         const curtainCenterX = pos === 'right'
           ? (halfW - curtainW / 2) * 0.01
           : (-halfW + curtainW / 2) * 0.01;
-
-        const spaceHeight = (spaceInfo.height || 2400) * 0.01;
-        const curtainCenterY = spaceHeight / 2;
+        const curtainCenterY = ((spaceInfo.height || 2400) * 0.01) / 2;
 
         return (
           <Html
             position={[curtainCenterX, curtainCenterY, guideZPosition + 0.02]}
             center
             zIndexRange={[16000, 16001]}
-            style={{ pointerEvents: 'auto' }}
+            style={{ pointerEvents: 'auto', background: 'none' }}
           >
             <div
               onClick={(e) => {
@@ -1497,20 +1493,20 @@ const FreePlacementDropZone: React.FC = () => {
                 }
               }}
               style={{
-                width: '48px',
-                height: '48px',
+                width: '24px',
+                height: '24px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(99, 102, 241, 0.85)',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '28px',
+                fontSize: '16px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                transition: 'transform 0.15s, background-color 0.15s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
                 userSelect: 'none',
+                lineHeight: 1,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.15)';
