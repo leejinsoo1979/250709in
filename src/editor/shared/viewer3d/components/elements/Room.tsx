@@ -2553,13 +2553,19 @@ const Room: React.FC<RoomProps> = ({
           const minLeftMM = hasFreeMods ? Math.min(...allModuleBounds.map(b => b.left)) : 0;
           const maxRightMM = hasFreeMods ? Math.max(...allModuleBounds.map(b => b.right)) : 0;
 
-          // 도어기준 시: 서라운드 앞면 = 도어 앞면 (실측 diff = 23mm)
+          // 도어기준 시: 앞면 = 도어 앞면 (실측 diff = 23mm)
           const DOOR_FRONT_OFFSET_MM = 23;
-          const doorBaseOffset = (spaceInfo.frameOffsetBase ?? spaceInfo.surroundOffsetBase) === 'door'
+          // 서라운드와 상하부프레임 각각 독립적으로 도어기준 적용
+          const surroundDoorOffset = spaceInfo.surroundOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
-          const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) + doorBaseOffset;
+          const frameDoorOffset = spaceInfo.frameOffsetBase === 'door'
+            ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
+            : 0;
+          const baseZWithoutDoor = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
+          const topZPosition = baseZWithoutDoor + frameDoorOffset;
+          const surroundZPosition = baseZWithoutDoor + surroundDoorOffset;
 
           return (
             <>
@@ -2569,7 +2575,7 @@ const Room: React.FC<RoomProps> = ({
                 // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
                 const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
                 // 각 모듈별 개별 상부프레임 생성
-                const isDoorBase = (spaceInfo.frameOffsetBase ?? spaceInfo.surroundOffsetBase) === 'door';
+                const isDoorBase = spaceInfo.frameOffsetBase === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
                 return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
                   // 개별 가구 하이라이트 or 서라운드-top 하이라이트
@@ -2655,7 +2661,7 @@ const Room: React.FC<RoomProps> = ({
                 const gapMM = leftCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
                 const leftZOffset = leftCfg.offset ? mmToThreeUnits(leftCfg.offset) : 0;
-                const frontZ = topZPosition + leftZOffset;
+                const frontZ = surroundZPosition + leftZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이
                 // 바닥배치: 전체높이 - 바닥마감재
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
@@ -2710,7 +2716,7 @@ const Room: React.FC<RoomProps> = ({
                 const gapMM = rightCfg.gap || 0;
                 // Z축 옵셋: 양수=앞으로, 음수=뒤로
                 const rightZOffset = rightCfg.offset ? mmToThreeUnits(rightCfg.offset) : 0;
-                const frontZ = topZPosition + rightZOffset;
+                const frontZ = surroundZPosition + rightZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 const surrH = adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
@@ -2767,7 +2773,7 @@ const Room: React.FC<RoomProps> = ({
 
                 // 전면패널: gap 너비만큼 앞면 가림 (offset 반영)
                 const midZOffset = midCfg.offset ? mmToThreeUnits(midCfg.offset) : 0;
-                const frontZ = topZPosition + midZOffset;
+                const frontZ = surroundZPosition + midZOffset;
                 // 좌측 측면패널: leftX(좌측 가구 오른쪽) + 18/2
                 const leftSideX = mmToThreeUnits(midCfg.leftX + END_PANEL_THICKNESS / 2);
                 const leftSideZ = frontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(SIDE_DEPTH_MM) / 2;
