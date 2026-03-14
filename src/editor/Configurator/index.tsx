@@ -950,6 +950,13 @@ const Configurator: React.FC = () => {
     );
   };
 
+  // lockedWallGaps는 세션 전용 — Firebase에 저장하지 않음
+  const stripSessionOnlyFields = (si: any) => {
+    if (!si || typeof si !== 'object') return si;
+    const { lockedWallGaps, ...rest } = si;
+    return rest;
+  };
+
   // Firebase 호환을 위해 undefined 값 제거하는 헬퍼 함수
   const removeUndefinedValues = (obj: any): any => {
     if (obj === null || obj === undefined) {
@@ -1126,7 +1133,7 @@ const Configurator: React.FC = () => {
             const updatePayload = {
               name: currentDesignFileName || basicInfo.title,
               projectData: removeUndefinedValues(basicInfo),
-              spaceConfig: removeUndefinedValues(spaceInfo),
+              spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo)),
               furniture: {
                 placedModules: removeUndefinedValues(placedModules)
               },
@@ -1179,7 +1186,7 @@ const Configurator: React.FC = () => {
                   furniture: {
                     placedModules: removeUndefinedValues(placedModules)
                   },
-                  spaceConfig: removeUndefinedValues(spaceInfo)
+                  spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo))
                 }, thumbnail);
 
                 if (projectUpdateResult.error) {
@@ -1247,7 +1254,7 @@ const Configurator: React.FC = () => {
               name: basicInfo.title || '새 디자인',
               projectId: effectiveProjectId,
               projectData: removeUndefinedValues(basicInfo),
-              spaceConfig: removeUndefinedValues(spaceInfo),
+              spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo)),
               furniture: {
                 placedModules: removeUndefinedValues(placedModules)
               },
@@ -1266,7 +1273,7 @@ const Configurator: React.FC = () => {
                   furniture: {
                     placedModules: removeUndefinedValues(placedModules)
                   },
-                  spaceConfig: removeUndefinedValues(spaceInfo)
+                  spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo))
                 }, thumbnail);
 
                 if (projectUpdateResult.error) {
@@ -1594,7 +1601,7 @@ const Configurator: React.FC = () => {
           const { id: designFileId, error } = await createDesignFile({
             name: newTitle.trim(),
             projectId: projectIdToUse,
-            spaceConfig: removeUndefinedValues(spaceInfo),
+            spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo)),
             furniture: {
               placedModules: removeUndefinedValues(placedModules)
             },
@@ -1661,7 +1668,7 @@ const Configurator: React.FC = () => {
           const { error } = await updateProject(currentProjectId, {
             title: newName,
             projectData: removeUndefinedValues({ ...basicInfo, title: newName }),
-            spaceConfig: removeUndefinedValues(spaceInfo),
+            spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo)),
             furniture: {
               placedModules: removeUndefinedValues(placedModules)
             }
@@ -1729,7 +1736,7 @@ const Configurator: React.FC = () => {
           const { error } = await updateDesignFile(currentDesignFileId, {
             name: newName,
             projectData: removeUndefinedValues(basicInfo),
-            spaceConfig: removeUndefinedValues(spaceInfo),
+            spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo)),
             furniture: {
               placedModules: removeUndefinedValues(placedModules)
             }
@@ -3430,12 +3437,12 @@ const Configurator: React.FC = () => {
                       const inputValue = e.target.value;
                       const totalWidth = spaceInfo.width || 4800;
                       const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                      // 입력값은 이격 반영된 내경이므로 이격을 더해서 외부 너비로 변환
+                      // 자유배치: 이격 없이 순수 너비, 슬롯배치: 이격 반영
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
                       const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                      const gapToAdd = pos === 'right' ? gapLeft + gapMiddle : gapMiddle + gapRight;
+                      const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? gapLeft + gapMiddle : gapMiddle + gapRight);
                       const currentMainOuter = totalWidth - currentDroppedWidth;
                       const currentMainInternal = Math.round(currentMainOuter - gapToAdd);
 
@@ -3619,9 +3626,9 @@ const Configurator: React.FC = () => {
                       const inputValue = e.target.value;
                       const totalWidth = spaceInfo.width || 4800;
                       const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                      // 입력값은 이격 반영된 내경이므로 이격을 더해서 외부 너비로 변환
+                      // 자유배치: 이격 없이 순수 너비, 슬롯배치: 이격 반영
                       const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const gapToAdd = pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
+                      const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5));
 
                       // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
                       if (inputValue === '' || isNaN(parseInt(inputValue))) {
