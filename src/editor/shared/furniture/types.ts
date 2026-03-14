@@ -139,7 +139,9 @@ export interface PlacedModule {
   hasLeftEndPanel?: boolean;     // 좌측 EP 표시 여부
   hasRightEndPanel?: boolean;    // 우측 EP 표시 여부
   endPanelThickness?: number;    // EP 두께 (mm, 기본값: 18)
-  endPanelOffset?: number;       // EP 옵셋 (mm, 기본값: 0)
+  endPanelOffset?: number;       // EP 옵셋 (mm, 기본값: 0) — 하위호환용
+  leftEndPanelOffset?: number;   // 좌측 EP 개별 옵셋 (mm)
+  rightEndPanelOffset?: number;  // 우측 EP 개별 옵셋 (mm)
 
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
