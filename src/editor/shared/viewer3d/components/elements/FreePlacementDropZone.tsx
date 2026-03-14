@@ -154,15 +154,17 @@ const FreePlacementDropZone: React.FC = () => {
     const singleCount = isDualArr.filter(d => !d).length;
     const dualCount = isDualArr.filter(d => d).length;
 
-    // 단위 너비 = 유효 공간 / (싱글 수 + 듀얼 수 × 2)
+    // 단위 너비 = 유효 공간 / (싱글 수 + 듀얼 수 × 2), 최대폭 제한
+    const MAX_SINGLE = 600;
+    const MAX_DUAL = 1200;
     const totalUnits = singleCount + dualCount * 2;
     if (totalUnits === 0) return;
-    const unitWidth = Math.floor(availableWidth / totalUnits);
+    const unitWidth = Math.min(MAX_SINGLE, Math.floor(availableWidth / totalUnits));
 
     // 이격 없이 빈틈없이 배치
     let currentX = effectiveStartX;
     sorted.forEach((mod, i) => {
-      const w = isDualArr[i] ? unitWidth * 2 : unitWidth;
+      const w = isDualArr[i] ? Math.min(unitWidth * 2, MAX_DUAL) : unitWidth;
       const centerXmm = currentX + (w / 2);
 
       updatePlacedModule(mod.id, {
