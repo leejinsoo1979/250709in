@@ -1,0 +1,128 @@
+/**
+ * 서라운드 패널 갤러리 - 기타 탭에서 좌/우/상단 패널 개별 배치
+ */
+import React, { useCallback, useMemo } from 'react';
+import { surroundPanelModules, SurroundPanelModuleData } from '@/data/modules/surroundPanels';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import styles from './SurroundPanelGallery.module.css';
+
+const SurroundPanelGallery: React.FC = () => {
+  const { spaceInfo } = useSpaceConfigStore();
+  const {
+    selectedFurnitureId,
+    setSelectedFurnitureId,
+    setFurniturePlacementMode,
+    placedModules,
+    surroundPanelWidths,
+    setSurroundPanelWidth,
+  } = useFurnitureStore();
+
+  const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
+
+  // 각 타입별 이미 배치된 서라운드 패널 확인
+  const placedPanelTypes = useMemo(() => {
+    const types = new Set<string>();
+    for (const m of placedModules) {
+      if (m.isSurroundPanel && m.surroundPanelType) {
+        types.add(m.surroundPanelType);
+      }
+    }
+    return types;
+  }, [placedModules]);
+
+  // 카드 클릭 → 배치 모드 활성화
+  const handleCardClick = useCallback((panel: SurroundPanelModuleData) => {
+    // 이미 배치된 타입은 클릭 불가
+    if (placedPanelTypes.has(panel.panelType)) return;
+
+    // 이미 같은 패널 선택 중이면 토글 해제
+    if (selectedFurnitureId === panel.id) {
+      setSelectedFurnitureId(null);
+      setFurniturePlacementMode(false);
+      return;
+    }
+
+    setSelectedFurnitureId(panel.id);
+    setFurniturePlacementMode(true);
+  }, [selectedFurnitureId, placedPanelTypes, setSelectedFurnitureId, setFurniturePlacementMode]);
+
+  // 폭 변경 핸들러
+  const handleWidthChange = useCallback((type: 'left' | 'right' | 'top', value: string) => {
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return;
+    const min = 18;
+    const max = type === 'top' ? 100 : 200;
+    const clamped = Math.max(min, Math.min(max, num));
+    setSurroundPanelWidth(type, clamped);
+  }, [setSurroundPanelWidth]);
+
+  // 키보드 ArrowUp/Down 지원
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, type: 'left' | 'right' | 'top') => {
+    const step = e.shiftKey ? 10 : 1;
+    const min = 18;
+    const max = type === 'top' ? 100 : 200;
+    const current = surroundPanelWidths[type];
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSurroundPanelWidth(type, Math.min(max, current + step));
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSurroundPanelWidth(type, Math.max(min, current - step));
+    }
+  }, [surroundPanelWidths, setSurroundPanelWidth]);
+
+  return (
+    <div className={styles.container}>
+      <h3 className={styles.title}>서라운드 패널</h3>
+      <p className={styles.description}>독립 패널을 배치합니다. 클릭하면 자동으로 배치됩니다.</p>
+
+      <div className={styles.cardList}>
+        {surroundPanelModules.map((panel) => {
+          const isPlaced = placedPanelTypes.has(panel.panelType);
+          const isActive = selectedFurnitureId === panel.id;
+          const displayWidth = panel.panelType === 'top'
+            ? (surroundPanelWidths.top || Math.round(internalSpace.width))
+            : surroundPanelWidths[panel.panelType];
+
+          return (
+            <div
+              key={panel.id}
+              className={`${styles.card} ${isActive ? styles.active : ''} ${isPlaced ? styles.placed : ''}`}
+              onClick={() => handleCardClick(panel)}
+            >
+              <div className={styles.cardHeader}>
+                <span className={styles.panelName}>{panel.name}</span>
+                {isPlaced && <span className={styles.placedBadge}>배치됨</span>}
+              </div>
+
+              <div className={styles.widthRow}>
+                <label className={styles.widthLabel}>폭</label>
+                <input
+                  type="number"
+                  className={styles.widthInput}
+                  value={displayWidth}
+                  min={18}
+                  max={panel.panelType === 'top' ? 100 : 200}
+                  onChange={(e) => handleWidthChange(panel.panelType, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, panel.panelType)}
+                  onClick={(e) => e.stopPropagation()}
+                  disabled={isPlaced}
+                />
+                <span className={styles.widthUnit}>mm</span>
+              </div>
+
+              <div className={styles.cardInfo}>
+                <span>두께: 18mm (고정)</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default SurroundPanelGallery;

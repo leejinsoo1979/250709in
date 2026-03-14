@@ -1,0 +1,119 @@
+.container {
+  padding: 12px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--theme-text-primary);
+}
+
+.description {
+  font-size: 11px;
+  color: var(--theme-text-tertiary);
+  margin: 0 0 12px 0;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--theme-background-secondary);
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card:hover:not(.placed) {
+  border-color: var(--theme-primary);
+  background: var(--theme-background-secondary);
+}
+
+.card.active {
+  border-color: var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 8%, var(--theme-background-secondary));
+}
+
+.card.placed {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.panelName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+}
+
+.placedBadge {
+  font-size: 10px;
+  color: var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.widthRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.widthLabel {
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  min-width: 20px;
+}
+
+.widthInput {
+  width: 60px;
+  padding: 3px 6px;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  background: var(--theme-surface);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  text-align: right;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.widthInput::-webkit-outer-spin-button,
+.widthInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.widthInput:focus {
+  border-color: var(--theme-primary);
+}
+
+.widthInput:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.widthUnit {
+  font-size: 11px;
+  color: var(--theme-text-tertiary);
+}
+
+.cardInfo {
+  font-size: 10px;
+  color: var(--theme-text-tertiary);
+}

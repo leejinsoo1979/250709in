@@ -73,6 +73,10 @@ interface FurnitureDataState {
   lastCustomDimensions: Record<string, { width: number; height: number; depth: number }>;
   setLastCustomDimensions: (key: string, dims: { width: number; height: number; depth: number }) => void;
 
+  // 서라운드 패널 배치 시 사용할 폭 (mm)
+  surroundPanelWidths: { left: number; right: number; top: number };
+  setSurroundPanelWidth: (type: 'left' | 'right' | 'top', width: number) => void;
+
   // 저장 상태 관리
   markAsSaved: () => void;
   resetAll: () => void;
@@ -120,6 +124,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   lastCustomDimensions: {},
   setLastCustomDimensions: (key, dims) => set((state) => ({
     lastCustomDimensions: { ...state.lastCustomDimensions, [key]: dims }
+  })),
+
+  // 서라운드 패널 폭 기본값
+  surroundPanelWidths: { left: 40, right: 40, top: 18 },
+  setSurroundPanelWidth: (type, width) => set((state) => ({
+    surroundPanelWidths: { ...state.surroundPanelWidths, [type]: width }
   })),
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
