@@ -1414,11 +1414,22 @@ const Room: React.FC<RoomProps> = ({
             })();
 
             const wfColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
+            // 자유배치: 커튼박스구간이 높고 메인구간이 낮음 (반전)
+            const droppedCeilingY = isFreePlacement
+              ? panelStartY + height + 0.001                          // 커튼박스: 전체 높이
+              : panelStartY + height - droppedCeilingHeight + 0.001;  // 슬롯: 단내림 낮은 높이
+            const normalCeilingY = isFreePlacement
+              ? panelStartY + height - droppedCeilingHeight + 0.001   // 메인: 낮은 높이
+              : panelStartY + height + 0.001;                         // 슬롯: 전체 높이
+            const boundaryWallY = isFreePlacement
+              ? panelStartY + height - droppedCeilingHeight / 2       // 메인쪽 경계벽
+              : panelStartY + height - droppedCeilingHeight / 2;      // 단내림쪽 경계벽
+
             return renderMode === 'solid' ? (
               <>
-                {/* 단내림 영역 천장 (낮은 높이) - 불투명 그라데이션 */}
+                {/* 단내림/커튼박스 영역 천장 */}
                 <mesh
-                  position={[droppedAreaX, panelStartY + height - droppedCeilingHeight + 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
                   renderOrder={-1}
                 >
@@ -1427,9 +1438,9 @@ const Room: React.FC<RoomProps> = ({
                     object={opaqueTopWallMaterial} />
                 </mesh>
 
-                {/* 일반 영역 천장 (원래 높이) */}
+                {/* 메인/일반 영역 천장 */}
                 <mesh
-                  position={[normalAreaX, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[normalAreaX, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
                   renderOrder={-1}
                 >
@@ -1439,10 +1450,10 @@ const Room: React.FC<RoomProps> = ({
                     object={topWallMaterial} />
                 </mesh>
 
-                {/* 단내림 경계 수직 벽 */}
+                {/* 경계 수직 벽 */}
                 <mesh
                   renderOrder={-1}
-                  position={[boundaryWallX, panelStartY + height - droppedCeilingHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
