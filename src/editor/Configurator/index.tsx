@@ -4129,6 +4129,7 @@ const Configurator: React.FC = () => {
                             <input
                               type="text" inputMode="numeric"
                               value={d.offset > 0 ? d.offset : ''} placeholder="0"
+                              onFocus={() => setHighlightedFrame(key)}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
@@ -4136,6 +4137,7 @@ const Configurator: React.FC = () => {
                                 }
                               }}
                               onBlur={(e) => {
+                                setHighlightedFrame(null);
                                 const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
                                 setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v } } });
                               }}
@@ -4147,6 +4149,7 @@ const Configurator: React.FC = () => {
                             <input
                               type="text" inputMode="numeric"
                               value={d.offset < 0 ? Math.abs(d.offset) : ''} placeholder="0"
+                              onFocus={() => setHighlightedFrame(key)}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
@@ -4154,6 +4157,7 @@ const Configurator: React.FC = () => {
                                 }
                               }}
                               onBlur={(e) => {
+                                setHighlightedFrame(null);
                                 const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
                                 setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === -0 ? 0 : v } } });
                               }}
@@ -4187,6 +4191,7 @@ const Configurator: React.FC = () => {
                           <input
                             type="text" inputMode="numeric"
                             value={(midCfg.offset || 0) > 0 ? midCfg.offset : ''} placeholder="0"
+                            onFocus={() => setHighlightedFrame(`middle-${idx}`)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
@@ -4196,6 +4201,7 @@ const Configurator: React.FC = () => {
                               }
                             }}
                             onBlur={(e) => {
+                              setHighlightedFrame(null);
                               const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
                               const newMiddle = [...middleGaps];
                               newMiddle[idx] = { ...newMiddle[idx], offset: v };
@@ -4209,6 +4215,7 @@ const Configurator: React.FC = () => {
                           <input
                             type="text" inputMode="numeric"
                             value={(midCfg.offset || 0) < 0 ? Math.abs(midCfg.offset) : ''} placeholder="0"
+                            onFocus={() => setHighlightedFrame(`middle-${idx}`)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
@@ -4218,6 +4225,7 @@ const Configurator: React.FC = () => {
                               }
                             }}
                             onBlur={(e) => {
+                              setHighlightedFrame(null);
                               const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
                               const newMiddle = [...middleGaps];
                               newMiddle[idx] = { ...newMiddle[idx], offset: v === -0 ? 0 : v };

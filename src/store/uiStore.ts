@@ -14,8 +14,8 @@ export interface EditorTab {
   addedAt: number; // timestamp
 }
 
-// 프레임 강조 타입 정의
-export type HighlightedFrame = 'left' | 'right' | 'top' | 'base' | null;
+// 프레임 강조 타입 정의 (중간 서라운드 'middle-0', 'middle-1' 등 동적 키 지원)
+export type HighlightedFrame = string | null;
 
 // 측정 포인트 타입
 export type MeasurePoint = [number, number, number];

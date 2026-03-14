@@ -746,7 +746,7 @@ const Room: React.FC<RoomProps> = ({
 
 
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
-  const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base', onTextureLoaded?: () => void) => {
+  const createFrameMaterial = useCallback((frameType?: string, onTextureLoaded?: () => void) => {
     // 2D 모드에서 모든 프레임(상부/하부/좌우)을 형광 녹색으로 직접 반환
     const isNeonFrame = viewMode === '2D' && (frameType === 'top' || frameType === 'base' || frameType === 'left' || frameType === 'right');
     if (isNeonFrame) {
@@ -2828,7 +2828,10 @@ const Room: React.FC<RoomProps> = ({
                 const rightSideZ = leftSideZ;
                 // 전면패널: gap 전체 폭
                 const frontX = mmToThreeUnits(centerXmm);
-                const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
+                const isMiddleHighlighted = highlightedFrame === `middle-${idx}`;
+                const frameMat = isMiddleHighlighted
+                  ? createFrameMaterial(`middle-${idx}`)
+                  : (leftFrameMaterial ?? createFrameMaterial('left'));
 
                 return (
                   <group key={`free-middle-surround-${idx}`}>
