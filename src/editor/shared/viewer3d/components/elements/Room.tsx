@@ -2569,6 +2569,27 @@ const Room: React.FC<RoomProps> = ({
           const topZPosition = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) + doorBaseOffset;
 
+          // 디버깅: 서라운드 vs 도어 Z축 비교
+          if (hasFreeMods) {
+            const surroundFrontZ = topZPosition + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+            // 도어 위치: furnitureZ + doorDepth/2 + doorThickness/2
+            // furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness(20mm) - depth/2
+            // doorDepth/2 = (depth + 28mm) / 2
+            // doorFront = furnitureZOffset + furnitureDepth/2 - 20 - depth/2 + (depth+28)/2 + 9
+            //           = furnitureZOffset + furnitureDepth/2 - 20 + 14 + 9
+            //           = furnitureZOffset + furnitureDepth/2 + 3
+            const doorFrontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3);
+            console.log('🔧 서라운드 Z 디버그:', {
+              surroundOffsetBase: spaceInfo.surroundOffsetBase,
+              doorBaseOffsetMM: spaceInfo.surroundOffsetBase === 'door' ? DOOR_FRONT_OFFSET_MM : 0,
+              surroundFrontZ: surroundFrontZ.toFixed(4),
+              doorFrontZ: doorFrontZ.toFixed(4),
+              diff: (doorFrontZ - surroundFrontZ).toFixed(4),
+              furnitureZOffset: furnitureZOffset.toFixed(4),
+              furnitureDepthHalf: (furnitureDepth / 2).toFixed(4),
+            });
+          }
+
           return (
             <>
               {/* 상부 프레임 스트립 */}
