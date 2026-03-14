@@ -2807,6 +2807,59 @@ const Room: React.FC<RoomProps> = ({
                   </group>
                 );
               })}
+
+              {/* 커튼박스 마감 — 커튼박스 구간 안에 프레임 패널 */}
+              {spaceInfo.curtainBoxFinished && spaceInfo.droppedCeiling?.enabled && (() => {
+                const dcPos = spaceInfo.droppedCeiling!.position || 'right';
+                const dcWidthMM = spaceInfo.droppedCeiling!.width || 150;
+                const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 100;
+                const dcTotalH = height + dcDropH; // 커튼박스 전체 높이(mm)
+                const panelThickMM = 18;
+
+                const panelH = mmToThreeUnits(dcTotalH);
+                const panelCenterY = panelStartY + panelH / 2;
+
+                // 커튼박스 구간 중심 X
+                const spaceHalfW = (spaceInfo.width || 2400) / 2;
+                const dcCenterX = dcPos === 'left'
+                  ? mmToThreeUnits(-spaceHalfW + dcWidthMM / 2)
+                  : mmToThreeUnits(spaceHalfW - dcWidthMM / 2);
+
+                // 경계면 X (메인구간과 접하는 면)
+                const borderX = dcPos === 'left'
+                  ? mmToThreeUnits(-spaceHalfW + dcWidthMM - panelThickMM / 2)
+                  : mmToThreeUnits(spaceHalfW - dcWidthMM + panelThickMM / 2);
+
+                const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
+                const frontZ = surroundZPosition;
+
+                // 전면패널: 커튼박스 폭 × 전체높이 × 18mm
+                const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
+                const frontPos: [number, number, number] = [dcCenterX, panelCenterY, frontZ];
+
+                // 경계면 측면패널: 18mm × 전체높이 × 40mm (안쪽으로)
+                const sideDepthMM = 40;
+                const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, mmToThreeUnits(sideDepthMM)];
+                const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(sideDepthMM) / 2;
+                const sidePos: [number, number, number] = [borderX, panelCenterY, sideZ];
+
+                const isCBHighlighted = highlightedFrame === 'curtain-box-finish';
+
+                return (
+                  <group key="curtain-box-finish">
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-front"
+                      args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-side"
+                      args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                    {isCBHighlighted && (
+                      <>
+                        <mesh position={frontPos}><boxGeometry args={frontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                        <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
+                      </>
+                    )}
+                  </group>
+                );
+              })()}
             </>
           );
         }
