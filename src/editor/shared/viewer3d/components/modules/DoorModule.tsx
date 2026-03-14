@@ -754,8 +754,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isFloorType = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
     const floorHeightForCalc = isFloorType ? 0 : floorHeightValue;
 
-    // 가구 높이 계산 (자유배치: effectiveInternalHeight 사용, 슬롯배치: 공간에서 계산)
-    tallCabinetFurnitureHeight = effectiveInternalHeight || (fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue);
+    // 가구 높이 계산
+    // 공간에 맞춤(space-fit): 항상 공간 높이 기준으로 도어 높이 계산
+    // 가구에 맞춤(furniture-fit): 자유배치 시 effectiveInternalHeight(가구 높이) 사용
+    const doorSetupMode = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+    if (doorSetupMode === 'space-fit') {
+      tallCabinetFurnitureHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
+    } else {
+      tallCabinetFurnitureHeight = effectiveInternalHeight || (fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue);
+    }
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
@@ -1066,6 +1073,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           설명: `가구 상단(${doorTopLocal.toFixed(2)}mm) ~ ${sectionDoorBottom.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
         });
       }
+
+      // 공간에 맞춤 모드: 섹션 분할 도어도 Y 위치 보정 필요
+      const doorSetupModeForSection = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+      if (doorSetupModeForSection === 'space-fit' && effectiveInternalHeight) {
+        const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
+        doorYPosition += mmToThreeUnits(heightDiff / 2);
+      }
     } else {
       // 병합 모드: 천장/바닥 기준
       // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
@@ -1077,6 +1091,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       // 도어 중심 = 하단에서 도어 높이의 절반만큼 위 (플로팅 시 하단이 올라가므로 중심도 올라감)
       doorYPosition = mmToThreeUnits(doorBottom + actualDoorHeight / 2);
+
+      // 공간에 맞춤 모드: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
+      // → 가구 중심과 공간 중심의 차이만큼 도어 Y 위치 보정
+      const doorSetupModeForY = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+      if (doorSetupModeForY === 'space-fit' && effectiveInternalHeight) {
+        const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
+        doorYPosition += mmToThreeUnits(heightDiff / 2);
+      }
 
       console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
         fullSpaceHeight,
