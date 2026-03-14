@@ -514,24 +514,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
-    // materialConfig.doorTexture 또는 textureUrl 사용
-    // 도어 텍스처가 내부재질 텍스처와 동일하면 도어 전용 텍스처로 보지 않음 (기본 doorColor 사용)
+    // 도어 전용 텍스처만 사용 (내부재질 텍스처로 fallback하지 않음)
+    // doorTexture가 명시적으로 설정된 경우에만 텍스처 적용, 그렇지 않으면 doorColor(단색) 사용
     const doorTextureUrl = (materialConfig.doorTexture && materialConfig.doorTexture !== materialConfig.interiorTexture)
       ? materialConfig.doorTexture : undefined;
-    const effectiveTextureUrl = doorTextureUrl || textureUrl;
+    const effectiveTextureUrl = doorTextureUrl;
 
     console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
-      propTextureUrl: textureUrl,
-      configTextureUrl: materialConfig.doorTexture,
+      doorTextureUrl,
       effectiveTextureUrl,
-      hasDoorMaterial: !!doorMaterial,
-      hasLeftDoorMaterial: !!leftDoorMaterial,
-      hasRightDoorMaterial: !!rightDoorMaterial,
       doorColor,
       isDragging,
       isEditMode,
-      willApplyTexture: !isDragging && !isEditMode && !!effectiveTextureUrl,
-      fullMaterialConfig: materialConfig
+      willApplyTexture: !isDragging && !isEditMode && !!effectiveTextureUrl
     });
 
     const panelNames = {
@@ -574,7 +569,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
       });
     }
-  }, [materialConfig.doorTexture, textureUrl, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
+  }, [materialConfig.doorTexture, materialConfig.interiorTexture, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
