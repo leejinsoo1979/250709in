@@ -664,7 +664,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const minDoors = doorRange.min;
   const maxDoors = doorRange.max;
 
-  const tabs = spaceInfo.droppedCeiling?.enabled ? [
+  const isEqualDivision = (spaceInfo.layoutMode || 'equal-division') === 'equal-division';
+  const tabs = spaceInfo.droppedCeiling?.enabled && isEqualDivision ? [
     { id: 'placement' as RightPanelTab, label: t('space.mainSection') },
     { id: 'module' as RightPanelTab, label: t('space.droppedSection') }
   ] : [
@@ -717,8 +718,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               className={`${styles.tabButton} ${activeTab === tab.id ? styles.active : ''}`}
               onClick={() => {
                 onTabChange(tab.id);
-                // 단내림이 활성화된 경우 UIStore 업데이트
-                if (spaceInfo.droppedCeiling?.enabled) {
+                // 단내림이 활성화된 경우 UIStore 업데이트 (균등분할 모드에서만)
+                if (spaceInfo.droppedCeiling?.enabled && isEqualDivision) {
                   const newTab = tab.id === 'placement' ? 'main' : 'dropped';
                   console.log('🎯 RightPanel 탭 클릭 - activeDroppedCeilingTab 설정:', {
                     clickedTabId: tab.id,
@@ -823,8 +824,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 step={100}
               />
               
-              {/* 단내림 활성화 시 구간별 정보 표시 */}
-              {spaceInfo.droppedCeiling?.enabled && (
+              {/* 단내림 활성화 시 구간별 정보 표시 - 균등분할 모드에서만 */}
+              {spaceInfo.droppedCeiling?.enabled && isEqualDivision && (
                 <div className={styles.zoneInfo}>
                   <div className={styles.zoneInfoItem}>
                     <span className={styles.zoneLabel}>{t('space.mainSection')}:</span>
@@ -851,7 +852,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             </FormControl>
 
             {/* 단내림 설정 - 균등분할 모드에서만 표시 (자유배치 모드에서는 숨김) */}
-            {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (<FormControl
+            {isEqualDivision && (<FormControl
               label={t('space.droppedCeiling')}
               expanded={expandedSections.has('droppedCeiling')}
               onToggle={() => toggleSection('droppedCeiling')}
@@ -967,7 +968,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             </FormControl>)}
 
             {/* 메인구간 사이즈 - 단내림 활성화되고 메인구간 탭일 때, 균등분할 모드에서만 표시 */}
-            {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && (spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
+            {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && isEqualDivision && (
               <FormControl
                 label={t('space.mainSectionSize')}
                 expanded={expandedSections.has('mainSpace')}
@@ -1038,7 +1039,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             </FormControl>
 
             {/* 컬럼수 - 균등분할 모드에서만 표시 */}
-            {(spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
+            {isEqualDivision && (
               <FormControl
                 label={t('space.columnCount')}
                 expanded={expandedSections.has('layout')}
@@ -1165,7 +1166,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
         {activeTab === 'module' && (
           <div className={styles.moduleSettings}>
             {/* 단내림 구간이 활성화된 경우 도어 개수 표시 (균등분할 모드에서만) */}
-            {spaceInfo.droppedCeiling?.enabled && (spaceInfo.layoutMode || 'equal-division') === 'equal-division' && (
+            {spaceInfo.droppedCeiling?.enabled && isEqualDivision && (
               <div className={styles.formContainer}>
                 <FormControl
                   label={t('space.droppedColumnCount')}
