@@ -4065,23 +4065,168 @@ const Configurator: React.FC = () => {
         </div>
         )}
 
-        {/* 서라운드 세부옵션 — 자유배치 모드 */}
+        {/* 서라운드 + 상,하부프레임 통합 — 좌→우 순서 (서라운드1, 2, 3...) */}
         {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
-          const isActive = fs ? (fs.left.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;
-          if (!isActive) return null;
-          const sides = [
-            { key: 'left' as const, label: '좌' },
-            { key: 'right' as const, label: '우' },
-          ];
-          const middleGaps = fs?.middle || [];
+          if (!fs) return null;
+          const freeMods = placedModules.filter(m => m.isFreePlacement);
+          const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
+          const middleGaps = fs.middle || [];
+
+          // 좌→우 순서로 아이템 배열 생성: 좌서라운드, 가구1상/하, 중간서라운드1, 가구2상/하, ..., 우서라운드
+          type ItemType =
+            | { kind: 'surround-left' }
+            | { kind: 'surround-right' }
+            | { kind: 'surround-top' }
+            | { kind: 'surround-middle'; idx: number }
+            | { kind: 'furniture'; mod: typeof sorted[0] };
+          const items: ItemType[] = [];
+
+          // 좌 서라운드
+          if (fs.left.enabled) items.push({ kind: 'surround-left' });
+          // 가구 + 중간 서라운드 교차 배치
+          sorted.forEach((mod, i) => {
+            items.push({ kind: 'furniture', mod });
+            if (i < sorted.length - 1 && middleGaps[i]) {
+              items.push({ kind: 'surround-middle', idx: i });
+            }
+          });
+          // 상 서라운드 (상부프레임)
+          if (fs.top.enabled) items.push({ kind: 'surround-top' });
+          // 우 서라운드
+          if (fs.right.enabled) items.push({ kind: 'surround-right' });
+
+          if (items.length === 0) return null;
+
+          // 서라운드 행 렌더 헬퍼 (ON/OFF + 앞/뒤)
+          const renderSurroundRow = (
+            num: number,
+            enabled: boolean,
+            offset: number,
+            onToggle: () => void,
+            onOffsetChange: (val: number) => void,
+            highlightKey: string,
+          ) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+              <span className={styles.frameItemLabel} style={{ minWidth: '40px', textAlign: 'left', margin: 0 }}>서라운드{num}</span>
+              <button
+                onClick={onToggle}
+                className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
+                style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
+              >
+                {enabled ? 'ON' : 'OFF'}
+              </button>
+              {enabled ? (
+                <>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset > 0 ? offset : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onOffsetChange(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : -parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                        onOffsetChange(v === -0 ? 0 : v);
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+          );
+
+          // 가구 프레임 행 렌더 헬퍼 (상/하 ON/OFF + 앞/뒤)
+          const renderFrameRow = (
+            num: number,
+            label: string,
+            enabled: boolean,
+            offset: number,
+            onToggle: () => void,
+            onOffsetChange: (val: number) => void,
+            highlightKey: string,
+          ) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+              <span className={styles.frameItemLabel} style={{ minWidth: '40px', textAlign: 'left', margin: 0 }}>{label}{num}</span>
+              <button
+                onClick={onToggle}
+                className={`${styles.toggleButton} ${enabled ? styles.toggleButtonActive : ''}`}
+                style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
+              >
+                {enabled ? 'ON' : 'OFF'}
+              </button>
+              {enabled ? (
+                <>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset > 0 ? offset : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onOffsetChange(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset < 0 ? Math.abs(offset) : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(highlightKey)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onOffsetChange(v === '' ? 0 : -parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
+                        onOffsetChange(v === -0 ? 0 : v);
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+          );
+
+          let counter = 0;
           return (
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>서라운드</h3>
+                <h3 className={styles.sectionTitle}>서라운드 / 상,하부프레임</h3>
               </div>
-              {/* 서라운드 옵셋 기준 선택: 가구기준 / 도어기준 */}
+              {/* 서라운드 옵셋 기준 선택 */}
               <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
                 <button
                   style={{
@@ -4106,293 +4251,88 @@ const Configurator: React.FC = () => {
                   도어기준
                 </button>
               </div>
+              {/* 하부프레임 높이/깊이 (글로벌) */}
+              <BaseControls
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
+                disabled={hasSpecialDualFurniture}
+                renderMode="placement-only"
+              />
               <div className={styles.subSetting}>
-                {sides.map(({ key, label }) => {
-                  const d = fs![key];
-                  return (
-                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                      {/* 라벨 */}
-                      <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>{label}</span>
-                      {/* ON/OFF 토글 — 기존 toggleButton 스타일 사용 */}
-                      <button
-                        onClick={() => setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, enabled: !d.enabled } } })}
-                        className={`${styles.toggleButton} ${d.enabled ? styles.toggleButtonActive : ''}`}
-                        style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-                      >
-                        {d.enabled ? 'ON' : 'OFF'}
-                      </button>
-                      {/* ON일 때: 앞/뒤 옵셋 */}
-                      {d.enabled ? (
-                        <>
-                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                            <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
-                            <input
-                              type="text" inputMode="numeric"
-                              value={d.offset > 0 ? d.offset : ''} placeholder="0"
-                              onFocus={() => setHighlightedFrame(`surround-${key}`)}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (v === '' || /^\d+$/.test(v)) {
-                                  setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === '' ? 0 : parseInt(v, 10) } } });
-                                }
-                              }}
-                              onBlur={(e) => {
-                                setHighlightedFrame(null);
-                                const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                                setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v } } });
-                              }}
-                              className={styles.frameNumberInput}
-                            />
-                          </div>
-                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                            <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
-                            <input
-                              type="text" inputMode="numeric"
-                              value={d.offset < 0 ? Math.abs(d.offset) : ''} placeholder="0"
-                              onFocus={() => setHighlightedFrame(`surround-${key}`)}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (v === '' || /^\d+$/.test(v)) {
-                                  setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === '' ? 0 : -parseInt(v, 10) } } });
-                                }
-                              }}
-                              onBlur={(e) => {
-                                setHighlightedFrame(null);
-                                const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                                setSpaceInfo({ freeSurround: { ...fs!, [key]: { ...d, offset: v === -0 ? 0 : v } } });
-                              }}
-                              className={styles.frameNumberInput}
-                            />
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                  );
-                })}
-                {/* 중간 gap 서라운드 */}
-                {middleGaps.map((midCfg, idx) => (
-                  <div key={`middle-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                    <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>중{middleGaps.length > 1 ? idx + 1 : ''}</span>
-                    <button
-                      onClick={() => {
+                {items.map((item, _i) => {
+                  counter++;
+                  const num = counter;
+                  if (item.kind === 'surround-left') {
+                    const d = fs.left;
+                    return <React.Fragment key="surround-left">{renderSurroundRow(num, d.enabled, d.offset,
+                      () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
+                      'surround-left',
+                    )}</React.Fragment>;
+                  }
+                  if (item.kind === 'surround-right') {
+                    const d = fs.right;
+                    return <React.Fragment key="surround-right">{renderSurroundRow(num, d.enabled, d.offset,
+                      () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
+                      'surround-right',
+                    )}</React.Fragment>;
+                  }
+                  if (item.kind === 'surround-top') {
+                    const d = fs.top;
+                    return <React.Fragment key="surround-top">{renderSurroundRow(num, d.enabled, d.offset,
+                      () => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, enabled: !d.enabled } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, top: { ...d, offset: v } } }),
+                      'surround-top',
+                    )}</React.Fragment>;
+                  }
+                  if (item.kind === 'surround-middle') {
+                    const midIdx = item.idx;
+                    const midCfg = middleGaps[midIdx];
+                    return <React.Fragment key={`surround-middle-${midIdx}`}>{renderSurroundRow(num, midCfg.enabled, midCfg.offset || 0,
+                      () => {
                         const newMiddle = [...middleGaps];
-                        newMiddle[idx] = { ...newMiddle[idx], enabled: !newMiddle[idx].enabled };
-                        setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
-                      }}
-                      className={`${styles.toggleButton} ${midCfg.enabled ? styles.toggleButtonActive : ''}`}
-                      style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-                    >
-                      {midCfg.enabled ? 'ON' : 'OFF'}
-                    </button>
-                    {midCfg.enabled ? (
-                      <>
-                        <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                          <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={(midCfg.offset || 0) > 0 ? midCfg.offset : ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`surround-middle-${idx}`)}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const newMiddle = [...middleGaps];
-                                newMiddle[idx] = { ...newMiddle[idx], offset: v === '' ? 0 : parseInt(v, 10) };
-                                setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                              const newMiddle = [...middleGaps];
-                              newMiddle[idx] = { ...newMiddle[idx], offset: v };
-                              setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
-                            }}
-                            className={styles.frameNumberInput}
-                          />
-                        </div>
-                        <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                          <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={(midCfg.offset || 0) < 0 ? Math.abs(midCfg.offset) : ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`surround-middle-${idx}`)}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const newMiddle = [...middleGaps];
-                                newMiddle[idx] = { ...newMiddle[idx], offset: v === '' ? 0 : -parseInt(v, 10) };
-                                setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                              const newMiddle = [...middleGaps];
-                              newMiddle[idx] = { ...newMiddle[idx], offset: v === -0 ? 0 : v };
-                              setSpaceInfo({ freeSurround: { ...fs!, middle: newMiddle } });
-                            }}
-                            className={styles.frameNumberInput}
-                          />
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
-                ))}
+                        newMiddle[midIdx] = { ...newMiddle[midIdx], enabled: !newMiddle[midIdx].enabled };
+                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                      },
+                      (v) => {
+                        const newMiddle = [...middleGaps];
+                        newMiddle[midIdx] = { ...newMiddle[midIdx], offset: v };
+                        setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                      },
+                      `surround-middle-${midIdx}`,
+                    )}</React.Fragment>;
+                  }
+                  if (item.kind === 'furniture') {
+                    const mod = item.mod;
+                    const cat = getModuleCategory(mod);
+                    const hasTop = cat === 'upper' || cat === 'full';
+                    const hasBaseFrame = cat === 'lower' || cat === 'full';
+                    const rows: React.ReactNode[] = [];
+                    if (hasTop) {
+                      rows.push(<React.Fragment key={`top-${mod.id}`}>{renderFrameRow(num, '상프레임',
+                        mod.hasTopFrame !== false, mod.topFrameOffset || 0,
+                        () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
+                        (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
+                        'top',
+                      )}</React.Fragment>);
+                    }
+                    if (hasBaseFrame) {
+                      rows.push(<React.Fragment key={`base-${mod.id}`}>{renderFrameRow(num, '하프레임',
+                        mod.hasBase !== false, mod.baseFrameOffset || 0,
+                        () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
+                        (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
+                        'base',
+                      )}</React.Fragment>);
+                    }
+                    return <React.Fragment key={`furniture-${mod.id}`}>{rows}</React.Fragment>;
+                  }
+                  return null;
+                })}
               </div>
             </div>
           );
         })()}
-
-        {/* 상,하부프레임 — 가구별 ON/OFF + 앞/뒤 옵셋 */}
-        <div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>상,하부프레임</h3>
-          </div>
-          {/* 하부프레임 높이/깊이 (글로벌) */}
-          <BaseControls
-            spaceInfo={spaceInfo}
-            onUpdate={handleSpaceInfoUpdate}
-            disabled={hasSpecialDualFurniture}
-            renderMode="placement-only"
-          />
-          {/* 가구별 상/하부프레임 ON/OFF + 앞/뒤 옵셋 */}
-          {isFreeMode && (() => {
-            const freeMods = placedModules.filter(m => m.isFreePlacement);
-            if (freeMods.length === 0) return null;
-            // X 좌표 기준 좌→우 정렬
-            const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
-            return (
-              <div className={styles.subSetting}>
-                {sorted.map((mod, idx) => {
-                  const cat = getModuleCategory(mod);
-                  const hasTop = cat === 'upper' || cat === 'full';
-                  const hasBase = cat === 'lower' || cat === 'full';
-                  const label = `가구${sorted.length > 1 ? idx + 1 : ''}`;
-                  return (
-                    <div key={mod.id} style={{ padding: '4px 0', borderBottom: idx < sorted.length - 1 ? '1px solid var(--theme-border-light, #eee)' : 'none' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>{label}</span>
-                      {/* 상부프레임 */}
-                      {hasTop && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0' }}>
-                          <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>상</span>
-                          <button
-                            onClick={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
-                            className={`${styles.toggleButton} ${(mod.hasTopFrame !== false) ? styles.toggleButtonActive : ''}`}
-                            style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-                          >
-                            {(mod.hasTopFrame !== false) ? 'ON' : 'OFF'}
-                          </button>
-                          {(mod.hasTopFrame !== false) ? (
-                            <>
-                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
-                                <input
-                                  type="text" inputMode="numeric"
-                                  value={(mod.topFrameOffset || 0) > 0 ? mod.topFrameOffset : ''} placeholder="0"
-                                  onFocus={() => setHighlightedFrame('top')}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    if (v === '' || /^\d+$/.test(v)) {
-                                      updatePlacedModule(mod.id, { topFrameOffset: v === '' ? 0 : parseInt(v, 10) });
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    setHighlightedFrame(null);
-                                    const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                                    updatePlacedModule(mod.id, { topFrameOffset: v });
-                                  }}
-                                  className={styles.frameNumberInput}
-                                />
-                              </div>
-                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
-                                <input
-                                  type="text" inputMode="numeric"
-                                  value={(mod.topFrameOffset || 0) < 0 ? Math.abs(mod.topFrameOffset!) : ''} placeholder="0"
-                                  onFocus={() => setHighlightedFrame('top')}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    if (v === '' || /^\d+$/.test(v)) {
-                                      updatePlacedModule(mod.id, { topFrameOffset: v === '' ? 0 : -parseInt(v, 10) });
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    setHighlightedFrame(null);
-                                    const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                                    updatePlacedModule(mod.id, { topFrameOffset: v === -0 ? 0 : v });
-                                  }}
-                                  className={styles.frameNumberInput}
-                                />
-                              </div>
-                            </>
-                          ) : null}
-                        </div>
-                      )}
-                      {/* 하부프레임 */}
-                      {hasBase && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 0' }}>
-                          <span className={styles.frameItemLabel} style={{ minWidth: '14px', textAlign: 'left', margin: 0 }}>하</span>
-                          <button
-                            onClick={() => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) })}
-                            className={`${styles.toggleButton} ${(mod.hasBase !== false) ? styles.toggleButtonActive : ''}`}
-                            style={{ padding: '1px 6px', fontSize: '10px', flex: 'none', minWidth: '32px', borderRadius: '4px', border: '1px solid var(--theme-border)' }}
-                          >
-                            {(mod.hasBase !== false) ? 'ON' : 'OFF'}
-                          </button>
-                          {(mod.hasBase !== false) ? (
-                            <>
-                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>앞</span>
-                                <input
-                                  type="text" inputMode="numeric"
-                                  value={(mod.baseFrameOffset || 0) > 0 ? mod.baseFrameOffset : ''} placeholder="0"
-                                  onFocus={() => setHighlightedFrame('base')}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    if (v === '' || /^\d+$/.test(v)) {
-                                      updatePlacedModule(mod.id, { baseFrameOffset: v === '' ? 0 : parseInt(v, 10) });
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    setHighlightedFrame(null);
-                                    const v = Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                                    updatePlacedModule(mod.id, { baseFrameOffset: v });
-                                  }}
-                                  className={styles.frameNumberInput}
-                                />
-                              </div>
-                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                                <span style={{ fontSize: '9px', color: 'var(--theme-text-muted)', padding: '0 4px', flexShrink: 0 }}>뒤</span>
-                                <input
-                                  type="text" inputMode="numeric"
-                                  value={(mod.baseFrameOffset || 0) < 0 ? Math.abs(mod.baseFrameOffset!) : ''} placeholder="0"
-                                  onFocus={() => setHighlightedFrame('base')}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    if (v === '' || /^\d+$/.test(v)) {
-                                      updatePlacedModule(mod.id, { baseFrameOffset: v === '' ? 0 : -parseInt(v, 10) });
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    setHighlightedFrame(null);
-                                    const v = -Math.max(0, Math.min(200, parseInt(e.target.value) || 0));
-                                    updatePlacedModule(mod.id, { baseFrameOffset: v === -0 ? 0 : v });
-                                  }}
-                                  className={styles.frameNumberInput}
-                                />
-                              </div>
-                            </>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </div>
 
         {/* 배치방식 */}
         <div className={styles.configSection}>
