@@ -2234,8 +2234,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         }
       })()}
 
-      {/* 조절발 (upper가 아닌 경우) — 바닥판 올림 시 숨김 */}
-      {showFurniture && category !== 'upper' && !(sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0) && (() => {
+      {/* 조절발 (upper가 아닌 경우) — 바닥판 올림 시 숨김, 하부 섹션 비움 시 숨김 */}
+      {showFurniture && category !== 'upper' && sections[0]?.enabled !== false && !(sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0) && (() => {
         const lowerSection = sections[0];
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
         const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
