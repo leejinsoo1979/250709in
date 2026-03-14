@@ -2269,6 +2269,24 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         applyConfig({ ...config, sections });
                       }
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const cur = parseInt(String(shelfGap), 10) || 0;
+                        const next = Math.max(0, Math.min(350, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                        const sections = [...config.sections];
+                        const sec = { ...sections[sIdx] };
+                        const elArr = side === 'full' ? [...(sec.elements || [])] : side === 'left' ? [...(sec.leftElements || [])] : [...(sec.rightElements || [])];
+                        if (elArr[0]?.type === 'rod') {
+                          elArr[0] = { ...elArr[0], shelfGap: next };
+                        }
+                        if (side === 'full') sec.elements = elArr;
+                        else if (side === 'left') sec.leftElements = elArr;
+                        else sec.rightElements = elArr;
+                        sections[sIdx] = sec;
+                        applyConfig({ ...config, sections });
+                      }
+                    }}
                   />
                   <span className={styles.unit}>mm</span>
                   <span style={{ fontSize: '11px', color: '#888' }}>상판~선반</span>
@@ -3203,7 +3221,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       handleHSplitPosition(sIdx, clamped);
                       setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: (clamped + pt2).toString() }));
                     }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const cur = parseInt(hSplitInputs[`${sIdx}-left`] || (pos + pt2).toString(), 10);
+                        const next = Math.max(100 + pt2, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                        setHSplitInputs(prev => ({ ...prev, [`${sIdx}-left`]: next.toString() }));
+                      }
+                    }}
                     style={{ width: '60px' }}
                   />
                   <span className={styles.unit}>mm</span>
@@ -3223,7 +3249,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         handleHSplitSecondPosition(sIdx, clamped);
                         setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: (clamped + pt2).toString() }));
                       }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(hSplitInputs[`${sIdx}-center`] || (centerWVal + pt2).toString(), 10);
+                          const next = Math.max(100 + pt2, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                          setHSplitInputs(prev => ({ ...prev, [`${sIdx}-center`]: next.toString() }));
+                        }
+                      }}
                       style={{ width: '60px' }}
                     />
                     <span className={styles.unit}>mm</span>
@@ -4120,25 +4154,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           const num = Math.max(15, Math.min(25, parseInt(v, 10)));
                           updatePlacedModule(moduleId, { endPanelThickness: num });
                         }}
-                        style={{
-                          width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
-                          borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                          background: 'var(--theme-background)', color: 'var(--theme-text)',
-                        }}
-                      />
-                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 옵셋</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={placedModule.endPanelOffset ?? 0}
-                        onChange={(e) => {
-                          const v = e.target.value.replace(/[^0-9-]/g, '');
-                          if (v === '' || v === '-') return;
-                          const num = Math.max(-50, Math.min(50, parseInt(v, 10)));
-                          updatePlacedModule(moduleId, { endPanelOffset: num });
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = placedModule.endPanelThickness ?? 18;
+                            const next = Math.max(15, Math.min(25, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                            updatePlacedModule(moduleId, { endPanelThickness: next });
+                          }
                         }}
                         style={{
                           width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
@@ -4148,6 +4170,79 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       />
                       <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                     </div>
+                    {/* 좌측 EP 옵셋 */}
+                    {placedModule.hasLeftEndPanel && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '0' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>좌 EP</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                              updatePlacedModule(moduleId, { leftEndPanelOffset: num });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(moduleId, { leftEndPanelOffset: next });
+                            }
+                          }}
+                          style={{
+                            width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                            borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                            background: 'var(--theme-background)', color: 'var(--theme-text)',
+                          }}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                      </div>
+                    )}
+                    {/* 우측 EP 옵셋 */}
+                    {placedModule.hasRightEndPanel && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '0' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>우 EP</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                              updatePlacedModule(moduleId, { rightEndPanelOffset: num });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(moduleId, { rightEndPanelOffset: next });
+                            }
+                          }}
+                          style={{
+                            width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                            borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                            background: 'var(--theme-background)', color: 'var(--theme-text)',
+                          }}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                      </div>
+                    )}
+                    <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>범위: -50mm ~ 50mm</span>
                   </div>
                 )}
               </div>

@@ -1293,6 +1293,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleDepthKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleDepthInputBlur();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const cur = parseInt(depthInputValue, 10) || customDepth;
+      const minD = FURNITURE_LIMITS.DEPTH.MIN;
+      const maxD = Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX);
+      const next = Math.max(minD, Math.min(maxD, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+      setDepthInputValue(next.toString());
+      setDepthError('');
+      handleCustomDepthChange(next);
     }
   };
 
@@ -1765,6 +1774,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleWidthKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleWidthInputBlur();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const cur = parseInt(widthInputValue, 10) || customWidth;
+      const minW = 150;
+      const maxW = moduleData?.dimensions?.width || 2400;
+      const next = Math.max(minW, Math.min(maxW, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+      setWidthInputValue(next.toString());
+      handleCustomWidthChange(next);
     }
   };
 
@@ -2252,7 +2269,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         }
                       }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
+                          const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          setFreeWidthInput(next.toString());
+                          if (currentPlacedModule) {
+                            const newX = currentPlacedModule.isFreePlacement
+                              ? calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo)
+                              : currentPlacedModule.position.x;
+                            updatePlacedModule(currentPlacedModule.id, {
+                              freeWidth: next,
+                              moduleWidth: next,
+                              position: { ...currentPlacedModule.position, x: newX },
+                            });
+                          }
+                        }
+                      }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="너비"
                       style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
@@ -2308,7 +2343,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         }
                       }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(freeHeightInput, 10) || (currentPlacedModule?.freeHeight || moduleData.dimensions.height);
+                          const next = Math.max(100, Math.min(3000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          setFreeHeightInput(next.toString());
+                          if (currentPlacedModule) {
+                            updatePlacedModule(currentPlacedModule.id, { freeHeight: next });
+                          }
+                        }
+                      }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="높이"
                       style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
@@ -2364,7 +2410,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         }
                       }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(freeDepthInput, 10) || (currentPlacedModule?.freeDepth || moduleData.dimensions.depth);
+                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          setFreeDepthInput(next.toString());
+                          if (currentPlacedModule) {
+                            updatePlacedModule(currentPlacedModule.id, { freeDepth: next });
+                          }
+                        }
+                      }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="깊이"
                       style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
@@ -2472,7 +2529,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setSectionWidthInputs(prev => ({ ...prev, [sIdx]: Math.round(totalW).toString() }));
                               }
                             }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = parseInt(displayW, 10) || Math.round(totalW);
+                                const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setSectionWidthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                const newX = calcResizedPositionX(currentPlacedModule, next, placedModules, spaceInfo);
+                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...currentPlacedModule.position, x: newX } };
+                                if (isCustom) {
+                                  const newSecs = cc!.sections.map((s: any) => ({ ...s, width: next }));
+                                  updates.customConfig = { ...cc!, sections: newSecs };
+                                }
+                                updatePlacedModule(currentPlacedModule.id, updates);
+                                setFreeWidthInput(next.toString());
+                              }
+                            }}
                             className={styles.depthInput}
                             style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
                           />
@@ -2495,7 +2568,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setSectionHeightInputs(prev => ({ ...prev, [sIdx]: displayH }));
                               }
                             }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (isCustom && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                                e.preventDefault();
+                                const cur = parseInt(displayH, 10) || 0;
+                                const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                setSectionHeightInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
+                              }
+                            }}
                             className={styles.depthInput}
                             readOnly={!isCustom}
                             style={{
@@ -2531,7 +2612,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setSectionDepthInputs(prev => ({ ...prev, [sIdx]: displayD }));
                               }
                             }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = parseInt(displayD, 10) || Math.round(totalD);
+                                const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setSectionDepthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                if (sIdx === 0) {
+                                  setLowerSectionDepth(next);
+                                  updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: next });
+                                  setLowerDepthInput(next.toString());
+                                } else if (sIdx === 1) {
+                                  setUpperSectionDepth(next);
+                                  updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: next });
+                                  setUpperDepthInput(next.toString());
+                                }
+                              }
+                            }}
                             className={styles.depthInput}
                             style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
                           />
@@ -2558,7 +2656,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     value={hsLeftWidthInput[sIdx] || ''}
                                     onChange={(e) => setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
                                     onBlur={() => handleHsLeftWidthBlur(sIdx)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsLeftWidthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                        setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
                                     className={styles.depthInput}
                                     style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
                                   />
@@ -2571,7 +2677,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     value={hsLeftDepthInput[sIdx] || ''}
                                     onChange={(e) => setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
                                     onBlur={() => handleHsDepthBlur(sIdx, 'left')}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsLeftDepthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                        setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
                                     className={styles.depthInput}
                                     style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
                                   />
@@ -2601,7 +2715,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                       value={hsCenterDepthInput[sIdx] || ''}
                                       onChange={(e) => setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
                                       onBlur={() => handleHsDepthBlur(sIdx, 'center')}
-                                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                          e.preventDefault();
+                                          const cur = parseInt(hsCenterDepthInput[sIdx] || '0', 10);
+                                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                          setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                        }
+                                      }}
                                       className={styles.depthInput}
                                       style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
                                     />
@@ -2621,7 +2743,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     value={hsRightWidthInput[sIdx] || ''}
                                     onChange={(e) => setHsRightWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
                                     onBlur={() => handleHsRightWidthBlur(sIdx)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsRightWidthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                        setHsRightWidthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
                                     className={styles.depthInput}
                                     style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
                                   />
@@ -2634,7 +2764,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     value={hsRightDepthInput[sIdx] || ''}
                                     onChange={(e) => setHsRightDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
                                     onBlur={() => handleHsDepthBlur(sIdx, 'right')}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsRightDepthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                        setHsRightDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
                                     className={styles.depthInput}
                                     style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
                                   />
@@ -2701,31 +2839,90 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
                           }
                         }}
-                        className={styles.dimensionInput}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: '8px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 옵셋</label>
-                    <div className={styles.inputWithUnit}>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={currentPlacedModule.endPanelOffset ?? 0}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                            const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
-                            updatePlacedModule(currentPlacedModule.id, { endPanelOffset: num });
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = currentPlacedModule.endPanelThickness ?? 18;
+                            const next = Math.max(15, Math.min(25, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                            updatePlacedModule(currentPlacedModule.id, { endPanelThickness: next });
                           }
                         }}
                         className={styles.dimensionInput}
                       />
                       <span className={styles.unit}>mm</span>
                     </div>
-                    <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>범위: -50mm ~ 50mm</span>
                   </div>
+                  {/* 좌측 EP 옵셋 */}
+                  {currentPlacedModule.hasLeftEndPanel && (
+                    <div style={{ marginTop: '8px' }}>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
+                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: next });
+                            }
+                          }}
+                          className={styles.dimensionInput}
+                          style={{ width: '50px', textAlign: 'center' }}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* 우측 EP 옵셋 */}
+                  {currentPlacedModule.hasRightEndPanel && (
+                    <div style={{ marginTop: '8px' }}>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>앞</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>(</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                              const num = v === '' || v === '-' ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
+                              const next = Math.max(-50, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: next });
+                            }
+                          }}
+                          className={styles.dimensionInput}
+                          style={{ width: '50px', textAlign: 'center' }}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)' }}>)</span>
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>뒤</span>
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  )}
+                  <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>범위: -50mm ~ 50mm</span>
                 </>
               )}
             </div>
@@ -2750,6 +2947,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           updatePlacedModule(currentPlacedModule.id, { freeLeftGap: v === '' ? 0 : parseInt(v, 10) });
                         }
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = currentPlacedModule.freeLeftGap ?? 0;
+                          const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                          updatePlacedModule(currentPlacedModule.id, { freeLeftGap: next });
+                        }
+                      }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="0"
                       style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
@@ -2768,6 +2973,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const v = e.target.value;
                         if (v === '' || /^\d+$/.test(v)) {
                           updatePlacedModule(currentPlacedModule.id, { freeRightGap: v === '' ? 0 : parseInt(v, 10) });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = currentPlacedModule.freeRightGap ?? 0;
+                          const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                          updatePlacedModule(currentPlacedModule.id, { freeRightGap: next });
                         }
                       }}
                       className={`${styles.depthInput} furniture-depth-input`}
@@ -2847,6 +3060,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => handleLowerDepthChange(e.target.value)}
                       onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-0`)}
                       onBlur={() => useUIStore.getState().setHighlightedSection(null)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(lowerDepthInput, 10) || 0;
+                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          handleLowerDepthChange(next.toString());
+                        }
+                      }}
                       className={styles.depthInput}
                       placeholder="580"
                       style={{
@@ -2905,6 +3126,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => handleUpperDepthChange(e.target.value)}
                       onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-1`)}
                       onBlur={() => useUIStore.getState().setHighlightedSection(null)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(upperDepthInput, 10) || 0;
+                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          handleUpperDepthChange(next.toString());
+                        }
+                      }}
                       className={styles.depthInput}
                       placeholder="580"
                       style={{
@@ -2977,6 +3206,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     console.log('🎯 패널 강조 해제');
                     setHighlightedPanel(null);
                   }}
+                  onKeyDown={handleLowerTopOffsetKeyDown}
                   className={styles.depthInput}
                   placeholder="0"
                   style={{
@@ -3309,6 +3539,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           value={doorOverlayLeftInput}
                           onChange={(e) => handleDoorOverlayChange('left', e.target.value)}
                           onBlur={() => handleDoorOverlayBlur('left')}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = parseFloat(doorOverlayLeftInput) || 0;
+                              const next = cur + (e.key === 'ArrowUp' ? 1 : -1);
+                              handleDoorOverlayChange('left', next.toString());
+                            }
+                          }}
                           className={`${styles.depthInput} furniture-depth-input`}
                           placeholder="0"
                           style={{
@@ -3330,6 +3568,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           value={doorOverlayRightInput}
                           onChange={(e) => handleDoorOverlayChange('right', e.target.value)}
                           onBlur={() => handleDoorOverlayBlur('right')}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = parseFloat(doorOverlayRightInput) || 0;
+                              const next = cur + (e.key === 'ArrowUp' ? 1 : -1);
+                              handleDoorOverlayChange('right', next.toString());
+                            }
+                          }}
                           className={`${styles.depthInput} furniture-depth-input`}
                           placeholder="0"
                           style={{
@@ -3353,6 +3599,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           value={doorOverlayTopInput}
                           onChange={(e) => handleDoorOverlayChange('top', e.target.value)}
                           onBlur={() => handleDoorOverlayBlur('top')}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = parseFloat(doorOverlayTopInput) || 0;
+                              const next = cur + (e.key === 'ArrowUp' ? 1 : -1);
+                              handleDoorOverlayChange('top', next.toString());
+                            }
+                          }}
                           className={`${styles.depthInput} furniture-depth-input`}
                           placeholder="0"
                           style={{
@@ -3374,6 +3628,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           value={doorOverlayBottomInput}
                           onChange={(e) => handleDoorOverlayChange('bottom', e.target.value)}
                           onBlur={() => handleDoorOverlayBlur('bottom')}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = parseFloat(doorOverlayBottomInput) || 0;
+                              const next = cur + (e.key === 'ArrowUp' ? 1 : -1);
+                              handleDoorOverlayChange('bottom', next.toString());
+                            }
+                          }}
                           className={`${styles.depthInput} furniture-depth-input`}
                           placeholder="0"
                           style={{
