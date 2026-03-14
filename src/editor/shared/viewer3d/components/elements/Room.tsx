@@ -2567,11 +2567,8 @@ const Room: React.FC<RoomProps> = ({
               {freeTopEnabled && topStripGroups.flatMap((group) => {
                 const freeTopCfg = spaceInfo.freeSurround?.top;
                 const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
-                const baseFrameThicknessMM = group.thicknessMM > 0
-                  ? group.thicknessMM
-                  : freeTopCfg?.enabled
-                    ? freeTopCfg.size
-                    : topBottomFrameHeightMm;
+                // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
+                const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
                 const topZOffset = freeTopCfg?.offset ? mmToThreeUnits(freeTopCfg.offset) : 0;
 
                 // 각 모듈별 개별 상부프레임 생성
@@ -2581,12 +2578,9 @@ const Room: React.FC<RoomProps> = ({
                   const modCenterXmm = (bounds.left + bounds.right) / 2;
                   const modFreeHeight = mod.freeHeight || internalSpaceHeight;
 
-                  const gapMM = (modFreeHeight > 0 && modFreeHeight < internalSpaceHeight)
-                    ? internalSpaceHeight - modFreeHeight
-                    : 0;
-                  // gap + 상판 두께 절반 보정 (가구 상판 중심이 freeHeight에서 절반만큼 아래)
-                  const halfPanel = baseFrameThicknessMM / 2;
-                  const totalFrameHeightMM = gapMM > 0 ? gapMM + halfPanel : baseFrameThicknessMM;
+                  // 프레임 높이 = 천장에서 가구 상단까지의 거리
+                  // 천장(heightMm) - 받침대(baseFrame) - 가구높이(freeHeight) = ceilingToBaseTop - freeHeight
+                  const totalFrameHeightMM = Math.max(0, ceilingToBaseTopMM - modFreeHeight);
                   const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
                   // 프레임 상단 = 천장에 맞추고 아래로 확장
                   const modFrameCenterY = panelStartY + height - modFrameHeight / 2;
