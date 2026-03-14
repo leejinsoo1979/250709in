@@ -145,6 +145,11 @@ export interface SpaceInfo {
   // 공간 레벨 도어 이격거리
   doorTopGap?: number;
   doorBottomGap?: number;
+
+  // 자유배치 벽 이격거리 잠금 (공간 레벨)
+  // left: 왼쪽 벽에서의 잠금 이격거리 (mm), undefined면 잠금 안 됨
+  // right: 오른쪽 벽에서의 잠금 이격거리 (mm), undefined면 잠금 안 됨
+  lockedWallGaps?: { left?: number; right?: number };
 }
 
 // 단내림 설정 인터페이스
@@ -187,6 +192,9 @@ interface SpaceConfigState {
   removePanelB: (id: string) => void;
   updatePanelB: (id: string, updates: Partial<PanelB>) => void;
   
+  // 자유배치 벽 이격거리 잠금 액션
+  setLockedWallGap: (side: 'left' | 'right', value: number | undefined) => void;
+
   // 전체 상태 관리
   resetAll: () => void;
   markAsSaved: () => void;
@@ -313,7 +321,7 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
 export const DEFAULT_SPACE_CONFIG: SpaceInfo = createDefaultSpaceConfig();
 
 // 초기 상태
-const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'setPanelBs' | 'addPanelB' | 'removePanelB' | 'updatePanelB' | 'resetAll' | 'markAsSaved'> = {
+const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'setPanelBs' | 'addPanelB' | 'removePanelB' | 'updatePanelB' | 'setLockedWallGap' | 'resetAll' | 'markAsSaved'> = {
   isDirty: false,
   spaceInfo: DEFAULT_SPACE_CONFIG,
 };
@@ -601,6 +609,19 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       isDirty: true,
     })),
   
+  // 자유배치 벽 이격거리 잠금
+  setLockedWallGap: (side, value) =>
+    set((state) => {
+      const prev = state.spaceInfo.lockedWallGaps || {};
+      const next = { ...prev, [side]: value };
+      // 양쪽 모두 undefined이면 필드 자체를 제거
+      const cleaned = (next.left == null && next.right == null) ? undefined : next;
+      return {
+        spaceInfo: { ...state.spaceInfo, lockedWallGaps: cleaned },
+        isDirty: true,
+      };
+    }),
+
   // 전체 상태 초기화
   resetAll: () => set({ ...initialState, isDirty: false }),
   
