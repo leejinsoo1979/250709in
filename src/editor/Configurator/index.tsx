@@ -4107,6 +4107,13 @@ const Configurator: React.FC = () => {
                       type="text" inputMode="numeric"
                       value={sizeMM || ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(highlightKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + delta)));
+                        }
+                      }}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
@@ -4124,6 +4131,13 @@ const Configurator: React.FC = () => {
                       type="text" inputMode="numeric"
                       value={offset !== 0 ? offset : ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(highlightKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + delta)));
+                        }
+                      }}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
@@ -4254,6 +4268,13 @@ const Configurator: React.FC = () => {
                       type="text" inputMode="numeric"
                       value={sizeMM || ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(highlightKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + delta)));
+                        }
+                      }}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
@@ -4271,6 +4292,13 @@ const Configurator: React.FC = () => {
                       type="text" inputMode="numeric"
                       value={offset !== 0 ? offset : ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(highlightKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + delta)));
+                        }
+                      }}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
