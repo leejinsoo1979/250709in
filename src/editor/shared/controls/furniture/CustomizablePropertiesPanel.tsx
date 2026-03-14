@@ -4151,14 +4151,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         onChange={(e) => {
                           const v = e.target.value.replace(/[^0-9]/g, '');
                           if (v === '') return;
-                          const num = Math.max(15, Math.min(25, parseInt(v, 10)));
+                          const num = Math.max(10, Math.min(50, parseInt(v, 10)));
                           updatePlacedModule(moduleId, { endPanelThickness: num });
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = placedModule.endPanelThickness ?? 18;
-                            const next = Math.max(15, Math.min(25, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                            const next = Math.max(10, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                             updatePlacedModule(moduleId, { endPanelThickness: next });
                           }
                         }}
@@ -4170,11 +4170,45 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       />
                       <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                     </div>
+                    {/* EP 깊이 */}
+                    {(() => {
+                      const furnitureDepth = placedModule.freeDepth || 580;
+                      const epDepthVal = placedModule.endPanelDepth ?? furnitureDepth;
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 깊이</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={epDepthVal}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? furnitureDepth : Math.max(50, Math.min(furnitureDepth, parseInt(v, 10)));
+                                updatePlacedModule(moduleId, { endPanelDepth: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = epDepthVal;
+                                const next = Math.max(50, Math.min(furnitureDepth, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(moduleId, { endPanelDepth: next });
+                              }
+                            }}
+                            style={{
+                              width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                              borderRadius: '4px', fontSize: '13px', textAlign: 'center',
+                              background: 'var(--theme-background)', color: 'var(--theme-text)',
+                            }}
+                          />
+                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                        </div>
+                      );
+                    })()}
                     {/* 좌측 EP 옵셋 */}
                     {placedModule.hasLeftEndPanel && (() => {
                       const rawVal = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-                      const leftDir = rawVal > 0 ? 'front' : rawVal < 0 ? 'back' : 'front';
-                      const leftAbs = Math.abs(rawVal);
                       return (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</span>
@@ -4182,21 +4216,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={leftAbs}
+                              value={rawVal}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (v === '' || /^\d+$/.test(v)) {
-                                  const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
-                                  const sign = leftDir === 'front' ? 1 : -1;
-                                  updatePlacedModule(moduleId, { leftEndPanelOffset: abs * sign });
+                                if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                  const num = (v === '' || v === '-') ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                                  updatePlacedModule(moduleId, { leftEndPanelOffset: num });
                                 }
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const abs = Math.max(0, Math.min(50, leftAbs + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  const sign = leftDir === 'front' ? 1 : -1;
-                                  updatePlacedModule(moduleId, { leftEndPanelOffset: abs * sign });
+                                  const next = Math.max(-50, Math.min(50, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  updatePlacedModule(moduleId, { leftEndPanelOffset: next });
                                 }
                               }}
                               style={{
@@ -4207,38 +4239,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             />
                             <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
-                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                            <button
-                              style={{
-                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                                background: leftDir === 'front' ? '#4A90D9' : '#fff',
-                                color: leftDir === 'front' ? '#fff' : '#666',
-                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                              }}
-                              onClick={() => updatePlacedModule(moduleId, { leftEndPanelOffset: Math.max(1, leftAbs) })}
-                            >
-                              앞에서
-                            </button>
-                            <button
-                              style={{
-                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                                background: leftDir === 'back' ? '#4A90D9' : '#fff',
-                                color: leftDir === 'back' ? '#fff' : '#666',
-                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                              }}
-                              onClick={() => updatePlacedModule(moduleId, { leftEndPanelOffset: -Math.max(1, leftAbs) })}
-                            >
-                              뒤에서
-                            </button>
-                          </div>
+                          <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 / - 뒤</span>
                         </div>
                       );
                     })()}
                     {/* 우측 EP 옵셋 */}
                     {placedModule.hasRightEndPanel && (() => {
                       const rawVal = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-                      const rightDir = rawVal > 0 ? 'front' : rawVal < 0 ? 'back' : 'front';
-                      const rightAbs = Math.abs(rawVal);
                       return (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</span>
@@ -4246,21 +4253,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={rightAbs}
+                              value={rawVal}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (v === '' || /^\d+$/.test(v)) {
-                                  const abs = v === '' ? 0 : Math.min(50, parseInt(v, 10));
-                                  const sign = rightDir === 'front' ? 1 : -1;
-                                  updatePlacedModule(moduleId, { rightEndPanelOffset: abs * sign });
+                                if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                  const num = (v === '' || v === '-') ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                                  updatePlacedModule(moduleId, { rightEndPanelOffset: num });
                                 }
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const abs = Math.max(0, Math.min(50, rightAbs + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  const sign = rightDir === 'front' ? 1 : -1;
-                                  updatePlacedModule(moduleId, { rightEndPanelOffset: abs * sign });
+                                  const next = Math.max(-50, Math.min(50, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  updatePlacedModule(moduleId, { rightEndPanelOffset: next });
                                 }
                               }}
                               style={{
@@ -4271,30 +4276,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             />
                             <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
-                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                            <button
-                              style={{
-                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                                background: rightDir === 'front' ? '#4A90D9' : '#fff',
-                                color: rightDir === 'front' ? '#fff' : '#666',
-                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                              }}
-                              onClick={() => updatePlacedModule(moduleId, { rightEndPanelOffset: Math.max(1, rightAbs) })}
-                            >
-                              앞에서
-                            </button>
-                            <button
-                              style={{
-                                flex: 1, padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px',
-                                background: rightDir === 'back' ? '#4A90D9' : '#fff',
-                                color: rightDir === 'back' ? '#fff' : '#666',
-                                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                              }}
-                              onClick={() => updatePlacedModule(moduleId, { rightEndPanelOffset: -Math.max(1, rightAbs) })}
-                            >
-                              뒤에서
-                            </button>
-                          </div>
+                          <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 / - 뒤</span>
                         </div>
                       );
                     })()}
