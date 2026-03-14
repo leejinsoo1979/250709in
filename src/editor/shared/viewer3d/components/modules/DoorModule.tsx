@@ -346,13 +346,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 자유배치에서 실제 사용할 높이: props internalHeight > store freeHeight > 기본값
   const effectiveInternalHeight = internalHeight || storeFreeHeight;
 
-  // 자유배치 EP 보정: 도어 너비 축소 + X 위치 보정
+  // 자유배치 EP 보정: 도어 너비만 축소 (위치는 부모 group에서 이미 보정됨)
   const freeEpLeftThk = (isFree && storePlacedModule?.hasLeftEndPanel && !storePlacedModule?.customConfig)
     ? (storePlacedModule?.endPanelThickness || 18) : 0;
   const freeEpRightThk = (isFree && storePlacedModule?.hasRightEndPanel && !storePlacedModule?.customConfig)
     ? (storePlacedModule?.endPanelThickness || 18) : 0;
   const freeEpWidthReduction = freeEpLeftThk + freeEpRightThk;
-  const freeEpXOffset = (freeEpLeftThk - freeEpRightThk) / 2 * 0.01; // mm → Three.js 단위
 
   console.log('🚪🔵🔵🔵 DoorModule 자유배치 감지:', {
     furnitureId,
@@ -1194,8 +1193,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
 
   // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
-  // 자유배치 EP offset 적용
-  let doorGroupX = (slotCenterX || 0) + freeEpXOffset; // 원래 슬롯 중심 X 좌표 + EP 보정 (Three.js 단위)
+  // (자유배치 EP offset은 부모 group position에서 이미 적용됨)
+  let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   
   // slotCenterX가 제공되었는지 확인
   if (slotCenterX !== undefined && slotCenterX !== null) {
