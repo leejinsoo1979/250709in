@@ -186,34 +186,7 @@ export function calcResizedPositionX(
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
   const halfNew = newWidthMm / 2;
 
-  // ── 잠금 우선: 이 가구가 잠긴 벽에 인접한 경우만 적용 ──
-  const lockedGaps = spaceInfo.lockedWallGaps;
-  const hasLeftLock = lockedGaps?.left != null;
-  const hasRightLock = lockedGaps?.right != null;
-
-  // 이 가구가 가장 왼쪽/오른쪽인지 확인 (잠금에 인접한 가구만 잠금 적용)
-  const isLeftmost = hasLeftLock && !allModules.some(m =>
-    m.id !== module.id && m.isFreePlacement &&
-    getModuleBoundsX(m).left < oldBounds.left
-  );
-  const isRightmost = hasRightLock && !allModules.some(m =>
-    m.id !== module.id && m.isFreePlacement &&
-    getModuleBoundsX(m).right > oldBounds.right
-  );
-
-  if (isLeftmost && !isRightmost) {
-    const fixedLeft = startX + lockedGaps.left!;
-    return (fixedLeft + halfNew) * 0.01;
-  }
-  if (isRightmost && !isLeftmost) {
-    const fixedRight = endX - lockedGaps.right!;
-    return (fixedRight - halfNew) * 0.01;
-  }
-  if (isLeftmost && isRightmost) {
-    return module.position.x;
-  }
-
-  // ── 잠금 없음: 붙어있는 쪽 고정 (기존 로직) ──
+  // ── 붙어있는 쪽 고정 (기존 로직) ──
   const SNAP_THRESHOLD = 3;
 
   let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD;
@@ -237,6 +210,22 @@ export function calcResizedPositionX(
     newCenterMm = currentCenterMm;
   }
 
-  const clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
+  let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
+
+  // 잠긴 이격 영역 침범 방지 (벽처럼 취급)
+  const lockedGaps = spaceInfo.lockedWallGaps;
+  if (lockedGaps?.left != null && lockedGaps.left > 0) {
+    const effectiveStart = startX + lockedGaps.left;
+    if (clampedMm - halfNew < effectiveStart) {
+      clampedMm = effectiveStart + halfNew;
+    }
+  }
+  if (lockedGaps?.right != null && lockedGaps.right > 0) {
+    const effectiveEnd = endX - lockedGaps.right;
+    if (clampedMm + halfNew > effectiveEnd) {
+      clampedMm = effectiveEnd - halfNew;
+    }
+  }
+
   return clampedMm * 0.01;
 }
