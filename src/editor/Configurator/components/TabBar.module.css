@@ -46,7 +46,7 @@
 
 /* 활성 탭 */
 .tab.active {
-  background: var(--theme-background, #ffffff);
+  background: color-mix(in srgb, var(--theme-primary, #21b691) 15%, transparent);
   color: var(--theme-primary, #21b691);
   font-weight: 700;
   font-size: 13px;
@@ -120,6 +120,14 @@
 .closeButton:hover {
   background: var(--theme-border, #e0e0e0);
   color: var(--theme-text, #24292f);
+}
+
+.tab.active .closeButton {
+  color: var(--theme-primary, #21b691);
+}
+
+.tab.active .closeButton:hover {
+  background: color-mix(in srgb, var(--theme-primary, #21b691) 25%, transparent);
 }
 
 /* + 디자인 버튼 */
