@@ -85,13 +85,19 @@ export function generateSurround(
   const leftMethod = determineSurroundMethod(leftGap);
   const rightMethod = determineSurroundMethod(rightGap);
 
+  // 구간분할(커튼박스) 활성 시, 커튼박스 쪽 서라운드는 불필요 (벽으로 막혀있음)
+  const hasCurtainBox = spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode === 'free-placement';
+  const curtainBoxPosition = spaceInfo.droppedCeiling?.position || 'right';
+  const skipLeft = hasCurtainBox && curtainBoxPosition === 'left';
+  const skipRight = hasCurtainBox && curtainBoxPosition === 'right';
+
   // 7. FreeSurroundConfig 구성
   const config: FreeSurroundConfig = {
     left: {
-      enabled: leftMethod !== 'none',
+      enabled: skipLeft ? false : leftMethod !== 'none',
       size: 18,
       offset: 0,
-      method: leftMethod,
+      method: skipLeft ? 'none' : leftMethod,
       gap: Math.round(leftGap),
     },
     top: {
@@ -100,10 +106,10 @@ export function generateSurround(
       offset: 0,
     },
     right: {
-      enabled: rightMethod !== 'none',
+      enabled: skipRight ? false : rightMethod !== 'none',
       size: 18,
       offset: 0,
-      method: rightMethod,
+      method: skipRight ? 'none' : rightMethod,
       gap: Math.round(rightGap),
     },
     middle: middleGaps.length > 0 ? middleGaps : undefined,
