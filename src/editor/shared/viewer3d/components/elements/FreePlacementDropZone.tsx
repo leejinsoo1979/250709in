@@ -132,7 +132,7 @@ const FreePlacementDropZone: React.FC = () => {
     return Math.round(maxGap);
   }, [placedModules, spaceBounds]);
 
-  // ── 균등배치 모드: ON 시 가구를 이격 없이 왼쪽부터 채움 (원래 너비 상한) ──
+  // ── 균등배치 모드: 잠기지 않은 이격을 제거하고 듀얼은 듀얼끼리, 싱글은 싱글끼리 균일 사이즈 ──
   useEffect(() => {
     if (!equalDistribution || !isFreePlacement || freeModules.length === 0) return;
 
@@ -149,49 +149,26 @@ const FreePlacementDropZone: React.FC = () => {
     // 좌→우 정렬 순서
     const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
 
-    // 각 가구의 싱글/듀얼별 min/max 계산 (isDualSlot 우선, moduleId 폴백)
-    const limits = sorted.map(mod => {
-      const isDual = mod.isDualSlot === true || mod.moduleId?.includes('dual-');
-      return { min: isDual ? 800 : 400, max: isDual ? 1200 : 600 };
-    });
+    // 싱글/듀얼 분류
+    const isDualArr = sorted.map(mod => mod.isDualSlot === true || mod.moduleId?.includes('dual-'));
+    const singleCount = isDualArr.filter(d => !d).length;
+    const dualCount = isDualArr.filter(d => d).length;
 
-    // 1단계: 모든 가구를 최소 너비로 배정
-    const widths = limits.map(l => l.min);
-    let totalMin = widths.reduce((s, w) => s + w, 0);
+    // 단위 너비 = 유효 공간 / (싱글 수 + 듀얼 수 × 2)
+    const totalUnits = singleCount + dualCount * 2;
+    if (totalUnits === 0) return;
+    const unitWidth = Math.floor(availableWidth / totalUnits);
 
-    // 2단계: 남는 공간을 균등 분배 (각 가구의 max까지)
-    let remaining = availableWidth - totalMin;
-    if (remaining > 0) {
-      // 아직 max에 도달하지 않은 가구들에 균등 분배
-      let expandable = widths.map((w, i) => limits[i].max - w).filter(d => d > 0);
-      while (remaining > 0.5 && expandable.some(d => d > 0)) {
-        const expandCount = widths.filter((w, i) => w < limits[i].max).length;
-        if (expandCount === 0) break;
-        const share = remaining / expandCount;
-        let used = 0;
-        for (let i = 0; i < widths.length; i++) {
-          const room = limits[i].max - widths[i];
-          if (room > 0) {
-            const add = Math.min(room, share);
-            widths[i] = Math.round((widths[i] + add) * 10) / 10;
-            used += add;
-          }
-        }
-        remaining -= used;
-        expandable = widths.map((w, i) => limits[i].max - w).filter(d => d > 0);
-      }
-    }
-
-    // 이격 없이 왼쪽부터 빈틈없이 배치
+    // 이격 없이 빈틈없이 배치
     let currentX = effectiveStartX;
     sorted.forEach((mod, i) => {
-      const w = widths[i];
+      const w = isDualArr[i] ? unitWidth * 2 : unitWidth;
       const centerXmm = currentX + (w / 2);
-      const centerXcm = centerXmm * 0.01;
 
       updatePlacedModule(mod.id, {
         freeWidth: w,
-        position: { ...mod.position, x: centerXcm },
+        moduleWidth: w,
+        position: { ...mod.position, x: centerXmm * 0.01 },
       });
 
       currentX += w;
