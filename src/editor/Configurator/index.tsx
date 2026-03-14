@@ -4247,6 +4247,7 @@ const Configurator: React.FC = () => {
           if (!fs) return null;
           const freeMods = placedModules.filter(m => m.isFreePlacement);
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
+          const toAlpha = (n: number) => String.fromCharCode(64 + n);
 
           const renderFrameOffsetRow = (
             num: number,
