@@ -307,7 +307,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 가구 높이 배열을 추출하여 깊은 비교를 위한 의존성으로 사용
   const furnitureHeightKeys = useMemo(
-    () => placedModules.map(m => `${m.id}-${m.moduleId}-${m.freeHeight || 0}-${m.customHeight || 0}`).join(','),
+    () => placedModules.map(m => `${m.id}-${m.moduleId}-${m.freeHeight || 0}-${m.customHeight || 0}-${m.topFrameThickness || 0}`).join(','),
     [placedModules]
   );
 
@@ -2648,7 +2648,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
           
-          const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
+          // 자유배치 시 맨 오른쪽 가구의 topFrameThickness 사용 (우측 치수선이니까)
+          const globalTopFrame = frameSize.top ?? 0;
+          const freeMods = placedModules.filter(m => m.isFreePlacement);
+          const rightmostMod = freeMods.length > 0
+            ? freeMods.reduce((r, m) => m.position.x > r.position.x ? m : r)
+            : null;
+          const topFrameHeight = rightmostMod
+            ? (rightmostMod.topFrameThickness ?? globalTopFrame)
+            : globalTopFrame; // 상부 프레임 높이
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
           const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
           const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
