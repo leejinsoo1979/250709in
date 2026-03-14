@@ -583,12 +583,11 @@ export const useUIStore = create<UIState>()(
           selectedPanelBId: panelBId
         }),
       
-      // 모든 팝업 닫기
+      // 모든 팝업 닫기 (selectedFurnitureId는 유지 — 우측바 도어 셋팅 등에서 참조)
       closeAllPopups: () =>
-        set({ 
+        set({
           activePopup: { type: null, id: null },
           highlightedCompartment: null,
-          selectedFurnitureId: null // 팝업 닫을 때 강조도 제거
         }),
       
       setHighlightedFrame: (frame) =>

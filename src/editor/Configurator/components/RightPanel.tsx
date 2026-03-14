@@ -26,8 +26,11 @@ export const ModuleContent: React.FC = () => {
   const { placedModules, updatePlacedModule } = useFurnitureStore();
 
   // 선택된 자유배치 가구의 도어 셋팅 상태
-  const selectedModule = selectedFurnitureId
-    ? placedModules.find(m => m.id === selectedFurnitureId)
+  // selectedFurnitureId 또는 activePopup(furnitureEdit/customizableEdit)에서 가구 ID 결정
+  const furnitureId = selectedFurnitureId
+    ?? ((activePopup.type === 'furnitureEdit' || activePopup.type === 'customizableEdit') ? activePopup.id : null);
+  const selectedModule = furnitureId
+    ? placedModules.find(m => m.id === furnitureId)
     : null;
 
   const moduleData = selectedModule
