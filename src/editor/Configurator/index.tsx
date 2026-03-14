@@ -183,10 +183,8 @@ const Configurator: React.FC = () => {
     if (!isNaN(num)) {
       // 글로벌 spaceInfo에 저장
       setSpaceInfo({ [field]: num });
-      // 모든 도어 가구의 props에도 반영 → DoorModule React.memo 통과시킴
-      placedModules.filter(m => m.hasDoor).forEach(m => {
-        updatePlacedModule(m.id, { [field]: num });
-      });
+      // R3F Canvas 내부 DoorModule 리렌더 트리거 (spaceConfigStore → R3F 전파 우회)
+      setPlacedModules([...placedModules]);
     }
   };
 
