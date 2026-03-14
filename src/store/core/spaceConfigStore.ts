@@ -124,6 +124,9 @@ export interface SpaceInfo {
 
   // 자유배치 서라운드 설정
   freeSurround?: FreeSurroundConfig;
+
+  // 자유배치 도어 셋업 방식 (글로벌)
+  doorSetupMode?: 'default' | 'frame-cover';
 }
 
 // 단내림 설정 인터페이스
