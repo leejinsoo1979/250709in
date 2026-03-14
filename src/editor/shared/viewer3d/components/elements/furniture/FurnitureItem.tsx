@@ -1156,6 +1156,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.freeHeight
     : (actualModuleData?.dimensions.height || 0);
 
+  // 개별 가구 상부프레임 두께 변경 시 가구 높이 조정 (키큰장만)
+  // 상부프레임이 커지면 가구 높이가 줄어들고, 상부섹션이 그 변화를 흡수
+  // (useBaseFurniture.ts의 modelConfig 스케일링 로직이 서랍은 고정, 나머지 섹션만 조정)
+  if (isTallCabinetForY && placedModule.topFrameThickness !== undefined) {
+    const globalTopFrame = spaceInfo.frameSize?.top || 30;
+    const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
+    furnitureHeightMm -= topFrameDelta;
+  }
 
   // customSections는 placedModule에 직접 저장된 것만 사용
   // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
