@@ -772,6 +772,10 @@ const FreePlacementDropZone: React.FC = () => {
     // 이격거리 편집 중이면 드래그 시작하지 않음
     if (editingGapIndex !== null) return;
 
+    // R3F Html 툴바 버튼 클릭 시 이 핸들러가 호출되지 않도록
+    // __r3fClickHandled 플래그 확인
+    if ((window as any).__r3fClickHandled) return;
+
     // 클릭 지점이 가구 위인지 확인 — 아니면 선택 해제 + 팝업 닫기
     const mod = placedModules.find(m => m.id === editingFreeModuleId);
     if (mod && e.point) {
@@ -784,10 +788,12 @@ const FreePlacementDropZone: React.FC = () => {
       const margin = 30; // 30mm 여유
 
       // 툴바 영역 (가구 상단 위쪽)은 드래그 시작하지 않음 — HTML 버튼 클릭 허용
-      const toolbarMargin = 150; // 150mm (툴바 높이 + 여유)
-      if (clickYmm > modTopY && clickYmm < modTopY + toolbarMargin &&
+      const toolbarMargin = 200; // 200mm (툴바 높이 + 여유)
+      if (clickYmm > modTopY - margin && clickYmm < modTopY + toolbarMargin &&
           clickXmm >= bounds.left - margin && clickXmm <= bounds.right + margin) {
-        return; // 툴바 영역 클릭 → 드래그 무시, HTML 이벤트로 전달
+        // 툴바 영역 → 아무 것도 하지 않음 (선택 해제도 안 함)
+        e.stopPropagation();
+        return;
       }
 
       const outsideX = clickXmm < bounds.left - margin || clickXmm > bounds.right + margin;

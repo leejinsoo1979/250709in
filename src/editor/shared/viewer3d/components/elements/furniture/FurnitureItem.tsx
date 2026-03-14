@@ -2776,6 +2776,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 }}
               >
                 <div
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                    (window as any).__r3fClickHandled = true;
+                  }}
+                  onPointerUp={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                  }}
                   style={{
                     display: 'flex',
                     gap: '12px',
