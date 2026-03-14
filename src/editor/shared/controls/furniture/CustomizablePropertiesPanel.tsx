@@ -3384,7 +3384,19 @@ const CustomizablePropertiesPanel: React.FC = () => {
                 sections[sIdx] = { ...sections[sIdx], bottomPanelRaise: clamped };
                 applyConfig({ ...config, sections });
               }}
-              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const cur = section.bottomPanelRaise ?? 0;
+                  const delta = e.key === 'ArrowUp' ? 1 : -1;
+                  const maxRaise = section.height || 500;
+                  const next = Math.max(0, Math.min(maxRaise, cur + delta));
+                  const sections = [...config.sections];
+                  sections[sIdx] = { ...sections[sIdx], bottomPanelRaise: next };
+                  applyConfig({ ...config, sections });
+                }
+              }}
             />
             <span className={styles.unit}>mm</span>
           </div>
