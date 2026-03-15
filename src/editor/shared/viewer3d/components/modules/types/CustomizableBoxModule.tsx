@@ -1625,10 +1625,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     }
     } // else (기존 단일 깊이) 닫기
 
-    // ═══ 4. 내부 요소 (칸막이, 서랍, 옷봉, 선반) ═══
-    if (!isDragging || isEditMode) {
-      meshes.push(...renderSectionContent(section, sIdx, boxW, boxH, boxD, centerY));
-    }
+    // ═══ 4. 내부 요소 (칸막이, 서랍, 옷봉, 선반) — 드래그/고스트 중에도 표시 ═══
+    meshes.push(...renderSectionContent(section, sIdx, boxW, boxH, boxD, centerY));
 
     // depthOffset이 있으면 group으로 감싸서 Z 이동
     if (depthOffset !== 0) {
@@ -1827,16 +1825,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
       }
 
-      // 내부 요소 (선반, 서랍 등 — 드래그 중에는 숨김)
-      if ((!isDragging || isEditMode)) {
-        if (hasContent) {
-          subMeshes.push(
-            ...renderSectionElements(
-              elements!, subInnerW, sbInnerH, sbHsCenterY, subCenterX, subBoxD,
-              label, `s${sIdx}-hsplit-${side}`
-            )
-          );
-        }
+      // 내부 요소 (선반, 서랍 등 — 드래그/고스트 중에도 표시)
+      if (hasContent) {
+        subMeshes.push(
+          ...renderSectionElements(
+            elements!, subInnerW, sbInnerH, sbHsCenterY, subCenterX, subBoxD,
+            label, `s${sIdx}-hsplit-${side}`
+          )
+        );
       }
 
       // 깊이 오프셋이 있으면 group으로 감싸기

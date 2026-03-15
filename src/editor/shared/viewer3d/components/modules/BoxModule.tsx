@@ -761,8 +761,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           placedFurnitureId={placedFurnitureId}
           panelGrainDirections={panelGrainDirections}
         >
-          {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-          {!isDragging && (
+          {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
+          {(
             <SectionsRenderer
               modelConfig={baseFurniture.modelConfig}
               height={baseFurniture.height}
