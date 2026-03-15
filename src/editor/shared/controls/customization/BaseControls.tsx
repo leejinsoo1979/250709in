@@ -78,11 +78,11 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   const handleBaseTypeChange = (type: 'floor' | 'stand') => {
     // 기존 baseConfig가 없으면 기본값으로 초기화하여 생성
     const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
-    
+
     // 띄워서 배치 선택 시 자동으로 띄움 높이 200mm 및 바닥 마감재 없음
     if (type === 'stand') {
       setFloatHeight('200'); // 기본값 200mm로 설정
-      onUpdate({
+      const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
           type,
@@ -91,17 +91,23 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
         },
         hasFloorFinish: false,  // 바닥 마감재 자동으로 없음
         floorFinish: undefined,  // 바닥 마감재 설정 제거
-      });
+      };
+      onUpdate(updates);
+      // 자유배치 가구 freeHeight 재계산 (float 전환으로 높이 축소)
+      recalcFreePlacementHeights(updates);
     } else {
       // 바닥에 배치 선택 (받침대 있음)
-      onUpdate({
+      const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
           type,
           placementType: 'ground', // 바닥에 배치 설정
           height: currentBaseConfig.height || 65, // 받침대 높이 유지
         },
-      });
+      };
+      onUpdate(updates);
+      // 자유배치 가구 freeHeight 재계산 (ground 복귀로 높이 복원)
+      recalcFreePlacementHeights(updates);
     }
   };
 
