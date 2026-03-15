@@ -70,29 +70,6 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
 
   const { renderMode, viewMode, view2DDirection } = useSpace3DView();
 
-  // 플로팅 높이 디버그
-  React.useEffect(() => {
-    if (spaceInfo?.baseConfig) {
-      console.log('🔍 SingleType1 spaceInfo.baseConfig:', {
-        floatHeight: spaceInfo.baseConfig.floatHeight,
-        placementType: spaceInfo.baseConfig.placementType,
-        height: spaceInfo.baseConfig.height,
-        전체baseConfig: spaceInfo.baseConfig
-      });
-    }
-  }, [spaceInfo?.baseConfig]);
-
-  // 디버그: zone 값 확인
-  React.useEffect(() => {
-    console.log('🚪🔴 SingleType1 - zone prop:', {
-      zone,
-      moduleId: moduleData.id,
-      placedFurnitureId,
-      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
-      dropHeight: spaceInfo?.droppedCeiling?.dropHeight
-    });
-  }, [zone, moduleData.id, placedFurnitureId, spaceInfo?.droppedCeiling]);
-
   const sectionDepths = React.useMemo(() => {
     const defaultDepth = depth;
     if (!modelConfig.sections || modelConfig.sections.length !== 2) {

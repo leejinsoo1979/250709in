@@ -207,10 +207,8 @@ const Configurator: React.FC = () => {
     else setDoorBottomGapInput(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
-      console.log('🔴🔴 handleDoorGapChange:', { field, val: num, doorModuleCount: placedModules.filter(m => m.hasDoor).length });
       setSpaceInfo({ [field]: num });
       placedModules.filter(m => m.hasDoor).forEach(m => {
-        console.log('🔴🔴 updatePlacedModule:', { moduleId: m.id, field, val: num });
         updatePlacedModule(m.id, { [field]: num });
       });
     }
@@ -229,16 +227,6 @@ const Configurator: React.FC = () => {
       updatePlacedModule(moduleId, { [field]: num });
     }
   };
-
-  // 도어갭 변경 디버깅: store 값 확인
-  React.useEffect(() => {
-    console.log('🔴🔴 doorGap store 상태:', {
-      storeTopGap: spaceInfo.doorTopGap,
-      storeBotGap: spaceInfo.doorBottomGap,
-      doorSetupMode: spaceInfo.doorSetupMode,
-      hasDoorModules: placedModules.filter(m => m.hasDoor).map(m => ({ id: m.id, topGap: m.doorTopGap, botGap: m.doorBottomGap }))
-    });
-  }, [spaceInfo.doorTopGap, spaceInfo.doorBottomGap, spaceInfo.doorSetupMode, placedModules]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();

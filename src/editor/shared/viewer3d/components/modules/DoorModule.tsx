@@ -586,7 +586,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const storeBotGap = storePlacedModule?.doorBottomGap;
   const doorTopGap = doorTopGapProp ?? storeTopGap ?? originalSpaceInfo.doorTopGap ?? 5;
   const doorBottomGap = doorBottomGapProp ?? storeBotGap ?? originalSpaceInfo.doorBottomGap ?? 25;
-  console.log('🚪🔴🔴 doorGap 전체 추적:', { doorTopGapProp, doorBottomGapProp, storeTopGap, storeBotGap, storeGlobalTop: originalSpaceInfo.doorTopGap, storeGlobalBot: originalSpaceInfo.doorBottomGap, finalTop: doorTopGap, finalBot: doorBottomGap, moduleId: moduleData?.id });
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);
@@ -773,7 +772,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 가구에 맞춤: 실제 가구 높이 사용 (per-furniture topFrame 반영됨)
       tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
     }
-console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight, '| floatH:', floatHeight, '| baseHeightValue:', baseHeightValue, '| placementType:', placementType);
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
@@ -810,21 +808,6 @@ console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effective
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
-
-console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
-      doorBottomGapInput: doorBottomGap,
-      baselineBottomGap,
-      effectiveBottomGap,
-      extraBottomGap,
-      doorTopGapInput: doorTopGap,
-      extraTopGap,
-      cabinetBottomLocal,
-      cabinetTopLocal,
-      doorBottomLocal,
-      doorTopLocal,
-      placementType,
-      floatHeight,
-    });
 
     // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
     // 별도의 doorBottomLocal 조정 불필요
@@ -1126,8 +1109,6 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
       // });
     }
   }
-
-  console.log('🚪📐 최종 도어 렌더링:', { doorTopGap, doorBottomGap, actualDoorHeight: actualDoorHeight.toFixed(1), doorHeight_mm: (doorHeight / 0.01).toFixed(1), doorYPosition_mm: (doorYPosition / 0.01).toFixed(1), tallCabinetFurnitureHeight, placementType, sectionIndex, totalSections, isUpper: isUpperCabinet, isLower: isLowerCabinet });
 
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
