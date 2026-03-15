@@ -99,6 +99,9 @@ export function useLivePanelData() {
           console.warn(`Module ${moduleIndex} has no moduleId`);
           return;
         }
+
+        // 가구 식별 라벨 생성 (패널 이름 앞에 붙임)
+        const furnitureNumber = moduleIndex + 1;
         
         
         // Find module data with dynamic sizing
@@ -124,6 +127,10 @@ export function useLivePanelData() {
           console.log(`Module ${moduleIndex}: Using customSections from placed module`, placedModule.customSections);
         }
         console.log(`Module ${moduleIndex}: Found module data`, moduleData);
+
+        // 가구 식별 라벨: "가구1(2단서랍+옷장)" 형태
+        const moduleName = moduleData.name?.replace(/\s*[\d.]+mm$/, '') || moduleId;
+        const furnitureLabel = placedModules.length > 1 ? `[${furnitureNumber}]${moduleName}` : '';
 
         // Get actual module configuration
         const width = placedModule.width || moduleData.dimensions.width;
@@ -345,7 +352,7 @@ export function useLivePanelData() {
 
           return {
             id: `m${moduleIndex}_p${panelIndex}`,
-            name: panel.name,
+            name: furnitureLabel ? `${furnitureLabel} ${panel.name}` : panel.name,
             width: panel.width || 0,
             height: panel.height || panel.depth || 0, // depth가 height로 사용될 수 있음
             thickness: panel.thickness,
@@ -531,6 +538,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
         };
       }
+
+      // 가구 식별 라벨 생성
+      const furnitureNumber2 = moduleIndex + 1;
+      const moduleName2 = moduleData.name?.replace(/\s*[\d.]+mm$/, '') || moduleId;
+      const furnitureLabel2 = placedModules.length > 1 ? `[${furnitureNumber2}]${moduleName2}` : '';
 
       const width = placedModule.width || moduleData.dimensions.width;
       const depth = placedModule.depth || moduleData.dimensions.depth;
@@ -743,7 +755,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
         return {
           id: `m${moduleIndex}_p${panelIndex}`,
-          name: panel.name,
+          name: furnitureLabel2 ? `${furnitureLabel2} ${panel.name}` : panel.name,
           width: panel.width || 0,
           height: panel.height || panel.depth || 0, // depth가 height로 사용될 수 있음
           thickness: panel.thickness,
