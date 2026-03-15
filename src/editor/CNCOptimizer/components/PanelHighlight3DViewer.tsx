@@ -16,6 +16,7 @@ import styles from './PanelHighlight3DViewer.module.css';
 interface PanelHighlight3DViewerProps {
   highlightedPanelName: string | null;
   highlightedFurnitureId: string | null;
+  excludedMeshNames?: Set<string>;
 }
 
 /** WebGL ErrorBoundary — Canvas 생성 실패 시 fallback UI */
@@ -64,7 +65,8 @@ const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
   highlightedPanelName: string | null;
-}> = ({ highlightedFurnitureId, highlightedPanelName }) => {
+  excludedMeshNames?: Set<string>;
+}> = ({ highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
   const { scene, invalidate } = useThree();
   const originalMaterials = useRef<Map<string, { opacity: number; transparent: boolean; emissive: THREE.Color; emissiveIntensity: number }>>(new Map());
 
@@ -82,6 +84,29 @@ const PanelDimmer: React.FC<{
         }
       }
     });
+
+    // 제외 패널 visible 처리
+    if (excludedMeshNames && excludedMeshNames.size > 0) {
+      scene.traverse((obj) => {
+        if (!(obj instanceof THREE.Mesh) || !obj.name) return;
+        const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
+        if (meshSuffix !== obj.name && excludedMeshNames.has(meshSuffix)) {
+          obj.visible = false;
+        } else if (meshSuffix !== obj.name) {
+          obj.visible = true;
+        }
+      });
+    } else {
+      // 제외 없으면 모두 visible 복원
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh && obj.name) {
+          const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
+          if (meshSuffix !== obj.name) {
+            obj.visible = true;
+          }
+        }
+      });
+    }
 
     if (!highlightedFurnitureId) {
       // 하이라이트 없음 → 원래 상태 복원
@@ -169,6 +194,8 @@ const PanelDimmer: React.FC<{
     return () => {
       scene.traverse((obj) => {
         if (!(obj instanceof THREE.Mesh)) return;
+        // visible 복원
+        obj.visible = true;
         const mat = obj.material;
         if (!(mat instanceof THREE.MeshStandardMaterial)) return;
         const original = originalMaterials.current.get(obj.uuid);
@@ -180,7 +207,7 @@ const PanelDimmer: React.FC<{
         mat.needsUpdate = true;
       });
     };
-  }, [highlightedFurnitureId, highlightedPanelName, scene, invalidate]);
+  }, [highlightedFurnitureId, highlightedPanelName, excludedMeshNames, scene, invalidate]);
 
   return null;
 };
@@ -255,7 +282,8 @@ const Scene3D: React.FC<{
   targetCenter: THREE.Vector3;
   highlightedFurnitureId: string | null;
   highlightedPanelName: string | null;
-}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedFurnitureId, highlightedPanelName }) => {
+  excludedMeshNames?: Set<string>;
+}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
   return (
     <Suspense fallback={null}>
       <ViewerThemeProvider viewMode="3D">
@@ -304,7 +332,7 @@ const Scene3D: React.FC<{
           ))}
 
           {/* 반투명 처리 (furnitureId + panelName 기반 개별 패널 매칭) */}
-          <PanelDimmer highlightedFurnitureId={highlightedFurnitureId} highlightedPanelName={highlightedPanelName} />
+          <PanelDimmer highlightedFurnitureId={highlightedFurnitureId} highlightedPanelName={highlightedPanelName} excludedMeshNames={excludedMeshNames} />
         </Space3DViewProvider>
       </ViewerThemeProvider>
     </Suspense>
@@ -314,6 +342,7 @@ const Scene3D: React.FC<{
 const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   highlightedPanelName,
   highlightedFurnitureId,
+  excludedMeshNames,
 }) => {
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const placedModules = useFurnitureStore((state) => state.placedModules);
@@ -434,6 +463,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
             targetCenter={targetCenter}
             highlightedFurnitureId={highlightedFurnitureId}
             highlightedPanelName={highlightedPanelName}
+            excludedMeshNames={excludedMeshNames}
           />
         </Canvas>
       </WebGLErrorBoundary>

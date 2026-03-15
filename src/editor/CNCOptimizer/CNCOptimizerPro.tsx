@@ -210,7 +210,8 @@ function PageInner(){
     sawStats, setSawStats,
     fullSimulating, setFullSimulating, fullSimCurrentSheet, setFullSimCurrentSheet,
     fullSimTotalSheets, setFullSimTotalSheets,
-    hoveredPanelName, hoveredFurnitureId, setHoveredPanel
+    hoveredPanelName, hoveredFurnitureId, setHoveredPanel,
+    excludedPanelIds
   } = useCNCStore();
 
   // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
@@ -565,6 +566,18 @@ function PageInner(){
     }
   }, [livePanels, userHasModifiedPanels, setPanels]);
 
+  // 제외 패널 ID → meshName 변환 (3D 뷰어에서 사용)
+  const excludedMeshNames = useMemo(() => {
+    const names = new Set<string>();
+    excludedPanelIds.forEach(panelId => {
+      const panel = panels.find(p => p.id === panelId);
+      if (panel?.meshName) {
+        names.add(panel.meshName);
+      }
+    });
+    return names;
+  }, [excludedPanelIds, panels]);
+
   const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
     // overrideOptimizationType이 주어지면 그 값을 사용, 아니면 settings에서 가져옴
     const effectiveOptimizationType = overrideOptimizationType || settings.optimizationType;
@@ -646,6 +659,9 @@ function PageInner(){
       const panelGroups = new Map<string, Panel[]>();
 
       panels.forEach(panel => {
+        // 제외된 패널 스킵
+        if (excludedPanelIds.has(panel.id)) return;
+
         // Apply grain and rotation settings
         const processedPanel = { ...panel };
         
@@ -917,7 +933,7 @@ function PageInner(){
     } finally {
       setIsOptimizing(false);
     }
-  }, [panels, stock, settings, setPlacements, setCurrentSheetIndex, setSawStats]);
+  }, [panels, stock, settings, excludedPanelIds, setPlacements, setCurrentSheetIndex, setSawStats]);
 
   // 시뮬레이션 완료 콜백 - 전체 시뮬레이션 모드일 때 다음 시트로 진행
   const handleSimulationComplete = useCallback(() => {
@@ -1287,6 +1303,7 @@ function PageInner(){
                 <PanelHighlight3DViewer
                   highlightedPanelName={hoveredPanelName}
                   highlightedFurnitureId={hoveredFurnitureId}
+                  excludedMeshNames={excludedMeshNames}
                 />
               </div>
             </div>
@@ -1436,6 +1453,7 @@ function PageInner(){
                 <PanelHighlight3DViewer
                   highlightedPanelName={hoveredPanelName}
                   highlightedFurnitureId={hoveredFurnitureId}
+                  excludedMeshNames={excludedMeshNames}
                 />
               )}
             </div>

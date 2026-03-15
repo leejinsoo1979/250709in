@@ -8,7 +8,7 @@ import styles from './SidebarLeft.module.css';
 
 export default function PanelsTable(){
   const { t } = useTranslation();
-  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel } = useCNCStore();
+  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion } = useCNCStore();
   const { panels: livePanels } = useLivePanelData();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -304,7 +304,8 @@ export default function PanelsTable(){
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: '28%', textAlign: 'center' }}>{t('cnc.name')}</th>
+                <th style={{ width: '4%' }}></th>
+                <th style={{ width: '24%', textAlign: 'center' }}>{t('cnc.name')}</th>
                 <th style={{ width: '20%', textAlign: 'center' }}>{t('cnc.dimensions')}</th>
                 <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
                 <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>{t('cnc.quantity')}</th>
@@ -320,7 +321,7 @@ export default function PanelsTable(){
                 <tr
                   key={p.id}
                   ref={selectedPanelId === p.id ? selectedRowRef : null}
-                  className={`panel-clickable ${selectedPanelId === p.id ? styles.selected : ''} ${isNewPanel ? styles.newPanel : ''}`}
+                  className={`panel-clickable ${selectedPanelId === p.id ? styles.selected : ''} ${isNewPanel ? styles.newPanel : ''} ${excludedPanelIds.has(p.id) ? styles.excludedRow : ''}`}
                   onClick={() => {
                     selectPanel(p.id);
                     const info = panelHighlightMap.get(p.id);
@@ -344,6 +345,19 @@ export default function PanelsTable(){
                   }}
                   data-panel-id={p.id}
                 >
+                  <td style={{ padding: '6px 2px 6px 6px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      className={styles.panelCheckbox}
+                      checked={!excludedPanelIds.has(p.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        togglePanelExclusion(p.id);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      title={excludedPanelIds.has(p.id) ? '패널 포함' : '패널 제외'}
+                    />
+                  </td>
                   <td>
                     <input 
                       value={p.label} 

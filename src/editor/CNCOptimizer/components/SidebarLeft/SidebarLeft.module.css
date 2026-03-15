@@ -576,6 +576,24 @@
   transform: scale(0.95);
 }
 
+/* 패널 제외 체크박스 */
+.panelCheckbox {
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+  accent-color: hsl(var(--theme));
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.excludedRow {
+  opacity: 0.4 !important;
+}
+
+.excludedRow td {
+  opacity: 1 !important;
+}
+
 .empty {
   text-align: center;
   color: #999;
