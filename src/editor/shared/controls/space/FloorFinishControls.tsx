@@ -106,7 +106,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       <div className={styles.container}>
         <div className={styles.section}>
           <p className={styles.disabledMessage}>
-            {t('space.floorFinishDisabledForFloat') || '띄워서 배치 시 바닥마감재 설정이 비활성화됩니다.'}
+            띄워서 배치 시 바닥마감재 설정이 비활성화됩니다.
           </p>
         </div>
       </div>
