@@ -3464,6 +3464,47 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
+      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 */}
+      {placedModule.isFreePlacement && placedModule.hasDoor && viewMode !== '2D' && !isDraggingThis && !isEditMode && (
+        <Html
+          position={[
+            adjustedPosition.x,
+            finalYPosition,
+            furnitureZ + depth / 2 + doorThickness + 0.3
+          ]}
+          center
+          zIndexRange={[100, 0]}
+          style={{
+            userSelect: 'none',
+            pointerEvents: 'auto',
+            zIndex: 100,
+          }}
+        >
+          <div
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '28px',
+              height: '28px',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              (window as any).__r3fClickHandled = true;
+              onDoubleClick(e as any, placedModule.id);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title="도어 설정"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </div>
+        </Html>
+      )}
+
       {/* 3D 모드에서 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드에서는 숨김 */}
       {!readOnly && showFurnitureEditHandles && showDimensions && viewMode === '3D' && !isLayoutBuilderOpen && (
         <Html
