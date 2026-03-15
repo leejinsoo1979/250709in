@@ -330,143 +330,115 @@ const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | '
   spaceInfo: DEFAULT_SPACE_CONFIG,
 };
 
-export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
+// R3F ConcurrentRoot + Zustand v5 호환성 workaround
+// callback set()은 R3F Canvas 내부 컴포넌트의 re-render를 트리거하지 않으므로
+// get() + 비-callback set() + delayed re-trigger 사용
+let spaceConfigStoreRef: typeof useSpaceConfigStore | null = null;
+const notifyR3FSpaceConfig = () => {
+  setTimeout(() => {
+    const current = spaceConfigStoreRef?.getState();
+    if (current) {
+      spaceConfigStoreRef?.setState({ spaceInfo: { ...current.spaceInfo } });
+    }
+  }, 50);
+};
+
+export const useSpaceConfigStore = create<SpaceConfigState>()((set, get) => ({
   ...initialState,
   
   // 공간 정보 설정
+  // get() + 비-callback set() 패턴 사용 (R3F Canvas 내부 리렌더 보장)
   setSpaceInfo: (info) => {
-// console.log('🏪 [Store] setSpaceInfo 호출:', {
-//       customColumnCount: info.customColumnCount,
-//       width: info.width,
-//       surroundType: info.surroundType,
-//       installType: info.installType,
-//       gapConfig: info.gapConfig,
-//       baseConfig: info.baseConfig
-//     });
-    // baseConfig.depth 업데이트 감지
-    if (info.baseConfig?.depth !== undefined) {
-// console.log('📏 [Store] baseConfig.depth 업데이트 감지:', {
-//         새값: info.baseConfig.depth,
-//         전체baseConfig: info.baseConfig
-//       });
+    const state = get();
+
+    // installType 하이픈 문제 수정
+    const { lockedWallGaps: _ignored, ...restInfo } = info;
+    const processedInfo = { ...restInfo };
+    if (processedInfo.installType === 'built-in' as any) {
+      processedInfo.installType = 'builtin';
     }
-    set((state) => {
-      // installType 하이픈 문제 수정
-      const { lockedWallGaps: _ignored, ...restInfo } = info;
-      const processedInfo = { ...restInfo };
-      if (processedInfo.installType === 'built-in' as any) {
-        processedInfo.installType = 'builtin';
-      }
-      
-      // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
-      if (processedInfo.droppedCeiling?.enabled && 
-          (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
-        processedInfo.droppedCeiling = {
-          ...processedInfo.droppedCeiling,
-          width: processedInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
-          dropHeight: processedInfo.droppedCeiling.dropHeight || DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
-        };
-      }
 
-      // 임시 spaceInfo 생성
-      // materialConfig는 명시적으로 병합하여 기존 텍스처 값 보존
-      let tempSpaceInfo = {
-        ...state.spaceInfo,
-        ...processedInfo,
-        materialConfig: {
-          ...state.spaceInfo.materialConfig,
-          ...processedInfo.materialConfig
-        }
+    // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
+    if (processedInfo.droppedCeiling?.enabled &&
+        (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
+      processedInfo.droppedCeiling = {
+        ...processedInfo.droppedCeiling,
+        width: processedInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+        dropHeight: processedInfo.droppedCeiling.dropHeight || DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
       };
-      
-      // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
-      const shouldAdjust =
-        processedInfo.width !== undefined ||
-        processedInfo.customColumnCount !== undefined ||
-        processedInfo.installType !== undefined ||
-        processedInfo.surroundType !== undefined ||
-        processedInfo.wallConfig !== undefined ||
-        processedInfo.gapConfig !== undefined;
-      
-      // gapConfig만 변경한 경우에는 SpaceCalculator에서 gapConfig을 덮어쓰지 않도록 보존
-      const isGapConfigOnly = processedInfo.gapConfig !== undefined &&
-        processedInfo.width === undefined &&
-        processedInfo.customColumnCount === undefined &&
-        processedInfo.installType === undefined &&
-        processedInfo.surroundType === undefined &&
-        processedInfo.wallConfig === undefined;
+    }
 
-      if (shouldAdjust && !isGapConfigOnly) {
-        const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
+    // 임시 spaceInfo 생성
+    // materialConfig는 명시적으로 병합하여 기존 텍스처 값 보존
+    let tempSpaceInfo = {
+      ...state.spaceInfo,
+      ...processedInfo,
+      materialConfig: {
+        ...state.spaceInfo.materialConfig,
+        ...processedInfo.materialConfig
+      }
+    };
 
-        if (adjustmentResult.adjustmentMade) {
-          // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount와 layoutMode는 보존
-          const preservedCustomColumnCount = tempSpaceInfo.customColumnCount;
-          const preservedLayoutMode = tempSpaceInfo.layoutMode;
-          tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
+    // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
+    const shouldAdjust =
+      processedInfo.width !== undefined ||
+      processedInfo.customColumnCount !== undefined ||
+      processedInfo.installType !== undefined ||
+      processedInfo.surroundType !== undefined ||
+      processedInfo.wallConfig !== undefined ||
+      processedInfo.gapConfig !== undefined;
 
-          // customColumnCount가 명시적으로 설정된 경우 보존
-          if (preservedCustomColumnCount !== undefined) {
-            tempSpaceInfo.customColumnCount = preservedCustomColumnCount;
-          }
-          // layoutMode 보존 (adjustForIntegerSlotWidth에서 누락 방지)
-          if (preservedLayoutMode !== undefined) {
-            tempSpaceInfo.layoutMode = preservedLayoutMode;
-          }
+    // gapConfig만 변경한 경우에는 SpaceCalculator에서 gapConfig을 덮어쓰지 않도록 보존
+    const isGapConfigOnly = processedInfo.gapConfig !== undefined &&
+      processedInfo.width === undefined &&
+      processedInfo.customColumnCount === undefined &&
+      processedInfo.installType === undefined &&
+      processedInfo.surroundType === undefined &&
+      processedInfo.wallConfig === undefined;
 
-// console.log('🎯 슬롯 정수화 자동 조정 완료:', {
-//             슬롯너비: adjustmentResult.slotWidth,
-//             프레임크기: tempSpaceInfo.frameSize,
-//             이격거리: tempSpaceInfo.gapConfig,
-//             조정여부: adjustmentResult.adjustmentMade,
-//             customColumnCount: tempSpaceInfo.customColumnCount
-//           });
+    if (shouldAdjust && !isGapConfigOnly) {
+      const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
+
+      if (adjustmentResult.adjustmentMade) {
+        // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount와 layoutMode는 보존
+        const preservedCustomColumnCount = tempSpaceInfo.customColumnCount;
+        const preservedLayoutMode = tempSpaceInfo.layoutMode;
+        tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
+
+        // customColumnCount가 명시적으로 설정된 경우 보존
+        if (preservedCustomColumnCount !== undefined) {
+          tempSpaceInfo.customColumnCount = preservedCustomColumnCount;
+        }
+        // layoutMode 보존 (adjustForIntegerSlotWidth에서 누락 방지)
+        if (preservedLayoutMode !== undefined) {
+          tempSpaceInfo.layoutMode = preservedLayoutMode;
         }
       }
-      
-      const previousDropped = state.spaceInfo.droppedCeiling;
-      const nextDropped = tempSpaceInfo.droppedCeiling;
+    }
 
-      if (
-        previousDropped?.enabled &&
-        nextDropped?.enabled &&
-        previousDropped.position !== nextDropped.position
-      ) {
-        const furnitureState = useFurnitureStore.getState();
-        if (furnitureState.placedModules.length > 0) {
-// console.log('🧹 단내림 위치 변경 → 배치된 가구 초기화', {
-//             이전위치: previousDropped.position,
-//             새로운위치: nextDropped.position,
-//             초기화가구수: furnitureState.placedModules.length
-//           });
+    const previousDropped = state.spaceInfo.droppedCeiling;
+    const nextDropped = tempSpaceInfo.droppedCeiling;
 
-          furnitureState.setPlacedModules([]);
-          furnitureState.clearAllSelections();
-        }
+    if (
+      previousDropped?.enabled &&
+      nextDropped?.enabled &&
+      previousDropped.position !== nextDropped.position
+    ) {
+      const furnitureState = useFurnitureStore.getState();
+      if (furnitureState.placedModules.length > 0) {
+        furnitureState.setPlacedModules([]);
+        furnitureState.clearAllSelections();
       }
+    }
 
-      const newState = {
-        spaceInfo: tempSpaceInfo,
-        isDirty: true,
-      };
-      
-// console.log('🏪🏪🏪 [Store] 최종 spaceInfo:', {
-//         customColumnCount: newState.spaceInfo.customColumnCount,
-//         width: newState.spaceInfo.width,
-//         baseConfig: newState.spaceInfo.baseConfig,
-//         'baseConfig.depth': newState.spaceInfo.baseConfig?.depth
-//       });
-      // wallConfig 업데이트 디버그
-      if (processedInfo.wallConfig) {
-// console.log('🏪 SpaceConfigStore - wallConfig 업데이트:', {
-//           이전: state.spaceInfo.wallConfig,
-//           새로운: processedInfo.wallConfig,
-//           최종: newState.spaceInfo.wallConfig
-//         });
-      }
-      
-      return newState;
+    // 비-callback set() 사용: R3F Canvas 내부 컴포넌트 리렌더 보장
+    set({
+      spaceInfo: tempSpaceInfo,
+      isDirty: true,
     });
+
+    // R3F 리렌더 추가 보장 (delayed re-trigger)
+    notifyR3FSpaceConfig();
   },
   
   // 공간 정보 초기화
@@ -632,4 +604,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   
   // 저장 상태로 마킹
   markAsSaved: () => set({ isDirty: false }),
-})); 
+}));
+
+// R3F notifyR3F 용 스토어 참조 설정
+spaceConfigStoreRef = useSpaceConfigStore;
