@@ -137,11 +137,13 @@ const applySafetyShelf = (
   totalHeight: number,
   safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION
 ): SectionConfig[] => {
-  // 안전선반 위 최소 내경 확보: totalHeight - bottomPanel(18) - safetyPos - shelfThickness(18) - topPanel(18) >= 200
-  // → safetyPosition <= totalHeight - 254
+  // 안전선반 위 최소 내경 확보:
+  // 섹션 좌표계에서 상판 하단 = totalHeight - basicThickness
+  // 안전선반 위 내경 = (totalHeight - basicThickness) - safetyPosition - basicThickness >= 200
+  // → safetyPosition <= totalHeight - 2*basicThickness - 200
   const basicThickness = 18;
   const minTopCompartment = FURNITURE_SPECS.SAFETY_SHELF_MIN_TOP_COMPARTMENT;
-  const maxSafetyPosition = totalHeight - (basicThickness * 3) - minTopCompartment;
+  const maxSafetyPosition = totalHeight - (basicThickness * 2) - minTopCompartment;
   const clampedSafetyPosition = Math.min(safetyPosition, maxSafetyPosition);
 
   // 각 섹션의 시작 위치 계산하면서 안전선반 적용
