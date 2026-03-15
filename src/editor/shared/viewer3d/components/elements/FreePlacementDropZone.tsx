@@ -1475,10 +1475,10 @@ const FreePlacementDropZone: React.FC = () => {
         const furnitureDepth = furnitureDepthMm * 0.01;
         const furnitureZOffset = -panelDepth / 2 + (panelDepth - furnitureDepth) / 2;
         const furnitureFrontZ = furnitureZOffset + furnitureDepth / 2;
-        const boxDepthMm = 130;
-        const depthThree = boxDepthMm * 0.01;
-        // 가구 앞면에서 뒤쪽으로 130mm
-        const zOffset = furnitureFrontZ - depthThree / 2;
+        const backWallZ = -panelDepth;
+        // 가구 앞면 ~ 뒷벽 전체 깊이
+        const depthThree = furnitureFrontZ - backWallZ;
+        const zOffset = (furnitureFrontZ + backWallZ) / 2;
         const boxes: React.ReactNode[] = [];
         if (lockedGaps.left != null && lockedGaps.left > 0) {
           const w = lockedGaps.left * 0.01;
