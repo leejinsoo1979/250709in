@@ -2312,6 +2312,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
           
+          {/* 깊이 설정 (상세보기 아닐 때만) */}
+          {!showDetails && (
+          <div className={styles.propertySection}>
+            <h5 className={styles.sectionTitle}>{t('furniture.depthSettings')}</h5>
+            <div className={styles.depthInputWrapper}>
+              <div className={styles.inputWithUnit}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={depthInputValue}
+                  onChange={(e) => handleDepthInputChange(e.target.value)}
+                  onBlur={handleDepthInputBlur}
+                  onKeyDown={handleDepthKeyDown}
+                  className={`${styles.depthInput} furniture-depth-input ${depthError ? styles.inputError : ''}`}
+                  placeholder={`${FURNITURE_LIMITS.DEPTH.MIN}-${FURNITURE_LIMITS.DEPTH.MAX}`}
+                  style={{
+                    color: '#000000',
+                    backgroundColor: '#ffffff',
+                    WebkitTextFillColor: '#000000',
+                    opacity: 1
+                  }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+              {depthError && <div className={styles.errorMessage}>{depthError}</div>}
+              <div className={styles.depthRange}>
+                {t('furniture.range')}: {FURNITURE_LIMITS.DEPTH.MIN}mm ~ {Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}mm
+              </div>
+            </div>
+          </div>
+          )}
+
           {/* 너비 설정 (기둥 C인 경우만 표시) */}
           {isColumnC && (
             <div className={styles.propertySection}>
@@ -3433,38 +3465,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 범위: -50mm ~ 50mm
               </div>
             </div>
-          )}
-
-          {/* 깊이 설정 (상세보기 아닐 때만) */}
-          {!showDetails && (
-          <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}>{t('furniture.depthSettings')}</h5>
-            <div className={styles.depthInputWrapper}>
-              <div className={styles.inputWithUnit}>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={depthInputValue}
-                  onChange={(e) => handleDepthInputChange(e.target.value)}
-                  onBlur={handleDepthInputBlur}
-                  onKeyDown={handleDepthKeyDown}
-                  className={`${styles.depthInput} furniture-depth-input ${depthError ? styles.inputError : ''}`}
-                  placeholder={`${FURNITURE_LIMITS.DEPTH.MIN}-${FURNITURE_LIMITS.DEPTH.MAX}`}
-                  style={{
-                    color: '#000000',
-                    backgroundColor: '#ffffff',
-                    WebkitTextFillColor: '#000000',
-                    opacity: 1
-                  }}
-                />
-                <span className={styles.unit}>mm</span>
-              </div>
-              {depthError && <div className={styles.errorMessage}>{depthError}</div>}
-              <div className={styles.depthRange}>
-                {t('furniture.range')}: {FURNITURE_LIMITS.DEPTH.MIN}mm ~ {Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}mm
-              </div>
-            </div>
-          </div>
           )}
 
           {/* 도어 병합/분할 (2섹션 가구만, 도어가 있을 때만, 상세보기 아닐 때만) */}
