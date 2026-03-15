@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
-import { calculatePanelDetails as calculatePanelDetailsShared } from '@/editor/shared/utils/calculatePanelDetails';
+import { calculatePanelDetails as calculatePanelDetailsShared, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
+import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
@@ -139,7 +140,29 @@ export function useLivePanelData() {
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
         const moduleBackPanelThickness = (placedModule as any).backPanelThickness ?? 9;
-        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight, moduleBackPanelThickness, placedModule.customConfig);
+
+        // 프레임 높이 계산
+        const topFrameH = calculateTopBottomFrameHeight(spaceInfo);
+        const baseFrameH = calculateBaseFrameHeight(spaceInfo);
+        const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+        const visualBaseFrameH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
+          ? Math.max(0, baseFrameH - floorFinishH) : baseFrameH;
+
+        const allPanelsList = calculatePanelDetailsShared(
+          moduleData, width, depth, hasDoor, t, undefined,
+          moduleHingePosition, moduleHingeType,
+          spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap,
+          baseHeight, moduleBackPanelThickness, placedModule.customConfig,
+          // --- 이전에 누락된 파라미터 8개 ---
+          placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
+          placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
+          (placedModule as any).endPanelThickness, // 엔드패널 두께
+          placedModule.freeHeight,          // 자유배치 높이
+          topFrameH,                        // 상부프레임 높이
+          visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
+          (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
+          (placedModule as any).hasBase      // 하부프레임 표시 여부
+        );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
         console.log(`Module ${moduleIndex}: Total panel count:`, allPanelsList.length);
@@ -353,6 +376,34 @@ export function useLivePanelData() {
         allPanels.push(...convertedPanels);
       });
 
+      // 서라운드 패널 추가 (공간 전체 단위)
+      if (spaceInfo.freeSurround) {
+        const spaceH = spaceInfo.height || 2400;
+        const floorFinishForSurround = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+        const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+          ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+        const surroundH = spaceH - floorFinishForSurround - floatH;
+        const surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+
+        if (surroundPanelList.length > 0) {
+          console.log(`서라운드 패널 ${surroundPanelList.length}개 추가`);
+          const surroundConverted: Panel[] = surroundPanelList.map((panel: any, idx: number) => ({
+            id: `surround_p${idx}`,
+            name: panel.name,
+            width: panel.width || 0,
+            height: panel.height || 0,
+            thickness: panel.thickness,
+            material: panel.material || 'PB',
+            color: placedModules[0]?.color || 'MW',
+            quantity: 1,
+            grain: getDefaultGrain(panel.name),
+            meshName: panel.name,
+            furnitureId: 'surround',
+          }));
+          allPanels.push(...surroundConverted);
+        }
+      }
+
       console.log('========================================');
       console.log('📊 패널 추출 완료 요약:');
       console.log(`   - 배치된 가구 수: ${placedModules.length}`);
@@ -494,7 +545,29 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
       const moduleBackPanelThickness2 = (placedModule as any).backPanelThickness ?? 9;
-      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight2, moduleBackPanelThickness2, placedModule.customConfig);
+
+      // 프레임 높이 계산
+      const topFrameH2 = calculateTopBottomFrameHeight(spaceInfo);
+      const baseFrameH2 = calculateBaseFrameHeight(spaceInfo);
+      const floorFinishH2 = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+      const visualBaseFrameH2 = spaceInfo.baseConfig?.type === 'floor' && floorFinishH2 > 0
+        ? Math.max(0, baseFrameH2 - floorFinishH2) : baseFrameH2;
+
+      const allPanelsList = calculatePanelDetailsShared(
+        moduleData, width, depth, hasDoor, t, undefined,
+        moduleHingePosition, moduleHingeType,
+        spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap,
+        baseHeight2, moduleBackPanelThickness2, placedModule.customConfig,
+        // --- 이전에 누락된 파라미터 8개 ---
+        placedModule.hasLeftEndPanel,
+        placedModule.hasRightEndPanel,
+        (placedModule as any).endPanelThickness,
+        placedModule.freeHeight,
+        topFrameH2,
+        visualBaseFrameH2,
+        (placedModule as any).hasTopFrame,
+        (placedModule as any).hasBase
+      );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
@@ -696,6 +769,33 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       allPanels.push(...convertedPanels);
     });
+
+    // 서라운드 패널 추가 (공간 전체 단위)
+    if (spaceInfo.freeSurround) {
+      const spaceH2 = spaceInfo.height || 2400;
+      const floorFinishForSurround2 = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+      const floatH2 = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+        ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+      const surroundH2 = spaceH2 - floorFinishForSurround2 - floatH2;
+      const surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2);
+
+      if (surroundPanelList2.length > 0) {
+        const surroundConverted2: Panel[] = surroundPanelList2.map((panel: any, idx: number) => ({
+          id: `surround_p${idx}`,
+          name: panel.name,
+          width: panel.width || 0,
+          height: panel.height || 0,
+          thickness: panel.thickness,
+          material: panel.material || 'PB',
+          color: placedModules[0]?.color || 'MW',
+          quantity: 1,
+          grain: getDefaultGrain(panel.name),
+          meshName: panel.name,
+          furnitureId: 'surround',
+        }));
+        allPanels.push(...surroundConverted2);
+      }
+    }
 
     callback(allPanels);
   }, [placedModules, spaceInfo, callback]);
