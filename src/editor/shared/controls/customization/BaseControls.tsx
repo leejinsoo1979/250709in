@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import BaseTypeSelector from './components/BaseTypeSelector';
 import PlacementControls from './components/PlacementControls';
 import styles from '../styles/common.module.css';
@@ -17,7 +18,32 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   const { placedModules, updateModule } = useFurnitureStore();
 
   console.log('🔧 BaseControls - disabled 상태:', disabled);
-  
+
+  // 자유배치 가구 freeHeight 재계산 (float 전환/변경 시)
+  // 슬롯배치는 shelving.ts에서 모듈 생성 시 floatHeight 반영하지만,
+  // 자유배치는 이미 배치된 가구의 freeHeight를 수동으로 갱신해야 함
+  const recalcFreePlacementHeights = (updatedSpaceInfo: Partial<SpaceInfo>) => {
+    const merged = { ...spaceInfo, ...updatedSpaceInfo } as SpaceInfo;
+    if (merged.baseConfig) {
+      merged.baseConfig = { ...spaceInfo.baseConfig, ...updatedSpaceInfo.baseConfig } as SpaceInfo['baseConfig'];
+    }
+    const internalSpace = calculateInternalSpace(merged);
+    const isFloat = merged.baseConfig?.type === 'stand' && merged.baseConfig?.placementType === 'float';
+    const floatH = isFloat ? (merged.baseConfig?.floatHeight || 0) : 0;
+    const newMaxHeight = internalSpace.height - floatH;
+
+    placedModules.forEach(mod => {
+      if (!mod.isFreePlacement) return;
+      // 키큰장(full category)만 freeHeight 갱신 — 상/하부장은 독립 높이
+      const cat = mod.moduleId?.split('-')[0];
+      if (cat !== 'full' && cat !== 'customizable') return;
+      // freeHeight가 있든 없든 새 최대높이로 갱신
+      if (mod.freeHeight !== newMaxHeight) {
+        updateModule(mod.id, { freeHeight: newMaxHeight });
+      }
+    });
+  };
+
   // 바닥마감재가 있을 때 받침대 높이 조정해서 표시
   const getAdjustedBaseHeight = () => {
     const originalHeight = spaceInfo.baseConfig?.height || 65;
@@ -85,24 +111,27 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     const currentBaseConfig = spaceInfo.baseConfig || { type: 'stand', height: 65 };
 
     // 띄워서 배치 선택 시 바닥 마감재도 자동으로 없음으로 설정
-    if (placementType === 'float') {
-      onUpdate({
-        baseConfig: {
-          ...currentBaseConfig,
-          placementType,
-          floatHeight: currentBaseConfig.floatHeight || 60,
-        },
-        hasFloorFinish: false,  // 바닥 마감재 자동으로 없음
-        floorFinish: undefined,  // 바닥 마감재 설정 제거
-      });
-    } else {
-      onUpdate({
-        baseConfig: {
-          ...currentBaseConfig,
-          placementType,
-        },
-      });
-    }
+    const updates: Partial<SpaceInfo> = placementType === 'float'
+      ? {
+          baseConfig: {
+            ...currentBaseConfig,
+            placementType,
+            floatHeight: currentBaseConfig.floatHeight || 60,
+          },
+          hasFloorFinish: false,
+          floorFinish: undefined,
+        }
+      : {
+          baseConfig: {
+            ...currentBaseConfig,
+            placementType,
+          },
+        };
+
+    onUpdate(updates);
+
+    // 자유배치 가구 freeHeight 재계산 (float↔ground 전환)
+    recalcFreePlacementHeights(updates);
 
     // 바닥 배치로 변경 시 모든 가구에 도어 기본 갭 설정
     if (placementType === 'ground') {
@@ -225,12 +254,16 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
         const currentBaseConfig = spaceInfo.baseConfig || { type: 'stand', height: 0, floatHeight: 60 };
         
         // 즉시 store 업데이트
-        onUpdate({
+        const updates: Partial<SpaceInfo> = {
           baseConfig: {
             ...currentBaseConfig,
             floatHeight: validatedValue,
           },
-        });
+        };
+        onUpdate(updates);
+
+        // 자유배치 가구 freeHeight 재계산
+        recalcFreePlacementHeights(updates);
       }
     }
   };

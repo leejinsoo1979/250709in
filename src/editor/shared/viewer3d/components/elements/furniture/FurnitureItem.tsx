@@ -1157,13 +1157,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 자유배치 상/하부장: freeHeight 고정 (프레임 변경과 무관한 독립 높이)
   // 슬롯 기반: actualModuleData.dimensions.height (이미 internalSpace 반영)
   let furnitureHeightMm: number;
-  // 띄워서 배치(float): 가구 높이를 floatHeight만큼 줄임 (상부섹션이 줄어듦)
-  // 상부프레임 사이즈는 Room.tsx에서 ceilingToBaseTopMM과 modFreeHeight 양쪽에서 상쇄되어 변하지 않음
-  const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-  const floatHeightMm = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  // 자유배치 float: freeHeight는 BaseControls에서 float 전환/변경 시 이미 재계산됨
+  // (슬롯배치가 shelving.ts에서 모듈 생성 시 floatHeight를 반영하는 것과 동일한 패턴)
   if (placedModule.isFreePlacement && isTallCabinetForY) {
-    // 키큰장: freeHeight 또는 내경 높이에서 띄움높이만큼 차감
-    furnitureHeightMm = (placedModule.freeHeight || internalSpace.height) - floatHeightMm;
+    furnitureHeightMm = placedModule.freeHeight || internalSpace.height;
     // 개별 가구 상부프레임 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;
