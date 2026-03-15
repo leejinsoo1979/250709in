@@ -3530,7 +3530,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   )}
                 </div>
               )}
-              {/* 경첩 타입 선택 (A-type 45mm / B-type 48mm) */}
+              {/* 경첩 타입 선택 — 숨김 처리
               <div className={styles.hingeSubSection}>
                 <h6 className={styles.subSectionTitle}>경첩 타입</h6>
                 <div className={styles.hingeTabSelector}>
@@ -3550,6 +3550,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </button>
                 </div>
               </div>
+              */}
             </div>
           )}
 
