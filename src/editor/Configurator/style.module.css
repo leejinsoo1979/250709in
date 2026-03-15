@@ -200,7 +200,7 @@
 }
 
 .fileTreeFileName {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--theme-text);
   white-space: nowrap;
@@ -209,7 +209,7 @@
 }
 
 .fileTreeFileMeta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--theme-text-muted);
   white-space: nowrap;
   overflow: hidden;
