@@ -776,6 +776,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
+
+    // ── 자유배치: 갭을 가구 기준으로 직접 적용 ──
+    // 슬롯 배치는 공간 좌표계(천장/바닥 기준) 역산이 필요하지만,
+    // 자유배치는 가구 상단/하단에서의 직접 거리로 해석
+    if (isFree) {
+      const freeTopGap = doorTopGap ?? 5;
+      const freeBottomGap = doorBottomGap ?? 25;
+      doorTopLocal = cabinetTopLocal - freeTopGap;
+      doorBottomLocal = cabinetBottomLocal + freeBottomGap;
+      actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+    } else {
+      // ── 슬롯 배치: 기존 공간 좌표계 기반 로직 ──
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     // baseConfig.type === 'floor'일 때 actualBaseHeight에 이미 바닥마감재 포함
     const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
@@ -813,6 +825,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 별도의 doorBottomLocal 조정 불필요
 
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+    }
 
 // console.log('🚪📏 키큰장 actualDoorHeight:', {
       // doorTopLocal,
