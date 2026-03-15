@@ -3194,7 +3194,9 @@ export const generateDxfFromData = (
       if (moduleDepth) furnitureDepthMm = moduleDepth;
     }
 
-    // 씬 추출 X 범위 계산
+    // 씬 추출 X좌표를 데이터 기반 좌표(0~furnitureDepthMm)로 항상 정규화
+    // projectTo2D left: X = (spaceDepth/200 - Z) * 100 → 범위 0~spaceDepth
+    // generateExternalDimensions: X = 0~furnitureDepthMm
     if (internalLines.length > 0) {
       let sceneMinX = Infinity, sceneMaxX = -Infinity;
       for (const line of internalLines) {
@@ -3204,28 +3206,16 @@ export const generateDxfFromData = (
       const sceneWidth = sceneMaxX - sceneMinX;
       console.log(`📐 측면뷰 씬 X범위: ${sceneMinX.toFixed(1)}~${sceneMaxX.toFixed(1)} (폭=${sceneWidth.toFixed(1)}), 데이터 깊이=${furnitureDepthMm}mm`);
 
-      // 씬 추출 폭이 데이터 깊이의 50% 미만이면 X좌표 스케일링 필요
-      if (sceneWidth > 0 && sceneWidth < furnitureDepthMm * 0.5) {
+      // 항상 씬 X범위를 데이터 범위(0~furnitureDepthMm)로 매핑
+      if (sceneWidth > 1) {
         const scaleX = furnitureDepthMm / sceneWidth;
-        console.log(`📐 측면뷰 X스케일링: ${scaleX.toFixed(2)}x (${sceneWidth.toFixed(1)}mm → ${furnitureDepthMm}mm)`);
+        console.log(`📐 측면뷰 X정규화: [${sceneMinX.toFixed(1)}~${sceneMaxX.toFixed(1)}] → [0~${furnitureDepthMm}] (scale=${scaleX.toFixed(2)})`);
         for (const line of internalLines) {
           line.x1 = (line.x1 - sceneMinX) * scaleX;
           line.x2 = (line.x2 - sceneMinX) * scaleX;
         }
         for (const text of internalTexts) {
           text.x = (text.x - sceneMinX) * scaleX;
-        }
-      } else if (sceneWidth > 0) {
-        // 폭은 충분하지만 시작점을 0으로 맞춤
-        const offsetX = -sceneMinX;
-        if (Math.abs(offsetX) > 1) {
-          for (const line of internalLines) {
-            line.x1 += offsetX;
-            line.x2 += offsetX;
-          }
-          for (const text of internalTexts) {
-            text.x += offsetX;
-          }
         }
       }
     }
