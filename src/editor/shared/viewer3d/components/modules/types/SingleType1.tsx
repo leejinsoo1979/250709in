@@ -289,6 +289,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
             />
           ) : (
             <>
+              {/* 상부 섹션 도어만 렌더링 (하부 서랍 섹션은 도어 불필요) */}
               <DoorModule
                 moduleWidth={doorWidth || moduleData.dimensions.width}
                 moduleDepth={baseFurniture.actualDepthMm}
@@ -308,30 +309,6 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 doorTopGap={upperDoorTopGap ?? doorTopGap}
                 doorBottomGap={upperDoorBottomGap ?? 0}
                 sectionIndex={1}
-                totalSections={2}
-                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
-                zone={zone}
-              />
-
-              <DoorModule
-                moduleWidth={doorWidth || moduleData.dimensions.width}
-                moduleDepth={baseFurniture.actualDepthMm}
-                hingePosition={hingePosition}
-                spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth || doorWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                textureUrl={spaceInfo.materialConfig?.doorTexture}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                sectionHeightsMm={sectionHeightsMm}
-                doorTopGap={lowerDoorTopGap ?? 0}
-                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
-                sectionIndex={0}
                 totalSections={2}
                 floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
                 zone={zone}
