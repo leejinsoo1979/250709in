@@ -681,7 +681,7 @@ const FreePlacementDropZone: React.FC = () => {
 
   const remainingGaps = useMemo(() => {
     const { startX, endX } = spaceBounds;
-    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01;
+    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01 * 2; // 가구 치수선(slotDimensionY)보다 1단 위로
 
     // 가구가 없어도 잠금이 있으면 벽 갭 표시
     if (freeModules.length === 0) {
