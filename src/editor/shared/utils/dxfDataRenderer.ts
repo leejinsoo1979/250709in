@@ -2773,14 +2773,15 @@ export const generateExternalDimensions = (
         const backFootDepth = furnitureDepthMm - plateHalfMm;
 
         // 조절발 그리기 함수
+        // 조절발은 받침대 내부에 위치: Y=baseFrameHeightMm(상단)에서 Y=0(바닥)까지
         const drawFoot = (footCenterDepth: number) => {
-          // 조절발 플레이트 (상단 사각형) - 받침대 바로 아래
+          // 조절발 플레이트 (상단 사각형) - 받침대 상단(=가구 하단)에서 아래로
           const plateLeft = transformX(footCenterDepth - footPlateSize / 2);
           const plateRight = transformX(footCenterDepth + footPlateSize / 2);
           const plateMinX = Math.min(plateLeft, plateRight);
           const plateMaxX = Math.max(plateLeft, plateRight);
-          const plateTop = 0; // 받침대 바닥
-          const plateBottom = -footPlateThickness;
+          const plateTop = baseFrameHeightMm; // 받침대 상단
+          const plateBottom = baseFrameHeightMm - footPlateThickness;
 
           lines.push({ x1: plateMinX, y1: plateBottom, x2: plateMaxX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
           lines.push({ x1: plateMaxX, y1: plateBottom, x2: plateMaxX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
@@ -2793,7 +2794,7 @@ export const generateExternalDimensions = (
           const cylMinX = Math.min(cylLeft, cylRight);
           const cylMaxX = Math.max(cylLeft, cylRight);
           const cylTop = plateBottom;
-          const cylBottom = plateBottom - footCylinderHeight;
+          const cylBottom = Math.max(plateBottom - footCylinderHeight, 0);
 
           lines.push({ x1: cylMinX, y1: cylTop, x2: cylMinX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
           lines.push({ x1: cylMaxX, y1: cylTop, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
@@ -3302,10 +3303,11 @@ export const generateDxfFromData = (
         const frontFootX = 20 + actualBaseDepthForFoot + 32; // 앞면에서 20mm + 받침대 깊이 + 플레이트 반
 
         // 조절발 그리기 함수 (정면뷰와 동일한 형태)
+        // 조절발은 받침대 내부에 위치: Y=baseFrameHeightMm(상단)에서 Y=0(바닥)까지
         const drawFoot = (footCenterX: number) => {
-          // 플레이트 (상단 사각형) - 받침대 바로 아래
-          const plateTop = 0; // 받침대 바닥
-          const plateBottom = -footPlateThickness;
+          // 플레이트 (상단 사각형) - 받침대 상단(=가구 하단)에서 아래로
+          const plateTop = baseFrameHeightMm; // 받침대 상단
+          const plateBottom = baseFrameHeightMm - footPlateThickness;
           const plateHalfSize = footPlateSize / 2;
 
           frameLines.push({ x1: footCenterX - plateHalfSize, y1: plateBottom, x2: footCenterX + plateHalfSize, y2: plateBottom, layer: 'ACCESSORIES', color: 8 });
@@ -3316,7 +3318,7 @@ export const generateDxfFromData = (
           // 원통 (플레이트 아래) - 정면뷰와 동일
           const cylHalfSize = footDiameter / 2;
           const cylTop = plateBottom;
-          const cylBottom = plateBottom - footCylinderHeight;
+          const cylBottom = Math.max(plateBottom - footCylinderHeight, 0);
 
           frameLines.push({ x1: footCenterX - cylHalfSize, y1: cylTop, x2: footCenterX - cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
           frameLines.push({ x1: footCenterX + cylHalfSize, y1: cylTop, x2: footCenterX + cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
@@ -3394,6 +3396,8 @@ export const generateDxfFromData = (
   dxf.addLayer('SPACE_FRAME', 3, 'CONTINUOUS');      // 공간 프레임 - 연두색
   dxf.addLayer('FURNITURE_PANEL', 30, 'CONTINUOUS'); // 가구 패널 - 주황색
   dxf.addLayer('DOOR', 3, 'CONTINUOUS');             // 도어 - 연두색 (2D와 동일)
+  dxf.addLayer('DOOR_DIMENSIONS', 7, 'CONTINUOUS');  // 도어 치수선 - 흰색
+  dxf.addLayer('DRAWER', 30, 'CONTINUOUS');           // 서랍 - 주황색
   dxf.addLayer('BACK_PANEL', 254, 'CONTINUOUS');     // 백패널 - 매우 연한 회색 (투명도 효과)
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
   dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발 - 회색 (2D와 동일)
