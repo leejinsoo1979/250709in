@@ -681,7 +681,7 @@ const FreePlacementDropZone: React.FC = () => {
 
   const remainingGaps = useMemo(() => {
     const { startX, endX } = spaceBounds;
-    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01 * 2; // 가구 치수선(slotDimensionY)보다 1단 위로
+    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01;
 
     // 가구가 없어도 잠금이 있으면 벽 갭 표시
     if (freeModules.length === 0) {
@@ -1528,7 +1528,7 @@ const FreePlacementDropZone: React.FC = () => {
             {/* 치수 라벨 - 클릭하면 인라인 편집 */}
             {editingGapIndex === i ? (
               <Html
-                position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
+                position={[gap.centerX, gap.centerY + 0.3, guideZPosition]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1579,7 +1579,7 @@ const FreePlacementDropZone: React.FC = () => {
               </Html>
             ) : (
               <Html
-                position={[gap.centerX, gap.centerY + 0.1, guideZPosition]}
+                position={[gap.centerX, gap.centerY + 0.3, guideZPosition]}
                 center
                 style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9999, background: 'transparent' }}
                 zIndexRange={[9999, 10000]}
