@@ -2773,17 +2773,14 @@ export const generateExternalDimensions = (
         const backFootDepth = furnitureDepthMm - plateHalfMm;
 
         // 조절발 그리기 함수
-        // 3D에서: 조절발은 가구 하단(=받침대 상단)에서 아래로 내려감
-        // DXF에서: 받침대 Y=0~baseFrameHeightMm, 조절발은 받침대 안에 위치
-        // → plateTop = baseFrameHeightMm (받침대 상단 = 가구 하단)에서 아래로
         const drawFoot = (footCenterDepth: number) => {
-          // 조절발 플레이트 (상단 사각형) - 가구 하단(=받침대 상단)에서 아래로
+          // 조절발 플레이트 (상단 사각형) - 받침대 바로 아래
           const plateLeft = transformX(footCenterDepth - footPlateSize / 2);
           const plateRight = transformX(footCenterDepth + footPlateSize / 2);
           const plateMinX = Math.min(plateLeft, plateRight);
           const plateMaxX = Math.max(plateLeft, plateRight);
-          const plateTop = baseFrameHeightMm; // 받침대 상단 (가구 바닥)
-          const plateBottom = baseFrameHeightMm - footPlateThickness;
+          const plateTop = 0; // 받침대 바닥
+          const plateBottom = -footPlateThickness;
 
           lines.push({ x1: plateMinX, y1: plateBottom, x2: plateMaxX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
           lines.push({ x1: plateMaxX, y1: plateBottom, x2: plateMaxX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
@@ -2796,7 +2793,7 @@ export const generateExternalDimensions = (
           const cylMinX = Math.min(cylLeft, cylRight);
           const cylMaxX = Math.max(cylLeft, cylRight);
           const cylTop = plateBottom;
-          const cylBottom = Math.max(plateBottom - footCylinderHeight, 0); // 바닥(Y=0) 아래로 안 내려가게
+          const cylBottom = plateBottom - footCylinderHeight;
 
           lines.push({ x1: cylMinX, y1: cylTop, x2: cylMinX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
           lines.push({ x1: cylMaxX, y1: cylTop, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
@@ -2974,12 +2971,12 @@ export const generateExternalDimensions = (
 
       // ===== 상단: 상부섹션 깊이 치수 =====
       const topDimY = height + dimOffset;
-      // 데이터 기반 깊이값 사용 (0 ~ furnitureDepthMm) — 씬 추출 범위가 아닌 실제 가구 깊이
-      lines.push({ x1: 0, y1: topDimY, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      // 실제 가구 형상 X 범위 사용 (furnitureXMin ~ furnitureXMax)
+      lines.push({ x1: furnitureXMin, y1: topDimY, x2: furnitureXMax, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
       // 연장선 - Y축 길이 최소화
-      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      lines.push({ x1: furnitureXMin, y1: height, x2: furnitureXMin, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureXMax, y1: height, x2: furnitureXMax, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      texts.push({ x: (furnitureXMin + furnitureXMax) / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
       if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
@@ -3042,13 +3039,13 @@ export const generateExternalDimensions = (
       texts.push({ x: rightX + 60, y: height / 2, text: `${height}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // ===== 상단: 상부섹션 깊이 치수 =====
-      // 데이터 기반 깊이값 사용 (0 ~ furnitureDepthMm) — 씬 추출 범위가 아닌 실제 가구 깊이
+      // 실제 가구 형상 범위 (furnitureXMin ~ furnitureXMax) 사용
       const topDimY = height + dimOffset;
-      lines.push({ x1: 0, y1: topDimY, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureXMin, y1: topDimY, x2: furnitureXMax, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
       // 연장선 - Y축 길이 최소화
-      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      lines.push({ x1: furnitureXMin, y1: height, x2: furnitureXMin, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureXMax, y1: height, x2: furnitureXMax, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      texts.push({ x: (furnitureXMin + furnitureXMax) / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
       if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
@@ -3305,11 +3302,10 @@ export const generateDxfFromData = (
         const frontFootX = 20 + actualBaseDepthForFoot + 32; // 앞면에서 20mm + 받침대 깊이 + 플레이트 반
 
         // 조절발 그리기 함수 (정면뷰와 동일한 형태)
-        // 조절발은 받침대 내부에 위치 (받침대 상단에서 아래로)
         const drawFoot = (footCenterX: number) => {
-          // 플레이트 (상단 사각형) - 받침대 상단(=가구 하단)에서 아래로
-          const plateTop = baseFrameHeightMm; // 받침대 상단
-          const plateBottom = baseFrameHeightMm - footPlateThickness;
+          // 플레이트 (상단 사각형) - 받침대 바로 아래
+          const plateTop = 0; // 받침대 바닥
+          const plateBottom = -footPlateThickness;
           const plateHalfSize = footPlateSize / 2;
 
           frameLines.push({ x1: footCenterX - plateHalfSize, y1: plateBottom, x2: footCenterX + plateHalfSize, y2: plateBottom, layer: 'ACCESSORIES', color: 8 });
@@ -3320,7 +3316,7 @@ export const generateDxfFromData = (
           // 원통 (플레이트 아래) - 정면뷰와 동일
           const cylHalfSize = footDiameter / 2;
           const cylTop = plateBottom;
-          const cylBottom = Math.max(plateBottom - footCylinderHeight, 0); // 바닥(Y=0) 아래로 안 내려가게
+          const cylBottom = plateBottom - footCylinderHeight;
 
           frameLines.push({ x1: footCenterX - cylHalfSize, y1: cylTop, x2: footCenterX - cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
           frameLines.push({ x1: footCenterX + cylHalfSize, y1: cylTop, x2: footCenterX + cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
