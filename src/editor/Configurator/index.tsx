@@ -170,6 +170,24 @@ const Configurator: React.FC = () => {
     placedModules.filter(m => m.hasDoor).sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0)),
     [placedModules]
   );
+  // 도어 번호 매핑: 듀얼(양문) 가구는 도어 2개, 싱글 가구는 도어 1개
+  const doorNumberMap = useMemo(() => {
+    let doorNum = 1;
+    return doorFurnitureList.map((mod) => {
+      const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-') || mod.baseModuleType?.includes('dual-');
+      if (isDual) {
+        const label = `도어 ${doorNum},${doorNum + 1}`;
+        const nums = [doorNum, doorNum + 1];
+        doorNum += 2;
+        return { label, nums, isDual: true };
+      } else {
+        const label = `도어 ${doorNum}`;
+        const nums = [doorNum];
+        doorNum += 1;
+        return { label, nums, isDual: false };
+      }
+    });
+  }, [doorFurnitureList]);
   const showDoorSetup = (spaceInfo.layoutMode || 'equal-division') === 'free-placement'
     && doorFurnitureList.length > 0;
   const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
@@ -4556,9 +4574,9 @@ const Configurator: React.FC = () => {
                   <thead>
                     <tr>
                       <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'left', whiteSpace: 'nowrap' }}></th>
-                      {doorFurnitureList.map((_, idx) => (
+                      {doorNumberMap.map((info, idx) => (
                         <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                          도어 {idx + 1}
+                          {info.label}
                         </th>
                       ))}
                     </tr>
