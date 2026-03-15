@@ -4379,13 +4379,14 @@ const Configurator: React.FC = () => {
                   topNum++;
                   const tn = topNum;
                   // 실제 렌더링되는 상부프레임 높이
-                  // freeHeight 있으면: 이미 floatHeight 반영된 값 → floatH도 빼야 함
-                  // freeHeight 없으면: internalSpace.height = 공간-받침대-topFrame → floatH 불필요
+                  // actualTopFrameSize = 공간높이 - 받침대 - 띄움높이 - 가구높이
                   const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-                  const hasExplicitFreeHeight = mod.freeHeight != null;
-                  const floatH = hasExplicitFreeHeight && spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
-                    ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-                  const modHeight = mod.freeHeight || calculateInternalSpace(spaceInfo).height;
+                  const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+                  const floatH = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+                  const internalH = calculateInternalSpace(spaceInfo).height;
+                  // freeHeight가 아직 float 반영 전(= internalH와 같음)이면 직접 floatH 차감
+                  const rawFreeH = mod.freeHeight || internalH;
+                  const modHeight = (floatH > 0 && rawFreeH >= internalH) ? (internalH - floatH) : rawFreeH;
                   const actualTopFrameSize = Math.max(0, spaceInfo.height - baseH - floatH - modHeight);
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
