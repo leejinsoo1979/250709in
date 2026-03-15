@@ -3212,7 +3212,7 @@ const Configurator: React.FC = () => {
       return () => document.removeEventListener('mousedown', handler);
     }, [open]);
     return (
-      <div ref={ref} style={{ position: 'relative', marginLeft: 'auto' }}>
+      <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
         <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>?</button>
         {open && (
           <div className={styles.helpPopover}>
