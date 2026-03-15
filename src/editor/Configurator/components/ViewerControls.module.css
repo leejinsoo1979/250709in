@@ -612,3 +612,71 @@
 
 .mobileOptionItem:active { transform: scale(0.95); }
 .mobileOptionItem span { white-space: nowrap; }
+
+/* ── Door Guide Tooltip ── */
+.doorGuideTooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--theme-primary);
+  color: #fff;
+  padding: 8px 14px 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  animation: doorGuideAppear 0.4s ease-out;
+}
+
+.doorGuideTooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--theme-primary);
+}
+
+.doorGuideFingerIcon {
+  font-size: 16px;
+  animation: doorGuideFingerBounce 1s ease-in-out infinite;
+  display: inline-block;
+}
+
+.doorGuideClose {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 0 0 4px;
+  line-height: 1;
+}
+.doorGuideClose:hover {
+  color: #fff;
+}
+
+@keyframes doorGuideAppear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes doorGuideFingerBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}

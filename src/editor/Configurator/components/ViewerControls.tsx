@@ -81,6 +81,25 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showMobileOptions, setShowMobileOptions] = useState(false);
   const [showDisplayMenu, setShowDisplayMenu] = useState(false);
   const displayMenuRef = useRef<HTMLDivElement>(null);
+  const [showDoorGuide, setShowDoorGuide] = useState(false);
+  const prevHasFurnitureRef = useRef(false);
+
+  // 가구가 처음 배치되면 도어 안내 표시
+  useEffect(() => {
+    if (hasFurniture && !prevHasFurnitureRef.current && !hasDoorsInstalled) {
+      const timer = setTimeout(() => setShowDoorGuide(true), 1500);
+      return () => clearTimeout(timer);
+    }
+    if (!hasFurniture) {
+      setShowDoorGuide(false);
+    }
+    prevHasFurnitureRef.current = hasFurniture;
+  }, [hasFurniture, hasDoorsInstalled]);
+
+  // 도어 설치되면 안내 숨김
+  useEffect(() => {
+    if (hasDoorsInstalled) setShowDoorGuide(false);
+  }, [hasDoorsInstalled]);
 
   // 표시 옵션 드롭다운 외부 클릭 감지
   useEffect(() => {
@@ -350,14 +369,33 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         </div>
 
         {onDoorInstallationToggle && hasFurniture && (
-          <div className={styles.segmentedControl}>
+          <div className={styles.segmentedControl} style={{ position: 'relative' }}>
             <button
               className={`${styles.segmentButton} ${styles.segmentIconText} ${hasDoorsInstalled ? styles.segmentAccentActive : ''}`}
-              onClick={onDoorInstallationToggle}
+              onClick={() => {
+                onDoorInstallationToggle();
+                setShowDoorGuide(false);
+              }}
             >
               <BiDoorOpen size={13} />
               {hasDoorsInstalled ? '도어제거' : '도어설치'}
             </button>
+            {/* 도어 설치 안내 툴팁 */}
+            {showDoorGuide && !hasDoorsInstalled && (
+              <div
+                className={styles.doorGuideTooltip}
+                onClick={() => setShowDoorGuide(false)}
+              >
+                <span className={styles.doorGuideFingerIcon}>👆</span>
+                <span>도어를 장착해보세요</span>
+                <button
+                  className={styles.doorGuideClose}
+                  onClick={(e) => { e.stopPropagation(); setShowDoorGuide(false); }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </div>
         )}
 
