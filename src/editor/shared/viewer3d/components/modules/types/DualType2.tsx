@@ -622,8 +622,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
-                if (safetyShelfPositionMm !== undefined && !isFloating) {
-                  // 안전선반이 있고 띄움 배치가 아닌 경우: 브라켓 윗면이 안전선반 하단에 붙음
+                if (safetyShelfPositionMm !== undefined) {
+                  // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                   const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (sectionIndex === 0) {
