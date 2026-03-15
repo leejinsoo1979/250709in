@@ -1531,7 +1531,7 @@ const FreePlacementDropZone: React.FC = () => {
               const isLocked = spaceInfo.lockedWallGaps?.[side] != null;
               return (
                 <Html
-                  position={[gap.centerX, gap.centerY + 0.85, guideZPosition]}
+                  position={[gap.centerX, gap.centerY + 1.2, guideZPosition]}
                   center
                   style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9998, background: 'transparent' }}
                   zIndexRange={[9998, 9999]}
