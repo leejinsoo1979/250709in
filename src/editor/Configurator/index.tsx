@@ -3333,7 +3333,10 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : '단내림'}</h3>
-            <HelpBtn title={isFreeMode ? '커튼박스' : '단내림'} text="천장 높이가 부분적으로 낮아지는 단내림(커튼박스) 구간이 있을 때 활성화합니다. 좌측/우측 위치, 구간 너비, 내려오는 높이(dropHeight)를 설정하면 해당 영역의 가구 높이가 자동으로 줄어듭니다. 에어컨 배관, 커튼박스 등으로 천장이 낮아진 구간에 사용합니다." />
+            <HelpBtn title={isFreeMode ? '커튼박스' : '단내림'} text={isFreeMode
+              ? "벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다. 위치(좌/우)와 너비를 설정하여 가구 배치 가능 영역을 정확히 구분합니다."
+              : "공간의 한쪽 천장이 낮아지는(단이 내려오는) 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 좌측/우측 위치, 구간 너비, 단 높이를 설정하면 해당 영역의 가구 높이가 자동으로 맞춰집니다."
+            } />
           </div>
 
           <div className={styles.toggleButtonGroup}>
@@ -3607,7 +3610,10 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'}</h3>
-              <HelpBtn title={isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'} text="천장이 낮아진 단내림(커튼박스) 구간의 너비와 높이를 표시합니다. 높이는 전체 높이에서 단내림 높이(dropHeight)를 뺀 값입니다. 이 영역에 배치되는 가구는 줄어든 높이에 맞게 자동 조절됩니다." />
+              <HelpBtn title={isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'} text={isFreeMode
+                ? "커튼박스 구간의 너비를 표시합니다. 이 영역은 커튼레일 박스가 차지하는 공간으로, 가구가 배치되지 않습니다."
+                : "단내림 구간의 실제 사용 가능한 너비와 높이를 표시합니다. 높이는 전체 높이에서 단 높이를 뺀 값이며, 이 영역에 배치되는 가구는 줄어든 높이에 맞게 자동 조절됩니다."
+              } />
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
