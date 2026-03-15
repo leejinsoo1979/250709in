@@ -298,11 +298,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const activePopup = useUIStore(state => state.activePopup);
   const { updatePlacedModule } = useFurnitureStore();
+  // store에서 해당 가구의 도어 갭/경첩을 직접 구독 (플로팅 패널 변경 시 즉시 반영)
+  const storeDoorTopGap = useFurnitureStore(state => state.placedModules.find(m => m.id === placedModule.id)?.doorTopGap);
+  const storeDoorBottomGap = useFurnitureStore(state => state.placedModules.find(m => m.id === placedModule.id)?.doorBottomGap);
+  const storeHingePosition = useFurnitureStore(state => state.placedModules.find(m => m.id === placedModule.id)?.hingePosition);
   const { getCustomFurnitureById } = useCustomFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const [showDoorOptions, setShowDoorOptions] = useState(false);
-  const [doorTopGapInput, setDoorTopGapInput] = useState<string>((placedModule.doorTopGap ?? 5).toString());
-  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((placedModule.doorBottomGap ?? 25).toString());
+  const [doorTopGapInput, setDoorTopGapInput] = useState<string>((storeDoorTopGap ?? placedModule.doorTopGap ?? 5).toString());
+  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((storeDoorBottomGap ?? placedModule.doorBottomGap ?? 25).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id && !isCustomEditing;
@@ -334,11 +338,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }, [showDoorOptions]);
 
-  // placedModule 갭 값 변경 시 입력 동기화
+  // store 갭 값 변경 시 입력 동기화
   useEffect(() => {
-    setDoorTopGapInput((placedModule.doorTopGap ?? 5).toString());
-    setDoorBottomGapInput((placedModule.doorBottomGap ?? 25).toString());
-  }, [placedModule.doorTopGap, placedModule.doorBottomGap]);
+    setDoorTopGapInput((storeDoorTopGap ?? 5).toString());
+    setDoorBottomGapInput((storeDoorBottomGap ?? 25).toString());
+  }, [storeDoorTopGap, storeDoorBottomGap]);
 
   // 도어 갭 변경 핸들러
   const handleDoorTopGapCommit = useCallback((value: string) => {
@@ -346,18 +350,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!isNaN(num) && num >= 0) {
       updatePlacedModule(placedModule.id, { doorTopGap: num });
     } else {
-      setDoorTopGapInput((placedModule.doorTopGap ?? 5).toString());
+      setDoorTopGapInput((storeDoorTopGap ?? 5).toString());
     }
-  }, [placedModule.id, placedModule.doorTopGap, updatePlacedModule]);
+  }, [placedModule.id, storeDoorTopGap, updatePlacedModule]);
 
   const handleDoorBottomGapCommit = useCallback((value: string) => {
     const num = parseInt(value);
     if (!isNaN(num) && num >= 0) {
       updatePlacedModule(placedModule.id, { doorBottomGap: num });
     } else {
-      setDoorBottomGapInput((placedModule.doorBottomGap ?? 25).toString());
+      setDoorBottomGapInput((storeDoorBottomGap ?? 25).toString());
     }
-  }, [placedModule.id, placedModule.doorBottomGap, updatePlacedModule]);
+  }, [placedModule.id, storeDoorBottomGap, updatePlacedModule]);
 
   // 도어 셋업 모드 변경 핸들러
   const handleDoorSetupModeChange = useCallback((mode: 'furniture-fit' | 'space-fit') => {
@@ -3140,8 +3144,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   customSections={adjustedCustomSections} // 사용자 정의 섹션 설정 (단내림 구간에서 조정됨)
                   showFurniture={showFurniture} // 가구 본체 표시 여부
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
-                  doorTopGap={placedModule.doorTopGap ?? spaceInfo.doorTopGap} // 개별 우선 → 글로벌 폴백
-                  doorBottomGap={placedModule.doorBottomGap ?? spaceInfo.doorBottomGap} // 개별 우선 → 글로벌 폴백
+                  doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap} // store 우선 → prop → 글로벌 폴백
+                  doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap} // store 우선 → prop → 글로벌 폴백
                   lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
                   lowerSectionDepthDirection={placedModule.lowerSectionDepthDirection} // 하부 깊이 줄이는 방향
@@ -3420,8 +3424,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? (spaceInfo.baseConfig?.floatHeight || 0)
                   : 0
               }
-              doorTopGap={placedModule.doorTopGap ?? spaceInfo.doorTopGap}
-              doorBottomGap={placedModule.doorBottomGap ?? spaceInfo.doorBottomGap}
+              doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap}
+              doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap}
               slotWidths={undefined}
               zone={effectiveZone}
               internalHeight={furnitureHeightMm}
@@ -3737,9 +3741,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         padding: '5px 8px',
                         borderRadius: '6px',
                         border: '1px solid',
-                        borderColor: (placedModule.hingePosition || 'right') === pos ? '#6366f1' : '#d1d5db',
-                        background: (placedModule.hingePosition || 'right') === pos ? '#6366f1' : '#fff',
-                        color: (placedModule.hingePosition || 'right') === pos ? '#fff' : '#374151',
+                        borderColor: (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos ? '#6366f1' : '#d1d5db',
+                        background: (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos ? '#6366f1' : '#fff',
+                        color: (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos ? '#fff' : '#374151',
                         cursor: 'pointer',
                         fontSize: '12px',
                         fontWeight: 500,
