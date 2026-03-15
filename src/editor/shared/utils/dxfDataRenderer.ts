@@ -3149,265 +3149,27 @@ export const generateDxfFromData = (
   // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달, excludeDoor 옵션 전달)
   const extracted = extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
 
-  // 측면뷰(left/right)에서는 씬에서 추출한 데이터만 사용 (generateExternalDimensions 제외)
-  // 이렇게 하면 현재 2D 화면에 보이는 대로 그대로 DXF로 변환됨
+  // 측면뷰(left/right): 완전히 데이터 기반으로 생성
+  // generateExternalDimensions(dimensionsOnly=false)가 가구 형상 + 프레임 + 조절발 + 치수선을 모두 생성
+  // 씬 추출은 측면뷰에서 X 범위가 불안정하므로 사용하지 않음
   let lines: DxfLine[];
   let texts: DxfText[];
 
   if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면뷰: 씬에서 추출한 가구 형상만 사용 + 외부 치수선 (CADDimensions2D와 동일)
-    // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
-    // 프레임과 조절발은 데이터 기반으로 생성하므로 씬에서 제외
+    console.log(`📐 측면뷰 (${viewDirection}): 완전 데이터 기반 생성 (씬 추출 미사용)`);
 
-    // 씬에서 추출한 라인 중 가구 형상만 유지 (프레임, 조절발, 치수선, 환기캡, 도어 제외)
-    let filteredLines = extracted.lines.filter(line => {
-      // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
-      if (line.layer === 'DIMENSIONS') {
-        return false;
-      }
-      // VENTILATION 레이어(환기캡)는 제외 - 측면뷰에서 안 보이게
-      if (line.layer === 'VENTILATION') {
-        return false;
-      }
-      // SPACE_FRAME 레이어(상부/하부 프레임)는 제외 - 데이터 기반으로 생성
-      if (line.layer === 'SPACE_FRAME') {
-        return false;
-      }
-      // ACCESSORIES 레이어(조절발)는 제외 - 데이터 기반으로 생성
-      if (line.layer === 'ACCESSORIES') {
-        return false;
-      }
-      // DOOR / DOOR_DIMENSIONS 레이어 제외 - 측면뷰에서 도어는 불필요
-      // 도어 엣지가 포함되면 X 범위가 왜곡됨 (도어 두께가 가구 깊이에 영향)
-      if (line.layer === 'DOOR' || line.layer === 'DOOR_DIMENSIONS') {
-        return false;
-      }
-      return true;
-    });
-    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION, SPACE_FRAME, ACCESSORIES, DOOR 제외)`);
-
-    // ========================================
-    // 모듈 데이터 기반 가구 깊이 계산 (씬 추출 결과와 관계없이 정확한 깊이값)
-    // generateExternalDimensions와 동일한 로직으로 targetModule에서 깊이를 가져옴
-    // ========================================
-    let moduleBasedDepthMm = 600; // 기본값
-    if (placedModules.length > 0) {
-      let targetModule: typeof placedModules[0];
-      if (sideViewFilter === 'leftmost') {
-        targetModule = placedModules.reduce((prev, curr) => {
-          const prevX = prev.position?.x || 0;
-          const currX = curr.position?.x || 0;
-          return currX < prevX ? curr : prev;
-        });
-      } else if (sideViewFilter === 'rightmost') {
-        targetModule = placedModules.reduce((prev, curr) => {
-          const prevX = prev.position?.x || 0;
-          const currX = curr.position?.x || 0;
-          return currX > prevX ? curr : prev;
-        });
-      } else {
-        targetModule = placedModules[0];
-      }
-      const moduleDepth = targetModule.upperSectionDepth || targetModule.customDepth;
-      if (moduleDepth && moduleDepth > 0) {
-        moduleBasedDepthMm = moduleDepth;
-      }
-      console.log(`📐 측면뷰 모듈 데이터 기반 깊이: ${moduleBasedDepthMm}mm (upperSectionDepth=${targetModule.upperSectionDepth}, customDepth=${targetModule.customDepth})`);
-    }
-
-    // ========================================
-    // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 모듈 깊이 기준으로 정규화 + 스케일링
-    // 씬 추출 라인의 X 범위가 좁을 수 있으므로 (패널 두께만 추출되는 경우)
-    // 모듈 데이터 기반 깊이(moduleBasedDepthMm)로 스케일링하여 정확한 비율 유지
-    // ========================================
-    if (filteredLines.length > 0) {
-      // 추출된 라인들의 X 좌표 범위 계산
-      let minX = Infinity;
-      let maxX = -Infinity;
-      filteredLines.forEach(line => {
-        minX = Math.min(minX, line.x1, line.x2);
-        maxX = Math.max(maxX, line.x1, line.x2);
-      });
-
-      const sceneWidth = maxX - minX;
-      // 목표 깊이: 모듈 데이터 기반 깊이 사용 (씬 추출 범위가 좁아도 정확한 깊이)
-      const targetDepth = moduleBasedDepthMm;
-      console.log(`📐 측면뷰 X좌표 정규화: 씬 범위 ${minX.toFixed(1)}~${maxX.toFixed(1)} (${sceneWidth.toFixed(1)}mm) → 목표 깊이 ${targetDepth}mm`);
-
-      // 스케일 팩터 계산: 씬 추출 범위가 너무 작으면 모듈 깊이로 스케일링
-      // 씬 추출 범위가 모듈 깊이의 50% 미만이면 스케일링 적용 (패널 두께만 추출된 경우)
-      const needsScaling = sceneWidth > 0 && sceneWidth < targetDepth * 0.5;
-      const scaleFactor = needsScaling ? (targetDepth / sceneWidth) : 1;
-
-      if (needsScaling) {
-        console.log(`⚠️ 측면뷰: 씬 추출 범위(${sceneWidth.toFixed(1)}mm)가 모듈 깊이(${targetDepth}mm)의 50% 미만 → ${scaleFactor.toFixed(2)}x 스케일링 적용`);
-      }
-
-      // X 좌표를 0 기준으로 정규화하면서 좌우 반전 (미러링) + 스케일링
-      filteredLines = filteredLines.map(line => ({
-        ...line,
-        x1: targetDepth - (line.x1 - minX) * scaleFactor,
-        x2: targetDepth - (line.x2 - minX) * scaleFactor
-      }));
-    }
-
-    // 씬에서 추출한 텍스트는 모두 제외 (내부 치수 텍스트)
-    // 외부 치수선의 텍스트만 사용
-    console.log(`📏 측면뷰: 씬 텍스트 ${extracted.texts.length}개 모두 제외 (내부 치수)`);
-
-    // 정규화된 가구형상의 실제 X 범위 = 모듈 기반 깊이 (0 ~ moduleBasedDepthMm)
-    // 씬 추출 범위가 좁더라도 스케일링 후에는 모듈 깊이와 일치
-    let actualFurnitureMinX = 0;
-    let actualFurnitureMaxX = moduleBasedDepthMm;
-    if (filteredLines.length > 0) {
-      actualFurnitureMinX = Infinity;
-      actualFurnitureMaxX = -Infinity;
-      filteredLines.forEach(line => {
-        actualFurnitureMinX = Math.min(actualFurnitureMinX, line.x1, line.x2);
-        actualFurnitureMaxX = Math.max(actualFurnitureMaxX, line.x1, line.x2);
-      });
-      console.log(`📐 측면뷰 정규화 후 가구 X 범위: ${actualFurnitureMinX.toFixed(1)} ~ ${actualFurnitureMaxX.toFixed(1)}`);
-    }
-
-    // 실제 가구 깊이: 모듈 데이터 기반 깊이 사용 (씬 추출 범위에 의존하지 않음)
-    const actualFurnitureWidth = actualFurnitureMaxX - actualFurnitureMinX;
-    console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm (모듈 기반: ${moduleBasedDepthMm}mm)`);
-
-    // ========================================
-    // 씬에서 SPACE_FRAME이 추출되었는지 확인
-    // Room.tsx의 조건부 렌더링으로 인해 PDF 내보내기 시 프레임이 누락될 수 있음
-    // ========================================
-    const hasSpaceFrameFromScene = filteredLines.some(line => line.layer === 'SPACE_FRAME');
-    console.log(`📐 측면뷰: 씬에서 SPACE_FRAME 추출됨? ${hasSpaceFrameFromScene}`);
-
-    // 프레임 라인을 별도로 생성 (씬에서 추출되지 않은 경우만)
-    let frameLines: DxfLine[] = [];
-    if (!hasSpaceFrameFromScene) {
-      console.log(`📐 측면뷰: 씬에서 프레임 미추출 - 데이터 기반 프레임 생성`);
-
-      // spaceInfo에서 프레임 정보 가져오기
-      // 기본값을 명시적으로 처리하여 0과 undefined를 구분
-      const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
-      const topFrameHeightMm = frameSize.top !== undefined ? frameSize.top : 30; // 기본 상부 프레임 30mm
-      const baseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65, depth: 0 };
-      const isFloating = baseConfig.type === 'stand' && baseConfig.placementType === 'float';
-      const isStandType = baseConfig.type === 'stand';
-      // 바닥레일/받침대가 있으면 높이 사용, 없으면 floor 타입의 경우 기본 65mm
-      const baseFrameHeightMm = isFloating ? 0 : (baseConfig.height !== undefined ? baseConfig.height : 65);
-      const baseDepthMm = baseConfig.depth || 0;
-
-      console.log(`📐 측면뷰 프레임 생성 조건: topFrameHeightMm=${topFrameHeightMm}, baseFrameHeightMm=${baseFrameHeightMm}, isFloating=${isFloating}, isStandType=${isStandType}`);
-
-      const frameColor = 7; // ACI 7 = 흰색
-
-      // 실제 가구 깊이: 모듈 데이터 기반 깊이 우선 사용 (씬 추출 범위에 의존하지 않음)
-      const furnitureDepthMm = moduleBasedDepthMm;
-
-      // 프레임은 0 ~ furnitureDepthMm 범위에 그려짐 (정규화된 좌표계)
-
-      // 상부 프레임 (있는 경우)
-      if (topFrameHeightMm > 0) {
-        const topFrameBottom = height - topFrameHeightMm;
-        const topFrameTop = height;
-
-        // 상부 프레임 사각형 (정규화된 좌표계에서)
-        frameLines.push({ x1: 0, y1: topFrameBottom, x2: furnitureDepthMm, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
-        frameLines.push({ x1: furnitureDepthMm, y1: topFrameBottom, x2: furnitureDepthMm, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
-        frameLines.push({ x1: furnitureDepthMm, y1: topFrameTop, x2: 0, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
-        frameLines.push({ x1: 0, y1: topFrameTop, x2: 0, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
-        console.log(`  ✅ 상부 프레임: Y ${topFrameBottom.toFixed(1)} ~ ${topFrameTop.toFixed(1)}`);
-      }
-
-      // 하부 프레임/받침대 (있는 경우)
-      if (baseFrameHeightMm > 0) {
-        const baseBottom = 0;
-        const baseTop = baseFrameHeightMm;
-        const actualBaseDepth = baseDepthMm > 0 ? Math.min(baseDepthMm, furnitureDepthMm) : furnitureDepthMm;
-
-        // 하부 프레임 사각형 (정규화된 좌표계에서)
-        frameLines.push({ x1: 0, y1: baseBottom, x2: actualBaseDepth, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
-        frameLines.push({ x1: actualBaseDepth, y1: baseBottom, x2: actualBaseDepth, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
-        frameLines.push({ x1: actualBaseDepth, y1: baseTop, x2: 0, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
-        frameLines.push({ x1: 0, y1: baseTop, x2: 0, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
-        console.log(`  ✅ 하부 프레임: Y ${baseBottom.toFixed(1)} ~ ${baseTop.toFixed(1)}, 깊이 ${actualBaseDepth.toFixed(1)}`);
-      }
-
-      // 조절발 생성 (floor 타입이고 받침대가 있는 경우)
-      // generateExternalDimensions의 조절발 로직과 완전 동일하게 통일
-      // AdjustableFootsRenderer와 동일한 Z축 위치 계산
-      if (!isStandType && baseFrameHeightMm > 0) {
-        const footPlateSize = 64;
-        const footPlateThickness = 7;
-        const footDiameter = 56;
-        const footCylinderHeight = Math.max(baseFrameHeightMm - footPlateThickness, 0);
-        const actualBaseDepthForFoot = baseDepthMm > 0 ? baseDepthMm : 0;
-        const plateHalfMm = footPlateSize / 2; // 32mm
-
-        // generateExternalDimensions과 동일한 깊이 위치 계산
-        // 앞쪽 조절발: plateHalf + 20 + baseDepthOffset
-        const frontFootDepth = plateHalfMm + 20 + actualBaseDepthForFoot;
-        // 뒤쪽 조절발: furnitureDepthMm - plateHalf
-        const backFootDepth = furnitureDepthMm - plateHalfMm;
-
-        // 조절발 그리기 함수
-        // 조절발은 받침대 내부에 위치: Y=baseFrameHeightMm(상단)에서 Y=0(바닥)까지
-        const drawFoot = (footCenterDepth: number) => {
-          // 플레이트 (상단 사각형) - 받침대 상단(=가구 하단)에서 아래로
-          const plateTop = baseFrameHeightMm; // 받침대 상단
-          const plateBottom = baseFrameHeightMm - footPlateThickness;
-
-          frameLines.push({ x1: footCenterDepth - plateHalfMm, y1: plateBottom, x2: footCenterDepth + plateHalfMm, y2: plateBottom, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: footCenterDepth + plateHalfMm, y1: plateBottom, x2: footCenterDepth + plateHalfMm, y2: plateTop, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: footCenterDepth + plateHalfMm, y1: plateTop, x2: footCenterDepth - plateHalfMm, y2: plateTop, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: footCenterDepth - plateHalfMm, y1: plateTop, x2: footCenterDepth - plateHalfMm, y2: plateBottom, layer: 'ACCESSORIES', color: 8 });
-
-          // 원통 (플레이트 아래) - 정면뷰와 동일
-          const cylHalfSize = footDiameter / 2;
-          const cylTop = plateBottom;
-          const cylBottom = Math.max(plateBottom - footCylinderHeight, 0);
-
-          frameLines.push({ x1: footCenterDepth - cylHalfSize, y1: cylTop, x2: footCenterDepth - cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: footCenterDepth + cylHalfSize, y1: cylTop, x2: footCenterDepth + cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: footCenterDepth - cylHalfSize, y1: cylBottom, x2: footCenterDepth + cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
-        };
-
-        // 앞쪽 조절발 그리기
-        drawFoot(frontFootDepth);
-        // 뒤쪽 조절발 그리기
-        drawFoot(backFootDepth);
-
-        console.log(`  ✅ 조절발: 앞쪽 depth=${frontFootDepth.toFixed(1)}, 뒤쪽 depth=${backFootDepth.toFixed(1)}, 원통높이=${footCylinderHeight}mm`);
-      }
-
-      // 후면 보강대는 씬에서 추출 (데이터 기반 생성 제거)
-      // 3D 씬에서 보강대가 이미 렌더링되어 있으므로 씬 추출 라인에서 표시됨
-    }
-
-    // 외부 치수선 생성
-    // 씬에서 가구 형상을 추출하지 못하면 데이터 기반으로 가구 형상도 생성
-    const needsDataBasedFurniture = filteredLines.length === 0;
-    if (needsDataBasedFurniture) {
-      console.log(`⚠️ 측면뷰: 씬에서 가구 형상 추출 실패 - 데이터 기반으로 생성`);
-    }
-
-    // 치수선에도 모듈 기반 깊이 전달 (씬 추출 범위가 좁아도 정확한 치수 표시)
-    const dimFurnitureMinX = 0;
-    const dimFurnitureMaxX = moduleBasedDepthMm;
+    // generateExternalDimensions에서 가구 형상 + 프레임 + 조절발 + 치수선 모두 생성
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
-      !needsDataBasedFurniture, // dimensionsOnly: 씬 추출 성공 시 true, 실패 시 false (가구형상도 생성)
-      moduleBasedDepthMm, // 모듈 데이터 기반 깊이
-      dimFurnitureMinX,
-      dimFurnitureMaxX
+      false // dimensionsOnly=false: 가구 형상 + 치수선 모두 생성
     );
 
-    // 가구 형상(씬 추출 또는 데이터 생성) + 프레임(데이터 생성) + 치수선 합치기
-    lines = [...filteredLines, ...frameLines, ...externalDimensions.lines];
+    lines = [...externalDimensions.lines];
     texts = [...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 ${filteredLines.length}개 + 프레임 ${frameLines.length}개 + 치수/형상 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    console.log(`📐 측면뷰 (${viewDirection}): 데이터 기반 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 씬에서 추출한 치수선(DIMENSIONS 레이어)을 제외하고
     // generateExternalDimensions()에서 생성한 치수선만 사용 (중복 방지)
