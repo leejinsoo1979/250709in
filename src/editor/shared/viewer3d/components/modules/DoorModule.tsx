@@ -1459,19 +1459,13 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
               
               {/* 자유배치 도어 설정 아이콘 (좌측 도어) */}
               {isFree && viewMode === '3D' && !isDragging && (
-                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center>
+                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center style={{ background: 'none' }}>
                   <div
                     style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      background: 'transparent',
-                      border: '1.5px solid var(--theme-primary, #6366f1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      boxShadow: 'none',
                       pointerEvents: 'auto',
                     }}
                     onClick={(e) => {
@@ -1896,19 +1890,13 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
               
               {/* 자유배치 도어 설정 아이콘 (우측 도어) */}
               {isFree && viewMode === '3D' && !isDragging && (
-                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center>
+                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center style={{ background: 'none' }}>
                   <div
                     style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      background: 'transparent',
-                      border: '1.5px solid var(--theme-primary, #6366f1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      boxShadow: 'none',
                       pointerEvents: 'auto',
                     }}
                     onClick={(e) => {
@@ -2390,19 +2378,13 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
 
             {/* 자유배치 도어 설정 아이콘 */}
             {isFree && viewMode === '3D' && !isDragging && (
-              <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center>
+              <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center style={{ background: 'none' }}>
                 <div
                   style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    background: 'transparent',
-                    border: '1.5px solid var(--theme-primary, #6366f1)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    boxShadow: 'none',
                     pointerEvents: 'auto',
                   }}
                   onClick={(e) => {
