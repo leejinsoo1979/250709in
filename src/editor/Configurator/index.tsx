@@ -4487,6 +4487,23 @@ const Configurator: React.FC = () => {
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
               <HelpBtn title="도어 셋팅" text="전체: 모든 도어 가구에 동일한 상단/하단 갭을 적용합니다. 개별: 각 도어 가구마다 개별적으로 갭을 설정합니다." />
             </div>
+            {/* 가구에 맞춤/공간에 맞춤 */}
+            <div style={{ marginTop: '6px' }}>
+              <div className={styles.toggleButtonGroup}>
+                <button
+                  className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
+                  onClick={() => setSpaceInfo({ doorSetupMode: 'furniture-fit' })}
+                >
+                  가구에 맞춤
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
+                  onClick={() => setSpaceInfo({ doorSetupMode: 'space-fit' })}
+                >
+                  공간에 맞춤
+                </button>
+              </div>
+            </div>
             {/* 전체/개별 토글 */}
             <div className={styles.toggleButtonGroup}>
               <button
@@ -4592,23 +4609,6 @@ const Configurator: React.FC = () => {
               </div>
             )}
 
-            {/* 가구에 맞춤/공간에 맞춤 */}
-            <div style={{ marginTop: '10px' }}>
-              <div className={styles.toggleButtonGroup}>
-                <button
-                  className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => setSpaceInfo({ doorSetupMode: 'furniture-fit' })}
-                >
-                  가구에 맞춤
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => setSpaceInfo({ doorSetupMode: 'space-fit' })}
-                >
-                  공간에 맞춤
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
