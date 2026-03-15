@@ -617,8 +617,7 @@
 .doorGuideTooltip {
   position: absolute;
   top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: -10px;
   background: var(--theme-surface);
   color: var(--theme-primary);
   border: 1px solid var(--theme-primary);
@@ -640,8 +639,7 @@
   content: '';
   position: absolute;
   top: -7px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px;
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
   border-bottom: 7px solid var(--theme-primary);
@@ -651,8 +649,7 @@
   content: '';
   position: absolute;
   top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 21px;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
   border-bottom: 6px solid var(--theme-surface);
@@ -668,11 +665,11 @@
 @keyframes doorGuideAppear {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(6px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 

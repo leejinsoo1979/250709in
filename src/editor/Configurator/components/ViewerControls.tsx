@@ -400,8 +400,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 className={styles.doorGuideTooltip}
                 onClick={() => { setShowDoorGuide(false); doorGuideDismissedRef.current = true; }}
               >
-                <PiHandTapThin className={styles.doorGuideFingerIcon} size={20} />
                 <span>도어를 장착해보세요</span>
+                <PiHandTapThin className={styles.doorGuideFingerIcon} size={20} />
               </div>
             )}
           </div>
