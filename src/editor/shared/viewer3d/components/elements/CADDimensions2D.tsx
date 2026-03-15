@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
 import { calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
@@ -477,30 +477,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시 */}
         {visibleFurniture.map((module, moduleIndex) => {
-          const moduleData = getModuleById(
+          let moduleData = getModuleById(
             module.moduleId,
             { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
             spaceInfo
           );
 
+          // 커스터마이징/자유배치 가구 폴백: buildModuleDataFromPlacedModule
+          if (!moduleData) {
+            moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+          }
+
           if (!moduleData) return null;
 
-          const indexing = calculateSpaceIndexing(spaceInfo);
-          const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
-
-          // 가구 Z 위치 계산 (실제 가구 위치와 동일하게)
-          const panelDepthMm = spaceInfo.depth || 1500;
-          const furnitureDepthMm = 600;
-          const panelDepth = mmToThreeUnits(panelDepthMm);
-          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
-          const doorThickness = mmToThreeUnits(20);
-          const zOffset = -panelDepth / 2;
-          const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-          const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
-
           // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
-          const moduleHeightMm = (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
+          const moduleHeightMm = (module as PlacedModule).freeHeight ?? (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) {
             return null;
@@ -513,7 +504,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
-          const cabinetTopY = cabinetBottomY + internalHeight;
+          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 공간 내경 높이
+          const moduleFreeH = (module as PlacedModule).freeHeight;
+          const cabinetHeight = moduleFreeH ? mmToThreeUnits(moduleFreeH) : internalHeight;
+          const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
 
           // 2개 섹션만 표시 (하부/상부)
@@ -1267,31 +1261,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시 */}
+        {/* 가구별 섹션 치수 가이드 - 우측뷰에서 보이는 가구만 표시 */}
         {visibleFurniture.map((module, moduleIndex) => {
-          const moduleData = getModuleById(
+          let moduleData = getModuleById(
             module.moduleId,
             { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
             spaceInfo
           );
 
-          if (!moduleData) return null;
-          const indexing = calculateSpaceIndexing(spaceInfo);
-          const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
+          // 커스터마이징/자유배치 가구 폴백
+          if (!moduleData) {
+            moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+          }
 
-          // 가구 Z 위치 계산 (실제 가구 위치와 동일하게)
-          const panelDepthMm = spaceInfo.depth || 1500;
-          const furnitureDepthMm = 600;
-          const panelDepth = mmToThreeUnits(panelDepthMm);
-          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
-          const doorThickness = mmToThreeUnits(20);
-          const zOffset = -panelDepth / 2;
-          const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-          const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+          if (!moduleData) return null;
 
           // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
-          const moduleHeightMm = (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
+          const moduleHeightMm = (module as PlacedModule).freeHeight ?? (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'right');
           if (sectionConfigs.length === 0) {
             return null;
@@ -1304,7 +1290,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
-          const cabinetTopY = cabinetBottomY + internalHeight;
+          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 공간 내경 높이
+          const moduleFreeH = (module as PlacedModule).freeHeight;
+          const cabinetHeight = moduleFreeH ? mmToThreeUnits(moduleFreeH) : internalHeight;
+          const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
 
           // 2개 섹션만 표시 (하부/상부)
