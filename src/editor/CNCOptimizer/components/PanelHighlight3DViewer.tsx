@@ -85,27 +85,27 @@ const PanelDimmer: React.FC<{
       }
     });
 
-    // 제외 패널 visible 처리
+    // 제외 패널 visible 처리 (mesh + 부모 group 포함)
     if (excludedMeshNames && excludedMeshNames.size > 0) {
       scene.traverse((obj) => {
-        if (!(obj instanceof THREE.Mesh) || !obj.name) return;
+        if (!obj.name) return;
+        // mesh name 또는 edge name에서 panelName 추출
         const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
-        if (meshSuffix !== obj.name && excludedMeshNames.has(meshSuffix)) {
-          obj.visible = false;
-        } else if (meshSuffix !== obj.name) {
-          obj.visible = true;
+        if (meshSuffix !== obj.name) {
+          obj.visible = !excludedMeshNames.has(meshSuffix);
         }
       });
+      invalidate();
     } else {
       // 제외 없으면 모두 visible 복원
       scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh && obj.name) {
-          const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
-          if (meshSuffix !== obj.name) {
-            obj.visible = true;
-          }
+        if (!obj.name) return;
+        const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
+        if (meshSuffix !== obj.name) {
+          obj.visible = true;
         }
       });
+      invalidate();
     }
 
     if (!highlightedFurnitureId) {
