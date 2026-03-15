@@ -1162,7 +1162,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
   if (placedModule.isFreePlacement && isTallCabinetForY) {
     // 키큰장: freeHeight 우선, 없으면 내경 높이 기반 (띄움높이 차감)
-    furnitureHeightMm = placedModule.freeHeight || (internalSpace.height - floatHeightMmForHeight);
+    furnitureHeightMm = (placedModule.freeHeight || internalSpace.height) - floatHeightMmForHeight;
     // 개별 가구 상부프레임 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;
