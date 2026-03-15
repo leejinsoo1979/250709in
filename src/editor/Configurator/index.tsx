@@ -4525,13 +4525,25 @@ const Configurator: React.FC = () => {
               <div className={styles.toggleButtonGroup}>
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => setSpaceInfo({ doorSetupMode: 'furniture-fit' })}
+                  onClick={() => {
+                    setSpaceInfo({ doorSetupMode: 'furniture-fit' });
+                    // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
+                    placedModules.filter(m => m.hasDoor).forEach(m => {
+                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                    });
+                  }}
                 >
                   가구에 맞춤
                 </button>
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => setSpaceInfo({ doorSetupMode: 'space-fit' })}
+                  onClick={() => {
+                    setSpaceInfo({ doorSetupMode: 'space-fit' });
+                    // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
+                    placedModules.filter(m => m.hasDoor).forEach(m => {
+                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                    });
+                  }}
                 >
                   공간에 맞춤
                 </button>

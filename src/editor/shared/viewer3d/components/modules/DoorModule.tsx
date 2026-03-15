@@ -1457,33 +1457,6 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
                 panelGrainDirections={panelGrainDirections}
               />
               
-              {/* 자유배치 도어 설정 아이콘 (좌측 도어) */}
-              {isFree && !isDragging && viewMode !== '2D' && (
-                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center style={{ background: 'none' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      pointerEvents: 'auto',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (furnitureId) {
-                        const { setActivePopup } = useUIStore.getState();
-                        setActivePopup({ type: 'placedModule', id: furnitureId });
-                      }
-                    }}
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                  </div>
-                </Html>
-              )}
-
               {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
@@ -1888,33 +1861,6 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
                 panelGrainDirections={panelGrainDirections}
               />
               
-              {/* 자유배치 도어 설정 아이콘 (우측 도어) */}
-              {isFree && !isDragging && viewMode !== '2D' && (
-                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center style={{ background: 'none' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      pointerEvents: 'auto',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (furnitureId) {
-                        const { setActivePopup } = useUIStore.getState();
-                        setActivePopup({ type: 'placedModule', id: furnitureId });
-                      }
-                    }}
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                  </div>
-                </Html>
-              )}
-
               {/* Hinges for right door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
@@ -2375,33 +2321,6 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
                 opacity={viewMode === '3D' ? 0.9 : 1}
               />
             </lineSegments>
-
-            {/* 자유배치 도어 설정 아이콘 */}
-            {isFree && !isDragging && viewMode !== '2D' && (
-              <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center style={{ background: 'none' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (furnitureId) {
-                      const { setActivePopup } = useUIStore.getState();
-                      setActivePopup({ type: 'placedModule', id: furnitureId });
-                    }
-                  }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                </div>
-              </Html>
-            )}
 
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
@@ -2953,6 +2872,5 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
   }
 };
 
-// React.memo 커스텀 비교 제거 — 내부에서 useSpaceConfigStore 구독 중이므로
-// zustand이 doorTopGap/doorBottomGap 변경 시 직접 리렌더 트리거
-export default React.memo(DoorModule);
+// React.memo 제거 — doorTopGap/doorBottomGap/doorSetupMode 변경 시 확실한 리렌더 보장
+export default DoorModule;
