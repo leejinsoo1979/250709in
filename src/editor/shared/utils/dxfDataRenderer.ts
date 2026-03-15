@@ -2809,6 +2809,58 @@ export const generateExternalDimensions = (
         console.log(`🦶 조절발 위치 (${viewDirection}뷰): 앞쪽=${frontFootDepth}mm, 뒤쪽=${backFootDepth}mm`);
       }
 
+      // ========================================
+      // 6. 내부 선반/칸막이 수평선 (섹션 경계)
+      // computeSectionHeightsInfo에서 각 섹션 높이를 구하고 경계에 수평선 그림
+      // ========================================
+      if (placedModules.length > 0) {
+        let targetMod: PlacedModule;
+        if (sideViewFilter === 'leftmost') {
+          targetMod = placedModules.reduce((prev, curr) =>
+            ((curr.position?.x || 0) < (prev.position?.x || 0)) ? curr : prev
+          );
+        } else if (sideViewFilter === 'rightmost') {
+          targetMod = placedModules.reduce((prev, curr) =>
+            ((curr.position?.x || 0) > (prev.position?.x || 0)) ? curr : prev
+          );
+        } else {
+          targetMod = placedModules[0];
+        }
+
+        const modData = getModuleById(
+          targetMod.moduleId,
+          { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+          spaceInfo
+        );
+
+        const moduleHeightForSections = targetMod.customHeight ?? furnitureHeightMm;
+        const sectionInfo = computeSectionHeightsInfo(targetMod, modData, moduleHeightForSections, viewDirection);
+
+        if (sectionInfo.heightsMm.length > 1) {
+          const bt = sectionInfo.basicThicknessMm; // 기본 판재 두께 (18mm)
+          // 섹션 경계에 수평선 그리기 (하판 위부터 누적)
+          let currentY = furnitureBaseY + bt; // 하판 위
+          for (let i = 0; i < sectionInfo.heightsMm.length - 1; i++) {
+            currentY += sectionInfo.heightsMm[i];
+            // 칸막이 수평선 (섹션 경계 = 선반 판재)
+            const shelfY = currentY;
+            lines.push({ x1: minX, y1: shelfY, x2: maxX, y2: shelfY, layer: 'FURNITURE_PANEL', color: lineColor });
+            // 칸막이 두께 표현 (판재 상단)
+            const shelfTopY = shelfY + bt;
+            lines.push({ x1: minX, y1: shelfTopY, x2: maxX, y2: shelfTopY, layer: 'FURNITURE_PANEL', color: lineColor });
+            currentY += bt; // 판재 두께만큼 추가
+          }
+          console.log(`📐 내부 선반 ${sectionInfo.heightsMm.length - 1}개 경계선 추가`);
+        }
+
+        // 하판/상판 수평선 (가구 내부 상하단 판재)
+        const btLine = sectionInfo.basicThicknessMm;
+        // 하판 상단
+        lines.push({ x1: minX, y1: furnitureBaseY + btLine, x2: maxX, y2: furnitureBaseY + btLine, layer: 'FURNITURE_PANEL', color: lineColor });
+        // 상판 하단
+        lines.push({ x1: minX, y1: panelTop - btLine, x2: maxX, y2: panelTop - btLine, layer: 'FURNITURE_PANEL', color: lineColor });
+      }
+
       console.log(`✅ ${viewDirection}뷰 가구 형상 생성 완료: ${lines.length}개 라인`);
     }
 
@@ -3149,82 +3201,27 @@ export const generateDxfFromData = (
   // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달, excludeDoor 옵션 전달)
   const extracted = extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
 
-  // 측면뷰(left/right): 하이브리드 방식
-  // - 씬 추출: 내부 구조 (선반, 칸막이, 서랍 등) — FURNITURE_PANEL, DRAWER, BACK_PANEL 등
-  // - 데이터 기반: 외곽 프레임 + 조절발 + 치수선 — generateExternalDimensions(dimensionsOnly=false)
-  // - 씬 추출 X좌표를 데이터 기반 좌표 범위(0~furnitureDepthMm)로 정규화
+  // 측면뷰(left/right): 완전 데이터 기반
+  // 씬에는 leftmost 가구 1개만 렌더링되어 있어 다른 슬롯 가구를 씬에서 추출 불가능.
+  // generateExternalDimensions(dimensionsOnly=false)가 모든 것을 생성:
+  //   외곽 측판, 상/하부 프레임, 조절발, 내부 선반/칸막이 경계선, 하판/상판, 치수선
   let lines: DxfLine[];
   let texts: DxfText[];
 
   if (viewDirection === 'left' || viewDirection === 'right') {
-    console.log(`📐 측면뷰 (${viewDirection}): 하이브리드 생성 (씬 내부구조 + 데이터 프레임/치수)`);
+    console.log(`📐 측면뷰 (${viewDirection}): 완전 데이터 기반 생성`);
 
-    // 1. 데이터 기반: 프레임 + 조절발 + 치수선 생성
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
-      false // dimensionsOnly=false: 가구 형상 + 치수선 모두 생성
+      false // dimensionsOnly=false: 가구 형상 + 내부구조 + 치수선 모두 생성
     );
 
-    // 2. 씬 추출: 내부 구조만 (DIMENSIONS, SPACE_FRAME, ACCESSORIES 제외 — 데이터 기반에서 생성)
-    const excludeLayers = new Set(['DIMENSIONS', 'DOOR_DIMENSIONS', 'SPACE_FRAME', 'ACCESSORIES']);
-    const internalLines = extracted.lines.filter(line => !excludeLayers.has(line.layer));
-    const internalTexts = extracted.texts.filter(text => !excludeLayers.has(text.layer));
-    console.log(`📐 측면뷰 씬 추출 내부구조: ${internalLines.length}개 라인, ${internalTexts.length}개 텍스트 (전체 ${extracted.lines.length}개에서 필터)`);
-
-    // 3. 씬 추출 X좌표 범위 → 데이터 기반 좌표 범위로 정규화
-    // 데이터 기반 furnitureDepthMm 계산 (generateExternalDimensions과 동일한 로직)
-    let furnitureDepthMm = 600;
-    if (placedModules.length > 0) {
-      let targetModule: PlacedModule;
-      if (sideViewFilter === 'leftmost') {
-        targetModule = placedModules.reduce((prev, curr) =>
-          ((curr.position?.x || 0) < (prev.position?.x || 0)) ? curr : prev
-        );
-      } else if (sideViewFilter === 'rightmost') {
-        targetModule = placedModules.reduce((prev, curr) =>
-          ((curr.position?.x || 0) > (prev.position?.x || 0)) ? curr : prev
-        );
-      } else {
-        targetModule = placedModules[0];
-      }
-      const moduleDepth = targetModule.upperSectionDepth || targetModule.customDepth;
-      if (moduleDepth) furnitureDepthMm = moduleDepth;
-    }
-
-    // 씬 추출 X좌표를 데이터 기반 좌표(0~furnitureDepthMm)로 항상 정규화
-    // projectTo2D left: X = (spaceDepth/200 - Z) * 100 → 범위 0~spaceDepth
-    // generateExternalDimensions: X = 0~furnitureDepthMm
-    if (internalLines.length > 0) {
-      let sceneMinX = Infinity, sceneMaxX = -Infinity;
-      for (const line of internalLines) {
-        sceneMinX = Math.min(sceneMinX, line.x1, line.x2);
-        sceneMaxX = Math.max(sceneMaxX, line.x1, line.x2);
-      }
-      const sceneWidth = sceneMaxX - sceneMinX;
-      console.log(`📐 측면뷰 씬 X범위: ${sceneMinX.toFixed(1)}~${sceneMaxX.toFixed(1)} (폭=${sceneWidth.toFixed(1)}), 데이터 깊이=${furnitureDepthMm}mm`);
-
-      // 항상 씬 X범위를 데이터 범위(0~furnitureDepthMm)로 매핑
-      if (sceneWidth > 1) {
-        const scaleX = furnitureDepthMm / sceneWidth;
-        console.log(`📐 측면뷰 X정규화: [${sceneMinX.toFixed(1)}~${sceneMaxX.toFixed(1)}] → [0~${furnitureDepthMm}] (scale=${scaleX.toFixed(2)})`);
-        for (const line of internalLines) {
-          line.x1 = (line.x1 - sceneMinX) * scaleX;
-          line.x2 = (line.x2 - sceneMinX) * scaleX;
-        }
-        for (const text of internalTexts) {
-          text.x = (text.x - sceneMinX) * scaleX;
-        }
-      }
-    }
-
-    // 4. 합산: 씬 내부구조 + 데이터 프레임/치수선
-    // 데이터 기반의 FURNITURE_PANEL(외곽선)은 이미 포함 → 씬의 외곽선과 겹칠 수 있으나 무해
-    lines = [...internalLines, ...externalDimensions.lines];
-    texts = [...internalTexts, ...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 내부구조 ${internalLines.length} + 데이터 ${externalDimensions.lines.length} = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    lines = [...externalDimensions.lines];
+    texts = [...externalDimensions.texts];
+    console.log(`📐 측면뷰 (${viewDirection}): 데이터 기반 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 씬에서 추출한 치수선(DIMENSIONS 레이어)을 제외하고
     // generateExternalDimensions()에서 생성한 치수선만 사용 (중복 방지)

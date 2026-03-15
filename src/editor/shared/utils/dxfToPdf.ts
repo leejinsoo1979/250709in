@@ -429,43 +429,29 @@ export const downloadDxfAsPdf = async (
       await switchSceneViewMode('2D', 'front', 'wireframe');
     }
 
-    // 측면도(left)는 가구가 있는 슬롯만 페이지 생성
-    if (viewDirection === 'left' && sortedOccupiedSlots.length > 0) {
-      for (const slotIndex of sortedOccupiedSlots) {
+    // 측면도(left)는 배치된 가구 각각에 대해 페이지 생성
+    // 씬에는 leftmost 가구 1개만 렌더링되므로, 완전 데이터 기반으로 각 가구별 측면뷰 생성
+    if (viewDirection === 'left' && placedModules.length > 0) {
+      // X 위치 기준 정렬 (왼쪽부터)
+      const sortedModules = [...placedModules].sort((a, b) =>
+        (a.position?.x ?? 0) - (b.position?.x ?? 0)
+      );
+
+      for (let moduleIdx = 0; moduleIdx < sortedModules.length; moduleIdx++) {
+        const singleModule = sortedModules[moduleIdx];
 
         if (!isFirstPage) pdf.addPage();
         isFirstPage = false;
 
-        // 해당 슬롯의 가구만 필터링 (slotIndex 없으면 X 위치로 계산)
-        // 슬롯 계산이 불가능한 경우(기본 슬롯 0) 모든 가구 포함
-        const useAllModules = sortedOccupiedSlots.length === 1 && sortedOccupiedSlots[0] === 0;
+        console.log(`[DXF] left (가구 ${moduleIdx + 1}/${sortedModules.length}): moduleId=${singleModule.moduleId}`);
 
-        const slotModules = useAllModules ? placedModules : placedModules.filter(m => {
-          let globalSlotIndex: number;
-
-          if (m.slotIndex !== undefined) {
-            globalSlotIndex = m.slotIndex;
-            if (hasDroppedCeiling && m.zone === 'dropped') {
-              globalSlotIndex = normalSlotCount + m.slotIndex;
-            }
-          } else {
-            // slotIndex가 없는 경우 X 위치로 슬롯 계산
-            const moduleX = m.position?.x ?? 0;
-            globalSlotIndex = Math.floor(moduleX / slotWidth);
-            globalSlotIndex = Math.max(0, Math.min(globalSlotIndex, normalSlotCount - 1));
-          }
-
-          return globalSlotIndex === slotIndex;
-        });
-
-        console.log('[DXF] left (slot ' + (slotIndex + 1) + '): ' + slotModules.length + ' modules');
-
+        // 각 가구 1개만 전달하여 해당 가구의 측면뷰 생성
         const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-        const { lines, texts } = generateViewDataFromDxf(spaceInfo, slotModules, dxfViewDirection);
-        console.log('[DXF] left (slot ' + (slotIndex + 1) + '): ' + lines.length + ' lines, ' + texts.length + ' texts');
+        const { lines, texts } = generateViewDataFromDxf(spaceInfo, [singleModule], dxfViewDirection);
+        console.log(`[DXF] left (가구 ${moduleIdx + 1}): ${lines.length} lines, ${texts.length} texts`);
 
-        // 슬롯 번호를 제목에 포함
-        renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1, slotModules);
+        // 가구 번호를 제목에 포함
+        renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, moduleIdx + 1, [singleModule]);
       }
     }
     // 도어 입면도 (DOOR 레이어만 표시 - 2D 뷰어에서 가구 필터 끈 것과 동일)
