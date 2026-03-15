@@ -62,6 +62,7 @@ const FreePlacementDropZone: React.FC = () => {
   const activePopup = useUIStore(state => state.activePopup);
   const equalDistribution = useUIStore(state => state.equalDistribution);
   const viewMode = useUIStore(state => state.viewMode);
+  const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
@@ -1584,8 +1585,8 @@ const FreePlacementDropZone: React.FC = () => {
                 zIndexRange={[9999, 10000]}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', background: 'transparent' }}>
-                  {/* 잠금 아이콘 - 벽 갭에서만 표시 (공간 레벨 잠금) */}
-                  {(gap.gapType === 'left-wall' || gap.gapType === 'right-wall') && (() => {
+                  {/* 잠금 아이콘 - 벽 갭에서만 표시 (공간 레벨 잠금), 아이콘 끄면 숨김 */}
+                  {showFurnitureEditHandles && (gap.gapType === 'left-wall' || gap.gapType === 'right-wall') && (() => {
                     const side = gap.gapType === 'left-wall' ? 'left' : 'right';
                     const isLocked = spaceInfo.lockedWallGaps?.[side] != null;
                     return (
