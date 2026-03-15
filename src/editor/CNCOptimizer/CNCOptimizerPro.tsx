@@ -1277,7 +1277,17 @@ function PageInner(){
 
         {/* Center - Preview */}
         <div className={styles.centerPanel}>
-          {optimizationResults.length > 0 ? (
+          {viewSwapped ? (
+            /* 스왑 모드: 3D 뷰어가 메인 중앙에 표시 */
+            <div className={styles.viewerContainer}>
+              <div className={styles.mainViewer}>
+                <PanelHighlight3DViewer
+                  highlightedPanelName={hoveredPanelName}
+                  highlightedFurnitureId={hoveredFurnitureId}
+                />
+              </div>
+            </div>
+          ) : optimizationResults.length > 0 ? (
             <div className={styles.viewerContainer}>
               {/* Keyboard navigation hint */}
               {optimizationResults.length > 1 && (
@@ -1331,7 +1341,7 @@ function PageInner(){
                   onSimulationComplete={handleSimulationComplete}
                 />
               </div>
-              
+
               <div className={styles.thumbnailBar}>
                 <div className={styles.thumbnailScroll}>
                   {optimizationResults.map((result, index) => (
@@ -1356,7 +1366,7 @@ function PageInner(){
               <Cpu size={48} />
               <h3>{t('cnc.noResults')}</h3>
               <p>{t('cnc.setupHint')}</p>
-              <button 
+              <button
                 className={`${styles.optimizeButtonLarge} ${styles.primary}`}
                 onClick={handleOptimize}
                 disabled={isOptimizing}
@@ -1370,12 +1380,61 @@ function PageInner(){
         {/* Right Sidebar - 3D Viewer + Stats */}
         <div className={styles.rightSidebar}>
           <div className={styles.rightSidebarContent}>
-            {/* 3D 패널 하이라이트 뷰어 */}
+            {/* 3D 패널 하이라이트 뷰어 / 스왑 시 커팅 레이아웃 축소 */}
             <div className={styles.viewer3dContainer}>
-              <PanelHighlight3DViewer
-                highlightedPanelName={hoveredPanelName}
-                highlightedFurnitureId={hoveredFurnitureId}
-              />
+              <button className={styles.swapButton} onClick={() => setViewSwapped(v => !v)} title="뷰어 위치 변경">
+                <ArrowLeftRight size={14} />
+              </button>
+              {viewSwapped ? (
+                optimizationResults.length > 0 ? (
+                  <CuttingLayoutPreview2
+                    result={optimizationResults[currentSheetIndex]}
+                    highlightedPanelId={selectedPanelId}
+                    showLabels={settings.labelsOnPanels}
+                    onPanelClick={(id) => {
+                      setSelectedPanelId(id);
+                      const currentResult = optimizationResults[currentSheetIndex];
+                      const placedPanel = currentResult?.panels.find(p => p.id === id);
+                      if (placedPanel?.meshName && placedPanel?.furnitureId) {
+                        setHoveredPanel(placedPanel.meshName, placedPanel.furnitureId);
+                      } else {
+                        const baseId = id?.replace(/-\d+$/, '');
+                        const origPanel = panels.find(p => p.id === baseId || p.id === id);
+                        if (origPanel?.meshName && origPanel?.furnitureId) {
+                          setHoveredPanel(origPanel.meshName, origPanel.furnitureId);
+                        } else {
+                          setHoveredPanel(null, null);
+                        }
+                      }
+                    }}
+                    allowRotation={!settings.considerGrain}
+                    scale={viewerScale}
+                    rotation={viewerRotation}
+                    offset={viewerOffset}
+                    onScaleChange={setViewerScale}
+                    onRotationChange={setViewerRotation}
+                    onOffsetChange={setViewerOffset}
+                    sheetInfo={{
+                      currentIndex: currentSheetIndex,
+                      totalSheets: optimizationResults.length,
+                      onOptimize: handleOptimize,
+                      isOptimizing: isOptimizing,
+                      stock: stock
+                    }}
+                    onCurrentSheetIndexChange={setCurrentSheetIndex}
+                    showCuttingListTab={showCuttingList}
+                    allCutSteps={allCutSteps}
+                    boringData={boringPanels}
+                    shelfBoringPositions={customShelfPositionsByFurniture}
+                    onSimulationComplete={handleSimulationComplete}
+                  />
+                ) : null
+              ) : (
+                <PanelHighlight3DViewer
+                  highlightedPanelName={hoveredPanelName}
+                  highlightedFurnitureId={hoveredFurnitureId}
+                />
+              )}
             </div>
 
             <div className={styles.statsCard}>

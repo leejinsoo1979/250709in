@@ -853,6 +853,7 @@
 
 /* 3D 패널 하이라이트 뷰어 (16:9 비율) */
 .viewer3dContainer {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   flex-shrink: 0;
@@ -860,6 +861,27 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   overflow: hidden;
   background: #f8f9fa;
+}
+
+.swapButton {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.swapButton:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .statsCard {
