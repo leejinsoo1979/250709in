@@ -219,45 +219,70 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
     // 선택된 슬롯의 가구만 필터링
     let filteredBySlot = placedModules;
+    const isFreePlacementMode = spaceInfo.layoutMode === 'free-placement';
+
     if (selectedSlotIndex !== null) {
-      filteredBySlot = placedModules.filter(module => {
-        if (module.slotIndex === undefined) return false;
+      if (isFreePlacementMode) {
+        // 자유배치 모드: X좌표 순 가상 슬롯 인덱스 매핑
+        const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
+        const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
 
-        // module.slotIndex는 zone 내 로컬 인덱스
-        // selectedSlotIndex는 글로벌 인덱스
-        // 글로벌 인덱스로 변환하여 비교해야 함
-        let moduleGlobalSlotIndex = module.slotIndex;
-
-        // zone이 명시적으로 'dropped'이거나, X 위치로 단내림 구간으로 판별
-        let isInDroppedZone = module.zone === 'dropped';
-
-        // zone이 설정되지 않은 경우 X 위치로 판별
-        if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
-          const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
-          const moduleXMm = module.position.x * 100;
-          const normalWidth = zones.normal.width;
-          const droppedWidth = zones.dropped.width;
-
-          if (droppedPosition === 'left') {
-            isInDroppedZone = moduleXMm < droppedWidth;
+        const xGroups: number[][] = [];
+        let lastX: number | null = null;
+        sortedByX.forEach((m, idx) => {
+          const mx = m.position?.x ?? 0;
+          if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+            xGroups.push([idx]);
+            lastX = mx;
           } else {
-            isInDroppedZone = moduleXMm >= normalWidth;
+            xGroups[xGroups.length - 1].push(idx);
           }
+        });
+
+        const virtualSlotModuleIds = new Set<string>();
+        if (selectedSlotIndex < xGroups.length) {
+          xGroups[selectedSlotIndex].forEach(idx => {
+            virtualSlotModuleIds.add(sortedByX[idx].id);
+          });
         }
 
-        if (hasDroppedCeiling && isInDroppedZone) {
-          // 단내림 구간 가구: 로컬 인덱스 + normalSlotCount = 글로벌 인덱스
-          moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
-        }
+        filteredBySlot = placedModules.filter(module => {
+          if (module.isSurroundPanel) return false;
+          return virtualSlotModuleIds.has(module.id);
+        });
+      } else {
+        // 슬롯 기반 배치: 기존 로직
+        filteredBySlot = placedModules.filter(module => {
+          if (module.slotIndex === undefined) return false;
 
-        // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
-        if (module.isDualSlot) {
-          return moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex;
-        }
+          let moduleGlobalSlotIndex = module.slotIndex;
 
-        // 싱글 가구인 경우: 정확히 일치하는 슬롯만
-        return moduleGlobalSlotIndex === selectedSlotIndex;
-      });
+          let isInDroppedZone = module.zone === 'dropped';
+
+          if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
+            const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+            const moduleXMm = module.position.x * 100;
+            const normalWidth = zones.normal.width;
+            const droppedWidth = zones.dropped.width;
+
+            if (droppedPosition === 'left') {
+              isInDroppedZone = moduleXMm < droppedWidth;
+            } else {
+              isInDroppedZone = moduleXMm >= normalWidth;
+            }
+          }
+
+          if (hasDroppedCeiling && isInDroppedZone) {
+            moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
+          }
+
+          if (module.isDualSlot) {
+            return moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex;
+          }
+
+          return moduleGlobalSlotIndex === selectedSlotIndex;
+        });
+      }
     }
 
     if (filteredBySlot.length === 0) return [];

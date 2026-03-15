@@ -2,6 +2,7 @@ import React from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './SlotSelector.module.css';
 
@@ -28,6 +29,7 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   const { columnCount, zones } = useDerivedSpaceStore();
   const { theme } = useTheme();
   const { spaceInfo } = useSpaceConfigStore();
+  const placedModules = useFurnitureStore(state => state.placedModules);
 
   // 실제 방향 결정 (4분할 뷰에서는 splitViewDirection 사용)
   const effectiveDirection = forSplitView ? splitViewDirection : view2DDirection;
@@ -95,53 +97,71 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     backgroundColor: isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
   };
 
-  // 일반 영역과 단내림 영역 슬롯 개수 계산
-  const normalSlotCount = zones?.normal?.columnCount || columnCount;
-  const droppedSlotCount = zones?.dropped?.columnCount || 0;
-  const totalSlots = normalSlotCount + droppedSlotCount;
-
-  // 단내림 위치에 따른 슬롯 순서 결정
-  const isDroppedOnLeft = spaceInfo?.droppedCeiling?.position === 'left';
+  // 자유배치 모드 여부
+  const isFreePlacementMode = spaceInfo?.layoutMode === 'free-placement';
 
   // 슬롯 배열 생성
-  const slotButtons = [];
+  const slotButtons: { displayIndex: number; actualIndex: number; zone: 'normal' | 'dropped' }[] = [];
 
-  if (isDroppedOnLeft) {
-    // 단내림이 좌측: 번호도 역순, actualIndex도 역순
-    // 8,7 / 6,5,4,3,2,1 → actualIndex: 7,6 / 5,4,3,2,1,0
-    // 단내림 슬롯들 (역순)
-    for (let i = droppedSlotCount - 1; i >= 0; i--) {
+  if (isFreePlacementMode) {
+    // 자유배치 모드: 배치된 가구 수 기반으로 가상 슬롯 생성 (X좌표 순)
+    const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
+    const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+
+    // X좌표 기준 그룹핑 (같은 X = 상부장+하부장 조합)
+    let virtualSlotCount = 0;
+    let lastX: number | null = null;
+    sortedByX.forEach(m => {
+      const mx = m.position?.x ?? 0;
+      if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+        virtualSlotCount++;
+        lastX = mx;
+      }
+    });
+
+    for (let i = 0; i < virtualSlotCount; i++) {
       slotButtons.push({
-        displayIndex: normalSlotCount + droppedSlotCount - i, // 8, 7
-        actualIndex: normalSlotCount + i, // 7, 6
-        zone: 'dropped' as const
-      });
-    }
-    // 일반 슬롯들 (역순)
-    for (let i = normalSlotCount - 1; i >= 0; i--) {
-      slotButtons.push({
-        displayIndex: i + 1, // 6, 5, 4, 3, 2, 1
-        actualIndex: i, // 5, 4, 3, 2, 1, 0
+        displayIndex: i + 1,
+        actualIndex: i,
         zone: 'normal' as const
       });
     }
   } else {
-    // 단내림이 우측: 1,2,3,4,5,6 / 7,8 → actualIndex: 0,1,2,3,4,5 / 6,7
-    // 일반 슬롯들
-    for (let i = 0; i < normalSlotCount; i++) {
-      slotButtons.push({
-        displayIndex: i + 1, // 1, 2, 3, 4, 5, 6
-        actualIndex: i, // 0, 1, 2, 3, 4, 5
-        zone: 'normal' as const
-      });
-    }
-    // 단내림 슬롯들
-    for (let i = 0; i < droppedSlotCount; i++) {
-      slotButtons.push({
-        displayIndex: normalSlotCount + i + 1, // 7, 8
-        actualIndex: normalSlotCount + i, // 6, 7
-        zone: 'dropped' as const
-      });
+    // 슬롯 기반 배치: 기존 로직
+    const normalSlotCount = zones?.normal?.columnCount || columnCount;
+    const droppedSlotCount = zones?.dropped?.columnCount || 0;
+    const isDroppedOnLeft = spaceInfo?.droppedCeiling?.position === 'left';
+
+    if (isDroppedOnLeft) {
+      for (let i = droppedSlotCount - 1; i >= 0; i--) {
+        slotButtons.push({
+          displayIndex: normalSlotCount + droppedSlotCount - i,
+          actualIndex: normalSlotCount + i,
+          zone: 'dropped' as const
+        });
+      }
+      for (let i = normalSlotCount - 1; i >= 0; i--) {
+        slotButtons.push({
+          displayIndex: i + 1,
+          actualIndex: i,
+          zone: 'normal' as const
+        });
+      }
+    } else {
+      for (let i = 0; i < normalSlotCount; i++) {
+        slotButtons.push({
+          displayIndex: i + 1,
+          actualIndex: i,
+          zone: 'normal' as const
+        });
+      }
+      for (let i = 0; i < droppedSlotCount; i++) {
+        slotButtons.push({
+          displayIndex: normalSlotCount + i + 1,
+          actualIndex: normalSlotCount + i,
+          zone: 'dropped' as const
+        });
+      }
     }
   }
 

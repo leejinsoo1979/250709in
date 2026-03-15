@@ -53,47 +53,74 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
     const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
 
-    basePlacedModules = basePlacedModules.filter(module => {
-      if (module.slotIndex === undefined) return false;
+    // 자유배치 모드: X좌표 기반 가상 슬롯 인덱스 매핑
+    const isFreePlacementMode = spaceInfo.layoutMode === 'free-placement';
 
-      // module.slotIndex는 zone 내 로컬 인덱스
-      // selectedSlotIndex는 글로벌 인덱스
-      // 글로벌 인덱스로 변환하여 비교해야 함
-      let moduleGlobalSlotIndex = module.slotIndex;
+    if (isFreePlacementMode) {
+      // 자유배치: X좌표 순으로 정렬하여 가상 인덱스 부여
+      // 서라운드 패널 제외, 같은 X좌표 가구는 같은 가상 슬롯
+      const nonSurroundModules = basePlacedModules.filter(m => !m.isSurroundPanel);
+      const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
 
-      // zone이 명시적으로 'dropped'이거나, zone이 없지만 X 위치로 단내림 구간으로 판별
-      let isInDroppedZone = module.zone === 'dropped';
-
-      // zone이 설정되지 않은 경우 X 위치로 판별
-      if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
-        const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
-        const moduleXMm = module.position.x * 100; // Three.js 좌표를 mm로 변환
-
-        // 내경 너비에서 단내림/일반 영역 경계 계산
-        const normalWidth = zones.normal.width;
-        const droppedWidth = zones.dropped.width;
-
-        if (droppedPosition === 'left') {
-          // 단내림이 왼쪽: 0 ~ droppedWidth가 단내림 영역
-          isInDroppedZone = moduleXMm < droppedWidth;
+      // X좌표 기준으로 그룹핑 (같은 X좌표 = 같은 가상 슬롯)
+      const xGroups: number[][] = [];
+      let lastX: number | null = null;
+      sortedByX.forEach((m, idx) => {
+        const mx = m.position?.x ?? 0;
+        if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+          xGroups.push([idx]);
+          lastX = mx;
         } else {
-          // 단내림이 오른쪽: normalWidth ~ (normalWidth + droppedWidth)가 단내림 영역
-          isInDroppedZone = moduleXMm >= normalWidth;
+          xGroups[xGroups.length - 1].push(idx);
+        }
+      });
+
+      // 가상 슬롯 인덱스 → 모듈 ID 맵
+      const virtualSlotModuleIds = new Set<string>();
+      if (selectedSlotIndex !== null && selectedSlotIndex < xGroups.length) {
+        xGroups[selectedSlotIndex].forEach(idx => {
+          virtualSlotModuleIds.add(sortedByX[idx].id);
+        });
+      }
+
+      basePlacedModules = basePlacedModules.filter(module => {
+        if (module.isSurroundPanel) return false; // 측면뷰에서 서라운드 패널 제외
+        return virtualSlotModuleIds.has(module.id);
+      });
+    } else {
+      // 슬롯 기반 배치: 기존 로직
+      basePlacedModules = basePlacedModules.filter(module => {
+        if (module.slotIndex === undefined) return false;
+
+        let moduleGlobalSlotIndex = module.slotIndex;
+
+        let isInDroppedZone = module.zone === 'dropped';
+
+        if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
+          const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+          const moduleXMm = module.position.x * 100;
+
+          const normalWidth = zones.normal.width;
+          const droppedWidth = zones.dropped.width;
+
+          if (droppedPosition === 'left') {
+            isInDroppedZone = moduleXMm < droppedWidth;
+          } else {
+            isInDroppedZone = moduleXMm >= normalWidth;
+          }
         }
 
-      }
+        if (hasDroppedCeiling && isInDroppedZone) {
+          moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
+        }
 
-      if (hasDroppedCeiling && isInDroppedZone) {
-        // 단내림 구간 가구: 로컬 인덱스 + normalSlotCount = 글로벌 인덱스
-        moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
-      }
+        const isMatch = module.isDualSlot
+          ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
+          : (moduleGlobalSlotIndex === selectedSlotIndex);
 
-      const isMatch = module.isDualSlot
-        ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
-        : (moduleGlobalSlotIndex === selectedSlotIndex);
-
-      return isMatch;
-    });
+        return isMatch;
+      });
+    }
 
   }
 
