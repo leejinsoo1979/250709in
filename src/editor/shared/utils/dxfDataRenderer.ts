@@ -3159,7 +3159,7 @@ export const generateDxfFromData = (
     // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
     // 프레임과 조절발은 데이터 기반으로 생성하므로 씬에서 제외
 
-    // 씬에서 추출한 라인 중 가구 형상만 유지 (프레임, 조절발, 치수선, 환기캡 제외)
+    // 씬에서 추출한 라인 중 가구 형상만 유지 (프레임, 조절발, 치수선, 환기캡, 도어 제외)
     let filteredLines = extracted.lines.filter(line => {
       // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
       if (line.layer === 'DIMENSIONS') {
@@ -3177,9 +3177,14 @@ export const generateDxfFromData = (
       if (line.layer === 'ACCESSORIES') {
         return false;
       }
+      // DOOR / DOOR_DIMENSIONS 레이어 제외 - 측면뷰에서 도어는 불필요
+      // 도어 엣지가 포함되면 X 범위가 왜곡됨 (도어 두께가 가구 깊이에 영향)
+      if (line.layer === 'DOOR' || line.layer === 'DOOR_DIMENSIONS') {
+        return false;
+      }
       return true;
     });
-    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION, SPACE_FRAME, ACCESSORIES 제외)`);
+    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION, SPACE_FRAME, ACCESSORIES, DOOR 제외)`);
 
     // ========================================
     // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화 + 좌우 반전
