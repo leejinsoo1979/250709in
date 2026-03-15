@@ -61,6 +61,7 @@ const FreePlacementDropZone: React.FC = () => {
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
   const equalDistribution = useUIStore(state => state.equalDistribution);
+  const viewMode = useUIStore(state => state.viewMode);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
@@ -1463,8 +1464,9 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
-      {/* 잠긴 이격 구간 — 붉은색 투명 박스 */}
+      {/* 잠긴 이격 구간 — 붉은색 투명 박스 (3D에서만) */}
       {(() => {
+        if (viewMode === '2D') return null;
         const lockedGaps = spaceInfo.lockedWallGaps;
         if (!lockedGaps) return null;
         const { startX, endX } = spaceBounds;
