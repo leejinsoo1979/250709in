@@ -82,24 +82,37 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showDisplayMenu, setShowDisplayMenu] = useState(false);
   const displayMenuRef = useRef<HTMLDivElement>(null);
   const [showDoorGuide, setShowDoorGuide] = useState(false);
-  const prevHasFurnitureRef = useRef(false);
+  const doorGuideDismissedRef = useRef(false);
 
-  // 가구가 처음 배치되면 도어 안내 표시
+  // 모든 슬롯에 가구가 배치되면 도어 안내 표시
   useEffect(() => {
-    if (hasFurniture && !prevHasFurnitureRef.current && !hasDoorsInstalled) {
-      const timer = setTimeout(() => setShowDoorGuide(true), 1500);
-      return () => clearTimeout(timer);
+    if (hasDoorsInstalled || doorGuideDismissedRef.current) {
+      setShowDoorGuide(false);
+      return;
     }
+
     if (!hasFurniture) {
       setShowDoorGuide(false);
+      return;
     }
-    prevHasFurnitureRef.current = hasFurniture;
-  }, [hasFurniture, hasDoorsInstalled]);
 
-  // 도어 설치되면 안내 숨김
-  useEffect(() => {
-    if (hasDoorsInstalled) setShowDoorGuide(false);
-  }, [hasDoorsInstalled]);
+    // 슬롯배치: 슬롯 수와 배치된 가구가 차지하는 슬롯 수 비교
+    if (!isFreePlacement) {
+      const totalSlots = spaceInfo?.customColumnCount || 1;
+      const slotFurniture = placedModules.filter(m => !m.isFreePlacement);
+      let occupiedSlots = 0;
+      slotFurniture.forEach(m => {
+        const isDual = m.moduleId?.startsWith('dual-') || m.isDualSlot;
+        occupiedSlots += isDual ? 2 : 1;
+      });
+      if (occupiedSlots >= totalSlots) {
+        const timer = setTimeout(() => setShowDoorGuide(true), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        setShowDoorGuide(false);
+      }
+    }
+  }, [placedModules, hasDoorsInstalled, isFreePlacement, spaceInfo?.customColumnCount, hasFurniture]);
 
   // 표시 옵션 드롭다운 외부 클릭 감지
   useEffect(() => {
@@ -384,16 +397,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             {showDoorGuide && !hasDoorsInstalled && (
               <div
                 className={styles.doorGuideTooltip}
-                onClick={() => setShowDoorGuide(false)}
+                onClick={() => { setShowDoorGuide(false); doorGuideDismissedRef.current = true; }}
               >
-                <span className={styles.doorGuideFingerIcon}>👆</span>
+                <svg className={styles.doorGuideFingerIcon} viewBox="0 0 24 32" width="18" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C12 0.9 11.1 0 10 0C8.9 0 8 0.9 8 2V16H6V10C6 8.9 5.1 8 4 8C2.9 8 2 8.9 2 10V20C2 26.6 6.4 30 12 30C17.6 30 20 26.6 20 22V14C20 12.9 19.1 12 18 12C16.9 12 16 12.9 16 14V16H14V6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6V16H8V2H12Z" fill="currentColor"/>
+                </svg>
                 <span>도어를 장착해보세요</span>
-                <button
-                  className={styles.doorGuideClose}
-                  onClick={(e) => { e.stopPropagation(); setShowDoorGuide(false); }}
-                >
-                  ×
-                </button>
               </div>
             )}
           </div>
