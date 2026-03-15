@@ -580,10 +580,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 원본 spaceInfo 가져오기 (zone별로 분리되지 않은 전체 공간 정보)
   const { spaceInfo: originalSpaceInfo } = useSpaceConfigStore();
 
-  // doorTopGap/doorBottomGap: props(개별 가구) → 글로벌 spaceInfo → 기본값
-  const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 5;
-  const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 25;
-  console.log('🚪🔴🔴 doorGap 전체 추적:', { doorTopGapProp, doorBottomGapProp, storeTopGap: originalSpaceInfo.doorTopGap, storeBotGap: originalSpaceInfo.doorBottomGap, finalTop: doorTopGap, finalBot: doorBottomGap, moduleId: moduleData?.id });
+  // doorTopGap/doorBottomGap: props(개별 가구) → store 개별 가구 → 글로벌 spaceInfo → 기본값
+  // storePlacedModule에서도 직접 읽어서 prop 체인 누락 시에도 동작하도록 보장
+  const storeTopGap = storePlacedModule?.doorTopGap;
+  const storeBotGap = storePlacedModule?.doorBottomGap;
+  const doorTopGap = doorTopGapProp ?? storeTopGap ?? originalSpaceInfo.doorTopGap ?? 5;
+  const doorBottomGap = doorBottomGapProp ?? storeBotGap ?? originalSpaceInfo.doorBottomGap ?? 25;
+  console.log('🚪🔴🔴 doorGap 전체 추적:', { doorTopGapProp, doorBottomGapProp, storeTopGap, storeBotGap, storeGlobalTop: originalSpaceInfo.doorTopGap, storeGlobalBot: originalSpaceInfo.doorBottomGap, finalTop: doorTopGap, finalBot: doorBottomGap, moduleId: moduleData?.id });
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);
@@ -760,7 +763,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 가구 높이 계산
     // 공간에 맞춤(space-fit): 공간 전체 높이 기준 (글로벌 topFrame) — 도어가 공간을 채움
     // 가구에 맞춤(furniture-fit): 가구 높이 기준 (per-furniture topFrame 반영) — 도어가 가구에 맞춤
-    const doorSetupMode = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+    // storeSpaceInfo(selector) 또는 originalSpaceInfo(no-selector) 중 최신값 사용
+    const doorSetupMode = storeSpaceInfo?.doorSetupMode || originalSpaceInfo.doorSetupMode || 'furniture-fit';
     const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
     if (doorSetupMode === 'space-fit') {
       // 공간에 맞춤: 글로벌 프레임 기준 공간 높이 사용 (per-furniture topFrame과 무관)
@@ -1083,7 +1087,7 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
       }
 
       // 공간에 맞춤 모드: 섹션 분할 도어도 Y 위치 보정 필요
-      const doorSetupModeForSection = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+      const doorSetupModeForSection = storeSpaceInfo?.doorSetupMode || originalSpaceInfo.doorSetupMode || 'furniture-fit';
       if (doorSetupModeForSection === 'space-fit' && effectiveInternalHeight) {
         const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
@@ -1102,7 +1106,7 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
 
       // 공간에 맞춤 모드: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
       // → 가구 중심과 공간 중심의 차이만큼 도어 Y 위치 보정
-      const doorSetupModeForY = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+      const doorSetupModeForY = storeSpaceInfo?.doorSetupMode || originalSpaceInfo.doorSetupMode || 'furniture-fit';
       if (doorSetupModeForY === 'space-fit' && effectiveInternalHeight) {
         const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
