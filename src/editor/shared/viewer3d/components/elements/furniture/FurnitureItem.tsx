@@ -315,6 +315,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }, [isDraggingThis, isEditMode]);
 
+  // 허공 클릭 시 도어 옵션 패널 닫기
+  useEffect(() => {
+    if (!showDoorOptions) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // 패널 내부 클릭은 무시
+      if (target.closest('[data-door-options-panel]')) return;
+      setShowDoorOptions(false);
+    };
+    // 다음 프레임에 리스너 등록 (현재 클릭 이벤트 무시)
+    const raf = requestAnimationFrame(() => {
+      window.addEventListener('pointerdown', handleOutsideClick);
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('pointerdown', handleOutsideClick);
+    };
+  }, [showDoorOptions]);
+
   // placedModule 갭 값 변경 시 입력 동기화
   useEffect(() => {
     setDoorTopGapInput((placedModule.doorTopGap ?? 5).toString());
@@ -3535,6 +3554,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }}
         >
           <div
+            data-door-options-panel
             style={{
               cursor: 'pointer',
               display: 'flex',
@@ -3582,6 +3602,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }}
         >
           <div
+            data-door-options-panel
             style={{
               background: 'rgba(255, 255, 255, 0.95)',
               borderRadius: '12px',
