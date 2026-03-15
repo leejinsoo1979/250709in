@@ -4576,8 +4576,8 @@ const Configurator: React.FC = () => {
                               if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
                             }}
                             onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                            className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                            placeholder="5" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center', width: '100%' }} />
+                            placeholder="5"
+                            style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
                         </td>
                       ))}
                     </tr>
@@ -4593,8 +4593,8 @@ const Configurator: React.FC = () => {
                               if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
                             }}
                             onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                            className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                            placeholder="25" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center', width: '100%' }} />
+                            placeholder="25"
+                            style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
                         </td>
                       ))}
                     </tr>
