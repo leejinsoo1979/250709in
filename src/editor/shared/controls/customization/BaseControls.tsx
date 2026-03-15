@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import BaseTypeSelector from './components/BaseTypeSelector';
 import PlacementControls from './components/PlacementControls';
 import styles from '../styles/common.module.css';
@@ -35,8 +36,8 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     placedModules.forEach(mod => {
       if (!mod.isFreePlacement) return;
       // 키큰장(full category)만 freeHeight 갱신 — 상/하부장은 독립 높이
-      const cat = mod.moduleId?.split('-')[0];
-      if (cat !== 'full' && cat !== 'customizable') return;
+      const cat = getModuleCategory(mod);
+      if (cat !== 'full') return;
       // freeHeight가 있든 없든 새 최대높이로 갱신
       if (mod.freeHeight !== newMaxHeight) {
         updateModule(mod.id, { freeHeight: newMaxHeight });
