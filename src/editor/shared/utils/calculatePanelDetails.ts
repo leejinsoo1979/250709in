@@ -2,6 +2,7 @@ import { ModuleData } from '@/data/modules';
 import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/calculators/hingeCalculator';
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
+import type { FreeSurroundConfig } from '@/store/core/spaceConfigStore';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -976,6 +977,121 @@ export const calculatePanelDetails = (
   if (panels.frame.length > 0) {
     result.push({ name: '=== 프레임 ===' });
     result.push(...panels.frame);
+  }
+
+  return result;
+};
+
+// === 서라운드 패널 목록 생성 (공간 전체 단위) ===
+const SURROUND_SIDE_DEPTH = 40; // L자형 측면 패널 깊이 (mm)
+const SURROUND_PANEL_THICKNESS = 18; // 서라운드 패널 두께 (mm)
+
+export const calculateSurroundPanels = (
+  freeSurround: FreeSurroundConfig | undefined,
+  surroundHeightMm: number // 서라운드 높이 (mm) = 공간높이 - 바닥마감재 - 띄움높이
+): any[] => {
+  if (!freeSurround) return [];
+
+  const result: any[] = [];
+
+  // 좌측 서라운드
+  if (freeSurround.left?.enabled && freeSurround.left.method !== 'none') {
+    const method = freeSurround.left.method || 'lshape';
+    const gapMm = freeSurround.left.gap || 0;
+
+    if (method === 'lshape' && gapMm > 0) {
+      // L자형: 측면판 + 전면판
+      result.push({
+        name: '좌측 서라운드 측면판',
+        width: SURROUND_SIDE_DEPTH,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+      result.push({
+        name: '좌측 서라운드 전면판',
+        width: gapMm,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+    } else if (method === 'ep') {
+      // 엔드패널형: 단일 패널
+      result.push({
+        name: '좌측 서라운드',
+        width: SURROUND_PANEL_THICKNESS,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+    }
+  }
+
+  // 우측 서라운드
+  if (freeSurround.right?.enabled && freeSurround.right.method !== 'none') {
+    const method = freeSurround.right.method || 'lshape';
+    const gapMm = freeSurround.right.gap || 0;
+
+    if (method === 'lshape' && gapMm > 0) {
+      result.push({
+        name: '우측 서라운드 측면판',
+        width: SURROUND_SIDE_DEPTH,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+      result.push({
+        name: '우측 서라운드 전면판',
+        width: gapMm,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+    } else if (method === 'ep') {
+      result.push({
+        name: '우측 서라운드',
+        width: SURROUND_PANEL_THICKNESS,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+    }
+  }
+
+  // 중간 서라운드 (가구 사이 gap)
+  if (freeSurround.middle && freeSurround.middle.length > 0) {
+    freeSurround.middle.forEach((midCfg, idx) => {
+      if (!midCfg.enabled || midCfg.method === 'none') return;
+      const gapMm = midCfg.gap || 0;
+      if (gapMm <= 0) return;
+
+      const label = freeSurround.middle!.length > 1 ? `중간${idx + 1}` : '중간';
+
+      // 좌측 측면판
+      result.push({
+        name: `${label} 서라운드 좌측면판`,
+        width: SURROUND_SIDE_DEPTH,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+      // 우측 측면판
+      result.push({
+        name: `${label} 서라운드 우측면판`,
+        width: SURROUND_SIDE_DEPTH,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+      // 전면판
+      result.push({
+        name: `${label} 서라운드 전면판`,
+        width: gapMm,
+        height: surroundHeightMm,
+        thickness: SURROUND_PANEL_THICKNESS,
+        material: 'PB',
+      });
+    });
   }
 
   return result;

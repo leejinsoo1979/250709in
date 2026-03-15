@@ -7,7 +7,7 @@ import { calculateInternalSpace, calculateTopBottomFrameHeight, calculateBaseFra
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
-import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
@@ -1148,6 +1148,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     );
   }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase]);
 
+  // 서라운드 패널 계산 (공간 전체 단위)
+  const surroundPanels = React.useMemo(() => {
+    if (!spaceInfo.freeSurround) return [];
+    // 서라운드 높이 = 공간높이 - 바닥마감재 - 띄움높이
+    const spaceH = spaceInfo.height || 2400;
+    const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+      ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+    const surroundH = spaceH - floorFinishH - floatH;
+    const panels = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+    if (panels.length === 0) return [];
+    return [{ name: '=== 서라운드 ===' }, ...panels];
+  }, [spaceInfo.freeSurround, spaceInfo.height, spaceInfo.baseConfig, floorFinishH]);
+
+  // panelDetails + surroundPanels 합산
+  const allPanelDetails = React.useMemo(() => {
+    return [...panelDetails, ...surroundPanels];
+  }, [panelDetails, surroundPanels]);
+
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {
 // console.log(`🔍 [가구 타입 확인] ${moduleData?.id}: 듀얼=${isDualFurniture}, 싱글=${isSingleFurniture}, 커버도어=${isCoverDoor}`);
@@ -2090,7 +2108,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 상세보기 패널 */}
           {showDetails && (() => {
             // 실제 패널 개수 계산 (섹션 구분자와 정보성 항목 제외)
-            const actualPanelCount = panelDetails.filter(panel =>
+            const actualPanelCount = allPanelDetails.filter(panel =>
               !panel.name?.startsWith('===') && !panel.isInfo
             ).length;
 
@@ -2100,14 +2118,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {t('furniture.panelDetails')} (총 {actualPanelCount}장)
                 </h5>
                 <div className={styles.panelList}>
-                  {panelDetails.map((panel, index) => {
+                  {allPanelDetails.map((panel, index) => {
                   // 섹션 구분자인 경우
                   if (panel.name && panel.name.startsWith('===')) {
                     // 현재 섹션부터 다음 섹션 구분자 전까지의 실제 패널 개수 계산
                     let sectionPanelCount = 0;
-                    for (let i = index + 1; i < panelDetails.length; i++) {
-                      if (panelDetails[i].name?.startsWith('===')) break;
-                      if (!panelDetails[i].isInfo) sectionPanelCount++;
+                    for (let i = index + 1; i < allPanelDetails.length; i++) {
+                      if (allPanelDetails[i].name?.startsWith('===')) break;
+                      if (!allPanelDetails[i].isInfo) sectionPanelCount++;
                     }
 
                     return (

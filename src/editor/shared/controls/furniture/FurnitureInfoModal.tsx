@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Module, PlacedModule } from '@/types/module';
 import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
-import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
@@ -385,7 +385,20 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     topFrameHeightMm, visualBaseFrameHeightMm,
     placedModule?.hasTopFrame, placedModule?.hasBase
   );
-  const totalPanels = panels.filter(p => !p.name?.startsWith('===')).length;
+
+  // 서라운드 패널 (공간 전체 단위)
+  const surroundHeightMm = (() => {
+    const spaceH = spaceInfo.height || 2400;
+    const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+      ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+    return spaceH - floorFinishH - floatH;
+  })();
+  const surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundHeightMm);
+  const allPanels = surroundPanelList.length > 0
+    ? [...panels, { name: '=== 서라운드 ===' }, ...surroundPanelList]
+    : panels;
+
+  const totalPanels = allPanels.filter(p => !p.name?.startsWith('===')).length;
 
   return (
     <>
@@ -467,7 +480,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
                 <div className={styles.headerCell}>재질</div>
               </div>
               <div className={styles.tableBody}>
-                {panels.map((panel, index) => {
+                {allPanels.map((panel, index) => {
                   // 섹션 구분자인 경우
                   if (panel.name && panel.name.startsWith('===')) {
                     return (
