@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../../utils/geometry';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
 import * as THREE from 'three';
@@ -300,10 +300,63 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const { updatePlacedModule } = useFurnitureStore();
   const { getCustomFurnitureById } = useCustomFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
+  const [showDoorOptions, setShowDoorOptions] = useState(false);
+  const [doorTopGapInput, setDoorTopGapInput] = useState<string>((placedModule.doorTopGap ?? 5).toString());
+  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((placedModule.doorBottomGap ?? 25).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id && !isCustomEditing;
   const { theme: appTheme } = useTheme();
+
+  // 드래그/편집 시 도어 옵션 패널 닫기
+  useEffect(() => {
+    if (isDraggingThis || isEditMode) {
+      setShowDoorOptions(false);
+    }
+  }, [isDraggingThis, isEditMode]);
+
+  // placedModule 갭 값 변경 시 입력 동기화
+  useEffect(() => {
+    setDoorTopGapInput((placedModule.doorTopGap ?? 5).toString());
+    setDoorBottomGapInput((placedModule.doorBottomGap ?? 25).toString());
+  }, [placedModule.doorTopGap, placedModule.doorBottomGap]);
+
+  // 도어 갭 변경 핸들러
+  const handleDoorTopGapCommit = useCallback((value: string) => {
+    const num = parseInt(value);
+    if (!isNaN(num) && num >= 0) {
+      updatePlacedModule(placedModule.id, { doorTopGap: num });
+    } else {
+      setDoorTopGapInput((placedModule.doorTopGap ?? 5).toString());
+    }
+  }, [placedModule.id, placedModule.doorTopGap, updatePlacedModule]);
+
+  const handleDoorBottomGapCommit = useCallback((value: string) => {
+    const num = parseInt(value);
+    if (!isNaN(num) && num >= 0) {
+      updatePlacedModule(placedModule.id, { doorBottomGap: num });
+    } else {
+      setDoorBottomGapInput((placedModule.doorBottomGap ?? 25).toString());
+    }
+  }, [placedModule.id, placedModule.doorBottomGap, updatePlacedModule]);
+
+  // 도어 셋업 모드 변경 핸들러
+  const handleDoorSetupModeChange = useCallback((mode: 'furniture-fit' | 'space-fit') => {
+    const { setSpaceInfo } = useSpaceConfigStore.getState();
+    setSpaceInfo({ doorSetupMode: mode });
+    // 모든 도어 가구에 리렌더 트리거
+    const allModules = useFurnitureStore.getState().placedModules;
+    allModules.forEach((m) => {
+      if (m.hasDoor) {
+        updatePlacedModule(m.id, { _doorSetupTs: Date.now() } as any);
+      }
+    });
+  }, [updatePlacedModule]);
+
+  // 경첩 방향 변경 핸들러
+  const handleHingeChange = useCallback((pos: 'left' | 'right') => {
+    updatePlacedModule(placedModule.id, { hingePosition: pos });
+  }, [placedModule.id, updatePlacedModule]);
 
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
@@ -3498,7 +3551,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             onClick={(e) => {
               e.stopPropagation();
               (window as any).__r3fClickHandled = true;
-              onDoubleClick(e as any, placedModule.id);
+              setShowDoorOptions(prev => !prev);
             }}
             onPointerDown={(e) => e.stopPropagation()}
             title="도어 설정"
@@ -3507,6 +3560,177 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
+          </div>
+        </Html>
+      )}
+
+      {/* 도어 옵션 플로팅 패널 */}
+      {showDoorOptions && placedModule.isFreePlacement && placedModule.hasDoor && viewMode !== '2D' && (
+        <Html
+          position={[
+            adjustedPosition.x + width / 2 + 1.5,
+            finalYPosition,
+            furnitureZ + depth / 2 + doorThickness + 0.3
+          ]}
+          center
+          zIndexRange={[200, 0]}
+          style={{
+            userSelect: 'none',
+            pointerEvents: 'auto',
+            zIndex: 200,
+            background: 'transparent',
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '12px',
+              border: '2px solid #6366f1',
+              boxShadow: '0 4px 16px rgba(99, 102, 241, 0.2)',
+              padding: '12px',
+              minWidth: '200px',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              fontSize: '13px',
+              color: '#1f2937',
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>도어 셋팅</span>
+              <button
+                onClick={() => setShowDoorOptions(false)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                  color: '#9ca3af', fontSize: '16px', lineHeight: 1,
+                }}
+              >✕</button>
+            </div>
+
+            {/* 가구에 맞춤 / 공간에 맞춤 */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+              {(['furniture-fit', 'space-fit'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => handleDoorSetupModeChange(mode)}
+                  style={{
+                    flex: 1,
+                    padding: '6px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit')
+                      ? '#6366f1' : '#d1d5db',
+                    background: (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit')
+                      ? '#6366f1' : '#fff',
+                    color: (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit')
+                      ? '#fff' : '#374151',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {mode === 'furniture-fit' ? '가구에 맞춤' : '공간에 맞춤'}
+                </button>
+              ))}
+            </div>
+
+            {/* 상단/하단 갭 */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>상단 ↑</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={doorTopGapInput}
+                    onChange={(e) => setDoorTopGapInput(e.target.value)}
+                    onBlur={() => handleDoorTopGapCommit(doorTopGapInput)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleDoorTopGapCommit(doorTopGapInput);
+                      if (e.key === 'ArrowUp') {
+                        const v = Math.max(0, (parseInt(doorTopGapInput) || 0) + 1);
+                        setDoorTopGapInput(v.toString());
+                        updatePlacedModule(placedModule.id, { doorTopGap: v });
+                      }
+                      if (e.key === 'ArrowDown') {
+                        const v = Math.max(0, (parseInt(doorTopGapInput) || 0) - 1);
+                        setDoorTopGapInput(v.toString());
+                        updatePlacedModule(placedModule.id, { doorTopGap: v });
+                      }
+                    }}
+                    style={{
+                      width: '50px', padding: '4px 6px', borderRadius: '4px',
+                      border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center',
+                      outline: 'none', color: '#000',
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>하단 ↓</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={doorBottomGapInput}
+                    onChange={(e) => setDoorBottomGapInput(e.target.value)}
+                    onBlur={() => handleDoorBottomGapCommit(doorBottomGapInput)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleDoorBottomGapCommit(doorBottomGapInput);
+                      if (e.key === 'ArrowUp') {
+                        const v = Math.max(0, (parseInt(doorBottomGapInput) || 0) + 1);
+                        setDoorBottomGapInput(v.toString());
+                        updatePlacedModule(placedModule.id, { doorBottomGap: v });
+                      }
+                      if (e.key === 'ArrowDown') {
+                        const v = Math.max(0, (parseInt(doorBottomGapInput) || 0) - 1);
+                        setDoorBottomGapInput(v.toString());
+                        updatePlacedModule(placedModule.id, { doorBottomGap: v });
+                      }
+                    }}
+                    style={{
+                      width: '50px', padding: '4px 6px', borderRadius: '4px',
+                      border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center',
+                      outline: 'none', color: '#000',
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 경첩 방향 (싱글 가구만) */}
+            {!isDualFurniture && (
+              <div>
+                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>경첩 방향</label>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['left', 'right'] as const).map((pos) => (
+                    <button
+                      key={pos}
+                      onClick={() => handleHingeChange(pos)}
+                      style={{
+                        flex: 1,
+                        padding: '5px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid',
+                        borderColor: (placedModule.hingePosition || 'right') === pos ? '#6366f1' : '#d1d5db',
+                        background: (placedModule.hingePosition || 'right') === pos ? '#6366f1' : '#fff',
+                        color: (placedModule.hingePosition || 'right') === pos ? '#fff' : '#374151',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {pos === 'left' ? '좌' : '우'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Html>
       )}
