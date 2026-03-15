@@ -3187,9 +3187,38 @@ export const generateDxfFromData = (
     console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION, SPACE_FRAME, ACCESSORIES, DOOR 제외)`);
 
     // ========================================
-    // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화 + 좌우 반전
-    // 가구의 월드 X 위치와 관계없이 DXF에서는 0~깊이 범위에 그려져야 함
-    // 측면뷰에서는 UI와 일치하도록 X축을 반전 (미러링)
+    // 모듈 데이터 기반 가구 깊이 계산 (씬 추출 결과와 관계없이 정확한 깊이값)
+    // generateExternalDimensions와 동일한 로직으로 targetModule에서 깊이를 가져옴
+    // ========================================
+    let moduleBasedDepthMm = 600; // 기본값
+    if (placedModules.length > 0) {
+      let targetModule: typeof placedModules[0];
+      if (sideViewFilter === 'leftmost') {
+        targetModule = placedModules.reduce((prev, curr) => {
+          const prevX = prev.position?.x || 0;
+          const currX = curr.position?.x || 0;
+          return currX < prevX ? curr : prev;
+        });
+      } else if (sideViewFilter === 'rightmost') {
+        targetModule = placedModules.reduce((prev, curr) => {
+          const prevX = prev.position?.x || 0;
+          const currX = curr.position?.x || 0;
+          return currX > prevX ? curr : prev;
+        });
+      } else {
+        targetModule = placedModules[0];
+      }
+      const moduleDepth = targetModule.upperSectionDepth || targetModule.customDepth;
+      if (moduleDepth && moduleDepth > 0) {
+        moduleBasedDepthMm = moduleDepth;
+      }
+      console.log(`📐 측면뷰 모듈 데이터 기반 깊이: ${moduleBasedDepthMm}mm (upperSectionDepth=${targetModule.upperSectionDepth}, customDepth=${targetModule.customDepth})`);
+    }
+
+    // ========================================
+    // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 모듈 깊이 기준으로 정규화 + 스케일링
+    // 씬 추출 라인의 X 범위가 좁을 수 있으므로 (패널 두께만 추출되는 경우)
+    // 모듈 데이터 기반 깊이(moduleBasedDepthMm)로 스케일링하여 정확한 비율 유지
     // ========================================
     if (filteredLines.length > 0) {
       // 추출된 라인들의 X 좌표 범위 계산
@@ -3200,16 +3229,25 @@ export const generateDxfFromData = (
         maxX = Math.max(maxX, line.x1, line.x2);
       });
 
-      const furnitureWidth = maxX - minX;
-      console.log(`📐 측면뷰 X좌표 정규화 + 반전: 원본 범위 ${minX.toFixed(1)}~${maxX.toFixed(1)} → 0~${furnitureWidth.toFixed(1)} (좌우 반전 적용)`);
+      const sceneWidth = maxX - minX;
+      // 목표 깊이: 모듈 데이터 기반 깊이 사용 (씬 추출 범위가 좁아도 정확한 깊이)
+      const targetDepth = moduleBasedDepthMm;
+      console.log(`📐 측면뷰 X좌표 정규화: 씬 범위 ${minX.toFixed(1)}~${maxX.toFixed(1)} (${sceneWidth.toFixed(1)}mm) → 목표 깊이 ${targetDepth}mm`);
 
-      // X 좌표를 0 기준으로 정규화하면서 좌우 반전 (미러링)
-      // 원래: minX → 0, maxX → furnitureWidth
-      // 반전: minX → furnitureWidth, maxX → 0
+      // 스케일 팩터 계산: 씬 추출 범위가 너무 작으면 모듈 깊이로 스케일링
+      // 씬 추출 범위가 모듈 깊이의 50% 미만이면 스케일링 적용 (패널 두께만 추출된 경우)
+      const needsScaling = sceneWidth > 0 && sceneWidth < targetDepth * 0.5;
+      const scaleFactor = needsScaling ? (targetDepth / sceneWidth) : 1;
+
+      if (needsScaling) {
+        console.log(`⚠️ 측면뷰: 씬 추출 범위(${sceneWidth.toFixed(1)}mm)가 모듈 깊이(${targetDepth}mm)의 50% 미만 → ${scaleFactor.toFixed(2)}x 스케일링 적용`);
+      }
+
+      // X 좌표를 0 기준으로 정규화하면서 좌우 반전 (미러링) + 스케일링
       filteredLines = filteredLines.map(line => ({
         ...line,
-        x1: furnitureWidth - (line.x1 - minX),
-        x2: furnitureWidth - (line.x2 - minX)
+        x1: targetDepth - (line.x1 - minX) * scaleFactor,
+        x2: targetDepth - (line.x2 - minX) * scaleFactor
       }));
     }
 
@@ -3217,9 +3255,10 @@ export const generateDxfFromData = (
     // 외부 치수선의 텍스트만 사용
     console.log(`📏 측면뷰: 씬 텍스트 ${extracted.texts.length}개 모두 제외 (내부 치수)`);
 
-    // 정규화된 가구형상의 실제 X 범위 계산 (치수선 배치용)
+    // 정규화된 가구형상의 실제 X 범위 = 모듈 기반 깊이 (0 ~ moduleBasedDepthMm)
+    // 씬 추출 범위가 좁더라도 스케일링 후에는 모듈 깊이와 일치
     let actualFurnitureMinX = 0;
-    let actualFurnitureMaxX = 600; // 기본값: 가구 깊이
+    let actualFurnitureMaxX = moduleBasedDepthMm;
     if (filteredLines.length > 0) {
       actualFurnitureMinX = Infinity;
       actualFurnitureMaxX = -Infinity;
@@ -3230,9 +3269,9 @@ export const generateDxfFromData = (
       console.log(`📐 측면뷰 정규화 후 가구 X 범위: ${actualFurnitureMinX.toFixed(1)} ~ ${actualFurnitureMaxX.toFixed(1)}`);
     }
 
-    // 실제 가구 깊이 계산 (씬에서 추출한 형상 기준)
+    // 실제 가구 깊이: 모듈 데이터 기반 깊이 사용 (씬 추출 범위에 의존하지 않음)
     const actualFurnitureWidth = actualFurnitureMaxX - actualFurnitureMinX;
-    console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm`);
+    console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm (모듈 기반: ${moduleBasedDepthMm}mm)`);
 
     // ========================================
     // 씬에서 SPACE_FRAME이 추출되었는지 확인
@@ -3261,8 +3300,8 @@ export const generateDxfFromData = (
 
       const frameColor = 7; // ACI 7 = 흰색
 
-      // 실제 가구 깊이 (정규화 후)
-      const furnitureDepthMm = actualFurnitureWidth > 0 ? actualFurnitureWidth : 600;
+      // 실제 가구 깊이: 모듈 데이터 기반 깊이 우선 사용 (씬 추출 범위에 의존하지 않음)
+      const furnitureDepthMm = moduleBasedDepthMm;
 
       // 프레임은 0 ~ furnitureDepthMm 범위에 그려짐 (정규화된 좌표계)
 
@@ -3352,15 +3391,18 @@ export const generateDxfFromData = (
       console.log(`⚠️ 측면뷰: 씬에서 가구 형상 추출 실패 - 데이터 기반으로 생성`);
     }
 
+    // 치수선에도 모듈 기반 깊이 전달 (씬 추출 범위가 좁아도 정확한 치수 표시)
+    const dimFurnitureMinX = 0;
+    const dimFurnitureMaxX = moduleBasedDepthMm;
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
       !needsDataBasedFurniture, // dimensionsOnly: 씬 추출 성공 시 true, 실패 시 false (가구형상도 생성)
-      actualFurnitureWidth > 0 ? actualFurnitureWidth : undefined, // 씬 추출 실패 시 undefined로 전달
-      actualFurnitureMinX !== Infinity ? actualFurnitureMinX : undefined,
-      actualFurnitureMaxX !== -Infinity ? actualFurnitureMaxX : undefined
+      moduleBasedDepthMm, // 모듈 데이터 기반 깊이
+      dimFurnitureMinX,
+      dimFurnitureMaxX
     );
 
     // 가구 형상(씬 추출 또는 데이터 생성) + 프레임(데이터 생성) + 치수선 합치기
