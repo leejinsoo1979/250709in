@@ -4569,18 +4569,15 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
                       {doorFurnitureList.map((mod) => (
                         <td key={mod.id} style={{ padding: '3px 4px' }}>
-                          <div className={doorSettingStyles.inputWithUnit}>
-                            <input type="text" inputMode="numeric"
-                              defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 5)}
-                              onBlur={(e) => {
-                                const v = parseFloat(e.target.value);
-                                if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
-                              }}
-                              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                              className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                              placeholder="5" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center' }} />
-                            <span className={doorSettingStyles.unit}>mm</span>
-                          </div>
+                          <input type="text" inputMode="numeric"
+                            defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 5)}
+                            onBlur={(e) => {
+                              const v = parseFloat(e.target.value);
+                              if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
+                            }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            className={`${doorSettingStyles.depthInput} furniture-depth-input`}
+                            placeholder="5" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center', width: '100%' }} />
                         </td>
                       ))}
                     </tr>
@@ -4589,18 +4586,15 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                       {doorFurnitureList.map((mod) => (
                         <td key={mod.id} style={{ padding: '3px 4px' }}>
-                          <div className={doorSettingStyles.inputWithUnit}>
-                            <input type="text" inputMode="numeric"
-                              defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25)}
-                              onBlur={(e) => {
-                                const v = parseFloat(e.target.value);
-                                if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
-                              }}
-                              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                              className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                              placeholder="25" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center' }} />
-                            <span className={doorSettingStyles.unit}>mm</span>
-                          </div>
+                          <input type="text" inputMode="numeric"
+                            defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25)}
+                            onBlur={(e) => {
+                              const v = parseFloat(e.target.value);
+                              if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
+                            }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            className={`${doorSettingStyles.depthInput} furniture-depth-input`}
+                            placeholder="25" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center', width: '100%' }} />
                         </td>
                       ))}
                     </tr>
