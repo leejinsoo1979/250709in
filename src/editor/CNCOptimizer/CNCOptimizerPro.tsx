@@ -4,7 +4,7 @@ import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowLeftRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
 import { GiCircularSawblade } from 'react-icons/gi';
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
@@ -235,6 +235,7 @@ function PageInner(){
   const [viewerRotation, setViewerRotation] = useState(-90); // 기본값 -90 (가로뷰)
   const [viewerOffset, setViewerOffset] = useState({ x: 0, y: 0 });
   const [showCuttingList, setShowCuttingList] = useState(true); // 컷팅 리스트 탭 기본 선택
+  const [viewSwapped, setViewSwapped] = useState(false); // 패널뷰어 ↔ 3D뷰어 위치 스왑
   const [expandedSheets, setExpandedSheets] = useState<Set<number>>(new Set()); // 펼쳐진 시트 인덱스들
   const [showTotalStats, setShowTotalStats] = useState(true); // 전체 통계 표시 여부
   const [showSheetStats, setShowSheetStats] = useState(true); // 시트 통계 표시 여부
@@ -400,6 +401,9 @@ function PageInner(){
             bracketBoringPositions: p.bracketBoringPositions,
             bracketBoringDepthPositions: p.bracketBoringDepthPositions,
             isBracketSide: p.isBracketSide,
+            // 3D 패널 하이라이트용
+            meshName: p.meshName,
+            furnitureId: p.furnitureId,
           };
         });
 
@@ -550,6 +554,9 @@ function PageInner(){
           bracketBoringPositions: p.bracketBoringPositions,
           bracketBoringDepthPositions: p.bracketBoringDepthPositions,
           isBracketSide: p.isBracketSide,
+          // 3D 패널 하이라이트용
+          meshName: p.meshName,
+          furnitureId: p.furnitureId,
         };
       });
 
@@ -766,6 +773,9 @@ function PageInner(){
               bracketBoringPositions: p.bracketBoringPositions,
               bracketBoringDepthPositions: p.bracketBoringDepthPositions,
               isBracketSide: p.isBracketSide,
+              // 3D 패널 하이라이트용
+              meshName: p.meshName,
+              furnitureId: p.furnitureId,
             };
           });
 

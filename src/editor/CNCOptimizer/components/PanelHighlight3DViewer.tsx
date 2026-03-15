@@ -60,10 +60,11 @@ const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 
   return null;
 };
 
-/** 비하이라이트 패널 반투명 처리 (scene traverse) */
+/** 비하이라이트 패널 반투명 처리 (scene traverse) — 개별 패널 수준 하이라이트 지원 */
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
-}> = ({ highlightedFurnitureId }) => {
+  highlightedPanelName: string | null;
+}> = ({ highlightedFurnitureId, highlightedPanelName }) => {
   const { scene, invalidate } = useThree();
   const originalMaterials = useRef<Map<string, { opacity: number; transparent: boolean; emissive: THREE.Color; emissiveIntensity: number }>>(new Map());
 
@@ -103,15 +104,27 @@ const PanelDimmer: React.FC<{
     // furnitureId로 이름이 지정된 그룹 찾기
     const targetGroup = scene.getObjectByName(highlightedFurnitureId);
 
-    // 하이라이트 대상 메시 UUID 수집
-    const highlightedMeshUuids = new Set<string>();
+    // 대상 가구 내 모든 메시 UUID
+    const furnitureMeshUuids = new Set<string>();
+    // 대상 패널 메시 UUID (panelName 매칭)
+    const targetPanelUuids = new Set<string>();
+
     if (targetGroup) {
       targetGroup.traverse((obj) => {
         if (obj instanceof THREE.Mesh) {
-          highlightedMeshUuids.add(obj.uuid);
+          furnitureMeshUuids.add(obj.uuid);
+          // 개별 패널 매칭: mesh.name이 "furniture-mesh-{panelName}" 또는 "back-panel-mesh-{panelName}" 형식
+          if (highlightedPanelName && obj.name) {
+            const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
+            if (meshSuffix === highlightedPanelName) {
+              targetPanelUuids.add(obj.uuid);
+            }
+          }
         }
       });
     }
+
+    const hasSpecificPanel = highlightedPanelName && targetPanelUuids.size > 0;
 
     scene.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
@@ -121,14 +134,28 @@ const PanelDimmer: React.FC<{
       const original = originalMaterials.current.get(obj.uuid);
       if (!original) return;
 
-      if (highlightedMeshUuids.has(obj.uuid)) {
-        // 하이라이트된 가구: 강조
+      if (hasSpecificPanel && targetPanelUuids.has(obj.uuid)) {
+        // ★ 대상 패널: 강한 파란 강조
         mat.opacity = 1;
         mat.transparent = false;
         mat.emissive.set(0x2266cc);
-        mat.emissiveIntensity = 0.4;
+        mat.emissiveIntensity = 0.5;
+      } else if (furnitureMeshUuids.has(obj.uuid)) {
+        if (hasSpecificPanel) {
+          // 같은 가구의 다른 패널: 살짝 투명 (컨텍스트 유지)
+          mat.opacity = 0.35;
+          mat.transparent = true;
+          mat.emissive.copy(original.emissive);
+          mat.emissiveIntensity = 0;
+        } else {
+          // 패널 이름 없이 가구만 강조: 전체 가구 강조 (기존 동작)
+          mat.opacity = 1;
+          mat.transparent = false;
+          mat.emissive.set(0x2266cc);
+          mat.emissiveIntensity = 0.4;
+        }
       } else {
-        // 나머지: 반투명
+        // 다른 가구: 매우 투명
         mat.opacity = 0.12;
         mat.transparent = true;
         mat.emissive.copy(original.emissive);
@@ -137,11 +164,9 @@ const PanelDimmer: React.FC<{
       mat.needsUpdate = true;
     });
 
-    // 즉시 리렌더링 트리거
     invalidate();
 
     return () => {
-      // cleanup: 원래 상태로 복원
       scene.traverse((obj) => {
         if (!(obj instanceof THREE.Mesh)) return;
         const mat = obj.material;
@@ -155,7 +180,7 @@ const PanelDimmer: React.FC<{
         mat.needsUpdate = true;
       });
     };
-  }, [highlightedFurnitureId, scene, invalidate]);
+  }, [highlightedFurnitureId, highlightedPanelName, scene, invalidate]);
 
   return null;
 };
@@ -229,7 +254,8 @@ const Scene3D: React.FC<{
   targetSize: THREE.Vector3;
   targetCenter: THREE.Vector3;
   highlightedFurnitureId: string | null;
-}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedFurnitureId }) => {
+  highlightedPanelName: string | null;
+}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedFurnitureId, highlightedPanelName }) => {
   return (
     <Suspense fallback={null}>
       <ViewerThemeProvider viewMode="3D">
@@ -277,8 +303,8 @@ const Scene3D: React.FC<{
             </group>
           ))}
 
-          {/* 반투명 처리 (furnitureId 기반 그룹 매칭) */}
-          <PanelDimmer highlightedFurnitureId={highlightedFurnitureId} />
+          {/* 반투명 처리 (furnitureId + panelName 기반 개별 패널 매칭) */}
+          <PanelDimmer highlightedFurnitureId={highlightedFurnitureId} highlightedPanelName={highlightedPanelName} />
         </Space3DViewProvider>
       </ViewerThemeProvider>
     </Suspense>
@@ -407,6 +433,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
             targetSize={targetSize}
             targetCenter={targetCenter}
             highlightedFurnitureId={highlightedFurnitureId}
+            highlightedPanelName={highlightedPanelName}
           />
         </Canvas>
       </WebGLErrorBoundary>
