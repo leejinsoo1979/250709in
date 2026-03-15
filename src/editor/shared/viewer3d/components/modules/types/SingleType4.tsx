@@ -282,7 +282,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           ) : (
             // 분할 모드: 상하부 도어 각각
             <>
-              {/* 상부 섹션 도어만 렌더링 (하부 서랍 섹션은 도어 불필요) */}
+              {/* 상부 섹션 도어 (옷장) */}
               <DoorModule
                 moduleWidth={doorWidth || moduleData.dimensions.width}
                 moduleDepth={baseFurniture.actualDepthMm}
@@ -303,6 +303,30 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               totalSections={2}
               doorTopGap={upperDoorTopGap ?? doorTopGap}
               doorBottomGap={upperDoorBottomGap ?? 0}
+                zone={zone}
+              />
+
+              {/* 하부 섹션 도어 (4단 서랍) */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+              sectionHeightsMm={sectionHeightsMm}
+              sectionIndex={0}
+              totalSections={2}
+              doorTopGap={lowerDoorTopGap ?? 0}
+              doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
                 zone={zone}
               />
             </>
