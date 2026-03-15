@@ -3068,8 +3068,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   customSections={adjustedCustomSections} // 사용자 정의 섹션 설정 (단내림 구간에서 조정됨)
                   showFurniture={showFurniture} // 가구 본체 표시 여부
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
-                  doorTopGap={spaceInfo.doorTopGap ?? placedModule.doorTopGap} // 글로벌 우선 → 개별 폴백
-                  doorBottomGap={spaceInfo.doorBottomGap ?? placedModule.doorBottomGap} // 글로벌 우선 → 개별 폴백
+                  doorTopGap={placedModule.doorTopGap ?? spaceInfo.doorTopGap} // 개별 우선 → 글로벌 폴백
+                  doorBottomGap={placedModule.doorBottomGap ?? spaceInfo.doorBottomGap} // 개별 우선 → 글로벌 폴백
                   lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
                   lowerSectionDepthDirection={placedModule.lowerSectionDepthDirection} // 하부 깊이 줄이는 방향
@@ -3348,8 +3348,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? (spaceInfo.baseConfig?.floatHeight || 0)
                   : 0
               }
-              doorTopGap={spaceInfo.doorTopGap ?? placedModule.doorTopGap}
-              doorBottomGap={spaceInfo.doorBottomGap ?? placedModule.doorBottomGap}
+              doorTopGap={placedModule.doorTopGap ?? spaceInfo.doorTopGap}
+              doorBottomGap={placedModule.doorBottomGap ?? spaceInfo.doorBottomGap}
               slotWidths={undefined}
               zone={effectiveZone}
               internalHeight={furnitureHeightMm}
