@@ -583,7 +583,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // doorTopGap/doorBottomGap: props(개별 가구) → 글로벌 spaceInfo → 기본값
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 5;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 25;
-  console.log('🚪🔍 doorBottomGap 추적:', { doorBottomGapProp, storeVal: originalSpaceInfo.doorBottomGap, final: doorBottomGap, placementType: originalSpaceInfo.baseConfig?.placementType });
+  console.log('🚪🔴🔴 doorGap 전체 추적:', { doorTopGapProp, doorBottomGapProp, storeTopGap: originalSpaceInfo.doorTopGap, storeBotGap: originalSpaceInfo.doorBottomGap, finalTop: doorTopGap, finalBot: doorBottomGap, moduleId: moduleData?.id });
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);
@@ -1123,7 +1123,7 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
     }
   }
 
-  console.log('🚪📐 최종 도어 렌더링:', { actualDoorHeight: actualDoorHeight.toFixed(1), doorHeight: (doorHeight / 0.01).toFixed(1), doorYPosition: (doorYPosition / 0.01).toFixed(1), tallCabinetFurnitureHeight, placementType, sectionIndex, totalSections });
+  console.log('🚪📐 최종 도어 렌더링:', { doorTopGap, doorBottomGap, actualDoorHeight: actualDoorHeight.toFixed(1), doorHeight_mm: (doorHeight / 0.01).toFixed(1), doorYPosition_mm: (doorYPosition / 0.01).toFixed(1), tallCabinetFurnitureHeight, placementType, sectionIndex, totalSections, isUpper: isUpperCabinet, isLower: isLowerCabinet });
 
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
