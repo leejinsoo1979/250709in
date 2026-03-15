@@ -1157,9 +1157,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 자유배치 상/하부장: freeHeight 고정 (프레임 변경과 무관한 독립 높이)
   // 슬롯 기반: actualModuleData.dimensions.height (이미 internalSpace 반영)
   let furnitureHeightMm: number;
+  // 띄워서 배치(stand): calculateInternalSpace가 baseFrameHeight=0으로 계산하므로
+  // internalSpace.height가 하부프레임만큼 큼 → 하부프레임 높이를 빼서 바닥배치와 동일하게
+  const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const baseHeightCompensation = isStandFloat ? (spaceInfo.baseConfig?.height || 65) : 0;
   if (placedModule.isFreePlacement && isTallCabinetForY) {
-    // 키큰장: freeHeight 우선, 없으면 내경 높이 기반
-    furnitureHeightMm = placedModule.freeHeight || internalSpace.height;
+    // 키큰장: freeHeight 우선, 없으면 내경 높이 기반 (stand 시 하부프레임 보정)
+    furnitureHeightMm = placedModule.freeHeight || (internalSpace.height - baseHeightCompensation);
     // 개별 가구 상부프레임 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;

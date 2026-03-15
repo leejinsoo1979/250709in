@@ -2570,12 +2570,8 @@ const Room: React.FC<RoomProps> = ({
               {/* 상부 프레임 스트립 — 개별 가구의 hasTopFrame에 따라 렌더링 */}
               {topStripGroups.flatMap((group) => {
                 const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
-                // 띄워서 배치 시 stand 타입은 baseFrameHeight=0이라 internalSpaceHeight가 커짐
-                // 바닥배치와 동일한 상부프레임을 위해 하부프레임 높이를 보정
-                const isFloatMode = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-                const baseFrameCompensation = isFloatMode ? (spaceInfo.baseConfig?.height || 65) : 0;
-                // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight - baseCompensation)
-                const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm - baseFrameCompensation;
+                // 천장~받침대 상단까지의 높이 (= internalSpaceHeight + topFrameHeight)
+                const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm;
                 // 각 모듈별 개별 상부프레임 생성
                 const isDoorBase = spaceInfo.frameOffsetBase === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
