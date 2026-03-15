@@ -7,6 +7,7 @@ import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizon
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -74,6 +75,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
+  const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
   const hasFurniture = placedModules.length > 0;
   const { theme } = useTheme();
@@ -91,7 +93,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       return;
     }
 
-    const totalSlots = spaceInfo?.customColumnCount || 1;
+    const totalSlots = derivedColumnCount || spaceInfo?.customColumnCount || 1;
     const slotFurniture = placedModules.filter(m => !m.isFreePlacement);
     let occupiedSlots = 0;
     slotFurniture.forEach(m => {
@@ -105,7 +107,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     } else {
       setShowDoorGuide(false);
     }
-  }, [placedModules, hasDoorsInstalled, isFreePlacement, spaceInfo?.customColumnCount, hasFurniture]);
+  }, [placedModules, hasDoorsInstalled, isFreePlacement, derivedColumnCount, spaceInfo?.customColumnCount, hasFurniture]);
 
   // 표시 옵션 드롭다운 외부 클릭 감지
   useEffect(() => {
