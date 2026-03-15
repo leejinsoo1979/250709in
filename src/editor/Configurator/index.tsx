@@ -165,9 +165,9 @@ const Configurator: React.FC = () => {
   const [newDesignProjectId, setNewDesignProjectId] = useState<string | null>(null);
   const [isCreatingNewDesign, setIsCreatingNewDesign] = useState(false);
 
-  // 도어 셋팅: 자유배치 모드 + 도어 달린 가구 존재 시 표시
+  // 도어 셋팅: 자유배치 모드 + 도어 달린 가구가 실제로 배치되어 있을 때만 표시
   const showDoorSetup = (spaceInfo.layoutMode || 'equal-division') === 'free-placement'
-    && (placedModules.some(m => m.hasDoor) || spaceInfo.doorTopGap !== undefined || spaceInfo.doorBottomGap !== undefined);
+    && placedModules.some(m => m.hasDoor);
   const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
   const [doorTopGapInput, setDoorTopGapInput] = useState(String(spaceInfo.doorTopGap ?? 5));
   const [doorBottomGapInput, setDoorBottomGapInput] = useState(String(spaceInfo.doorBottomGap ?? 25));
