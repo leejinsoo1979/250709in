@@ -3566,7 +3566,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               justifyContent: 'center',
               width: '32px',
               height: '32px',
-              border: '2px solid #6366f1',
+              border: `2px solid ${getThemeColor()}`,
               borderRadius: '50%',
               backgroundColor: '#ffffff',
               transition: 'all 0.2s ease',
@@ -3580,7 +3580,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             onPointerDown={(e) => e.stopPropagation()}
             title="도어 설정"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={getThemeColor()} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
@@ -3610,8 +3610,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             style={{
               background: 'rgba(255, 255, 255, 0.95)',
               borderRadius: '12px',
-              border: '2px solid #6366f1',
-              boxShadow: '0 4px 16px rgba(99, 102, 241, 0.2)',
+              border: `2px solid ${getThemeColor()}`,
+              boxShadow: `0 4px 16px ${getThemeColor()}33`,
               padding: '12px',
               minWidth: '200px',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -3635,7 +3635,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
             {/* 가구에 맞춤 / 공간에 맞춤 */}
             <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-              {(['furniture-fit', 'space-fit'] as const).map((mode) => (
+              {(['furniture-fit', 'space-fit'] as const).map((mode) => {
+                const isActive = (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit');
+                return (
                 <button
                   key={mode}
                   onClick={() => handleDoorSetupModeChange(mode)}
@@ -3644,12 +3646,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     padding: '6px 8px',
                     borderRadius: '6px',
                     border: '1px solid',
-                    borderColor: (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit')
-                      ? '#6366f1' : '#d1d5db',
-                    background: (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit')
-                      ? '#6366f1' : '#fff',
-                    color: (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit')
-                      ? '#fff' : '#374151',
+                    borderColor: isActive ? getThemeColor() : '#d1d5db',
+                    background: isActive ? getThemeColor() : '#fff',
+                    color: isActive ? '#fff' : '#374151',
                     cursor: 'pointer',
                     fontSize: '12px',
                     fontWeight: 500,
@@ -3658,7 +3657,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 >
                   {mode === 'furniture-fit' ? '가구에 맞춤' : '공간에 맞춤'}
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             {/* 상단/하단 갭 */}
@@ -3732,7 +3732,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <div>
                 <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>경첩 방향</label>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  {(['left', 'right'] as const).map((pos) => (
+                  {(['left', 'right'] as const).map((pos) => {
+                    const isActive = (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos;
+                    return (
                     <button
                       key={pos}
                       onClick={() => handleHingeChange(pos)}
@@ -3741,9 +3743,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         padding: '5px 8px',
                         borderRadius: '6px',
                         border: '1px solid',
-                        borderColor: (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos ? '#6366f1' : '#d1d5db',
-                        background: (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos ? '#6366f1' : '#fff',
-                        color: (storeHingePosition ?? placedModule.hingePosition ?? 'right') === pos ? '#fff' : '#374151',
+                        borderColor: isActive ? getThemeColor() : '#d1d5db',
+                        background: isActive ? getThemeColor() : '#fff',
+                        color: isActive ? '#fff' : '#374151',
                         cursor: 'pointer',
                         fontSize: '12px',
                         fontWeight: 500,
@@ -3752,7 +3754,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     >
                       {pos === 'left' ? '좌' : '우'}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

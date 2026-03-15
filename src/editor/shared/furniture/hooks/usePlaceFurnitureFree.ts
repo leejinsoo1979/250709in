@@ -129,7 +129,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     hasBase: moduleData.category !== 'upper',
     hasTopFrame: moduleData.category !== 'lower',
     hasBottomFrame: moduleData.category !== 'upper',
-    hasDoor: moduleData.hasDoor ?? false,
+    hasDoor: false, // 자유배치 시 도어 없이 배치 (사용자가 수동 설정)
     lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {
       // My캐비넷 "수정" 모드: 내부 구조 편집 가능 (톱니/연필 아이콘 표시)
