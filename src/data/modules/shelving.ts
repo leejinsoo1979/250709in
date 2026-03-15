@@ -105,6 +105,7 @@ const FURNITURE_SPECS = {
   // 안전선반 스펙
   SAFETY_SHELF_POSITION: 2050, // 안전선반 위치
   SAFETY_SHELF_THRESHOLD: 2300, // 안전선반 적용 임계 높이
+  SAFETY_SHELF_MIN_TOP_COMPARTMENT: 200, // 안전선반 위 최소 내경 높이 (mm)
   
   // 색상 설정
   COLORS: {
@@ -136,6 +137,13 @@ const applySafetyShelf = (
   totalHeight: number,
   safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION
 ): SectionConfig[] => {
+  // 안전선반 위 최소 내경 확보: totalHeight - bottomPanel(18) - safetyPos - shelfThickness(18) - topPanel(18) >= 200
+  // → safetyPosition <= totalHeight - 254
+  const basicThickness = 18;
+  const minTopCompartment = FURNITURE_SPECS.SAFETY_SHELF_MIN_TOP_COMPARTMENT;
+  const maxSafetyPosition = totalHeight - (basicThickness * 3) - minTopCompartment;
+  const clampedSafetyPosition = Math.min(safetyPosition, maxSafetyPosition);
+
   // 각 섹션의 시작 위치 계산하면서 안전선반 적용
   let currentPosition = 0;
 
@@ -149,10 +157,10 @@ const applySafetyShelf = (
     // hanging 섹션이고 높이가 1000mm 이상이고 안전선반 위치가 범위 내에 있는지 확인
     if (section.type === 'hanging' &&
         section.height >= SAFETY_SHELF_MIN_HANGING_HEIGHT &&
-        safetyPosition >= sectionStart &&
-        safetyPosition < sectionEnd) {
+        clampedSafetyPosition >= sectionStart &&
+        clampedSafetyPosition < sectionEnd) {
 
-      const safetyPosInSection = safetyPosition - sectionStart;
+      const safetyPosInSection = clampedSafetyPosition - sectionStart;
 
       // 이미 shelfPositions가 있으면 안전선반 위치 추가 (Type4 바닥판 보존하면서 안전선반 추가)
       if (section.shelfPositions && section.shelfPositions.length > 0) {
