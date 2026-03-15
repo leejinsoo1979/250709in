@@ -4742,9 +4742,16 @@ const Configurator: React.FC = () => {
                         )}
                       </div>
                       <div className={styles.fileTreeFileInfo}>
-                        <div className={styles.fileTreeFileName}>{file.name}</div>
+                        <div className={styles.fileTreeFilePath}>
+                          {(() => {
+                            const proj = fileTreeProjects.find(p => p.id === fileTreeSelectedProjectId);
+                            const folder = file.folderId ? fileTreeFolders[fileTreeSelectedProjectId!]?.find(f => f.id === file.folderId) : null;
+                            const parts = [proj?.title || '프로젝트', folder?.name, file.name].filter(Boolean);
+                            return parts.join(' > ');
+                          })()}
+                        </div>
                         <div className={styles.fileTreeFileMeta}>
-                          프로젝트 · {file.spaceSize ? `${file.spaceSize.width}x${file.spaceSize.depth}` : '-'}
+                          {file.spaceSize ? `${file.spaceSize.width}x${file.spaceSize.depth}` : '-'}
                         </div>
                         <div className={styles.fileTreeFileMeta}>
                           {file.updatedAt?.toDate ? file.updatedAt.toDate().toLocaleDateString('ko-KR') : '-'}

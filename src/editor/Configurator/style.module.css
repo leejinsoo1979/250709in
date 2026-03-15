@@ -150,7 +150,8 @@
   box-shadow: 0 0 0 1px var(--theme-primary);
 }
 
-.fileTreeFileCardActive .fileTreeFileName {
+.fileTreeFileCardActive .fileTreeFileName,
+.fileTreeFileCardActive .fileTreeFilePath {
   color: #ffffff;
 }
 
@@ -200,6 +201,15 @@
 }
 
 .fileTreeFileName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileTreeFilePath {
   font-size: 14px;
   font-weight: 600;
   color: var(--theme-text);
