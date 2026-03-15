@@ -18,6 +18,37 @@ import {
   type SideViewFilter
 } from './dxfDataRenderer';
 import { ColumnIndexer } from './indexing/ColumnIndexer';
+import { useUIStore } from '@/store/uiStore';
+
+/**
+ * PDF 생성 전 씬을 올바른 뷰 모드로 전환하는 헬퍼
+ * DXF 추출은 현재 씬 상태에서 Line/Text 객체를 가져오므로,
+ * 올바른 뷰 모드가 설정되어야 도어/대각선 등 조건부 렌더링 요소가 포함됨
+ */
+const switchSceneViewMode = async (
+  viewMode: '2D' | '3D',
+  view2DDirection: 'front' | 'left' | 'right' | 'top',
+  renderMode: 'solid' | 'wireframe' = 'wireframe'
+): Promise<void> => {
+  const store = useUIStore.getState();
+  const needsChange = store.viewMode !== viewMode ||
+    store.view2DDirection !== view2DDirection ||
+    store.renderMode !== renderMode;
+
+  if (!needsChange) {
+    console.log(`[PDF] 씬 뷰 모드 변경 불필요: ${viewMode}/${view2DDirection}/${renderMode}`);
+    return;
+  }
+
+  console.log(`[PDF] 씬 뷰 모드 전환: ${store.viewMode}/${store.view2DDirection} → ${viewMode}/${view2DDirection}/${renderMode}`);
+  store.setViewMode(viewMode);
+  store.setView2DDirection(view2DDirection);
+  store.setRenderMode(renderMode);
+
+  // React 렌더링 사이클 대기 (씬 갱신 필요 - 도어 대각선 등 조건부 렌더링 요소 포함)
+  // ConvertModal의 캡처 코드에서 1500ms 대기하므로 동일한 시간 사용
+  await new Promise(resolve => setTimeout(resolve, 1000));
+};
 
 // PDF 뷰 타입
 // - front: 입면도 (도어 있음) - 도어가 장착된 정면도
@@ -313,8 +344,15 @@ export const downloadDxfAsPdf = async (
   console.log('[PDF] DXF to PDF conversion starting...');
   console.log('[PDF] Views to convert: ' + views.join(', '));
 
-  // 씬이 완전히 렌더링될 때까지 대기 (도어 대각선 등 동적 요소 포함)
-  await new Promise(resolve => setTimeout(resolve, 100));
+  // 현재 뷰 상태 저장 (나중에 복원)
+  const uiState = useUIStore.getState();
+  const originalViewMode = uiState.viewMode;
+  const originalView2DDirection = uiState.view2DDirection;
+  const originalRenderMode = uiState.renderMode;
+  console.log(`[PDF] 원래 뷰 모드: ${originalViewMode}/${originalView2DDirection}/${originalRenderMode}`);
+
+  // PDF 생성을 위해 2D wireframe 모드로 전환 (도어 대각선 등 조건부 렌더링 포함)
+  await switchSceneViewMode('2D', 'front', 'wireframe');
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -379,7 +417,18 @@ export const downloadDxfAsPdf = async (
 
   let isFirstPage = true;
 
+  try {
   for (const viewDirection of views) {
+    // 각 뷰에 맞는 씬 상태로 전환
+    if (viewDirection === 'left') {
+      await switchSceneViewMode('2D', 'left', 'wireframe');
+    } else if (viewDirection === 'top') {
+      await switchSceneViewMode('2D', 'top', 'wireframe');
+    } else {
+      // front, front-no-door, door-only 모두 front 방향 필요
+      await switchSceneViewMode('2D', 'front', 'wireframe');
+    }
+
     // 측면도(left)는 가구가 있는 슬롯만 페이지 생성
     if (viewDirection === 'left' && sortedOccupiedSlots.length > 0) {
       for (const slotIndex of sortedOccupiedSlots) {
@@ -475,6 +524,15 @@ export const downloadDxfAsPdf = async (
 
   pdf.save(`drawing_${new Date().toISOString().slice(0, 10)}.pdf`);
   console.log('✅ PDF 다운로드 완료');
+
+  } finally {
+    // 원래 뷰 상태로 복원
+    console.log(`[PDF] 뷰 모드 복원: ${originalViewMode}/${originalView2DDirection}/${originalRenderMode}`);
+    const restoreStore = useUIStore.getState();
+    restoreStore.setViewMode(originalViewMode);
+    restoreStore.setView2DDirection(originalView2DDirection);
+    restoreStore.setRenderMode(originalRenderMode);
+  }
 };
 
 /**
