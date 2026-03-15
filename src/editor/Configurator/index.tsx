@@ -3214,7 +3214,7 @@ const Configurator: React.FC = () => {
     }, [open]);
     return (
       <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
-        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}><GoQuestion size={11} /></button>
+        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}><GoQuestion size={16} /></button>
         {open && (
           <div className={styles.helpPopover}>
             <div className={styles.helpPopoverTitle}>{title}</div>
