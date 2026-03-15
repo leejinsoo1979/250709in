@@ -2594,10 +2594,10 @@ const Room: React.FC<RoomProps> = ({
                   const modCategory = getModuleCategory(mod);
                   let modFreeHeight: number;
                   if (modCategory === 'full') {
+                    // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
                     const baseFH = mod.freeHeight || internalSpaceHeight;
-                    // freeHeight가 아직 floatHeight 미반영이면 직접 차감
-                    const needsFloatAdj = floatHeightForFrame > 0 && Math.abs(baseFH - internalSpaceHeight) < 1;
-                    modFreeHeight = needsFloatAdj ? baseFH - floatHeightForFrame : baseFH;
+                    const maxFH = internalSpaceHeight - floatHeightForFrame;
+                    modFreeHeight = Math.min(baseFH, maxFH);
                     // 개별 가구 상부프레임 두께 보정
                     if (mod.topFrameThickness !== undefined) {
                       const globalTopFrame = spaceInfo.frameSize?.top || 30;

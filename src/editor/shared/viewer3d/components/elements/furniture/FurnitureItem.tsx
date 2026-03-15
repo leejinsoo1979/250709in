@@ -1162,12 +1162,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeightMm = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
   if (placedModule.isFreePlacement && isTallCabinetForY) {
-    // freeHeight가 있으면 사용, 없으면 internalSpace에서 floatHeight 차감
+    // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
     const baseFreeHeight = placedModule.freeHeight || internalSpace.height;
-    // freeHeight가 이미 floatHeight 반영됐는지 확인:
-    // internalSpace.height(예:2305)와 가까우면 아직 미반영 → floatHeight 차감 필요
-    const needsFloatAdjust = floatHeightMm > 0 && Math.abs(baseFreeHeight - internalSpace.height) < 1;
-    furnitureHeightMm = needsFloatAdjust ? baseFreeHeight - floatHeightMm : baseFreeHeight;
+    const maxFreeHeight = internalSpace.height - floatHeightMm;
+    furnitureHeightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 가구 상부프레임 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;

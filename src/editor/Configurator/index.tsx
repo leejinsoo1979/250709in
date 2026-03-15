@@ -4384,9 +4384,10 @@ const Configurator: React.FC = () => {
                   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
                   const floatH = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
                   const internalH = calculateInternalSpace(spaceInfo).height;
-                  // freeHeight가 아직 float 반영 전(= internalH와 같음)이면 직접 floatH 차감
+                  // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
                   const rawFreeH = mod.freeHeight || internalH;
-                  const modHeight = (floatH > 0 && rawFreeH >= internalH) ? (internalH - floatH) : rawFreeH;
+                  const maxFreeH = internalH - floatH;
+                  const modHeight = Math.min(rawFreeH, maxFreeH);
                   const actualTopFrameSize = Math.max(0, spaceInfo.height - baseH - floatH - modHeight);
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
