@@ -4532,60 +4532,63 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
             ) : (
-              /* 개별 모드: 도어 가구별 상단/하단 갭 */
-              <div style={{ marginTop: '8px', display: 'flex', gap: '8px', overflowX: 'auto' }}>
-                {doorFurnitureList.map((mod, idx) => (
-                  <div key={mod.id} style={{
-                    flex: '0 0 auto',
-                    minWidth: '100px',
-                    padding: '8px',
-                    border: '1px solid var(--theme-border, #e0e0e0)',
-                    borderRadius: '8px',
-                    background: 'var(--theme-surface, #fff)',
-                  }}>
-                    <div style={{
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      color: 'var(--theme-text-secondary, #666)',
-                      marginBottom: '6px',
-                      textAlign: 'center',
-                    }}>
-                      도어 {idx + 1}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div>
-                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary, #999)' }}>상단갭</label>
-                        <div className={doorSettingStyles.inputWithUnit}>
-                          <input type="text" inputMode="numeric"
-                            defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 5)}
-                            onBlur={(e) => {
-                              const v = parseFloat(e.target.value);
-                              if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
-                            }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                            className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                            placeholder="5" style={{ color: '#000', backgroundColor: '#fff' }} />
-                          <span className={doorSettingStyles.unit}>mm</span>
-                        </div>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary, #999)' }}>하단갭</label>
-                        <div className={doorSettingStyles.inputWithUnit}>
-                          <input type="text" inputMode="numeric"
-                            defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25)}
-                            onBlur={(e) => {
-                              const v = parseFloat(e.target.value);
-                              if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
-                            }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                            className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                            placeholder="25" style={{ color: '#000', backgroundColor: '#fff' }} />
-                          <span className={doorSettingStyles.unit}>mm</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              /* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */
+              <div style={{ marginTop: '8px', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                  {/* 헤더: 도어 1, 도어 2, ... */}
+                  <thead>
+                    <tr>
+                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'left', whiteSpace: 'nowrap' }}></th>
+                      {doorFurnitureList.map((_, idx) => (
+                        <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                          도어 {idx + 1}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* 상단갭 행 */}
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+                      {doorFurnitureList.map((mod) => (
+                        <td key={mod.id} style={{ padding: '3px 4px' }}>
+                          <div className={doorSettingStyles.inputWithUnit}>
+                            <input type="text" inputMode="numeric"
+                              defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 5)}
+                              onBlur={(e) => {
+                                const v = parseFloat(e.target.value);
+                                if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
+                              }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              className={`${doorSettingStyles.depthInput} furniture-depth-input`}
+                              placeholder="5" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center' }} />
+                            <span className={doorSettingStyles.unit}>mm</span>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                    {/* 하단갭 행 */}
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+                      {doorFurnitureList.map((mod) => (
+                        <td key={mod.id} style={{ padding: '3px 4px' }}>
+                          <div className={doorSettingStyles.inputWithUnit}>
+                            <input type="text" inputMode="numeric"
+                              defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25)}
+                              onBlur={(e) => {
+                                const v = parseFloat(e.target.value);
+                                if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
+                              }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              className={`${doorSettingStyles.depthInput} furniture-depth-input`}
+                              placeholder="25" style={{ color: '#000', backgroundColor: '#fff', textAlign: 'center' }} />
+                            <span className={doorSettingStyles.unit}>mm</span>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
 
