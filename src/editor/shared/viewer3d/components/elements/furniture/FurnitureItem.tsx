@@ -380,6 +380,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 내경 공간 계산 - zone 정보가 있으면 zone별 계산
   let internalSpace = calculateInternalSpace(spaceInfo);
+  // 띄워서 배치 시 내경 높이에서 floatHeight 차감
+  const floatHeightMm = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+    ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+  if (floatHeightMm > 0) {
+    internalSpace = { ...internalSpace, height: internalSpace.height - floatHeightMm };
+  }
   let zoneSpaceInfo = spaceInfo;
 
   // zone 자동 감지: placedModule.zone이 없으면 X 위치 기반으로 zone 결정
