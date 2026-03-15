@@ -4378,9 +4378,12 @@ const Configurator: React.FC = () => {
                   if (cat !== 'upper' && cat !== 'full') return null;
                   topNum++;
                   const tn = topNum;
-                  // 실제 렌더링되는 상부프레임 높이 = 공간높이 - 받침대 - 띄움높이 - 가구높이
+                  // 실제 렌더링되는 상부프레임 높이
+                  // freeHeight 있으면: 이미 floatHeight 반영된 값 → floatH도 빼야 함
+                  // freeHeight 없으면: internalSpace.height = 공간-받침대-topFrame → floatH 불필요
                   const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-                  const floatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
+                  const hasExplicitFreeHeight = mod.freeHeight != null;
+                  const floatH = hasExplicitFreeHeight && spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
                     ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
                   const modHeight = mod.freeHeight || calculateInternalSpace(spaceInfo).height;
                   const actualTopFrameSize = Math.max(0, spaceInfo.height - baseH - floatH - modHeight);
@@ -4389,7 +4392,10 @@ const Configurator: React.FC = () => {
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                     (v) => {
                       // 상부프레임 size 변경 → freeHeight 역산 (가구 높이 조정)
-                      const newFreeHeight = Math.max(100, spaceInfo.height - baseH - floatH - v);
+                      // 역산 시에는 항상 floatH 반영 (새 freeHeight에 floatH가 포함되어야 하므로)
+                      const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
+                        ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+                      const newFreeHeight = Math.max(100, spaceInfo.height - baseH - revFloatH - v);
                       updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
                     },
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
