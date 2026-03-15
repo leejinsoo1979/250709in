@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
+import { PiHandTapThin } from 'react-icons/pi';
 import { TbBorderOuter } from 'react-icons/tb';
 import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, ChevronDown } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
@@ -399,9 +400,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 className={styles.doorGuideTooltip}
                 onClick={() => { setShowDoorGuide(false); doorGuideDismissedRef.current = true; }}
               >
-                <svg className={styles.doorGuideFingerIcon} viewBox="0 0 24 32" width="18" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C12 0.9 11.1 0 10 0C8.9 0 8 0.9 8 2V16H6V10C6 8.9 5.1 8 4 8C2.9 8 2 8.9 2 10V20C2 26.6 6.4 30 12 30C17.6 30 20 26.6 20 22V14C20 12.9 19.1 12 18 12C16.9 12 16 12.9 16 14V16H14V6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6V16H8V2H12Z" fill="currentColor"/>
-                </svg>
+                <PiHandTapThin className={styles.doorGuideFingerIcon} size={20} />
                 <span>도어를 장착해보세요</span>
               </div>
             )}
