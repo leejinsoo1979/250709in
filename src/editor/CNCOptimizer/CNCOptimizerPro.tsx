@@ -1280,6 +1280,9 @@ function PageInner(){
           {viewSwapped ? (
             /* 스왑 모드: 3D 뷰어가 메인 중앙에 표시 */
             <div className={styles.viewerContainer}>
+              <button className={styles.swapButton} onClick={() => setViewSwapped(v => !v)} title="뷰어 위치 변경">
+                <ArrowLeftRight size={14} />
+              </button>
               <div className={styles.mainViewer}>
                 <PanelHighlight3DViewer
                   highlightedPanelName={hoveredPanelName}
