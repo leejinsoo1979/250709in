@@ -584,6 +584,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 5;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 25;
 
+  console.log('🚪 DoorModule doorGap DEBUG:', {
+    doorTopGapProp,
+    doorBottomGapProp,
+    storeDoorTopGap: originalSpaceInfo.doorTopGap,
+    storeDoorBottomGap: originalSpaceInfo.doorBottomGap,
+    resolvedTopGap: doorTopGap,
+    resolvedBottomGap: doorBottomGap,
+    isFreePlacement,
+    moduleId: moduleData?.id,
+    effectiveInternalHeight: internalHeight,
+  });
+
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);
 
@@ -805,6 +817,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
+
+    console.log('🚪⚙️ 키큰장 도어 갭 적용:', {
+      doorTopGap,
+      doorBottomGap,
+      effectiveTopFrame,
+      extraTopGap,
+      baselineBottomGap,
+      extraBottomGap,
+      cabinetBottomLocal,
+      cabinetTopLocal,
+      doorBottomLocal,
+      doorTopLocal,
+      tallCabinetFurnitureHeight,
+      doorSetupMode: originalSpaceInfo.doorSetupMode || 'furniture-fit',
+      placementType,
+      floatHeight,
+      isFreePlacement,
+    });
 
 // console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
       // doorBottomGapInput: doorBottomGap,
