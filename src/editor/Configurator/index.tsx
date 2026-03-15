@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { TbRulerMeasure } from 'react-icons/tb';
+import { GoQuestion } from 'react-icons/go';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
@@ -3213,7 +3214,7 @@ const Configurator: React.FC = () => {
     }, [open]);
     return (
       <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
-        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>?</button>
+        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}><GoQuestion size={11} /></button>
         {open && (
           <div className={styles.helpPopover}>
             <div className={styles.helpPopoverTitle}>{title}</div>
