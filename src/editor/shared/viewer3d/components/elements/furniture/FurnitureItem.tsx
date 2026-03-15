@@ -3478,6 +3478,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             userSelect: 'none',
             pointerEvents: 'auto',
             zIndex: 100,
+            background: 'transparent',
           }}
         >
           <div
