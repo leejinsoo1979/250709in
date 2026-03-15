@@ -142,6 +142,17 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
       const safetyShelfPositionMm = section.shelfPositions?.find(pos => pos > 0);
       const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
 
+      console.log('🔴 [SingleType1] rod계산:', {
+        index,
+        sectionType: section.type,
+        sectionHeight: section.height,
+        shelfPositions: section.shelfPositions,
+        safetyShelfPositionMm,
+        hasFinishPanel,
+        sectionBottomY,
+        actualSectionHeight,
+      });
+
       let rodYPosition: number;
       if (safetyShelfPositionMm !== undefined) {
         const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
