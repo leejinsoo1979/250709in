@@ -2312,34 +2312,63 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
           
-          {/* 깊이 설정 (상세보기 아닐 때만) */}
-          {!showDetails && (
+          {/* 가구 치수 (슬롯배치: W·H 읽기전용, D 편집 가능) */}
+          {!showDetails && !currentPlacedModule?.isFreePlacement && (
           <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}>{t('furniture.depthSettings')}</h5>
-            <div className={styles.depthInputWrapper}>
-              <div className={styles.inputWithUnit}>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={depthInputValue}
-                  onChange={(e) => handleDepthInputChange(e.target.value)}
-                  onBlur={handleDepthInputBlur}
-                  onKeyDown={handleDepthKeyDown}
-                  className={`${styles.depthInput} furniture-depth-input ${depthError ? styles.inputError : ''}`}
-                  placeholder={`${FURNITURE_LIMITS.DEPTH.MIN}-${FURNITURE_LIMITS.DEPTH.MAX}`}
-                  style={{
-                    color: '#000000',
-                    backgroundColor: '#ffffff',
-                    WebkitTextFillColor: '#000000',
-                    opacity: 1
-                  }}
-                />
-                <span className={styles.unit}>mm</span>
+            <h5 className={styles.sectionTitle}>가구 치수</h5>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              {/* 너비 (읽기전용) */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>W</label>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="text"
+                    value={customWidth}
+                    readOnly
+                    className={`${styles.depthInput} furniture-depth-input`}
+                    style={{ color: '#000000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px', cursor: 'default' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
               </div>
-              {depthError && <div className={styles.errorMessage}>{depthError}</div>}
-              <div className={styles.depthRange}>
-                {t('furniture.range')}: {FURNITURE_LIMITS.DEPTH.MIN}mm ~ {Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}mm
+              <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+              {/* 높이 (읽기전용) */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>H</label>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="text"
+                    value={moduleData.dimensions.height}
+                    readOnly
+                    className={`${styles.depthInput} furniture-depth-input`}
+                    style={{ color: '#000000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px', cursor: 'default' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
               </div>
+              <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+              {/* 깊이 (편집 가능) */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>D</label>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={depthInputValue}
+                    onChange={(e) => handleDepthInputChange(e.target.value)}
+                    onBlur={handleDepthInputBlur}
+                    onKeyDown={handleDepthKeyDown}
+                    className={`${styles.depthInput} furniture-depth-input ${depthError ? styles.inputError : ''}`}
+                    placeholder={`${FURNITURE_LIMITS.DEPTH.MIN}-${FURNITURE_LIMITS.DEPTH.MAX}`}
+                    style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              </div>
+            </div>
+            {depthError && <div className={styles.errorMessage}>{depthError}</div>}
+            <div className={styles.depthRange}>
+              D {t('furniture.range')}: {FURNITURE_LIMITS.DEPTH.MIN}mm ~ {Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}mm
             </div>
           </div>
           )}
