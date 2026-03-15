@@ -3366,7 +3366,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                     >
-                      앞에서
+                      뒤고정
                     </button>
                     <button
                       style={{
@@ -3382,7 +3382,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                     >
-                      뒤에서
+                      앞고정
                     </button>
                   </div>
                 </div>
@@ -3432,7 +3432,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                     >
-                      앞에서
+                      뒤고정
                     </button>
                     <button
                       style={{
@@ -3448,7 +3448,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                     >
-                      뒤에서
+                      앞고정
                     </button>
                   </div>
                 </div>
