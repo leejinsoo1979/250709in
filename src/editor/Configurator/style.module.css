@@ -146,8 +146,16 @@
 
 .fileTreeFileCardActive {
   border-color: var(--theme-primary);
-  background: color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface));
+  background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface));
   box-shadow: 0 0 0 1px var(--theme-primary);
+}
+
+.fileTreeFileCardActive .fileTreeFileName {
+  color: var(--theme-primary);
+}
+
+.fileTreeFileCardActive .fileTreeFileMeta {
+  color: var(--theme-text-secondary, #656d76);
 }
 
 /* 썸네일 영역 */
