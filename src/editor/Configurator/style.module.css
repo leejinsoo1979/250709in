@@ -1180,19 +1180,21 @@
   height: 14px;
   min-width: 14px;
   border-radius: 50%;
-  border: 1.2px solid var(--theme-text-secondary);
+  border: 1.2px solid var(--theme-text-muted);
   background: transparent;
-  color: var(--theme-text-secondary);
+  color: var(--theme-text-muted);
   font-size: 9px;
   font-weight: 700;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   line-height: 1;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  opacity: 0.5;
+  margin-left: auto;
 }
 
 .helpBtn:hover {
