@@ -3235,7 +3235,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>공간 설정</h3>
-            <HelpBtn title="공간 설정" text="설치 공간의 전체 너비(W)와 높이(H)를 설정합니다. 실측 치수를 mm 단위로 입력하세요." />
+            <HelpBtn title="공간 설정" text="가구가 설치될 공간의 전체 너비(W)와 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 너비는 1,000~8,000mm, 높이는 2,000~3,000mm 범위에서 설정 가능합니다. 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈가 자동 계산됩니다." />
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -3267,7 +3267,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>공간 유형</h3>
-            <HelpBtn title="공간 유형" text="설치 방식을 선택합니다. 빌트인, 세미빌트인, 스탠드 등 공간 형태에 맞는 유형을 지정하세요." />
+            <HelpBtn title="공간 유형" text="빌트인: 벽면에 완전히 매립되는 방식으로, 좌우 벽과 천장에 프레임이 밀착됩니다. 세미빌트인: 한쪽 벽만 밀착하고 반대쪽은 개방됩니다. 스탠드: 벽과 무관하게 독립적으로 배치합니다. 유형에 따라 프레임 구성과 이격거리가 달라집니다." />
           </div>
           <InstallTypeControls
             spaceInfo={spaceInfo}
@@ -3281,7 +3281,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>컬럼수</h3>
-              <HelpBtn title="컬럼수" text="공간을 나눌 칸 수를 설정합니다. 칸 수에 따라 각 슬롯의 너비가 자동 계산됩니다." />
+              <HelpBtn title="컬럼수" text="공간을 균등하게 나눌 칸(슬롯) 수를 설정합니다. 전체 너비에서 프레임과 이격거리를 뺀 내경을 칸 수로 나누어 각 슬롯의 너비가 자동 계산됩니다. 단내림이 있는 경우 메인 구간과 단내림 구간의 칸 수를 각각 설정할 수 있습니다." />
             </div>
 
             {!spaceInfo.droppedCeiling?.enabled ? (
@@ -3333,7 +3333,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : '단내림'}</h3>
-            <HelpBtn title={isFreeMode ? '커튼박스' : '단내림'} text="천장에 단내림(커튼박스)이 있는 경우 활성화합니다. 위치, 너비, 높이를 지정하여 해당 영역에 맞는 가구를 배치할 수 있습니다." />
+            <HelpBtn title={isFreeMode ? '커튼박스' : '단내림'} text="천장 높이가 부분적으로 낮아지는 단내림(커튼박스) 구간이 있을 때 활성화합니다. 좌측/우측 위치, 구간 너비, 내려오는 높이(dropHeight)를 설정하면 해당 영역의 가구 높이가 자동으로 줄어듭니다. 에어컨 배관, 커튼박스 등으로 천장이 낮아진 구간에 사용합니다." />
           </div>
 
           <div className={styles.toggleButtonGroup}>
@@ -3437,7 +3437,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
-              <HelpBtn title="메인구간 사이즈" text="단내림이 없는 메인 구간의 너비와 높이입니다. 공간 설정에서 자동 계산됩니다." />
+              <HelpBtn title="메인구간 사이즈" text="단내림이 없는 메인 구간의 실제 사용 가능한 너비와 높이를 표시합니다. 전체 공간 너비에서 단내림 구간 너비를 뺀 값이며, 이격거리가 반영된 순수 내경입니다. 이 영역에 배치되는 가구는 전체 높이를 사용합니다." />
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -3607,7 +3607,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'}</h3>
-              <HelpBtn title={isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'} text="단내림(커튼박스) 구간의 너비와 높이입니다. 단내림 설정에서 자동 계산됩니다." />
+              <HelpBtn title={isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'} text="천장이 낮아진 단내림(커튼박스) 구간의 너비와 높이를 표시합니다. 높이는 전체 높이에서 단내림 높이(dropHeight)를 뺀 값입니다. 이 영역에 배치되는 가구는 줄어든 높이에 맞게 자동 조절됩니다." />
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -3767,7 +3767,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>프레임 설정</h3>
-            <HelpBtn title="프레임 설정" text="프레임 타입을 선택합니다. 전체서라운드, 양쪽서라운드, 노서라운드 중 공간에 맞는 방식을 지정하세요." />
+            <HelpBtn title="프레임 설정" text="가구 외곽을 감싸는 프레임 방식을 선택합니다. 전체서라운드: 상하좌우 모두 프레임으로 마감. 양쪽서라운드: 좌우와 상단만 프레임 적용. 노서라운드: 프레임 없이 가구만 배치하며, 빌트인 시 벽면에 직접 밀착됩니다. 프레임 타입에 따라 가구의 실제 사용 가능 공간이 달라집니다." />
           </div>
 
           {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 (슬롯배치 모드만) */}
@@ -4218,7 +4218,7 @@ const Configurator: React.FC = () => {
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>서라운드</h3>
-                <HelpBtn title="서라운드" text="서라운드 프레임의 상하좌우 치수를 설정합니다. 벽면과 가구 사이의 마감 프레임 크기를 조절합니다." />
+                <HelpBtn title="서라운드" text="서라운드 프레임의 상·하·좌·우 각 면의 두께를 개별 설정합니다. 벽면과 가구 사이의 마감재 역할을 하며, 값이 클수록 가구 배치 가능 공간이 줄어듭니다. 옵셋 기준을 '외경'으로 하면 전체 공간 기준, '내경'으로 하면 가구 기준으로 계산됩니다." />
               </div>
               {/* 서라운드 옵셋 기준 선택 */}
               <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
@@ -4380,7 +4380,7 @@ const Configurator: React.FC = () => {
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
-                <HelpBtn title="상,하부프레임" text="가구 상단과 하단의 프레임 높이를 설정합니다. 받침대(베이스) 높이와 상부 마감 높이를 조절합니다." />
+                <HelpBtn title="상,하부프레임" text="상부프레임: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 하부프레임(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
               </div>
               <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
                 <button
@@ -4466,7 +4466,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
-              <HelpBtn title="도어 셋팅" text="도어 설치 방식을 설정합니다. 가구맞춤: 각 가구에 맞게 도어 적용. 프레임커버: 모든 도어 높이를 통일합니다." />
+              <HelpBtn title="도어 셋팅" text="자유배치 모드에서 도어의 설치 방식을 결정합니다. 가구에 맞춤: 각 가구의 높이에 맞게 도어가 개별 적용됩니다. 프레임 커버: 상부 프레임을 가리도록 모든 도어의 높이를 동일하게 통일하여 깔끔한 외관을 만듭니다." />
             </div>
             <div className={styles.toggleButtonGroup}>
               <button
@@ -4517,7 +4517,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>배치방식</h3>
-            <HelpBtn title="배치방식" text="가구의 바닥 배치 방식을 설정합니다. 받침대, 조절발, 띄움(플로팅) 중 선택할 수 있습니다." />
+            <HelpBtn title="배치방식" text="가구 하단의 바닥 처리 방식을 선택합니다. 받침대: 고정된 베이스 위에 가구를 올립니다. 조절발: 바닥 수평이 맞지 않을 때 높이 조절이 가능한 발을 사용합니다. 띄움(플로팅): 벽에 고정하여 바닥에서 떠 있는 형태로 설치하며, 띄움 높이를 지정할 수 있습니다." />
           </div>
           <BaseControls
             spaceInfo={spaceInfo}
@@ -4532,7 +4532,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>바닥마감재</h3>
-            <HelpBtn title="바닥마감재" text="바닥 마감재 유무를 설정합니다. 마감재가 있으면 가구 하단에 바닥재 두께만큼 여유를 둡니다." />
+            <HelpBtn title="바닥마감재" text="가구 설치 후 바닥에 마감재(마루, 타일 등)를 시공할 예정인지 설정합니다. '있음'으로 설정하면 가구 하단에 바닥재 두께(약 10~15mm)만큼 여유 공간을 확보하여, 나중에 마감재를 가구 아래로 밀어넣을 수 있도록 합니다." />
           </div>
           <FloorFinishControls
             spaceInfo={spaceInfo}
