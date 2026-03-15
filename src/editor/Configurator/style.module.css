@@ -151,11 +151,11 @@
 }
 
 .fileTreeFileCardActive .fileTreeFileName {
-  color: var(--theme-primary);
+  color: #ffffff;
 }
 
 .fileTreeFileCardActive .fileTreeFileMeta {
-  color: var(--theme-text-secondary, #656d76);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* 썸네일 영역 */
