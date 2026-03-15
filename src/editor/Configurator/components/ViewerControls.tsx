@@ -83,35 +83,27 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showDisplayMenu, setShowDisplayMenu] = useState(false);
   const displayMenuRef = useRef<HTMLDivElement>(null);
   const [showDoorGuide, setShowDoorGuide] = useState(false);
-  const doorGuideDismissedRef = useRef(false);
 
-  // 모든 슬롯에 가구가 배치되면 도어 안내 표시
+  // 모든 슬롯이 채워지면 안내 표시, 빈 슬롯 생기면 숨김
   useEffect(() => {
-    if (hasDoorsInstalled || doorGuideDismissedRef.current) {
+    if (hasDoorsInstalled || isFreePlacement || !hasFurniture) {
       setShowDoorGuide(false);
       return;
     }
 
-    if (!hasFurniture) {
-      setShowDoorGuide(false);
-      return;
-    }
+    const totalSlots = spaceInfo?.customColumnCount || 1;
+    const slotFurniture = placedModules.filter(m => !m.isFreePlacement);
+    let occupiedSlots = 0;
+    slotFurniture.forEach(m => {
+      const isDual = m.moduleId?.startsWith('dual-') || m.isDualSlot;
+      occupiedSlots += isDual ? 2 : 1;
+    });
 
-    // 슬롯배치: 슬롯 수와 배치된 가구가 차지하는 슬롯 수 비교
-    if (!isFreePlacement) {
-      const totalSlots = spaceInfo?.customColumnCount || 1;
-      const slotFurniture = placedModules.filter(m => !m.isFreePlacement);
-      let occupiedSlots = 0;
-      slotFurniture.forEach(m => {
-        const isDual = m.moduleId?.startsWith('dual-') || m.isDualSlot;
-        occupiedSlots += isDual ? 2 : 1;
-      });
-      if (occupiedSlots >= totalSlots) {
-        const timer = setTimeout(() => setShowDoorGuide(true), 1000);
-        return () => clearTimeout(timer);
-      } else {
-        setShowDoorGuide(false);
-      }
+    if (occupiedSlots >= totalSlots) {
+      const timer = setTimeout(() => setShowDoorGuide(true), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowDoorGuide(false);
     }
   }, [placedModules, hasDoorsInstalled, isFreePlacement, spaceInfo?.customColumnCount, hasFurniture]);
 
@@ -398,7 +390,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             {showDoorGuide && !hasDoorsInstalled && (
               <div
                 className={styles.doorGuideTooltip}
-                onClick={() => { setShowDoorGuide(false); doorGuideDismissedRef.current = true; }}
+                onClick={() => setShowDoorGuide(false)}
               >
                 <span>도어를 장착해보세요</span>
                 <PiHandTapThin className={styles.doorGuideFingerIcon} size={20} />
