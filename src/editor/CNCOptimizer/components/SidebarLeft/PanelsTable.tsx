@@ -304,7 +304,32 @@ export default function PanelsTable(){
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: '4%' }}></th>
+                <th style={{ width: '4%', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    className={styles.panelCheckbox}
+                    checked={panels.length > 0 && excludedPanelIds.size === 0}
+                    ref={(el) => {
+                      if (el) {
+                        el.indeterminate = excludedPanelIds.size > 0 && excludedPanelIds.size < panels.length;
+                      }
+                    }}
+                    onChange={() => {
+                      if (excludedPanelIds.size === 0) {
+                        // 모두 체크됨 → 모두 해제
+                        panels.forEach(p => togglePanelExclusion(p.id));
+                      } else {
+                        // 일부/전부 해제 → 모두 체크 (제외된 것만 토글)
+                        panels.forEach(p => {
+                          if (excludedPanelIds.has(p.id)) {
+                            togglePanelExclusion(p.id);
+                          }
+                        });
+                      }
+                    }}
+                    title="전체 선택/해제"
+                  />
+                </th>
                 <th style={{ width: '24%', textAlign: 'center' }}>{t('cnc.name')}</th>
                 <th style={{ width: '20%', textAlign: 'center' }}>{t('cnc.dimensions')}</th>
                 <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
