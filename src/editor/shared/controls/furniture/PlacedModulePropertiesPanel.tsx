@@ -3,7 +3,7 @@ import { useSpaceConfigStore, FURNITURE_LIMITS } from '@/store/core/spaceConfigS
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { getModuleById, buildModuleDataFromPlacedModule, ModuleData } from '@/data/modules';
-import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
+import { calculateInternalSpace, calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -1125,11 +1125,28 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
   const doorOriginalWidth = currentPlacedModule?.customWidth || moduleData?.dimensions.width;
 
+  // 프레임 높이 계산 (상부프레임, 하부프레임)
+  const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
+  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+  // 받침대 시각적 높이: 바닥마감재가 있으면 그만큼 차감
+  const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+  const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
+    ? Math.max(0, baseFrameHeightMm - floorFinishH)
+    : baseFrameHeightMm;
+
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
-    return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, undefined, undefined, undefined, undefined, undefined, undefined, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight);
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight]);
+    return calculatePanelDetails(
+      moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth,
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      backPanelThicknessValue, currentPlacedModule?.customConfig,
+      currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
+      currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight,
+      topFrameHeightMm, visualBaseFrameHeightMm,
+      currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase
+    );
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase]);
 
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {

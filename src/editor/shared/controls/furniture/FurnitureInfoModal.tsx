@@ -4,6 +4,8 @@ import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
 import styles from './FurnitureInfoModal.module.css';
 
 
@@ -22,6 +24,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { updateModule } = useFurnitureStore();
+
+  const { spaceInfo } = useSpaceConfigStore();
 
   // 결 방향 상태 (기본값: horizontal)
   const [grainDirection, setGrainDirection] = useState<'horizontal' | 'vertical'>('horizontal');
@@ -364,7 +368,23 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   const customDepth = placedModule.customDepth || moduleData.dimensions.depth;
   const hasDoor = placedModule.doorConfig?.enabled || false;
   
-  const panels = calculatePanelDetails(moduleData as ModuleData, customWidth, customDepth, hasDoor, t, undefined, undefined, undefined, undefined, undefined, undefined, undefined, placedModule?.backPanelThickness, placedModule?.customConfig, placedModule?.hasLeftEndPanel, placedModule?.hasRightEndPanel, placedModule?.endPanelThickness, placedModule?.freeHeight);
+  // 프레임 높이 계산
+  const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
+  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+  const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+  const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
+    ? Math.max(0, baseFrameHeightMm - floorFinishH)
+    : baseFrameHeightMm;
+
+  const panels = calculatePanelDetails(
+    moduleData as ModuleData, customWidth, customDepth, hasDoor, t,
+    undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+    placedModule?.backPanelThickness, placedModule?.customConfig,
+    placedModule?.hasLeftEndPanel, placedModule?.hasRightEndPanel,
+    placedModule?.endPanelThickness, placedModule?.freeHeight,
+    topFrameHeightMm, visualBaseFrameHeightMm,
+    placedModule?.hasTopFrame, placedModule?.hasBase
+  );
   const totalPanels = panels.filter(p => !p.name?.startsWith('===')).length;
 
   return (

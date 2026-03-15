@@ -22,12 +22,17 @@ export const calculatePanelDetails = (
   hasLeftEndPanel?: boolean, // 좌측 엔드패널 여부
   hasRightEndPanel?: boolean, // 우측 엔드패널 여부
   endPanelThickness?: number, // 엔드패널 두께 (mm, 기본값: 18)
-  freeHeight?: number // 자유배치 모드 가구 높이 (mm) — 지정 시 섹션 비례 스케일링
+  freeHeight?: number, // 자유배치 모드 가구 높이 (mm) — 지정 시 섹션 비례 스케일링
+  topFrameHeightMm?: number, // 상부프레임 높이 (mm) — 0이면 프레임 없음
+  baseFrameHeightMm?: number, // 하부프레임(받침대) 높이 (mm) — 0이면 받침대 없음
+  hasTopFrame?: boolean, // 상부프레임 표시 여부 (기본: true)
+  hasBase?: boolean // 하부프레임(받침대) 표시 여부 (기본: true)
 ) => {
-  const panels: { upper: any[]; lower: any[]; door: any[] } = {
+  const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
     lower: [],     // 하부장 패널
-    door: []       // 도어 패널
+    door: [],      // 도어 패널
+    frame: []      // 프레임 패널 (상부/하부)
   };
 
   // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
@@ -940,6 +945,37 @@ export const calculatePanelDetails = (
       thickness: epT,
       quantity: 1,
     });
+  }
+
+  // === 프레임 패널 (상부프레임 / 하부프레임) ===
+  const FRAME_THICKNESS = 18; // 프레임 두께 고정 18mm
+
+  // 상부프레임
+  if (hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
+    panels.frame.push({
+      name: '상부프레임',
+      width: customWidth,
+      height: topFrameHeightMm,
+      thickness: FRAME_THICKNESS,
+      material: 'PB',
+    });
+  }
+
+  // 하부프레임 (받침대)
+  if (hasBase !== false && baseFrameHeightMm && baseFrameHeightMm > 0) {
+    panels.frame.push({
+      name: '하부프레임',
+      width: customWidth,
+      height: baseFrameHeightMm,
+      thickness: FRAME_THICKNESS,
+      material: 'PB',
+    });
+  }
+
+  // 프레임 패널 추가
+  if (panels.frame.length > 0) {
+    result.push({ name: '=== 프레임 ===' });
+    result.push(...panels.frame);
   }
 
   return result;

@@ -7,7 +7,9 @@ export const calculatePanelDetails = (
   customWidth: number,
   customDepth: number,
   hasDoor: boolean = false,
-  backPanelThicknessMm?: number // 백패널 두께 (mm, 기본값: 9)
+  backPanelThicknessMm?: number, // 백패널 두께 (mm, 기본값: 9)
+  topFrameHeightMm?: number, // 상부프레임 높이 (mm)
+  baseFrameHeightMm?: number // 하부프레임(받침대) 높이 (mm)
 ): Panel[] => {
   const panels: Panel[] = [];
   let panelId = 1;
@@ -413,6 +415,37 @@ export const calculatePanelDetails = (
       });
     }
   }
-  
+
+  // === 프레임 패널 (상부프레임 / 하부프레임) ===
+  const FRAME_THICKNESS = 18;
+
+  if (topFrameHeightMm && topFrameHeightMm > 0) {
+    panels.push({
+      id: `panel-${panelId++}`,
+      name: `${moduleData.name} - 상부프레임`,
+      width: customWidth,
+      height: topFrameHeightMm,
+      thickness: FRAME_THICKNESS,
+      material: 'PB',
+      color: 'MW',
+      quantity: 1,
+      grain: 'HORIZONTAL'
+    });
+  }
+
+  if (baseFrameHeightMm && baseFrameHeightMm > 0) {
+    panels.push({
+      id: `panel-${panelId++}`,
+      name: `${moduleData.name} - 하부프레임`,
+      width: customWidth,
+      height: baseFrameHeightMm,
+      thickness: FRAME_THICKNESS,
+      material: 'PB',
+      color: 'MW',
+      quantity: 1,
+      grain: 'HORIZONTAL'
+    });
+  }
+
   return panels;
 };
