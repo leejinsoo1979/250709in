@@ -1471,10 +1471,14 @@ const FreePlacementDropZone: React.FC = () => {
         const spaceH = spaceInfo.height * 0.01;
         const panelDepthMm = spaceInfo.depth || 600;
         const panelDepth = panelDepthMm * 0.01;
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
+        const furnitureDepth = furnitureDepthMm * 0.01;
+        const furnitureZOffset = -panelDepth / 2 + (panelDepth - furnitureDepth) / 2;
+        const furnitureFrontZ = furnitureZOffset + furnitureDepth / 2;
         const boxDepthMm = 130;
         const depthThree = boxDepthMm * 0.01;
-        // 뒷벽에 붙임: 뒷벽 Z = -panelDepth/2, 박스 뒷면 = 뒷벽
-        const zOffset = -panelDepth / 2 + depthThree / 2;
+        // 가구 앞면에서 뒤쪽으로 130mm
+        const zOffset = furnitureFrontZ - depthThree / 2;
         const boxes: React.ReactNode[] = [];
         if (lockedGaps.left != null && lockedGaps.left > 0) {
           const w = lockedGaps.left * 0.01;
