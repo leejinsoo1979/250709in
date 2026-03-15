@@ -249,6 +249,32 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     });
   };
 
+  // PDF 뷰 전체 선택/해제
+  const allPdfViewKeys = Object.keys(selectedViews) as (keyof typeof selectedViews)[];
+  const allPdfSelected = allPdfViewKeys.every(key => selectedViews[key]);
+  const somePdfSelected = allPdfViewKeys.some(key => selectedViews[key]);
+
+  const handleSelectAllPdfViews = () => {
+    const newValue = !allPdfSelected;
+    const updated = { ...selectedViews };
+    for (const key of allPdfViewKeys) {
+      updated[key] = newValue;
+    }
+    setSelectedViews(updated);
+  };
+
+  // DXF 도면 전체 선택/해제
+  const allDxfTypes: DrawingType[] = ['front', 'plan', 'sideLeft', 'door'];
+  const allDxfSelected = allDxfTypes.every(t => selectedDXFTypes.includes(t));
+
+  const handleSelectAllDxfTypes = () => {
+    if (allDxfSelected) {
+      setSelectedDXFTypes([]);
+    } else {
+      setSelectedDXFTypes([...allDxfTypes]);
+    }
+  };
+
   const handleDXFDownload = async () => {
     console.log('📐 DXF 다운로드 버튼 클릭됨');
     
@@ -388,7 +414,18 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
             {exportType === 'dxf' && (
               <>
                 <div className={styles.section}>
-                  <h3 className={styles.sectionHeader}>포함할 도면 선택</h3>
+                  <div className={styles.sectionHeaderRow}>
+                    <h3 className={styles.sectionHeader}>포함할 도면 선택</h3>
+                    <label className={styles.selectAllLabel}>
+                      <input
+                        type="checkbox"
+                        checked={allDxfSelected}
+                        ref={(el) => { if (el) el.indeterminate = selectedDXFTypes.length > 0 && !allDxfSelected; }}
+                        onChange={handleSelectAllDxfTypes}
+                      />
+                      <span>전체 선택</span>
+                    </label>
+                  </div>
                   <div className={styles.viewList}>
                     <label className={`${styles.viewOption} ${selectedDXFTypes.includes('front') ? styles.selected : ''}`}>
                       <input
@@ -445,7 +482,18 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
               <>
                 {/* 포함할 뷰 선택 */}
                 <div className={styles.section}>
-                  <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
+                  <div className={styles.sectionHeaderRow}>
+                    <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
+                    <label className={styles.selectAllLabel}>
+                      <input
+                        type="checkbox"
+                        checked={allPdfSelected}
+                        ref={(el) => { if (el) el.indeterminate = somePdfSelected && !allPdfSelected; }}
+                        onChange={handleSelectAllPdfViews}
+                      />
+                      <span>전체 선택</span>
+                    </label>
+                  </div>
                   <div className={styles.viewList}>
                     <label className={`${styles.viewOption} ${selectedViews['3d'] ? styles.selected : ''}`}>
                       <input

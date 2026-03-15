@@ -256,7 +256,35 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--theme-text);
-  margin: 0 0 10px 0;
+  margin: 0;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.selectAllLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--theme-text-secondary, #666);
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectAllLabel input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--theme-primary, #6C5CE7);
+}
+
+.selectAllLabel span {
+  white-space: nowrap;
 }
 
 /* 파일 형식 탭 */
