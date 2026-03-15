@@ -564,8 +564,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     const isFloating = hasFloatingPlacement;
                     const isLastSection = index === allSections.length - 1;
 
-                    // 띄움배치 시 상부섹션은 18mm 확장
-                    const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
+                    // 띄움배치 시 상부섹션 확장 제거 — 상단 선반갭 유지 (바닥배치와 동일)
+                    const floatingAdjustment = 0;
 
 // console.log('🟢🟢🟢 [SectionsRenderer] 정면뷰 상부섹션 topY 계산:', {
                       // furnitureId,
@@ -723,13 +723,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                   if (safetyShelfPositionMm !== undefined) {
                     const sectionBottomY = sectionCenterY - sectionHeight/2;
-                    // 띄움배치 여부 확인 (명시 플래그 우선)
-                    const isFloating = hasFloatingPlacement;
-                    const floatingAdjustment = isFloating ? mmToThreeUnits(18) : 0;
                     // 안전선반 윗면
                     topCompartmentBottomY = sectionBottomY + (safetyShelfPositionMm * 0.01) + basicThickness / 2;
-                    // 상부 프레임 하단 (띄움배치 시 18mm 확장)
-                    topCompartmentTopY = height/2 - basicThickness + floatingAdjustment;
+                    // 상부 프레임 하단 (띄움배치 시에도 상단갭 유지)
+                    topCompartmentTopY = height/2 - basicThickness;
                     // 안전선반 위 칸의 내경
                     topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
 
