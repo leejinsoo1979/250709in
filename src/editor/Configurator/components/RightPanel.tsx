@@ -43,33 +43,70 @@ interface FormControlProps {
   children: React.ReactNode;
   expanded?: boolean;
   onToggle?: () => void;
+  helpText?: string;
+  style?: React.CSSProperties;
 }
 
-const FormControl: React.FC<FormControlProps> = ({ 
-  label, 
-  children, 
-  expanded = true, 
-  onToggle 
-}) => (
-  <div className={styles.formControl}>
-    <div className={styles.formHeader} onClick={onToggle}>
-      <div className={styles.formIndicator}></div>
-      <h3 className={styles.formLabel}>{label}</h3>
-      {onToggle && (
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          className={`${styles.expandIcon} ${expanded ? styles.expanded : ''}`}
-        >
-          <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2.5"/>
-        </svg>
-      )}
+const FormControl: React.FC<FormControlProps> = ({
+  label,
+  children,
+  expanded = true,
+  onToggle,
+  helpText,
+  style
+}) => {
+  const [showHelp, setShowHelp] = useState(false);
+  const helpRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!showHelp) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (helpRef.current && !helpRef.current.contains(e.target as Node)) {
+        setShowHelp(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showHelp]);
+
+  return (
+    <div className={styles.formControl} style={style}>
+      <div className={styles.formHeader} onClick={onToggle}>
+        <div className={styles.formIndicator}></div>
+        <h3 className={styles.formLabel}>{label}</h3>
+        <div style={{ flex: 1 }} />
+        {helpText && (
+          <div ref={helpRef} style={{ position: 'relative' }}>
+            <button
+              className={styles.helpButton}
+              onClick={(e) => { e.stopPropagation(); setShowHelp(!showHelp); }}
+            >
+              ?
+            </button>
+            {showHelp && (
+              <div className={styles.helpPopup}>
+                <div className={styles.helpPopupTitle}>{label}</div>
+                <div className={styles.helpPopupText}>{helpText}</div>
+              </div>
+            )}
+          </div>
+        )}
+        {onToggle && (
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            className={`${styles.expandIcon} ${expanded ? styles.expanded : ''}`}
+          >
+            <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2.5"/>
+          </svg>
+        )}
+      </div>
+      {expanded && <div className={styles.formContent}>{children}</div>}
     </div>
-    {expanded && <div className={styles.formContent}>{children}</div>}
-  </div>
-);
+  );
+};
 
 interface NumberInputProps {
   label: string;
@@ -745,6 +782,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('common.brandType')}
               expanded={expandedSections.has('brand')}
               onToggle={() => toggleSection('brand')}
+              helpText="가구 브랜드 타입을 선택합니다. 싱글(1칸)과 듀얼(2칸) 중 선택할 수 있습니다."
             >
               <div className={styles.brandType}>
                 <div className={styles.brandLabel}>{t('furniture.single')}</div>
@@ -760,6 +798,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('common.priceInfo')}
               expanded={expandedSections.has('price')}
               onToggle={() => toggleSection('price')}
+              helpText="현재 설정된 가구 구성의 예상 가격을 표시합니다."
             >
               <div className={styles.priceInfo}>
                 <div className={styles.priceLabel}>{t('common.priceInfo')}</div>
@@ -772,6 +811,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('material.selection')}
               expanded={expandedSections.has('material')}
               onToggle={() => toggleSection('material')}
+              helpText="가구 본체에 사용할 자재를 선택합니다. 선택한 자재에 따라 색상과 질감이 변경됩니다."
             >
               <ColorWheel />
               <div className={styles.materialToggle}>
@@ -789,6 +829,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('space.title')}
               expanded={expandedSections.has('space')}
               onToggle={() => toggleSection('space')}
+              helpText="설치 공간의 전체 너비와 높이를 설정합니다. 실측 치수를 입력하세요."
             >
               <NumberInput
                 label={t('space.totalWidth')}
@@ -856,6 +897,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('space.droppedCeiling')}
               expanded={expandedSections.has('droppedCeiling')}
               onToggle={() => toggleSection('droppedCeiling')}
+              helpText="천장 단내림이 있는 경우 설정합니다. 단내림 구간의 위치, 너비, 높이를 지정하여 해당 영역에 맞는 가구를 배치할 수 있습니다."
             >
               {/* 단내림 있음/없음 토글 */}
               <ToggleGroup
@@ -973,6 +1015,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 label={t('space.mainSectionSize')}
                 expanded={expandedSections.has('mainSpace')}
                 onToggle={() => toggleSection('mainSpace')}
+                helpText="단내림이 없는 메인 구간의 너비와 높이를 확인합니다. 공간 설정에서 자동 계산됩니다."
               >
                 <div className={styles.numberInput}>
                   <div className={styles.inputLabel}>{t('space.width')}</div>
@@ -1017,6 +1060,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('space.layoutMode')}
               expanded={expandedSections.has('layoutMode')}
               onToggle={() => toggleSection('layoutMode')}
+              helpText="균등분할: 공간을 동일한 폭으로 나누어 가구를 배치합니다. 자유배치: 원하는 위치에 자유롭게 가구를 배치합니다."
             >
               <ToggleGroup
                 key={`layout-mode-${currentLanguage}`}
@@ -1044,6 +1088,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 label={t('space.columnCount')}
                 expanded={expandedSections.has('layout')}
                 onToggle={() => toggleSection('layout')}
+                helpText="공간을 나눌 칸 수를 설정합니다. 칸 수에 따라 각 슬롯의 너비가 자동으로 계산됩니다."
               >
                 <NumberInput
                   label={spaceInfo.droppedCeiling?.enabled ? t('space.columnCount') : t('space.columnCount')}
@@ -1079,6 +1124,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 label={t('material.floorFinish')}
                 expanded={expandedSections.has('floor')}
                 onToggle={() => toggleSection('floor')}
+                helpText="바닥 마감재 유무를 설정합니다. 마감재가 있으면 가구 하단에 바닥재 두께만큼 여유를 둡니다."
               >
                 <ToggleGroup
                   key={`floor-${currentLanguage}`}
@@ -1094,6 +1140,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('frame.properties')}
               expanded={expandedSections.has('frame')}
               onToggle={() => toggleSection('frame')}
+              helpText="프레임 타입을 선택합니다. 서라운드: 벽면 프레임으로 감싸는 방식. 노서라운드: 프레임 없이 빌트인으로 설치합니다."
             >
               <ToggleGroup
                 key={`frame-${currentLanguage}`}
@@ -1109,6 +1156,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 label={t('space.topFrame')}
                 expanded={expandedSections.has('topFrame')}
                 onToggle={() => toggleSection('topFrame')}
+                helpText="노서라운드 모드에서 상부 프레임의 높이를 설정합니다. 가구 위쪽 마감 처리에 사용됩니다."
               >
                 <NumberInput
                   label={t('space.frameHeight')}
@@ -1136,6 +1184,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 label="도어 셋업"
                 expanded={expandedSections.has('doorSetup')}
                 onToggle={() => toggleSection('doorSetup')}
+                helpText="자유배치 모드에서 도어 설치 방식을 설정합니다. 기본: 각 가구에 맞춤. 프레임 커버: 모든 도어 높이를 통일합니다."
               >
                 <div className={doorStyles.doorTabSelector}>
                   <button
@@ -1172,6 +1221,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   label={t('space.droppedColumnCount')}
                   expanded={expandedSections.has('droppedLayout')}
                   onToggle={() => toggleSection('droppedLayout')}
+                  helpText="단내림 구간의 칸 수를 설정합니다. 단내림 영역에 배치할 가구 슬롯 수를 지정합니다."
                 >
                   <DoorSlider
                     value={spaceInfo.droppedCeilingDoorCount || 1}
@@ -1226,6 +1276,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   label={t('space.normalColumnCount')}
                   expanded={expandedSections.has('normalLayout')}
                   onToggle={() => toggleSection('normalLayout')}
+                  helpText="일반 구간(단내림 없는 영역)의 칸 수를 설정합니다."
                   style={{ marginTop: '16px' }}
                 >
                   <DoorSlider
