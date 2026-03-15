@@ -203,7 +203,7 @@ const FurnitureRenderer: React.FC<{
     <BoxModule
       moduleData={finalModuleData}
       viewMode="3D"
-      renderMode="solid"
+      renderMode="wireframe"
       placedFurnitureId={placedModule.id}
       spaceInfo={spaceInfo}
       hasDoor={placedModule.hasDoor ?? false}
@@ -236,7 +236,7 @@ const Scene3D: React.FC<{
         <Space3DViewProvider
           spaceInfo={spaceInfo}
           svgSize={{ width: 400, height: 225 }}
-          renderMode="solid"
+          renderMode="wireframe"
           viewMode="3D"
         >
           {/* 조명 */}
