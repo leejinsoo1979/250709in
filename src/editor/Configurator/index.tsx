@@ -3199,6 +3199,31 @@ const Configurator: React.FC = () => {
     }
   };
 
+  // 섹션 헬프 버튼
+  const HelpBtn: React.FC<{ title: string; text: string }> = ({ title, text }) => {
+    const [open, setOpen] = useState(false);
+    const ref = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+      if (!open) return;
+      const handler = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      };
+      document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+    return (
+      <div ref={ref} style={{ position: 'relative', marginLeft: 'auto' }}>
+        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>?</button>
+        {open && (
+          <div className={styles.helpPopover}>
+            <div className={styles.helpPopoverTitle}>{title}</div>
+            <div className={styles.helpPopoverText}>{text}</div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 우측 패널 컨텐츠 렌더링
   const renderRightPanelContent = () => {
     const isFreeMode = (spaceInfo.layoutMode || 'equal-division') === 'free-placement';
@@ -3209,6 +3234,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>공간 설정</h3>
+            <HelpBtn title="공간 설정" text="설치 공간의 전체 너비(W)와 높이(H)를 설정합니다. 실측 치수를 mm 단위로 입력하세요." />
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -3240,6 +3266,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>공간 유형</h3>
+            <HelpBtn title="공간 유형" text="설치 방식을 선택합니다. 빌트인, 세미빌트인, 스탠드 등 공간 형태에 맞는 유형을 지정하세요." />
           </div>
           <InstallTypeControls
             spaceInfo={spaceInfo}
@@ -3253,6 +3280,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>컬럼수</h3>
+              <HelpBtn title="컬럼수" text="공간을 나눌 칸 수를 설정합니다. 칸 수에 따라 각 슬롯의 너비가 자동 계산됩니다." />
             </div>
 
             {!spaceInfo.droppedCeiling?.enabled ? (
@@ -3304,6 +3332,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : '단내림'}</h3>
+            <HelpBtn title={isFreeMode ? '커튼박스' : '단내림'} text="천장에 단내림(커튼박스)이 있는 경우 활성화합니다. 위치, 너비, 높이를 지정하여 해당 영역에 맞는 가구를 배치할 수 있습니다." />
           </div>
 
           <div className={styles.toggleButtonGroup}>
@@ -3407,6 +3436,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
+              <HelpBtn title="메인구간 사이즈" text="단내림이 없는 메인 구간의 너비와 높이입니다. 공간 설정에서 자동 계산됩니다." />
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -3576,6 +3606,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'}</h3>
+              <HelpBtn title={isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'} text="단내림(커튼박스) 구간의 너비와 높이입니다. 단내림 설정에서 자동 계산됩니다." />
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -3735,6 +3766,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>프레임 설정</h3>
+            <HelpBtn title="프레임 설정" text="프레임 타입을 선택합니다. 전체서라운드, 양쪽서라운드, 노서라운드 중 공간에 맞는 방식을 지정하세요." />
           </div>
 
           {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 (슬롯배치 모드만) */}
@@ -4185,6 +4217,7 @@ const Configurator: React.FC = () => {
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>서라운드</h3>
+                <HelpBtn title="서라운드" text="서라운드 프레임의 상하좌우 치수를 설정합니다. 벽면과 가구 사이의 마감 프레임 크기를 조절합니다." />
               </div>
               {/* 서라운드 옵셋 기준 선택 */}
               <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
@@ -4346,6 +4379,7 @@ const Configurator: React.FC = () => {
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
+                <HelpBtn title="상,하부프레임" text="가구 상단과 하단의 프레임 높이를 설정합니다. 받침대(베이스) 높이와 상부 마감 높이를 조절합니다." />
               </div>
               <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
                 <button
@@ -4431,6 +4465,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
+              <HelpBtn title="도어 셋팅" text="도어 설치 방식을 설정합니다. 가구맞춤: 각 가구에 맞게 도어 적용. 프레임커버: 모든 도어 높이를 통일합니다." />
             </div>
             <div className={styles.toggleButtonGroup}>
               <button
@@ -4481,6 +4516,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>배치방식</h3>
+            <HelpBtn title="배치방식" text="가구의 바닥 배치 방식을 설정합니다. 받침대, 조절발, 띄움(플로팅) 중 선택할 수 있습니다." />
           </div>
           <BaseControls
             spaceInfo={spaceInfo}
@@ -4495,6 +4531,7 @@ const Configurator: React.FC = () => {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>바닥마감재</h3>
+            <HelpBtn title="바닥마감재" text="바닥 마감재 유무를 설정합니다. 마감재가 있으면 가구 하단에 바닥재 두께만큼 여유를 둡니다." />
           </div>
           <FloorFinishControls
             spaceInfo={spaceInfo}
