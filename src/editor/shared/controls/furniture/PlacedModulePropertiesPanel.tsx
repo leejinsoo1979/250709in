@@ -116,7 +116,7 @@ const getFurnitureImagePath = (moduleId: string) => {
     if (sections.length > 1 && moduleData.id.includes('2hanging')) {
       // 2단 옷장의 경우 안전선반으로 표시
       panels.common.push({
-        name: '안전선반 (칸막이)',
+        name: '선반 (칸막이)',
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
         thickness: basicThickness,

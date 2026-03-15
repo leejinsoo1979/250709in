@@ -58,7 +58,7 @@ export const calculatePanelDetails = (
     
     // 섹션 사이 구분판 (안전선반/칸막이)
     if (sections.length > 1) {
-      const dividerName = moduleData.id.includes('2hanging') ? '안전선반' : '중간 칸막이';
+      const dividerName = moduleData.id.includes('2hanging') ? '선반' : '중간 칸막이';
       panels.push({
         id: `panel-${panelId++}`,
         name: `${moduleData.name} - ${dividerName}`,

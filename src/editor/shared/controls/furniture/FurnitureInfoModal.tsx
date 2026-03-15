@@ -103,7 +103,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       // 섹션 사이 구분판
       if (sections.length > 1 && moduleData.id.includes('2hanging')) {
         panels.common.push({
-          name: '안전선반 (칸막이)',
+          name: '선반 (칸막이)',
           width: innerWidth,
           depth: customDepth - backPanelThickness - 17,
           thickness: basicThickness,

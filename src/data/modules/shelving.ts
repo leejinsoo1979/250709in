@@ -74,7 +74,7 @@ export interface ModuleData {
     hasSharedMiddlePanel?: boolean; // 좌우 섹션 간 공유 중단선반 여부
     middlePanelHeight?: number; // 중단선반 위치 (바닥에서 mm)
     // 듀얼 가구 안전선반 통합 옵션 (상부 옷장이 동일 용도인 경우)
-    hasSharedSafetyShelf?: boolean; // 통합 안전선반 여부
+    hasSharedSafetyShelf?: boolean; // 통합 선반 여부
     safetyShelfHeight?: number; // 안전선반 위치 (바닥에서 mm)
   };
 }
@@ -246,7 +246,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE1,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `하단 2단 서랍장 + 상단 옷장 (안전선반 포함)`
+      ? `하단 2단 서랍장 + 상단 옷장 (선반 포함)`
       : `하단 2단 서랍장 + 상단 옷장`,
     FURNITURE_SPECS.DEFAULT_DEPTH // 서랍+옷장 복합형 기본 깊이
   );
@@ -297,7 +297,7 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `하단 짧은옷장 + 상단 긴옷장 (안전선반 포함)`
+      ? `하단 짧은옷장 + 상단 긴옷장 (선반 포함)`
       : `하단 짧은옷장 + 상단 긴옷장`
   );
   
@@ -348,7 +348,7 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE4,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `4단 서랍장 + 옷장 복합형 (안전선반 포함)`
+      ? `4단 서랍장 + 옷장 복합형 (선반 포함)`
       : `4단 서랍장 + 옷장 복합형`
   );
   
@@ -403,7 +403,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE1,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `듀얼 하단 2단 서랍장 + 상단 옷장 (안전선반 포함)`
+      ? `듀얼 하단 2단 서랍장 + 상단 옷장 (선반 포함)`
       : `듀얼 하단 2단 서랍장 + 상단 옷장`
   );
   
@@ -453,7 +453,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `듀얼 하단 짧은옷장 + 상단 긴옷장 (안전선반 포함)`
+      ? `듀얼 하단 짧은옷장 + 상단 긴옷장 (선반 포함)`
       : `듀얼 하단 짧은옷장 + 상단 긴옷장`
   );
   
@@ -504,7 +504,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE4,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `듀얼 4단 서랍장 + 옷장 복합형 (안전선반 포함)`
+      ? `듀얼 4단 서랍장 + 옷장 복합형 (선반 포함)`
       : `듀얼 4단 서랍장 + 옷장 복합형`
   );
   
@@ -568,7 +568,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     600, // 좌측 서랍+옷장 기본 깊이 (customDepth로 변경 가능)
     FURNITURE_SPECS.COLORS.STYLER,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `좌측 서랍+옷장 + 우측 스타일러장 (안전선반 포함)`
+      ? `좌측 서랍+옷장 + 우측 스타일러장 (선반 포함)`
       : `좌측 서랍+옷장 + 우측 스타일러장`,
     600
   );
@@ -607,7 +607,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.PANTSHANGER,
     hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT 
-      ? `좌측 4단서랍+옷장 + 우측 바지걸이+옷장 (통합 안전선반)`
+      ? `좌측 4단서랍+옷장 + 우측 바지걸이+옷장 (통합 선반)`
       : `좌측 4단서랍+옷장 + 우측 바지걸이+옷장`
   );
   
@@ -620,7 +620,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
       // 통합 중단선반: 좌측 면판과 우측 면판 사이에 끼워지는 1개의 패널
       hasSharedMiddlePanel: true,
       middlePanelHeight: bottomSectionHeight, // 중단 패널 위치
-      // 통합 안전선반: 상부 옷장이 좌우 동일 용도이므로 전체 폭 1개 패널
+      // 통합 선반: 상부 옷장이 좌우 동일 용도이므로 전체 폭 1개 패널
       hasSharedSafetyShelf: hangingHeight >= SAFETY_SHELF_MIN_HANGING_HEIGHT,
       safetyShelfHeight: FURNITURE_SPECS.SAFETY_SHELF_POSITION,
       leftSections: [
