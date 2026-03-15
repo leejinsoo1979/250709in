@@ -321,7 +321,13 @@ export default function PanelsTable(){
                   key={p.id}
                   ref={selectedPanelId === p.id ? selectedRowRef : null}
                   className={`panel-clickable ${selectedPanelId === p.id ? styles.selected : ''} ${isNewPanel ? styles.newPanel : ''}`}
-                  onClick={() => selectPanel(p.id)}
+                  onClick={() => {
+                    selectPanel(p.id);
+                    const info = panelHighlightMap.get(p.id);
+                    if (info) {
+                      setHoveredPanel(info.meshName, info.furnitureId);
+                    }
+                  }}
                   onMouseEnter={() => {
                     const info = panelHighlightMap.get(p.id);
                     if (info) {
@@ -330,7 +336,12 @@ export default function PanelsTable(){
                       setHoveredPanel(p.label, null);
                     }
                   }}
-                  onMouseLeave={() => setHoveredPanel(null, null)}
+                  onMouseLeave={() => {
+                    // 선택된 패널이 아닌 경우에만 하이라이트 해제 (클릭으로 선택된 패널은 유지)
+                    if (selectedPanelId !== p.id) {
+                      setHoveredPanel(null, null);
+                    }
+                  }}
                   data-panel-id={p.id}
                 >
                   <td>
