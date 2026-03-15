@@ -4487,6 +4487,21 @@ const Configurator: React.FC = () => {
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
               <HelpBtn title="도어 셋팅" text="전체: 모든 도어 가구에 동일한 상단/하단 갭을 적용합니다. 개별: 각 도어 가구마다 개별적으로 갭을 설정합니다." />
             </div>
+            {/* 전체/개별 토글 */}
+            <div className={styles.toggleButtonGroup}>
+              <button
+                className={`${styles.toggleButton} ${doorGapMode === 'global' ? styles.toggleButtonActive : ''}`}
+                onClick={() => setDoorGapMode('global')}
+              >
+                전체
+              </button>
+              <button
+                className={`${styles.toggleButton} ${doorGapMode === 'individual' ? styles.toggleButtonActive : ''}`}
+                onClick={() => setDoorGapMode('individual')}
+              >
+                개별
+              </button>
+            </div>
             {/* 가구에 맞춤/공간에 맞춤 */}
             <div style={{ marginTop: '6px' }}>
               <div className={styles.toggleButtonGroup}>
@@ -4503,21 +4518,6 @@ const Configurator: React.FC = () => {
                   공간에 맞춤
                 </button>
               </div>
-            </div>
-            {/* 전체/개별 토글 */}
-            <div className={styles.toggleButtonGroup}>
-              <button
-                className={`${styles.toggleButton} ${doorGapMode === 'global' ? styles.toggleButtonActive : ''}`}
-                onClick={() => setDoorGapMode('global')}
-              >
-                전체
-              </button>
-              <button
-                className={`${styles.toggleButton} ${doorGapMode === 'individual' ? styles.toggleButtonActive : ''}`}
-                onClick={() => setDoorGapMode('individual')}
-              >
-                개별
-              </button>
             </div>
 
             {doorGapMode === 'global' ? (
