@@ -121,7 +121,7 @@
   font-weight: 600;
   color: var(--theme-text);
   margin: 0;
-  flex: 1;
+  flex-shrink: 0;
   letter-spacing: -0.01em;
 }
 
@@ -728,14 +728,15 @@
 
 /* ── Help Button & Popup ── */
 .helpButton {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
   border-radius: 50%;
-  border: 1px solid var(--theme-border);
+  border: 1.2px solid var(--theme-text-muted);
   background: transparent;
   color: var(--theme-text-muted);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -744,12 +745,15 @@
   line-height: 1;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  opacity: 0.6;
+  margin-right: 4px;
 }
 
 .helpButton:hover {
   border-color: var(--theme-primary);
   color: var(--theme-primary);
   background: var(--theme-background-secondary);
+  opacity: 1;
 }
 
 .helpPopup {
