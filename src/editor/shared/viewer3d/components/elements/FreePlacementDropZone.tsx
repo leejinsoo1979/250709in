@@ -1463,6 +1463,40 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
+      {/* 잠긴 이격 구간 — 붉은색 투명 박스 */}
+      {(() => {
+        const lockedGaps = spaceInfo.lockedWallGaps;
+        if (!lockedGaps) return null;
+        const { startX, endX } = spaceBounds;
+        const spaceH = spaceInfo.height * 0.01;
+        const furnitureDepthMm = Math.min(spaceInfo.depth || 600, 600);
+        const depthThree = furnitureDepthMm * 0.01;
+        const panelDepth = (spaceInfo.depth || 600) * 0.01;
+        const zOffset = -panelDepth / 2 + (panelDepth - depthThree) / 2 + depthThree / 2;
+        const boxes: React.ReactNode[] = [];
+        if (lockedGaps.left != null && lockedGaps.left > 0) {
+          const w = lockedGaps.left * 0.01;
+          const cx = startX * 0.01 + w / 2;
+          boxes.push(
+            <mesh key="locked-left" position={[cx, spaceH / 2, zOffset]}>
+              <boxGeometry args={[w, spaceH, depthThree]} />
+              <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+            </mesh>
+          );
+        }
+        if (lockedGaps.right != null && lockedGaps.right > 0) {
+          const w = lockedGaps.right * 0.01;
+          const cx = endX * 0.01 - w / 2;
+          boxes.push(
+            <mesh key="locked-right" position={[cx, spaceH / 2, zOffset]}>
+              <boxGeometry args={[w, spaceH, depthThree]} />
+              <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+            </mesh>
+          );
+        }
+        return boxes;
+      })()}
+
       {!isDraggingPlaced && remainingGaps.map((gap, i) => {
         const lineColor = themeColor;
 
