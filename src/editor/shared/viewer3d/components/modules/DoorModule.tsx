@@ -12,7 +12,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { Line } from '@react-three/drei';
+import { Line, Html } from '@react-three/drei';
 import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
@@ -583,6 +583,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // doorTopGap/doorBottomGap: props(개별 가구) → 글로벌 spaceInfo → 기본값
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 5;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 25;
+  console.log('🚪🔍 doorBottomGap 추적:', { doorBottomGapProp, storeVal: originalSpaceInfo.doorBottomGap, final: doorBottomGap, placementType: originalSpaceInfo.baseConfig?.placementType });
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);
@@ -768,7 +769,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 가구에 맞춤: 실제 가구 높이 사용 (per-furniture topFrame 반영됨)
       tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
     }
-// console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight);
+console.log('🚪🔧 doorSetupMode:', doorSetupMode, '| furnitureH:', effectiveInternalHeight, '| spaceH:', spaceBasedHeight, '| used:', tallCabinetFurnitureHeight, '| floatH:', floatHeight, '| baseHeightValue:', baseHeightValue, '| placementType:', placementType);
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
@@ -806,21 +807,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
 
-// console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
-      // doorBottomGapInput: doorBottomGap,
-      // baselineBottomGap,
-      // effectiveBottomGap,
-      // extraBottomGap,
-      // doorTopGapInput: doorTopGap,
-      // extraTopGap,
-      // cabinetBottomLocal,
-      // cabinetTopLocal,
-      // doorBottomLocal,
-      // doorTopLocal,
-      // placementType,
-      // floatHeight,
-      // 설명: '띄움배치 시 baselineBottomGap에 이미 floatHeight 반영됨'
-    // });
+console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
+      doorBottomGapInput: doorBottomGap,
+      baselineBottomGap,
+      effectiveBottomGap,
+      extraBottomGap,
+      doorTopGapInput: doorTopGap,
+      extraTopGap,
+      cabinetBottomLocal,
+      cabinetTopLocal,
+      doorBottomLocal,
+      doorTopLocal,
+      placementType,
+      floatHeight,
+    });
 
     // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
     // 별도의 doorBottomLocal 조정 불필요
@@ -1122,6 +1122,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // });
     }
   }
+
+  console.log('🚪📐 최종 도어 렌더링:', { actualDoorHeight: actualDoorHeight.toFixed(1), doorHeight: (doorHeight / 0.01).toFixed(1), doorYPosition: (doorYPosition / 0.01).toFixed(1), tallCabinetFurnitureHeight, placementType, sectionIndex, totalSections });
 
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
@@ -1455,6 +1457,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 panelGrainDirections={panelGrainDirections}
               />
               
+              {/* 자유배치 도어 설정 아이콘 (좌측 도어) */}
+              {isFree && viewMode === '3D' && !isDragging && (
+                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center>
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'transparent',
+                      border: '1.5px solid var(--theme-primary, #6366f1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: 'none',
+                      pointerEvents: 'auto',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (furnitureId) {
+                        const { setActivePopup } = useUIStore.getState();
+                        setActivePopup({ type: 'placedModule', id: furnitureId });
+                      }
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--theme-primary, #6366f1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                  </div>
+                </Html>
+              )}
+
               {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
@@ -1859,6 +1894,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 panelGrainDirections={panelGrainDirections}
               />
               
+              {/* 자유배치 도어 설정 아이콘 (우측 도어) */}
+              {isFree && viewMode === '3D' && !isDragging && (
+                <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center>
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'transparent',
+                      border: '1.5px solid var(--theme-primary, #6366f1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: 'none',
+                      pointerEvents: 'auto',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (furnitureId) {
+                        const { setActivePopup } = useUIStore.getState();
+                        setActivePopup({ type: 'placedModule', id: furnitureId });
+                      }
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--theme-primary, #6366f1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                  </div>
+                </Html>
+              )}
+
               {/* Hinges for right door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
@@ -2319,6 +2387,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 opacity={viewMode === '3D' ? 0.9 : 1}
               />
             </lineSegments>
+
+            {/* 자유배치 도어 설정 아이콘 */}
+            {isFree && viewMode === '3D' && !isDragging && (
+              <Html position={[0, 0, doorThicknessUnits / 2 + 0.002]} center>
+                <div
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: 'transparent',
+                    border: '1.5px solid var(--theme-primary, #6366f1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: 'none',
+                    pointerEvents: 'auto',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (furnitureId) {
+                      const { setActivePopup } = useUIStore.getState();
+                      setActivePopup({ type: 'placedModule', id: furnitureId });
+                    }
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--theme-primary, #6366f1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                </div>
+              </Html>
+            )}
 
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
