@@ -845,6 +845,13 @@ export const useUIStore = create<UIState>()(
         // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
         // doorsOpen과 activePopup은 세션별로 초기화
       }),
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...(persistedState as object),
+        // 새로고침 시 치수는 항상 ON (이전 localStorage 잔존값 무시)
+        showDimensions: true,
+        showDimensionsText: true,
+      }),
     }
   )
 ); 
