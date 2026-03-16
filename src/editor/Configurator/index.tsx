@@ -207,8 +207,10 @@ const Configurator: React.FC = () => {
     else setDoorBottomGapInput(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
+      console.log('🔴🔴 handleDoorGapChange:', { field, val: num, doorModuleCount: placedModules.filter(m => m.hasDoor).length });
       setSpaceInfo({ [field]: num });
       placedModules.filter(m => m.hasDoor).forEach(m => {
+        console.log('🔴🔴 updatePlacedModule:', { moduleId: m.id, field, val: num });
         updatePlacedModule(m.id, { [field]: num });
       });
     }
@@ -227,6 +229,16 @@ const Configurator: React.FC = () => {
       updatePlacedModule(moduleId, { [field]: num });
     }
   };
+
+  // 도어갭 변경 디버깅: store 값 확인
+  React.useEffect(() => {
+    console.log('🔴🔴 doorGap store 상태:', {
+      storeTopGap: spaceInfo.doorTopGap,
+      storeBotGap: spaceInfo.doorBottomGap,
+      doorSetupMode: spaceInfo.doorSetupMode,
+      hasDoorModules: placedModules.filter(m => m.hasDoor).map(m => ({ id: m.id, topGap: m.doorTopGap, botGap: m.doorBottomGap }))
+    });
+  }, [spaceInfo.doorTopGap, spaceInfo.doorBottomGap, spaceInfo.doorSetupMode, placedModules]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
@@ -3409,13 +3421,11 @@ const Configurator: React.FC = () => {
                   const droppedInternalWidth = droppedWidth - frameThickness;
                   const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
 
-                  // 커튼박스 기본 높이 = 공간높이와 동일 (dropHeight = 0)
-                  const freeDropHeight = 0;
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
                       enabled: true,
                       width: droppedWidth,
-                      dropHeight: isFreeMode ? freeDropHeight : 200,
+                      dropHeight: isFreeMode ? 100 : 200,
                       position: 'right'
                     },
                     droppedCeilingDoorCount: droppedDoorCount,
@@ -3736,7 +3746,7 @@ const Configurator: React.FC = () => {
                     min="1800"
                     max="2900"
                     step="10"
-                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight ?? 0) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
                     key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -3750,7 +3760,7 @@ const Configurator: React.FC = () => {
 
                       if (isFreeMode) {
                         // 자유배치: 커튼박스 높이 = 메인높이 + dropHeight
-                        const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight ?? 0);
+                        const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
                         if (inputValue === '' || isNaN(parseInt(inputValue))) {
                           e.target.value = currentCurtainH.toString();
                           return;
