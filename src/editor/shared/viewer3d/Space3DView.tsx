@@ -2180,8 +2180,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             </>
           )}
 
-          {/* 줌 슬라이더 - 뷰어 하단 중앙 (임베디드/분할뷰/2D뷰 제외) */}
-          {!isEmbedded && view2DDirection !== 'all' && viewMode !== '2D' && (<>
+          {/* 줌 슬라이더 - 숨김 처리 */}
+          {false && !isEmbedded && view2DDirection !== 'all' && viewMode !== '2D' && (<>
             <style>{`
               .zoom-slider::-webkit-slider-thumb {
                 -webkit-appearance: none;
