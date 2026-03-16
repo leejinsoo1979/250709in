@@ -369,17 +369,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 도어 셋팅 변경 시 상하부프레임도 연동 변경
     // 공간에 맞춤 → 프레임 가구에 맞춤, 가구에 맞춤 → 프레임 도어에 맞춤
     if (mode === 'space-fit') {
-      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture' });
+      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: 25 });
+      const allModules = useFurnitureStore.getState().placedModules;
+      allModules.forEach((m) => {
+        if (m.hasDoor) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 25 });
+      });
     } else {
-      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'door' });
+      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });
+      const allModules = useFurnitureStore.getState().placedModules;
+      allModules.forEach((m) => {
+        if (m.hasDoor) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5 });
+      });
     }
-    // 모든 도어 가구에 리렌더 트리거
-    const allModules = useFurnitureStore.getState().placedModules;
-    allModules.forEach((m) => {
-      if (m.hasDoor) {
-        updatePlacedModule(m.id, { _doorSetupTs: Date.now() } as any);
-      }
-    });
   }, [updatePlacedModule]);
 
   // 경첩 방향 변경 핸들러
