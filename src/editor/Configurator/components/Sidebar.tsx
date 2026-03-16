@@ -116,28 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </nav>
 
-      {/* Bottom action buttons */}
-      <div className={styles.actionGroup}>
-
-        {/* 다크/라이트 모드 토글 */}
-        <button
-          className={styles.actionButton}
-          onClick={toggleMode}
-          data-tooltip={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
-        >
-          {theme.mode === 'dark' ? <Moon size={17} strokeWidth={1.8} /> : <Sun size={17} strokeWidth={1.8} />}
-        </button>
-
-        {!readOnly && (
-          <button
-            className={styles.actionButton}
-            onClick={handleExitClick}
-            data-tooltip={t('sidebar.exitToDashboard')}
-          >
-            <LogOut size={17} strokeWidth={1.8} style={{ transform: 'scaleX(-1)' }} />
-          </button>
-        )}
-      </div>
+      {/* Bottom action buttons - 숨김 처리 */}
 
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
