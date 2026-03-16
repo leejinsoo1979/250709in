@@ -4560,9 +4560,9 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     setSpaceInfo({ doorSetupMode: 'furniture-fit', frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });
-                    // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
+                    // 개별 모듈의 갭도 모두 리셋 + 리렌더 트리거
                     placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5, _doorSetupTs: Date.now() });
                     });
                   }}
                 >
@@ -4572,9 +4572,9 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: 25 });
-                    // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
+                    // 개별 모듈의 갭도 모두 리셋 + 리렌더 트리거
                     placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 25, _doorSetupTs: Date.now() });
                     });
                   }}
                 >
@@ -4633,6 +4633,7 @@ const Configurator: React.FC = () => {
                       {doorFurnitureList.map((mod) => (
                         <td key={mod.id} style={{ padding: '3px 4px' }}>
                           <input type="text" inputMode="numeric"
+                            key={`top-${mod.id}-${mod.doorTopGap}-${doorSetupMode}`}
                             defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 5)}
                             onBlur={(e) => {
                               const v = parseFloat(e.target.value);
@@ -4650,6 +4651,7 @@ const Configurator: React.FC = () => {
                       {doorFurnitureList.map((mod) => (
                         <td key={mod.id} style={{ padding: '3px 4px' }}>
                           <input type="text" inputMode="numeric"
+                            key={`bot-${mod.id}-${mod.doorBottomGap}-${doorSetupMode}`}
                             defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25)}
                             onBlur={(e) => {
                               const v = parseFloat(e.target.value);
