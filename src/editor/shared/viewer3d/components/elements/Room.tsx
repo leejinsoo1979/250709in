@@ -1661,21 +1661,21 @@ const Room: React.FC<RoomProps> = ({
           <>
           {/* 왼쪽 세로 모서리 (좌측벽과 뒷벽 사이) */}
           <mesh
-            position={[-width / 2, (isFreePlacement ? sideFrameStartY + adjustedPanelHeight / 2 : panelStartY + height / 2), zOffset + panelDepth / 2]}
+            position={[-width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
             rotation={[0, 0, 0]}
             renderOrder={-1}
           >
-            <planeGeometry args={[0.02, isFreePlacement ? adjustedPanelHeight : height]} />
+            <planeGeometry args={[0.02, height]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
           {/* 오른쪽 세로 모서리 (우측벽과 뒷벽 사이) */}
           <mesh
-            position={[width / 2, (isFreePlacement ? sideFrameStartY + adjustedPanelHeight / 2 : panelStartY + height / 2), zOffset + panelDepth / 2]}
+            position={[width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
             rotation={[0, 0, 0]}
             renderOrder={-1}
           >
-            <planeGeometry args={[0.02, isFreePlacement ? adjustedPanelHeight : height]} />
+            <planeGeometry args={[0.02, height]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
