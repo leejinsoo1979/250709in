@@ -762,11 +762,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 가구에 맞춤(furniture-fit): 가구 높이 기준 (per-furniture topFrame 반영) — 도어가 가구에 맞춤
     const doorSetupMode = originalSpaceInfo.doorSetupMode || 'furniture-fit';
     const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
-    if (doorSetupMode === 'space-fit' && !isFree) {
-      // 슬롯배치 + 공간에 맞춤: 글로벌 프레임 기준 공간 높이 사용
+
+    if (isFree) {
+      // ── 자유배치: 항상 실제 가구 높이 기준 ──
+      tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
+    } else if (doorSetupMode === 'space-fit') {
       tallCabinetFurnitureHeight = spaceBasedHeight;
     } else {
-      // 가구에 맞춤 또는 자유배치: 실제 가구 높이 사용
       tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
     }
 
@@ -779,20 +781,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const freeTopGap = doorTopGap ?? (doorSetupMode === 'space-fit' ? 1.5 : 5);
       const freeBottomGap = doorBottomGap ?? (doorSetupMode === 'space-fit' ? 25 : 25);
       if (doorSetupMode === 'space-fit') {
-        // 천장바닥기준: 천장/바닥에서의 절대 거리
-        // 도어 상단 = 가구 상단 + topFrame - topGap (가구 상단은 천장에서 topFrame 아래)
-        doorTopLocal = cabinetTopLocal + topFrameHeightValue - freeTopGap;
-        // 도어 하단 = 가구 하단 - (실제 받침대 높이) + bottomGap
-        // 가구 하단 아래에 받침대가 있고, 그 아래가 바닥
+        // 천장바닥기준: 도어가 가구 위/아래로 확장
+        // 가구 상단에서 천장까지의 거리 계산
         const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
+        const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
+        // 상단: 가구 상단 + (천장까지 거리) - topGap
+        doorTopLocal = cabinetTopLocal + distToTop - freeTopGap;
+        // 하단: 가구 하단 - baseHeight + bottomGap (바닥에서 bottomGap만큼 위)
         doorBottomLocal = cabinetBottomLocal - actualBase + freeBottomGap;
-        actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
       } else {
-        // 상하프레임기준: 가구 상/하단 기준으로 갭 적용
+        // 상하프레임기준: 가구 상/하단에서 갭
         doorTopLocal = cabinetTopLocal - freeTopGap;
         doorBottomLocal = cabinetBottomLocal + freeBottomGap;
-        actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
       }
+      actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
     } else {
       // ── 슬롯 배치: 기존 공간 좌표계 기반 로직 ──
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
