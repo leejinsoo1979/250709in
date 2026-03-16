@@ -4487,32 +4487,15 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    // 가구에 맞춤: 상단갭 = 상부프레임 + 1.5, 하단갭 = 하부프레임 + 1.5 (천장바닥 기준)
-                    const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-                    const isStandFloatL = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-                    const floatHL = isStandFloatL ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-                    const internalHL = calculateInternalSpace(spaceInfo).height;
-                    // 하부프레임 높이 (받침대)
-                    const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                    // 가구에 맞춤: 천장/바닥 이격만 → 상단갭 1.5, 하단갭 = 받침대높이 or 띄움높이
+                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+                    const spaceFitBottom = isFloat ? floatH : 25;
 
-                    setSpaceInfo({ frameOffsetBase: 'furniture' });
-                    setPlacedModules(prev => {
-                      const updated = prev.map(m => {
-                        if (!m.hasDoor) return m;
-                        // 상부프레임 높이 (가구별)
-                        const rawFreeH = m.freeHeight || internalHL;
-                        const maxFreeH = internalHL - floatHL;
-                        const modHeight = Math.min(rawFreeH, maxFreeH);
-                        const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
-                        console.log('🟢 가구에맞춤 도어갭 계산:', { id: m.id, topFrameSize, baseFrameH, topGap: topFrameSize + 1.5, botGap: baseFrameH + 1.5, freeHeight: m.freeHeight, modHeight, spaceHeight: spaceInfo.height, baseH, floatHL });
-                        return {
-                          ...m,
-                          doorTopGap: topFrameSize + 1.5,
-                          doorBottomGap: baseFrameH + 1.5,
-                        };
-                      });
-                      return updated;
-                    });
+                    setSpaceInfo({ frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
+                    setPlacedModules(prev => prev.map(m =>
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
+                    ));
                     setTimeout(() => {
                       const latest = useFurnitureStore.getState().placedModules;
                       useFurnitureStore.setState({ placedModules: [...latest] });
@@ -4529,13 +4512,29 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
-                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
-                    const spaceFitBottom = isFloat ? floatH : 25;
-                    setSpaceInfo({ frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    setPlacedModules(prev => prev.map(m =>
-                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
-                    ));
+                    // 도어에 맞춤: 프레임 포함 → 상단갭 = 상부프레임 + 1.5, 하단갭 = 하부프레임 + 1.5
+                    const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                    const isStandFloatL = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+                    const floatHL = isStandFloatL ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+                    const internalHL = calculateInternalSpace(spaceInfo).height;
+                    const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+
+                    setSpaceInfo({ frameOffsetBase: 'door' });
+                    setPlacedModules(prev => {
+                      const updated = prev.map(m => {
+                        if (!m.hasDoor) return m;
+                        const rawFreeH = m.freeHeight || internalHL;
+                        const maxFreeH = internalHL - floatHL;
+                        const modHeight = Math.min(rawFreeH, maxFreeH);
+                        const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
+                        return {
+                          ...m,
+                          doorTopGap: topFrameSize + 1.5,
+                          doorBottomGap: baseFrameH + 1.5,
+                        };
+                      });
+                      return updated;
+                    });
                     setTimeout(() => {
                       const latest = useFurnitureStore.getState().placedModules;
                       useFurnitureStore.setState({ placedModules: [...latest] });
