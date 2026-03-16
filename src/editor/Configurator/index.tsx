@@ -4450,7 +4450,12 @@ const Configurator: React.FC = () => {
                     color: (spaceInfo.frameOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onClick={() => setSpaceInfo({ frameOffsetBase: 'furniture' })}
+                  onClick={() => {
+                    setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit' });
+                    placedModules.filter(m => m.hasDoor).forEach(m => {
+                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                    });
+                  }}
                 >
                   가구에 맞춤
                 </button>
@@ -4461,7 +4466,12 @@ const Configurator: React.FC = () => {
                     color: spaceInfo.frameOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onClick={() => setSpaceInfo({ frameOffsetBase: 'door' })}
+                  onClick={() => {
+                    setSpaceInfo({ frameOffsetBase: 'door', doorSetupMode: 'furniture-fit' });
+                    placedModules.filter(m => m.hasDoor).forEach(m => {
+                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                    });
+                  }}
                 >
                   도어에 맞춤
                 </button>
