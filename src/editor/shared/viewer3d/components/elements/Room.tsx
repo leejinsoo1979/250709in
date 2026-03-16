@@ -1524,7 +1524,44 @@ const Room: React.FC<RoomProps> = ({
               lines.push([x2, fY, z1, x2, fY, z2]);
             }
 
-            if (lines.length === 0) return null;
+            // === 단내림 경계벽 라인 (테마색상) ===
+            if (hasDC && spaceInfo.droppedCeiling) {
+              const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
+              const dcIsL = spaceInfo.droppedCeiling.position === 'left';
+              const bx = dcIsL ? x1 + dcW : x2 - dcW;
+              const droppedCY = cY - dcDropH;
+
+              // 경계벽 수직 라인 (뒷벽→앞쪽 그라데이션) - 상단/하단 2개
+              lines.push([bx, cY, z1, bx, cY, z2]);       // 경계벽 상단 (뒤→앞)
+              lines.push([bx, droppedCY, z1, bx, droppedCY, z2]); // 경계벽 하단 (뒤→앞)
+
+              // 단내림쪽 외벽의 droppedCeiling 높이 수평 라인
+              if (dcIsL && hasLW) {
+                lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+              } else if (!dcIsL && hasRW) {
+                lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
+              }
+            }
+
+            // === 단내림 경계벽 뒷벽 실선 (테마색상, 그라데이션 없음) ===
+            const solidThemeLines: [number, number, number, number, number, number][] = [];
+            if (hasDC && spaceInfo.droppedCeiling) {
+              const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
+              const dcIsL = spaceInfo.droppedCeiling.position === 'left';
+              const bx = dcIsL ? x1 + dcW : x2 - dcW;
+              const droppedCY = cY - dcDropH;
+
+              // 경계벽 수직선 (뒷벽)
+              solidThemeLines.push([bx, droppedCY, z1, bx, cY, z1]);
+              // 경계벽 하단 수평선 (droppedCeilingY에서 경계벽~외벽)
+              if (dcIsL) {
+                solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
+              } else {
+                solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
+              }
+            }
+
+            if (lines.length === 0 && solidThemeLines.length === 0) return null;
 
             const positions = new Float32Array(lines.length * 6);
             const vertColors = new Float32Array(lines.length * 6);
@@ -1542,14 +1579,35 @@ const Room: React.FC<RoomProps> = ({
               vertColors[i * 6 + 5] = threeEdgeColor.b * 0.3 + bgColor.b * 0.7;
             });
 
+            // 단내림 뒷벽 실선 (그라데이션 없이 테마색상 단색)
+            let solidThemePositions: Float32Array | null = null;
+            if (solidThemeLines.length > 0) {
+              solidThemePositions = new Float32Array(solidThemeLines.length * 6);
+              solidThemeLines.forEach((line, i) => {
+                for (let j = 0; j < 6; j++) solidThemePositions![i * 6 + j] = line[j];
+              });
+            }
+
             return (
-              <lineSegments renderOrder={100}>
-                <bufferGeometry>
-                  <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-                  <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
-                </bufferGeometry>
-                <lineBasicMaterial vertexColors depthTest={false} />
-              </lineSegments>
+              <>
+                {lines.length > 0 && (
+                  <lineSegments renderOrder={100}>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+                      <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
+                    </bufferGeometry>
+                    <lineBasicMaterial vertexColors depthTest={false} />
+                  </lineSegments>
+                )}
+                {solidThemePositions && (
+                  <lineSegments renderOrder={100}>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={edgeColor} depthTest={false} />
+                  </lineSegments>
+                )}
+              </>
             );
           })()}
 
