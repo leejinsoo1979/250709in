@@ -1210,11 +1210,8 @@ const Room: React.FC<RoomProps> = ({
                 if (hasDroppedCeiling && isLeftDropped) {
                   // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
                   // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
-                  // 자유배치 + 띄움배치: floatHeight도 반영
-                  const baseWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
-                  const droppedWallHeight = isFreePlacement ? baseWallHeight - floatHeight : baseWallHeight;
-                  const droppedStartY = isFreePlacement ? sideFrameStartY : panelStartY;
-                  const droppedCenterY = droppedStartY + droppedWallHeight / 2;
+                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
+                  const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1230,16 +1227,13 @@ const Room: React.FC<RoomProps> = ({
 
                 // 단내림이 없거나 오른쪽 단내림인 경우 기존 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
-                  // 자유배치 + 띄움배치: 벽도 서라운드와 동일하게 floatHeight만큼 하단 축소
-                  const wallH = isFreePlacement ? adjustedPanelHeight : height;
-                  const wallCenterY = isFreePlacement ? sideFrameStartY + wallH / 2 : panelStartY + height / 2;
                   return renderMode === 'solid' ? (
                     <mesh
-                      position={[-width / 2 - 0.001, wallCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
                       renderOrder={-1}
                     >
-                      <planeGeometry args={[extendedPanelDepth, wallH]} />
+                      <planeGeometry args={[extendedPanelDepth, height]} />
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
@@ -1278,11 +1272,8 @@ const Room: React.FC<RoomProps> = ({
                 if (hasDroppedCeiling && isRightDropped) {
                   // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
                   // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
-                  // 자유배치 + 띄움배치: floatHeight도 반영
-                  const baseWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
-                  const droppedWallHeight = isFreePlacement ? baseWallHeight - floatHeight : baseWallHeight;
-                  const droppedStartY = isFreePlacement ? sideFrameStartY : panelStartY;
-                  const droppedCenterY = droppedStartY + droppedWallHeight / 2;
+                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
+                  const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1298,16 +1289,13 @@ const Room: React.FC<RoomProps> = ({
 
                 // 단내림이 없거나 왼쪽에 있는 경우 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
-                  // 자유배치 + 띄움배치: 벽도 서라운드와 동일하게 floatHeight만큼 하단 축소
-                  const wallH = isFreePlacement ? adjustedPanelHeight : height;
-                  const wallCenterY = isFreePlacement ? sideFrameStartY + wallH / 2 : panelStartY + height / 2;
                   return renderMode === 'solid' ? (
                     <mesh
-                      position={[width / 2 + 0.001, wallCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
                       renderOrder={-1}
                     >
-                      <planeGeometry args={[extendedPanelDepth, wallH]} />
+                      <planeGeometry args={[extendedPanelDepth, height]} />
                       <primitive
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
