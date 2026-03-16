@@ -4559,7 +4559,7 @@ const Configurator: React.FC = () => {
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
-                    setSpaceInfo({ doorSetupMode: 'furniture-fit', frameOffsetBase: 'door' });
+                    setSpaceInfo({ doorSetupMode: 'furniture-fit', frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });
                     // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
                     placedModules.filter(m => m.hasDoor).forEach(m => {
                       updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
@@ -4571,7 +4571,7 @@ const Configurator: React.FC = () => {
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
-                    setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture' });
+                    setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: 25 });
                     // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
                     placedModules.filter(m => m.hasDoor).forEach(m => {
                       updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
