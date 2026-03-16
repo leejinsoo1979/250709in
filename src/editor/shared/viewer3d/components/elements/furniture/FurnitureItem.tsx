@@ -366,11 +366,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 셋업 모드 변경 핸들러
   const handleDoorSetupModeChange = useCallback((mode: 'furniture-fit' | 'space-fit') => {
     const { setSpaceInfo } = useSpaceConfigStore.getState();
-    // 공간에 맞춤 선택 시 상하부프레임을 가구에 맞춤으로 자동 변경
+    // 도어 셋팅 변경 시 상하부프레임도 연동 변경
+    // 공간에 맞춤 → 프레임 가구에 맞춤, 가구에 맞춤 → 프레임 도어에 맞춤
     if (mode === 'space-fit') {
       setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture' });
     } else {
-      setSpaceInfo({ doorSetupMode: mode });
+      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'door' });
     }
     // 모든 도어 가구에 리렌더 트리거
     const allModules = useFurnitureStore.getState().placedModules;
