@@ -242,11 +242,8 @@ const Configurator: React.FC = () => {
   }, [doorFurnitureList]);
   const showDoorSetup = (spaceInfo.layoutMode || 'equal-division') === 'free-placement'
     && doorFurnitureList.length > 0;
-  const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
-  // 모드별 기본 하단갭: 상하프레임기준=1.5, 천장바닥기준=받침대높이(띄움이면 floatHeight, 아니면 25)
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-  const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : (isFloatPlacement ? currentFloatHeight : 25);
 
   // 개별 모드: 개별 가구 도어 갭 변경
   const handleIndividualDoorGapChange = (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => {
@@ -263,13 +260,12 @@ const Configurator: React.FC = () => {
   };
 
   // 도어 셋팅 최초 표시 시 undefined 값만 기본값으로 채움
-  // (doorSetupMode 변경은 상하프레임기준/천장바닥기준 버튼의 onClick에서 직접 처리)
   React.useEffect(() => {
     if (!showDoorSetup) return;
     const needsInit = spaceInfo.doorTopGap === undefined || spaceInfo.doorBottomGap === undefined;
     if (!needsInit) return;
     const topGap = spaceInfo.doorTopGap ?? 1.5;
-    const botGap = spaceInfo.doorBottomGap ?? defaultBottomGap;
+    const botGap = spaceInfo.doorBottomGap ?? 1.5;
     setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
     setPlacedModules(prev => prev.map(m => {
       if (!m.hasDoor) return m;
@@ -282,15 +278,6 @@ const Configurator: React.FC = () => {
     }, 50);
   }, [showDoorSetup]);
 
-  // 도어갭 변경 디버깅: store 값 확인
-  React.useEffect(() => {
-    console.log('🔴🔴 doorGap store 상태:', {
-      storeTopGap: spaceInfo.doorTopGap,
-      storeBotGap: spaceInfo.doorBottomGap,
-      doorSetupMode: spaceInfo.doorSetupMode,
-      hasDoorModules: placedModules.filter(m => m.hasDoor).map(m => ({ id: m.id, topGap: m.doorTopGap, botGap: m.doorBottomGap }))
-    });
-  }, [spaceInfo.doorTopGap, spaceInfo.doorBottomGap, spaceInfo.doorSetupMode, placedModules]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
@@ -4498,13 +4485,28 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
-                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
-                    const spaceFitBottom = isFloat ? floatH : 25;
-                    setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    setPlacedModules(prev => prev.map(m =>
-                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
-                    ));
+                    // 가구에 맞춤: 도어 갭 = 1.5 + 프레임 사이즈 (per module)
+                    const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                    const isStandFloatLocal = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+                    const floatHLocal = isStandFloatLocal ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+                    const internalHLocal = calculateInternalSpace(spaceInfo).height;
+                    // 하부프레임 높이 (받침대)
+                    const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+
+                    setSpaceInfo({ frameOffsetBase: 'furniture' });
+                    setPlacedModules(prev => prev.map(m => {
+                      if (!m.hasDoor) return m;
+                      // 상부프레임 높이 계산 (가구별)
+                      const rawFreeH = m.freeHeight || internalHLocal;
+                      const maxFreeH = internalHLocal - floatHLocal;
+                      const modHeight = Math.min(rawFreeH, maxFreeH);
+                      const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHLocal - modHeight);
+                      return {
+                        ...m,
+                        doorTopGap: 1.5 + topFrameSize,
+                        doorBottomGap: 1.5 + baseFrameH,
+                      };
+                    }));
                     setTimeout(() => {
                       const latest = useFurnitureStore.getState().placedModules;
                       useFurnitureStore.setState({ placedModules: [...latest] });
@@ -4521,7 +4523,7 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    setSpaceInfo({ frameOffsetBase: 'door', doorSetupMode: 'furniture-fit', doorTopGap: 1.5, doorBottomGap: 1.5 });
+                    setSpaceInfo({ frameOffsetBase: 'door' });
                     setPlacedModules(prev => prev.map(m =>
                       m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: 1.5 } : m
                     ));
@@ -4595,47 +4597,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
-              <HelpBtn title="도어 셋팅" text="전체: 모든 도어 가구에 동일한 상단/하단 갭을 적용합니다. 개별: 각 도어 가구마다 개별적으로 갭을 설정합니다." />
-            </div>
-            {/* 상하프레임기준/천장바닥기준 */}
-            <div style={{ marginTop: '6px' }}>
-              <div className={styles.toggleButtonGroup}>
-                <button
-                  className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => {
-                    setSpaceInfo({ doorSetupMode: 'furniture-fit', frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });
-                    // 배치 업데이트: notifyR3F 중간 상태 방지
-                    setPlacedModules(prev => prev.map(m =>
-                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: 1.5 } : m
-                    ));
-                    setTimeout(() => {
-                      const latest = useFurnitureStore.getState().placedModules;
-                      useFurnitureStore.setState({ placedModules: [...latest] });
-                    }, 50);
-                  }}
-                >
-                  상하프레임기준
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => {
-                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
-                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
-                    const spaceFitBottom = isFloat ? floatH : 25;
-                    setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    // 배치 업데이트: notifyR3F 중간 상태 방지
-                    setPlacedModules(prev => prev.map(m =>
-                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
-                    ));
-                    setTimeout(() => {
-                      const latest = useFurnitureStore.getState().placedModules;
-                      useFurnitureStore.setState({ placedModules: [...latest] });
-                    }, 50);
-                  }}
-                >
-                  천장바닥기준
-                </button>
-              </div>
+              <HelpBtn title="도어 셋팅" text="상하부프레임 섹션에서 '가구에 맞춤' 또는 '도어에 맞춤'을 선택하면 도어 갭이 자동 계산됩니다. 각 값은 개별적으로 수정할 수 있습니다." />
             </div>
 
             {/* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */}
@@ -4667,7 +4629,7 @@ const Configurator: React.FC = () => {
                     <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                     {doorFurnitureList.map((mod) => (
                       <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                        storeValue={mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? defaultBottomGap}
+                        storeValue={mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5}
                         onCommit={handleIndividualDoorGapChange} />
                     ))}
                   </tr>
