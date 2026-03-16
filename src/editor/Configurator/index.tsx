@@ -211,26 +211,22 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // 도어 셋팅 표시 시 spaceInfo에 doorTopGap/doorBottomGap 기본값 초기화
-  // (doorSetupMode에 맞는 기본값이 store에 없으면 설정)
+  // 도어 셋팅 표시 시 doorSetupMode에 맞게 spaceInfo + 모듈 갭 동기화
   React.useEffect(() => {
     if (!showDoorSetup) return;
-    const needsInit = spaceInfo.doorTopGap === undefined || spaceInfo.doorBottomGap === undefined;
-    if (needsInit) {
-      const topGap = spaceInfo.doorTopGap ?? 1.5;
-      const botGap = spaceInfo.doorBottomGap ?? defaultBottomGap;
-      setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
-      // 개별 모듈에도 기본값 설정 (배치 업데이트)
-      setPlacedModules(prev => prev.map(m => {
-        if (!m.hasDoor) return m;
-        if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
-        return { ...m, doorTopGap: m.doorTopGap ?? topGap, doorBottomGap: m.doorBottomGap ?? botGap };
-      }));
-      setTimeout(() => {
-        const latest = useFurnitureStore.getState().placedModules;
-        useFurnitureStore.setState({ placedModules: [...latest] });
-      }, 50);
-    }
+    const topGap = 1.5;
+    const botGap = defaultBottomGap; // doorSetupMode에 따라 1.5 or 25/floatHeight
+    // spaceInfo 갱신
+    setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
+    // 모든 도어 모듈도 동기화
+    setPlacedModules(prev => prev.map(m => {
+      if (!m.hasDoor) return m;
+      return { ...m, doorTopGap: topGap, doorBottomGap: botGap };
+    }));
+    setTimeout(() => {
+      const latest = useFurnitureStore.getState().placedModules;
+      useFurnitureStore.setState({ placedModules: [...latest] });
+    }, 50);
   }, [showDoorSetup, doorSetupMode]);
 
   // 도어갭 변경 디버깅: store 값 확인
@@ -4437,7 +4433,7 @@ const Configurator: React.FC = () => {
               <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
-                <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}>▼</span>
+                <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
                 <HelpBtn title="상,하부프레임" text="상부프레임: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 하부프레임(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
               </div>
               {!isFrameSectionCollapsed && <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
