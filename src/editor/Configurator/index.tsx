@@ -265,7 +265,9 @@ const Configurator: React.FC = () => {
     const needsInit = spaceInfo.doorTopGap === undefined || spaceInfo.doorBottomGap === undefined;
     if (!needsInit) return;
     const topGap = spaceInfo.doorTopGap ?? 1.5;
-    const botGap = spaceInfo.doorBottomGap ?? 1.5;
+    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+    const botGap = spaceInfo.doorBottomGap ?? (isFloat ? floatH : 25);
     setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
     setPlacedModules(prev => prev.map(m => {
       if (!m.hasDoor) return m;
@@ -4510,9 +4512,12 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    setSpaceInfo({ frameOffsetBase: 'door' });
+                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+                    const spaceFitBottom = isFloat ? floatH : 25;
+                    setSpaceInfo({ frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
                     setPlacedModules(prev => prev.map(m =>
-                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: 1.5 } : m
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
                     ));
                     setTimeout(() => {
                       const latest = useFurnitureStore.getState().placedModules;
