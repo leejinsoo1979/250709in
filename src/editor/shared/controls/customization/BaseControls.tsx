@@ -16,7 +16,7 @@ interface BaseControlsProps {
 }
 
 const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabled = false, renderMode }) => {
-  const { placedModules, updateModule } = useFurnitureStore();
+  const { placedModules, updatePlacedModule } = useFurnitureStore();
 
   console.log('🔧 BaseControls - disabled 상태:', disabled);
 
@@ -40,7 +40,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       if (cat !== 'full') return;
       // freeHeight가 있든 없든 새 최대높이로 갱신
       if (mod.freeHeight !== newMaxHeight) {
-        updateModule(mod.id, { freeHeight: newMaxHeight });
+        updatePlacedModule(mod.id, { freeHeight: newMaxHeight });
       }
     });
   };
@@ -142,11 +142,13 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     // 바닥 배치로 변경 시 모든 가구에 도어 기본 갭 설정
     if (placementType === 'ground') {
+      const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
+      const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : 25;
       placedModules.forEach(module => {
         if (module.hasDoor) {
-          updateModule(module.id, {
-            doorTopGap: module.doorTopGap ?? 5,
-            doorBottomGap: module.doorBottomGap ?? 25
+          updatePlacedModule(module.id, {
+            doorTopGap: module.doorTopGap ?? 1.5,
+            doorBottomGap: module.doorBottomGap ?? defaultBottomGap
           });
         }
       });

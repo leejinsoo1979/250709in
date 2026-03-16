@@ -149,11 +149,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
 
-      // 도어 바닥 이격거리 초기화 (배치 타입에 따라)
+      // 도어 바닥 이격거리 초기화 (doorSetupMode + 배치 타입에 따라)
       if (module.doorBottomGap === undefined) {
-        const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-        const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-        module.doorBottomGap = isFloatPlacement ? floatHeight : 25;
+        const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
+        if (doorSetupMode === 'furniture-fit') {
+          module.doorBottomGap = spaceInfo.doorBottomGap ?? 1.5;
+        } else {
+          const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+          const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+          module.doorBottomGap = isFloatPlacement ? floatHeight : (spaceInfo.doorBottomGap ?? 25);
+        }
       }
 
       // 2단 가구인 경우 섹션 깊이 초기화
@@ -502,15 +507,18 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 전체 도어 설치/제거 함수
   setAllDoors: (hasDoor: boolean) => {
+    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
+    const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : 25;
 
     set((state) => {
       const updatedModules = state.placedModules.map(module => ({
         ...module,
         hasDoor,
-        // 도어 설치 시 기본 갭 설정 (천장에서 5mm, 바닥에서 25mm)
+        // 도어 설치 시 기본 갭 설정 (doorSetupMode 기반)
         ...(hasDoor && {
-          doorTopGap: module.doorTopGap ?? 5,
-          doorBottomGap: module.doorBottomGap ?? 25
+          doorTopGap: module.doorTopGap ?? (spaceInfo.doorTopGap ?? 1.5),
+          doorBottomGap: module.doorBottomGap ?? (spaceInfo.doorBottomGap ?? defaultBottomGap)
         })
       }));
 
