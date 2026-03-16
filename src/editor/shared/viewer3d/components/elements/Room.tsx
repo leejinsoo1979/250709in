@@ -3666,6 +3666,9 @@ const Room: React.FC<RoomProps> = ({
           const stripGroups = computeBaseStripGroups(placedModulesFromStore);
           if (stripGroups.length === 0) return null;
 
+          const DOOR_FRONT_OFFSET_BASE_MM = 23;
+          const baseFrameDoorOffset = spaceInfo.frameOffsetBase === 'door'
+            ? mmToThreeUnits(DOOR_FRONT_OFFSET_BASE_MM) : 0;
           const baseZBase = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
             mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
@@ -3681,7 +3684,7 @@ const Room: React.FC<RoomProps> = ({
                   const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
                   // 가구별 하부프레임 Z축 옵셋
                   const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
-                  const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
+                  const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset + baseFrameDoorOffset;
                   // 개별 가구 하이라이트 or 기본 base material
                   const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
                   const baseMat = baseFrameMaterial ?? createFrameMaterial('base');
