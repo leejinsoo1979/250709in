@@ -244,18 +244,23 @@ const Configurator: React.FC = () => {
     && doorFurnitureList.length > 0;
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
+  const [doorGapAllSync, setDoorGapAllSync] = useState(false);
 
-  // 개별 모드: 개별 가구 도어 갭 변경
+  // 개별 모드: 개별 가구 도어 갭 변경 (전체선택 시 모든 도어에 동일 적용)
   const handleIndividualDoorGapChange = (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => {
     const num = parseFloat(val);
-    console.log('🟡🟡 handleIndividualDoorGapChange:', { moduleId, field, val, num, isNaN: isNaN(num) });
     if (!isNaN(num)) {
-      updatePlacedModule(moduleId, { [field]: num });
-      // 확인: store에 실제로 반영됐는지
-      setTimeout(() => {
-        const updated = useFurnitureStore.getState().placedModules.find(m => m.id === moduleId);
-        console.log('🟡🟡 store 확인:', { moduleId, doorTopGap: updated?.doorTopGap, doorBottomGap: updated?.doorBottomGap });
-      }, 100);
+      if (doorGapAllSync) {
+        setPlacedModules(prev => prev.map(m =>
+          m.hasDoor ? { ...m, [field]: num } : m
+        ));
+        setTimeout(() => {
+          const latest = useFurnitureStore.getState().placedModules;
+          useFurnitureStore.setState({ placedModules: [...latest] });
+        }, 50);
+      } else {
+        updatePlacedModule(moduleId, { [field]: num });
+      }
     }
   };
 
@@ -4614,7 +4619,17 @@ const Configurator: React.FC = () => {
                 {/* 헤더: 도어 1, 도어 2, ... */}
                 <thead>
                   <tr>
-                    <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'left', whiteSpace: 'nowrap' }}></th>
+                    <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={doorGapAllSync}
+                          onChange={(e) => setDoorGapAllSync(e.target.checked)}
+                          style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                        />
+                        <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
+                      </label>
+                    </th>
                     {doorNumberMap.map((info, idx) => (
                       <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
                         {info.label}
