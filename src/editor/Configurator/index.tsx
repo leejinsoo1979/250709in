@@ -4496,19 +4496,23 @@ const Configurator: React.FC = () => {
                     const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
 
                     setSpaceInfo({ frameOffsetBase: 'furniture' });
-                    setPlacedModules(prev => prev.map(m => {
-                      if (!m.hasDoor) return m;
-                      // 상부프레임 높이 (가구별)
-                      const rawFreeH = m.freeHeight || internalHL;
-                      const maxFreeH = internalHL - floatHL;
-                      const modHeight = Math.min(rawFreeH, maxFreeH);
-                      const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
-                      return {
-                        ...m,
-                        doorTopGap: topFrameSize + 1.5,
-                        doorBottomGap: baseFrameH + 1.5,
-                      };
-                    }));
+                    setPlacedModules(prev => {
+                      const updated = prev.map(m => {
+                        if (!m.hasDoor) return m;
+                        // 상부프레임 높이 (가구별)
+                        const rawFreeH = m.freeHeight || internalHL;
+                        const maxFreeH = internalHL - floatHL;
+                        const modHeight = Math.min(rawFreeH, maxFreeH);
+                        const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
+                        console.log('🟢 가구에맞춤 도어갭 계산:', { id: m.id, topFrameSize, baseFrameH, topGap: topFrameSize + 1.5, botGap: baseFrameH + 1.5, freeHeight: m.freeHeight, modHeight, spaceHeight: spaceInfo.height, baseH, floatHL });
+                        return {
+                          ...m,
+                          doorTopGap: topFrameSize + 1.5,
+                          doorBottomGap: baseFrameH + 1.5,
+                        };
+                      });
+                      return updated;
+                    });
                     setTimeout(() => {
                       const latest = useFurnitureStore.getState().placedModules;
                       useFurnitureStore.setState({ placedModules: [...latest] });
