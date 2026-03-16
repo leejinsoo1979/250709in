@@ -91,11 +91,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: '기둥'
     },
     {
-      id: 'etc' as SidebarTab,
-      icon: <TbBrandAsana size={22} />,
-      label: t('sidebar.etc')
-    },
-    {
       id: 'myCabinet' as SidebarTab,
       icon: <MdOutlineDashboardCustomize size={22} />,
       label: '커스텀'
