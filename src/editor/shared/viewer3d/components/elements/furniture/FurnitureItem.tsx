@@ -3645,34 +3645,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               >✕</button>
             </div>
 
-            {/* 가구에 맞춤 / 공간에 맞춤 */}
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-              {(['furniture-fit', 'space-fit'] as const).map((mode) => {
-                const isActive = (spaceInfo.doorSetupMode || 'furniture-fit') === mode || ((spaceInfo.doorSetupMode || 'furniture-fit') === 'default' && mode === 'furniture-fit') || ((spaceInfo.doorSetupMode) === 'frame-cover' && mode === 'space-fit');
-                return (
-                <button
-                  key={mode}
-                  onClick={() => handleDoorSetupModeChange(mode)}
-                  style={{
-                    flex: 1,
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid',
-                    borderColor: isActive ? getThemeColor() : '#d1d5db',
-                    background: isActive ? getThemeColor() : '#fff',
-                    color: isActive ? '#fff' : '#374151',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {mode === 'furniture-fit' ? '가구에 맞춤' : '공간에 맞춤'}
-                </button>
-                );
-              })}
-            </div>
-
             {/* 상단/하단 갭 */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
               <div style={{ flex: 1 }}>
