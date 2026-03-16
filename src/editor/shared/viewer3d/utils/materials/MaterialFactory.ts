@@ -506,9 +506,9 @@ export class MaterialFactory {
    */
   static createEdgeShadowMaterial(): THREE.MeshBasicMaterial {
     return new THREE.MeshBasicMaterial({
-      color: '#888888',
+      color: '#666666',
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.5,
       side: THREE.DoubleSide
     });
   }
