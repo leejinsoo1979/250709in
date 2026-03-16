@@ -212,23 +212,25 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // 도어 셋팅 표시 시 doorSetupMode에 맞게 spaceInfo + 모듈 갭 동기화
+  // 도어 셋팅 최초 표시 시 undefined 값만 기본값으로 채움
+  // (doorSetupMode 변경은 상하프레임기준/천장바닥기준 버튼의 onClick에서 직접 처리)
   React.useEffect(() => {
     if (!showDoorSetup) return;
-    const topGap = 1.5;
-    const botGap = defaultBottomGap; // doorSetupMode에 따라 1.5 or 25/floatHeight
-    // spaceInfo 갱신
+    const needsInit = spaceInfo.doorTopGap === undefined || spaceInfo.doorBottomGap === undefined;
+    if (!needsInit) return;
+    const topGap = spaceInfo.doorTopGap ?? 1.5;
+    const botGap = spaceInfo.doorBottomGap ?? defaultBottomGap;
     setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
-    // 모든 도어 모듈도 동기화
     setPlacedModules(prev => prev.map(m => {
       if (!m.hasDoor) return m;
-      return { ...m, doorTopGap: topGap, doorBottomGap: botGap };
+      if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
+      return { ...m, doorTopGap: m.doorTopGap ?? topGap, doorBottomGap: m.doorBottomGap ?? botGap };
     }));
     setTimeout(() => {
       const latest = useFurnitureStore.getState().placedModules;
       useFurnitureStore.setState({ placedModules: [...latest] });
     }, 50);
-  }, [showDoorSetup, doorSetupMode]);
+  }, [showDoorSetup]);
 
   // 도어갭 변경 디버깅: store 값 확인
   React.useEffect(() => {
