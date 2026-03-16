@@ -229,6 +229,29 @@
   margin-left: auto;
 }
 
+.exitButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  height: 34px;
+  background: none;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  color: var(--theme-text-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.exitButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
 .settingsButton {
   display: flex;
   align-items: center;

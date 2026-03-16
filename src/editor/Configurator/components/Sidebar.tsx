@@ -1,19 +1,10 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, User, Sun, Moon } from 'lucide-react';
-import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
+import { TbBoxAlignRight } from 'react-icons/tb';
 import { MdOutlineDashboardCustomize } from 'react-icons/md';
-import { PiCrownDuotone } from "react-icons/pi";
-import { GoPersonAdd } from "react-icons/go";
-import { ProjectCollaborator } from '@/firebase/shareLinks';
-import { useNavigate } from 'react-router-dom';
-import { useProjectStore } from '@/store/core/projectStore';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useState } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload' | 'myCabinet';
@@ -45,27 +36,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onFileTreeToggle,
   isFileTreeOpen,
 }) => {
-  const { user } = useAuth();
   const { theme, toggleMode } = useTheme();
-  const navigate = useNavigate();
-  const { t, currentLanguage } = useTranslation();
-
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
-  const hasUnsavedChanges = () => {
-    const projectDirty = useProjectStore.getState().isDirty;
-    const spaceDirty = useSpaceConfigStore.getState().isDirty;
-    const furnitureDirty = useFurnitureStore.getState().hasUnsavedChanges;
-    return projectDirty || spaceDirty || !!furnitureDirty;
-  };
-
-  const handleExitClick = () => {
-    if (hasUnsavedChanges()) {
-      setShowExitConfirm(true);
-    } else {
-      navigate('/dashboard');
-    }
-  };
+  const { t } = useTranslation();
 
   const allTabs = [
     {
@@ -116,63 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </nav>
 
-      {/* Bottom action buttons - 숨김 처리 */}
-
-      {/* Exit Confirmation Modal */}
-      {showExitConfirm && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => setShowExitConfirm(false)}
-        >
-          <div
-            className={styles.modalContent}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.modalIcon}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h3 className={styles.modalTitle}>
-              {t('messages.unsavedChanges')}
-            </h3>
-            <p className={styles.modalDescription}>
-              {t('messages.exitConfirm')}
-              <br />
-              {t('messages.loseChanges')}
-            </p>
-            <div className={styles.modalActions}>
-              <button
-                className={styles.modalButtonSecondary}
-                onClick={async () => {
-                  setShowExitConfirm(false);
-                  if (onSave) {
-                    try {
-                      await onSave();
-                    } catch (error) {
-                      console.error('❌ 저장 실패:', error);
-                      alert('저장에 실패했습니다. 다시 시도해주세요.');
-                      return;
-                    }
-                  }
-                  navigate('/dashboard');
-                }}
-              >
-                {t('messages.exitWithSaving')}
-              </button>
-              <button
-                className={styles.modalButtonDanger}
-                onClick={() => {
-                  setShowExitConfirm(false);
-                  navigate('/dashboard');
-                }}
-              >
-                {t('messages.exitWithoutSaving')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Bottom action buttons - 나가기는 헤더로 이동됨 */}
     </aside>
   );
 };
