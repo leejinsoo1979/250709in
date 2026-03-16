@@ -225,8 +225,14 @@ const Configurator: React.FC = () => {
   // 개별 모드: 개별 가구 도어 갭 변경
   const handleIndividualDoorGapChange = (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => {
     const num = parseFloat(val);
+    console.log('🟡🟡 handleIndividualDoorGapChange:', { moduleId, field, val, num, isNaN: isNaN(num) });
     if (!isNaN(num)) {
       updatePlacedModule(moduleId, { [field]: num });
+      // 확인: store에 실제로 반영됐는지
+      setTimeout(() => {
+        const updated = useFurnitureStore.getState().placedModules.find(m => m.id === moduleId);
+        console.log('🟡🟡 store 확인:', { moduleId, doorTopGap: updated?.doorTopGap, doorBottomGap: updated?.doorBottomGap });
+      }, 100);
     }
   };
 
@@ -4555,7 +4561,7 @@ const Configurator: React.FC = () => {
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
-                    setSpaceInfo({ doorSetupMode: 'space-fit' });
+                    setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture' });
                     // R3F Canvas 내부 DoorModule 리렌더 보장: furnitureStore도 터치
                     placedModules.filter(m => m.hasDoor).forEach(m => {
                       updatePlacedModule(m.id, { _doorSetupTs: Date.now() });

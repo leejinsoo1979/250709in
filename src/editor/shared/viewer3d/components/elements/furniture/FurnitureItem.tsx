@@ -365,12 +365,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 도어 셋업 모드 변경 핸들러
   const handleDoorSetupModeChange = useCallback((mode: 'furniture-fit' | 'space-fit') => {
-    const { setSpaceInfo, spaceInfo: currentSpaceInfo } = useSpaceConfigStore.getState();
-    console.log('🚪 handleDoorSetupModeChange called:', mode, 'current frameOffsetBase:', currentSpaceInfo.frameOffsetBase);
+    const { setSpaceInfo } = useSpaceConfigStore.getState();
     // 공간에 맞춤 선택 시 상하부프레임을 가구에 맞춤으로 자동 변경
     if (mode === 'space-fit') {
       setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture' });
-      console.log('🚪 setSpaceInfo called with frameOffsetBase: furniture');
     } else {
       setSpaceInfo({ doorSetupMode: mode });
     }
