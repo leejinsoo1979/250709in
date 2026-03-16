@@ -143,7 +143,7 @@ const Configurator: React.FC = () => {
     const panelClosed = searchParams.get('panelClosed');
     return panelClosed !== 'true';
   });
-  const [isFrameSectionCollapsed, setIsFrameSectionCollapsed] = useState(true);
+  const [isFrameSectionCollapsed, setIsFrameSectionCollapsed] = useState(false);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
   const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
