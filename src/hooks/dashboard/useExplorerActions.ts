@@ -194,6 +194,14 @@ export function useExplorerActions(
     await data.refreshProjects();
     if (nav.currentProjectId) {
       await data.refreshDesignFiles(nav.currentProjectId);
+    } else {
+      // 휴지통 등 프로젝트 미선택 상태: 삭제된 항목의 프로젝트 디자인파일도 갱신
+      const projectIdsToRefresh = new Set(items.map(i => i.projectId).filter(Boolean) as string[]);
+      for (const pid of projectIdsToRefresh) {
+        if (!deletedProjectIds.has(pid)) {
+          await data.refreshDesignFiles(pid);
+        }
+      }
     }
     clearSelection();
   }, [data, nav.currentProjectId, clearSelection]);
