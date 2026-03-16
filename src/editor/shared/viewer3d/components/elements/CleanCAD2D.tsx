@@ -2352,7 +2352,82 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      
+      {/* 자유배치 모드: 가구 배치공간 합산 치수선 */}
+      {isFreePlacement && furnitureDimensions && furnitureDimensions.length > 0 && (() => {
+        const validDims = furnitureDimensions.filter((d): d is NonNullable<typeof d> => d !== null);
+        if (validDims.length === 0) return null;
+        // moduleX는 Three.js 단위, actualWidth는 mm → 올바른 단위 변환
+        const edges = validDims.map(d => ({
+          left: d.moduleX - mmToThreeUnits(d.actualWidth / 2),
+          right: d.moduleX + mmToThreeUnits(d.actualWidth / 2),
+        }));
+        const leftMost = Math.min(...edges.map(e => e.left));
+        const rightMost = Math.max(...edges.map(e => e.right));
+        const totalWidthMm = Math.round((rightMost - leftMost) * 100); // Three.js → mm
+        const centerX = (leftMost + rightMost) / 2;
+        const extLen = mmToThreeUnits(EXTENSION_LENGTH);
+
+        return (
+          <group key="free-placement-total-width">
+            {/* 합산 너비 치수선 */}
+            <NativeLine name="dimension_line"
+              points={[[leftMost, columnDimensionY, 0.002], [rightMost, columnDimensionY, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 좌측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([leftMost, columnDimensionY, 0.002], [leftMost + 0.03, columnDimensionY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 우측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([rightMost, columnDimensionY, 0.002], [rightMost - 0.03, columnDimensionY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 합산 너비 텍스트 */}
+            <Text
+              renderOrder={1000}
+              depthTest={false}
+              position={[centerX, columnDimensionY + mmToThreeUnits(20), 0.01]}
+              fontSize={baseFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
+            >
+              {totalWidthMm}
+            </Text>
+            {/* 좌측 연장선 */}
+            <NativeLine name="dimension_line"
+              points={[[leftMost, spaceHeight, 0.001], [leftMost, topDimensionY + extLen, 0.001]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 우측 연장선 */}
+            <NativeLine name="dimension_line"
+              points={[[rightMost, spaceHeight, 0.001], [rightMost, topDimensionY + extLen, 0.001]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+          </group>
+        );
+      })()}
+
+
       {/* 좌측 전체 높이 치수선 */}
       {showDimensions && <group>
         {/* 단내림이 있는 경우 높이 치수선 표시 */}
