@@ -4180,9 +4180,14 @@ const Configurator: React.FC = () => {
             | { kind: 'right' }
             | { kind: 'middle'; idx: number };
           const surroundItems: SurroundItem[] = [];
-          surroundItems.push({ kind: 'left' });
-          middleGaps.forEach((_m, i) => surroundItems.push({ kind: 'middle', idx: i }));
-          surroundItems.push({ kind: 'right' });
+          if (fs.left.enabled) surroundItems.push({ kind: 'left' });
+          middleGaps.forEach((_m, i) => {
+            if (_m.enabled) surroundItems.push({ kind: 'middle', idx: i });
+          });
+          if (fs.right.enabled) surroundItems.push({ kind: 'right' });
+
+          // 활성된 서라운드 항목이 없으면 섹션 자체를 숨김
+          if (surroundItems.length === 0) return null;
 
           const droppedPos = spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.position : null;
           const getSurroundLabel = (kind: string) => {
