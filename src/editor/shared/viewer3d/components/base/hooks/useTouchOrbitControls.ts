@@ -185,27 +185,19 @@ export const useTouchOrbitControls = (
       const currentTouches = Array.from(e.touches);
       
       if (e.touches.length === 1 && touchCount.current === 1) {
-        // 한 손가락: 카메라 회전
+        // 한 손가락: 팬 (회전은 휠 클릭+드래그로만)
         const touch = currentTouches[0];
         const lastPos = lastTouchPositions[0];
-        
+
         if (lastPos) {
           const deltaX = touch.clientX - lastPos.x;
           const deltaY = touch.clientY - lastPos.y;
-          
-          // 회전 민감도 조정
-          const rotateSpeed = sensitivity * 0.01;
-          controlsRef.current.rotateLeft((deltaX * rotateSpeed * Math.PI) / 180);
-          controlsRef.current.rotateUp((deltaY * rotateSpeed * Math.PI) / 180);
+
+          const panSpeed = panSensitivity * 0.01;
+          controlsRef.current.pan(-deltaX * panSpeed, deltaY * panSpeed, 0);
           controlsRef.current.update();
-          
-          console.log('🔄 한 손가락 회전:', {
-            deltaX: deltaX.toFixed(2),
-            deltaY: deltaY.toFixed(2),
-            rotateSpeed: rotateSpeed.toFixed(4)
-          });
         }
-        
+
         lastTouchPositions[0] = { x: touch.clientX, y: touch.clientY };
       } else if (e.touches.length === 2 && touchCount.current === 2) {
         // 두 손가락: 줌 또는 팬
