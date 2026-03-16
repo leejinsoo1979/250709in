@@ -1092,7 +1092,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
   // 띄움 높이 또는 배치 타입이 변경될 때 모든 가구의 바닥 이격거리 자동 업데이트
+  // 단, 도어에 맞춤(frameOffsetBase === 'door') 상태에서는 프레임 포함 값을 유지
   useEffect(() => {
+    // 도어에 맞춤 상태면 프레임 포함 값이므로 자동 업데이트 건너뜀
+    if (spaceInfo.frameOffsetBase === 'door') return;
+
     const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
     const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
     const targetBottomGap = isFloatPlacement ? floatHeight : 25;
@@ -1109,7 +1113,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorBottomGap(targetBottomGap);
       setDoorBottomGapInput(targetBottomGap.toString());
     }
-  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType]);
+  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.frameOffsetBase]);
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
