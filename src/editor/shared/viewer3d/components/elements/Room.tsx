@@ -1038,7 +1038,7 @@ const Room: React.FC<RoomProps> = ({
 
   // 좌우 프레임 높이 (띄워서 배치일 때 줄어듦)
   const adjustedPanelHeight = height - floatHeight;
-// console.log('🔍 adjustedPanelHeight 계산:', { height, floatHeight, adjustedPanelHeight, baseConfig: spaceInfo.baseConfig });
+// console.log('🔍 adjustedPanelHeight 계산:', { height, floatHeight, adjustedPanelHeight, sideFrameStartY: panelStartY + floatHeight, baseConfig: spaceInfo.baseConfig });
 
   // 상단 요소들의 Y 위치 (띄워서 배치일 때 위로 이동)
   const topElementsY = panelStartY + height - topBottomFrameHeight / 2;
@@ -1210,8 +1210,11 @@ const Room: React.FC<RoomProps> = ({
                 if (hasDroppedCeiling && isLeftDropped) {
                   // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
                   // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
-                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
-                  const droppedCenterY = panelStartY + droppedWallHeight / 2;
+                  // 자유배치 + 띄움배치: floatHeight도 반영
+                  const baseWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
+                  const droppedWallHeight = isFreePlacement ? baseWallHeight - floatHeight : baseWallHeight;
+                  const droppedStartY = isFreePlacement ? sideFrameStartY : panelStartY;
+                  const droppedCenterY = droppedStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1227,13 +1230,16 @@ const Room: React.FC<RoomProps> = ({
 
                 // 단내림이 없거나 오른쪽 단내림인 경우 기존 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
+                  // 자유배치 + 띄움배치: 벽도 서라운드와 동일하게 floatHeight만큼 하단 축소
+                  const wallH = isFreePlacement ? adjustedPanelHeight : height;
+                  const wallCenterY = isFreePlacement ? sideFrameStartY + wallH / 2 : panelStartY + height / 2;
                   return renderMode === 'solid' ? (
                     <mesh
-                      position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
+                      position={[-width / 2 - 0.001, wallCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
                       renderOrder={-1}
                     >
-                      <planeGeometry args={[extendedPanelDepth, height]} />
+                      <planeGeometry args={[extendedPanelDepth, wallH]} />
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
@@ -1272,8 +1278,11 @@ const Room: React.FC<RoomProps> = ({
                 if (hasDroppedCeiling && isRightDropped) {
                   // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
                   // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
-                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
-                  const droppedCenterY = panelStartY + droppedWallHeight / 2;
+                  // 자유배치 + 띄움배치: floatHeight도 반영
+                  const baseWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
+                  const droppedWallHeight = isFreePlacement ? baseWallHeight - floatHeight : baseWallHeight;
+                  const droppedStartY = isFreePlacement ? sideFrameStartY : panelStartY;
+                  const droppedCenterY = droppedStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1289,13 +1298,16 @@ const Room: React.FC<RoomProps> = ({
 
                 // 단내림이 없거나 왼쪽에 있는 경우 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
+                  // 자유배치 + 띄움배치: 벽도 서라운드와 동일하게 floatHeight만큼 하단 축소
+                  const wallH = isFreePlacement ? adjustedPanelHeight : height;
+                  const wallCenterY = isFreePlacement ? sideFrameStartY + wallH / 2 : panelStartY + height / 2;
                   return renderMode === 'solid' ? (
                     <mesh
-                      position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
+                      position={[width / 2 + 0.001, wallCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
                       renderOrder={-1}
                     >
-                      <planeGeometry args={[extendedPanelDepth, height]} />
+                      <planeGeometry args={[extendedPanelDepth, wallH]} />
                       <primitive
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
@@ -1649,21 +1661,21 @@ const Room: React.FC<RoomProps> = ({
           <>
           {/* 왼쪽 세로 모서리 (좌측벽과 뒷벽 사이) */}
           <mesh
-            position={[-width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
+            position={[-width / 2, (isFreePlacement ? sideFrameStartY + adjustedPanelHeight / 2 : panelStartY + height / 2), zOffset + panelDepth / 2]}
             rotation={[0, 0, 0]}
             renderOrder={-1}
           >
-            <planeGeometry args={[0.02, height]} />
+            <planeGeometry args={[0.02, isFreePlacement ? adjustedPanelHeight : height]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
           {/* 오른쪽 세로 모서리 (우측벽과 뒷벽 사이) */}
           <mesh
-            position={[width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
+            position={[width / 2, (isFreePlacement ? sideFrameStartY + adjustedPanelHeight / 2 : panelStartY + height / 2), zOffset + panelDepth / 2]}
             rotation={[0, 0, 0]}
             renderOrder={-1}
           >
-            <planeGeometry args={[0.02, height]} />
+            <planeGeometry args={[0.02, isFreePlacement ? adjustedPanelHeight : height]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
 
