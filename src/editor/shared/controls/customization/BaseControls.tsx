@@ -83,8 +83,6 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     // 띄워서 배치 선택 시 자동으로 띄움 높이 200mm 및 바닥 마감재 없음
     if (type === 'stand') {
       setFloatHeight('200'); // 기본값 200mm로 설정
-      const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
-      const floatBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : 200;
       const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
@@ -94,21 +92,12 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
         },
         hasFloorFinish: false,  // 바닥 마감재 자동으로 없음
         floorFinish: undefined,  // 바닥 마감재 설정 제거
-        doorBottomGap: floatBottomGap,
       };
       onUpdate(updates);
-      // 개별 모듈 도어 갭도 갱신
-      placedModules.forEach(module => {
-        if (module.hasDoor) {
-          updatePlacedModule(module.id, { doorBottomGap: floatBottomGap });
-        }
-      });
       // 자유배치 가구 freeHeight 재계산 (float 전환으로 높이 축소)
       recalcFreePlacementHeights(updates);
     } else {
       // 바닥에 배치 선택 (받침대 있음)
-      const doorSetupModeForFloor = spaceInfo.doorSetupMode || 'furniture-fit';
-      const groundBottomGap = doorSetupModeForFloor === 'furniture-fit' ? 1.5 : 25;
       const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
@@ -116,15 +105,8 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
           placementType: 'ground', // 바닥에 배치 설정
           height: currentBaseConfig.height || 65, // 받침대 높이 유지
         },
-        doorBottomGap: groundBottomGap,
       };
       onUpdate(updates);
-      // 개별 모듈 도어 갭도 갱신
-      placedModules.forEach(module => {
-        if (module.hasDoor) {
-          updatePlacedModule(module.id, { doorBottomGap: groundBottomGap });
-        }
-      });
       // 자유배치 가구 freeHeight 재계산 (ground 복귀로 높이 복원)
       recalcFreePlacementHeights(updates);
     }
@@ -401,26 +383,12 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     // 값이 변경된 경우만 업데이트
     if (value !== currentBaseConfig.floatHeight) {
-      const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
-      const updatesObj: Partial<SpaceInfo> = {
+      onUpdate({
         baseConfig: {
           ...currentBaseConfig,
           floatHeight: value,
         },
-      };
-      // 천장바닥기준이면 doorBottomGap도 새 floatHeight로 갱신
-      if (doorSetupMode === 'space-fit') {
-        updatesObj.doorBottomGap = value;
-      }
-      onUpdate(updatesObj);
-      // space-fit이면 개별 모듈 도어 갭도 갱신
-      if (doorSetupMode === 'space-fit') {
-        placedModules.forEach(module => {
-          if (module.hasDoor) {
-            updatePlacedModule(module.id, { doorBottomGap: value });
-          }
-        });
-      }
+      });
     }
   };
 
