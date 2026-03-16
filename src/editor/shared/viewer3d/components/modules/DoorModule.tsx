@@ -580,11 +580,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 원본 spaceInfo 가져오기 (zone별로 분리되지 않은 전체 공간 정보)
   const { spaceInfo: originalSpaceInfo } = useSpaceConfigStore();
 
-  // doorTopGap/doorBottomGap: props(개별 가구) → 글로벌 spaceInfo → 모드별 기본값
-  const doorSetupModeForDefaults = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+  // doorTopGap/doorBottomGap: 항상 천장바닥 기준 (props → 글로벌 spaceInfo → 기본값)
   const isFloatForDefault = originalSpaceInfo.baseConfig?.placementType === 'float';
   const floatHeightForDefault = originalSpaceInfo.baseConfig?.floatHeight || 200;
-  const defaultBottomGap = doorSetupModeForDefaults === 'furniture-fit' ? 1.5 : (isFloatForDefault ? floatHeightForDefault : 25);
+  const defaultBottomGap = isFloatForDefault ? floatHeightForDefault : 25;
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 1.5;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? defaultBottomGap;
   // debug removed
@@ -761,57 +760,34 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isFloorType = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
     const floorHeightForCalc = isFloorType ? 0 : floorHeightValue;
 
-    // 가구 높이 계산
-    // 공간에 맞춤(space-fit): 공간 전체 높이 기준 (글로벌 topFrame) — 도어가 공간을 채움
-    // 가구에 맞춤(furniture-fit): 가구 높이 기준 (per-furniture topFrame 반영) — 도어가 가구에 맞춤
-    const doorSetupMode = originalSpaceInfo.doorSetupMode || 'furniture-fit';
+    // 가구 높이 계산 — 항상 천장바닥 기준 (공간 전체 높이)
     const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
 
     if (isFree) {
-      // ── 자유배치: 항상 실제 가구 높이 기준 ──
       tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
-    } else if (doorSetupMode === 'space-fit') {
-      tallCabinetFurnitureHeight = spaceBasedHeight;
     } else {
-      tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
+      tallCabinetFurnitureHeight = spaceBasedHeight;
     }
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
 
-    // ── 자유배치: 도어 셋업 모드에 따라 기준점 다름 ──
+    // ── 자유배치: 천장바닥 기준 ──
     if (isFree) {
       const freeTopGap = doorTopGap ?? 1.5;
-      const freeBottomGap = doorBottomGap ?? (doorSetupMode === 'furniture-fit' ? 1.5 : (placementType === 'float' ? floatHeight : 25));
-      if (doorSetupMode === 'space-fit') {
-        // 천장바닥기준: 도어가 가구 위/아래로 확장
-        // 가구 상단에서 천장까지의 거리 계산
-        const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
-        const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
-        // 상단: 가구 상단 + (천장까지 거리) - topGap
-        doorTopLocal = cabinetTopLocal + distToTop - freeTopGap;
-        // 하단: 가구 하단 - baseHeight + bottomGap (바닥에서 bottomGap만큼 위)
-        doorBottomLocal = cabinetBottomLocal - actualBase + freeBottomGap;
-      } else {
-        // 상하프레임기준: 가구 상/하단에서 갭
-        doorTopLocal = cabinetTopLocal - freeTopGap;
-        doorBottomLocal = cabinetBottomLocal + freeBottomGap;
-      }
+      const freeBottomGap = doorBottomGap ?? (placementType === 'float' ? floatHeight : 25);
+      // 천장바닥기준: 도어가 가구 위/아래로 확장
+      const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
+      const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
+      doorTopLocal = cabinetTopLocal + distToTop - freeTopGap;
+      doorBottomLocal = cabinetBottomLocal - actualBase + freeBottomGap;
       actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
     } else {
-      // ── 슬롯 배치: 도어 셋업 모드에 따라 분기 ──
+      // ── 슬롯 배치: 항상 천장바닥 기준 ──
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
 
-    if (doorSetupMode === 'furniture-fit') {
-      // ── 상하프레임기준: 가구 상/하단에서 직접 갭 적용 ──
-      const extraTopGap = doorTopGap ?? 1.5;
-      const extraBottomGap = doorBottomGap ?? 1.5;
-      doorBottomLocal = cabinetBottomLocal + extraBottomGap;
-      doorTopLocal = cabinetTopLocal - extraTopGap;
-    } else {
-      // ── 천장바닥기준: 기존 공간 좌표계 기반 로직 ──
     // 띄움배치 시 doorBottomGap이 baselineBottomGap보다 작으면
     // 도어가 캐비넷 아래로 확장되는 문제 발생 → baselineBottomGap을 최소값으로 사용
     const rawInputBottomGap = doorBottomGap ?? baselineBottomGap;
@@ -836,19 +812,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
-    }
 
-console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
-      doorBottomGapInput: doorBottomGap,
-      doorTopGapInput: doorTopGap,
-      doorSetupMode,
-      cabinetBottomLocal,
-      cabinetTopLocal,
-      doorBottomLocal,
-      doorTopLocal,
-      placementType,
-      floatHeight,
-    });
 
     // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
     // 별도의 doorBottomLocal 조정 불필요
@@ -1111,9 +1075,8 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
         // });
       }
 
-      // 공간에 맞춤 모드: 섹션 분할 도어도 Y 위치 보정 필요
-      const doorSetupModeForSection = originalSpaceInfo.doorSetupMode || 'furniture-fit';
-      if (doorSetupModeForSection === 'space-fit' && effectiveInternalHeight) {
+      // 천장바닥 기준: 섹션 분할 도어도 Y 위치 보정 필요
+      if (effectiveInternalHeight) {
         const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
       }
@@ -1129,10 +1092,9 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
       // 도어 중심 = 하단에서 도어 높이의 절반만큼 위 (플로팅 시 하단이 올라가므로 중심도 올라감)
       doorYPosition = mmToThreeUnits(doorBottom + actualDoorHeight / 2);
 
-      // 공간에 맞춤 모드: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
+      // 천장바닥 기준: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
       // → 가구 중심과 공간 중심의 차이만큼 도어 Y 위치 보정
-      const doorSetupModeForY = originalSpaceInfo.doorSetupMode || 'furniture-fit';
-      if (doorSetupModeForY === 'space-fit' && effectiveInternalHeight) {
+      if (effectiveInternalHeight) {
         const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
       }
@@ -1152,7 +1114,6 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
     }
   }
 
-  console.log('🚪📐 최종 도어 렌더링:', { doorTopGap, doorBottomGap, actualDoorHeight: actualDoorHeight.toFixed(1), doorHeight_mm: (doorHeight / 0.01).toFixed(1), doorYPosition_mm: (doorYPosition / 0.01).toFixed(1), tallCabinetFurnitureHeight, placementType, sectionIndex, totalSections, isUpper: isUpperCabinet, isLower: isLowerCabinet });
 
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
@@ -2901,5 +2862,5 @@ console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
   }
 };
 
-// React.memo 제거 — doorTopGap/doorBottomGap/doorSetupMode 변경 시 확실한 리렌더 보장
+// React.memo 제거 — doorTopGap/doorBottomGap 변경 시 확실한 리렌더 보장
 export default DoorModule;
