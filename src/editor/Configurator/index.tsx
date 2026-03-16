@@ -142,6 +142,7 @@ const Configurator: React.FC = () => {
     const panelClosed = searchParams.get('panelClosed');
     return panelClosed !== 'true';
   });
+  const [isFrameSectionCollapsed, setIsFrameSectionCollapsed] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
   const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
@@ -4433,12 +4434,13 @@ const Configurator: React.FC = () => {
           let baseNum = 0;
           return (
             <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
+              <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
+                <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}>▼</span>
                 <HelpBtn title="상,하부프레임" text="상부프레임: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 하부프레임(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
               </div>
-              <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
+              {!isFrameSectionCollapsed && <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
                 <button
                   style={{
                     flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
@@ -4531,6 +4533,7 @@ const Configurator: React.FC = () => {
                   )}</React.Fragment>;
                 })}
               </div>
+              }
             </div>
           );
         })()}
