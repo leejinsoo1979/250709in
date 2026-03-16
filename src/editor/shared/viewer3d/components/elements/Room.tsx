@@ -1788,85 +1788,162 @@ const Room: React.FC<RoomProps> = ({
           )}
 
           {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe에서는 숨김) */}
-          {renderMode === 'solid' && (
-          <>
-          {/* 왼쪽 세로 모서리 (좌측벽과 뒷벽 사이) */}
-          <mesh
-            position={[-width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
-            rotation={[0, 0, 0]}
-            renderOrder={-1}
-          >
-            <planeGeometry args={[0.02, height]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+          {renderMode === 'solid' && (() => {
+            const _hasDC = spaceInfo.droppedCeiling?.enabled;
+            const _dcIsLeft = _hasDC && spaceInfo.droppedCeiling?.position === 'left';
+            const _dcIsRight = _hasDC && spaceInfo.droppedCeiling?.position === 'right';
+            const _dcDropH = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+            const _dcW = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
 
-          {/* 오른쪽 세로 모서리 (우측벽과 뒷벽 사이) */}
-          <mesh
-            position={[width / 2, panelStartY + height / 2, zOffset + panelDepth / 2]}
-            rotation={[0, 0, 0]}
-            renderOrder={-1}
-          >
-            <planeGeometry args={[0.02, height]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+            // 단내림 고려한 좌/우 벽 높이
+            const leftWallH = _dcIsLeft ? (height - _dcDropH) : height;
+            const rightWallH = _dcIsRight ? (height - _dcDropH) : height;
+            // 단내림 고려한 좌/우 천장 Y
+            const leftCeilingY = _dcIsLeft ? (panelStartY + height - _dcDropH) : (panelStartY + height);
+            const rightCeilingY = _dcIsRight ? (panelStartY + height - _dcDropH) : (panelStartY + height);
+            // 경계벽 X 위치
+            const _bx = _dcIsLeft ? (xOffset + _dcW) : (xOffset + width - _dcW);
 
-          {/* 상단 가로 모서리 (천장과 뒷벽 사이) */}
-          <mesh
-            position={[xOffset + width / 2, panelStartY + height, zOffset + panelDepth / 2]}
-            rotation={[0, 0, Math.PI / 2]}
-            renderOrder={-1}
-          >
-            <planeGeometry args={[0.02, width]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+            return (
+            <>
+            {/* 왼쪽 세로 모서리 (좌측벽과 뒷벽 사이) */}
+            <mesh
+              position={[-width / 2, panelStartY + leftWallH / 2, zOffset + panelDepth / 2]}
+              rotation={[0, 0, 0]}
+              renderOrder={-1}
+            >
+              <planeGeometry args={[0.02, leftWallH]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
 
-          {/* 하단 가로 모서리 (바닥과 뒷벽 사이) */}
-          <mesh
-            position={[xOffset + width / 2, panelStartY, zOffset + panelDepth / 2]}
-            rotation={[0, 0, Math.PI / 2]}
-            renderOrder={-1}
-          >
-            <planeGeometry args={[0.02, width]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+            {/* 오른쪽 세로 모서리 (우측벽과 뒷벽 사이) */}
+            <mesh
+              position={[width / 2, panelStartY + rightWallH / 2, zOffset + panelDepth / 2]}
+              rotation={[0, 0, 0]}
+              renderOrder={-1}
+            >
+              <planeGeometry args={[0.02, rightWallH]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
 
-          {/* 왼쪽 위 세로 모서리 (좌측벽과 천장 사이) */}
-          <mesh
-            position={[-width / 2, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[0.02, extendedPanelDepth]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+            {/* 상단 가로 모서리 (천장과 뒷벽 사이) - 단내림 시 메인 구간만 */}
+            {_hasDC ? (
+              <>
+                {/* 메인 구간 천장 가로선 */}
+                <mesh
+                  position={[
+                    _dcIsLeft ? (xOffset + _dcW + (width - _dcW) / 2) : (xOffset + (width - _dcW) / 2),
+                    panelStartY + height,
+                    zOffset + panelDepth / 2
+                  ]}
+                  rotation={[0, 0, Math.PI / 2]}
+                  renderOrder={-1}
+                >
+                  <planeGeometry args={[0.02, width - _dcW]} />
+                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                </mesh>
+                {/* 단내림 구간 천장 가로선 (낮은 높이) */}
+                <mesh
+                  position={[
+                    _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
+                    panelStartY + height - _dcDropH,
+                    zOffset + panelDepth / 2
+                  ]}
+                  rotation={[0, 0, Math.PI / 2]}
+                  renderOrder={-1}
+                >
+                  <planeGeometry args={[0.02, _dcW]} />
+                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                </mesh>
+                {/* 경계벽 수직 가로선 (뒷벽) */}
+                <mesh
+                  position={[_bx, panelStartY + height - _dcDropH / 2, zOffset + panelDepth / 2]}
+                  rotation={[0, 0, 0]}
+                  renderOrder={-1}
+                >
+                  <planeGeometry args={[0.02, _dcDropH]} />
+                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                </mesh>
+              </>
+            ) : (
+              <mesh
+                position={[xOffset + width / 2, panelStartY + height, zOffset + panelDepth / 2]}
+                rotation={[0, 0, Math.PI / 2]}
+                renderOrder={-1}
+              >
+                <planeGeometry args={[0.02, width]} />
+                <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+              </mesh>
+            )}
 
-          {/* 오른쪽 위 세로 모서리 (우측벽과 천장 사이) */}
-          <mesh
-            position={[width / 2, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[0.02, extendedPanelDepth]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+            {/* 하단 가로 모서리 (바닥과 뒷벽 사이) */}
+            <mesh
+              position={[xOffset + width / 2, panelStartY, zOffset + panelDepth / 2]}
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={-1}
+            >
+              <planeGeometry args={[0.02, width]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
 
-          {/* 왼쪽 아래 세로 모서리 (좌측벽과 바닥 사이) */}
-          <mesh
-            position={[-width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[0.02, extendedPanelDepth]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
+            {/* 왼쪽 위 세로 모서리 (좌측벽과 천장 사이) */}
+            <mesh
+              position={[-width / 2, leftCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.02, extendedPanelDepth]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
 
-          {/* 오른쪽 아래 세로 모서리 (우측벽과 바닥 사이) */}
-          <mesh
-            position={[width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[0.02, extendedPanelDepth]} />
-            <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-          </mesh>
-          </>
-          )}
+            {/* 오른쪽 위 세로 모서리 (우측벽과 천장 사이) */}
+            <mesh
+              position={[width / 2, rightCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.02, extendedPanelDepth]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
+
+            {/* 왼쪽 아래 세로 모서리 (좌측벽과 바닥 사이) */}
+            <mesh
+              position={[-width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.02, extendedPanelDepth]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
+
+            {/* 오른쪽 아래 세로 모서리 (우측벽과 바닥 사이) */}
+            <mesh
+              position={[width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.02, extendedPanelDepth]} />
+              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+            </mesh>
+
+            {/* 단내림 경계벽 앞뒤 모서리 */}
+            {_hasDC && (
+              <>
+                <mesh
+                  position={[_bx, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                >
+                  <planeGeometry args={[0.02, extendedPanelDepth]} />
+                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                </mesh>
+                <mesh
+                  position={[_bx, panelStartY + height - _dcDropH, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                >
+                  <planeGeometry args={[0.02, extendedPanelDepth]} />
+                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                </mesh>
+              </>
+            )}
+            </>
+            );
+          })()}
 
           {/* 은선모드: 천장-벽 경계 모서리 라인 */}
           {renderMode === 'wireframe' && (() => {
