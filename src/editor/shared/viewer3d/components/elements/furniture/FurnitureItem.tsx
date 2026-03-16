@@ -366,7 +366,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 셋업 모드 변경 핸들러
   const handleDoorSetupModeChange = useCallback((mode: 'furniture-fit' | 'space-fit') => {
     const { setSpaceInfo } = useSpaceConfigStore.getState();
-    setSpaceInfo({ doorSetupMode: mode });
+    // 공간에 맞춤 선택 시 상하부프레임을 가구에 맞춤으로 자동 변경
+    if (mode === 'space-fit') {
+      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture' });
+    } else {
+      setSpaceInfo({ doorSetupMode: mode });
+    }
     // 모든 도어 가구에 리렌더 트리거
     const allModules = useFurnitureStore.getState().placedModules;
     allModules.forEach((m) => {
@@ -3110,6 +3115,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 furnitureId: placedModule.id
               });
 
+              console.log('🔵🔵 FurnitureItem → BoxModule doorTopGap:', { storeDoorTopGap, placedDoorTopGap: placedModule.doorTopGap, spaceDoorTopGap: spaceInfo.doorTopGap, resolved: storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap, moduleId: placedModule.id });
               return (
                 <BoxModule
                   moduleData={actualModuleData}
