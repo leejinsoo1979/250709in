@@ -3409,10 +3409,8 @@ const Configurator: React.FC = () => {
                   const droppedInternalWidth = droppedWidth - frameThickness;
                   const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
 
-                  // 커튼박스 기본 높이 2400mm → dropHeight = 2400 - mainHeight
-                  const mainHeight = spaceInfo.height || 2400;
-                  const defaultCurtainBoxHeight = 2400;
-                  const freeDropHeight = Math.max(0, defaultCurtainBoxHeight - mainHeight);
+                  // 커튼박스 기본 높이 = 공간높이와 동일 (dropHeight = 0)
+                  const freeDropHeight = 0;
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
                       enabled: true,
