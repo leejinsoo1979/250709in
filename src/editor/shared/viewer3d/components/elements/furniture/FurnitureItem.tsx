@@ -369,10 +369,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 도어 셋팅 변경 시 상하부프레임도 연동 변경
     // 공간에 맞춤 → 프레임 가구에 맞춤, 가구에 맞춤 → 프레임 도어에 맞춤
     if (mode === 'space-fit') {
-      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: 25 });
+      const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+      const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+      const spaceFitBottom = isFloat ? floatH : 25;
+      setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
       const allModules = useFurnitureStore.getState().placedModules;
       allModules.forEach((m) => {
-        if (m.hasDoor) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 25 });
+        if (m.hasDoor) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
       });
     } else {
       setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });

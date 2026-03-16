@@ -509,7 +509,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   setAllDoors: (hasDoor: boolean) => {
     const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
     const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
-    const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : 25;
+    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+    const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
+    const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : (isFloatPlacement ? floatHeight : 25);
 
     set((state) => {
       const updatedModules = state.placedModules.map(module => ({

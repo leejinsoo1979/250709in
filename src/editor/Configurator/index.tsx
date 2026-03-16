@@ -191,8 +191,10 @@ const Configurator: React.FC = () => {
   const showDoorSetup = (spaceInfo.layoutMode || 'equal-division') === 'free-placement'
     && doorFurnitureList.length > 0;
   const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
-  // 모드별 기본 하단갭: 상하프레임기준(furniture-fit)=1.5, 천장바닥기준(space-fit)=25
-  const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : 25;
+  // 모드별 기본 하단갭: 상하프레임기준=1.5, 천장바닥기준=받침대높이(띄움이면 floatHeight, 아니면 25)
+  const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+  const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
+  const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : (isFloatPlacement ? currentFloatHeight : 25);
   // 전체/개별 모드 ('global' = 전체, 'individual' = 개별)
   const [doorGapMode, setDoorGapMode] = useState<'global' | 'individual'>('global');
   const [doorTopGapInput, setDoorTopGapInput] = useState(String(spaceInfo.doorTopGap ?? 1.5));
@@ -4474,9 +4476,12 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit', doorTopGap: 1.5, doorBottomGap: 25 });
+                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+                    const spaceFitBottom = isFloat ? floatH : 25;
+                    setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
                     placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 25 });
+                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
                     });
                   }}
                 >
@@ -4594,10 +4599,13 @@ const Configurator: React.FC = () => {
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
-                    setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: 25 });
+                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+                    const spaceFitBottom = isFloat ? floatH : 25;
+                    setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
                     // 개별 모듈의 갭도 모두 리셋 + 리렌더 트리거
                     placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 25 });
+                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
                     });
                   }}
                 >
@@ -4703,7 +4711,6 @@ const Configurator: React.FC = () => {
             spaceInfo={spaceInfo}
             onUpdate={handleSpaceInfoUpdate}
             disabled={hasSpecialDualFurniture}
-            renderMode="type-only"
           />
         </div>
 

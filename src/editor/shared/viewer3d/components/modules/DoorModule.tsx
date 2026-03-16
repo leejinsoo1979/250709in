@@ -582,7 +582,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // doorTopGap/doorBottomGap: props(개별 가구) → 글로벌 spaceInfo → 모드별 기본값
   const doorSetupModeForDefaults = originalSpaceInfo.doorSetupMode || 'furniture-fit';
-  const defaultBottomGap = doorSetupModeForDefaults === 'furniture-fit' ? 1.5 : 25;
+  const isFloatForDefault = originalSpaceInfo.baseConfig?.placementType === 'float';
+  const floatHeightForDefault = originalSpaceInfo.baseConfig?.floatHeight || 200;
+  const defaultBottomGap = doorSetupModeForDefaults === 'furniture-fit' ? 1.5 : (isFloatForDefault ? floatHeightForDefault : 25);
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 1.5;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? defaultBottomGap;
   // debug removed
@@ -780,8 +782,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // ── 자유배치: 도어 셋업 모드에 따라 기준점 다름 ──
     if (isFree) {
-      const freeTopGap = doorTopGap ?? (doorSetupMode === 'space-fit' ? 1.5 : 5);
-      const freeBottomGap = doorBottomGap ?? (doorSetupMode === 'space-fit' ? 25 : 25);
+      const freeTopGap = doorTopGap ?? 1.5;
+      const freeBottomGap = doorBottomGap ?? (doorSetupMode === 'furniture-fit' ? 1.5 : (placementType === 'float' ? floatHeight : 25));
       if (doorSetupMode === 'space-fit') {
         // 천장바닥기준: 도어가 가구 위/아래로 확장
         // 가구 상단에서 천장까지의 거리 계산
@@ -798,11 +800,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
       actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
     } else {
-      // ── 슬롯 배치: 기존 공간 좌표계 기반 로직 ──
+      // ── 슬롯 배치: 도어 셋업 모드에 따라 분기 ──
     const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
-    // baseConfig.type === 'floor'일 때 actualBaseHeight에 이미 바닥마감재 포함
     const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
-    // 띄움배치 시 doorBottomGap(기본 25mm)이 baselineBottomGap(floatHeight=200mm)보다 작으면
+
+    if (doorSetupMode === 'furniture-fit') {
+      // ── 상하프레임기준: 가구 상/하단에서 직접 갭 적용 ──
+      const extraTopGap = doorTopGap ?? 1.5;
+      const extraBottomGap = doorBottomGap ?? 1.5;
+      doorBottomLocal = cabinetBottomLocal + extraBottomGap;
+      doorTopLocal = cabinetTopLocal - extraTopGap;
+    } else {
+      // ── 천장바닥기준: 기존 공간 좌표계 기반 로직 ──
+    // 띄움배치 시 doorBottomGap이 baselineBottomGap보다 작으면
     // 도어가 캐비넷 아래로 확장되는 문제 발생 → baselineBottomGap을 최소값으로 사용
     const rawInputBottomGap = doorBottomGap ?? baselineBottomGap;
     const inputBottomGap = placementType === 'float'
@@ -815,11 +825,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isFullSurround = originalSpaceInfo.surroundType === 'surround' &&
       originalSpaceInfo.frameConfig?.top === true && originalSpaceInfo.frameConfig?.bottom === true;
 
-    // doorTopGap은 천장에서 도어 상단까지의 절대 거리
-    // 가구 상단은 천장에서 effectiveTopFrame만큼 아래에 있음
-    // 개별 가구 상부프레임(perFurnitureTopFrame)이 있으면 그 값 사용, 없으면 글로벌 값
-    // 전체서라운드: 도어가 상부프레임 하단에서 1.5mm 떨어짐 (가구 상단 기준 extraTopGap = 1.5)
-    // 그 외: 기존 로직 (doorTopGap - effectiveTopFrame)
     const effectiveTopFrame = perFurnitureTopFrame ?? topFrameHeightValue;
     let extraTopGap: number;
     if (isFullSurround) {
@@ -831,14 +836,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
+    }
 
 console.log('🚪⚙️ 키큰장 도어 갭 변환:', {
       doorBottomGapInput: doorBottomGap,
-      baselineBottomGap,
-      effectiveBottomGap,
-      extraBottomGap,
       doorTopGapInput: doorTopGap,
-      extraTopGap,
+      doorSetupMode,
       cabinetBottomLocal,
       cabinetTopLocal,
       doorBottomLocal,
