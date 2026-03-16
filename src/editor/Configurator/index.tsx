@@ -4553,7 +4553,7 @@ const Configurator: React.FC = () => {
                 개별
               </button>
             </div>
-            {/* 가구에 맞춤/공간에 맞춤 */}
+            {/* 상하프레임기준/천장바닥기준 */}
             <div style={{ marginTop: '6px' }}>
               <div className={styles.toggleButtonGroup}>
                 <button
@@ -4566,7 +4566,7 @@ const Configurator: React.FC = () => {
                     });
                   }}
                 >
-                  가구에 맞춤
+                  상하프레임기준
                 </button>
                 <button
                   className={`${styles.toggleButton} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.toggleButtonActive : ''}`}
@@ -4578,7 +4578,7 @@ const Configurator: React.FC = () => {
                     });
                   }}
                 >
-                  공간에 맞춤
+                  천장바닥기준
                 </button>
               </div>
             </div>
