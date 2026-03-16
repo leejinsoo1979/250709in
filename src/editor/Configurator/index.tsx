@@ -4451,9 +4451,9 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit' });
+                    setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit', doorTopGap: 1.5, doorBottomGap: 25 });
                     placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 25, _doorSetupTs: Date.now() });
                     });
                   }}
                 >
@@ -4467,9 +4467,9 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    setSpaceInfo({ frameOffsetBase: 'door', doorSetupMode: 'furniture-fit' });
+                    setSpaceInfo({ frameOffsetBase: 'door', doorSetupMode: 'furniture-fit', doorTopGap: 1.5, doorBottomGap: 1.5 });
                     placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { _doorSetupTs: Date.now() });
+                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5, _doorSetupTs: Date.now() });
                     });
                   }}
                 >
