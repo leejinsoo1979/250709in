@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { TbRulerMeasure } from 'react-icons/tb';
 import { GoQuestion } from 'react-icons/go';
+import { IoIosArrowDropup } from 'react-icons/io';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
@@ -4434,7 +4435,7 @@ const Configurator: React.FC = () => {
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
                 <HelpBtn title="상,하부프레임" text="상부프레임: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 하부프레임(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
-                <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
               {!isFrameSectionCollapsed && <><div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
                 <button
