@@ -83,6 +83,8 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     // 띄워서 배치 선택 시 자동으로 띄움 높이 200mm 및 바닥 마감재 없음
     if (type === 'stand') {
       setFloatHeight('200'); // 기본값 200mm로 설정
+      const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
+      const doorBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : (spaceInfo.doorBottomGap ?? 25);
       const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
@@ -92,12 +94,21 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
         },
         hasFloorFinish: false,  // 바닥 마감재 자동으로 없음
         floorFinish: undefined,  // 바닥 마감재 설정 제거
+        doorBottomGap,
       };
       onUpdate(updates);
+      // 개별 모듈 도어 갭도 현재 모드에 맞게 갱신
+      placedModules.forEach(module => {
+        if (module.hasDoor) {
+          updatePlacedModule(module.id, { doorBottomGap });
+        }
+      });
       // 자유배치 가구 freeHeight 재계산 (float 전환으로 높이 축소)
       recalcFreePlacementHeights(updates);
     } else {
       // 바닥에 배치 선택 (받침대 있음)
+      const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
+      const doorBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : (spaceInfo.doorBottomGap ?? 25);
       const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
@@ -105,8 +116,15 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
           placementType: 'ground', // 바닥에 배치 설정
           height: currentBaseConfig.height || 65, // 받침대 높이 유지
         },
+        doorBottomGap,
       };
       onUpdate(updates);
+      // 개별 모듈 도어 갭도 현재 모드에 맞게 갱신
+      placedModules.forEach(module => {
+        if (module.hasDoor) {
+          updatePlacedModule(module.id, { doorBottomGap });
+        }
+      });
       // 자유배치 가구 freeHeight 재계산 (ground 복귀로 높이 복원)
       recalcFreePlacementHeights(updates);
     }
