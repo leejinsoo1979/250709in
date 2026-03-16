@@ -4271,7 +4271,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>서라운드</h3>
+                <h3 className={styles.sectionTitle}>좌,우 서라운드</h3>
                 <HelpBtn title="서라운드" text="서라운드 프레임의 상·하·좌·우 각 면의 두께를 개별 설정합니다. 벽면과 가구 사이의 마감재 역할을 하며, 값이 클수록 가구 배치 가능 공간이 줄어듭니다. 옵셋 기준을 '외경'으로 하면 전체 공간 기준, '내경'으로 하면 가구 기준으로 계산됩니다." />
               </div>
               {/* 서라운드 옵셋 기준 선택 */}
