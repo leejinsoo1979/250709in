@@ -1468,6 +1468,91 @@ const Room: React.FC<RoomProps> = ({
             ) : null;
           })()}
 
+          {/* 솔리드모드: 천장/바닥-벽 경계선 (테마색상) */}
+          {viewMode !== '2D' && renderMode === 'solid' && (() => {
+            const wc = spaceInfo.wallConfig || { left: true, right: true };
+            const hasLW = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+              (spaceInfo.installType === 'semistanding' && wc.left);
+            const hasRW = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+              (spaceInfo.installType === 'semistanding' && wc.right);
+            const cY = panelStartY + height; // 천장 Y
+            const fY = panelStartY;           // 바닥 Y
+            const z1 = extendedZOffset;        // 뒷벽 Z
+            const z2 = extendedZOffset + extendedPanelDepth; // 앞쪽 Z
+            const x1 = xOffset;               // 좌측 벽 X
+            const x2 = xOffset + width;        // 우측 벽 X
+
+            // 테마 색상 가져오기
+            const tcMap: Record<string, string> = {
+              green: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', vivid: '#a25378',
+              red: '#D2042D', pink: '#ec4899', indigo: '#6366f1', teal: '#14b8a6',
+              yellow: '#eab308', gray: '#6b7280', cyan: '#06b6d4', lime: '#84cc16',
+              black: '#1a1a1a', wine: '#845EC2', gold: '#d97706', navy: '#1e3a8a',
+              emerald: '#059669', violet: '#C128D7', mint: '#0CBA80', neon: '#18CF23',
+              rust: '#FF7438', white: '#D65DB1', plum: '#790963', brown: '#5A2B1D',
+              darkgray: '#2C3844', maroon: '#3F0D0D', turquoise: '#003A7A',
+              slate: '#2E3A47', copper: '#AD4F34', forest: '#1B3924', olive: '#4C462C'
+            };
+            const edgeColor = tcMap[appTheme.color] || '#3b82f6';
+            const threeEdgeColor = new THREE.Color(edgeColor);
+
+            // 단내림 정보
+            const hasDC = spaceInfo.droppedCeiling?.enabled;
+            const dcDropH = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+            const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
+            const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
+
+            // 경계선 수집 (그라데이션: 뒷벽=진한, 앞쪽=투명)
+            const lines: [number, number, number, number, number, number][] = [];
+
+            // 천장-좌벽 경계
+            if (hasLW) {
+              const leftCY = dcIsLeft ? (cY - dcDropH) : cY;
+              lines.push([x1, leftCY, z1, x1, leftCY, z2]);
+            }
+            // 천장-우벽 경계
+            if (hasRW) {
+              const rightCY = dcIsRight ? (cY - dcDropH) : cY;
+              lines.push([x2, rightCY, z1, x2, rightCY, z2]);
+            }
+            // 바닥-좌벽 경계
+            if (hasLW) {
+              lines.push([x1, fY, z1, x1, fY, z2]);
+            }
+            // 바닥-우벽 경계
+            if (hasRW) {
+              lines.push([x2, fY, z1, x2, fY, z2]);
+            }
+
+            if (lines.length === 0) return null;
+
+            const positions = new Float32Array(lines.length * 6);
+            const vertColors = new Float32Array(lines.length * 6);
+            const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+
+            lines.forEach((line, i) => {
+              for (let j = 0; j < 6; j++) positions[i * 6 + j] = line[j];
+              // 뒷벽 쪽: 테마 색상
+              vertColors[i * 6 + 0] = threeEdgeColor.r;
+              vertColors[i * 6 + 1] = threeEdgeColor.g;
+              vertColors[i * 6 + 2] = threeEdgeColor.b;
+              // 앞쪽: 배경색으로 페이드
+              vertColors[i * 6 + 3] = threeEdgeColor.r * 0.3 + bgColor.r * 0.7;
+              vertColors[i * 6 + 4] = threeEdgeColor.g * 0.3 + bgColor.g * 0.7;
+              vertColors[i * 6 + 5] = threeEdgeColor.b * 0.3 + bgColor.b * 0.7;
+            });
+
+            return (
+              <lineSegments renderOrder={100}>
+                <bufferGeometry>
+                  <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+                  <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
+                </bufferGeometry>
+                <lineBasicMaterial vertexColors depthTest={false} />
+              </lineSegments>
+            );
+          })()}
+
           {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰에서는 숨김 */}
           {viewMode !== '2D' && renderMode === 'solid' && (
               <mesh
