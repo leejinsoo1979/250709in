@@ -3425,7 +3425,7 @@ const Configurator: React.FC = () => {
                     droppedCeiling: {
                       enabled: true,
                       width: droppedWidth,
-                      dropHeight: isFreeMode ? 100 : 200,
+                      dropHeight: isFreeMode ? Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)) : 200,
                       position: 'right'
                     },
                     droppedCeilingDoorCount: droppedDoorCount,
