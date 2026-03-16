@@ -4485,28 +4485,15 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    // 가구에 맞춤: 도어 갭 = 1.5 + 프레임 사이즈 (per module)
-                    const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-                    const isStandFloatLocal = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-                    const floatHLocal = isStandFloatLocal ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-                    const internalHLocal = calculateInternalSpace(spaceInfo).height;
-                    // 하부프레임 높이 (받침대)
-                    const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                    // 가구에 맞춤: 도어는 천장바닥 기준 (상단 1.5, 하단 받침대높이 or 띄움높이)
+                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
+                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
+                    const spaceFitBottom = isFloat ? floatH : 25;
 
-                    setSpaceInfo({ frameOffsetBase: 'furniture' });
-                    setPlacedModules(prev => prev.map(m => {
-                      if (!m.hasDoor) return m;
-                      // 상부프레임 높이 계산 (가구별)
-                      const rawFreeH = m.freeHeight || internalHLocal;
-                      const maxFreeH = internalHLocal - floatHLocal;
-                      const modHeight = Math.min(rawFreeH, maxFreeH);
-                      const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHLocal - modHeight);
-                      return {
-                        ...m,
-                        doorTopGap: 1.5 + topFrameSize,
-                        doorBottomGap: 1.5 + baseFrameH,
-                      };
-                    }));
+                    setSpaceInfo({ frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
+                    setPlacedModules(prev => prev.map(m =>
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
+                    ));
                     setTimeout(() => {
                       const latest = useFurnitureStore.getState().placedModules;
                       useFurnitureStore.setState({ placedModules: [...latest] });
