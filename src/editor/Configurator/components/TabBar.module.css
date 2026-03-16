@@ -16,6 +16,33 @@
   display: none; /* Chrome, Safari */
 }
 
+/* 파일트리 토글 버튼 */
+.fileTreeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-right: 1px solid var(--theme-border, #e0e0e0);
+  background: transparent;
+  color: var(--theme-text-muted, #8c959f);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.fileTreeButton:hover {
+  background: var(--theme-background-secondary, #f6f8fa);
+  color: var(--theme-text, #24292f);
+}
+
+.fileTreeButton.active {
+  background: color-mix(in srgb, var(--theme-primary, #21b691) 15%, transparent);
+  color: var(--theme-primary, #21b691);
+}
+
 /* 개별 탭 */
 .tab {
   display: flex;

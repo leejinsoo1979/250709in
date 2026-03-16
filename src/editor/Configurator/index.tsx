@@ -4856,6 +4856,9 @@ const Configurator: React.FC = () => {
           onTabSwitch={handleTabSwitch}
           onTabClose={handleTabClose}
           onNewDesign={handleNewDesign}
+          onFileTreeToggle={handleFileTreeToggle}
+          isFileTreeOpen={isFileTreeOpen}
+          readOnly={readOnly}
         />
       )}
 

@@ -1,19 +1,33 @@
 import React from 'react';
 import { useUIStore, type EditorTab } from '@/store/uiStore';
+import { Menu } from 'lucide-react';
 import styles from './TabBar.module.css';
 
 interface TabBarProps {
   onTabSwitch: (tab: EditorTab) => void;
   onTabClose: (tab: EditorTab) => void;
   onNewDesign?: () => void;
+  onFileTreeToggle?: () => void;
+  isFileTreeOpen?: boolean;
+  readOnly?: boolean;
 }
 
-const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign }) => {
+const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, onFileTreeToggle, isFileTreeOpen, readOnly }) => {
   const openTabs = useUIStore((s) => s.openTabs);
   const activeTabId = useUIStore((s) => s.activeTabId);
 
   return (
     <div className={styles.tabBar}>
+      {/* 파일트리 토글 버튼 */}
+      {!readOnly && onFileTreeToggle && (
+        <button
+          className={`${styles.fileTreeButton} ${isFileTreeOpen ? styles.active : ''}`}
+          onClick={onFileTreeToggle}
+          title="파일 트리 열기/닫기"
+        >
+          <Menu size={16} />
+        </button>
+      )}
       {openTabs.map((tab) => (
         <div
           key={tab.id}

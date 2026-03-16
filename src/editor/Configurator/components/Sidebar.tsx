@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, Menu, User, Sun, Moon } from 'lucide-react';
+import { LogOut, User, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
@@ -101,17 +101,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
-      {/* 햄버거 메뉴 버튼 */}
-      {!readOnly && onFileTreeToggle && (
-        <button
-          className={`${styles.hamburgerButton} ${isFileTreeOpen ? styles.active : ''}`}
-          onClick={onFileTreeToggle}
-          title="파일 트리 열기/닫기"
-        >
-          <Menu size={20} />
-        </button>
-      )}
-
       {/* Navigation tabs */}
       <nav className={styles.tabList}>
         {tabs.map((tab) => (
@@ -129,59 +118,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom action buttons */}
       <div className={styles.actionGroup}>
-        {/* 소유자/협업자 아바타 */}
-        {owner && (
-          <div
-            className={styles.actionButton}
-            data-tooltip={owner.name}
-            style={{ position: 'relative' }}
-          >
-            <PiCrownDuotone size={10} style={{ position: 'absolute', top: 2, right: 2, color: '#facc15' }} />
-            <div style={{
-              width: 24, height: 24, borderRadius: '50%', overflow: 'hidden',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: theme.mode === 'dark' ? '#2a2a2a' : '#e5e5e5'
-            }}>
-              {owner.photoURL ? (
-                <img src={owner.photoURL} alt={owner.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <User size={14} />
-              )}
-            </div>
-          </div>
-        )}
-
-        {collaborators.map((collab, i) => (
-          <div
-            key={`${collab.userId}-${i}`}
-            className={styles.actionButton}
-            data-tooltip={collab.userName || collab.userEmail}
-          >
-            <div style={{
-              width: 24, height: 24, borderRadius: '50%', overflow: 'hidden',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: theme.mode === 'dark' ? '#2a2a2a' : '#e5e5e5'
-            }}>
-              {collab.photoURL ? (
-                <img src={collab.photoURL} alt={collab.userName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <User size={14} />
-              )}
-            </div>
-          </div>
-        ))}
-
-        {!readOnly && user?.uid === owner?.userId && onAddCollaborator && (
-          <button
-            className={styles.actionButton}
-            onClick={onAddCollaborator}
-            data-tooltip="협업자 추가"
-          >
-            <GoPersonAdd size={17} />
-          </button>
-        )}
-
-        <div style={{ borderTop: '1px solid var(--theme-border, rgba(255,255,255,0.1))', width: '60%', margin: '4px auto' }} />
 
         {/* 다크/라이트 모드 토글 */}
         <button
