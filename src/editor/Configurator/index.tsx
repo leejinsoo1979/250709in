@@ -3409,11 +3409,15 @@ const Configurator: React.FC = () => {
                   const droppedInternalWidth = droppedWidth - frameThickness;
                   const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
 
+                  // 커튼박스 기본 높이 2400mm → dropHeight = 2400 - mainHeight
+                  const mainHeight = spaceInfo.height || 2400;
+                  const defaultCurtainBoxHeight = 2400;
+                  const freeDropHeight = Math.max(0, defaultCurtainBoxHeight - mainHeight);
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
                       enabled: true,
                       width: droppedWidth,
-                      dropHeight: isFreeMode ? 100 : 200,
+                      dropHeight: isFreeMode ? freeDropHeight : 200,
                       position: 'right'
                     },
                     droppedCeilingDoorCount: droppedDoorCount,
@@ -3734,7 +3738,7 @@ const Configurator: React.FC = () => {
                     min="1800"
                     max="2900"
                     step="10"
-                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight ?? 0) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
                     key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -3748,7 +3752,7 @@ const Configurator: React.FC = () => {
 
                       if (isFreeMode) {
                         // 자유배치: 커튼박스 높이 = 메인높이 + dropHeight
-                        const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
+                        const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight ?? 0);
                         if (inputValue === '' || isNaN(parseInt(inputValue))) {
                           e.target.value = currentCurtainH.toString();
                           return;
