@@ -207,7 +207,7 @@ interface SpaceConfigState {
 // 기본값 상수들 (다른 파일에서 재사용 가능)
 export const DEFAULT_SPACE_VALUES = {
   WIDTH: 3600,
-  HEIGHT: 2400,
+  HEIGHT: 2360,
   DEPTH: 1500,
 } as const;
 
