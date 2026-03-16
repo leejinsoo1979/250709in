@@ -83,6 +83,56 @@ import styles from './style.module.css';
 import responsiveStyles from './responsive.module.css';
 import rightPanelStyles from './components/RightPanel.module.css';
 
+/** 도어 갭 개별 입력 — controlled input (store 값 변경 시 즉시 반영) */
+const DoorGapInput: React.FC<{
+  moduleId: string;
+  field: 'doorTopGap' | 'doorBottomGap';
+  storeValue: number;
+  onCommit: (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => void;
+}> = ({ moduleId, field, storeValue, onCommit }) => {
+  const [localVal, setLocalVal] = useState(String(storeValue));
+  const [isFocused, setIsFocused] = useState(false);
+
+  // store 값이 외부에서 변경되면 로컬 값도 동기화 (편집 중이 아닐 때만)
+  useEffect(() => {
+    if (!isFocused) {
+      setLocalVal(String(storeValue));
+    }
+  }, [storeValue, isFocused]);
+
+  const commit = () => {
+    setIsFocused(false);
+    onCommit(moduleId, field, localVal);
+  };
+
+  return (
+    <td style={{ padding: '2px 3px', textAlign: 'center' }}>
+      <input
+        type="number"
+        value={localVal}
+        onChange={(e) => setLocalVal(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+        style={{
+          width: '100%',
+          padding: '4px 2px',
+          fontSize: '12px',
+          textAlign: 'center',
+          border: '1px solid var(--theme-border-color, #ddd)',
+          borderRadius: '3px',
+          backgroundColor: 'var(--theme-input-bg, #fff)',
+          color: 'var(--theme-text-primary, #333)',
+          outline: 'none',
+          boxSizing: 'border-box',
+        }}
+        step="0.1"
+        min="0"
+      />
+    </td>
+  );
+};
+
 const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -4607,34 +4657,18 @@ const Configurator: React.FC = () => {
                   <tr>
                     <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
                     {doorFurnitureList.map((mod) => (
-                      <td key={`top-${mod.id}-${mod.doorTopGap}-${doorSetupMode}`} style={{ padding: '3px 4px' }}>
-                        <input type="text" inputMode="numeric"
-                          defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5)}
-                          onBlur={(e) => {
-                            const v = parseFloat(e.target.value);
-                            if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                          placeholder="1.5"
-                          style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
-                      </td>
+                      <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
+                        storeValue={mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5}
+                        onCommit={handleIndividualDoorGapChange} />
                     ))}
                   </tr>
                   {/* 하단갭 행 */}
                   <tr>
                     <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                     {doorFurnitureList.map((mod) => (
-                      <td key={`bot-${mod.id}-${mod.doorBottomGap}-${doorSetupMode}`} style={{ padding: '3px 4px' }}>
-                        <input type="text" inputMode="numeric"
-                          defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? defaultBottomGap)}
-                          onBlur={(e) => {
-                            const v = parseFloat(e.target.value);
-                            if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                          placeholder="25"
-                          style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
-                      </td>
+                      <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
+                        storeValue={mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? defaultBottomGap}
+                        onCommit={handleIndividualDoorGapChange} />
                     ))}
                   </tr>
                 </tbody>
