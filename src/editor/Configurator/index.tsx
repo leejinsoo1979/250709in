@@ -4326,7 +4326,7 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
                 >
-                  가구에 맞춤
+                  상하프레임 노출
                 </button>
                 <button
                   style={{
@@ -4337,7 +4337,7 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
                 >
-                  도어에 맞춤
+                  상하프레임 가림
                 </button>
               </div>
               <div className={styles.subSetting}>
@@ -4487,7 +4487,7 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    // 가구에 맞춤: 천장/바닥 이격만 → 상단갭 1.5, 하단갭 = 받침대높이 or 띄움높이
+                    // 상하프레임 노출: 천장/바닥 이격만 → 상단갭 1.5, 하단갭 = 받침대높이 or 띄움높이
                     const isFloat = spaceInfo.baseConfig?.placementType === 'float';
                     const floatH = spaceInfo.baseConfig?.floatHeight || 200;
                     const spaceFitBottom = isFloat ? floatH : 25;
@@ -4502,7 +4502,7 @@ const Configurator: React.FC = () => {
                     }, 50);
                   }}
                 >
-                  가구에 맞춤
+                  상하프레임 노출
                 </button>
                 <button
                   style={{
@@ -4512,7 +4512,7 @@ const Configurator: React.FC = () => {
                     fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                   onClick={() => {
-                    // 도어에 맞춤: 프레임 포함 → 상단갭 = 상부프레임 + 1.5, 하단갭 = 하부프레임 + 1.5
+                    // 상하프레임 가림: 프레임 포함 → 상단갭 = 상부프레임 + 1.5, 하단갭 = 하부프레임 + 1.5
                     const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
                     const isStandFloatL = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
                     const floatHL = isStandFloatL ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
@@ -4541,7 +4541,7 @@ const Configurator: React.FC = () => {
                     }, 50);
                   }}
                 >
-                  도어에 맞춤
+                  상하프레임 가림
                 </button>
               </div>
               <div className={styles.subSetting}>
@@ -4605,7 +4605,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
-              <HelpBtn title="도어 셋팅" text="상하부프레임 섹션에서 '가구에 맞춤' 또는 '도어에 맞춤'을 선택하면 도어 갭이 자동 계산됩니다. 각 값은 개별적으로 수정할 수 있습니다." />
+              <HelpBtn title="도어 셋팅" text="상하부프레임 섹션에서 '상하프레임 노출' 또는 '상하프레임 가림'을 선택하면 도어 갭이 자동 계산됩니다." />
             </div>
 
             {/* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */}
