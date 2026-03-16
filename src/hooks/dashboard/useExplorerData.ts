@@ -472,6 +472,10 @@ export function useExplorerData(
     await loadFolderDataForProject(projectId);
   }, [loadFolderDataForProject]);
 
+  const setFoldersLocal = useCallback((projectId: string, newFolders: FolderData[]) => {
+    setFolders(prev => ({ ...prev, [projectId]: newFolders }));
+  }, []);
+
   // 현재 프로젝트 선택 시 폴더/디자인 파일 로드
   useEffect(() => {
     if (currentProjectId && user) {
@@ -503,5 +507,6 @@ export function useExplorerData(
     refreshProjects,
     refreshDesignFiles,
     refreshFolders,
+    setFoldersLocal,
   };
 }

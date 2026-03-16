@@ -306,8 +306,8 @@ const SimpleDashboard: React.FC = () => {
       };
 
       const updatedFolders = [...(data.folders[nav.currentProjectId] || []), newFolder];
+      data.setFoldersLocal(nav.currentProjectId, updatedFolders);
       await saveFolderData(nav.currentProjectId, updatedFolders);
-      await data.refreshFolders(nav.currentProjectId);
 
       setIsCreateFolderModalOpen(false);
       setNewFolderName('');

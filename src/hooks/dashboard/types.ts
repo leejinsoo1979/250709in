@@ -130,6 +130,7 @@ export interface UseExplorerDataReturn {
   refreshProjects: () => Promise<void>;
   refreshDesignFiles: (projectId: string) => Promise<void>;
   refreshFolders: (projectId: string) => Promise<void>;
+  setFoldersLocal: (projectId: string, folders: import('@/firebase/projects').FolderData[]) => void;
 }
 
 // selectItem 옵션
