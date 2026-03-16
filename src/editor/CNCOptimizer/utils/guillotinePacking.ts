@@ -554,5 +554,125 @@ export function packGuillotine(
     currentBin++;
   }
 
+  // === 후처리: 남은 패널을 기존 시트 빈 공간에 재배치 시도 ===
+  // 낮은 효율 시트의 패널을 높은 효율 시트의 빈 공간에 넣을 수 있는지 확인
+  if (bins.length > 1) {
+    backfillBins(bins, binWidth, binHeight, kerf);
+  }
+
   return bins;
+}
+
+/**
+ * 후처리: 저효율 시트의 패널을 다른 시트의 빈 공간에 합치기
+ * - 각 시트에서 배치된 패널 기준으로 빈 공간(free rects)을 계산
+ * - 저효율 시트의 패널을 빈 공간에 넣을 수 있으면 이동
+ * - 빈 시트가 되면 제거
+ */
+function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, kerf: number): void {
+  // 효율 낮은 시트부터 처리 (낮은 효율 → 높은 효율)
+  const binIndices = bins.map((_, i) => i);
+  binIndices.sort((a, b) => (bins[a].efficiency || 0) - (bins[b].efficiency || 0));
+
+  const removedBins = new Set<number>();
+
+  for (const srcIdx of binIndices) {
+    if (removedBins.has(srcIdx)) continue;
+    const srcBin = bins[srcIdx];
+    if (!srcBin.panels || srcBin.panels.length === 0) continue;
+
+    // 이 시트의 모든 패널을 다른 시트에 넣을 수 있는지 시도
+    const panelsToMove = [...srcBin.panels];
+    const movedPanels: Rect[] = [];
+
+    for (const panel of panelsToMove) {
+      let placed = false;
+
+      // 다른 시트에 넣기 시도 (효율 높은 것부터)
+      for (let dstIdx = 0; dstIdx < bins.length; dstIdx++) {
+        if (dstIdx === srcIdx || removedBins.has(dstIdx)) continue;
+        const dstBin = bins[dstIdx];
+
+        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf);
+        if (pos) {
+          const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
+          dstBin.panels.push(movedPanel);
+          dstBin.usedArea = (dstBin.usedArea || 0) + panel.width * panel.height;
+          dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
+          movedPanels.push(panel);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) break; // 하나라도 못 옮기면 이 시트는 유지
+    }
+
+    // 모든 패널을 옮겼으면 시트 제거
+    if (movedPanels.length === panelsToMove.length) {
+      removedBins.add(srcIdx);
+    }
+  }
+
+  // 빈 시트 제거 (뒤에서부터)
+  const toRemove = [...removedBins].sort((a, b) => b - a);
+  for (const idx of toRemove) {
+    bins.splice(idx, 1);
+  }
+}
+
+/**
+ * 시트의 빈 공간에 패널이 들어갈 위치 찾기
+ */
+function findFreePosition(
+  bin: PackedBin,
+  panel: Rect,
+  binWidth: number,
+  binHeight: number,
+  kerf: number
+): { x: number; y: number; rotated: boolean } | null {
+  const placed = (bin.panels || []).map(p => ({
+    x: p.x || 0,
+    y: p.y || 0,
+    w: p.rotated ? p.height : p.width,
+    h: p.rotated ? p.width : p.height
+  }));
+
+  // 후보 위치 생성
+  const candidates: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+  for (const r of placed) {
+    candidates.push({ x: r.x + r.w + kerf, y: r.y });       // 우측
+    candidates.push({ x: r.x, y: r.y + r.h + kerf });       // 상단
+    candidates.push({ x: r.x + r.w + kerf, y: r.y + r.h + kerf }); // 대각
+  }
+
+  // 원본 방향 + 회전 방향 시도
+  const orientations: { w: number; h: number; rotated: boolean }[] = [
+    { w: panel.width, h: panel.height, rotated: false }
+  ];
+  if (panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
+    orientations.push({ w: panel.height, h: panel.width, rotated: true });
+  }
+
+  // 후보 위치를 좌하단 우선 정렬
+  candidates.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+
+  for (const { w, h, rotated } of orientations) {
+    for (const { x, y } of candidates) {
+      if (x + w > binWidth + 0.5 || y + h > binHeight + 0.5) continue;
+      if (x < 0 || y < 0) continue;
+
+      // 겹침 확인
+      const margin = 0.5;
+      const overlaps = placed.some(r =>
+        x < r.x + r.w - margin && x + w > r.x + margin &&
+        y < r.y + r.h - margin && y + h > r.y + margin
+      );
+      if (!overlaps) {
+        return { x, y, rotated };
+      }
+    }
+  }
+
+  return null;
 }
