@@ -2352,7 +2352,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 자유배치 모드: 가구 배치공간 합산 치수선 */}
+      {/* 자유배치 모드 2단: 좌이격 | 가구합산너비 | 우이격 */}
       {isFreePlacement && furnitureDimensions && furnitureDimensions.length > 0 && (() => {
         const validDims = furnitureDimensions.filter((d): d is NonNullable<typeof d> => d !== null);
         if (validDims.length === 0) return null;
@@ -2361,67 +2361,101 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           left: d.moduleX - mmToThreeUnits(d.actualWidth / 2),
           right: d.moduleX + mmToThreeUnits(d.actualWidth / 2),
         }));
-        const leftMost = Math.min(...edges.map(e => e.left));
-        const rightMost = Math.max(...edges.map(e => e.right));
-        const totalWidthMm = Math.round((rightMost - leftMost) * 100); // Three.js → mm
-        const centerX = (leftMost + rightMost) / 2;
+        const furnitureLeft = Math.min(...edges.map(e => e.left));
+        const furnitureRight = Math.max(...edges.map(e => e.right));
+        const furnitureTotalMm = Math.round((furnitureRight - furnitureLeft) * 100);
         const extLen = mmToThreeUnits(EXTENSION_LENGTH);
 
+        // 공간 벽 위치 (Three.js 단위)
+        const wallLeft = leftOffset; // 좌측 벽
+        const wallRight = mmToThreeUnits(spaceInfo.width) + leftOffset; // 우측 벽
+
+        // 이격거리 (mm)
+        const leftGapMm = Math.round((furnitureLeft - wallLeft) * 100);
+        const rightGapMm = Math.round((wallRight - furnitureRight) * 100);
+
         return (
-          <group key="free-placement-total-width">
-            {/* 합산 너비 치수선 */}
+          <group key="free-placement-dimensions-tier2">
+            {/* 좌측 이격 치수선 (벽~가구좌측) */}
+            {leftGapMm > 0 && (
+              <>
+                <NativeLine name="dimension_line"
+                  points={[[wallLeft, columnDimensionY, 0.002], [furnitureLeft, columnDimensionY, 0.002]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([wallLeft, columnDimensionY, 0.002], [wallLeft + 0.03, columnDimensionY, 0.002], 0.01)}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([furnitureLeft, columnDimensionY, 0.002], [furnitureLeft - 0.03, columnDimensionY, 0.002], 0.01)}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <Text renderOrder={1000} depthTest={false}
+                  position={[(wallLeft + furnitureLeft) / 2, columnDimensionY + mmToThreeUnits(20), 0.01]}
+                  fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                >
+                  {leftGapMm}
+                </Text>
+              </>
+            )}
+
+            {/* 가구 합산 너비 치수선 */}
             <NativeLine name="dimension_line"
-              points={[[leftMost, columnDimensionY, 0.002], [rightMost, columnDimensionY, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
+              points={[[furnitureLeft, columnDimensionY, 0.002], [furnitureRight, columnDimensionY, 0.002]]}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            {/* 좌측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([leftMost, columnDimensionY, 0.002], [leftMost + 0.03, columnDimensionY, 0.002], 0.01)}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
+              points={createArrowHead([furnitureLeft, columnDimensionY, 0.002], [furnitureLeft + 0.03, columnDimensionY, 0.002], 0.01)}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            {/* 우측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([rightMost, columnDimensionY, 0.002], [rightMost - 0.03, columnDimensionY, 0.002], 0.01)}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
+              points={createArrowHead([furnitureRight, columnDimensionY, 0.002], [furnitureRight - 0.03, columnDimensionY, 0.002], 0.01)}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            {/* 합산 너비 텍스트 */}
-            <Text
-              renderOrder={1000}
-              depthTest={false}
-              position={[centerX, columnDimensionY + mmToThreeUnits(20), 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={textOutlineWidth}
-              outlineColor={textOutlineColor}
+            <Text renderOrder={1000} depthTest={false}
+              position={[(furnitureLeft + furnitureRight) / 2, columnDimensionY + mmToThreeUnits(20), 0.01]}
+              fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
             >
-              {totalWidthMm}
+              {furnitureTotalMm}
             </Text>
-            {/* 좌측 연장선 */}
+
+            {/* 우측 이격 치수선 (가구우측~벽) */}
+            {rightGapMm > 0 && (
+              <>
+                <NativeLine name="dimension_line"
+                  points={[[furnitureRight, columnDimensionY, 0.002], [wallRight, columnDimensionY, 0.002]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([furnitureRight, columnDimensionY, 0.002], [furnitureRight + 0.03, columnDimensionY, 0.002], 0.01)}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([wallRight, columnDimensionY, 0.002], [wallRight - 0.03, columnDimensionY, 0.002], 0.01)}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <Text renderOrder={1000} depthTest={false}
+                  position={[(furnitureRight + wallRight) / 2, columnDimensionY + mmToThreeUnits(20), 0.01]}
+                  fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                >
+                  {rightGapMm}
+                </Text>
+              </>
+            )}
+
+            {/* 가구 좌측 끝 연장선 (공간상단~치수선 위) */}
             <NativeLine name="dimension_line"
-              points={[[leftMost, spaceHeight, 0.001], [leftMost, topDimensionY + extLen, 0.001]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
+              points={[[furnitureLeft, spaceHeight, 0.001], [furnitureLeft, topDimensionY + extLen, 0.001]]}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            {/* 우측 연장선 */}
+            {/* 가구 우측 끝 연장선 */}
             <NativeLine name="dimension_line"
-              points={[[rightMost, spaceHeight, 0.001], [rightMost, topDimensionY + extLen, 0.001]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
+              points={[[furnitureRight, spaceHeight, 0.001], [furnitureRight, topDimensionY + extLen, 0.001]]}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
           </group>
         );
