@@ -10,14 +10,17 @@ interface InstallTypeControlsProps {
 }
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
-  const { clearAllModules } = useFurnitureStore();
+  const { clearAllModules, placedModules } = useFurnitureStore();
 
   console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
   console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
+    // 배치된 가구가 있으면 확인 팝업
+    if (placedModules.length > 0) {
+      if (!window.confirm('공간유형을 변경하면 배치된 가구가 사라집니다. 계속하시겠습니까?')) return;
+    }
     // 공간 유형 변경 시 모든 가구 제거
     clearAllModules();
-    console.log('🗑️ InstallTypeControls - 공간 유형 변경으로 모든 가구 제거');
 
     // 설치 유형에 따른 벽 구성 설정
     let wallConfig = { ...spaceInfo.wallConfig };
@@ -102,9 +105,12 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
   };
 
   const handleWallConfigChange = (side: 'left' | 'right') => {
+    // 배치된 가구가 있으면 확인 팝업
+    if (placedModules.length > 0) {
+      if (!window.confirm('벽 위치를 변경하면 배치된 가구가 사라집니다. 계속하시겠습니까?')) return;
+    }
     // 벽 위치 변경 시 모든 가구 제거
     clearAllModules();
-    console.log('🗑️ InstallTypeControls - 벽 위치 변경으로 모든 가구 제거');
 
     const newWallConfig = {
       left: side === 'left',
