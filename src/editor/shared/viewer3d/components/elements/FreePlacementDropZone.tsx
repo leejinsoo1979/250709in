@@ -1132,17 +1132,35 @@ const FreePlacementDropZone: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape') return;
 
+      if (e.key === 'Escape') {
+        // 1) 배치 대기 중(고스트 표시)인 경우: 배치 취소
+        const currentSelectedId = useFurnitureStore.getState().selectedFurnitureId;
+        const isPlacing = currentSelectedId && !placedModules.some(m => m.id === currentSelectedId);
+        if (isPlacing) {
+          useFurnitureStore.getState().setSelectedFurnitureId(null);
+          useUIStore.getState().setSelectedModuleForPlacement(null);
+          useMyCabinetStore.getState().setPendingPlacement(null);
+          useFurnitureStore.getState().setPendingCustomConfig(null);
+          setHoverXmm(null);
+          setIsColliding(false);
+          setIsSnapped(false);
+          e.preventDefault();
+          return;
+        }
+        // 2) 이동 중인 가구: 이동 취소
+        if (movingModuleId) {
+          setMovingModuleId(null);
+          e.preventDefault();
+          return;
+        }
+        return;
+      }
+
       // 이동할 가구: movingModuleId 또는 편집 중인 자유배치 가구
       const targetId = movingModuleId || editingFreeModuleId;
       if (!targetId) return;
       const mod = placedModules.find(m => m.id === targetId && m.isFreePlacement);
       if (!mod) return;
-
-      if (e.key === 'Escape') {
-        setMovingModuleId(null);
-        e.preventDefault();
-        return;
-      }
 
       // 화살표 키는 input 포커스와 무관하게 가구 이동 처리
       e.preventDefault();
