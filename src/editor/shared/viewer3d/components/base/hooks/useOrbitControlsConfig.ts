@@ -107,7 +107,7 @@ export const useOrbitControlsConfig = (
       enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임
       dampingFactor: 0.05, // 관성 정도 (작을수록 더 묵직함)
       mouseButtons: {
-        LEFT: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 왼쪽 버튼: 3D에서는 회전 (트랙패드 기본 동작)
+        LEFT: undefined, // 왼쪽 버튼: 비활성화 (회전은 휠 클릭+드래그로만)
         MIDDLE: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 중간 버튼(휠 클릭): 2D에서는 팬, 3D에서는 회전
         RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼: 팬
       },
