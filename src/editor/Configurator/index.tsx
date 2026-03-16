@@ -195,36 +195,6 @@ const Configurator: React.FC = () => {
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
   const defaultBottomGap = doorSetupMode === 'furniture-fit' ? 1.5 : (isFloatPlacement ? currentFloatHeight : 25);
-  // 전체/개별 모드 ('global' = 전체, 'individual' = 개별)
-  const [doorGapMode, setDoorGapMode] = useState<'global' | 'individual'>('global');
-  const [doorTopGapInput, setDoorTopGapInput] = useState(String(spaceInfo.doorTopGap ?? 1.5));
-  const [doorBottomGapInput, setDoorBottomGapInput] = useState(String(spaceInfo.doorBottomGap ?? defaultBottomGap));
-
-  useEffect(() => {
-    setDoorTopGapInput(String(spaceInfo.doorTopGap ?? 1.5));
-    setDoorBottomGapInput(String(spaceInfo.doorBottomGap ?? defaultBottomGap));
-  }, [spaceInfo.doorTopGap, spaceInfo.doorBottomGap, defaultBottomGap]);
-
-  // 전체 모드: 글로벌 도어 갭 변경
-  const handleDoorGapChange = (field: 'doorTopGap' | 'doorBottomGap', val: string) => {
-    if (field === 'doorTopGap') setDoorTopGapInput(val);
-    else setDoorBottomGapInput(val);
-    const num = parseFloat(val);
-    if (!isNaN(num)) {
-      console.log('🔴🔴 handleDoorGapChange:', { field, val: num, doorModuleCount: placedModules.filter(m => m.hasDoor).length });
-      setSpaceInfo({ [field]: num });
-      placedModules.filter(m => m.hasDoor).forEach(m => {
-        console.log('🔴🔴 updatePlacedModule:', { moduleId: m.id, field, val: num });
-        updatePlacedModule(m.id, { [field]: num });
-      });
-    }
-  };
-
-  const handleDoorGapBlur = (field: 'doorTopGap' | 'doorBottomGap') => {
-    const input = field === 'doorTopGap' ? doorTopGapInput : doorBottomGapInput;
-    const setter = field === 'doorTopGap' ? setDoorTopGapInput : setDoorBottomGapInput;
-    if (isNaN(parseFloat(input))) setter(field === 'doorTopGap' ? '1.5' : String(defaultBottomGap));
-  };
 
   // 개별 모드: 개별 가구 도어 갭 변경
   const handleIndividualDoorGapChange = (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => {
@@ -249,15 +219,16 @@ const Configurator: React.FC = () => {
       const topGap = spaceInfo.doorTopGap ?? 1.5;
       const botGap = spaceInfo.doorBottomGap ?? defaultBottomGap;
       setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
-      // 개별 모듈에도 기본값 설정
-      placedModules.filter(m => m.hasDoor).forEach(m => {
-        if (m.doorTopGap === undefined || m.doorBottomGap === undefined) {
-          updatePlacedModule(m.id, {
-            doorTopGap: m.doorTopGap ?? topGap,
-            doorBottomGap: m.doorBottomGap ?? botGap
-          });
-        }
-      });
+      // 개별 모듈에도 기본값 설정 (배치 업데이트)
+      setPlacedModules(prev => prev.map(m => {
+        if (!m.hasDoor) return m;
+        if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
+        return { ...m, doorTopGap: m.doorTopGap ?? topGap, doorBottomGap: m.doorBottomGap ?? botGap };
+      }));
+      setTimeout(() => {
+        const latest = useFurnitureStore.getState().placedModules;
+        useFurnitureStore.setState({ placedModules: [...latest] });
+      }, 50);
     }
   }, [showDoorSetup, doorSetupMode]);
 
@@ -4480,9 +4451,13 @@ const Configurator: React.FC = () => {
                     const floatH = spaceInfo.baseConfig?.floatHeight || 200;
                     const spaceFitBottom = isFloat ? floatH : 25;
                     setSpaceInfo({ frameOffsetBase: 'furniture', doorSetupMode: 'space-fit', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    });
+                    setPlacedModules(prev => prev.map(m =>
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
+                    ));
+                    setTimeout(() => {
+                      const latest = useFurnitureStore.getState().placedModules;
+                      useFurnitureStore.setState({ placedModules: [...latest] });
+                    }, 50);
                   }}
                 >
                   가구에 맞춤
@@ -4496,9 +4471,13 @@ const Configurator: React.FC = () => {
                   }}
                   onClick={() => {
                     setSpaceInfo({ frameOffsetBase: 'door', doorSetupMode: 'furniture-fit', doorTopGap: 1.5, doorBottomGap: 1.5 });
-                    placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5 });
-                    });
+                    setPlacedModules(prev => prev.map(m =>
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: 1.5 } : m
+                    ));
+                    setTimeout(() => {
+                      const latest = useFurnitureStore.getState().placedModules;
+                      useFurnitureStore.setState({ placedModules: [...latest] });
+                    }, 50);
                   }}
                 >
                   도어에 맞춤
@@ -4566,21 +4545,6 @@ const Configurator: React.FC = () => {
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
               <HelpBtn title="도어 셋팅" text="전체: 모든 도어 가구에 동일한 상단/하단 갭을 적용합니다. 개별: 각 도어 가구마다 개별적으로 갭을 설정합니다." />
             </div>
-            {/* 전체/개별 토글 */}
-            <div className={styles.toggleButtonGroup}>
-              <button
-                className={`${styles.toggleButton} ${doorGapMode === 'global' ? styles.toggleButtonActive : ''}`}
-                onClick={() => setDoorGapMode('global')}
-              >
-                전체
-              </button>
-              <button
-                className={`${styles.toggleButton} ${doorGapMode === 'individual' ? styles.toggleButtonActive : ''}`}
-                onClick={() => setDoorGapMode('individual')}
-              >
-                개별
-              </button>
-            </div>
             {/* 상하프레임기준/천장바닥기준 */}
             <div style={{ marginTop: '6px' }}>
               <div className={styles.toggleButtonGroup}>
@@ -4588,10 +4552,14 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     setSpaceInfo({ doorSetupMode: 'furniture-fit', frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });
-                    // 개별 모듈의 갭도 모두 리셋 + 리렌더 트리거
-                    placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5 });
-                    });
+                    // 배치 업데이트: notifyR3F 중간 상태 방지
+                    setPlacedModules(prev => prev.map(m =>
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: 1.5 } : m
+                    ));
+                    setTimeout(() => {
+                      const latest = useFurnitureStore.getState().placedModules;
+                      useFurnitureStore.setState({ placedModules: [...latest] });
+                    }, 50);
                   }}
                 >
                   상하프레임기준
@@ -4603,10 +4571,14 @@ const Configurator: React.FC = () => {
                     const floatH = spaceInfo.baseConfig?.floatHeight || 200;
                     const spaceFitBottom = isFloat ? floatH : 25;
                     setSpaceInfo({ doorSetupMode: 'space-fit', frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    // 개별 모듈의 갭도 모두 리셋 + 리렌더 트리거
-                    placedModules.filter(m => m.hasDoor).forEach(m => {
-                      updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    });
+                    // 배치 업데이트: notifyR3F 중간 상태 방지
+                    setPlacedModules(prev => prev.map(m =>
+                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
+                    ));
+                    setTimeout(() => {
+                      const latest = useFurnitureStore.getState().placedModules;
+                      useFurnitureStore.setState({ placedModules: [...latest] });
+                    }, 50);
                   }}
                 >
                   천장바닥기준
@@ -4614,88 +4586,58 @@ const Configurator: React.FC = () => {
               </div>
             </div>
 
-            {doorGapMode === 'global' ? (
-              /* 전체 모드: 글로벌 상단/하단 갭 */
-              <div style={{ marginTop: '8px' }}>
-                <div className={doorSettingStyles.doorGapContainer}>
-                  <div className={doorSettingStyles.doorGapField}>
-                    <label className={doorSettingStyles.doorGapLabel}>상단 ↓</label>
-                    <div className={doorSettingStyles.inputWithUnit}>
-                      <input type="text" inputMode="numeric" value={doorTopGapInput}
-                        onChange={(e) => handleDoorGapChange('doorTopGap', e.target.value)}
-                        onBlur={() => handleDoorGapBlur('doorTopGap')}
-                        className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                        placeholder="5" style={{ color: '#000', backgroundColor: '#fff' }} />
-                      <span className={doorSettingStyles.unit}>mm</span>
-                    </div>
-                  </div>
-                  <div className={doorSettingStyles.doorGapField}>
-                    <label className={doorSettingStyles.doorGapLabel}>하단 ↑</label>
-                    <div className={doorSettingStyles.inputWithUnit}>
-                      <input type="text" inputMode="numeric" value={doorBottomGapInput}
-                        onChange={(e) => handleDoorGapChange('doorBottomGap', e.target.value)}
-                        onBlur={() => handleDoorGapBlur('doorBottomGap')}
-                        className={`${doorSettingStyles.depthInput} furniture-depth-input`}
-                        placeholder="25" style={{ color: '#000', backgroundColor: '#fff' }} />
-                      <span className={doorSettingStyles.unit}>mm</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */
-              <div style={{ marginTop: '8px', overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                  {/* 헤더: 도어 1, 도어 2, ... */}
-                  <thead>
-                    <tr>
-                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'left', whiteSpace: 'nowrap' }}></th>
-                      {doorNumberMap.map((info, idx) => (
-                        <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                          {info.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* 상단갭 행 */}
-                    <tr>
-                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
-                      {doorFurnitureList.map((mod) => (
-                        <td key={`top-${mod.id}-${mod.doorTopGap}-${doorSetupMode}`} style={{ padding: '3px 4px' }}>
-                          <input type="text" inputMode="numeric"
-                            defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5)}
-                            onBlur={(e) => {
-                              const v = parseFloat(e.target.value);
-                              if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
-                            }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                            placeholder="1.5"
-                            style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
-                        </td>
-                      ))}
-                    </tr>
-                    {/* 하단갭 행 */}
-                    <tr>
-                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
-                      {doorFurnitureList.map((mod) => (
-                        <td key={`bot-${mod.id}-${mod.doorBottomGap}-${doorSetupMode}`} style={{ padding: '3px 4px' }}>
-                          <input type="text" inputMode="numeric"
-                            defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? defaultBottomGap)}
-                            onBlur={(e) => {
-                              const v = parseFloat(e.target.value);
-                              if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
-                            }}
-                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                            placeholder="25"
-                            style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+            {/* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */}
+            <div style={{ marginTop: '8px', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                {/* 헤더: 도어 1, 도어 2, ... */}
+                <thead>
+                  <tr>
+                    <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'left', whiteSpace: 'nowrap' }}></th>
+                    {doorNumberMap.map((info, idx) => (
+                      <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                        {info.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* 상단갭 행 */}
+                  <tr>
+                    <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+                    {doorFurnitureList.map((mod) => (
+                      <td key={`top-${mod.id}-${mod.doorTopGap}-${doorSetupMode}`} style={{ padding: '3px 4px' }}>
+                        <input type="text" inputMode="numeric"
+                          defaultValue={String(mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5)}
+                          onBlur={(e) => {
+                            const v = parseFloat(e.target.value);
+                            if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorTopGap', e.target.value);
+                          }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          placeholder="1.5"
+                          style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
+                      </td>
+                    ))}
+                  </tr>
+                  {/* 하단갭 행 */}
+                  <tr>
+                    <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+                    {doorFurnitureList.map((mod) => (
+                      <td key={`bot-${mod.id}-${mod.doorBottomGap}-${doorSetupMode}`} style={{ padding: '3px 4px' }}>
+                        <input type="text" inputMode="numeric"
+                          defaultValue={String(mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? defaultBottomGap)}
+                          onBlur={(e) => {
+                            const v = parseFloat(e.target.value);
+                            if (!isNaN(v)) handleIndividualDoorGapChange(mod.id, 'doorBottomGap', e.target.value);
+                          }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          placeholder="25"
+                          style={{ width: '100%', padding: '8px 4px', border: '1px solid var(--theme-border, #ddd)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', color: '#000', backgroundColor: '#fff', outline: 'none' }} />
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
           </div>
         )}
