@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { FileText, MoreHorizontal, Sparkles, Search, Trash2 } from 'lucide-react';
 import { LuFileBox } from 'react-icons/lu';
-import { IoBanOutline } from 'react-icons/io5';
+import { IoBanOutline, IoFileTrayStacked } from 'react-icons/io5';
 import { FcFolder } from 'react-icons/fc';
-import { RxDashboard } from 'react-icons/rx';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState, SelectItemOptions } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
@@ -138,7 +137,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
 
   const getItemIcon = (item: ExplorerItem, size: number, isCard?: boolean) => {
     if (item.type === 'project') {
-      return <RxDashboard size={size} className={styles.itemIconProject} />;
+      return <IoFileTrayStacked size={size} className={styles.itemIconProject} />;
     }
     if (item.type === 'folder') {
       return <FcFolder size={size} className={styles.itemIconFolder} />;
@@ -255,7 +254,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           </>
         ) : (
           <>
-            <RxDashboard size={40} className={styles.emptyIcon} />
+            <IoFileTrayStacked size={40} className={styles.emptyIcon} />
             <span>항목이 없습니다</span>
           </>
         )}
