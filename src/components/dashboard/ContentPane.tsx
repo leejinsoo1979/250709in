@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FileText, MoreHorizontal, Sparkles, Search } from 'lucide-react';
+import { FileText, MoreHorizontal, Sparkles, Search, Trash2 } from 'lucide-react';
 import { LuFileBox } from 'react-icons/lu';
 import { IoBanOutline } from 'react-icons/io5';
 import { FcFolder } from 'react-icons/fc';
@@ -34,6 +34,7 @@ interface ContentPaneProps {
   isNewUser?: boolean;
   userName?: string;
   onCreateProject?: () => void;
+  activeMenu?: string;
 }
 
 const ContentPane: React.FC<ContentPaneProps> = ({
@@ -56,6 +57,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   isNewUser,
   userName,
   onCreateProject,
+  activeMenu,
 }) => {
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
 
@@ -246,8 +248,17 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     // 일반 빈 상태
     return (
       <div className={styles.emptyState}>
-        <RxDashboard size={40} className={styles.emptyIcon} />
-        <span>항목이 없습니다</span>
+        {activeMenu === 'trash' ? (
+          <>
+            <Trash2 size={40} className={styles.emptyIcon} />
+            <span>휴지통이 비어있습니다</span>
+          </>
+        ) : (
+          <>
+            <RxDashboard size={40} className={styles.emptyIcon} />
+            <span>항목이 없습니다</span>
+          </>
+        )}
       </div>
     );
   }

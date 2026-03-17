@@ -786,6 +786,7 @@ const SimpleDashboard: React.FC = () => {
                 isNewUser={!data.isLoading && data.projects.length === 0 && Object.values(data.projectDesignFiles).flat().length === 0}
                 userName={user?.displayName || ''}
                 onCreateProject={() => setIsCreateModalOpen(true)}
+                activeMenu={nav.activeMenu}
               />
 
               {/* 마키 선택 오버레이 */}
