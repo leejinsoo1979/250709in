@@ -425,15 +425,23 @@ const Configurator: React.FC = () => {
   // isReadOnly는 이제 useMemo로 계산되므로 이 useEffect 제거
 
   // 읽기 전용 모드에서 3D 정면 뷰로 초기화 (섬네일과 동일한 뷰)
+  // 편집 모드에서는 치수/컬럼 항상 ON 보장
   useEffect(() => {
+    const uiStore = useUIStore.getState();
     if (isReadOnly) {
-      const uiStore = useUIStore.getState();
       uiStore.setViewMode('3D');
       uiStore.setView2DDirection('front');
       uiStore.setCameraMode('perspective');
       uiStore.setShowDimensions(false);
       uiStore.setShowDimensionsText(false);
-// console.log('📸 읽기 전용 모드: 3D 정면 뷰로 초기화 (섬네일과 동일)');
+    } else {
+      // 편집 모드 진입 시 치수 항상 켜기
+      if (!uiStore.showDimensions) {
+        uiStore.setShowDimensions(true);
+      }
+      if (!uiStore.showDimensionsText) {
+        uiStore.setShowDimensionsText(true);
+      }
     }
   }, [isReadOnly]);
 
