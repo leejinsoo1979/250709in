@@ -2069,7 +2069,7 @@ const Room: React.FC<RoomProps> = ({
             <>
             {/* 왼쪽 세로 모서리 (좌측벽과 뒷벽 사이) */}
             <mesh
-              position={[-width / 2, panelStartY + leftWallH / 2, zOffset + panelDepth / 2]}
+              position={[-width / 2, panelStartY + leftWallH / 2, zOffset]}
               rotation={[0, 0, 0]}
               renderOrder={-1}
             >
@@ -2079,7 +2079,7 @@ const Room: React.FC<RoomProps> = ({
 
             {/* 오른쪽 세로 모서리 (우측벽과 뒷벽 사이) */}
             <mesh
-              position={[width / 2, panelStartY + rightWallH / 2, zOffset + panelDepth / 2]}
+              position={[width / 2, panelStartY + rightWallH / 2, zOffset]}
               rotation={[0, 0, 0]}
               renderOrder={-1}
             >
@@ -2104,7 +2104,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       _mainStartX + _mainW / 2,
                       panelStartY + height,
-                      zOffset + panelDepth / 2
+                      zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
                     renderOrder={-1}
@@ -2117,7 +2117,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
                       isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
-                      zOffset + panelDepth / 2
+                      zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
                     renderOrder={-1}
@@ -2127,7 +2127,7 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                   {/* 경계벽 수직 음영선 (뒷벽) */}
                   <mesh
-                    position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset + panelDepth / 2]}
+                    position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset]}
                     rotation={[0, 0, 0]}
                     renderOrder={-1}
                   >
@@ -2138,7 +2138,7 @@ const Room: React.FC<RoomProps> = ({
               );
             })() : (
               <mesh
-                position={[xOffset + width / 2, panelStartY + height, zOffset + panelDepth / 2]}
+                position={[xOffset + width / 2, panelStartY + height, zOffset]}
                 rotation={[0, 0, Math.PI / 2]}
                 renderOrder={-1}
               >
@@ -2149,7 +2149,7 @@ const Room: React.FC<RoomProps> = ({
 
             {/* 하단 가로 모서리 (바닥과 뒷벽 사이) */}
             <mesh
-              position={[xOffset + width / 2, panelStartY, zOffset + panelDepth / 2]}
+              position={[xOffset + width / 2, panelStartY, zOffset]}
               rotation={[0, 0, Math.PI / 2]}
               renderOrder={-1}
             >
@@ -2228,7 +2228,7 @@ const Room: React.FC<RoomProps> = ({
                 <>
                   {/* 단내림 경계벽 수직 음영선 (뒷벽) */}
                   <mesh
-                    position={[_scBx, panelStartY + height - _scDropH2 / 2, zOffset + panelDepth / 2]}
+                    position={[_scBx, panelStartY + height - _scDropH2 / 2, zOffset]}
                     rotation={[0, 0, 0]}
                     renderOrder={-1}
                   >
@@ -2242,7 +2242,7 @@ const Room: React.FC<RoomProps> = ({
                         ? (_scIsLeft ? (-width / 2 + _dcW + _scW / 2) : (width / 2 - _dcW - _scW / 2))
                         : (_scIsLeft ? (-width / 2 + _scW / 2) : (width / 2 - _scW / 2)),
                       panelStartY + height - _scDropH2,
-                      zOffset + panelDepth / 2
+                      zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
                     renderOrder={-1}
