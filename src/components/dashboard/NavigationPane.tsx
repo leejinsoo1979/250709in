@@ -198,9 +198,9 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           ))}
         </div>
 
-        <hr className={styles.divider} />
+        {/* 프로젝트 트리 — 숨김 처리 */}
+        {false && <><hr className={styles.divider} />
 
-        {/* 프로젝트 트리 — 폴더까지만 표시 */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>
             {quickAccessItems.find(item => item.key === activeMenu)?.label || '프로젝트'}
@@ -286,7 +286,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
               </div>
             );
           })}
-        </div>
+        </div></>}
       </div>
 
       {/* 리사이즈 핸들 */}
