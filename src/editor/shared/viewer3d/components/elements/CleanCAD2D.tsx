@@ -1812,9 +1812,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       : (hasRightWall ? rightGapMm : 0);
                     mainPlacementWidth = Math.round((mainWidth - mainLeftGap - mainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 이격 차감 없음 (경계면 이격은 인접 구간에서 차감)
+                    // 단내림 구간: 양쪽 경계 이격을 흡수하여 확장
+                    // 낮은 가구는 벽이격 간섭 없음 → 인접 가구와 딱 붙일 수 있도록
                     if (hasSC) {
-                      scPlacementWidth = scWidth;
+                      scPlacementWidth = Math.round((scWidth + middleGapMm + middleGapMm) * 10) / 10;
                     }
 
                     // 커튼박스 구간 이격
