@@ -6,6 +6,7 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { getProject } from '@/firebase/projects';
+import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import styles from './style.module.css';
 
 // onClose prop 타입 추가
@@ -64,6 +65,36 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
     }
   };
 
+  // 유저 디폴트 공간설정 적용
+  const applyUserDefaults = async () => {
+    try {
+      const defaults = await getSpaceConfigDefaults();
+      if (defaults) {
+        const current = useSpaceConfigStore.getState().spaceInfo;
+        setSpaceInfo({
+          ...current,
+          width: defaults.width ?? current.width,
+          height: defaults.height ?? current.height,
+          gapConfig: {
+            left: defaults.gapLeft ?? current.gapConfig?.left ?? 1.5,
+            right: defaults.gapRight ?? current.gapConfig?.right ?? 1.5,
+          },
+          frameSize: {
+            ...current.frameSize!,
+            top: defaults.frameTop ?? current.frameSize?.top ?? 30,
+          },
+          baseConfig: {
+            ...current.baseConfig!,
+            height: defaults.baseHeight ?? current.baseConfig?.height ?? 65,
+          },
+        });
+        console.log('✅ 유저 공간설정 기본값 적용:', defaults);
+      }
+    } catch (error) {
+      console.error('유저 공간설정 기본값 로드 실패:', error);
+    }
+  };
+
   // Step1 컴포넌트 마운트 시 처리
   useEffect(() => {
     if (initialStep === 2) {
@@ -71,12 +102,14 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
       console.log('🧹 Step1 마운트: Step2부터 시작 - spaceConfig/furniture 초기화');
       resetSpaceConfig();
       clearAllModules();
+      applyUserDefaults();
     } else {
       // Step1부터 시작 - 전체 초기화
       console.log('🧹 Step1 마운트: 새 디자인 생성을 위해 store 초기화');
       resetProject();
       resetSpaceConfig();
       clearAllModules();
+      applyUserDefaults();
       console.log('📝 Step1: 디자인 제목 입력 필드 초기화 (빈 상태)');
     }
   }, []);
