@@ -751,6 +751,64 @@ export const deductCredits = async (amount: number = 20): Promise<{
   }
 };
 
+// 공간설정 기본값 타입
+export type SpaceConfigDefaults = {
+  width?: number;
+  height?: number;
+  gapLeft?: number;
+  gapRight?: number;
+  frameTop?: number;
+  baseHeight?: number;
+};
+
+// 공간설정 기본값 조회
+export const getSpaceConfigDefaults = async (): Promise<SpaceConfigDefaults | null> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) return null;
+
+    const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
+    const profileSnap = await getDoc(profileRef);
+
+    if (!profileSnap.exists()) return null;
+
+    const data = profileSnap.data() as UserProfile;
+    return data.spaceConfigDefaults || null;
+  } catch (error) {
+    console.error('공간설정 기본값 조회 에러:', error);
+    return null;
+  }
+};
+
+// 공간설정 기본값 저장
+export const updateSpaceConfigDefaults = async (
+  defaults: SpaceConfigDefaults
+): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { error: '로그인이 필요합니다.' };
+    }
+
+    const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
+
+    const profileSnap = await getDoc(profileRef);
+    if (!profileSnap.exists()) {
+      return await createOrUpdateUserProfile({ spaceConfigDefaults: defaults } as any);
+    }
+
+    await updateDoc(profileRef, {
+      spaceConfigDefaults: defaults,
+      updatedAt: serverTimestamp()
+    });
+
+    return { error: null };
+  } catch (error) {
+    console.error('공간설정 기본값 저장 에러:', error);
+    return { error: '공간설정 기본값 저장 중 오류가 발생했습니다.' };
+  }
+};
+
 // 크레딧 추가 (관리자용 또는 결제 후)
 export const addCredits = async (amount: number): Promise<{
   success: boolean;
