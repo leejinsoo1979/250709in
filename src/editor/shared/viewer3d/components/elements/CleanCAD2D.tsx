@@ -1843,10 +1843,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
                     // 단내림 구간: 외벽쪽(벽 or 커튼박스) gap만 차감, 메인쪽은 이격 없음
+                    let scOuterGap = 0;
                     if (hasSC) {
                       // 단내림의 외벽쪽(벽 or 커튼박스) 인접 결정
                       const sameSide = hasDC && dcPosition === scPosition;
-                      let scOuterGap: number;
                       if (sameSide) {
                         scOuterGap = middleGapMm; // 커튼박스↔단내림 경계
                       } else {
@@ -1865,6 +1865,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ? (hasRightWall ? rightGapMm : 0)
                       : middleGapMm;
                     dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
+
+                    // 3단 치수선용 실배치 X좌표 계산 (이격 반영)
+                    // 단내림 실배치 영역
+                    var scPlacStartX = scStartX;
+                    var scPlacEndX = scEndX;
+                    if (hasSC) {
+                      if (scOnLeft) {
+                        // 좌측 단내림: 외벽쪽(좌) gap 적용
+                        scPlacStartX = scStartX + mmToThreeUnits(scOuterGap);
+                      } else {
+                        // 우측 단내림: 외벽쪽(우) gap 적용
+                        scPlacEndX = scEndX - mmToThreeUnits(scOuterGap);
+                      }
+                    }
+                    // 메인 실배치 영역
+                    var mainPlacStartX = mainStartX + mmToThreeUnits(effectiveMainLeftGap);
+                    var mainPlacEndX = mainEndX - mmToThreeUnits(effectiveMainRightGap);
+                    // 커튼박스 실배치 영역
+                    var dcPlacStartX = droppedStartX + mmToThreeUnits(dcLeftGap);
+                    var dcPlacEndX = droppedEndX - mmToThreeUnits(dcRightGap);
                   } else {
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     mainPlacementWidth = mainSlotTotalWidth;
@@ -1873,18 +1893,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   return (<>
                 {/* 메인 구간 실배치 치수선 */}
+                {(() => {
+                  const msx = isFreePlacement ? mainPlacStartX : mainStartX;
+                  const mex = isFreePlacement ? mainPlacEndX : mainEndX;
+                  return (<>
                 <Line
-                  points={[[mainStartX, slotTotalDimensionY, 0.002], [mainEndX, slotTotalDimensionY, 0.002]]}
+                  points={[[msx, slotTotalDimensionY, 0.002], [mex, slotTotalDimensionY, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([mainStartX, slotTotalDimensionY, 0.002], [mainStartX + 0.05, slotTotalDimensionY, 0.002])}
+                  points={createArrowHead([msx, slotTotalDimensionY, 0.002], [msx + 0.05, slotTotalDimensionY, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([mainEndX, slotTotalDimensionY, 0.002], [mainEndX - 0.05, slotTotalDimensionY, 0.002])}
+                  points={createArrowHead([mex, slotTotalDimensionY, 0.002], [mex - 0.05, slotTotalDimensionY, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
@@ -1892,7 +1916,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[(mainStartX + mainEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    position={[(msx + mex) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -1905,30 +1929,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 메인 구간 실배치 연장선 */}
                 <Line
-                  points={[[mainStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mainStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[msx, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [msx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[mainEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mainEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[mex, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
+                  </>);
+                })()}
 
                 {/* 단내림(stepCeiling) 구간 실배치 치수선 — 자유배치 전용 */}
                 {hasSC && scPlacementWidth !== null && (<>
                 <Line
-                  points={[[scStartX, slotTotalDimensionY, 0.002], [scEndX, slotTotalDimensionY, 0.002]]}
+                  points={[[scPlacStartX, slotTotalDimensionY, 0.002], [scPlacEndX, slotTotalDimensionY, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([scStartX, slotTotalDimensionY, 0.002], [scStartX + 0.05, slotTotalDimensionY, 0.002])}
+                  points={createArrowHead([scPlacStartX, slotTotalDimensionY, 0.002], [scPlacStartX + 0.05, slotTotalDimensionY, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([scEndX, slotTotalDimensionY, 0.002], [scEndX - 0.05, slotTotalDimensionY, 0.002])}
+                  points={createArrowHead([scPlacEndX, slotTotalDimensionY, 0.002], [scPlacEndX - 0.05, slotTotalDimensionY, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
@@ -1936,7 +1962,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[(scStartX + scEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    position={[(scPlacStartX + scPlacEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -1949,30 +1975,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 단내림 구간 실배치 연장선 */}
                 <Line
-                  points={[[scStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[scPlacStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scPlacStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[scEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[scPlacEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scPlacEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 </>)}
 
                 {/* 커튼박스 구간 실배치 치수선 */}
+                {(() => {
+                  const dsx = isFreePlacement ? dcPlacStartX : droppedStartX;
+                  const dex = isFreePlacement ? dcPlacEndX : droppedEndX;
+                  return (<>
                 <Line
-                  points={[[droppedStartX, slotTotalDimensionY, 0.002], [droppedEndX, slotTotalDimensionY, 0.002]]}
+                  points={[[dsx, slotTotalDimensionY, 0.002], [dex, slotTotalDimensionY, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([droppedStartX, slotTotalDimensionY, 0.002], [droppedStartX + 0.05, slotTotalDimensionY, 0.002])}
+                  points={createArrowHead([dsx, slotTotalDimensionY, 0.002], [dsx + 0.05, slotTotalDimensionY, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([droppedEndX, slotTotalDimensionY, 0.002], [droppedEndX - 0.05, slotTotalDimensionY, 0.002])}
+                  points={createArrowHead([dex, slotTotalDimensionY, 0.002], [dex - 0.05, slotTotalDimensionY, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
@@ -1980,7 +2010,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[(droppedStartX + droppedEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    position={[(dsx + dex) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -1993,15 +2023,105 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 커튼박스 구간 실배치 연장선 */}
                 <Line
-                  points={[[droppedStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [droppedStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[dsx, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [dsx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[droppedEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [droppedEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[dex, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [dex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
+                  </>);
+                })()}
+
+                {/* 3단 치수선: 실배치 구간 사이 이격 치수선 (자유배치 전용) */}
+                {isFreePlacement && (() => {
+                  // 인접 실배치 구간 사이의 gap 치수선 (slotTotalDimensionY 레벨)
+                  const placGaps: { leftX: number; rightX: number; gapMm: number }[] = [];
+
+                  // 구간 순서: 좌→우 정렬
+                  // 커튼박스, 단내림, 메인 구간의 실배치 영역 사이 gap
+                  if (hasDC && hasSC) {
+                    const sameSide = dcPosition === scPosition;
+                    if (sameSide) {
+                      if (dcOnLeft) {
+                        // [DC] gap [SC] [Main] — DC↔SC gap
+                        if (Math.abs(dcPlacEndX - scPlacStartX) > 0.0001) {
+                          placGaps.push({ leftX: dcPlacEndX, rightX: scPlacStartX, gapMm: Math.round(Math.abs(scPlacStartX - dcPlacEndX) / 0.01 * 10) / 10 });
+                        }
+                      } else {
+                        // [Main] [SC] gap [DC] — SC↔DC gap
+                        if (Math.abs(scPlacEndX - dcPlacStartX) > 0.0001) {
+                          placGaps.push({ leftX: scPlacEndX, rightX: dcPlacStartX, gapMm: Math.round(Math.abs(dcPlacStartX - scPlacEndX) / 0.01 * 10) / 10 });
+                        }
+                      }
+                    } else {
+                      // 반대 쪽: 커튼박스↔메인 gap, 메인↔단내림 gap (= 0)
+                      if (dcOnLeft) {
+                        // [DC] gap [Main] [SC] — DC↔Main gap
+                        if (Math.abs(dcPlacEndX - mainPlacStartX) > 0.0001) {
+                          placGaps.push({ leftX: dcPlacEndX, rightX: mainPlacStartX, gapMm: Math.round(Math.abs(mainPlacStartX - dcPlacEndX) / 0.01 * 10) / 10 });
+                        }
+                      } else {
+                        // [SC] [Main] gap [DC] — Main↔DC gap
+                        if (Math.abs(mainPlacEndX - dcPlacStartX) > 0.0001) {
+                          placGaps.push({ leftX: mainPlacEndX, rightX: dcPlacStartX, gapMm: Math.round(Math.abs(dcPlacStartX - mainPlacEndX) / 0.01 * 10) / 10 });
+                        }
+                      }
+                    }
+                  } else if (hasDC) {
+                    // 커튼박스만: DC↔Main gap
+                    if (dcOnLeft) {
+                      if (Math.abs(dcPlacEndX - mainPlacStartX) > 0.0001) {
+                        placGaps.push({ leftX: dcPlacEndX, rightX: mainPlacStartX, gapMm: Math.round(Math.abs(mainPlacStartX - dcPlacEndX) / 0.01 * 10) / 10 });
+                      }
+                    } else {
+                      if (Math.abs(mainPlacEndX - dcPlacStartX) > 0.0001) {
+                        placGaps.push({ leftX: mainPlacEndX, rightX: dcPlacStartX, gapMm: Math.round(Math.abs(dcPlacStartX - mainPlacEndX) / 0.01 * 10) / 10 });
+                      }
+                    }
+                  }
+
+                  if (placGaps.length === 0) return null;
+
+                  return (<>
+                    {placGaps.map((g, idx) => (
+                      <React.Fragment key={`plac-gap-${idx}`}>
+                        <Line
+                          points={[[g.leftX, slotTotalDimensionY, 0.003], [g.rightX, slotTotalDimensionY, 0.003]]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        <Line
+                          points={createArrowHead([g.leftX, slotTotalDimensionY, 0.003], [g.leftX + 0.01, slotTotalDimensionY, 0.003])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        <Line
+                          points={createArrowHead([g.rightX, slotTotalDimensionY, 0.003], [g.rightX - 0.01, slotTotalDimensionY, 0.003])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {(showDimensionsText || isStep2) && (
+                          <Text
+                            renderOrder={1000}
+                            depthTest={false}
+                            position={[(g.leftX + g.rightX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                            fontSize={baseFontSize * 0.85}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                          >
+                            {g.gapMm}
+                          </Text>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </>);
+                })()}
                   </>);
                 })()}
 
