@@ -24,6 +24,10 @@ interface FrameSizeControlsProps {
   onFrameSizeChange: (dimension: 'left' | 'right' | 'top', value: string) => void;
   onFrameSizeBlur: (dimension: 'left' | 'right' | 'top', value: string) => void;
   onKeyDown: (e: React.KeyboardEvent, dimension: 'left' | 'right' | 'top') => void;
+  // 단내림 경계 이격거리 관련
+  droppedCeilingPosition?: 'left' | 'right'; // 단내림 위치 (활성 시)
+  middleGap?: number; // 현재 경계 이격거리 값
+  onMiddleGapChange?: (value: number) => void; // 경계 이격거리 변경 핸들러
 }
 
 // 개별 숫자 입력 필드 컴포넌트
@@ -102,10 +106,18 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   frameConfig,
   onFrameSizeChange,
   onFrameSizeBlur,
-  onKeyDown
+  onKeyDown,
+  droppedCeilingPosition,
+  middleGap,
+  onMiddleGapChange,
 }) => {
   const END_PANEL_WIDTH = 18;
   const { setHighlightedFrame } = useUIStore();
+
+  // 단내림 경계쪽은 프레임 대신 이격거리 표시
+  // 우단내림 → 우측이 이격거리, 좌단내림 → 좌측이 이격거리
+  const isRightBoundaryGap = isSurround && droppedCeilingPosition === 'right';
+  const isLeftBoundaryGap = isSurround && droppedCeilingPosition === 'left';
 
   // frameConfig가 있으면 개별 프레임 기반, 없으면 기존 isSurround 로직
   const showLeft = frameConfig ? frameConfig.left : isSurround;
@@ -145,35 +157,91 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
       <span className={styles.label}>프레임 설정</span>
       <div className={styles.inputGroup} style={{ gridTemplateColumns: gridColumns }}>
         {showLeft && (
-          <div className={styles.inputWrapper}>
-            <label className={styles.inputLabel}>좌측 (40~100)</label>
-            <NumberInput
-              value={!hasLeftWall ? END_PANEL_WIDTH : getNumericValue(frameSize.left)}
-              onChange={(val) => onFrameSizeChange('left', val)}
-              onFocus={(e) => handleInputFocus(e, 'left')}
-              onBlur={handleInputBlur('left')}
-              onKeyDown={(e) => onKeyDown(e, 'left')}
-              className={`${styles.input} ${!hasLeftWall ? styles.inputError : ''}`}
-              placeholder="50"
-              disabled={!hasLeftWall}
-            />
-          </div>
+          isLeftBoundaryGap ? (
+            <div className={styles.inputWrapper}>
+              <label className={styles.inputLabel}>좌이격 (0~5)</label>
+              <NumberInput
+                value={middleGap ?? 1.5}
+                onChange={() => {}}
+                onFocus={(e) => { e.target.select(); }}
+                onBlur={(val) => {
+                  const num = parseFloat(val) || 0;
+                  const clamped = Math.max(0, Math.min(5, Math.round(num * 2) / 2));
+                  onMiddleGapChange?.(clamped);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const current = middleGap ?? 1.5;
+                    const newVal = e.key === 'ArrowUp'
+                      ? Math.min(5, Math.round((current + 0.5) * 10) / 10)
+                      : Math.max(0, Math.round((current - 0.5) * 10) / 10);
+                    onMiddleGapChange?.(newVal);
+                  }
+                }}
+                className={styles.input}
+                placeholder="1.5"
+              />
+            </div>
+          ) : (
+            <div className={styles.inputWrapper}>
+              <label className={styles.inputLabel}>좌측 (40~100)</label>
+              <NumberInput
+                value={!hasLeftWall ? END_PANEL_WIDTH : getNumericValue(frameSize.left)}
+                onChange={(val) => onFrameSizeChange('left', val)}
+                onFocus={(e) => handleInputFocus(e, 'left')}
+                onBlur={handleInputBlur('left')}
+                onKeyDown={(e) => onKeyDown(e, 'left')}
+                className={`${styles.input} ${!hasLeftWall ? styles.inputError : ''}`}
+                placeholder="50"
+                disabled={!hasLeftWall}
+              />
+            </div>
+          )
         )}
 
         {showRight && (
-          <div className={styles.inputWrapper}>
-            <label className={styles.inputLabel}>우측 (40~100)</label>
-            <NumberInput
-              value={!hasRightWall ? END_PANEL_WIDTH : getNumericValue(frameSize.right)}
-              onChange={(val) => onFrameSizeChange('right', val)}
-              onFocus={(e) => handleInputFocus(e, 'right')}
-              onBlur={handleInputBlur('right')}
-              onKeyDown={(e) => onKeyDown(e, 'right')}
-              className={`${styles.input} ${!hasRightWall ? styles.inputError : ''}`}
-              placeholder="50"
-              disabled={!hasRightWall}
-            />
-          </div>
+          isRightBoundaryGap ? (
+            <div className={styles.inputWrapper}>
+              <label className={styles.inputLabel}>우이격 (0~5)</label>
+              <NumberInput
+                value={middleGap ?? 1.5}
+                onChange={() => {}}
+                onFocus={(e) => { e.target.select(); }}
+                onBlur={(val) => {
+                  const num = parseFloat(val) || 0;
+                  const clamped = Math.max(0, Math.min(5, Math.round(num * 2) / 2));
+                  onMiddleGapChange?.(clamped);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const current = middleGap ?? 1.5;
+                    const newVal = e.key === 'ArrowUp'
+                      ? Math.min(5, Math.round((current + 0.5) * 10) / 10)
+                      : Math.max(0, Math.round((current - 0.5) * 10) / 10);
+                    onMiddleGapChange?.(newVal);
+                  }
+                }}
+                className={styles.input}
+                placeholder="1.5"
+              />
+            </div>
+          ) : (
+            <div className={styles.inputWrapper}>
+              <label className={styles.inputLabel}>우측 (40~100)</label>
+              <NumberInput
+                value={!hasRightWall ? END_PANEL_WIDTH : getNumericValue(frameSize.right)}
+                onChange={(val) => onFrameSizeChange('right', val)}
+                onFocus={(e) => handleInputFocus(e, 'right')}
+                onBlur={handleInputBlur('right')}
+                onKeyDown={(e) => onKeyDown(e, 'right')}
+                className={`${styles.input} ${!hasRightWall ? styles.inputError : ''}`}
+                placeholder="50"
+                disabled={!hasRightWall}
+              />
+            </div>
+          )
         )}
 
         {showTop && (

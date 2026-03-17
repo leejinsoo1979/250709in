@@ -270,6 +270,18 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         onFrameSizeChange={handleFrameSizeChange}
         onFrameSizeBlur={handleFrameSizeBlur}
         onKeyDown={handleKeyDown}
+        droppedCeilingPosition={spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.position : undefined}
+        middleGap={spaceInfo.gapConfig?.middle ?? 1.5}
+        onMiddleGapChange={(value) => {
+          onUpdate({
+            gapConfig: {
+              ...spaceInfo.gapConfig,
+              left: spaceInfo.gapConfig?.left ?? 1.5,
+              right: spaceInfo.gapConfig?.right ?? 1.5,
+              middle: value,
+            },
+          });
+        }}
       />
     </div>
   );
