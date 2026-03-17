@@ -110,11 +110,14 @@ const FreePlacementDropZone: React.FC = () => {
   }, [editingFreeModuleId]);
 
   // 2차 클릭 이동 모드 진입 / 3차 클릭 배치 확정 이벤트 리스너
+  const moveModeRef = useRef(false);
+  moveModeRef.current = isMoveMode;
+
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.moduleId && detail.moduleId === editingFreeModuleId) {
-        if (isMoveMode) {
+        if (moveModeRef.current) {
           // 이미 이동 모드 → 배치 확정
           window.dispatchEvent(new CustomEvent('furniture-drag-end'));
           setIsDraggingPlaced(false);
@@ -129,7 +132,7 @@ const FreePlacementDropZone: React.FC = () => {
     };
     window.addEventListener('furniture-enter-move-mode', handler);
     return () => window.removeEventListener('furniture-enter-move-mode', handler);
-  }, [editingFreeModuleId, isMoveMode]);
+  }, [editingFreeModuleId]);
 
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);

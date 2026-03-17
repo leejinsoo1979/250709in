@@ -2713,6 +2713,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const handlePointerUp = () => {
     if (columnCResize.isResizing) {
       columnCResize.handlePointerUp();
+    } else if (isEditMode) {
+      // 편집/이동 모드에서 pointerUp → 이동 모드 진입 또는 배치 확정
+      (window as any).__furnitureMoveHandled = true;
+      window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
+        detail: { moduleId: placedModule.id },
+      }));
     } else {
       onPointerUp();
     }
@@ -2839,6 +2845,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         onClick={(e) => {
           // 가구 클릭 → 허공 클릭 deselect 방지 플래그 설정
           (window as any).__r3fClickHandled = true;
+          // 편집/이동 모드에서 pointerUp이 이미 처리한 경우 스킵
+          if ((window as any).__furnitureMoveHandled) {
+            (window as any).__furnitureMoveHandled = false;
+            e.stopPropagation();
+            return;
+          }
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
@@ -2850,12 +2862,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             e.stopPropagation();
             const updateModule = useFurnitureStore.getState().updateModule;
             updateModule(placedModule.id, { isLocked: false });
-          } else if (isEditMode) {
-            // 편집 모드 중 가구 재클릭 → 이동 모드 전환
-            e.stopPropagation();
-            window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
-              detail: { moduleId: placedModule.id },
-            }));
           } else {
             // 원클릭으로 편집 팝업 열기 (고스트 활성화)
             onDoubleClick(e, placedModule.id);
