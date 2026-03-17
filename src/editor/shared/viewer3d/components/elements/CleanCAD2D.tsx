@@ -2069,39 +2069,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
                   const boundaryGapY = slotDimensionY;
 
-                  // 경계면 목록 생성
-                  // 이격(middleGap)은 외벽~가구 배치 영역 경계에만 존재
-                  // 단내림↔메인 사이에는 이격 없음 (하나의 연속 배치 공간)
+                  // 경계면 이격 목록 생성
+                  // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
+                  // - 커튼박스/단내림 인접 → middleGap
+                  // - 벽 인접 → wallGap (좌/우이격 치수선에서 별도 표시)
                   const boundaries: { leftX: number; rightX: number }[] = [];
 
                   if (hasDC && hasSC) {
-                    // 커튼박스 + 단내림 모두 있는 경우
                     const sameSide = dcPosition === scPosition;
                     if (sameSide) {
-                      // 같은 쪽: 커튼박스↔단내림 경계만 (단내림↔메인은 이격 없음)
+                      // 같은 쪽: 커튼박스↔단내림 경계 (middleGap)
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: scStartX }); // 커튼박스↔단내림
+                        boundaries.push({ leftX: droppedEndX, rightX: scStartX });
                       } else {
-                        boundaries.push({ leftX: scEndX, rightX: droppedStartX }); // 단내림↔커튼박스
+                        boundaries.push({ leftX: scEndX, rightX: droppedStartX });
                       }
                     } else {
-                      // 반대 쪽: 커튼박스↔메인 경계 + 단내림↔메인 경계는 이격 없으므로
-                      // 메인↔커튼박스 경계만
-                      if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX }); // 커튼박스↔메인
+                      // 반대 쪽: 양쪽 모두 middleGap 경계
+                      // 단내림 쪽 (벽↔배치영역 경계에 middleGap 적용)
+                      if (scOnLeft) {
+                        boundaries.push({ leftX: leftOffset, rightX: scStartX }); // 벽↔단내림
                       } else {
-                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX }); // 메인↔커튼박스
+                        boundaries.push({ leftX: scEndX, rightX: leftOffset + mmToThreeUnits(spaceInfo.width) }); // 단내림↔벽
+                      }
+                      // 커튼박스 쪽 (배치영역↔커튼박스 경계에 middleGap 적용)
+                      if (dcOnLeft) {
+                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
+                      } else {
+                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                       }
                     }
                   } else if (hasDC) {
-                    // 커튼박스만
+                    // 커튼박스만: 배치영역↔커튼박스 경계
                     if (dcOnLeft) {
                       boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
                     } else {
                       boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                     }
+                  } else if (hasSC) {
+                    // 단내림만: 벽↔배치영역 경계 (middleGap 적용)
+                    if (scOnLeft) {
+                      boundaries.push({ leftX: leftOffset, rightX: scStartX });
+                    } else {
+                      boundaries.push({ leftX: scEndX, rightX: leftOffset + mmToThreeUnits(spaceInfo.width) });
+                    }
                   }
-                  // 단내림만 있고 커튼박스 없으면 이격 경계면 없음 (벽 이격은 좌/우이격에서 처리)
 
                   return (<>
                     {boundaries.map((b, idx) => (
