@@ -351,3 +351,264 @@ export function calcResizedPositionX(
 
   return clampedMm * 0.01;
 }
+
+// ─── 구간별 최적 가구 너비 자동 계산 유틸 ───
+
+export type ZoneType = 'main' | 'stepCeiling' | 'curtainBox';
+
+export interface ZonePlacementInfo {
+  zone: ZoneType;
+  placementStartXmm: number;  // 배치 시작점 (이격 반영, mm)
+  placementEndXmm: number;    // 배치 끝점
+  placementWidth: number;     // 배치가능 너비
+}
+
+/**
+ * 각 구간(메인/단내림/커튼박스)의 배치가능 범위(mm) 계산.
+ * CleanCAD2D.tsx 3단 치수선 로직을 재사용 가능한 형태로 추출.
+ */
+export function getZonePlacementBounds(spaceInfo: SpaceInfo): ZonePlacementInfo[] {
+  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+  if (!isFreePlacement) return [];
+
+  const totalWidth = spaceInfo.width || 2400;
+  const halfTotal = totalWidth / 2;
+
+  const hasDC = !!spaceInfo.droppedCeiling?.enabled;
+  const hasSC = !!spaceInfo.stepCeiling?.enabled;
+  const dcWidth = hasDC ? (spaceInfo.droppedCeiling!.width || 0) : 0;
+  const scWidth = hasSC ? (spaceInfo.stepCeiling!.width || 0) : 0;
+  const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
+  const scPosition = spaceInfo.stepCeiling?.position || 'right';
+
+  const mainWidth = totalWidth - dcWidth - scWidth;
+
+  const dcOnLeft = hasDC && dcPosition === 'left';
+  const dcOnRight = hasDC && dcPosition === 'right';
+  const scOnLeft = hasSC && scPosition === 'left';
+  const scOnRight = hasSC && scPosition === 'right';
+
+  // 구간 원점 X (mm, 중심=0 기준)
+  const leftStackWidth = (dcOnLeft ? dcWidth : 0) + (scOnLeft ? scWidth : 0);
+  const rightStackWidth = (dcOnRight ? dcWidth : 0) + (scOnRight ? scWidth : 0);
+
+  const mainStartXmm = -halfTotal + leftStackWidth;
+  const mainEndXmm = halfTotal - rightStackWidth;
+
+  // gap 설정
+  const leftGapMm = spaceInfo.gapConfig?.left ?? 1.5;
+  const rightGapMm = spaceInfo.gapConfig?.right ?? 1.5;
+  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
+  const middle2GapMm = (hasSC && hasDC)
+    ? (spaceInfo.gapConfig?.middle2 ?? middleGapMm)
+    : middleGapMm;
+
+  const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+  const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+  const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
+  const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
+
+  const zones: ZonePlacementInfo[] = [];
+
+  // ── 메인 구간 ──
+  let mainLeftDelta = 0;
+  if (scOnLeft) {
+    mainLeftDelta = -middleGapMm;
+  } else if (dcOnLeft) {
+    mainLeftDelta = middleGapMm;
+  } else {
+    mainLeftDelta = -(hasLeftWall ? leftGapMm : 0);
+  }
+
+  let mainRightDelta = 0;
+  if (scOnRight) {
+    mainRightDelta = -middleGapMm;
+  } else if (dcOnRight) {
+    mainRightDelta = middleGapMm;
+  } else {
+    mainRightDelta = -(hasRightWall ? rightGapMm : 0);
+  }
+
+  const mainPlacStart = mainStartXmm - mainLeftDelta;
+  const mainPlacEnd = mainEndXmm + mainRightDelta;
+  const mainPlacWidth = Math.round((mainWidth + mainLeftDelta + mainRightDelta) * 10) / 10;
+
+  zones.push({
+    zone: 'main',
+    placementStartXmm: mainPlacStart,
+    placementEndXmm: mainPlacEnd,
+    placementWidth: mainPlacWidth,
+  });
+
+  // ── 단내림(stepCeiling) 구간 ──
+  if (hasSC) {
+    let scStartXmm: number;
+    let scEndXmm: number;
+    if (scOnLeft) {
+      const scLeftEdge = dcOnLeft ? dcWidth : 0;
+      scStartXmm = -halfTotal + scLeftEdge;
+      scEndXmm = -halfTotal + scLeftEdge + scWidth;
+    } else {
+      scStartXmm = mainEndXmm;
+      scEndXmm = mainEndXmm + scWidth;
+    }
+
+    const scInnerGap = middleGapMm;
+    const sameSide = hasDC && dcPosition === scPosition;
+
+    let scPlacStart: number;
+    let scPlacEnd: number;
+    let scPlacWidth: number;
+
+    if (scOnLeft) {
+      scPlacEnd = scEndXmm + scInnerGap;
+      if (sameSide) {
+        const scOuterGap = middle2GapMm;
+        scPlacStart = scStartXmm - scOuterGap;
+        scPlacWidth = Math.round((scWidth + scInnerGap + scOuterGap) * 10) / 10;
+      } else {
+        const scWallGap = hasLeftWall ? leftGapMm : 0;
+        scPlacStart = scStartXmm + scWallGap;
+        scPlacWidth = Math.round((scWidth + scInnerGap - scWallGap) * 10) / 10;
+      }
+    } else {
+      scPlacStart = scStartXmm - scInnerGap;
+      if (sameSide) {
+        const scOuterGap = middle2GapMm;
+        scPlacEnd = scEndXmm + scOuterGap;
+        scPlacWidth = Math.round((scWidth + scInnerGap + scOuterGap) * 10) / 10;
+      } else {
+        const scWallGap = hasRightWall ? rightGapMm : 0;
+        scPlacEnd = scEndXmm - scWallGap;
+        scPlacWidth = Math.round((scWidth + scInnerGap - scWallGap) * 10) / 10;
+      }
+    }
+
+    zones.push({
+      zone: 'stepCeiling',
+      placementStartXmm: scPlacStart,
+      placementEndXmm: scPlacEnd,
+      placementWidth: scPlacWidth,
+    });
+  }
+
+  // ── 커튼박스(droppedCeiling) 구간 ──
+  if (hasDC) {
+    let dcStartXmm: number;
+    let dcEndXmm: number;
+    if (dcOnLeft) {
+      dcStartXmm = -halfTotal;
+      dcEndXmm = -halfTotal + dcWidth;
+    } else {
+      dcStartXmm = halfTotal - dcWidth;
+      dcEndXmm = halfTotal;
+    }
+
+    const dcInnerGap = hasSC ? middle2GapMm : middleGapMm;
+    const dcLeftGap = dcOnLeft ? (hasLeftWall ? leftGapMm : 0) : dcInnerGap;
+    const dcRightGap = dcOnRight ? (hasRightWall ? rightGapMm : 0) : dcInnerGap;
+
+    const dcPlacStart = dcStartXmm + dcLeftGap;
+    const dcPlacEnd = dcEndXmm - dcRightGap;
+    const dcPlacWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
+
+    zones.push({
+      zone: 'curtainBox',
+      placementStartXmm: dcPlacStart,
+      placementEndXmm: dcPlacEnd,
+      placementWidth: dcPlacWidth,
+    });
+  }
+
+  return zones;
+}
+
+/**
+ * X좌표(mm)가 어느 구간에 속하는지 판별.
+ * 기하학적 경계 기준 — 단내림 > 커튼박스 > 메인 순으로 체크.
+ */
+export function detectHoverZoneType(xMm: number, spaceInfo: SpaceInfo): ZoneType {
+  const totalWidth = spaceInfo.width || 2400;
+  const halfTotal = totalWidth / 2;
+
+  const hasDC = !!spaceInfo.droppedCeiling?.enabled;
+  const hasSC = !!spaceInfo.stepCeiling?.enabled;
+  const dcWidth = hasDC ? (spaceInfo.droppedCeiling!.width || 0) : 0;
+  const scWidth = hasSC ? (spaceInfo.stepCeiling!.width || 0) : 0;
+  const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
+  const scPosition = spaceInfo.stepCeiling?.position || 'right';
+
+  // 단내림 구간 체크
+  if (hasSC) {
+    const dcOnLeft = hasDC && dcPosition === 'left';
+    const scOnLeft = scPosition === 'left';
+
+    let scStartX: number;
+    let scEndX: number;
+    if (scOnLeft) {
+      const scLeftEdge = dcOnLeft ? dcWidth : 0;
+      scStartX = -halfTotal + scLeftEdge;
+      scEndX = scStartX + scWidth;
+    } else {
+      const dcOnRight = hasDC && dcPosition === 'right';
+      const rightStackDC = dcOnRight ? dcWidth : 0;
+      scEndX = halfTotal - rightStackDC;
+      scStartX = scEndX - scWidth;
+    }
+    if (xMm >= scStartX && xMm <= scEndX) return 'stepCeiling';
+  }
+
+  // 커튼박스 구간 체크
+  if (hasDC) {
+    let dcStartX: number;
+    let dcEndX: number;
+    if (dcPosition === 'left') {
+      dcStartX = -halfTotal;
+      dcEndX = -halfTotal + dcWidth;
+    } else {
+      dcStartX = halfTotal - dcWidth;
+      dcEndX = halfTotal;
+    }
+    if (xMm >= dcStartX && xMm <= dcEndX) return 'curtainBox';
+  }
+
+  return 'main';
+}
+
+/**
+ * 구간 내 이미 배치된 가구를 제외한 잔여 너비 계산.
+ * 각 PlacedModule의 X bounds와 구간 범위의 겹침(overlap) 차감.
+ * isSurroundPanel은 제외.
+ */
+export function getZoneRemainingWidth(
+  zoneInfo: ZonePlacementInfo,
+  modules: PlacedModule[],
+  excludeId?: string
+): number {
+  let occupied = 0;
+  for (const mod of modules) {
+    if (excludeId && mod.id === excludeId) continue;
+    if (!mod.isFreePlacement) continue;
+    if (mod.isSurroundPanel) continue;
+
+    const bounds = getModuleBoundsX(mod);
+    // 구간 범위와의 겹침(overlap) 계산
+    const overlapStart = Math.max(bounds.left, zoneInfo.placementStartXmm);
+    const overlapEnd = Math.min(bounds.right, zoneInfo.placementEndXmm);
+    if (overlapEnd > overlapStart) {
+      occupied += overlapEnd - overlapStart;
+    }
+  }
+
+  return Math.max(0, zoneInfo.placementWidth - occupied);
+}
+
+/**
+ * 잔여 너비를 기반으로 최적 가구 너비 계산.
+ * isDual이면 전체, 싱글이면 절반.
+ * 최소 200mm 보장.
+ */
+export function calculateOptimalFurnitureWidth(remaining: number, isDual: boolean): number {
+  const raw = isDual ? remaining : remaining / 2;
+  return Math.max(200, Math.round(raw));
+}
