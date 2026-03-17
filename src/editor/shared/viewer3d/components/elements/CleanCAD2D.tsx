@@ -1848,11 +1848,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 양쪽 경계이격을 흡수하여 확장
-                    // 단내림은 낮은 가구 배치 → 양쪽 경계이격에 간섭 없음
+                    // 단내림 구간: 양쪽 경계이격 차감
                     let scOuterGap = 0;
+                    let scInnerGap = 0; // 메인↔단내림 경계이격
                     if (hasSC) {
-                      // 단내림의 외벽쪽(커튼박스쪽) 경계이격
+                      // 단내림의 외벽쪽(커튼박스쪽 또는 벽쪽) 경계이격
                       const sameSide = hasDC && dcPosition === scPosition;
                       if (sameSide) {
                         scOuterGap = middle2GapMm; // 단내림↔커튼박스 경계
@@ -1860,9 +1860,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      // 메인↔단내림 경계이격도 흡수
-                      const scMainBoundaryGap = middleGapMm; // 메인↔단내림 경계
-                      scPlacementWidth = Math.round((scWidth + scMainBoundaryGap + scOuterGap) * 10) / 10;
+                      // 메인↔단내림 경계: 단내림↔메인 사이 gap은 별도 치수선으로 표시되므로
+                      // getInternalSpaceBoundsX에서는 gap 없음으로 처리하지만,
+                      // 3행 치수에서는 경계 gap을 각 구간에서 차감하지 않음 (2행 경계 치수로 표시)
+                      scPlacementWidth = Math.round((scWidth - scOuterGap) * 10) / 10;
                     }
 
                     // 커튼박스 구간: 양쪽 gap 차감
