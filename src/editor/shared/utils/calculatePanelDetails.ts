@@ -544,7 +544,7 @@ export const calculatePanelDetails = (
     // 우측 섹션 높이 계산
     const rightFixedSections = rightSectionsForType5or6.filter(s => s.heightType === 'absolute');
     const rightTotalFixedHeight = rightFixedSections.reduce((sum, s) => sum + (s.height || 0), 0);
-    const rightRemainingHeight = height - rightTotalFixedHeight;
+    const rightRemainingHeight = (height - basicThickness * 2) - rightTotalFixedHeight; // 내경 기준 (3D DualType6.tsx와 동일)
 
     rightSectionsForType5or6.forEach((section, sectionIndex) => {
       let rSectionHeight;
@@ -627,8 +627,10 @@ export const calculatePanelDetails = (
       // 상부장: 캐비넷높이 - 상단5mm + 하단확장28mm (DoorModule.tsx와 동일)
       actualDoorH = height - 5 + 28;
     } else if (isLowerCab) {
-      // 하부장 바닥형: 캐비넷높이 + 하단확장40mm + 상부마감재18mm (DoorModule.tsx와 동일)
-      actualDoorH = height + 40 + 18;
+      // 하부장: 바닥형은 +40+18, 띄움배치(baseHeight>65)는 +0+18 (DoorModule.tsx: floatHeight>0 → bottomExtension=0)
+      const isFloating = (baseHeight ?? 65) > 65;
+      const bottomExt = isFloating ? 0 : 40;
+      actualDoorH = height + bottomExt + 18;
     } else {
       actualDoorH = height - doorGap * 2;
     }
@@ -885,7 +887,7 @@ export const calculatePanelDetails = (
                 // 마이다 (손잡이판) = drawerWidth (서랍 본체 폭)
                 // drawerAlign='top'인 경우 맨 아래 서랍 마이다에 +24(하단)+18(상단) 확장 (DrawerRenderer.tsx 동일)
                 const isTopAlign = (el as any).drawerAlign === 'top';
-                const isBottomDrawer = i === drawerCount - 1; // 마지막 서랍이 맨 아래
+                const isBottomDrawer = i === 0; // heights[0]이 맨 아래 서랍 (DrawerRenderer: index 0부터 아래→위 쌓음)
                 const maidaBottomExt = (isTopAlign && isBottomDrawer) ? 24 : 0;
                 const maidaTopExt = (isTopAlign && isBottomDrawer) ? 18 : 0;
                 const maidaHeight = dh + maidaBottomExt + maidaTopExt;
