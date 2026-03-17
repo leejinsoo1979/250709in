@@ -359,8 +359,8 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             {renderCheckbox(item)}
             <div className={styles.tileThumbnail}>
               {(item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                  <IoBanOutline size={20} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <FileText size={20} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />
                 </div>
               ) : item.thumbnail ? (
                 <img src={item.thumbnail} alt={item.name} />
@@ -439,16 +439,14 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                           </div>
                         ))}
                         {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
-                          <div key={`empty-${i}`} className={styles.saasProjectGridItemEmpty}>
-                            <LuFileBox size={24} strokeWidth={1} />
-                          </div>
+                          <div key={`empty-${i}`} className={styles.saasProjectGridItemEmpty} />
                         ))}
                       </div>
                     );
                   })()
                 ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
-                  <div className={styles.projectGridEmpty} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                    <IoBanOutline size={20} />
+                  <div className={styles.projectGridEmpty}>
+                    <FileText size={24} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />
                   </div>
                 ) : item.thumbnail ? (
                   <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
@@ -541,8 +539,8 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             ) : item.type === 'project' ? (
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
             ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: 'var(--theme-background-secondary, #1a1a1a)', color: 'var(--theme-text-muted, #666)' }}>
-                <IoBanOutline size={20} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                <FileText size={20} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />
               </div>
             ) : item.thumbnail ? (
               <img src={item.thumbnail} alt={item.name} />
