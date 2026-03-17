@@ -78,6 +78,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
         </div>
 
         <div className={styles.body}>
+          <p className={styles.notice}>이 부분에 설정된 기본값은 기존 프로젝트를 제외한 새 프로젝트에서 부터 적용됩니다.</p>
           <div className={styles.fieldGroup}>
             <span className={styles.groupTitle}>공간 크기</span>
             <div className={styles.fieldRow}>
