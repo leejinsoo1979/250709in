@@ -1812,12 +1812,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       : (hasRightWall ? rightGapMm : 0);
                     mainPlacementWidth = Math.round((mainWidth - mainLeftGap - mainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 물리적 구간 폭 그대로 (이격 차감 없음)
-                    // 단내림은 낮은 가구 배치 → 양쪽 경계이격에 간섭 없음
-                    // 단내림↔커튼박스 1.5mm 이격은 ColumnIndexer의 normal↔dropped 존 사이
-                    // middleGap으로 물리적으로 존재 (dropped 쪽에서 차감됨)
+                    // 단내림 구간: 양쪽 경계이격을 흡수하여 확장
+                    // 단내림은 낮은 가구 배치 → 양쪽 경계이격(메인↔단내림, 단내림↔커튼박스)에 간섭 없음
+                    // 따라서 실배치 = 구간폭 + 좌측경계이격 + 우측경계이격
                     if (hasSC) {
-                      scPlacementWidth = scWidth;
+                      const scLeftBoundaryGap = middleGapMm;  // 메인↔단내림 경계
+                      const scRightBoundaryGap = middleGapMm; // 단내림↔커튼박스 경계
+                      scPlacementWidth = Math.round((scWidth + scLeftBoundaryGap + scRightBoundaryGap) * 10) / 10;
                     }
 
                     // 커튼박스 구간 이격
