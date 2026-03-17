@@ -118,9 +118,7 @@ const FreePlacementDropZone: React.FC = () => {
     // 이동 모드 진입 (가구 위 2차 클릭)
     const enterHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      console.log('[FreePlacement] enter-move-mode event', { moduleId: detail?.moduleId, editingFreeModuleId, isMoveMode });
       if (detail?.moduleId && detail.moduleId === editingFreeModuleId && !isMoveMode) {
-        console.log('[FreePlacement] → entering move mode');
         setIsMoveMode(true);
         setMovingModuleId(detail.moduleId);
         setIsDraggingPlaced(true);
@@ -129,9 +127,7 @@ const FreePlacementDropZone: React.FC = () => {
     };
     // 배치 확정 (가구 위 3차 클릭)
     const confirmHandler = () => {
-      console.log('[FreePlacement] confirm-placement event', { isMoveMode });
       if (isMoveMode) {
-        console.log('[FreePlacement] → confirming placement');
         window.dispatchEvent(new CustomEvent('furniture-drag-end'));
         setIsDraggingPlaced(false);
         setIsMoveMode(false);

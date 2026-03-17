@@ -2711,7 +2711,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: ThreeEvent<PointerEvent>) => {
+    // 편집/이동 모드에서는 pointerUp도 차단
+    if (isEditMode || (window as any).__furnitureMoveMode) {
+      e?.stopPropagation();
+      return;
+    }
     if (columnCResize.isResizing) {
       columnCResize.handlePointerUp();
     } else {
@@ -2840,7 +2845,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         onClick={(e) => {
           // 이동 모드 중 가구 클릭 → 배치 확정
           if ((window as any).__furnitureMoveMode) {
-            console.log('[FurnitureItem] move mode → confirm placement');
             e.stopPropagation();
             (window as any).__r3fClickHandled = true;
             window.dispatchEvent(new CustomEvent('furniture-confirm-placement'));
@@ -2861,7 +2865,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             updateModule(placedModule.id, { isLocked: false });
           } else if (isEditMode) {
             // 편집 모드 중 가구 재클릭 → 이동 모드 진입
-            console.log('[FurnitureItem] isEditMode → dispatching enter-move-mode', placedModule.id);
             e.stopPropagation();
             (window as any).__r3fClickHandled = true;
             window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
