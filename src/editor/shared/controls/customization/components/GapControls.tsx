@@ -20,15 +20,20 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right ?? 1.5);
   const [middleGap, setMiddleGap] = useState(spaceInfo?.gapConfig?.middle ?? 1.5);
 
-  // 단내림 활성화 여부 및 위치
+  // 단내림/커튼박스 활성화 여부
   const hasDroppedCeiling = spaceInfo?.droppedCeiling?.enabled === true;
   const droppedPosition = spaceInfo?.droppedCeiling?.position; // 'left' | 'right'
+  const hasStepCeiling = spaceInfo?.stepCeiling?.enabled === true;
 
-  // 단내림 시: 경계쪽 이격은 middle로 매핑
+  // 경계가 여러 개인지 판별 (단내림+커튼박스 → 경계 2개)
+  // 경계 2개일 때는 middle을 별도 행으로 표시하고, 좌/우이격은 순수 벽이격만
+  const hasMultipleBoundaries = hasDroppedCeiling && hasStepCeiling;
+
+  // 단내림만 있을 때(커튼박스 없이): 경계쪽 이격은 middle로 매핑
   // 우단내림 → "우이격" = middle (메인-단내림 경계)
   // 좌단내림 → "좌이격" = middle (단내림-메인 경계)
-  const isRightBoundaryMiddle = hasDroppedCeiling && droppedPosition === 'right';
-  const isLeftBoundaryMiddle = hasDroppedCeiling && droppedPosition === 'left';
+  const isRightBoundaryMiddle = hasDroppedCeiling && !hasMultipleBoundaries && droppedPosition === 'right';
+  const isLeftBoundaryMiddle = hasDroppedCeiling && !hasMultipleBoundaries && droppedPosition === 'left';
 
   // spaceInfo 변경 시 상태 업데이트
   useEffect(() => {
@@ -234,6 +239,46 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
                   const newValue = Math.min(5, Math.round((current + 0.5) * 10) / 10);
                   if (isRightBoundaryMiddle) { setMiddleGap(newValue); } else { setRightGap(newValue); }
                   updateGap(key, newValue);
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          )}
+          {/* 경계 이격거리 — 단내림+커튼박스 동시 활성 시 표시 */}
+          {hasMultipleBoundaries && (
+          <div className={styles.gapItem} style={{ gridColumn: '1 / -1' }}>
+            <label className={styles.gapLabel}>
+              경계이격
+            </label>
+            <div className={styles.gapControl}>
+              <button
+                className={styles.controlButton}
+                onClick={() => {
+                  const newValue = Math.max(0, Math.round((middleGap - 0.5) * 10) / 10);
+                  setMiddleGap(newValue);
+                  updateGap('middle', newValue);
+                }}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={middleGap}
+                onChange={(e) => handleInputChange('middle', e.target.value)}
+                onBlur={() => handleInputBlur('middle')}
+                className={styles.gapInput}
+                min="0"
+                max="5"
+                step="0.5"
+              />
+              <button
+                className={styles.controlButton}
+                onClick={() => {
+                  const newValue = Math.min(5, Math.round((middleGap + 0.5) * 10) / 10);
+                  setMiddleGap(newValue);
+                  updateGap('middle', newValue);
                 }}
               >
                 +
