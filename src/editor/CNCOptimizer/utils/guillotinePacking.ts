@@ -93,82 +93,24 @@ export class GuillotinePacker {
     const strips: Strip[] = [];
 
     // 1단계: 스트립 방향 치수로 그룹핑 (같은 높이/너비끼리)
-    // 회전 가능한 패널은 원본/회전 치수 중 더 효율적인 방향 선택
     const groups = new Map<number, Rect[]>();
-    // 회전 결정을 기록 (패널 ID → 회전 여부)
-    const preRotated = new Set<string>();
-
-    // 1차: 모든 패널을 원본 치수로 카운트
-    const dimCounts = new Map<number, number>();
     for (const panel of panels) {
-      const origDim = Math.round(horizontal ? panel.height : panel.width);
-      dimCounts.set(origDim, (dimCounts.get(origDim) || 0) + 1);
-      // 회전 가능하면 회전 치수도 카운트
-      if (panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
-        const rotDim = Math.round(horizontal ? panel.width : panel.height);
-        if (rotDim !== origDim) {
-          dimCounts.set(rotDim, (dimCounts.get(rotDim) || 0) + 1);
-        }
+      const dim = horizontal ? panel.height : panel.width;
+      const roundedDim = Math.round(dim);
+      if (!groups.has(roundedDim)) {
+        groups.set(roundedDim, []);
       }
-    }
-
-    // 2차: 각 패널의 최적 방향 결정 후 그룹핑
-    for (const panel of panels) {
-      const origDim = Math.round(horizontal ? panel.height : panel.width);
-      const canRotate = panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE');
-      let bestDim = origDim;
-
-      if (canRotate) {
-        const rotDim = Math.round(horizontal ? panel.width : panel.height);
-        if (rotDim !== origDim) {
-          // 회전 치수가 더 작으면 스트립이 얇아져서 시트에 더 많이 들어감
-          // 단, 채우기 방향도 시트에 맞아야 함
-          const origFill = horizontal ? panel.width : panel.height;
-          const rotFill = horizontal ? panel.height : panel.width;
-          const fillMax = horizontal ? this.binWidth : this.binHeight;
-          const dimMax = horizontal ? this.binHeight : this.binWidth;
-
-          // 두 방향 모두 시트에 맞는지 확인
-          const origFits = origDim <= dimMax && origFill <= fillMax;
-          const rotFits = rotDim <= dimMax && rotFill <= fillMax;
-
-          if (origFits && rotFits) {
-            // 둘 다 맞으면: 같은 치수 그룹이 더 많은 쪽 선택 (스트립 활용 최대화)
-            // 동률이면 스트립 방향 치수가 작은 쪽 선택 (스트립이 얇아져서 더 많은 스트립 배치)
-            const origGroupSize = dimCounts.get(origDim) || 0;
-            const rotGroupSize = dimCounts.get(rotDim) || 0;
-            if (rotGroupSize > origGroupSize || (rotGroupSize === origGroupSize && rotDim < origDim)) {
-              bestDim = rotDim;
-              preRotated.add(panel.id);
-            }
-          } else if (rotFits && !origFits) {
-            bestDim = rotDim;
-            preRotated.add(panel.id);
-          }
-        }
-      }
-
-      if (!groups.has(bestDim)) {
-        groups.set(bestDim, []);
-      }
-      groups.get(bestDim)!.push(panel);
+      groups.get(roundedDim)!.push(panel);
     }
 
     // 2단계: 그룹을 치수 내림차순으로 정렬 (큰 패널 먼저)
     const sortedDims = [...groups.keys()].sort((a, b) => b - a);
 
-    // 각 그룹 내에서 채우기 방향 치수 내림차순 정렬 (사전 회전 고려)
+    // 각 그룹 내에서 채우기 방향 치수 내림차순 정렬
     for (const [, groupPanels] of groups) {
       groupPanels.sort((a, b) => {
-        // 사전 회전된 패널은 치수가 뒤바뀜
-        const aRotated = preRotated.has(a.id);
-        const bRotated = preRotated.has(b.id);
-        const fillA = aRotated
-          ? (horizontal ? a.height : a.width)
-          : (horizontal ? a.width : a.height);
-        const fillB = bRotated
-          ? (horizontal ? b.height : b.width)
-          : (horizontal ? b.width : b.height);
+        const fillA = horizontal ? a.width : a.height;
+        const fillB = horizontal ? b.width : b.height;
         return fillB - fillA;
       });
     }
@@ -206,17 +148,14 @@ export class GuillotinePacker {
 
       for (const panel of unplacedGroupPanels) {
         if (placedPanelIds.has(panel.id)) continue;
-        const isPreRotated = preRotated.has(panel.id);
-        const panelFillDim = isPreRotated
-          ? (horizontal ? panel.height : panel.width)
-          : (horizontal ? panel.width : panel.height);
+        const panelFillDim = horizontal ? panel.width : panel.height;
 
         if (fillPos + panelFillDim <= fillMax) {
           const placed: PlacedRect = {
             ...panel,
             x: horizontal ? fillPos : currentPos,
             y: horizontal ? currentPos : fillPos,
-            rotated: isPreRotated,
+            rotated: false,
             stripIndex: strips.length
           };
           currentStrip.panels.push(placed);
