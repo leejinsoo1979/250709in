@@ -264,6 +264,14 @@
   opacity: 0.7;
 }
 
+.iconFileCount {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--theme-primary);
+  text-align: center;
+  margin-top: 2px;
+}
+
 /* ── 타일 뷰 ── */
 .tileGrid {
   display: grid;
