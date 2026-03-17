@@ -4816,16 +4816,22 @@ const Configurator: React.FC = () => {
                   const rawFreeH = mod.freeHeight || internalH;
                   const maxFreeH = internalH - floatH;
                   const modHeight = Math.min(rawFreeH, maxFreeH);
-                  const actualTopFrameSize = Math.max(0, spaceInfo.height - baseH - floatH - modHeight);
+                  // 단내림 구간 가구: 공간높이 대신 단내림 천장 높이 사용
+                  const isDroppedZone = mod.zone === 'dropped';
+                  const stepDrop = (isDroppedZone && spaceInfo.stepCeiling?.enabled)
+                    ? (spaceInfo.stepCeiling.dropHeight || 0) : 0;
+                  const dcDrop = (isDroppedZone && spaceInfo.droppedCeiling?.enabled && !spaceInfo.stepCeiling?.enabled)
+                    ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
+                  const effectiveSpaceHeight = spaceInfo.height - stepDrop - dcDrop;
+                  const actualTopFrameSize = Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight);
                   return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
                     mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
                     () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                     (v) => {
                       // 상부프레임 size 변경 → freeHeight 역산 (가구 높이 조정)
-                      // 역산 시에는 항상 floatH 반영 (새 freeHeight에 floatH가 포함되어야 하므로)
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-                      const newFreeHeight = Math.max(100, spaceInfo.height - baseH - revFloatH - v);
+                      const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
                       updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
                     },
                     (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
