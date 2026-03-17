@@ -190,6 +190,9 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
       baseConfig: { height: values.baseHeight, depth: 600, hasFrontBoard: false, frontBoardThickness: 0, frontBoardHeight: 0 },
       furnitureSingleWidth: values.furnitureSingleWidth,
       furnitureDualWidth: values.furnitureDualWidth,
+      layoutMode: 'free-placement' as const,
+      customColumnCount: 0,
+      columns: [],
     };
   }, [values]);
 
@@ -211,8 +214,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
                 spaceInfo={previewSpaceInfo}
                 viewMode="3D"
                 renderMode="solid"
-                showAll={true}
-                showDimensions={true}
+                showAll={false}
+                showDimensions={false}
                 showFrame={true}
                 showFurniture={false}
                 isEmbedded={true}
