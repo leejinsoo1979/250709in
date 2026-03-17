@@ -2698,10 +2698,11 @@ const Configurator: React.FC = () => {
             break;
         }
 
-        // 노서라운드일 때 gapConfig 설정
+        // 노서라운드일 때 gapConfig 설정 (middle 보존)
         finalUpdates.gapConfig = {
           left: currentWallConfig.left ? 1.5 : 0,
-          right: currentWallConfig.right ? 1.5 : 0
+          right: currentWallConfig.right ? 1.5 : 0,
+          middle: spaceInfo.gapConfig?.middle ?? 1.5,
         };
       }
 
@@ -2808,10 +2809,11 @@ const Configurator: React.FC = () => {
             break;
         }
 
-        // 노서라운드일 때 gapConfig도 업데이트
+        // 노서라운드일 때 gapConfig도 업데이트 (middle 보존)
         finalUpdates.gapConfig = {
           left: wallConfig.left ? 2 : 0,
-          right: wallConfig.right ? 2 : 0
+          right: wallConfig.right ? 2 : 0,
+          middle: spaceInfo.gapConfig?.middle ?? 1.5,
         };
       }
 

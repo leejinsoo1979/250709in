@@ -101,7 +101,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: currentTop };
       }
 
-      updates.gapConfig = { left: 2, right: 2 };
+      updates.gapConfig = { left: 2, right: 2, middle: spaceInfo.gapConfig?.middle ?? 1.5 };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
 
       onUpdate(updates);
@@ -124,6 +124,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         updates.gapConfig = {
           left: hasLeftWall ? 2 : 0,
           right: hasRightWall ? 2 : 0,
+          middle: spaceInfo.gapConfig?.middle ?? 1.5,
         };
       }
 
