@@ -3402,7 +3402,30 @@ const Configurator: React.FC = () => {
                 />
               </div>
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
-              <span style={{ fontSize: '12px', color: 'var(--theme-text)', fontWeight: 500 }}>{spaceInfo.height || 2400}</span>
+              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                <input
+                  type="text"
+                  defaultValue={spaceInfo.height || 2400}
+                  key={`main-height-${spaceInfo.height || 2400}`}
+                  readOnly={isFreeMode}
+                  style={isFreeMode ? { textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' } : { textAlign: 'center', fontSize: '12px' }}
+                  onKeyDown={(e) => {
+                    if (isFreeMode) return;
+                    if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+                  }}
+                  onBlur={(e) => {
+                    if (isFreeMode) return;
+                    const value = e.target.value;
+                    const totalHeight = spaceInfo.height || 2400;
+                    if (value === '' || isNaN(parseInt(value))) { e.target.value = totalHeight.toString(); return; }
+                    const numValue = parseInt(value);
+                    if (numValue < 1800) { e.target.value = '1800'; handleSpaceInfoUpdate({ height: 1800 }); }
+                    else if (numValue > 3000) { e.target.value = '3000'; handleSpaceInfoUpdate({ height: 3000 }); }
+                    else { handleSpaceInfoUpdate({ height: numValue }); }
+                  }}
+                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                />
+              </div>
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
             </div>
 
@@ -3445,7 +3468,37 @@ const Configurator: React.FC = () => {
                 />
               </div>
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
-              <span style={{ fontSize: '12px', color: 'var(--theme-text)', fontWeight: 500 }}>{isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}</span>
+              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                <input
+                  type="text"
+                  defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                  key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+                  onBlur={(e) => {
+                    const inputValue = e.target.value;
+                    const totalHeight = spaceInfo.height || 2400;
+                    if (isFreeMode) {
+                      const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
+                      if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentCurtainH.toString(); return; }
+                      const newCurtainH = parseInt(inputValue);
+                      const newDropHeight = newCurtainH - totalHeight;
+                      const clampedDrop = Math.max(10, Math.min(500, newDropHeight));
+                      e.target.value = (totalHeight + clampedDrop).toString();
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: clampedDrop } });
+                    } else {
+                      const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
+                      if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentDroppedHeight.toString(); return; }
+                      const droppedHeight = parseInt(inputValue);
+                      const newDropHeight = totalHeight - droppedHeight;
+                      if (newDropHeight < 100) { e.target.value = (totalHeight - 100).toString(); handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 100 } }); }
+                      else if (newDropHeight > 500) { e.target.value = (totalHeight - 500).toString(); handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 500 } }); }
+                      else { handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDropHeight } }); }
+                    }
+                  }}
+                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  style={{ textAlign: 'center', fontSize: '12px' }}
+                />
+              </div>
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
             </div>
           </div>
