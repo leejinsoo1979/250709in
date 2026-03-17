@@ -2998,13 +2998,9 @@ const Configurator: React.FC = () => {
   };
 
   // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
-  const handleTabSwitch = async (tab: EditorTab) => {
-    // 현재 파일 자동 저장
-    try {
-      await saveProject();
-    } catch (e) {
-      console.warn('탭 전환 전 자동 저장 실패:', e);
-    }
+  const handleTabSwitch = (tab: EditorTab) => {
+    // 현재 파일 자동 저장 (백그라운드 — 탭 전환 차단하지 않음)
+    saveProject().catch(e => console.warn('탭 전환 전 자동 저장 실패:', e));
     useUIStore.getState().setActiveTab(tab.id);
     navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
   };
