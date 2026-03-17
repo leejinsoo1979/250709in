@@ -1854,11 +1854,11 @@ const Room: React.FC<RoomProps> = ({
                   </lineSegments>
                 )}
                 {solidThemePositions && (
-                  <lineSegments renderOrder={0}>
+                  <lineSegments renderOrder={10}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={edgeColor} depthTest={true} />
+                    <lineBasicMaterial color={edgeColor} depthTest={false} />
                   </lineSegments>
                 )}
               </>
