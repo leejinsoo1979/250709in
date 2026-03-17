@@ -205,6 +205,16 @@ export interface UserProfile {
   isPublicProfile: boolean; // 다른 사용자가 프로필을 볼 수 있는지
   allowTeamInvitations: boolean; // 팀 초대를 받을 수 있는지
 
+  // 공간설정 기본값
+  spaceConfigDefaults?: {
+    width?: number;
+    height?: number;
+    gapLeft?: number;
+    gapRight?: number;
+    frameTop?: number;
+    baseHeight?: number;
+  };
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
