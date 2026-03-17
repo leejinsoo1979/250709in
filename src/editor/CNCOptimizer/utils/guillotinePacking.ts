@@ -607,7 +607,7 @@ export function packGuillotine(
   }
 
   // === 후처리: 남은 패널을 기존 시트 빈 공간에 재배치 시도 ===
-  // 낮은 효율 시트의 패널을 높은 효율 시트의 빈 공간에 넣을 수 있는지 확인
+  // 같은 가구 패널 그룹핑을 유지하면서 빈 시트 합치기
   if (bins.length > 1) {
     backfillBins(bins, binWidth, binHeight, kerf);
   }
@@ -617,8 +617,8 @@ export function packGuillotine(
 
 /**
  * 후처리: 저효율 시트의 패널을 다른 시트의 빈 공간에 합치기
- * - 각 시트에서 배치된 패널 기준으로 빈 공간(free rects)을 계산
- * - 저효율 시트의 패널을 빈 공간에 넣을 수 있으면 이동
+ * - 같은 가구 패널 그룹핑을 유지하면서 이동
+ * - 회전 상태는 원본 유지 (rotated 변경 금지)
  * - 빈 시트가 되면 제거
  */
 function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, kerf: number): void {
@@ -640,12 +640,13 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     for (const panel of panelsToMove) {
       let placed = false;
 
-      // 다른 시트에 넣기 시도 (효율 높은 것부터)
+      // 다른 시트에 넣기 시도
       for (let dstIdx = 0; dstIdx < bins.length; dstIdx++) {
         if (dstIdx === srcIdx || removedBins.has(dstIdx)) continue;
         const dstBin = bins[dstIdx];
 
-        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf);
+        // 회전 금지 모드로 위치 찾기 (원본 rotated 상태 유지)
+        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, true);
         if (pos) {
           const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
           dstBin.panels.push(movedPanel);
@@ -681,7 +682,8 @@ function findFreePosition(
   panel: Rect,
   binWidth: number,
   binHeight: number,
-  kerf: number
+  kerf: number,
+  noRotate: boolean = false
 ): { x: number; y: number; rotated: boolean } | null {
   const placed = (bin.panels || []).map(p => ({
     x: p.x || 0,
@@ -698,12 +700,20 @@ function findFreePosition(
     candidates.push({ x: r.x + r.w + kerf, y: r.y + r.h + kerf }); // 대각
   }
 
-  // 원본 방향 + 회전 방향 시도
-  const orientations: { w: number; h: number; rotated: boolean }[] = [
-    { w: panel.width, h: panel.height, rotated: false }
-  ];
-  if (panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
-    orientations.push({ w: panel.height, h: panel.width, rotated: true });
+  // 원본 방향 + 회전 방향 시도 (noRotate 시 원본 rotated 상태만 사용)
+  const orientations: { w: number; h: number; rotated: boolean }[] = [];
+  if (noRotate) {
+    // 원본 rotated 상태 유지
+    if (panel.rotated) {
+      orientations.push({ w: panel.height, h: panel.width, rotated: true });
+    } else {
+      orientations.push({ w: panel.width, h: panel.height, rotated: false });
+    }
+  } else {
+    orientations.push({ w: panel.width, h: panel.height, rotated: false });
+    if (panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
+      orientations.push({ w: panel.height, h: panel.width, rotated: true });
+    }
   }
 
   // 후보 위치를 좌하단 우선 정렬
