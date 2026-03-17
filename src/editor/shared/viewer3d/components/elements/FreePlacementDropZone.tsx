@@ -1635,12 +1635,11 @@ const FreePlacementDropZone: React.FC = () => {
         if (effectiveRightGap > 0) {
           const w = effectiveRightGap * 0.01;
           const cx = endX * 0.01 - w / 2;
-          if (rightAdj === 'dropped' && dcWallH > 0) {
-            // 커튼박스 인접: 내벽 높이만
-            const gapY = spaceH + dcWallH / 2;
+          if (rightAdj === 'dropped') {
+            // 커튼박스 인접: 메인 천장 높이까지 (바닥~메인천장 = 커튼박스 내벽 아랫면)
             boxes.push(
-              <mesh key="gap-right" position={[cx, gapY, zOffset]}>
-                <boxGeometry args={[w, dcWallH, depthThree]} />
+              <mesh key="gap-right" position={[cx, spaceH / 2, zOffset]}>
+                <boxGeometry args={[w, spaceH, depthThree]} />
                 <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
