@@ -55,8 +55,10 @@ export const calculatePanelDetails = (
   // 섹션 정보 가져오기
   // 듀얼 타입5,6 특별 처리 (leftSections/rightSections 구조)
   let sections;
-  if (moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
-    // leftSections를 기준으로 처리 (서랍 + 옷장)
+  // 듀얼 타입5/6은 leftSections + rightSections 모두 처리
+  const isType5or6 = moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler');
+  const rightSectionsForType5or6 = isType5or6 ? (moduleData.modelConfig?.rightSections || []) : [];
+  if (isType5or6) {
     sections = moduleData.modelConfig?.leftSections || [];
   } else {
     sections = moduleData.modelConfig?.sections || [];
@@ -194,18 +196,29 @@ export const calculatePanelDetails = (
       // 다중 섹션이고 상하 분리 측판 가구인 경우만 섹션별로 추가
       // 그 외는 통짜로 첫 번째 섹션에만 추가
       if (sections.length >= 2 && isSplitSidePanelFurniture) {
+        // 2hanging 분할 측판: 3D 렌더링(BaseFurnitureShell.tsx)과 동일하게
+        // 하부 측판 +bt, 상부 측판 -bt 보정
+        const is2HangingSplit = moduleData.id.includes('2hanging') && !moduleData.id.includes('2drawer');
+        let sidePanelHeight = adjustedSectionHeight;
+        if (is2HangingSplit && sections.length === 2) {
+          if (sectionIndex === 0) {
+            sidePanelHeight = adjustedSectionHeight + basicThickness; // 하부: +bt
+          } else {
+            sidePanelHeight = adjustedSectionHeight - basicThickness; // 상부: -bt
+          }
+        }
         // 상하 분리: 각 섹션마다 측판 추가
         targetPanel.push({
           name: `${sectionPrefix}좌측`,
           width: customDepth,
-          height: adjustedSectionHeight,
+          height: sidePanelHeight,
           thickness: basicThickness,
           material: 'PB'
         });
         targetPanel.push({
           name: `${sectionPrefix}우측`,
           width: customDepth,
-          height: adjustedSectionHeight,
+          height: sidePanelHeight,
           thickness: basicThickness,
           material: 'PB'
         });
@@ -334,6 +347,16 @@ export const calculatePanelDetails = (
       if (section.type === 'drawer' && section.count) {
         const drawerHeights = section.drawerHeights;
 
+        // Type5/6 듀얼은 좌측 컬럼 내경폭을 사용 (3D DualType6.tsx와 동일)
+        let drawerInnerWidth = innerWidth;
+        if (isType5or6) {
+          const rightAbsoluteWidth = moduleData.modelConfig?.rightAbsoluteWidth || 0;
+          const originalTotalWidth = moduleData.dimensions.width;
+          const rightRatio = rightAbsoluteWidth / (originalTotalWidth - 36);
+          const rightWidth = innerWidth * rightRatio;
+          drawerInnerWidth = innerWidth - rightWidth - basicThickness; // 좌측 컬럼 내경
+        }
+
         for (let i = 0; i < section.count; i++) {
           const drawerNum = i + 1;
 
@@ -346,11 +369,11 @@ export const calculatePanelDetails = (
             // 균등 분할 (전체 섹션 높이 - 칸막이 두께) / 서랍 개수
             individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
           }
-          
+
           // 서랍 본체 크기 계산 (DrawerRenderer.tsx 3D 렌더링과 완전 일치)
           // DrawerRenderer.renderDrawer() 호출: drawerWidth = innerWidth - 48mm (좌우 24mm 간격)
           // actualDrawerDepth = (D - bt) - 60mm, drawerBodyDepth = actualDrawerDepth - 15mm(손잡이판)
-          const drawerWidth = innerWidth - 48; // 서랍 전체 폭 (= 3D: innerWidth - mmToThreeUnits(48))
+          const drawerWidth = drawerInnerWidth - 48; // 서랍 전체 폭 (Type5/6: 좌측컬럼 내경 기준)
           const drawerFrontBackWidth = drawerWidth - 107; // 앞판/뒷판 폭 (= 3D: drawerWidth - mmToThreeUnits(107))
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
           const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (= 3D: (D-bt)-60-15)
@@ -509,14 +532,106 @@ export const calculatePanelDetails = (
   }
   
 
+  // === Type5/6 우측 섹션 패널 (rightSections) ===
+  if (isType5or6 && rightSectionsForType5or6.length > 0) {
+    // 우측 컬럼 내경폭 계산 (3D DualType6.tsx와 동일)
+    const rightAbsoluteWidth = moduleData.modelConfig?.rightAbsoluteWidth || 0;
+    const originalTotalWidth = moduleData.dimensions.width;
+    const rightRatio = rightAbsoluteWidth / (originalTotalWidth - 36); // 36 = 양쪽 측판 두께
+    const rightInnerWidth = innerWidth * rightRatio;
+    const rightHorizontalPanelWidth = rightInnerWidth - 1; // 좌우 0.5mm 갭
+
+    // 우측 섹션 높이 계산
+    const rightFixedSections = rightSectionsForType5or6.filter(s => s.heightType === 'absolute');
+    const rightTotalFixedHeight = rightFixedSections.reduce((sum, s) => sum + (s.height || 0), 0);
+    const rightRemainingHeight = height - rightTotalFixedHeight;
+
+    rightSectionsForType5or6.forEach((section, sectionIndex) => {
+      let rSectionHeight;
+      if (section.heightType === 'absolute') {
+        rSectionHeight = section.height || 0;
+      } else {
+        const variableSecs = rightSectionsForType5or6.filter(s => s.heightType !== 'absolute');
+        const totalPct = variableSecs.reduce((sum, s) => sum + (s.height || s.heightRatio || 100), 0);
+        const pct = (section.height || section.heightRatio || 100) / totalPct;
+        rSectionHeight = rightRemainingHeight * pct;
+      }
+
+      const rSectionPrefix = rightSectionsForType5or6.length > 1
+        ? (sectionIndex === 0 ? '우(하)' : '우(상)')
+        : '우';
+
+      // 우측 섹션 백패널
+      const rBackPanelHeight = rSectionHeight - basicThickness * 2 + 10 + 26; // heightExtension + totalHeightExtension
+      panels.upper.push({
+        name: `${rSectionPrefix}백패널`,
+        width: rightInnerWidth + 10,
+        height: rBackPanelHeight,
+        thickness: backPanelThickness,
+        material: 'MDF'
+      });
+
+      // 우측 섹션 보강대 (상/하 2개)
+      const rReinforcementWidth = rightInnerWidth - 1;
+      panels.upper.push({
+        name: `${rSectionPrefix}후면 보강대`,
+        width: rReinforcementWidth,
+        height: 60,
+        thickness: 15,
+        material: 'PB'
+      });
+      panels.upper.push({
+        name: `${rSectionPrefix}후면 보강대`,
+        width: rReinforcementWidth,
+        height: 60,
+        thickness: 15,
+        material: 'PB'
+      });
+
+      // 우측 섹션별 내부 요소 (hanging → 선반)
+      if (section.type === 'hanging') {
+        if (section.shelfPositions && section.shelfPositions.length > 0) {
+          panels.upper.push({
+            name: `${rSectionPrefix}선반 1`,
+            width: rightHorizontalPanelWidth,
+            depth: customDepth - 8 - basicThickness,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
+      } else if (section.type === 'shelf' && section.count) {
+        for (let i = 1; i <= section.count; i++) {
+          panels.upper.push({
+            name: `${rSectionPrefix}선반 ${i}`,
+            width: rightHorizontalPanelWidth,
+            depth: customDepth - 8 - basicThickness,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
+      }
+    });
+  }
+
   // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
   if (hasDoor) {
-    const doorGap = 2;
+    const doorGap = 3; // DoorModule.tsx 3D 렌더링과 동일 (doorGap = 3)
     // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
     // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
-    const actualDoorH = spaceHeight
-      ? spaceHeight - (doorTopGap ?? 5) - (doorBottomGap ?? 25)
-      : height - doorGap * 2;
+    const isUpperCab = moduleData.id.includes('upper-cabinet');
+    const isLowerCab = moduleData.id.includes('lower-cabinet');
+    let actualDoorH: number;
+    if (spaceHeight) {
+      actualDoorH = spaceHeight - (doorTopGap ?? 5) - (doorBottomGap ?? 25);
+    } else if (isUpperCab) {
+      // 상부장: 캐비넷높이 - 상단5mm + 하단확장28mm (DoorModule.tsx와 동일)
+      actualDoorH = height - 5 + 28;
+    } else if (isLowerCab) {
+      // 하부장 바닥형: 캐비넷높이 + 하단확장40mm + 상부마감재18mm (DoorModule.tsx와 동일)
+      actualDoorH = height + 40 + 18;
+    } else {
+      actualDoorH = height - doorGap * 2;
+    }
 
     // 도어 보링 데이터 생성 헬퍼
     const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean) => {
@@ -548,7 +663,8 @@ export const calculatePanelDetails = (
     };
 
     if (moduleData.id.includes('dual')) {
-      const singleDoorWidth = Math.floor((doorWidth - doorGap * 3) / 2);
+      // 3D 렌더링과 동일: 각 도어 = 전체폭/2 - doorGap (DoorModule.tsx: actualDoorWidth/2 - doorGap)
+      const singleDoorWidth = Math.floor(doorWidth / 2 - doorGap);
       const doorH = actualDoorH;
       const leftDoorBoring = createDoorBoringData(singleDoorWidth, doorH, true);
       const rightDoorBoring = createDoorBoringData(singleDoorWidth, doorH, false);
@@ -582,7 +698,8 @@ export const calculatePanelDetails = (
         isLeftHinge: false,
       });
     } else {
-      const doorW = doorWidth - doorGap * 2;
+      // 3D 렌더링과 동일: doorWidth = actualDoorWidth - doorGap (DoorModule.tsx)
+      const doorW = doorWidth - doorGap;
       const doorH = actualDoorH;
       const isLeftHinge = (hingePosition ?? 'left') === 'left';
       const doorBoring = createDoorBoringData(doorW, doorH, isLeftHinge);
@@ -733,7 +850,7 @@ export const calculatePanelDetails = (
 
       // 요소 기반 패널 생성 헬퍼
       const processElements = (
-        elements: Array<{ type: string; heights?: number[]; height?: number; hasRod?: boolean; withShelf?: boolean }> | undefined,
+        elements: Array<{ type: string; heights?: number[]; height?: number; hasRod?: boolean; withShelf?: boolean; drawerAlign?: 'top' | 'bottom' }> | undefined,
         areaPrefix: string,
         areaWidth: number
       ) => {
@@ -766,10 +883,16 @@ export const calculatePanelDetails = (
                 const drawerBodyDepth = (customDepth - basicThicknessCC) - 60 - drawerHandleThicknessCC;
 
                 // 마이다 (손잡이판) = drawerWidth (서랍 본체 폭)
+                // drawerAlign='top'인 경우 맨 아래 서랍 마이다에 +24(하단)+18(상단) 확장 (DrawerRenderer.tsx 동일)
+                const isTopAlign = (el as any).drawerAlign === 'top';
+                const isBottomDrawer = i === drawerCount - 1; // 마지막 서랍이 맨 아래
+                const maidaBottomExt = (isTopAlign && isBottomDrawer) ? 24 : 0;
+                const maidaTopExt = (isTopAlign && isBottomDrawer) ? 18 : 0;
+                const maidaHeight = dh + maidaBottomExt + maidaTopExt;
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}서랍${i + 1}(마이다)`,
                   width: drawerWidth,
-                  height: dh,
+                  height: maidaHeight,
                   thickness: drawerHandleThicknessCC,
                   material: 'PB'
                 });

@@ -184,23 +184,20 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
               individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
             }
             
-            // 서랍 손잡이판 (마이다) - PB 15mm
+            // 서랍 본체 크기 계산 (DrawerRenderer.tsx 3D 렌더링과 완전 일치)
+            const drawerWidth = innerWidth - 48; // innerWidth - 48mm (좌우 24mm 간격)
+            const drawerFrontBackWidth = drawerWidth - 107; // 앞판/뒷판
+            const drawerBodyHeight = individualDrawerHeight - 30;
+            const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (D-bt)-60-15
+
+            // 서랍 손잡이판 (마이다) - PB 15mm = drawerWidth (서랍 본체 폭)
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
-              width: customWidth,
+              width: drawerWidth,
               height: individualDrawerHeight,
               thickness: drawerHandleThickness,
               material: 'PB'
             });
-            
-            // 서랍 본체 크기 계산 (DrawerRenderer 참조)
-            // drawerWidth = innerWidth - 24mm (좌우 12mm 간격)
-            // 앞판/뒷판: drawerWidth - 106mm (좌우 측판 안쪽에 끼워짐)
-            // 좌측판/우측판: 전체 깊이 사용 (앞뒤 15mm씩 확장)
-            const drawerWidth = customWidth - 24;
-            const drawerFrontBackWidth = drawerWidth - 106;
-            const drawerBodyHeight = individualDrawerHeight - 30;
-            const drawerBodyDepth = customDepth - 47 - drawerHandleThickness;
 
             // 서랍 앞판 (두께 15mm)
             targetPanel.push({
