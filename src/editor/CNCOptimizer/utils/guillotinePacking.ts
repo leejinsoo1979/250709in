@@ -110,19 +110,19 @@ export class GuillotinePacker {
     // 2단계: 그룹을 치수 내림차순으로 정렬 (큰 패널 먼저)
     const sortedDims = [...groups.keys()].sort((a, b) => b - a);
 
-    // 각 그룹 내에서 정렬: 패널 종류(좌/우) → 가구번호 → 채우기 치수
-    // 이렇게 하면 같은 좌/우 측판이 연속 배치되어 보링 작업 효율적
+    // 각 그룹 내에서 정렬: 가구번호 → 패널 종류(좌/우) → 채우기 치수
+    // 같은 가구의 측판이 같은 시트에 연속 배치되도록 가구번호 우선
     for (const [, groupPanels] of groups) {
       groupPanels.sort((a, b) => {
-        // 1순위: 패널 종류 — 같은 좌/우 끼리 묶기
-        const sideA = this.extractPanelSide(a.name || '');
-        const sideB = this.extractPanelSide(b.name || '');
-        if (sideA !== sideB) return sideA.localeCompare(sideB);
-
-        // 2순위: 가구번호 순서 (같은 좌/우 내에서 가구별 정렬)
+        // 1순위: 가구번호 — 같은 가구 패널끼리 묶기
         const fnA = this.extractFurnitureNumber(a.name || '');
         const fnB = this.extractFurnitureNumber(b.name || '');
         if (fnA !== fnB) return fnA - fnB;
+
+        // 2순위: 패널 종류 — 같은 좌/우 끼리 묶기 (보링 효율)
+        const sideA = this.extractPanelSide(a.name || '');
+        const sideB = this.extractPanelSide(b.name || '');
+        if (sideA !== sideB) return sideA.localeCompare(sideB);
 
         // 3순위: 채우기 방향 치수 내림차순
         const fillA = horizontal ? a.width : a.height;
@@ -563,6 +563,12 @@ export class GuillotinePacker {
   }
 }
 
+/** 패널 이름에서 가구번호 추출 (예: "[3]듀얼..." → 3) */
+function extractFurnitureNum(name: string): number {
+  const match = name.match(/^\[(\d+)\]/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
 /**
  * 길로틴 방식 멀티 빈 패킹
  */
@@ -576,7 +582,15 @@ export function packGuillotine(
 ): PackedBin[] {
   const bins: PackedBin[] = [];
   let currentBin = 0;
-  const remainingPanels = [...panels];
+
+  // 가구번호 기준으로 정렬 → 같은 가구 패널이 같은 시트에 배치되도록
+  // 1순위: 가구번호 → 2순위: 면적 내림차순
+  const remainingPanels = [...panels].sort((a, b) => {
+    const fnA = extractFurnitureNum(a.name || '');
+    const fnB = extractFurnitureNum(b.name || '');
+    if (fnA !== fnB) return fnA - fnB;
+    return (b.width * b.height) - (a.width * a.height);
+  });
 
   while (remainingPanels.length > 0 && currentBin < maxBins) {
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
