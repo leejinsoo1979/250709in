@@ -2810,6 +2810,95 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         {spaceInfo.height - floorFinishHeightMmGlobal}
                       </Text>
 
+                      {/* ── 안쪽: 메인구간 프레임 분해 치수선 (받침대 + 내부공간 + 상부프레임) ── */}
+                      {(() => {
+                        const mainTopFrame = frameSize.top ?? 30;
+                        const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                        const mainInternalHeight = spaceInfo.height - mainTopFrame - baseHeight - floorFinishHeightMmGlobal;
+                        const baseTopYFrame = mmToThreeUnits(floorFinishHeightMmGlobal + baseHeight);
+                        const topFrameBottomYFrame = spaceHeight - mmToThreeUnits(mainTopFrame);
+                        const fX = leftFrameDimensionX + leftOffset;
+
+                        return (
+                          <>
+                            {/* 전체 세로선 */}
+                            <NativeLine name="dimension_line"
+                              points={[[fX, 0, 0.002], [fX, spaceHeight, 0.002]]}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            <NativeLine name="dimension_line"
+                              points={createArrowHead([fX, 0, 0.002], [fX, 0.05, 0.002])}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            <NativeLine name="dimension_line"
+                              points={createArrowHead([fX, spaceHeight, 0.002], [fX, spaceHeight - 0.05, 0.002])}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+
+                            {/* 받침대 구분 틱 + 텍스트 */}
+                            {baseHeight > 0 && (
+                              <>
+                                <NativeLine name="dimension_line"
+                                  points={[[fX - mmToThreeUnits(20), baseTopYFrame, 0.002], [fX + mmToThreeUnits(20), baseTopYFrame, 0.002]]}
+                                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                                />
+                                <Text renderOrder={1000} depthTest={false}
+                                  position={[fX + mmToThreeUnits(30), (hasFloorFinishDrop ? floorFinishYDrop : 0) + (baseTopYFrame - (hasFloorFinishDrop ? floorFinishYDrop : 0)) / 2, 0.01]}
+                                  fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
+                                >
+                                  {baseHeight}
+                                </Text>
+                              </>
+                            )}
+
+                            {/* 상부프레임 구분 틱 + 텍스트 */}
+                            {mainTopFrame > 0 && (
+                              <>
+                                <NativeLine name="dimension_line"
+                                  points={[[fX - mmToThreeUnits(20), topFrameBottomYFrame, 0.002], [fX + mmToThreeUnits(20), topFrameBottomYFrame, 0.002]]}
+                                  color={frameDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                                />
+                                <Text renderOrder={1000} depthTest={false}
+                                  position={[fX + mmToThreeUnits(30), topFrameBottomYFrame + (spaceHeight - topFrameBottomYFrame) / 2, 0.01]}
+                                  fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
+                                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
+                                >
+                                  {mainTopFrame}
+                                </Text>
+                              </>
+                            )}
+
+                            {/* 내부공간 높이 텍스트 */}
+                            {mainInternalHeight > 0 && (
+                              <Text renderOrder={1000} depthTest={false}
+                                position={[fX + mmToThreeUnits(30), baseTopYFrame + (topFrameBottomYFrame - baseTopYFrame) / 2, 0.01]}
+                                fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
+                              >
+                                {mainInternalHeight}
+                              </Text>
+                            )}
+
+                            {/* 바닥마감재 구분 틱 */}
+                            {hasFloorFinishDrop && (
+                              <>
+                                <NativeLine name="dimension_line"
+                                  points={[[fX - mmToThreeUnits(20), floorFinishYDrop, 0.002], [fX + mmToThreeUnits(20), floorFinishYDrop, 0.002]]}
+                                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                                />
+                                <Text renderOrder={1000} depthTest={false}
+                                  position={[fX + mmToThreeUnits(30), floorFinishMidYDrop, 0.01]}
+                                  fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
+                                >
+                                  {floorFinishHeightMmGlobal}
+                                </Text>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                     </>
                   );
                 })()}
