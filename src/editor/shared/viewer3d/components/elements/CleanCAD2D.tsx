@@ -4301,8 +4301,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
                 >
                   {(() => {
-                    const w = Math.round(actualWidth * 10) / 10;
-                    return w % 1 === 0 ? w : w.toFixed(1);
+                    const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+                    if (isDual) {
+                      const w = Math.floor(actualWidth * 2) / 2;
+                      return w % 1 === 0 ? w : w.toFixed(1);
+                    }
+                    return Math.floor(actualWidth);
                   })()}
                 </div>
               </Html>
