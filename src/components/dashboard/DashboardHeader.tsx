@@ -1,8 +1,9 @@
 import React from 'react';
-import { User, Settings, Search } from 'lucide-react';
+import { User, Settings, Search, Sun, Moon } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
+import { useTheme } from '@/contexts/ThemeContext';
 import styles from './DashboardHeader.module.css';
 
 interface DashboardHeaderProps {
@@ -21,6 +22,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onSearchChange,
 }) => {
   const { user } = useAuth();
+  const { theme, toggleMode } = useTheme();
 
   return (
     <header className={styles.header}>
@@ -51,6 +53,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <Settings size={18} />
           </button>
         )}
+        <button
+          className={styles.themeToggleBtn}
+          onClick={toggleMode}
+          title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
+        >
+          {theme.mode === 'dark' ? <Moon size={18} strokeWidth={1.8} /> : <Sun size={18} strokeWidth={1.8} />}
+        </button>
         <button
           className={styles.profileBtn}
           onClick={onProfileClick}

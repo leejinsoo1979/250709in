@@ -25,6 +25,25 @@
   gap: 8px;
 }
 
+.themeToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.themeToggleBtn:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
 .settingsBtn {
   display: flex;
   align-items: center;
