@@ -151,6 +151,83 @@ export const useTouchOrbitControls = (
     };
   }, [enableKeyboard, enabled, keyboardSpeed, controlsRef]);
 
+  // Ctrl + 트랙패드/마우스 드래그 → 회전 (마우스 휠 클릭+드래그와 동일)
+  // 맥북 트랙패드에서 Ctrl을 누르고 드래그하면 마우스 중간 버튼 드래그처럼 동작
+  useEffect(() => {
+    if (!enabled || !controlsRef.current) return;
+
+    const canvas = gl.domElement;
+    let isCtrlDragging = false;
+    const SYNTH_FLAG = '__ctrlRotateSynth';
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if ((e as any)[SYNTH_FLAG]) return; // 합성 이벤트는 무시
+      if (isFurnitureDrag.current) return;
+      // Ctrl + 클릭/드래그 → 중간 버튼으로 변환 (맥에서 Ctrl+click은 button=2로 올 수 있음)
+      if (e.ctrlKey && (e.button === 0 || e.button === 2)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        isCtrlDragging = true;
+        const synth = new PointerEvent('pointerdown', {
+          bubbles: true, clientX: e.clientX, clientY: e.clientY,
+          button: 1, buttons: 4, pointerId: e.pointerId,
+          pointerType: e.pointerType, view: window,
+        });
+        (synth as any)[SYNTH_FLAG] = true;
+        canvas.dispatchEvent(synth);
+      }
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if ((e as any)[SYNTH_FLAG]) return;
+      if (!isCtrlDragging) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const synth = new PointerEvent('pointermove', {
+        bubbles: true, clientX: e.clientX, clientY: e.clientY,
+        button: 1, buttons: 4, pointerId: e.pointerId,
+        pointerType: e.pointerType, view: window,
+      });
+      (synth as any)[SYNTH_FLAG] = true;
+      canvas.dispatchEvent(synth);
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if ((e as any)[SYNTH_FLAG]) return;
+      if (!isCtrlDragging) return;
+      isCtrlDragging = false;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const synth = new PointerEvent('pointerup', {
+        bubbles: true, clientX: e.clientX, clientY: e.clientY,
+        button: 1, buttons: 0, pointerId: e.pointerId,
+        pointerType: e.pointerType, view: window,
+      });
+      (synth as any)[SYNTH_FLAG] = true;
+      canvas.dispatchEvent(synth);
+    };
+
+    // Ctrl+클릭 시 맥 기본 컨텍스트 메뉴 방지
+    const handleContextMenu = (e: MouseEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+      }
+    };
+
+    // capture phase에서 가로채서 원래 Ctrl+클릭 이벤트를 막고 중간버튼 합성 이벤트 발송
+    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
+    window.addEventListener('pointermove', handlePointerMove, { capture: true });
+    window.addEventListener('pointerup', handlePointerUp, { capture: true });
+    canvas.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true } as any);
+      window.removeEventListener('pointermove', handlePointerMove, { capture: true } as any);
+      window.removeEventListener('pointerup', handlePointerUp, { capture: true } as any);
+      canvas.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [enabled, controlsRef, gl.domElement]);
+
   // 커스텀 터치 컨트롤
   useEffect(() => {
     if (!enabled || !controlsRef.current) return;
