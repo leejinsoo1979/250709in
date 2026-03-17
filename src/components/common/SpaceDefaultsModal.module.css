@@ -15,10 +15,9 @@
 
 .modal {
   background: var(--theme-surface, white);
-  border-radius: 16px;
-  width: 90vw;
-  max-width: 1200px;
-  max-height: 92vh;
+  border-radius: 12px;
+  width: 340px;
+  max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalSlideIn 0.3s ease-out;
@@ -70,7 +69,7 @@
   color: var(--theme-text, #374151);
 }
 
-/* ── Two-column layout ── */
+/* ── Content ── */
 .content {
   display: flex;
   flex: 1;
@@ -78,38 +77,13 @@
   min-height: 0;
 }
 
-/* ── Left: 3D Viewer ── */
-.leftSection {
-  flex: 1.3;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  background: var(--theme-surface, white);
-  position: relative;
-  min-width: 400px;
-}
-
-.viewer {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  background: var(--theme-surface, white);
-  border-radius: 8px;
-  overflow: hidden;
-  min-height: 400px;
-}
-
-/* ── Right: RightPanel-style settings ── */
 .rightSection {
-  flex: 0.7;
+  flex: 1;
   background: var(--theme-surface, white);
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  border-left: 1px solid var(--theme-border, #e5e7eb);
 }
 
 .notice {

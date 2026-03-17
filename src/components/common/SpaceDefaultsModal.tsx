@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getSpaceConfigDefaults, updateSpaceConfigDefaults, SpaceConfigDefaults } from '@/firebase/userProfiles';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import commonStyles from '@/editor/shared/controls/styles/common.module.css';
 import styles from './SpaceDefaultsModal.module.css';
 
@@ -173,29 +171,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
 
   const handleReset = () => { setValues(SYSTEM_DEFAULTS); setMessage(null); };
 
-  const previewSpaceInfo = useMemo<SpaceInfo>(() => {
-    const surroundType = values.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const;
-    const frameConfig = values.surroundMode === 'full-surround'
-      ? { left: true, right: true, top: true, bottom: true }
-      : values.surroundMode === 'sides-only'
-        ? { left: true, right: true, top: false, bottom: false }
-        : { left: false, right: false, top: true, bottom: false };
-    return {
-      width: values.width, height: values.height, depth: 600,
-      installType: 'builtin',
-      wallConfig: { left: true, right: true },
-      hasFloorFinish: false, surroundType, frameConfig,
-      frameSize: { top: values.frameTop, bottom: 0, left: values.frameLeft, right: values.frameRight },
-      gapConfig: { left: values.gapLeft, right: values.gapRight },
-      baseConfig: { height: values.baseHeight, depth: 600, hasFrontBoard: false, frontBoardThickness: 0, frontBoardHeight: 0 },
-      furnitureSingleWidth: values.furnitureSingleWidth,
-      furnitureDualWidth: values.furnitureDualWidth,
-      layoutMode: 'free-placement' as const,
-      customColumnCount: 0,
-      columns: [],
-    };
-  }, [values]);
-
   if (loading) return null;
 
   return (
@@ -207,26 +182,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
         </div>
 
         <div className={styles.content}>
-          {/* 좌측: 3D 프리뷰 */}
-          <div className={styles.leftSection}>
-            <div className={styles.viewer}>
-              <Space3DView
-                spaceInfo={previewSpaceInfo}
-                viewMode="3D"
-                renderMode="solid"
-                showAll={false}
-                showDimensions={false}
-                showFrame={true}
-                showFurniture={false}
-                isEmbedded={true}
-                isStep2={true}
-                readOnly={true}
-                setViewMode={() => {}}
-              />
-            </div>
-          </div>
-
-          {/* 우측: RightPanel 스타일 설정 폼 */}
           <div className={styles.rightSection}>
             <div className={styles.notice}>새 프로젝트에서부터 적용됩니다.</div>
             <div className={styles.panelContent}>
