@@ -472,59 +472,94 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // zone 자동 감지: placedModule.zone이 없으면 X 위치 기반으로 zone 결정
   let effectiveZone = placedModule.zone;
 
+  // 단내림 활성 여부 (슬롯: droppedCeiling, 자유배치: stepCeiling)
+  const hasDroppedZone = spaceInfo.droppedCeiling?.enabled;
+  const hasStepZone = spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled;
+  const hasAnyDroppedZone = hasDroppedZone || hasStepZone;
+
   // 단내림이 활성화되어 있고 zone 정보가 없으면 X 위치로 판단
-  if (spaceInfo.droppedCeiling?.enabled && !effectiveZone) {
-    const droppedPosition = spaceInfo.droppedCeiling.position;
-    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
+  if (hasAnyDroppedZone && !effectiveZone) {
+    const positionXMm = placedModule.position.x * 100;
     const totalWidth = spaceInfo.width;
 
-    // X 위치를 mm로 변환 (Three.js 단위 * 100)
-    const positionXMm = placedModule.position.x * 100;
-    // 공간 중심이 0이므로, 왼쪽 끝은 -totalWidth/2, 오른쪽 끝은 totalWidth/2
+    if (hasStepZone) {
+      // 자유배치: stepCeiling 기반 zone 감지
+      const stepPosition = spaceInfo.stepCeiling!.position || 'right';
+      const stepWidth = spaceInfo.stepCeiling!.width || 0;
+      const dcEnabled = spaceInfo.droppedCeiling?.enabled;
+      const dcWidth = dcEnabled ? (spaceInfo.droppedCeiling!.width || 0) : 0;
+      const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
 
-    if (droppedPosition === 'left') {
-      // 단내림 왼쪽: 왼쪽 끝 ~ (droppedCeilingWidth)까지가 dropped
-      // X 위치가 (-totalWidth/2 + droppedCeilingWidth) 미만이면 dropped
-      const droppedBoundary = -totalWidth / 2 + droppedCeilingWidth;
-      effectiveZone = positionXMm < droppedBoundary ? 'dropped' : 'normal';
-    } else {
-      // 단내림 오른쪽: 오른쪽 끝에서 droppedCeilingWidth 만큼이 dropped
-      // X 위치가 (totalWidth/2 - droppedCeilingWidth) 초과이면 dropped
-      const droppedBoundary = totalWidth / 2 - droppedCeilingWidth;
-      effectiveZone = positionXMm > droppedBoundary ? 'dropped' : 'normal';
+      if (stepPosition === 'left') {
+        const leftEdge = (dcPosition === 'left' && dcEnabled) ? -totalWidth / 2 + dcWidth : -totalWidth / 2;
+        const stepBoundary = leftEdge + stepWidth;
+        effectiveZone = positionXMm < stepBoundary ? 'dropped' : 'normal';
+      } else {
+        const rightEdge = (dcPosition === 'right' && dcEnabled) ? totalWidth / 2 - dcWidth : totalWidth / 2;
+        const stepBoundary = rightEdge - stepWidth;
+        effectiveZone = positionXMm > stepBoundary ? 'dropped' : 'normal';
+      }
+    } else if (hasDroppedZone) {
+      // 슬롯배치: droppedCeiling 기반 zone 감지
+      const droppedPosition = spaceInfo.droppedCeiling!.position;
+      const droppedCeilingWidth = spaceInfo.droppedCeiling!.width || 900;
+
+      if (droppedPosition === 'left') {
+        const droppedBoundary = -totalWidth / 2 + droppedCeilingWidth;
+        effectiveZone = positionXMm < droppedBoundary ? 'dropped' : 'normal';
+      } else {
+        const droppedBoundary = totalWidth / 2 - droppedCeilingWidth;
+        effectiveZone = positionXMm > droppedBoundary ? 'dropped' : 'normal';
+      }
     }
   }
 
   // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
-  // 높이는 항상 재계산해야 하므로 조건 제거
-  if (spaceInfo.droppedCeiling?.enabled && effectiveZone) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    const targetZone = effectiveZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+  if (hasAnyDroppedZone && effectiveZone) {
+    if (hasStepZone) {
+      // 자유배치 stepCeiling: zone별 높이 조정
+      const stepWidth = spaceInfo.stepCeiling!.width || 0;
+      const dcWidth = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling!.width || 0) : 0;
+      let zoneOuterWidth: number;
 
-    // 단내림 영역별 외경 너비 계산 (프레임 포함)
-    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
-    let zoneOuterWidth: number;
+      if (effectiveZone === 'dropped') {
+        zoneOuterWidth = stepWidth;
+      } else {
+        zoneOuterWidth = spaceInfo.width - stepWidth - dcWidth;
+      }
 
-    if (effectiveZone === 'dropped') {
-      // 단내림 영역의 외경 너비
-      zoneOuterWidth = droppedCeilingWidth;
-    } else {
-      // 메인 영역의 외경 너비
-      zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
+      zoneSpaceInfo = {
+        ...spaceInfo,
+        width: zoneOuterWidth,
+        zone: effectiveZone
+      };
+
+      // stepCeiling의 dropped zone: 높이 조정은 freeHeight에 이미 반영됨
+      // normal zone: 전체 높이 기준
+      internalSpace = calculateInternalSpace(zoneSpaceInfo);
+    } else if (hasDroppedZone) {
+      // 슬롯배치: 기존 droppedCeiling 로직
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      const targetZone = effectiveZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+
+      const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+      let zoneOuterWidth: number;
+
+      if (effectiveZone === 'dropped') {
+        zoneOuterWidth = droppedCeilingWidth;
+      } else {
+        zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
+      }
+
+      zoneSpaceInfo = {
+        ...spaceInfo,
+        width: zoneOuterWidth,
+        zone: effectiveZone
+      };
+
+      internalSpace = calculateInternalSpace(zoneSpaceInfo);
+      internalSpace.startX = targetZone.startX;
     }
-
-    // 영역별 spaceInfo 생성
-    zoneSpaceInfo = {
-      ...spaceInfo,
-      width: zoneOuterWidth,  // zone의 외경 너비
-      zone: effectiveZone  // zone 정보 추가 (자동 감지된 zone 사용)
-    };
-
-    internalSpace = calculateInternalSpace(zoneSpaceInfo);
-    internalSpace.startX = targetZone.startX;
-
-    // calculateInternalSpace에서 이미 zone === 'dropped'일 때 높이를 조정하므로
-    // 여기서는 추가 조정하지 않음
   }
 
   // 모듈 데이터 가져오기 - zone별 spaceInfo 사용

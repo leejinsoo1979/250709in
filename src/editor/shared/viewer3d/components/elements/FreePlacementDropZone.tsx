@@ -563,7 +563,9 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 단내림 구간 감지 → 고스트 높이 조정
   const ghostDroppedZone = useMemo(() => {
-    if (hoverXmm === null || !activeDimensions || !spaceInfo.droppedCeiling?.enabled) {
+    const hasAnyDropZone = spaceInfo.droppedCeiling?.enabled ||
+      (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled);
+    if (hoverXmm === null || !activeDimensions || !hasAnyDropZone) {
       return { zone: 'normal' as const, droppedInternalHeight: undefined };
     }
     const result = detectDroppedZone(hoverXmm, spaceInfo, activeDimensions.width);
@@ -1134,13 +1136,17 @@ const FreePlacementDropZone: React.FC = () => {
     let newZone = mod.zone || 'normal';
 
     if (droppedZone.zone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
-      if (category === 'full') {
+      if (category === 'full' || category === 'upper') {
         effectiveHeight = droppedZone.droppedInternalHeight;
       }
       newZone = 'dropped';
     } else {
-      // normal zone: 사용자가 설정한 freeHeight 유지, 없으면 원래 높이 사용
-      effectiveHeight = mod.freeHeight || originalHeight;
+      // normal zone: full/upper 카테고리는 전체 내경 높이로 복원 (단내림→메인 이동 시)
+      if (category === 'full' || category === 'upper') {
+        effectiveHeight = originalHeight;
+      } else {
+        effectiveHeight = mod.freeHeight || originalHeight;
+      }
       newZone = 'normal';
     }
 
