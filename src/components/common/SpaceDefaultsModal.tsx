@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getSpaceConfigDefaults, updateSpaceConfigDefaults, SpaceConfigDefaults } from '@/firebase/userProfiles';
-import { SPACE_LIMITS } from '@/store/core/spaceConfigStore';
+import { SPACE_LIMITS, SpaceInfo } from '@/store/core/spaceConfigStore';
+import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import styles from './SpaceDefaultsModal.module.css';
 
 interface SpaceDefaultsModalProps {
@@ -75,6 +76,32 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
     setMessage(null);
   };
 
+  // 프리뷰용 SpaceInfo 생성
+  const previewSpaceInfo = useMemo<SpaceInfo>(() => {
+    const surroundType = values.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const;
+    const frameConfig = values.surroundMode === 'full-surround'
+      ? { left: true, right: true, top: true, bottom: true }
+      : values.surroundMode === 'sides-only'
+        ? { left: true, right: true, top: false, bottom: false }
+        : { left: false, right: false, top: true, bottom: false };
+
+    return {
+      width: values.width,
+      height: values.height,
+      depth: 600,
+      installType: 'builtin',
+      wallConfig: { left: true, right: true },
+      hasFloorFinish: false,
+      surroundType,
+      frameConfig,
+      frameSize: { top: values.frameTop, bottom: 0, left: 18, right: 18 },
+      gapConfig: { left: values.gapLeft, right: values.gapRight },
+      baseConfig: { height: values.baseHeight, depth: 600, hasFrontBoard: false, frontBoardThickness: 0, frontBoardHeight: 0 },
+      furnitureSingleWidth: values.furnitureSingleWidth,
+      furnitureDualWidth: values.furnitureDualWidth,
+    };
+  }, [values]);
+
   if (loading) return null;
 
   return (
@@ -85,168 +112,191 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           <button className={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
-        <div className={styles.body}>
-          <p className={styles.notice}>이 부분에 설정된 기본값은 기존 프로젝트를 제외한 새 프로젝트에서 부터 적용됩니다.</p>
-          <div className={styles.fieldGroup}>
-            <span className={styles.groupTitle}>공간 크기</span>
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label className={styles.label}>너비 (W)</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={SPACE_LIMITS.WIDTH.MIN}
-                    max={SPACE_LIMITS.WIDTH.MAX}
-                    value={values.width}
-                    onChange={e => handleChange('width', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>높이 (H)</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={SPACE_LIMITS.HEIGHT.MIN}
-                    max={SPACE_LIMITS.HEIGHT.MAX}
-                    value={values.height}
-                    onChange={e => handleChange('height', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
+        <div className={styles.content}>
+          {/* 좌측: 3D 프리뷰 */}
+          <div className={styles.leftSection}>
+            <div className={styles.viewer}>
+              <Space3DView
+                spaceInfo={previewSpaceInfo}
+                viewMode="3D"
+                renderMode="solid"
+                showAll={true}
+                showDimensions={true}
+                showFrame={true}
+                isEmbedded={true}
+                isStep2={true}
+                setViewMode={() => {}}
+              />
             </div>
           </div>
 
-          <div className={styles.fieldGroup}>
-            <span className={styles.groupTitle}>이격거리</span>
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label className={styles.label}>좌측 이격</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.5}
-                    value={values.gapLeft}
-                    onChange={e => handleChange('gapLeft', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
+          {/* 우측: 설정 폼 */}
+          <div className={styles.rightSection}>
+            <div className={styles.formContent}>
+              <p className={styles.notice}>새 프로젝트에서부터 적용됩니다.</p>
+
+              <div className={styles.fieldGroup}>
+                <span className={styles.groupTitle}>공간 크기</span>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>너비 (W)</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={SPACE_LIMITS.WIDTH.MIN}
+                        max={SPACE_LIMITS.WIDTH.MAX}
+                        value={values.width}
+                        onChange={e => handleChange('width', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>높이 (H)</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={SPACE_LIMITS.HEIGHT.MIN}
+                        max={SPACE_LIMITS.HEIGHT.MAX}
+                        value={values.height}
+                        onChange={e => handleChange('height', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className={styles.field}>
-                <label className={styles.label}>우측 이격</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.5}
-                    value={values.gapRight}
-                    onChange={e => handleChange('gapRight', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
+
+              <div className={styles.fieldGroup}>
+                <span className={styles.groupTitle}>이격거리</span>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>좌측 이격</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        value={values.gapLeft}
+                        onChange={e => handleChange('gapLeft', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>우측 이격</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        value={values.gapRight}
+                        onChange={e => handleChange('gapRight', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              <div className={styles.fieldGroup}>
+                <span className={styles.groupTitle}>프레임 설정</span>
+                <div className={styles.toggleRow}>
+                  {SURROUND_OPTIONS.map(opt => (
+                    <button
+                      key={opt.id}
+                      className={`${styles.toggleBtn} ${values.surroundMode === opt.id ? styles.toggleBtnActive : ''}`}
+                      onClick={() => { setValues(prev => ({ ...prev, surroundMode: opt.id! })); setMessage(null); }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <span className={styles.groupTitle}>프레임 높이</span>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>상부프레임</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={0}
+                        max={200}
+                        value={values.frameTop}
+                        onChange={e => handleChange('frameTop', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>하부프레임</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={0}
+                        max={200}
+                        value={values.baseHeight}
+                        onChange={e => handleChange('baseHeight', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <span className={styles.groupTitle}>가구 배치 기본 너비</span>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>싱글</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={200}
+                        max={1200}
+                        step={10}
+                        value={values.furnitureSingleWidth}
+                        onChange={e => handleChange('furnitureSingleWidth', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>듀얼</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        className={styles.input}
+                        type="number"
+                        min={400}
+                        max={2400}
+                        step={10}
+                        value={values.furnitureDualWidth}
+                        onChange={e => handleChange('furnitureDualWidth', e.target.value)}
+                      />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {message && (
+                <p className={`${styles.message} ${message.type === 'success' ? styles.success : styles.error}`}>
+                  {message.text}
+                </p>
+              )}
             </div>
           </div>
-
-          <div className={styles.fieldGroup}>
-            <span className={styles.groupTitle}>프레임 설정</span>
-            <div className={styles.toggleRow}>
-              {SURROUND_OPTIONS.map(opt => (
-                <button
-                  key={opt.id}
-                  className={`${styles.toggleBtn} ${values.surroundMode === opt.id ? styles.toggleBtnActive : ''}`}
-                  onClick={() => { setValues(prev => ({ ...prev, surroundMode: opt.id! })); setMessage(null); }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <span className={styles.groupTitle}>프레임 높이</span>
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label className={styles.label}>상부프레임 높이</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={0}
-                    max={200}
-                    value={values.frameTop}
-                    onChange={e => handleChange('frameTop', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>하부프레임 높이</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={0}
-                    max={200}
-                    value={values.baseHeight}
-                    onChange={e => handleChange('baseHeight', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <span className={styles.groupTitle}>가구 배치 기본 너비</span>
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label className={styles.label}>싱글</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={200}
-                    max={1200}
-                    step={10}
-                    value={values.furnitureSingleWidth}
-                    onChange={e => handleChange('furnitureSingleWidth', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>듀얼</label>
-                <div className={styles.inputWrapper}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    min={400}
-                    max={2400}
-                    step={10}
-                    value={values.furnitureDualWidth}
-                    onChange={e => handleChange('furnitureDualWidth', e.target.value)}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {message && (
-            <p className={`${styles.message} ${message.type === 'success' ? styles.success : styles.error}`}>
-              {message.text}
-            </p>
-          )}
         </div>
 
         <div className={styles.footer}>
