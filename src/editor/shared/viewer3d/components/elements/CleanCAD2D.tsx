@@ -1620,8 +1620,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
-      {showDimensions && spaceInfo.droppedCeiling?.enabled && currentViewDirection !== 'top' && (
+      {/* 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
+      {showDimensions && (spaceInfo.droppedCeiling?.enabled || (isFreePlacement && spaceInfo.stepCeiling?.enabled)) && currentViewDirection !== 'top' && (
         <group>
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
@@ -1631,9 +1631,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
-            // 프레임을 포함한 전체 좌표 계산
-            const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
-            const droppedWidth = spaceInfo.droppedCeiling.width;
+            // 자유배치: 커튼박스 + 단내림 분리 계산
+            const hasDC = !!spaceInfo.droppedCeiling?.enabled;
+            const hasSC = isFreePlacement && !!spaceInfo.stepCeiling?.enabled;
+            const dcWidth = hasDC ? (spaceInfo.droppedCeiling!.width || 0) : 0;
+            const scWidth = hasSC ? (spaceInfo.stepCeiling!.width || 0) : 0;
+            const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
+            const scPosition = spaceInfo.stepCeiling?.position || 'right';
+
+            // 메인 구간 = 전체 - 커튼박스 - 단내림
+            const mainWidth = spaceInfo.width - dcWidth - scWidth;
+            const droppedWidth = dcWidth; // 커튼박스(자유배치) or 단내림(슬롯)
 
             // 슬롯 합계 너비 (실배치 공간)
             const zoneSlotInfoForDim = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
@@ -1645,21 +1653,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? zoneSlotInfoForDim.dropped.slotWidths.reduce((sum: number, w: number) => sum + w, 0)
               : (zoneSlotInfoForDim.dropped?.columnWidth || 0) * (zoneSlotInfoForDim.dropped?.columnCount || 0);
             const droppedSlotTotalWidth = Math.round(droppedSlotTotalWidthRaw * 10) / 10;
-            
-            // 메인 구간 치수선
-            const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
-              ? leftOffset + mmToThreeUnits(droppedWidth)
+
+            // 구간 순서 (벽→커튼박스→단내림→메인):
+            // position=right: 좌측부터 [메인] [단내림] [커튼박스] 우벽
+            // position=left:  좌벽 [커튼박스] [단내림] [메인]
+
+            // 메인 구간 X 좌표
+            const mainStartX = dcPosition === 'left'
+              ? leftOffset + mmToThreeUnits(dcWidth + scWidth)
               : leftOffset;
-            const mainEndX = spaceInfo.droppedCeiling.position === 'left'
+            const mainEndX = dcPosition === 'left'
               ? leftOffset + mmToThreeUnits(spaceInfo.width)
               : leftOffset + mmToThreeUnits(mainWidth);
-            
-            // 단내림 구간 치수선
-            const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-              ? leftOffset
+
+            // 단내림(stepCeiling) 구간 X 좌표
+            const scStartX = dcPosition === 'left'
+              ? leftOffset + mmToThreeUnits(dcWidth)
               : leftOffset + mmToThreeUnits(mainWidth);
-            const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? leftOffset + mmToThreeUnits(droppedWidth)
+            const scEndX = dcPosition === 'left'
+              ? leftOffset + mmToThreeUnits(dcWidth + scWidth)
+              : leftOffset + mmToThreeUnits(mainWidth + scWidth);
+
+            // 커튼박스(droppedCeiling) 구간 X 좌표
+            const droppedStartX = dcPosition === 'left'
+              ? leftOffset
+              : leftOffset + mmToThreeUnits(mainWidth + scWidth);
+            const droppedEndX = dcPosition === 'left'
+              ? leftOffset + mmToThreeUnits(dcWidth)
               : leftOffset + mmToThreeUnits(spaceInfo.width);
             
             return (
@@ -1695,7 +1715,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {Math.round(mainWidth)}
                   </Text>
                 )}
-                {/* 단내림 구간 치수선 */}
+                {/* 단내림(stepCeiling) 구간 치수선 — 자유배치 전용 */}
+                {hasSC && (<>
+                <Line
+                  points={[[scStartX, subDimensionY, 0.002], [scEndX, subDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([scStartX, subDimensionY, 0.002], [scStartX + 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([scEndX, subDimensionY, 0.002], [scEndX - 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[(scStartX + scEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {Math.round(scWidth)}
+                  </Text>
+                )}
+                </>)}
+                {/* 커튼박스(droppedCeiling) 구간 치수선 */}
+                {hasDC && (<>
                 <Line
                   points={[[droppedStartX, subDimensionY, 0.002], [droppedEndX, subDimensionY, 0.002]]}
                   color={dimensionColor}
@@ -1726,6 +1780,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {Math.round(droppedWidth)}
                   </Text>
                 )}
+                </>)}
 
                 {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 ===== */}
                 {(<>
@@ -1845,7 +1900,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
                 
-                {/* 단내림 구간 연장선 (치수선에서 벽면까지) */}
+                {/* 단내림(stepCeiling) 구간 연장선 */}
+                {hasSC && (
+                <>
+                <Line
+                  points={[
+                    [scStartX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [scStartX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[
+                    [scEndX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [scEndX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                </>
+                )}
+                {/* 커튼박스(droppedCeiling) 구간 연장선 */}
+                {hasDC && (
+                <>
                 <Line
                   points={[
                     [droppedStartX, subDimensionY - mmToThreeUnits(40), 0.001],
@@ -1862,6 +1940,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={subGuideColor}
                   lineWidth={1}
                 />
+                </>
+                )}
 
                 {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
                 {(() => {
