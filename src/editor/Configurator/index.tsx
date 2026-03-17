@@ -3362,33 +3362,16 @@ const Configurator: React.FC = () => {
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
                   type="text"
-                  defaultValue={(() => {
-                    const dcDefaultW = isFreeMode ? 150 : 900;
-                    const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || dcDefaultW);
-                    if (isFreeMode) return Math.round(mainOuter);
-                    const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                    const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                    const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                    const pos = spaceInfo.droppedCeiling?.position || 'right';
-                    return Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
-                  })()}
-                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900))}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}`}
+                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)))}
+                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900))}`}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
                   onBlur={(e) => {
                     const inputValue = e.target.value;
                     const totalWidth = spaceInfo.width || 4800;
-                    const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
-                    const pos = spaceInfo.droppedCeiling?.position || 'right';
-                    const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                    const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                    const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                    const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? gapLeft + gapMiddle : gapMiddle + gapRight);
-                    const currentMainOuter = totalWidth - currentDroppedWidth;
-                    const currentMainInternal = Math.round(currentMainOuter - gapToAdd);
-                    if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentMainInternal.toString(); return; }
-                    const mainInternal = parseInt(inputValue);
-                    const mainOuter = Math.round(mainInternal + gapToAdd);
-                    const newDroppedWidth = totalWidth - mainOuter;
+                    const currentMainOuter = totalWidth - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900));
+                    if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = Math.round(currentMainOuter).toString(); return; }
+                    const newMainOuter = parseInt(inputValue);
+                    const newDroppedWidth = totalWidth - newMainOuter;
                     if (newDroppedWidth < 100) {
                       handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
                     } else if (newDroppedWidth > totalWidth - 100) {
@@ -3435,32 +3418,21 @@ const Configurator: React.FC = () => {
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
                   type="text"
-                  defaultValue={(() => {
-                    const dcDefaultW = isFreeMode ? 150 : 900;
-                    const droppedOuter = spaceInfo.droppedCeiling?.width || dcDefaultW;
-                    if (isFreeMode) return Math.round(droppedOuter);
-                    const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                    const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                    const pos = spaceInfo.droppedCeiling?.position || 'right';
-                    return Math.round(pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft);
-                  })()}
-                  key={`dropped-width-${spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}`}
+                  defaultValue={spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)}
+                  key={`dropped-width-${spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)}`}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
                   onBlur={(e) => {
                     const inputValue = e.target.value;
                     const totalWidth = spaceInfo.width || 4800;
                     const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
-                    const pos = spaceInfo.droppedCeiling?.position || 'right';
-                    const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5));
-                    if (inputValue === '' || isNaN(parseInt(inputValue))) { const currentInternal = Math.round(currentDroppedWidth - gapToAdd); e.target.value = currentInternal.toString(); return; }
-                    const internalWidth = parseInt(inputValue);
-                    const droppedWidth = Math.round(internalWidth + gapToAdd);
-                    if (droppedWidth < 100) {
+                    if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentDroppedWidth.toString(); return; }
+                    const newDroppedWidth = parseInt(inputValue);
+                    if (newDroppedWidth < 100) {
                       handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
-                    } else if (droppedWidth > totalWidth - 100) {
+                    } else if (newDroppedWidth > totalWidth - 100) {
                       handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
                     } else {
-                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: droppedWidth } });
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
                     }
                   }}
                   className={`${styles.input} ${styles.inputWithUnitField}`}
