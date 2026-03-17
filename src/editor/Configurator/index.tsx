@@ -4009,97 +4009,109 @@ const Configurator: React.FC = () => {
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
-                {/* 좌측 이격거리 - 벽없음이면 비활성화 */}
+                {/* 좌측 이격거리 - 좌단내림 시 경계이격(middle), 그 외 벽이격(left) */}
+                {(() => {
+                  const isLeftBoundary = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left';
+                  const gapKey = isLeftBoundary ? 'middle' : 'left';
+                  const curVal = isLeftBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
+                  const isDisabled = !isLeftBoundary && !spaceInfo.wallConfig?.left;
+                  return (
                 <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>좌이격</label>
+                  <label className={styles.frameItemLabel}>{isLeftBoundary ? '좌이격(경계)' : '좌이격'}</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const cur = spaceInfo.gapConfig?.left ?? 1.5;
-                        const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
-                      disabled={!spaceInfo.wallConfig?.left}
+                      disabled={isDisabled}
                     >
                       −
                     </button>
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left ?? 1.5) : 0}
+                      value={isDisabled ? 0 : curVal}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
-                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
                         }
                       }}
                       onBlur={(e) => {
                         const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
                       className={styles.frameNumberInput}
-                      disabled={!spaceInfo.wallConfig?.left}
+                      disabled={isDisabled}
                     />
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const cur = spaceInfo.gapConfig?.left ?? 1.5;
-                        const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, left: val } });
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
-                      disabled={!spaceInfo.wallConfig?.left}
+                      disabled={isDisabled}
                     >
                       +
                     </button>
                   </div>
                 </div>
+                  );
+                })()}
 
-                {/* 우측 이격거리 - 벽없음이면 비활성화 */}
+                {/* 우측 이격거리 - 우단내림 시 경계이격(middle), 그 외 벽이격(right) */}
+                {(() => {
+                  const isRightBoundary = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right';
+                  const gapKey = isRightBoundary ? 'middle' : 'right';
+                  const curVal = isRightBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : (spaceInfo.gapConfig?.right ?? 1.5);
+                  const isDisabled = !isRightBoundary && !spaceInfo.wallConfig?.right;
+                  return (
                 <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>우이격</label>
+                  <label className={styles.frameItemLabel}>{isRightBoundary ? '우이격(경계)' : '우이격'}</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const cur = spaceInfo.gapConfig?.right ?? 1.5;
-                        const val = Math.max(0, Math.round((cur - 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
-                      disabled={!spaceInfo.wallConfig?.right}
+                      disabled={isDisabled}
                     >
                       −
                     </button>
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={spaceInfo.wallConfig?.right ? (spaceInfo.gapConfig?.right ?? 1.5) : 0}
+                      value={isDisabled ? 0 : curVal}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
-                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
                         }
                       }}
                       onBlur={(e) => {
                         const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
                       className={styles.frameNumberInput}
-                      disabled={!spaceInfo.wallConfig?.right}
+                      disabled={isDisabled}
                     />
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const cur = spaceInfo.gapConfig?.right ?? 1.5;
-                        const val = Math.min(5, Math.round((cur + 0.5) * 10) / 10);
-                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, right: val } });
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
-                      disabled={!spaceInfo.wallConfig?.right}
+                      disabled={isDisabled}
                     >
                       +
                     </button>
                   </div>
                 </div>
+                  );
+                })()}
 
                 {/* 상부 프레임 */}
                 <div className={styles.frameItem}>
@@ -4148,6 +4160,60 @@ const Configurator: React.FC = () => {
             <div className={styles.subSetting} style={{ marginTop: '12px', borderTop: '1px solid var(--theme-border)', paddingTop: '10px' }}>
               <div style={{ fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 600, marginBottom: '8px' }}>단내림 구간</div>
               <div className={styles.frameGrid}>
+                {/* 단내림 구간 벽쪽 이격거리 (우단내림→우이격, 좌단내림→좌이격) */}
+                {(() => {
+                  const pos = spaceInfo.droppedCeiling?.position;
+                  // 노서라운드일 때만 이격 표시 (서라운드는 프레임으로 처리)
+                  if ((spaceInfo.surroundType || 'surround') !== 'no-surround') return null;
+                  const gapKey = pos === 'right' ? 'right' : 'left';
+                  const label = pos === 'right' ? '우이격' : '좌이격';
+                  const curVal = spaceInfo.gapConfig?.[gapKey] ?? 1.5;
+                  const hasWall = pos === 'right' ? (spaceInfo.wallConfig?.right ?? true) : (spaceInfo.wallConfig?.left ?? true);
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>{label}</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      disabled={!hasWall}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={hasWall ? curVal : 0}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                      disabled={!hasWall}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      disabled={!hasWall}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
                 {/* 단내림 상부프레임 */}
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부프레임</label>
