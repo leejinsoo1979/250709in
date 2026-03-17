@@ -995,8 +995,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
   // 치수선 균등 간격 배치: 4단 — 전체폭 → 구간사이즈 → 슬롯합계(실배치) → 슬롯폭
+  // 자유배치+단내림: 슬롯합계 불필요 → 3단으로 축소
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = hasDroppedCeiling ? 4 : 3;
+  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
@@ -1646,7 +1647,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
 
-                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 ===== */}
+                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 — 자유배치에서는 숨김 (슬롯 개념 없음) ===== */}
+                {!isFreePlacement && (<>
                 {/* 메인 구간 슬롯 합계 치수선 */}
                 <Line
                   points={[[mainStartX, slotTotalDimensionY, 0.002], [mainEndX, slotTotalDimensionY, 0.002]]}
@@ -1732,6 +1734,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={subGuideColor}
                   lineWidth={1}
                 />
+                </>)}
 
                 {/* 구간 분리 가이드라인 - 숨김 처리 */}
                 {/* <Line
