@@ -1848,15 +1848,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 결과: 단내림·메인은 원래 구간 너비 유지, 커튼박스는 양쪽 차감
 
                     // 메인 배치폭:
-                    // - 단내림 인접: 단내림이 밀려옴(-middleGap) + 커튼박스쪽 밀림(+middleGap) = 상쇄 → 0
-                    // - 커튼박스 인접(단내림 없을 때): middleGap 차감
+                    // - 단내림 인접: 단내림에서 밀려옴 → 메인이 커튼박스쪽으로 밀림 → 상쇄 → 0
+                    // - 커튼박스 인접: 메인이 커튼박스쪽으로 밀림 → 커튼박스가 흡수 → 상쇄 → 0
                     // - 벽 인접: 벽이격 차감
-                    const effectiveMainLeftGap = mainLeftAdj === 'step'
-                      ? 0  // 단내림↔메인: 밀림 상쇄 → 차감 0
-                      : mainLeftGap;
-                    const effectiveMainRightGap = mainRightAdj === 'step'
-                      ? 0  // 단내림↔메인: 밀림 상쇄 → 차감 0
-                      : mainRightGap;
+                    const effectiveMainLeftGap = mainLeftAdj === 'wall' ? mainLeftGap : 0;
+                    const effectiveMainRightGap = mainRightAdj === 'wall' ? mainRightGap : 0;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
                     // 단내림 배치폭:
