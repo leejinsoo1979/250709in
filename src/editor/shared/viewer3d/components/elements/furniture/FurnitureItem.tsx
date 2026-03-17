@@ -1221,9 +1221,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
       const isInDroppedZone = placedModule.zone === 'dropped';
-      const ceilingHeight = isInDroppedZone && spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined
-        ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight // 전체 높이 - 내려온 높이
-        : spaceInfo.height;
+      let ceilingHeight = spaceInfo.height;
+      if (isInDroppedZone) {
+        if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+          // 자유배치: stepCeiling 단내림
+          ceilingHeight = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+        } else if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined) {
+          // 균등배치: droppedCeiling 단내림
+          ceilingHeight = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+        }
+      }
 
       // 상부장 상단 Y = 천장 높이 - 상부프레임 높이 (상부프레임 하단)
       const upperCabinetTopY = ceilingHeight - topFrameHeightMm;

@@ -3202,11 +3202,22 @@ const Room: React.FC<RoomProps> = ({
                   }
 
                   // 프레임 높이 = 천장에서 가구 상단까지의 거리
-                  // 천장(heightMm) - 받침대(baseFrame) - 가구높이(freeHeight) = ceilingToBaseTop - freeHeight
-                  const totalFrameHeightMM = Math.max(0, ceilingToBaseTopMM - modFreeHeight);
+                  // 단내림 구간이면 단내림 천장 기준, 아니면 전체 천장 기준
+                  let effectiveCeilingToBase = ceilingToBaseTopMM;
+                  let effectiveTopY = panelStartY + height; // 전체 천장 Y
+                  if (mod.zone === 'dropped' && spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+                    const stepDropH = spaceInfo.stepCeiling.dropHeight || 0;
+                    effectiveCeilingToBase = ceilingToBaseTopMM - stepDropH;
+                    effectiveTopY = panelStartY + height - mmToThreeUnits(stepDropH);
+                  } else if (mod.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+                    const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
+                    effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
+                    effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
+                  }
+                  const totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
                   const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-                  // 프레임 상단 = 천장에 맞추고 아래로 확장
-                  const modFrameCenterY = panelStartY + height - modFrameHeight / 2;
+                  // 프레임 상단 = 해당 구간 천장에 맞추고 아래로 확장
+                  const modFrameCenterY = effectiveTopY - modFrameHeight / 2;
 
                   // 가구별 상부프레임 Z축 옵셋
                   const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
