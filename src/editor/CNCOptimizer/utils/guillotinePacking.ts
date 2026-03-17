@@ -48,11 +48,11 @@ export class GuillotinePacker {
     this.kerf = kerf;
   }
 
-  packAll(panels: Rect[], _stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'): PackedBin {
-    // 항상 horizontal 모드 사용
-    // horizontal: height로 그룹핑(스트립=y축=L방향), width를 x축(W방향)에 배치
-    // → panel.width가 반드시 시트의 W방향(binWidth=1220)에 놓임
-    const bestResult = this.packStrips(panels, true);
+  packAll(panels: Rect[], stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'): PackedBin {
+    // horizontal: height로 그룹핑, width를 x축(W방향)에 배치
+    // vertical: width로 그룹핑, height를 y축(L방향)에 배치 — 측판용
+    const isHorizontal = stripDirection !== 'vertical';
+    const bestResult = this.packStrips(panels, isHorizontal);
     const bestEfficiency = this.calculateEfficiency(bestResult);
 
     this.strips = bestResult;
@@ -639,10 +639,12 @@ export function packGuillotine(
     else bodyPanels.push(panel);
   }
 
-  // ── 2단계: 각 카테고리 내에서 사이즈 기준 패킹 (큰 것부터) ──
-  const sideBins = packBySizeGroups(sidePanels, binWidth, binHeight, kerf, stripDirection);
-  const bodyBins = packBySizeGroups(bodyPanels, binWidth, binHeight, kerf, stripDirection);
-  const frameBins = packBySizeGroups(framePanels, binWidth, binHeight, kerf, stripDirection);
+  // ── 2단계: 각 카테고리별 최적 방향으로 패킹 ──
+  // 측판: vertical (같은 width끼리 한 줄에 상하 대칭 배치)
+  // 본체/프레임: horizontal (width를 x축=W방향에 배치)
+  const sideBins = packBySizeGroups(sidePanels, binWidth, binHeight, kerf, 'vertical');
+  const bodyBins = packBySizeGroups(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
+  const frameBins = packBySizeGroups(framePanels, binWidth, binHeight, kerf, 'horizontal');
 
   // 순서: 측판 → 본체 → 프레임 (큰 것부터 재단)
   return [...sideBins, ...bodyBins, ...frameBins];
