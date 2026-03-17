@@ -2434,8 +2434,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 자유배치 모드 2단: 좌이격 | 가구합산너비 | 우이격 */}
-      {isFreePlacement && furnitureDimensions && furnitureDimensions.length > 0 && (() => {
+      {/* 자유배치 모드 2단: 좌이격 | 가구합산너비 | 우이격 — 숨김 처리 (부정확) */}
+      {false && isFreePlacement && furnitureDimensions && furnitureDimensions.length > 0 && (() => {
         const validDims = furnitureDimensions.filter((d): d is NonNullable<typeof d> => d !== null);
         if (validDims.length === 0) return null;
         // moduleX는 Three.js 단위, actualWidth는 mm → 올바른 단위 변환
