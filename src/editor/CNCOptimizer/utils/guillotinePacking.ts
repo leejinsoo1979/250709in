@@ -131,7 +131,10 @@ export class GuillotinePacker {
       });
     }
 
-    // 3단계: 그룹별로 스트립 생성
+    // 3단계: 라운드 로빈으로 스트립 생성
+    // 각 치수 그룹에서 한 스트립씩만 만들고 다음 치수 그룹으로 순환
+    // → 같은 가구의 서로 다른 치수 패널이 같은 시트에 배치됨
+    // 예: (하)백패널(600높이) 스트립 → (상)백패널(564높이) 스트립 → 같은 시트
     let currentPos = 0;
     const maxPos = horizontal ? this.binHeight : this.binWidth;
     const fillMax = horizontal ? this.binWidth : this.binHeight;
@@ -141,67 +144,49 @@ export class GuillotinePacker {
     // 잔여 공간 목록 (스트립 옆 빈 공간)
     const residualAreas: ResidualArea[] = [];
 
+    // 각 치수 그룹의 다음 배치 인덱스 추적
+    const groupNextIndex = new Map<number, number>();
     for (const dim of sortedDims) {
-      const groupPanels = groups.get(dim)!;
-      if (groupPanels.length === 0) continue;
+      groupNextIndex.set(dim, 0);
+    }
 
-      // 이미 잔여 공간에 배치된 패널 제외
-      const unplacedGroupPanels = groupPanels.filter(p => !placedPanelIds.has(p.id));
-      if (unplacedGroupPanels.length === 0) continue;
+    // 라운드 로빈: 모든 그룹이 소진될 때까지 반복
+    let anyPlaced = true;
+    while (anyPlaced) {
+      anyPlaced = false;
 
-      // 이 치수의 스트립이 시트에 들어가는지 확인
-      if (currentPos + dim > maxPos) continue;
+      for (const dim of sortedDims) {
+        const groupPanels = groups.get(dim)!;
+        const startIdx = groupNextIndex.get(dim)!;
 
-      let fillPos = 0;
-      let currentStrip: Strip = {
-        x: horizontal ? 0 : currentPos,
-        y: horizontal ? currentPos : 0,
-        width: horizontal ? this.binWidth : dim,
-        height: horizontal ? dim : this.binHeight,
-        panels: [],
-        horizontal
-      };
-
-      for (const panel of unplacedGroupPanels) {
-        if (placedPanelIds.has(panel.id)) continue;
-        const panelFillDim = horizontal ? panel.width : panel.height;
-
-        if (fillPos + panelFillDim <= fillMax) {
-          const placed: PlacedRect = {
-            ...panel,
-            x: horizontal ? fillPos : currentPos,
-            y: horizontal ? currentPos : fillPos,
-            rotated: false,
-            stripIndex: strips.length
-          };
-          currentStrip.panels.push(placed);
-          placedPanelIds.add(panel.id);
-          fillPos += panelFillDim + this.kerf;
-          // 이 치수의 패널은 non-rotated로 배치됨 → 같은 치수 패널 회전 금지
-          const sizeKey = `${panel.width}×${panel.height}`;
-          rotationLocked.set(sizeKey, false);
-        } else {
-          // 현재 스트립이 꽉 참 → 스트립 저장 후 새 스트립
-          if (currentStrip.panels.length > 0) {
-            // 스트립 옆 잔여 공간 계산
-            if (fillPos < fillMax) {
-              residualAreas.push(this.calcResidual(currentStrip, fillPos, horizontal, dim));
-            }
-            strips.push(currentStrip);
-            currentPos += dim + this.kerf;
-
-            if (currentPos + dim > maxPos) break;
+        // 이 그룹에서 아직 배치 안 된 패널 찾기
+        let hasUnplaced = false;
+        for (let i = startIdx; i < groupPanels.length; i++) {
+          if (!placedPanelIds.has(groupPanels[i].id)) {
+            hasUnplaced = true;
+            break;
           }
+        }
+        if (!hasUnplaced) continue;
 
-          fillPos = 0;
-          currentStrip = {
-            x: horizontal ? 0 : currentPos,
-            y: horizontal ? currentPos : 0,
-            width: horizontal ? this.binWidth : dim,
-            height: horizontal ? dim : this.binHeight,
-            panels: [],
-            horizontal
-          };
+        // 이 치수의 스트립이 시트에 들어가는지 확인
+        if (currentPos + dim > maxPos) continue;
+
+        // 한 스트립분만 채우기
+        let fillPos = 0;
+        const currentStrip: Strip = {
+          x: horizontal ? 0 : currentPos,
+          y: horizontal ? currentPos : 0,
+          width: horizontal ? this.binWidth : dim,
+          height: horizontal ? dim : this.binHeight,
+          panels: [],
+          horizontal
+        };
+
+        for (let i = startIdx; i < groupPanels.length; i++) {
+          const panel = groupPanels[i];
+          if (placedPanelIds.has(panel.id)) continue;
+          const panelFillDim = horizontal ? panel.width : panel.height;
 
           if (fillPos + panelFillDim <= fillMax) {
             const placed: PlacedRect = {
@@ -216,17 +201,22 @@ export class GuillotinePacker {
             fillPos += panelFillDim + this.kerf;
             const sizeKey = `${panel.width}×${panel.height}`;
             rotationLocked.set(sizeKey, false);
+          } else {
+            // 스트립 꽉 참 → 이 그룹의 나머지는 다음 라운드에서
+            groupNextIndex.set(dim, i);
+            break;
           }
         }
-      }
 
-      // 마지막 스트립 저장
-      if (currentStrip.panels.length > 0) {
-        if (fillPos < fillMax) {
-          residualAreas.push(this.calcResidual(currentStrip, fillPos, horizontal, dim));
+        // 스트립 저장
+        if (currentStrip.panels.length > 0) {
+          if (fillPos < fillMax) {
+            residualAreas.push(this.calcResidual(currentStrip, fillPos, horizontal, dim));
+          }
+          strips.push(currentStrip);
+          currentPos += dim + this.kerf;
+          anyPlaced = true;
         }
-        strips.push(currentStrip);
-        currentPos += dim + this.kerf;
       }
     }
 
