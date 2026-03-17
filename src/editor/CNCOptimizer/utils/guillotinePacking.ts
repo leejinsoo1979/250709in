@@ -571,13 +571,63 @@ function packBySizeGroups(
 }
 
 /**
+ * 패널 이름에서 종류 키를 추출 (같은 종류끼리 같은 방향 강제용)
+ * 예: "[1]듀얼 2단 옷장 (상)백패널" → "백패널"
+ *     "[1]듀얼 2단 옷장 좌측판" → "좌측판"
+ */
+function extractPanelTypeKey(name: string): string {
+  if (!name) return '';
+  // 가구번호와 모델명 제거 후 핵심 패널 종류만 추출
+  const types = ['백패널', '좌측판', '우측판', '상판', '바닥', '선반', '칸막이',
+    '상부프레임', '하부프레임', '상부프래임', '하부프래임', '후면 보강대',
+    '서랍앞판', '서랍뒷판', '서랍좌측', '서랍우측', '서랍바닥', '도어'];
+  for (const t of types) {
+    if (name.includes(t)) return t;
+  }
+  return name;
+}
+
+/**
+ * 방향 정규화: 같은 종류 패널은 같은 방향으로 통일
+ *
+ * 규칙:
+ *   - width > binWidth인 패널이 있으면 → 해당 종류 전체를 width↔height 스왑 (rotated=true)
+ *   - 한 종류 안에서 일부만 스왑되는 것 방지 → 그 종류 전체를 같은 방향으로 통일
+ */
+function normalizeOrientation(panels: Rect[], binWidth: number): Rect[] {
+  // 패널 종류별 그룹핑
+  const typeGroups = new Map<string, Rect[]>();
+  for (const panel of panels) {
+    const typeKey = extractPanelTypeKey(panel.name || '');
+    if (!typeGroups.has(typeKey)) typeGroups.set(typeKey, []);
+    typeGroups.get(typeKey)!.push(panel);
+  }
+
+  // 각 종류별로: 하나라도 width > binWidth이면 전체 스왑
+  const swapTypes = new Set<string>();
+  for (const [typeKey, group] of typeGroups) {
+    const needsSwap = group.some(p => p.width > binWidth);
+    if (needsSwap) swapTypes.add(typeKey);
+  }
+
+  // 스왑 적용
+  return panels.map(panel => {
+    const typeKey = extractPanelTypeKey(panel.name || '');
+    if (swapTypes.has(typeKey)) {
+      return { ...panel, width: panel.height, height: panel.width, rotated: true };
+    }
+    return { ...panel, rotated: false };
+  });
+}
+
+/**
  * 길로틴 방식 멀티 빈 패킹
  *
  * 핵심 원칙:
  *   1. 측판 / 본체(상판·하판·선반·칸막이) / 프레임 — 카테고리별로 시트 분리
  *   2. 같은 사이즈 패널끼리 최대한 같은 시트에 배치 (재단 효율)
  *   3. 큰 패널부터 먼저 재단, 프레임은 맨 마지막
- *   4. 모든 패널 회전 금지
+ *   4. 같은 종류 패널은 같은 방향으로 통일
  */
 export function packGuillotine(
   panels: Rect[],
@@ -587,11 +637,14 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
+  // ── 0단계: 방향 정규화 (같은 종류 패널은 같은 방향으로 통일) ──
+  const normalized = normalizeOrientation(panels, binWidth);
+
   // ── 1단계: 카테고리 분류 (측판 / 본체 / 프레임) ──
   const sidePanels: Rect[] = [];
   const bodyPanels: Rect[] = [];
   const framePanels: Rect[] = [];
-  for (const panel of panels) {
+  for (const panel of normalized) {
     const cat = getPanelCategory(panel.name || '');
     if (cat === 'side') sidePanels.push(panel);
     else if (cat === 'frame') framePanels.push(panel);
