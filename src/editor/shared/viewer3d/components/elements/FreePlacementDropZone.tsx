@@ -1569,13 +1569,22 @@ const FreePlacementDropZone: React.FC = () => {
         const hasLeftWallLocal = isBuiltInLocal || (isSemiStandingLocal && spaceInfo.wallConfig?.left);
         const hasRightWallLocal = isBuiltInLocal || (isSemiStandingLocal && spaceInfo.wallConfig?.right);
 
-        // 단내림(step)은 이제 가구 배치 영역에 포함 → 'wall'로 처리
-        const leftAdj = hasDropped && droppedPosition === 'left' ? 'dropped' : 'wall';
-        const rightAdj = hasDropped && droppedPosition === 'right' ? 'dropped' : 'wall';
+        // 메인구간 좌/우 인접 판별: 단내림이 커튼박스와 같은 쪽이면 메인 인접은 '단내림'
+        const leftAdj: 'wall' | 'dropped' | 'step' =
+          (hasStepLocal && stepPosLocal === 'left') ? 'step'
+          : (hasDropped && droppedPosition === 'left') ? 'dropped'
+          : 'wall';
+        const rightAdj: 'wall' | 'dropped' | 'step' =
+          (hasStepLocal && stepPosLocal === 'right') ? 'step'
+          : (hasDropped && droppedPosition === 'right') ? 'dropped'
+          : 'wall';
 
-        // 실제 적용된 gap 크기 (벽이면 wallGap, 구간경계면 middleGap)
-        const effectiveLeftGap = leftAdj === 'wall' ? (hasLeftWallLocal ? gapLeft : 0) : middleGapVal;
-        const effectiveRightGap = rightAdj === 'wall' ? (hasRightWallLocal ? gapRight : 0) : middleGapVal;
+        // 실제 적용된 gap 크기 (벽→wallGap, 커튼박스→middle2, 단내림→middle)
+        const middleGapForStep = spaceInfo.gapConfig?.middle ?? 1.5;
+        const effectiveLeftGap = leftAdj === 'wall' ? (hasLeftWallLocal ? gapLeft : 0)
+          : leftAdj === 'step' ? middleGapForStep : middleGapVal;
+        const effectiveRightGap = rightAdj === 'wall' ? (hasRightWallLocal ? gapRight : 0)
+          : rightAdj === 'step' ? middleGapForStep : middleGapVal;
 
         // gap이 전부 0이면 패스 (middleGap도 고려)
         if (effectiveLeftGap <= 0 && effectiveRightGap <= 0 && gapLeft <= 0 && gapRight <= 0 && middleGapVal <= 0) return null;
@@ -1593,10 +1602,11 @@ const FreePlacementDropZone: React.FC = () => {
         const zOffset = (furnitureFrontZ + backWallZ) / 2;
         const boxes: React.ReactNode[] = [];
 
-        // 각 쪽 gap 박스 높이 & Y 위치 결정
-        // - 단내림 인접: 단내림 천장 높이까지 (바닥~단내림천장)
-        // - 커튼박스 인접: 커튼박스 내벽 높이만 (메인천장~커튼박스천장)
+        // 각 쪽 gap 박스 높이 = 장애벽(기둥) 높이만 표시
         // - 벽 인접: 전체 높이 (바닥~천장)
+        // - 커튼박스 인접: 커튼박스 내벽(dcDropHeight)만 (메인천장~커튼박스천장)
+        // - 단내림 인접: 단내림 기둥(scDropH)만 (메인천장~단내림천장)
+        // - 커튼박스↔단내림: (dcDropHeight+scDropH) (단내림천장~커튼박스천장)
         const stepDropH = (spaceInfo.stepCeiling?.dropHeight || 0);
         const dcDropHeightMm = spaceInfo.droppedCeiling?.dropHeight || 0;
         const dcWallH = dcDropHeightMm * 0.01; // 커튼박스 내벽 높이 (메인천장~커튼박스천장)
@@ -1614,12 +1624,13 @@ const FreePlacementDropZone: React.FC = () => {
                 <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
-          } else if (hasStepLocal && stepPosLocal === 'left') {
-            // 단내림 인접: 바닥~단내림천장
-            const h = (spaceInfo.height - stepDropH) * 0.01;
+          } else if (leftAdj === 'step' && stepDropH > 0) {
+            // 단내림 인접: 장애벽(단내림 기둥) 높이만 — 천장~단내림천장
+            const dropHThree = stepDropH * 0.01;
+            const gapY = spaceH - dropHThree / 2;
             boxes.push(
-              <mesh key="gap-left" position={[cx, h / 2, zOffset]}>
-                <boxGeometry args={[w, h, depthThree]} />
+              <mesh key="gap-left" position={[cx, gapY, zOffset]}>
+                <boxGeometry args={[w, dropHThree, depthThree]} />
                 <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
@@ -1645,12 +1656,13 @@ const FreePlacementDropZone: React.FC = () => {
                 <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
-          } else if (hasStepLocal && stepPosLocal === 'right') {
-            // 단내림 인접: 바닥~단내림천장
-            const h = (spaceInfo.height - stepDropH) * 0.01;
+          } else if (rightAdj === 'step' && stepDropH > 0) {
+            // 단내림 인접: 장애벽(단내림 기둥) 높이만 — 천장~단내림천장
+            const dropHThree = stepDropH * 0.01;
+            const gapY = spaceH - dropHThree / 2;
             boxes.push(
-              <mesh key="gap-right" position={[cx, h / 2, zOffset]}>
-                <boxGeometry args={[w, h, depthThree]} />
+              <mesh key="gap-right" position={[cx, gapY, zOffset]}>
+                <boxGeometry args={[w, dropHThree, depthThree]} />
                 <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
@@ -1714,46 +1726,24 @@ const FreePlacementDropZone: React.FC = () => {
           // 단내림이 벽에 직접 인접하는지 (커튼박스가 같은 쪽에 없는 경우)
           const cbSameSide = hasDropped && droppedPosition === stepPosition;
 
-          // 단내림↔메인 경계 gap 박스: 단내림 기둥(천장~단내림천장) 높이만
-          if (middleGap > 0) {
-            const w = middleGap * 0.01;
-            const dropHThree = scDropH * 0.01; // 단내림 기둥 높이 (dropHeight)
-            const gapBoxY = spaceH - dropHThree / 2; // 천장에서 기둥 절반만큼 아래
-            if (stepPosition === 'left') {
-              // 좌측: 커튼박스 있으면 커튼박스 다음에 단내림 위치
-              const scOffset = cbSameSide ? droppedWidth : 0;
-              const scRightEdge = (-halfW + scOffset + stepWidthMm) * 0.01;
-              boxes.push(
-                <mesh key="gap-sc-main-left" position={[scRightEdge + w / 2, gapBoxY, zOffset]}>
-                  <boxGeometry args={[w, dropHThree, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
-                </mesh>
-              );
-            } else {
-              // 우측: 커튼박스 있으면 커튼박스 다음에 단내림 위치
-              const scOffset = cbSameSide ? droppedWidth : 0;
-              const scLeftEdge = (halfW - scOffset - stepWidthMm) * 0.01;
-              boxes.push(
-                <mesh key="gap-sc-main-right" position={[scLeftEdge - w / 2, gapBoxY, zOffset]}>
-                  <boxGeometry args={[w, dropHThree, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
-                </mesh>
-              );
-            }
-          }
+          // 단내림↔메인 경계 gap은 메인구간 좌/우 gap에서 adj='step'으로 처리됨 (중복 방지)
 
           if (!cbSameSide) {
             // 커튼박스 없이 단내림만 → 벽 쪽 gap은 메인 gap 박스에서 처리됨 (skip)
           } else if (middle2Gap > 0) {
             // 커튼박스 + 단내림 같은 쪽 → 커튼박스↔단내림 사이 middle2Gap
             // 구간순서: 벽 → 커튼박스 → [middle2Gap] → 단내림 → [middleGap] → 메인
+            // 장애벽 높이 = 커튼박스천장 ~ 단내림천장 = dcDropHeight + scDropH
             const w = middle2Gap * 0.01;
+            const wallH = (dcDropHeightMm + scDropH) * 0.01; // 장애벽 높이
+            const wallBottomY = stepH; // 단내림 천장 (= 장애벽 하단)
+            const wallCenterY = wallBottomY + wallH / 2;
             if (stepPosition === 'left') {
               // 좌측: 벽(-halfW) → 커튼박스(droppedWidth) → [gap] → 단내림
               const gapCenterX = (-halfW + droppedWidth) * 0.01 + w / 2;
               boxes.push(
-                <mesh key="gap-cb-sc-left" position={[gapCenterX, stepH / 2, zOffset]}>
-                  <boxGeometry args={[w, stepH, depthThree]} />
+                <mesh key="gap-cb-sc-left" position={[gapCenterX, wallCenterY, zOffset]}>
+                  <boxGeometry args={[w, wallH, depthThree]} />
                   <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
@@ -1761,8 +1751,8 @@ const FreePlacementDropZone: React.FC = () => {
               // 우측: 단내림 → [gap] → 커튼박스(droppedWidth) ← 벽(halfW)
               const gapCenterX = (halfW - droppedWidth) * 0.01 - w / 2;
               boxes.push(
-                <mesh key="gap-cb-sc-right" position={[gapCenterX, stepH / 2, zOffset]}>
-                  <boxGeometry args={[w, stepH, depthThree]} />
+                <mesh key="gap-cb-sc-right" position={[gapCenterX, wallCenterY, zOffset]}>
+                  <boxGeometry args={[w, wallH, depthThree]} />
                   <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
