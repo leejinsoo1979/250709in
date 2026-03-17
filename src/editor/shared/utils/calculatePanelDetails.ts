@@ -347,24 +347,23 @@ export const calculatePanelDetails = (
             individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
           }
           
+          // 서랍 본체 크기 계산 (DrawerRenderer.tsx 3D 렌더링과 완전 일치)
+          // DrawerRenderer.renderDrawer() 호출: drawerWidth = innerWidth - 48mm (좌우 24mm 간격)
+          // actualDrawerDepth = (D - bt) - 60mm, drawerBodyDepth = actualDrawerDepth - 15mm(손잡이판)
+          const drawerWidth = innerWidth - 48; // 서랍 전체 폭 (= 3D: innerWidth - mmToThreeUnits(48))
+          const drawerFrontBackWidth = drawerWidth - 107; // 앞판/뒷판 폭 (= 3D: drawerWidth - mmToThreeUnits(107))
+          const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
+          const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (= 3D: (D-bt)-60-15)
+
           // 서랍 손잡이판 (마이다) - PB 15mm
-          // 마이다는 측판 사이에 들어가므로 내경폭 사용
+          // 마이다 폭 = drawerWidth (3D 렌더러와 동일: 서랍 본체 폭)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum}(마이다)`,
-            width: innerWidth,
+            width: drawerWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,
             material: 'PB'
           });
-
-          // 서랍 본체 크기 계산 (DrawerRenderer 참조)
-          // drawerWidth = innerWidth - 48mm (좌우 24mm 간격 = 측판 안쪽면에서 좌우 각 24mm)
-          // 앞판/뒷판: drawerWidth - 106mm (좌우 측판 안쪽에 끼워짐)
-          // 좌측판/우측판: 전체 깊이 사용 (앞뒤 15mm씩 확장)
-          const drawerWidth = innerWidth - 24; // 서랍 전체 폭 (내경 - 좌우 12mm)
-          const drawerFrontBackWidth = drawerWidth - 106; // 앞판/뒷판 폭
-          const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
-          const drawerBodyDepth = customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
 
           // 서랍 앞판/뒷판 바닥판 끼우는 홈 위치 계산
           // 바닥판은 하단에서 10mm + 5mm/2 = 12.5mm 위치
@@ -760,15 +759,16 @@ export const calculatePanelDetails = (
               const drawerCount = el.heights?.length || 0;
               for (let i = 0; i < drawerCount; i++) {
                 const dh = el.heights?.[i] || 200;
-                const drawerWidth = areaWidth - 24;
-                const drawerFrontBackWidth = drawerWidth - 106;
+                // 3D 렌더러와 동일한 공식 (DrawerRenderer.tsx 기준)
+                const drawerWidth = areaWidth - 48; // 좌우 24mm 간격
+                const drawerFrontBackWidth = drawerWidth - 107; // 앞/뒷판
                 const drawerBodyHeight = dh - 30;
-                const drawerBodyDepth = customDepth - 47 - drawerHandleThicknessCC;
+                const drawerBodyDepth = (customDepth - basicThicknessCC) - 60 - drawerHandleThicknessCC;
 
-                // 마이다 (손잡이판)
+                // 마이다 (손잡이판) = drawerWidth (서랍 본체 폭)
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}서랍${i + 1}(마이다)`,
-                  width: areaWidth,
+                  width: drawerWidth,
                   height: dh,
                   thickness: drawerHandleThicknessCC,
                   material: 'PB'
