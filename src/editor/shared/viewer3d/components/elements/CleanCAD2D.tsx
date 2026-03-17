@@ -1866,12 +1866,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       }
                     }
 
-                    // 메인 배치폭: 단내림/커튼박스 인접 → 가구가 밀려서 상쇄(0), 벽 인접 → 차감
-                    const mainLeftIsWall = !scOnLeft && !dcOnLeft;
-                    const mainRightIsWall = !scOnRight && !dcOnRight;
-                    const effectiveMainLeftGap = mainLeftIsWall ? (hasLeftWall ? leftGapMm : 0) : 0;
-                    const effectiveMainRightGap = mainRightIsWall ? (hasRightWall ? rightGapMm : 0) : 0;
-                    mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
+                    // 메인 배치폭: 각 방향별 delta 계산
+                    // - 단내림 인접 → 단내림 가구가 경계이격을 침범 → 차감 (-middleGap)
+                    // - 커튼박스 인접 → 메인 가구가 커튼박스 쪽으로 밀림 → 확장 (+gap)
+                    // - 벽 인접 → 벽이격 차감 (-wallGap)
+                    let mainLeftDelta = 0;
+                    if (scOnLeft) {
+                      // 메인 좌측 = 단내림 인접 → 단내림 가구가 침범 → 차감
+                      mainLeftDelta = -middleGapMm;
+                    } else if (dcOnLeft) {
+                      // 메인 좌측 = 커튼박스 인접 → 메인 가구가 밀려서 확장 → 가산
+                      mainLeftDelta = middleGapMm;
+                    } else {
+                      // 메인 좌측 = 벽 → 벽이격 차감
+                      mainLeftDelta = -(hasLeftWall ? leftGapMm : 0);
+                    }
+
+                    let mainRightDelta = 0;
+                    if (scOnRight) {
+                      // 메인 우측 = 단내림 인접 → 단내림 가구가 침범 → 차감
+                      mainRightDelta = -middleGapMm;
+                    } else if (dcOnRight) {
+                      // 메인 우측 = 커튼박스 인접 → 메인 가구가 밀려서 확장 → 가산
+                      mainRightDelta = middleGapMm;
+                    } else {
+                      // 메인 우측 = 벽 → 벽이격 차감
+                      mainRightDelta = -(hasRightWall ? rightGapMm : 0);
+                    }
+
+                    mainPlacementWidth = Math.round((mainWidth + mainLeftDelta + mainRightDelta) * 10) / 10;
 
                     // 커튼박스 구간: 양쪽 gap 차감
                     // 커튼박스의 내측 경계이격 = 단내림이 있으면 middle2, 없으면 middle
@@ -1909,8 +1932,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
                     }
-                    var mainPlacStartX = mainStartX + mmToThreeUnits(effectiveMainLeftGap);
-                    var mainPlacEndX = mainEndX - mmToThreeUnits(effectiveMainRightGap);
+                    // mainLeftDelta가 음수면 좌측에서 안으로 줄어듦 → startX + |delta|
+                    // mainLeftDelta가 양수면 좌측으로 확장 → startX - delta
+                    var mainPlacStartX = mainStartX - mmToThreeUnits(mainLeftDelta);
+                    // mainRightDelta가 음수면 우측에서 안으로 줄어듦 → endX - |delta| = endX + delta
+                    // mainRightDelta가 양수면 우측으로 확장 → endX + delta
+                    var mainPlacEndX = mainEndX + mmToThreeUnits(mainRightDelta);
                     var dcPlacStartX = droppedStartX + mmToThreeUnits(dcLeftGap);
                     var dcPlacEndX = droppedEndX - mmToThreeUnits(dcRightGap);
                   } else {
