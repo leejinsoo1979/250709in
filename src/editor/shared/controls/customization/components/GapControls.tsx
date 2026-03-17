@@ -155,11 +155,11 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   }
   if (hasMultipleBoundaries) {
     gapEntries.push({
-      label: droppedPosition === 'left' ? '단↔메' : '메↔단',
+      label: '경계1',
       key: 'middle', value: middleGap, setter: setMiddleGap
     });
     gapEntries.push({
-      label: droppedPosition === 'left' ? '커↔단' : '단↔커',
+      label: '경계2',
       key: 'middle2', value: middle2Gap, setter: setMiddle2Gap
     });
   }
