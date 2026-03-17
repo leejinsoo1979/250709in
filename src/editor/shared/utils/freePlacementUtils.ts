@@ -26,13 +26,44 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
   let startX = -halfW;
   let endX = halfW;
 
-  // 자유배치 커튼박스: 커튼박스 구간 제외
-  if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.droppedCeiling?.enabled) {
-    const surroundWidth = spaceInfo.droppedCeiling.width || 0;
-    if (spaceInfo.droppedCeiling.position === 'left') {
-      startX += surroundWidth;
+  if (spaceInfo.layoutMode === 'free-placement') {
+    const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+    const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+    const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
+    const hasDropped = spaceInfo.droppedCeiling?.enabled;
+    const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+
+    // 커튼박스 구간 제외
+    if (hasDropped) {
+      const surroundWidth = spaceInfo.droppedCeiling.width || 0;
+      if (droppedPosition === 'left') {
+        startX += surroundWidth;
+      } else {
+        endX -= surroundWidth;
+      }
+    }
+
+    // 이격거리 적용 — 벽이 있는 쪽만, 커튼박스 경계면은 middleGap
+    const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+    const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+    const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
+    const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
+
+    if (hasDropped) {
+      // 커튼박스가 있으면: 벽쪽은 벽이격, 커튼박스 경계쪽은 경계이격
+      if (droppedPosition === 'left') {
+        // 메인구간: 좌측=경계이격, 우측=벽이격
+        startX += middleGap;
+        if (hasRightWall) endX -= rightGap;
+      } else {
+        // 메인구간: 좌측=벽이격, 우측=경계이격
+        if (hasLeftWall) startX += leftGap;
+        endX -= middleGap;
+      }
     } else {
-      endX -= surroundWidth;
+      // 커튼박스 없음: 양쪽 벽이격만
+      if (hasLeftWall) startX += leftGap;
+      if (hasRightWall) endX -= rightGap;
     }
   }
 
