@@ -16,7 +16,14 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   baseHeight: 65,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
+  surroundMode: 'full-surround',
 };
+
+const SURROUND_OPTIONS: { id: SpaceConfigDefaults['surroundMode']; label: string }[] = [
+  { id: 'full-surround', label: '전체서라운드' },
+  { id: 'sides-only', label: '양쪽서라운드' },
+  { id: 'no-surround', label: '노서라운드' },
+];
 
 const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
   const [values, setValues] = useState<Required<SpaceConfigDefaults>>(SYSTEM_DEFAULTS);
@@ -37,6 +44,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           baseHeight: defaults.baseHeight ?? SYSTEM_DEFAULTS.baseHeight,
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? SYSTEM_DEFAULTS.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? SYSTEM_DEFAULTS.furnitureDualWidth,
+          surroundMode: defaults.surroundMode ?? SYSTEM_DEFAULTS.surroundMode,
         });
       }
       setLoading(false);
@@ -150,7 +158,22 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           </div>
 
           <div className={styles.fieldGroup}>
-            <span className={styles.groupTitle}>프레임</span>
+            <span className={styles.groupTitle}>프레임 설정</span>
+            <div className={styles.toggleRow}>
+              {SURROUND_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className={`${styles.toggleBtn} ${values.surroundMode === opt.id ? styles.toggleBtnActive : ''}`}
+                  onClick={() => { setValues(prev => ({ ...prev, surroundMode: opt.id! })); setMessage(null); }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <span className={styles.groupTitle}>프레임 높이</span>
             <div className={styles.fieldRow}>
               <div className={styles.field}>
                 <label className={styles.label}>상부프레임 높이</label>

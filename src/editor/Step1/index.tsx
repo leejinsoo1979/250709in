@@ -89,6 +89,15 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           },
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,
+          // 프레임 설정 (surroundMode)
+          ...(defaults.surroundMode ? {
+            surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
+            frameConfig: defaults.surroundMode === 'full-surround'
+              ? { left: true, right: true, top: true, bottom: true }
+              : defaults.surroundMode === 'sides-only'
+                ? { left: true, right: true, top: false, bottom: false }
+                : { left: false, right: false, top: true, bottom: false },
+          } : {}),
         });
         console.log('✅ 유저 공간설정 기본값 적용:', defaults);
       }

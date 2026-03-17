@@ -101,6 +101,36 @@
   letter-spacing: 0.5px;
 }
 
+.toggleRow {
+  display: flex;
+  gap: 6px;
+}
+
+.toggleBtn {
+  flex: 1;
+  padding: 7px 0;
+  border: 1px solid var(--theme-border, #d1d5db);
+  border-radius: 8px;
+  background: var(--theme-background-secondary, #f3f4f6);
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+  border-color: var(--theme-primary, #10b981);
+  color: var(--theme-text, #374151);
+}
+
+.toggleBtnActive {
+  background: var(--theme-primary, #10b981);
+  border-color: var(--theme-primary, #10b981);
+  color: white;
+  font-weight: 600;
+}
+
 .fieldRow {
   display: flex;
   gap: 12px;

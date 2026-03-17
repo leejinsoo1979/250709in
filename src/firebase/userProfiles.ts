@@ -761,6 +761,7 @@ export type SpaceConfigDefaults = {
   baseHeight?: number;
   furnitureSingleWidth?: number;
   furnitureDualWidth?: number;
+  surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
 };
 
 // 공간설정 기본값 조회
