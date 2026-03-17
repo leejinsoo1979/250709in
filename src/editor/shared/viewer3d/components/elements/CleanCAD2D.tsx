@@ -1543,13 +1543,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const normalBounds = getNormalZoneBounds(spaceInfo);
             const droppedBounds = getDroppedZoneBounds(spaceInfo);
             const subDimensionY = columnDimensionY; // 전체폭 바로 아래 (내경 치수선 위치 대체)
-            
+
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-            
+
             // 프레임을 포함한 전체 좌표 계산
             const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
             const droppedWidth = spaceInfo.droppedCeiling.width;
+
+            // 슬롯 합계 너비 (실배치 공간)
+            const zoneSlotInfoForDim = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            const mainSlotTotalWidth = Math.round(zoneSlotInfoForDim.normal.slotWidths
+              ? zoneSlotInfoForDim.normal.slotWidths.reduce((sum: number, w: number) => sum + w, 0)
+              : zoneSlotInfoForDim.normal.columnWidth * zoneSlotInfoForDim.normal.columnCount);
+            const droppedSlotTotalWidth = Math.round(zoneSlotInfoForDim.dropped?.slotWidths
+              ? zoneSlotInfoForDim.dropped.slotWidths.reduce((sum: number, w: number) => sum + w, 0)
+              : (zoneSlotInfoForDim.dropped?.columnWidth || 0) * (zoneSlotInfoForDim.dropped?.columnCount || 0));
             
             // 메인 구간 치수선
             const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
@@ -1597,7 +1606,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(mainWidth)}
+                    {mainSlotTotalWidth}
                   </Text>
                 )}
 
@@ -1629,7 +1638,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(droppedWidth)}
+                    {droppedSlotTotalWidth}
                   </Text>
                 )}
                 
