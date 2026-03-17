@@ -1206,8 +1206,8 @@ export class ColumnIndexer {
       }
     }
     
-    // 경계면 이격거리 (BOUNDARY_GAP과 동일한 값 사용) — 자유배치에서는 0
-    let boundaryGap = isFreePlacement ? 0 : (spaceInfo.gapConfig?.middle ?? 1.5);
+    // 경계면 이격거리 — 자유배치/슬롯배치 모두 실제 이격거리 반환
+    let boundaryGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
     // 각 영역의 컬럼 수 계산
     let normalColumnCount: number;
