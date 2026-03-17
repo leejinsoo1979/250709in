@@ -1556,12 +1556,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 슬롯 합계 너비 (실배치 공간)
             const zoneSlotInfoForDim = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const mainSlotTotalWidth = Math.round(zoneSlotInfoForDim.normal.slotWidths
+            const mainSlotTotalWidthRaw = zoneSlotInfoForDim.normal.slotWidths
               ? zoneSlotInfoForDim.normal.slotWidths.reduce((sum: number, w: number) => sum + w, 0)
-              : zoneSlotInfoForDim.normal.columnWidth * zoneSlotInfoForDim.normal.columnCount);
-            const droppedSlotTotalWidth = Math.round(zoneSlotInfoForDim.dropped?.slotWidths
+              : zoneSlotInfoForDim.normal.columnWidth * zoneSlotInfoForDim.normal.columnCount;
+            const mainSlotTotalWidth = Math.round(mainSlotTotalWidthRaw * 10) / 10;
+            const droppedSlotTotalWidthRaw = zoneSlotInfoForDim.dropped?.slotWidths
               ? zoneSlotInfoForDim.dropped.slotWidths.reduce((sum: number, w: number) => sum + w, 0)
-              : (zoneSlotInfoForDim.dropped?.columnWidth || 0) * (zoneSlotInfoForDim.dropped?.columnCount || 0));
+              : (zoneSlotInfoForDim.dropped?.columnWidth || 0) * (zoneSlotInfoForDim.dropped?.columnCount || 0);
+            const droppedSlotTotalWidth = Math.round(droppedSlotTotalWidthRaw * 10) / 10;
             
             // 메인 구간 치수선
             const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
