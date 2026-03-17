@@ -1149,6 +1149,7 @@ const FreePlacementDropZone: React.FC = () => {
       window.dispatchEvent(new CustomEvent('furniture-drag-end'));
     }
     setIsDraggingPlaced(false);
+    setIsMoveMode(false);
   }, [isDraggingPlaced]);
 
   // 키보드 좌우 화살표로 미세 이동
@@ -1499,7 +1500,7 @@ const FreePlacementDropZone: React.FC = () => {
         <mesh
           ref={dragPlaneRef}
           position={[planeConfig.planeCenterX, planeConfig.planeCenterY, 0.02]}
-          onPointerDown={!isDraggingPlaced ? handleEditDragPointerDown : undefined}
+          onPointerDown={isMoveMode ? handleDragPointerUp : (!isDraggingPlaced ? handleEditDragPointerDown : undefined)}
           onPointerMove={handleDragPointerMove}
           onPointerUp={handleDragPointerUp}
           onPointerLeave={handleDragPointerUp}
