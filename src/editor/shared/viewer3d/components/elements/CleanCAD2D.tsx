@@ -1866,12 +1866,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       }
                     }
 
-                    // 메인 배치폭: 벽 직접 인접 쪽만 이격 차감
-                    // 단내림/커튼박스 인접 → 가구가 내벽에 맞닿으므로 경계이격 상쇄 (차감 0)
-                    const mainLeftIsWall = !scOnLeft && !dcOnLeft;
-                    const mainRightIsWall = !scOnRight && !dcOnRight;
-                    const effectiveMainLeftGap = mainLeftIsWall ? (hasLeftWall ? leftGapMm : 0) : 0;
-                    const effectiveMainRightGap = mainRightIsWall ? (hasRightWall ? rightGapMm : 0) : 0;
+                    // 메인 배치폭: 양쪽 모두 이격 차감
+                    // 단내림 인접 → 경계이격(middleGap), 커튼박스 인접 → 경계이격(middleGap), 벽 → 벽이격
+                    const effectiveMainLeftGap = scOnLeft ? middleGapMm : mainLeftGap;
+                    const effectiveMainRightGap = scOnRight ? middleGapMm : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
                     // 커튼박스 구간: 양쪽 gap 차감
