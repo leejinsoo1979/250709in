@@ -136,11 +136,11 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   }, [paneWidth]);
 
   const quickAccessItems: { key: QuickAccessMenu; label: string; icon: React.ReactNode }[] = [
-    { key: 'in-progress', label: '진행중 프로젝트', icon: <Clock size={16} /> },
-    { key: 'completed', label: '완료된 프로젝트', icon: <Folder size={16} /> },
-    { key: 'shared-with-me', label: '공유받은 파일', icon: <Share2 size={16} /> },
-    { key: 'shared-by-me', label: '공유한 파일', icon: <Users size={16} /> },
-    { key: 'trash', label: '휴지통', icon: <Trash2 size={16} /> },
+    { key: 'in-progress', label: '진행중 프로젝트', icon: <Clock size={18} /> },
+    { key: 'completed', label: '완료된 프로젝트', icon: <Folder size={18} /> },
+    { key: 'shared-with-me', label: '공유받은 파일', icon: <Share2 size={18} /> },
+    { key: 'shared-by-me', label: '공유한 파일', icon: <Users size={18} /> },
+    { key: 'trash', label: '휴지통', icon: <Trash2 size={18} /> },
   ];
 
   // activeMenu에 따라 프로젝트 필터링
