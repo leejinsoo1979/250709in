@@ -489,93 +489,7 @@ function getPanelCategory(name: string): 'side' | 'body' | 'frame' {
   return 'body';
 }
 
-/**
- * 같은 사이즈(w×h) 패널끼리 그룹핑하여 시트에 패킹
- * - 같은 사이즈끼리 최대한 같은 시트에 모음 (재단 효율)
- * - 큰 패널부터 먼저 배치
- */
-function packBySizeGroups(
-  panels: Rect[],
-  binWidth: number,
-  binHeight: number,
-  kerf: number,
-  stripDirection: 'horizontal' | 'vertical' | 'auto'
-): PackedBin[] {
-  if (panels.length === 0) return [];
-
-  // width(W방향) 기준 그룹핑 — 같은 width끼리 같은 스트립에 들어가므로 같은 방향 보장
-  const widthGroups = new Map<number, Rect[]>();
-  for (const panel of panels) {
-    const w = Math.round(panel.width);
-    if (!widthGroups.has(w)) widthGroups.set(w, []);
-    widthGroups.get(w)!.push(panel);
-  }
-
-  // 면적 내림차순 정렬 (큰 패널 그룹 먼저)
-  const sortedWidths = [...widthGroups.keys()].sort((a, b) => {
-    // 같은 width 그룹 내 최대 면적 기준
-    const maxAreaA = Math.max(...widthGroups.get(a)!.map(p => p.width * p.height));
-    const maxAreaB = Math.max(...widthGroups.get(b)!.map(p => p.width * p.height));
-    return maxAreaB - maxAreaA;
-  });
-
-  // 각 그룹 내에서 height 내림차순 → 가구번호순 정렬
-  for (const w of sortedWidths) {
-    widthGroups.get(w)!.sort((a, b) => {
-      // 1순위: height 내림차순 (큰 패널 먼저)
-      if (Math.round(a.height) !== Math.round(b.height)) {
-        return b.height - a.height;
-      }
-      // 2순위: 가구번호순
-      const fnA = extractFurnitureNum(a.name || '');
-      const fnB = extractFurnitureNum(b.name || '');
-      return fnA - fnB;
-    });
-  }
-
-  // 같은 width 그룹을 한꺼번에 GuillotinePacker로 패킹
-  // → 같은 width 패널은 같은 스트립(horizontal: height 기준)에 들어감
-  // → 자연스럽게 같은 방향 보장
-  const bins: PackedBin[] = [];
-  const allPlaced = new Set<string>();
-
-  for (const w of sortedWidths) {
-    let remaining = widthGroups.get(w)!.filter(p => !allPlaced.has(p.id));
-    if (remaining.length === 0) continue;
-
-    // 기존 시트에 들어갈 수 있으면 추가
-    for (const bin of bins) {
-      if (remaining.length === 0) break;
-      const stillRemaining: Rect[] = [];
-      for (const panel of remaining) {
-        const pos = findFreePosition(bin, panel, binWidth, binHeight, kerf, true);
-        if (pos) {
-          const placed = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
-          bin.panels.push(placed);
-          bin.usedArea = (bin.usedArea || 0) + panel.width * panel.height;
-          bin.efficiency = ((bin.usedArea || 0) / (binWidth * binHeight)) * 100;
-          allPlaced.add(panel.id);
-        } else {
-          stillRemaining.push(panel);
-        }
-      }
-      remaining = stillRemaining;
-    }
-
-    // 남은 패널은 새 시트에
-    while (remaining.length > 0) {
-      const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-      const result = packer.packAll(remaining, stripDirection);
-      if (result.panels.length === 0) break;
-      bins.push(result);
-      const placedIds = new Set(result.panels.map(p => p.id));
-      for (const id of placedIds) allPlaced.add(id);
-      remaining = remaining.filter(p => !placedIds.has(p.id));
-    }
-  }
-
-  return bins;
-}
+// packBySizeGroups 제거 — packCategoryToMultiBins으로 대체
 
 /**
  * 패널 이름에서 종류 키를 추출 (같은 종류끼리 같은 방향 강제용)
@@ -609,13 +523,42 @@ function normalizeOrientation(panels: Rect[], binWidth: number): Rect[] {
 }
 
 /**
+ * 카테고리 패널을 멀티 시트로 패킹 (단순 반복)
+ * GuillotinePacker에 통째로 넘기고, 배치 안 된 패널은 새 시트에 반복
+ */
+function packCategoryToMultiBins(
+  panels: Rect[],
+  binWidth: number,
+  binHeight: number,
+  kerf: number,
+  direction: 'horizontal' | 'vertical'
+): PackedBin[] {
+  if (panels.length === 0) return [];
+
+  const bins: PackedBin[] = [];
+  // 면적 내림차순 정렬 (큰 패널 먼저)
+  let remaining = [...panels].sort((a, b) => (b.width * b.height) - (a.width * a.height));
+
+  while (remaining.length > 0) {
+    const packer = new GuillotinePacker(binWidth, binHeight, kerf);
+    const result = packer.packAll(remaining, direction);
+    if (result.panels.length === 0) break; // 더 이상 배치 불가
+    bins.push(result);
+    const placedIds = new Set(result.panels.map(p => p.id));
+    remaining = remaining.filter(p => !placedIds.has(p.id));
+  }
+
+  return bins;
+}
+
+/**
  * 길로틴 방식 멀티 빈 패킹
  *
  * 핵심 원칙:
- *   1. 측판 / 본체(상판·하판·선반·칸막이) / 프레임 — 카테고리별로 시트 분리
- *   2. 같은 사이즈 패널끼리 최대한 같은 시트에 배치 (재단 효율)
- *   3. 큰 패널부터 먼저 재단, 프레임은 맨 마지막
- *   4. 같은 종류 패널은 같은 방향으로 통일
+ *   1. 측판 / 본체 / 프레임 — 카테고리별로 시트 분리
+ *   2. 측판: vertical (같은 width끼리 한 줄, 상하 대칭)
+ *   3. 본체/프레임: horizontal (width → x축=W방향)
+ *   4. 큰 패널부터 먼저 재단, 프레임은 맨 마지막
  */
 export function packGuillotine(
   panels: Rect[],
@@ -625,10 +568,10 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
-  // ── 0단계: 방향 정규화 (같은 종류 패널은 같은 방향으로 통일) ──
+  // ── 0단계: 방향 정규화 (width > binWidth이면 스왑) ──
   const normalized = normalizeOrientation(panels, binWidth);
 
-  // ── 1단계: 카테고리 분류 (측판 / 본체 / 프레임) ──
+  // ── 1단계: 카테고리 분류 ──
   const sidePanels: Rect[] = [];
   const bodyPanels: Rect[] = [];
   const framePanels: Rect[] = [];
@@ -639,14 +582,12 @@ export function packGuillotine(
     else bodyPanels.push(panel);
   }
 
-  // ── 2단계: 각 카테고리별 최적 방향으로 패킹 ──
-  // 측판: vertical (같은 width끼리 한 줄에 상하 대칭 배치)
-  // 본체/프레임: horizontal (width를 x축=W방향에 배치)
-  const sideBins = packBySizeGroups(sidePanels, binWidth, binHeight, kerf, 'vertical');
-  const bodyBins = packBySizeGroups(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
-  const frameBins = packBySizeGroups(framePanels, binWidth, binHeight, kerf, 'horizontal');
+  // ── 2단계: 카테고리별 패킹 ──
+  const sideBins = packCategoryToMultiBins(sidePanels, binWidth, binHeight, kerf, 'vertical');
+  const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
+  const frameBins = packCategoryToMultiBins(framePanels, binWidth, binHeight, kerf, 'horizontal');
 
-  // 순서: 측판 → 본체 → 프레임 (큰 것부터 재단)
+  // 순서: 측판 → 본체 → 프레임
   return [...sideBins, ...bodyBins, ...frameBins];
 }
 
