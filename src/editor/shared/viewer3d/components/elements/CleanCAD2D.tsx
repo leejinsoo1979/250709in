@@ -1688,7 +1688,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                   const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
 
-                  const boundaryGapY = topDimensionY - mmToThreeUnits(120); // 좌우 이격과 동일한 Y 레벨
+                  const boundaryGapY = slotDimensionY; // 좌우 이격과 동일한 Y 레벨
                   let boundaryLeftX: number;
                   let boundaryRightX: number;
 
