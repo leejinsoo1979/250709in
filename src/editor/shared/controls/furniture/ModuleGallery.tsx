@@ -630,101 +630,55 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 듀얼/싱글 가구 판별
       const isDualFurniture = module.id.startsWith('dual-');
 
-      // 먼저 단내림 구역 정보를 파악
-      let droppedZoneStart = 0;
-      let droppedZoneEnd = 0;
-      let normalZoneStart = 0;
-      let normalZoneEnd = 0;
-
-      if (spaceInfo.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        if (spaceInfo.droppedCeiling.position === 'left') {
-          droppedZoneStart = 0;
-          droppedZoneEnd = zoneInfo.dropped?.columnCount || 0;
-          normalZoneStart = zoneInfo.dropped?.columnCount || 0;
-          normalZoneEnd = indexing.columnCount;
-        } else {
-          normalZoneStart = 0;
-          normalZoneEnd = zoneInfo.normal.columnCount;
-          droppedZoneStart = zoneInfo.normal.columnCount;
-          droppedZoneEnd = indexing.columnCount;
-        }
-      }
-
-      // 첫 번째 빈 슬롯 찾기
+      // 첫 번째 빈 슬롯 찾기 (로컬 인덱스 사용)
       let availableSlotIndex = -1;
+      let foundZone: 'normal' | 'dropped' | undefined = undefined;
 
       // 단내림이 있는 경우: activeDroppedCeilingTab에 따라 우선 순위 결정
       if (spaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const normalCount = zoneInfo.normal?.columnCount ?? 0;
+        const droppedCount = zoneInfo.dropped?.columnCount ?? 0;
+
         // activeDroppedCeilingTab이 'dropped'면 단내림 구간 우선, 아니면 일반 구간 우선
         const preferDropped = activeDroppedCeilingTab === 'dropped';
 
-        if (preferDropped) {
-          // 단내림 구간 우선 검색
-          for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
-            if (isDualFurniture) {
-              const slot2 = i + 1;
-              if (slot2 >= droppedZoneEnd) {
-                continue;
-              }
+        // 로컬 인덱스(0~zoneColumnCount)로 검색하는 헬퍼
+        const searchZone = (zone: 'normal' | 'dropped', count: number): number => {
+          for (let i = 0; i < count; i++) {
+            if (isDualFurniture && i + 1 >= count) {
+              continue;
             }
-
-            const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'dropped');
-            if (isAvailable) {
-              availableSlotIndex = i;
-              break;
+            const isAvail = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, zone);
+            if (isAvail) {
+              return i;
             }
           }
+          return -1;
+        };
 
-          // 단내림 구간에서 못 찾았으면 일반 구간에서 찾기
-          if (availableSlotIndex === -1) {
-            for (let i = normalZoneStart; i < normalZoneEnd; i++) {
-              if (isDualFurniture) {
-                const slot2 = i + 1;
-                if (slot2 >= normalZoneEnd) {
-                  continue;
-                }
-              }
-
-              const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'normal');
-              if (isAvailable) {
-                availableSlotIndex = i;
-                break;
-              }
+        if (preferDropped) {
+          // 단내림 구간 우선 검색
+          availableSlotIndex = searchZone('dropped', droppedCount);
+          if (availableSlotIndex !== -1) {
+            foundZone = 'dropped';
+          } else {
+            // 단내림 구간에서 못 찾았으면 일반 구간에서 찾기
+            availableSlotIndex = searchZone('normal', normalCount);
+            if (availableSlotIndex !== -1) {
+              foundZone = 'normal';
             }
           }
         } else {
           // 일반 구간 우선 검색
-          for (let i = normalZoneStart; i < normalZoneEnd; i++) {
-            if (isDualFurniture) {
-              const slot2 = i + 1;
-              if (slot2 >= normalZoneEnd) {
-                continue;
-              }
-            }
-
-            const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'normal');
-            if (isAvailable) {
-              availableSlotIndex = i;
-              break;
-            }
-          }
-
-          // 일반 구간에서 못 찾았으면 단내림 구간에서 찾기
-          if (availableSlotIndex === -1) {
-            for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
-              if (isDualFurniture) {
-                const slot2 = i + 1;
-                if (slot2 >= droppedZoneEnd) {
-                  continue;
-                }
-              }
-
-              const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'dropped');
-              if (isAvailable) {
-                availableSlotIndex = i;
-                break;
-              }
+          availableSlotIndex = searchZone('normal', normalCount);
+          if (availableSlotIndex !== -1) {
+            foundZone = 'normal';
+          } else {
+            // 일반 구간에서 못 찾았으면 단내림 구간에서 찾기
+            availableSlotIndex = searchZone('dropped', droppedCount);
+            if (availableSlotIndex !== -1) {
+              foundZone = 'dropped';
             }
           }
         }
@@ -744,30 +698,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         return;
       }
 
-      // 슬롯 인덱스에 따라 zone 결정
-      let localSlotIndex = availableSlotIndex;
-
-      if (spaceInfo.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-
-        // 단내림 위치에 따라 zone 판단
-        if (spaceInfo.droppedCeiling.position === 'left') {
-          if (zoneInfo.dropped && availableSlotIndex < zoneInfo.dropped.columnCount) {
-            targetZone = 'dropped';
-            localSlotIndex = availableSlotIndex;
-          } else {
-            targetZone = 'normal';
-            localSlotIndex = availableSlotIndex - (zoneInfo.dropped?.columnCount || 0);
-          }
-        } else {
-          if (zoneInfo.normal && availableSlotIndex < zoneInfo.normal.columnCount) {
-            targetZone = 'normal';
-            localSlotIndex = availableSlotIndex;
-          } else {
-            targetZone = 'dropped';
-            localSlotIndex = availableSlotIndex - zoneInfo.normal.columnCount;
-          }
-        }
+      // zone이 결정된 경우 직접 사용 (로컬 인덱스 그대로)
+      const localSlotIndex = availableSlotIndex;
+      if (foundZone) {
+        targetZone = foundZone;
       }
 
       // ★★★ 공통 배치 함수 사용 (클릭+고스트, 드래그앤드랍과 동일) ★★★
