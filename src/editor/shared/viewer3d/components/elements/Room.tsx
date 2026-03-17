@@ -1474,8 +1474,8 @@ const Room: React.FC<RoomProps> = ({
             ) : null;
           })()}
 
-          {/* 솔리드모드: 천장/바닥-벽 경계선 (테마색상) */}
-          {viewMode !== '2D' && renderMode === 'solid' && (() => {
+          {/* 솔리드모드: 천장/바닥-벽 경계선 (테마색상) - 도어 닫힘 시 숨김 */}
+          {viewMode !== '2D' && renderMode === 'solid' && !effectiveHideEdges && (() => {
             const wc = spaceInfo.wallConfig || { left: true, right: true };
             const hasLW = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wc.left);
@@ -1793,8 +1793,8 @@ const Room: React.FC<RoomProps> = ({
             </mesh>
           )}
 
-          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe에서는 숨김) */}
-          {renderMode === 'solid' && (() => {
+          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe/도어닫힘에서는 숨김) */}
+          {renderMode === 'solid' && !effectiveHideEdges && (() => {
             const _hasDC = spaceInfo.droppedCeiling?.enabled;
             const _dcIsLeft = _hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const _dcIsRight = _hasDC && spaceInfo.droppedCeiling?.position === 'right';
