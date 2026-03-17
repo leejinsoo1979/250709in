@@ -109,19 +109,27 @@ const FreePlacementDropZone: React.FC = () => {
     setIsMoveMode(false);
   }, [editingFreeModuleId]);
 
-  // 2차 클릭 이동 모드 진입 이벤트 리스너
+  // 2차 클릭 이동 모드 진입 / 3차 클릭 배치 확정 이벤트 리스너
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.moduleId && detail.moduleId === editingFreeModuleId) {
-        setIsMoveMode(true);
-        setMovingModuleId(detail.moduleId);
-        setIsDraggingPlaced(true);
+        if (isMoveMode) {
+          // 이미 이동 모드 → 배치 확정
+          window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+          setIsDraggingPlaced(false);
+          setIsMoveMode(false);
+        } else {
+          // 이동 모드 진입
+          setIsMoveMode(true);
+          setMovingModuleId(detail.moduleId);
+          setIsDraggingPlaced(true);
+        }
       }
     };
     window.addEventListener('furniture-enter-move-mode', handler);
     return () => window.removeEventListener('furniture-enter-move-mode', handler);
-  }, [editingFreeModuleId]);
+  }, [editingFreeModuleId, isMoveMode]);
 
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
