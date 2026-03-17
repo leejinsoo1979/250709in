@@ -1737,15 +1737,19 @@ const Room: React.FC<RoomProps> = ({
               // 자유배치: 커튼박스 천장 = cY + dcDropH (위로 확장)
               // 슬롯배치: 단내림 천장 = cY - dcDropH (아래로 축소)
               const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
-              // 경계벽 상단/하단 높이
-              const bwTop = isFreePlacement ? droppedCY : cY;   // 커튼박스 천장 or 메인 천장
-              const bwBot = isFreePlacement ? cY : droppedCY;   // 메인 천장 or 단내림 천장
+              // 커튼박스 경계벽 하단: 인접 구간 천장 높이
+              // 자유배치에서 단내림이 같은 쪽이면 → 단내림 천장(cY - scDropH), 아니면 → 메인 천장(cY)
+              const stepSameSideAsDC = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
+              const bwTop = isFreePlacement ? droppedCY : cY;
+              const bwBot = isFreePlacement
+                ? (stepSameSideAsDC ? cY - scDropHLine : cY)  // 단내림 천장 or 메인 천장
+                : droppedCY;                                    // 슬롯: 단내림 천장
 
               // 경계벽 수직 라인 (뒷벽→앞쪽 그라데이션) - 상단/하단 2개
               lines.push([bx, bwTop, z1, bx, bwTop, z2]);    // 경계벽 상단 (뒤→앞)
               lines.push([bx, bwBot, z1, bx, bwBot, z2]);    // 경계벽 하단 (뒤→앞)
 
-              // 커튼박스/단내림쪽 외벽의 천장 높이 수평 라인
+              // 커튼박스쪽 외벽의 천장 높이 수평 라인
               if (dcIsL && hasLW) {
                 lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
               } else if (!dcIsL && hasRW) {
@@ -1760,8 +1764,11 @@ const Room: React.FC<RoomProps> = ({
               const dcIsL = spaceInfo.droppedCeiling.position === 'left';
               const bx = dcIsL ? x1 + dcW : x2 - dcW;
               const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
+              const stepSameSideAsDC2 = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
               const bwTop = isFreePlacement ? droppedCY : cY;
-              const bwBot = isFreePlacement ? cY : droppedCY;
+              const bwBot = isFreePlacement
+                ? (stepSameSideAsDC2 ? cY - scDropHLine : cY)
+                : droppedCY;
 
               // 경계벽 수직선 (뒷벽)
               solidThemeLines.push([bx, bwBot, z1, bx, bwTop, z1]);
