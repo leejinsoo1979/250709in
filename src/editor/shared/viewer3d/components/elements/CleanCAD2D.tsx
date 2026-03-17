@@ -1318,7 +1318,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
-          leftText = `이격 ${leftValue}`;
+          leftText = `${leftValue}`;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
@@ -1433,7 +1433,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
-          rightText = `이격 ${rightValue}`;
+          rightText = `${rightValue}`;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
@@ -1862,7 +1862,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             }}
                             onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
                           >
-                            {`이격 ${boundaryGapMm}`}
+                            {`${boundaryGapMm}`}
                           </div>
                         </Html>
                       )}
@@ -1921,7 +1921,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 노서라운드: 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left ?? 1.5;
               if (leftValue === 0) return null;
-              leftText = `이격 ${leftValue}`;
+              leftText = `${leftValue}`;
             } else if (leftmostFurnitureX !== null) {
               // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
@@ -2165,7 +2165,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 노서라운드: 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right ?? 1.5;
               if (rightValue === 0) return null;
-              rightText = `이격 ${rightValue}`;
+              rightText = `${rightValue}`;
             } else if (rightmostFurnitureX !== null) {
               // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
@@ -4638,7 +4638,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             }}
                             onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
                           >
-                            {`이격 ${boundaryGapMm}`}
+                            {`${boundaryGapMm}`}
                           </div>
                         </Html>
                       )}
@@ -6341,7 +6341,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 왼쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left ?? 1.5;
                 if (leftValue === 0) return null;
-                leftText = `이격 ${leftValue}`;
+                leftText = `${leftValue}`;
               } else {
                 // 왼쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -6454,7 +6454,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 오른쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right ?? 1.5;
                 if (rightValue === 0) return null;
-                rightText = `이격 ${rightValue}`;
+                rightText = `${rightValue}`;
               } else {
                 // 오른쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
