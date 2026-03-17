@@ -20,7 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, getStandardDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
-import { IoLockClosed, IoLockOpen } from 'react-icons/io5';
+
 import { isSurroundPanelId } from '@/data/modules/surroundPanels';
 
 
@@ -1543,56 +1543,7 @@ const FreePlacementDropZone: React.FC = () => {
               gap.endX * 0.01, gap.centerY - 0.08, guideZPosition,
               gap.endX * 0.01, gap.centerY + 0.08, guideZPosition,
             ]} color={lineColor} />
-            {/* 잠금 아이콘 — 치수 라벨 위에 별도 배치 */}
-            {!editingGapIndex && showFurnitureEditHandles && (gap.gapType === 'left-wall' || gap.gapType === 'right-wall') && (() => {
-              const side = gap.gapType === 'left-wall' ? 'left' : 'right';
-              const isLocked = spaceInfo.lockedWallGaps?.[side] != null;
-              return (
-                <Html
-                  position={[gap.centerX, gap.centerY + 1.5, guideZPosition]}
-                  center
-                  style={{ pointerEvents: 'auto', userSelect: 'none', zIndex: 9998, background: 'transparent' }}
-                  zIndexRange={[9998, 9999]}
-                >
-                  <div
-                    style={{
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      border: `2px solid ${isLocked ? '#9b59b6' : themeColor}`,
-                      backgroundColor: '#ffffff',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      opacity: isLocked ? 1 : 0.5,
-                      transition: 'all 0.2s ease',
-                      color: isLocked ? '#9b59b6' : themeColor,
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLDivElement;
-                      el.style.opacity = '1';
-                      el.style.transform = 'scale(1.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLDivElement;
-                      if (!isLocked) el.style.opacity = '0.5';
-                      el.style.transform = 'scale(1)';
-                    }}
-                    onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                      setLockedWallGap(side, isLocked ? undefined : gap.width);
-                    }}
-                    title={isLocked ? '잠금 해제' : '잠금'}
-                  >
-                    {isLocked ? <IoLockClosed size={14} /> : <IoLockOpen size={14} />}
-                  </div>
-                </Html>
-              );
-            })()}
+            {/* 잠금 아이콘 제거됨 — 자유배치 모드에서는 이격거리 잠금 불필요 */}
             {/* 치수 라벨 - 가이드선 중앙 바로 위 (가구 치수와 동일 높이) */}
             {editingGapIndex === i ? (
               <Html
