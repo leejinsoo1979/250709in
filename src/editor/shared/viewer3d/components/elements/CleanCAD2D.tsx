@@ -1848,9 +1848,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 양쪽 경계이격 차감
+                    // 단내림 구간: 메인쪽으로 경계이격만큼 확장, 외벽쪽은 이격 차감
+                    // 단내림+메인은 통합 배치공간이므로 단내림↔메인 경계 gap은 단내림이 흡수
                     let scOuterGap = 0;
-                    let scInnerGap = 0; // 메인↔단내림 경계이격
                     if (hasSC) {
                       // 단내림의 외벽쪽(커튼박스쪽 또는 벽쪽) 경계이격
                       const sameSide = hasDC && dcPosition === scPosition;
@@ -1860,10 +1860,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      // 메인↔단내림 경계: 단내림↔메인 사이 gap은 별도 치수선으로 표시되므로
-                      // getInternalSpaceBoundsX에서는 gap 없음으로 처리하지만,
-                      // 3행 치수에서는 경계 gap을 각 구간에서 차감하지 않음 (2행 경계 치수로 표시)
-                      scPlacementWidth = Math.round((scWidth - scOuterGap) * 10) / 10;
+                      // 메인쪽 경계이격을 단내림이 흡수(확장) + 외벽쪽 이격 차감
+                      const scMainBoundaryGap = middleGapMm; // 메인↔단내림 경계
+                      scPlacementWidth = Math.round((scWidth + scMainBoundaryGap - scOuterGap) * 10) / 10;
                     }
 
                     // 커튼박스 구간: 양쪽 gap 차감
@@ -1882,10 +1881,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     var scPlacEndX = scEndX;
                     if (hasSC) {
                       if (scOnLeft) {
+                        // 좌단내림: 왼쪽=외벽쪽(gap 차감), 오른쪽=메인쪽(경계이격 흡수→확장)
                         scPlacStartX = scStartX + mmToThreeUnits(scOuterGap);
-                        // scPlacEndX = scEndX (메인쪽, gap 없음)
+                        scPlacEndX = scEndX + mmToThreeUnits(middleGapMm);
                       } else {
-                        // scPlacStartX = scStartX (메인쪽, gap 없음)
+                        // 우단내림: 왼쪽=메인쪽(경계이격 흡수→확장), 오른쪽=외벽쪽(gap 차감)
+                        scPlacStartX = scStartX - mmToThreeUnits(middleGapMm);
                         scPlacEndX = scEndX - mmToThreeUnits(scOuterGap);
                       }
                     }
