@@ -1599,7 +1599,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(mainWidth)}
+                    {(() => {
+                      if (isFreePlacement) return Math.round(mainWidth);
+                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return Math.round(zsi.normal.width);
+                    })()}
                   </Text>
                 )}
 
@@ -1631,7 +1635,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(droppedWidth)}
+                    {(() => {
+                      if (isFreePlacement) return Math.round(droppedWidth);
+                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return Math.round(zsi.dropped?.width || droppedWidth);
+                    })()}
                   </Text>
                 )}
                 
@@ -1682,65 +1690,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
 
-                {/* 단내림 구간 내경 치수선 — 구간 사이즈 아래에 표시 */}
-                {!isFreePlacement && (() => {
-                  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                  const droppedInternalWidth = zoneSlotInfo.dropped?.width || 0;
-                  if (droppedInternalWidth <= 0) return null;
-
-                  // 단내림 구간 내경 시작/끝 X 좌표 계산
-                  const droppedZoneInfo = zoneSlotInfo.dropped;
-                  if (!droppedZoneInfo) return null;
-                  const internalStartX = leftOffset + mmToThreeUnits(droppedZoneInfo.startX);
-                  const internalEndX = leftOffset + mmToThreeUnits(droppedZoneInfo.startX + droppedInternalWidth);
-                  const internalDimY = zoneDimensionY; // 구간 사이즈(subDimensionY) 바로 아래
-
-                  return (
-                    <group>
-                      <Line
-                        points={[[internalStartX, internalDimY, 0.002], [internalEndX, internalDimY, 0.002]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([internalStartX, internalDimY, 0.002], [internalStartX + 0.03, internalDimY, 0.002])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([internalEndX, internalDimY, 0.002], [internalEndX - 0.03, internalDimY, 0.002])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      {(showDimensionsText || isStep2) && (
-                        <Text
-                          renderOrder={1000}
-                          depthTest={false}
-                          position={[(internalStartX + internalEndX) / 2, internalDimY + mmToThreeUnits(30), 0.01]}
-                          fontSize={smallFontSize}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          outlineWidth={textOutlineWidth}
-                          outlineColor={textOutlineColor}
-                        >
-                          {Math.round(droppedInternalWidth)}
-                        </Text>
-                      )}
-                      {/* 연장선 */}
-                      <Line
-                        points={[[internalStartX, internalDimY - mmToThreeUnits(20), 0.001], [internalStartX, internalDimY + mmToThreeUnits(10), 0.001]]}
-                        color={subGuideColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={[[internalEndX, internalDimY - mmToThreeUnits(20), 0.001], [internalEndX, internalDimY + mmToThreeUnits(10), 0.001]]}
-                        color={subGuideColor}
-                        lineWidth={1}
-                      />
-                    </group>
-                  );
-                })()}
 
                 {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 (자유배치에서는 숨김) */}
                 {!isFreePlacement && (() => {
@@ -4070,7 +4019,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {Math.round(mainWidth)}
+                    {(() => {
+                      if (isFreePlacement) return Math.round(mainWidth);
+                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return Math.round(zsi.normal.width);
+                    })()}
                   </Text>
                 )}
 
@@ -4103,7 +4056,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {Math.round(droppedWidth)}
+                    {(() => {
+                      if (isFreePlacement) return Math.round(droppedWidth);
+                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return Math.round(zsi.dropped?.width || droppedWidth);
+                    })()}
                   </Text>
                 )}
                 
