@@ -994,9 +994,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
-  // 치수선 균등 간격 배치 (단내림 있으면 4단, 없으면 3단)
+  // 치수선 균등 간격 배치 (3단: 전체폭, 구간폭, 슬롯폭)
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = hasDroppedCeiling ? 4 : 3;
+  const dimLevels = 3;
   // 1단계: 전체 너비 (3600) - 가장 위
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단계 (단내림 시): 내부 너비 합산 (3597) - 전체 폭 바로 아래
@@ -1544,7 +1544,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
             const droppedBounds = getDroppedZoneBounds(spaceInfo);
-            const subDimensionY = zoneDimensionY; // 메인/단내림 구간 전용 Y 레벨
+            const subDimensionY = columnDimensionY; // 전체폭 바로 아래 (내경 치수선 위치 대체)
             
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -2268,8 +2268,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 전체 내부 너비 치수선 (자유배치 모드에서는 숨김 - 프레임 없음) */}
-      {!isFreePlacement && (() => {
+      {/* 전체 내부 너비 치수선 (자유배치/단내림 모드에서는 숨김) */}
+      {!isFreePlacement && !hasDroppedCeiling && (() => {
         const internalLeftX = threeUnitBoundaries[0];
         const internalRightX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
         const internalWidthMm = indexing.internalWidth;
