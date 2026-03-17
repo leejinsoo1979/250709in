@@ -74,7 +74,11 @@ const FreePlacementDropZone: React.FC = () => {
   const [movingModuleId, setMovingModuleId] = useState<string | null>(null);
   const [isDraggingPlaced, setIsDraggingPlaced] = useState(false);
   // 2차 클릭 이동 모드 (이격거리 라벨이 가구 Y위치로 내려옴)
-  const [isMoveMode, setIsMoveMode] = useState(false);
+  const [isMoveMode, _setIsMoveMode] = useState(false);
+  const setIsMoveMode = useCallback((v: boolean) => {
+    _setIsMoveMode(v);
+    (window as any).__furnitureMoveMode = v;
+  }, []);
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
@@ -107,7 +111,20 @@ const FreePlacementDropZone: React.FC = () => {
   // editingFreeModuleId가 바뀌면 이동 모드 리셋
   useEffect(() => {
     setIsMoveMode(false);
-  }, [editingFreeModuleId]);
+  }, [editingFreeModuleId, setIsMoveMode]);
+
+  // 가구 위 클릭으로 배치 확정 이벤트 수신
+  useEffect(() => {
+    const handler = () => {
+      if (isMoveMode) {
+        window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+        setIsDraggingPlaced(false);
+        setIsMoveMode(false);
+      }
+    };
+    window.addEventListener('furniture-confirm-placement', handler);
+    return () => window.removeEventListener('furniture-confirm-placement', handler);
+  }, [isMoveMode, setIsMoveMode]);
 
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);

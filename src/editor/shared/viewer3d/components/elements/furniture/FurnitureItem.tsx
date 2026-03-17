@@ -2832,6 +2832,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
         onClick={(e) => {
+          // 이동 모드 중 가구 클릭 → 배치 확정
+          if ((window as any).__furnitureMoveMode) {
+            e.stopPropagation();
+            (window as any).__r3fClickHandled = true;
+            window.dispatchEvent(new CustomEvent('furniture-confirm-placement'));
+            return;
+          }
           // 가구 클릭 → 허공 클릭 deselect 방지 플래그 설정
           (window as any).__r3fClickHandled = true;
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
