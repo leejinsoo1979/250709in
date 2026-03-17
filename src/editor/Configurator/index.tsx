@@ -3856,6 +3856,15 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
+        {/* 자유배치 모드: 좌우 이격거리 설정 */}
+        {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
+          <GapControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+            forceShow={true}
+          />
+        )}
+
         {/* 프레임 설정 (슬롯배치 모드만) */}
         {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (
         <div className={styles.configSection}>
