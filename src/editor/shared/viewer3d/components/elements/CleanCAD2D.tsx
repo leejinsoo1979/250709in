@@ -994,13 +994,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
-  // 치수선 균등 간격 배치: 2단 — 전체폭 → 구간사이즈 → 슬롯폭
+  // 치수선 균등 간격 배치: 4단 — 전체폭 → 구간사이즈 → 슬롯합계(실배치) → 슬롯폭
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = 3;
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled === true;
+  const dimLevels = hasDroppedCeiling ? 4 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
   const columnDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
+  // 3단: 슬롯 합계 너비 (실배치 공간) — 단내림 있을 때만
+  const slotTotalDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
   const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
@@ -1609,23 +1612,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {Math.round(mainWidth)}
                   </Text>
                 )}
-                {/* 메인 구간 슬롯 합계 (실배치 공간) */}
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[(mainStartX + mainEndX) / 2, subDimensionY - mmToThreeUnits(30), 0.01]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                  >
-                    {mainSlotTotalWidth}
-                  </Text>
-                )}
-
                 {/* 단내림 구간 치수선 */}
                 <Line
                   points={[[droppedStartX, subDimensionY, 0.002], [droppedEndX, subDimensionY, 0.002]]}
@@ -1657,12 +1643,72 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {Math.round(droppedWidth)}
                   </Text>
                 )}
-                {/* 단내림 구간 슬롯 합계 (실배치 공간) */}
+
+                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 ===== */}
+                {/* 메인 구간 슬롯 합계 치수선 */}
+                <Line
+                  points={[[mainStartX, slotTotalDimensionY, 0.002], [mainEndX, slotTotalDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([mainStartX, slotTotalDimensionY, 0.002], [mainStartX + 0.05, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([mainEndX, slotTotalDimensionY, 0.002], [mainEndX - 0.05, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
                 {(showDimensionsText || isStep2) && (
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[(droppedStartX + droppedEndX) / 2, subDimensionY - mmToThreeUnits(30), 0.01]}
+                    position={[(mainStartX + mainEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {mainSlotTotalWidth}
+                  </Text>
+                )}
+                {/* 메인 구간 슬롯 합계 연장선 */}
+                <Line
+                  points={[[mainStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mainStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[[mainEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mainEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+
+                {/* 단내림 구간 슬롯 합계 치수선 */}
+                <Line
+                  points={[[droppedStartX, slotTotalDimensionY, 0.002], [droppedEndX, slotTotalDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([droppedStartX, slotTotalDimensionY, 0.002], [droppedStartX + 0.05, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([droppedEndX, slotTotalDimensionY, 0.002], [droppedEndX - 0.05, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[(droppedStartX + droppedEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                     fontSize={smallFontSize}
                     color={textColor}
                     anchorX="center"
@@ -1673,7 +1719,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {droppedSlotTotalWidth}
                   </Text>
                 )}
-                
+                {/* 단내림 구간 슬롯 합계 연장선 */}
+                <Line
+                  points={[[droppedStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [droppedStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[[droppedEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [droppedEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+
                 {/* 구간 분리 가이드라인 - 숨김 처리 */}
                 {/* <Line
                   points={[
