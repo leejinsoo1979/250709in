@@ -385,14 +385,18 @@ export const optimizePanelsMultiple = async (
 
     for (let i = 0; i < panel.quantity; i++) {
       const id = `${panel.id}-${i}`;
-      const canRotate = panel.grain && panel.grain !== 'NONE' ? false : (panel.canRotate !== false);
-      // 좌우측판만 회전 금지 (보링 방향 유지), 백패널은 회전 허용
+      // 백패널: 결방향 무관, 항상 회전 가능
+      const isBackPanel = panel.name?.includes('백패널') && !panel.name?.includes('서랍');
+      const canRotate = isBackPanel
+        ? true
+        : (panel.grain && panel.grain !== 'NONE' ? false : (panel.canRotate !== false));
+      // 좌우측판만 회전 금지 (보링 방향 유지)
       const noRotatePanel = isSidePanel(panel.name);
       rectangles.push({
         id,
         width: panel.width,
         height: panel.height,
-        grain: panel.grain || 'NONE',
+        grain: isBackPanel ? 'NONE' : (panel.grain || 'NONE'), // 백패널은 grain 무시
         material: panel.material,
         color: panel.color,
         name: panel.name,
