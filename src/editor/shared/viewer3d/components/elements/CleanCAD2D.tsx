@@ -1654,33 +1654,54 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : (zoneSlotInfoForDim.dropped?.columnWidth || 0) * (zoneSlotInfoForDim.dropped?.columnCount || 0);
             const droppedSlotTotalWidth = Math.round(droppedSlotTotalWidthRaw * 10) / 10;
 
-            // 구간 순서 (벽→커튼박스→단내림→메인):
-            // position=right: 좌측부터 [메인] [단내림] [커튼박스] 우벽
-            // position=left:  좌벽 [커튼박스] [단내림] [메인]
+            // 구간 X 좌표 계산:
+            // 각 구간(커튼박스/단내림/메인)의 position에 따라 좌→우 순서 결정
+            // 동일 쪽: 벽→커튼박스→단내림→메인
+            // 반대 쪽: 벽→단내림→메인→커튼박스→벽 또는 벽→커튼박스→메인→단내림→벽
+            const dcOnLeft = hasDC && dcPosition === 'left';
+            const dcOnRight = hasDC && dcPosition === 'right';
+            const scOnLeft = hasSC && scPosition === 'left';
+            const scOnRight = hasSC && scPosition === 'right';
 
-            // 메인 구간 X 좌표
-            const mainStartX = dcPosition === 'left'
-              ? leftOffset + mmToThreeUnits(dcWidth + scWidth)
-              : leftOffset;
-            const mainEndX = dcPosition === 'left'
-              ? leftOffset + mmToThreeUnits(spaceInfo.width)
-              : leftOffset + mmToThreeUnits(mainWidth);
+            // 좌측에 쌓이는 구간 너비 합계 (좌→우 순서: 커튼박스 → 단내림)
+            const leftStackWidth = (dcOnLeft ? dcWidth : 0) + (scOnLeft ? scWidth : 0);
+            // 우측에 쌓이는 구간 너비 합계 (우→좌 순서: 커튼박스 → 단내림)
+            const rightStackWidth = (dcOnRight ? dcWidth : 0) + (scOnRight ? scWidth : 0);
+
+            // 메인 구간: 좌측 스택 뒤 ~ 우측 스택 앞
+            const mainStartX = leftOffset + mmToThreeUnits(leftStackWidth);
+            const mainEndX = leftOffset + mmToThreeUnits(spaceInfo.width - rightStackWidth);
 
             // 단내림(stepCeiling) 구간 X 좌표
-            const scStartX = dcPosition === 'left'
-              ? leftOffset + mmToThreeUnits(dcWidth)
-              : leftOffset + mmToThreeUnits(mainWidth);
-            const scEndX = dcPosition === 'left'
-              ? leftOffset + mmToThreeUnits(dcWidth + scWidth)
-              : leftOffset + mmToThreeUnits(mainWidth + scWidth);
+            let scStartX = mainStartX;
+            let scEndX = mainStartX;
+            if (hasSC) {
+              if (scOnLeft) {
+                // 좌측 단내림: 커튼박스 오른쪽 ~ 단내림 오른쪽 끝
+                const scLeftEdge = dcOnLeft ? dcWidth : 0;
+                scStartX = leftOffset + mmToThreeUnits(scLeftEdge);
+                scEndX = leftOffset + mmToThreeUnits(scLeftEdge + scWidth);
+              } else {
+                // 우측 단내림: 메인 끝 ~ 커튼박스 왼쪽
+                scStartX = mainEndX;
+                scEndX = mainEndX + mmToThreeUnits(scWidth);
+              }
+            }
 
             // 커튼박스(droppedCeiling) 구간 X 좌표
-            const droppedStartX = dcPosition === 'left'
-              ? leftOffset
-              : leftOffset + mmToThreeUnits(mainWidth + scWidth);
-            const droppedEndX = dcPosition === 'left'
-              ? leftOffset + mmToThreeUnits(dcWidth)
-              : leftOffset + mmToThreeUnits(spaceInfo.width);
+            let droppedStartX = mainStartX;
+            let droppedEndX = mainStartX;
+            if (hasDC) {
+              if (dcOnLeft) {
+                droppedStartX = leftOffset;
+                droppedEndX = leftOffset + mmToThreeUnits(dcWidth);
+              } else {
+                // 우측 커튼박스: 단내림 오른쪽 ~ 공간 끝
+                const dcLeftEdge = spaceInfo.width - dcWidth;
+                droppedStartX = leftOffset + mmToThreeUnits(dcLeftEdge);
+                droppedEndX = leftOffset + mmToThreeUnits(spaceInfo.width);
+              }
+            }
             
             return (
               <>
