@@ -348,19 +348,20 @@ export const calculatePanelDetails = (
           }
           
           // 서랍 손잡이판 (마이다) - PB 15mm
+          // 마이다는 측판 사이에 들어가므로 내경폭 사용
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum}(마이다)`,
-            width: customWidth,
+            width: innerWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,
             material: 'PB'
           });
 
           // 서랍 본체 크기 계산 (DrawerRenderer 참조)
-          // drawerWidth = innerWidth - 24mm (좌우 12mm 간격)
+          // drawerWidth = innerWidth - 48mm (좌우 24mm 간격 = 측판 안쪽면에서 좌우 각 24mm)
           // 앞판/뒷판: drawerWidth - 106mm (좌우 측판 안쪽에 끼워짐)
           // 좌측판/우측판: 전체 깊이 사용 (앞뒤 15mm씩 확장)
-          const drawerWidth = customWidth - 24; // 서랍 전체 폭
+          const drawerWidth = innerWidth - 24; // 서랍 전체 폭 (내경 - 좌우 12mm)
           const drawerFrontBackWidth = drawerWidth - 106; // 앞판/뒷판 폭
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
           const drawerBodyDepth = customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
