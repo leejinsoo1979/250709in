@@ -1071,7 +1071,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const renderFrontView = () => (
     <group position={[0, 0, zOffset]} renderOrder={9999}>
       {/* 단내림 구간 표시 (해칭) - 2D 모드, 슬롯배치에서만 (자유배치는 경계선만 표시) */}
-      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== '3D' && !isFreePlacement && (() => {
+      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== '3D' && (() => {
         const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
         const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
         const totalHeight = mmToThreeUnits(spaceInfo.height);
@@ -1145,22 +1145,38 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
             </mesh>
 
-            {/* 단내림 구간 경계선 */}
-            <Line
-              points={[[droppedStartX, normalHeight, 0.002], [droppedStartX, totalHeight, 0.002]]}
-              color={theme === 'dark' ? '#FFD700' : '#999999'}
-              lineWidth={0.8}
-            />
-            <Line
-              points={[[droppedEndX, normalHeight, 0.002], [droppedEndX, totalHeight, 0.002]]}
-              color={theme === 'dark' ? '#FFD700' : '#999999'}
-              lineWidth={0.8}
-            />
-            <Line
-              points={[[droppedStartX, normalHeight, 0.002], [droppedEndX, normalHeight, 0.002]]}
-              color={theme === 'dark' ? '#FFD700' : '#999999'}
-              lineWidth={0.8}
-            />
+            {/* 단내림/커튼박스 구간 경계선 */}
+            {(() => {
+              const hatchTop = isFreePlacement ? totalHeight + droppedHeight : totalHeight;
+              const borderColor = theme === 'dark' ? '#FFD700' : '#999999';
+              return (
+                <>
+                  <Line
+                    points={[[droppedStartX, normalHeight, 0.002], [droppedStartX, hatchTop, 0.002]]}
+                    color={borderColor}
+                    lineWidth={0.8}
+                  />
+                  <Line
+                    points={[[droppedEndX, normalHeight, 0.002], [droppedEndX, hatchTop, 0.002]]}
+                    color={borderColor}
+                    lineWidth={0.8}
+                  />
+                  <Line
+                    points={[[droppedStartX, normalHeight, 0.002], [droppedEndX, normalHeight, 0.002]]}
+                    color={borderColor}
+                    lineWidth={0.8}
+                  />
+                  {/* 자유배치 커튼박스: 상단 수평선 */}
+                  {isFreePlacement && (
+                    <Line
+                      points={[[droppedStartX, hatchTop, 0.002], [droppedEndX, hatchTop, 0.002]]}
+                      color={borderColor}
+                      lineWidth={0.8}
+                    />
+                  )}
+                </>
+              );
+            })()}
 
             {/* 해칭 패턴 */}
             {hatchLines}
