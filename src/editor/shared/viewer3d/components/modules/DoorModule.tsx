@@ -784,40 +784,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorBottomLocal = cabinetBottomLocal - actualBase + freeBottomGap;
       actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
     } else {
-      // ── 슬롯 배치: 항상 천장바닥 기준 ──
-    const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
-    const baselineBottomGap = isFloorType ? actualBaseHeight : (floorHeightValue + actualBaseHeight);
-
-    // 띄움배치 시 doorBottomGap이 baselineBottomGap보다 작으면
-    // 도어가 캐비넷 아래로 확장되는 문제 발생 → baselineBottomGap을 최소값으로 사용
-    const rawInputBottomGap = doorBottomGap ?? baselineBottomGap;
-    const inputBottomGap = placementType === 'float'
-      ? Math.max(rawInputBottomGap, baselineBottomGap)
-      : rawInputBottomGap;
-    const effectiveBottomGap = inputBottomGap;
-    const extraBottomGap = effectiveBottomGap - baselineBottomGap;
-
-    // 전체서라운드 판별: 상부프레임이 앞으로 나와 도어 위를 덮음
-    const isFullSurround = originalSpaceInfo.surroundType === 'surround' &&
-      originalSpaceInfo.frameConfig?.top === true && originalSpaceInfo.frameConfig?.bottom === true;
-
-    const effectiveTopFrame = perFurnitureTopFrame ?? topFrameHeightValue;
-    let extraTopGap: number;
-    if (isFullSurround) {
-      extraTopGap = 1.5; // 상부프레임 하단에서 1.5mm 갭
-    } else {
-      const absoluteTopGap = doorTopGap !== undefined ? doorTopGap : (effectiveTopFrame + 5);
-      extraTopGap = absoluteTopGap - effectiveTopFrame;
-    }
-
-    doorBottomLocal = cabinetBottomLocal + extraBottomGap;
-    doorTopLocal = cabinetTopLocal - extraTopGap;
-
-
-    // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
-    // 별도의 doorBottomLocal 조정 불필요
-
-    actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+      // ── 슬롯 배치: 자유배치와 동일하게 천장바닥 기준 도어 이격 적용 ──
+      const slotTopGap = doorTopGap ?? 1.5;
+      const slotBottomGap = doorBottomGap ?? (placementType === 'float' ? floatHeight : 25);
+      const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
+      const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
+      doorTopLocal = cabinetTopLocal + distToTop - slotTopGap;
+      doorBottomLocal = cabinetBottomLocal - actualBase + slotBottomGap;
+      actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
     }
 
 // console.log('🚪📏 키큰장 actualDoorHeight:', {

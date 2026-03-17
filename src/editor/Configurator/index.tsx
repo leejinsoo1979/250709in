@@ -306,8 +306,7 @@ const Configurator: React.FC = () => {
       }
     });
   }, [doorFurnitureList]);
-  const showDoorSetup = (spaceInfo.layoutMode || 'equal-division') === 'free-placement'
-    && doorFurnitureList.length > 0;
+  const showDoorSetup = doorFurnitureList.length > 0;
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
   const [doorGapAllSync, setDoorGapAllSync] = useState(false);
