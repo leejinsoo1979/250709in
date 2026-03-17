@@ -212,25 +212,47 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
     const teamId = await getActiveTeamId();
     const now = serverTimestamp() as Timestamp;
 
+    // 같은 프로젝트 내 중복 이름 체크 및 자동 사본 번호 부여
+    let finalName = data.name;
+    try {
+      const { designFiles: existingFiles } = await getDesignFiles(data.projectId);
+      const existingNames = new Set(existingFiles.map(f => f.name));
+
+      if (existingNames.has(finalName)) {
+        // 기본 이름에서 기존 사본 번호 패턴 제거 (예: "이름 사본2" → "이름")
+        const baseName = finalName.replace(/ 사본\d*$/, '');
+        let copyNum = 1;
+        let candidate = `${baseName} 사본${copyNum}`;
+        while (existingNames.has(candidate)) {
+          copyNum++;
+          candidate = `${baseName} 사본${copyNum}`;
+        }
+        finalName = candidate;
+        console.log('📋 [createDesignFile] 중복 이름 감지, 자동 변경:', data.name, '→', finalName);
+      }
+    } catch (dupCheckError) {
+      console.warn('⚠️ [createDesignFile] 중복 이름 체크 실패 (무시하고 원래 이름 사용):', dupCheckError);
+    }
+
     // undefined 필드들을 제외한 데이터 생성
     // Firebase는 undefined 값을 허용하지 않으므로, 자동 계산이 필요한 필드는 제거
     const spaceConfigWithDefaults = { ...data.spaceConfig };
-    
+
     // undefined 값을 가진 필드들을 제거 (Firebase는 undefined를 허용하지 않음)
     // 이 필드들은 나중에 자동 계산됨
     delete spaceConfigWithDefaults.mainDoorCount;
     delete spaceConfigWithDefaults.droppedCeilingDoorCount;
     delete spaceConfigWithDefaults.customColumnCount;
-    
+
     console.log('🔧 [createDesignFile] undefined 필드 제거 후 spaceConfig:', {
       hasMainDoorCount: 'mainDoorCount' in spaceConfigWithDefaults,
       hasDroppedCeilingDoorCount: 'droppedCeilingDoorCount' in spaceConfigWithDefaults,
       hasCustomColumnCount: 'customColumnCount' in spaceConfigWithDefaults,
       keys: Object.keys(spaceConfigWithDefaults)
     });
-    
+
     const baseData: any = {
-      name: data.name,
+      name: finalName,
       projectId: data.projectId,
       spaceConfig: spaceConfigWithDefaults,
       furniture: data.furniture,
