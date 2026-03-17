@@ -571,7 +571,7 @@
   position: relative; /* for itemCheckbox absolute positioning */
   display: flex;
   flex-direction: column;
-  background: var(--theme-background);
+  background: #ffffff;
   border: 1px solid var(--theme-border);
   border-radius: 12px;
   overflow: hidden;
@@ -595,7 +595,7 @@
   width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: var(--theme-background-tertiary, rgba(128, 128, 128, 0.08));
+  background: var(--theme-background-secondary);
 }
 
 .saasFolderIcon {
