@@ -1009,9 +1009,15 @@
 
 .cardMeta {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 2px;
   margin-bottom: 6px;
+}
+
+.cardSpaceSize {
+  font-size: 11px;
+  color: var(--theme-text-muted, #999);
+  letter-spacing: 0.3px;
 }
 
 .cardDate {

@@ -676,6 +676,11 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                             : item.name}
                         </div>
                         <div className={styles.cardMeta}>
+                          {item.type === 'design' && item.spaceSize && (
+                            <div className={styles.cardSpaceSize}>
+                              {item.spaceSize.width} × {item.spaceSize.height}{item.spaceSize.depth ? ` × ${item.spaceSize.depth}` : ''}
+                            </div>
+                          )}
                           <div className={styles.cardDate}>{formatDate(item.updatedAt)}</div>
                         </div>
                         <div className={styles.cardFooter}>
