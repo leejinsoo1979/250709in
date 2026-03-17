@@ -2690,6 +2690,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 편집 모드(이동 모드 포함)에서는 일반 드래그 시작 방지
     if (isEditMode) {
+      e.stopPropagation();
       return;
     }
 
@@ -2710,11 +2711,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: ThreeEvent<PointerEvent>) => {
     if (columnCResize.isResizing) {
       columnCResize.handlePointerUp();
     } else if (isEditMode) {
       // 편집/이동 모드에서 pointerUp → 이동 모드 진입 또는 배치 확정
+      // 버블링 차단하여 드래그 플레인의 onPointerUp이 즉시 종료하는 것 방지
+      e?.stopPropagation();
       (window as any).__furnitureMoveHandled = true;
       window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
         detail: { moduleId: placedModule.id },
