@@ -1590,29 +1590,24 @@ const FreePlacementDropZone: React.FC = () => {
         const zOffset = (furnitureFrontZ + backWallZ) / 2;
         const boxes: React.ReactNode[] = [];
 
-        // 메인구간 좌측 gap (인접 구간에 따라 높이 결정)
+        // 메인구간 좌측 gap (메인 천장 높이 사용 — 단내림 기둥 안쪽)
         if (effectiveLeftGap > 0) {
           const w = effectiveLeftGap * 0.01;
           const cx = startX * 0.01 + w / 2;
-          // 인접 구간이 단내림이면 단내림 높이, 아니면 메인 높이
-          const scDropHLocal = hasStepLocal ? (spaceInfo.stepCeiling!.dropHeight || 0) : 0;
-          const boxH = leftAdj === 'step' ? (spaceInfo.height - scDropHLocal) * 0.01 : spaceH;
           boxes.push(
-            <mesh key="gap-left" position={[cx, boxH / 2, zOffset]}>
-              <boxGeometry args={[w, boxH, depthThree]} />
+            <mesh key="gap-left" position={[cx, spaceH / 2, zOffset]}>
+              <boxGeometry args={[w, spaceH, depthThree]} />
               <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
           );
         }
-        // 메인구간 우측 gap (인접 구간에 따라 높이 결정)
+        // 메인구간 우측 gap (메인 천장 높이 사용 — 단내림 기둥 안쪽)
         if (effectiveRightGap > 0) {
           const w = effectiveRightGap * 0.01;
           const cx = endX * 0.01 - w / 2;
-          const scDropHLocal = hasStepLocal ? (spaceInfo.stepCeiling!.dropHeight || 0) : 0;
-          const boxH = rightAdj === 'step' ? (spaceInfo.height - scDropHLocal) * 0.01 : spaceH;
           boxes.push(
-            <mesh key="gap-right" position={[cx, boxH / 2, zOffset]}>
-              <boxGeometry args={[w, boxH, depthThree]} />
+            <mesh key="gap-right" position={[cx, spaceH / 2, zOffset]}>
+              <boxGeometry args={[w, spaceH, depthThree]} />
               <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
           );
