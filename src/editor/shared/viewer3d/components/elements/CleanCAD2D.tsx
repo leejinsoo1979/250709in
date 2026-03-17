@@ -994,16 +994,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
-  // 치수선 균등 간격 배치 (3단: 전체폭, 구간폭, 슬롯폭)
+  // 치수선 균등 간격 배치
+  // 단내림 시 4단: 전체폭 → 구간사이즈 → 가구배치공간 → 슬롯폭
+  // 단내림 없을 때 3단: 전체폭 → 구간사이즈(=가구배치공간) → 슬롯폭
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = 3;
-  // 1단계: 전체 너비 (3600) - 가장 위
+  const dimLevels = hasDroppedCeiling ? 4 : 3;
+  // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
-  // 2단계 (단내림 시): 내부 너비 합산 (3597) - 전체 폭 바로 아래
+  // 2단: 구간사이즈 (2700 / 900)
   const columnDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
-  // 3단계 (단내림 시 3, 아니면 2): 메인구간 + 단내림구간 치수 - 개별 슬롯 바로 위
+  // 3단: 가구배치공간 (이격 제외 내부폭) — 단내림 시에만 별도 레벨
   const zoneDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
-  // 4단계 (단내림 시 4, 아니면 3): 개별 슬롯 너비 - 가장 아래
+  // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
   const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
 
@@ -1682,6 +1684,117 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
 
+                {/* 가구배치공간 치수 (구간사이즈 한 단 아래) — 이격거리를 뺀 내부폭 */}
+                {!isFreePlacement && (() => {
+                  const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                  const mainInternalWidth = zsi.normal.width;
+                  const droppedInternalWidth = zsi.dropped?.width || 0;
+
+                  // 메인 구간 내부 시작/끝
+                  const mainIntStartX = leftOffset + mmToThreeUnits(zsi.normal.startX);
+                  const mainIntEndX = leftOffset + mmToThreeUnits(zsi.normal.startX + mainInternalWidth);
+
+                  // 단내림 구간 내부 시작/끝
+                  const droppedInt = zsi.dropped;
+                  const droppedIntStartX = droppedInt ? leftOffset + mmToThreeUnits(droppedInt.startX) : 0;
+                  const droppedIntEndX = droppedInt ? leftOffset + mmToThreeUnits(droppedInt.startX + droppedInternalWidth) : 0;
+
+                  const dimY = zoneDimensionY;
+
+                  return (
+                    <>
+                      {/* 메인 구간 가구배치공간 */}
+                      <Line
+                        points={[[mainIntStartX, dimY, 0.002], [mainIntEndX, dimY, 0.002]]}
+                        color={dimensionColor}
+                        lineWidth={1}
+                      />
+                      <Line
+                        points={createArrowHead([mainIntStartX, dimY, 0.002], [mainIntStartX + 0.05, dimY, 0.002])}
+                        color={dimensionColor}
+                        lineWidth={1}
+                      />
+                      <Line
+                        points={createArrowHead([mainIntEndX, dimY, 0.002], [mainIntEndX - 0.05, dimY, 0.002])}
+                        color={dimensionColor}
+                        lineWidth={1}
+                      />
+                      {(showDimensionsText || isStep2) && (
+                        <Text
+                          renderOrder={1000}
+                          depthTest={false}
+                          position={[(mainIntStartX + mainIntEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                          fontSize={smallFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
+                        >
+                          {Math.round(mainInternalWidth)}
+                        </Text>
+                      )}
+                      {/* 메인 구간 연장선 */}
+                      <Line
+                        points={[[mainIntStartX, dimY - mmToThreeUnits(20), 0.001], [mainIntStartX, dimY + mmToThreeUnits(10), 0.001]]}
+                        color={subGuideColor}
+                        lineWidth={1}
+                      />
+                      <Line
+                        points={[[mainIntEndX, dimY - mmToThreeUnits(20), 0.001], [mainIntEndX, dimY + mmToThreeUnits(10), 0.001]]}
+                        color={subGuideColor}
+                        lineWidth={1}
+                      />
+
+                      {/* 단내림 구간 가구배치공간 */}
+                      {droppedInt && droppedInternalWidth > 0 && (
+                        <>
+                          <Line
+                            points={[[droppedIntStartX, dimY, 0.002], [droppedIntEndX, dimY, 0.002]]}
+                            color={dimensionColor}
+                            lineWidth={1}
+                          />
+                          <Line
+                            points={createArrowHead([droppedIntStartX, dimY, 0.002], [droppedIntStartX + 0.05, dimY, 0.002])}
+                            color={dimensionColor}
+                            lineWidth={1}
+                          />
+                          <Line
+                            points={createArrowHead([droppedIntEndX, dimY, 0.002], [droppedIntEndX - 0.05, dimY, 0.002])}
+                            color={dimensionColor}
+                            lineWidth={1}
+                          />
+                          {(showDimensionsText || isStep2) && (
+                            <Text
+                              renderOrder={1000}
+                              depthTest={false}
+                              position={[(droppedIntStartX + droppedIntEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                              fontSize={smallFontSize}
+                              color={textColor}
+                              anchorX="center"
+                              anchorY="middle"
+                              outlineWidth={textOutlineWidth}
+                              outlineColor={textOutlineColor}
+                            >
+                              {Math.round(droppedInternalWidth)}
+                            </Text>
+                          )}
+                          {/* 단내림 구간 연장선 */}
+                          <Line
+                            points={[[droppedIntStartX, dimY - mmToThreeUnits(20), 0.001], [droppedIntStartX, dimY + mmToThreeUnits(10), 0.001]]}
+                            color={subGuideColor}
+                            lineWidth={1}
+                          />
+                          <Line
+                            points={[[droppedIntEndX, dimY - mmToThreeUnits(20), 0.001], [droppedIntEndX, dimY + mmToThreeUnits(10), 0.001]]}
+                            color={subGuideColor}
+                            lineWidth={1}
+                          />
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
 
                 {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 (자유배치에서는 숨김) */}
                 {!isFreePlacement && (() => {
