@@ -158,6 +158,9 @@ export interface SpaceInfo {
   // 자유배치 가구 기본 너비 (mm)
   furnitureSingleWidth?: number;  // 싱글 가구 기본 너비 (기본 500)
   furnitureDualWidth?: number;    // 듀얼 가구 기본 너비 (기본 1000)
+
+  // 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간)
+  stepCeiling?: StepCeilingConfig;
 }
 
 // 단내림 설정 인터페이스
@@ -170,6 +173,14 @@ export interface DroppedCeilingConfig {
   topFrame?: number;             // 단내림 상부프레임 높이 (mm, 기본: frameSize.top과 동일)
   bottomFrame?: number;          // 단내림 하부프레임 높이 (mm, 기본: 0)
   sideFrame?: number;            // 단내림 벽쪽 프레임 폭 (mm, 서라운드 시 사용, 기본: frameSize.left/right와 동일)
+}
+
+// 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간)
+export interface StepCeilingConfig {
+  enabled: boolean;
+  position: 'left' | 'right';
+  width: number;       // mm
+  dropHeight: number;  // mm
 }
 
 // 공간 설정 상태 타입
