@@ -3612,46 +3612,67 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
 
-              {/* 3-2. 전체 공간높이 (좌단내림일 때 우측에 표시) */}
-              {isLeftDrop && dropHeight > 0 && (
+              {/* 3-2. 전체 공간높이 (좌단내림일 때 우측 가장 바깥에 표시) */}
+              {isLeftDrop && dropHeight > 0 && (() => {
+                const rightOuterX = rightDimensionX + mmToThreeUnits(200);
+                const floorFinishH = floorFinishHeightMmGlobal;
+                const floorFinishYR = floorFinishH > 0 ? mmToThreeUnits(floorFinishH) : 0;
+                const hasFloorFinishR = floorFinishH > 0;
+                const spaceMidYR = floorFinishYR + (spaceHeight - floorFinishYR) / 2;
+                return (
               <group>
+                {/* 전체 세로선 (바닥 ~ 천장) */}
                 <NativeLine name="dimension_line"
-                  points={[[rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
+                  points={[[rightOuterX, 0, 0.002], [rightOuterX, spaceHeight, 0.002]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, topFrameLineTopY + 0.03, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
+                  points={createArrowHead([rightOuterX, 0, 0.002], [rightOuterX, 0.05, 0.002])}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height) - 0.03, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
+                  points={createArrowHead([rightOuterX, spaceHeight, 0.002], [rightOuterX, spaceHeight - 0.05, 0.002])}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
-                <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(10), (topFrameLineTopY + mmToThreeUnits(spaceInfo.height)) / 2, 0.01]}
-                  fontSize={baseFontSize}
-                  color={textColor}
-                  anchorX="left"
-                  anchorY="middle"
-                  outlineWidth={textOutlineWidth}
-                  outlineColor={textOutlineColor}
-                  rotation={[0, 0, 0]}
+                {/* 바닥마감재 구분 틱 & 치수 */}
+                {hasFloorFinishR && (
+                  <>
+                    <NativeLine name="dimension_line"
+                      points={[[rightOuterX - mmToThreeUnits(30), floorFinishYR, 0.002], [rightOuterX + mmToThreeUnits(30), floorFinishYR, 0.002]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[rightOuterX + mmToThreeUnits(10), floorFinishYR / 2, 0.01]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {floorFinishH}
+                    </Text>
+                  </>
+                )}
+                {/* 공간 높이 텍스트 */}
+                <Text renderOrder={1000} depthTest={false}
+                  position={[rightOuterX + mmToThreeUnits(10), spaceMidYR, 0.01]}
+                  fontSize={largeFontSize} color={textColor}
+                  anchorX="left" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                 >
-                  {dropHeight}
+                  {spaceInfo.height - floorFinishH}
                 </Text>
+                {/* 연장선: 바닥 → 치수선 */}
+                <Line
+                  points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [rightOuterX + mmToThreeUnits(20), 0, 0.001]]}
+                  color={dimensionColor} lineWidth={0.5}
+                />
+                {/* 연장선: 천장 → 치수선 */}
+                <Line
+                  points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [rightOuterX + mmToThreeUnits(20), spaceHeight, 0.001]]}
+                  color={dimensionColor} lineWidth={0.5}
+                />
               </group>
-              )}
+                );
+              })()}
 
               {/* 4. 상부 프레임 이상으로 올라온 가구 높이 */}
               {hasExtraFurnitureHeight && (
@@ -3734,8 +3755,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 lineWidth={0.5}
               />
               )}
-              {/* 단내림 상단(=공간 천장) 연장선 — 단내림일 때 우측에 */}
-              {(isRightDrop || isLeftDrop) && dropHeight > 0 && (
+              {/* 단내림 상단(=공간 천장) 연장선 — 우단내림일 때만 우측에 (좌단내림은 전체높이 치수선에서 처리) */}
+              {isRightDrop && dropHeight > 0 && (
               <Line
                 points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, mmToThreeUnits(spaceInfo.height), 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), mmToThreeUnits(spaceInfo.height), 0.001]]}
                 color={dimensionColor}
