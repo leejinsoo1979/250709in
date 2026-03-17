@@ -1005,8 +1005,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const slotTotalDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
-  const leftFrameDimensionX = -mmToThreeUnits(200); // 좌측 프레임 분해 치수선 (공간에 가까운 안쪽)
-  const leftDimensionX = leftFrameDimensionX - mmToThreeUnits(120); // 좌측 전체높이 치수선 (프레임 분해보다 바깥)
+  const leftFrameDimensionX = -mmToThreeUnits(120); // 좌측 프레임 분해 치수선 (공간에 가까운 안쪽)
+  const leftDimensionX = leftFrameDimensionX - mmToThreeUnits(200); // 좌측 전체높이 치수선 (프레임 분해보다 충분히 바깥)
 
   // 좌측 오프셋 (가로 공간치수의 절반)
   const leftOffset = -mmToThreeUnits(spaceInfo.width / 2);
