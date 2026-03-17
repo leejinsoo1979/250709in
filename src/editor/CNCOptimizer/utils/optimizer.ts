@@ -368,14 +368,6 @@ export const optimizePanelsMultiple = async (
   const rectangles: Rect[] = [];
   const panelMap = new Map<string, Panel>();
 
-  // 좌우측판 판별 (서랍 측판 제외) — 회전 금지 대상
-  // 백패널은 회전 가능 (같은 시트에 효율적으로 배치하기 위해)
-  const isSidePanel = (name: string | undefined): boolean => {
-    if (!name) return false;
-    if (name.includes('서랍')) return false;
-    return name.includes('좌측판') || name.includes('우측판');
-  };
-
   console.log('[OPTIMIZER] Input panels count:', panels.length);
   panels.forEach(panel => {
     // 보링 디버그 로그
@@ -385,22 +377,16 @@ export const optimizePanelsMultiple = async (
 
     for (let i = 0; i < panel.quantity; i++) {
       const id = `${panel.id}-${i}`;
-      // 백패널: 결방향 무관, 항상 회전 가능
-      const isBackPanel = panel.name?.includes('백패널') && !panel.name?.includes('서랍');
-      const canRotate = isBackPanel
-        ? true
-        : (panel.grain && panel.grain !== 'NONE' ? false : (panel.canRotate !== false));
-      // 좌우측판만 회전 금지 (보링 방향 유지)
-      const noRotatePanel = isSidePanel(panel.name);
+      // 모든 패널 회전 금지 (보링·결방향·재단 일관성 보장)
       rectangles.push({
         id,
         width: panel.width,
         height: panel.height,
-        grain: isBackPanel ? 'NONE' : (panel.grain || 'NONE'), // 백패널은 grain 무시
+        grain: panel.grain || 'NONE',
         material: panel.material,
         color: panel.color,
         name: panel.name,
-        canRotate: noRotatePanel ? false : canRotate,
+        canRotate: false,
       });
       panelMap.set(id, panel);
     }

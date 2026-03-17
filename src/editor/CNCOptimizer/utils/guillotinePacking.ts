@@ -560,33 +560,6 @@ function extractFurnitureNum(name: string): number {
 }
 
 /**
- * 가구 무결성 검사: 같은 가구의 패널이 일부만 배치된 경우 해당 가구번호 반환
- * (같은 가구의 상부/하부 백패널이 분리되는 것을 방지)
- */
-function detectSplitFurniture(allPanels: Rect[], placedIds: Set<string>): Set<number> {
-  const furnitureStatus = new Map<number, { placed: number; unplaced: number }>();
-
-  for (const p of allPanels) {
-    const fn = extractFurnitureNum(p.name || '');
-    if (fn === 0) continue; // 가구번호 없는 패널은 제외
-    if (!furnitureStatus.has(fn)) furnitureStatus.set(fn, { placed: 0, unplaced: 0 });
-    if (placedIds.has(p.id)) {
-      furnitureStatus.get(fn)!.placed++;
-    } else {
-      furnitureStatus.get(fn)!.unplaced++;
-    }
-  }
-
-  const splitSet = new Set<number>();
-  for (const [fn, status] of furnitureStatus) {
-    if (status.placed > 0 && status.unplaced > 0) {
-      splitSet.add(fn);
-    }
-  }
-  return splitSet;
-}
-
-/**
  * 길로틴 방식 멀티 빈 패킹
  */
 export function packGuillotine(
@@ -612,84 +585,25 @@ export function packGuillotine(
     furnitureGroups.get(fn)!.sort((a, b) => (b.width * b.height) - (a.width * a.height));
   }
 
-  // ── 가구 그룹 단위로 시트에 채우기 ──
-  // 현재 시트에 누적할 패널 목록
-  let currentSheetPanels: Rect[] = [];
-  let currentSheetArea = 0;
-  const sheetArea = binWidth * binHeight;
-  // 무결성 체크에서 실패 경험 있는 가구는 분리 허용 (무한루프 방지)
-  const splitExemptFurniture = new Set<number>();
-
+  // ── 가구 1개씩 독립 시트로 패킹 ──
+  // 같은 가구의 패널은 반드시 같은 시트에 배치 (상하부 측판, 백패널 등)
+  // 가구 1개의 패널은 시트 1장에 항상 들어감 (최대 1200×2400 < 시트 1220×2440)
   for (const fn of sortedFurnitureNums) {
     const group = furnitureGroups.get(fn)!;
-    const groupArea = group.reduce((sum, p) => sum + p.width * p.height, 0);
-
-    // 현재 시트에 이 가구 그룹을 추가해도 원장 면적 이내인지 (kerf 여유 포함)
-    // 면적 기준 대략 체크 — 실제 배치 가능 여부는 패커가 결정
-    if (currentSheetPanels.length > 0 && currentSheetArea + groupArea > sheetArea * 0.95) {
-      // 현재 시트 패킹 실행 후 새 시트 시작
-      const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-      const result = packer.packAll(currentSheetPanels, stripDirection);
-      if (result.panels.length > 0) {
-        // ── 가구 무결성 체크: 같은 가구의 패널이 분리되면 전부 다음 시트로 ──
-        const placedIds = new Set(result.panels.map(p => p.id));
-        const splitFurniture = detectSplitFurniture(currentSheetPanels, placedIds);
-        // 면제된 가구 제외
-        for (const efn of splitExemptFurniture) splitFurniture.delete(efn);
-        if (splitFurniture.size > 0) {
-          for (const sfn of splitFurniture) splitExemptFurniture.add(sfn);
-          // 분리된 가구의 배치된 패널을 시트에서 제거
-          result.panels = result.panels.filter(p => !splitFurniture.has(extractFurnitureNum(p.name || '')));
-          // 효율 재계산
-          result.usedArea = result.panels.reduce((sum, p) => sum + p.width * p.height, 0);
-          result.efficiency = (result.usedArea / (binWidth * binHeight)) * 100;
-        }
-        if (result.panels.length > 0) {
-          bins.push(result);
-        }
-        // 배치 안 된 패널 + 분리된 가구 패널은 다음 시트로
-        const finalPlacedIds = new Set(result.panels.map(p => p.id));
-        const unplaced = currentSheetPanels.filter(p => !finalPlacedIds.has(p.id));
-        currentSheetPanels = [...unplaced, ...group];
-        currentSheetArea = currentSheetPanels.reduce((sum, p) => sum + p.width * p.height, 0);
-      } else {
-        currentSheetPanels.push(...group);
-        currentSheetArea += groupArea;
-      }
-    } else {
-      currentSheetPanels.push(...group);
-      currentSheetArea += groupArea;
-    }
-  }
-
-  // 마지막 시트 패킹 (splitExemptFurniture는 위에서 선언됨 — 무한루프 방지)
-  while (currentSheetPanels.length > 0 && bins.length < maxBins) {
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-    const result = packer.packAll(currentSheetPanels, stripDirection);
-
-    if (result.panels.length === 0) {
-      console.warn(`[packGuillotine] Cannot place ${currentSheetPanels.length} remaining panels`);
-      break;
-    }
-
-    // ── 가구 무결성 체크 (면제된 가구 제외) ──
-    const placedIds = new Set(result.panels.map(p => p.id));
-    const splitFurniture = detectSplitFurniture(currentSheetPanels, placedIds);
-    // 면제된 가구 제외
-    for (const fn of splitExemptFurniture) splitFurniture.delete(fn);
-
-    if (splitFurniture.size > 0) {
-      // 이 가구들은 다음에 분리 허용
-      for (const fn of splitFurniture) splitExemptFurniture.add(fn);
-      result.panels = result.panels.filter(p => !splitFurniture.has(extractFurnitureNum(p.name || '')));
-      result.usedArea = result.panels.reduce((sum, p) => sum + p.width * p.height, 0);
-      result.efficiency = (result.usedArea / (binWidth * binHeight)) * 100;
-    }
-
-    const finalPlacedIds = new Set(result.panels.map(p => p.id));
-    currentSheetPanels = currentSheetPanels.filter(p => !finalPlacedIds.has(p.id));
+    const result = packer.packAll(group, stripDirection);
     if (result.panels.length > 0) {
       bins.push(result);
+    }
+    // 배치 못한 패널이 있으면 별도 시트
+    const placedIds = new Set(result.panels.map(p => p.id));
+    const unplaced = group.filter(p => !placedIds.has(p.id));
+    if (unplaced.length > 0) {
+      const packer2 = new GuillotinePacker(binWidth, binHeight, kerf);
+      const result2 = packer2.packAll(unplaced, stripDirection);
+      if (result2.panels.length > 0) {
+        bins.push(result2);
+      }
     }
   }
 
@@ -703,8 +617,9 @@ export function packGuillotine(
 
 /**
  * 후처리: 저효율 시트의 패널을 다른 시트의 빈 공간에 합치기
- * - 같은 가구 패널 그룹핑을 유지하면서 이동
- * - 회전 상태는 원본 유지 (rotated 변경 금지)
+ * 핵심 원칙: 같은 가구의 패널은 절대 분리하지 않음
+ * - 시트 단위로만 합침 (시트의 모든 패널이 하나의 대상 시트에 들어가야 함)
+ * - 회전 금지 (canRotate=false)
  * - 빈 시트가 되면 제거
  */
 function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, kerf: number): void {
@@ -719,65 +634,47 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     const srcBin = bins[srcIdx];
     if (!srcBin.panels || srcBin.panels.length === 0) continue;
 
-    // 이 시트의 모든 패널을 다른 시트에 넣을 수 있는지 시도
-    // 같은 가구의 패널은 같은 대상 시트로 이동해야 함
+    // 이 시트의 모든 패널을 하나의 대상 시트에 넣을 수 있는지 시도
+    // (같은 가구 패널 분리 방지: 시트 전체를 하나의 대상으로만 이동)
     const panelsToMove = [...srcBin.panels];
-    const movedPanels: Rect[] = [];
-    // 이동된 패널 임시 추적 (실패 시 롤백)
-    const moveLog: { dstIdx: number; panel: Rect }[] = [];
-    // 가구번호 → 대상 시트 인덱스 (같은 가구는 같은 시트로)
-    const furnitureDstMap = new Map<number, number>();
 
-    for (const panel of panelsToMove) {
-      let placed = false;
-      const fn = extractFurnitureNum(panel.name || '');
-      const preferredDst = fn > 0 ? furnitureDstMap.get(fn) : undefined;
+    for (let dstIdx = 0; dstIdx < bins.length; dstIdx++) {
+      if (dstIdx === srcIdx || removedBins.has(dstIdx)) continue;
 
-      // 같은 가구 패널이 이미 다른 시트에 갔으면 그 시트 우선 시도
-      const dstOrder: number[] = [];
-      if (preferredDst !== undefined) dstOrder.push(preferredDst);
-      for (let i = 0; i < bins.length; i++) {
-        if (i !== srcIdx && !removedBins.has(i) && i !== preferredDst) dstOrder.push(i);
-      }
+      // 이 대상 시트에 srcBin의 모든 패널이 들어가는지 시도
+      const dstBin = bins[dstIdx];
+      const moveLog: { panel: Rect }[] = [];
+      let allFit = true;
 
-      for (const dstIdx of dstOrder) {
-        const dstBin = bins[dstIdx];
-
-        // canRotate=false인 패널(좌우측판)만 회전 금지, 백패널 등은 회전 허용
-        const noRotate = panel.canRotate === false;
-        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, noRotate);
+      for (const panel of panelsToMove) {
+        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, true);
         if (pos) {
           const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
           dstBin.panels.push(movedPanel);
           dstBin.usedArea = (dstBin.usedArea || 0) + panel.width * panel.height;
-          dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
-          movedPanels.push(panel);
-          moveLog.push({ dstIdx, panel: movedPanel });
-          if (fn > 0) furnitureDstMap.set(fn, dstIdx);
-          placed = true;
+          moveLog.push({ panel: movedPanel });
+        } else {
+          allFit = false;
           break;
         }
       }
 
-      if (!placed) {
-        // 하나라도 못 옮기면 이 시트는 유지 → 이미 옮긴 패널 롤백
+      if (allFit) {
+        // 모든 패널이 하나의 대상 시트에 들어감 → 원본 시트 제거
+        dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
+        removedBins.add(srcIdx);
+        break;
+      } else {
+        // 롤백: 이미 추가한 패널 제거
         for (const log of moveLog) {
-          const dstBin = bins[log.dstIdx];
           const idx = dstBin.panels.indexOf(log.panel);
           if (idx !== -1) {
             dstBin.panels.splice(idx, 1);
             dstBin.usedArea = (dstBin.usedArea || 0) - log.panel.width * log.panel.height;
-            dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
           }
         }
-        movedPanels.length = 0;
-        break;
+        dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
       }
-    }
-
-    // 모든 패널을 옮겼으면 시트 제거
-    if (movedPanels.length === panelsToMove.length) {
-      removedBins.add(srcIdx);
     }
   }
 
