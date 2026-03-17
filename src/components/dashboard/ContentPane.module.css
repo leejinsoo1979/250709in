@@ -565,13 +565,14 @@
   gap: 20px;
   padding: 20px;
   overflow-y: auto;
+  background: var(--theme-background-secondary);
 }
 
 .saasCard {
   position: relative; /* for itemCheckbox absolute positioning */
   display: flex;
   flex-direction: column;
-  background: var(--theme-background-secondary);
+  background: var(--theme-background);
   border: 1px solid var(--theme-border);
   border-radius: 12px;
   overflow: hidden;
@@ -629,6 +630,7 @@
   position: relative;
   border-radius: 4px;
   border: 1px solid var(--theme-border, rgba(0, 0, 0, 0.08));
+  background: var(--theme-background);
 }
 
 .saasProjectGridItem img,
