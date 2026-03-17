@@ -402,7 +402,7 @@ export function useExplorerData(
       }
       return filteredProjects.map(p => ({
         id: p.id, name: p.title, type: 'project' as const,
-        updatedAt: p.updatedAt, thumbnail: p.thumbnail,
+        createdAt: p.createdAt, updatedAt: p.updatedAt, thumbnail: p.thumbnail,
         spaceSize: p.spaceSize, furnitureCount: p.furnitureCount,
         status: p.status, isShared: p.isShared,
       }));

@@ -21,6 +21,7 @@ export interface ExplorerItem {
   type: 'project' | 'folder' | 'design';
   projectId?: string;
   folderId?: string;
+  createdAt?: Timestamp;
   updatedAt?: Timestamp;
   thumbnail?: string;
   spaceSize?: { width: number; height: number; depth: number };

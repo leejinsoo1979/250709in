@@ -565,7 +565,9 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               </div>
             )}
             <div className={styles.iconMeta}>
-              {formatDateFull(item.updatedAt)}
+              {item.type === 'project' && item.createdAt
+                ? formatDateFull(item.createdAt)
+                : formatDateFull(item.updatedAt)}
             </div>
           </div>
         </div>
