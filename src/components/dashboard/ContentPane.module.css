@@ -101,6 +101,7 @@
 
 .projectName {
   color: var(--theme-primary) !important;
+  font-weight: 700;
 }
 
 .itemIconDesign {
