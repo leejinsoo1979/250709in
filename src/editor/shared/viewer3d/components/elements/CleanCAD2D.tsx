@@ -2796,10 +2796,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
 
-          // 단내림이 있으면 단내림 높이를 기준으로 치수 계산 (좌/우 모두)
+          // 단내림 높이 계산 — 우측 치수선은 우단내림일 때만 단내림 적용
           const hasDrop = spaceInfo.droppedCeiling?.enabled === true;
           const dropHeight = hasDrop ? (spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
-          const effectiveHeight = spaceInfo.height - dropHeight; // 단내림 구간의 실제 높이
+          const isRightDrop = hasDrop && spaceInfo.droppedCeiling!.position === 'right';
+          const isLeftDrop = hasDrop && spaceInfo.droppedCeiling!.position === 'left';
+          // 우측 치수선: 우단내림이면 단내림 높이 적용, 좌단내림이면 전체 높이 사용
+          const effectiveHeight = isRightDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
 
           // 상부프레임 = 공간높이 - 받침대 - 맨 오른쪽 가구 높이 (실제 렌더링과 동일)
           const globalTopFrame = frameSize.top ?? 0;
@@ -3150,8 +3153,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
 
-              {/* 3-1. 단내림 기둥높이 (단내림이 있을 때만 표시) — 같은 치수선에 연속 */}
-              {hasDrop && dropHeight > 0 && (
+              {/* 3-1. 단내림 기둥높이 (우단내림일 때만 우측에 표시) */}
+              {isRightDrop && dropHeight > 0 && (
               <group>
                 <NativeLine name="dimension_line"
                   points={[[rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002]]}
@@ -3276,8 +3279,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 lineWidth={0.5}
               />
               )}
-              {/* 단내림 상단(=공간 천장) 연장선 — 단내림이 있을 때만 */}
-              {hasDrop && dropHeight > 0 && (
+              {/* 단내림 상단(=공간 천장) 연장선 — 우단내림일 때만 우측에 */}
+              {isRightDrop && dropHeight > 0 && (
               <Line
                 points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, mmToThreeUnits(spaceInfo.height), 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), mmToThreeUnits(spaceInfo.height), 0.001]]}
                 color={dimensionColor}
