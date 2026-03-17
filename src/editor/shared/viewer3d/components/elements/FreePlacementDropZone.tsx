@@ -1548,14 +1548,33 @@ const FreePlacementDropZone: React.FC = () => {
         if (viewMode === '2D') return null;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
+        const middleGapVal = spaceInfo.gapConfig?.middle ?? 1.5;
         const hasDropped = spaceInfo.droppedCeiling?.enabled;
         const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
         const droppedWidth = spaceInfo.droppedCeiling?.width || 0;
         const totalWidth = spaceInfo.width || 2400;
         const halfW = totalWidth / 2;
 
-        // 커튼박스 외벽 쪽 gap도 표시해야 하므로, 벽 gap이 전부 0이면 패스
-        if (gapLeft <= 0 && gapRight <= 0) return null;
+        const hasStepLocal = spaceInfo.stepCeiling?.enabled;
+        const stepPosLocal = spaceInfo.stepCeiling?.position || 'right';
+
+        // 메인구간 좌/우에 인접한 것 결정 (getInternalSpaceBoundsX와 동일 로직)
+        const isBuiltInLocal = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+        const isSemiStandingLocal = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+        const hasLeftWallLocal = isBuiltInLocal || (isSemiStandingLocal && spaceInfo.wallConfig?.left);
+        const hasRightWallLocal = isBuiltInLocal || (isSemiStandingLocal && spaceInfo.wallConfig?.right);
+
+        const leftAdj = hasStepLocal && stepPosLocal === 'left' ? 'step'
+          : hasDropped && droppedPosition === 'left' ? 'dropped' : 'wall';
+        const rightAdj = hasStepLocal && stepPosLocal === 'right' ? 'step'
+          : hasDropped && droppedPosition === 'right' ? 'dropped' : 'wall';
+
+        // 실제 적용된 gap 크기 (벽이면 wallGap, 구간경계면 middleGap)
+        const effectiveLeftGap = leftAdj === 'wall' ? (hasLeftWallLocal ? gapLeft : 0) : middleGapVal;
+        const effectiveRightGap = rightAdj === 'wall' ? (hasRightWallLocal ? gapRight : 0) : middleGapVal;
+
+        // gap이 전부 0이면 패스 (middleGap도 고려)
+        if (effectiveLeftGap <= 0 && effectiveRightGap <= 0 && gapLeft <= 0 && gapRight <= 0 && middleGapVal <= 0) return null;
 
         const { startX, endX } = spaceBounds;
         const spaceH = spaceInfo.height * 0.01;
@@ -1570,24 +1589,29 @@ const FreePlacementDropZone: React.FC = () => {
         const zOffset = (furnitureFrontZ + backWallZ) / 2;
         const boxes: React.ReactNode[] = [];
 
-        // 메인구간 좌측 gap
-        if (gapLeft > 0) {
-          const w = gapLeft * 0.01;
+        // 메인구간 좌측 gap (인접 구간에 따라 높이 결정)
+        if (effectiveLeftGap > 0) {
+          const w = effectiveLeftGap * 0.01;
           const cx = startX * 0.01 + w / 2;
+          // 인접 구간이 단내림이면 단내림 높이, 아니면 메인 높이
+          const scDropHLocal = hasStepLocal ? (spaceInfo.stepCeiling!.dropHeight || 0) : 0;
+          const boxH = leftAdj === 'step' ? (spaceInfo.height - scDropHLocal) * 0.01 : spaceH;
           boxes.push(
-            <mesh key="gap-left" position={[cx, spaceH / 2, zOffset]}>
-              <boxGeometry args={[w, spaceH, depthThree]} />
+            <mesh key="gap-left" position={[cx, boxH / 2, zOffset]}>
+              <boxGeometry args={[w, boxH, depthThree]} />
               <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
           );
         }
-        // 메인구간 우측 gap
-        if (gapRight > 0) {
-          const w = gapRight * 0.01;
+        // 메인구간 우측 gap (인접 구간에 따라 높이 결정)
+        if (effectiveRightGap > 0) {
+          const w = effectiveRightGap * 0.01;
           const cx = endX * 0.01 - w / 2;
+          const scDropHLocal = hasStepLocal ? (spaceInfo.stepCeiling!.dropHeight || 0) : 0;
+          const boxH = rightAdj === 'step' ? (spaceInfo.height - scDropHLocal) * 0.01 : spaceH;
           boxes.push(
-            <mesh key="gap-right" position={[cx, spaceH / 2, zOffset]}>
-              <boxGeometry args={[w, spaceH, depthThree]} />
+            <mesh key="gap-right" position={[cx, boxH / 2, zOffset]}>
+              <boxGeometry args={[w, boxH, depthThree]} />
               <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
           );
