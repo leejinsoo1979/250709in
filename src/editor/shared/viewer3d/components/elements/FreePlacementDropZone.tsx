@@ -1552,7 +1552,15 @@ const FreePlacementDropZone: React.FC = () => {
         if (viewMode === '2D') return null;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
+        const hasDropped = spaceInfo.droppedCeiling?.enabled;
+        const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+        const droppedWidth = spaceInfo.droppedCeiling?.width || 0;
+        const totalWidth = spaceInfo.width || 2400;
+        const halfW = totalWidth / 2;
+
+        // 커튼박스 외벽 쪽 gap도 표시해야 하므로, 벽 gap이 전부 0이면 패스
         if (gapLeft <= 0 && gapRight <= 0) return null;
+
         const { startX, endX } = spaceBounds;
         const spaceH = spaceInfo.height * 0.01;
         const panelDepthMm = spaceInfo.depth || 600;
@@ -1565,6 +1573,8 @@ const FreePlacementDropZone: React.FC = () => {
         const depthThree = furnitureFrontZ - backWallZ;
         const zOffset = (furnitureFrontZ + backWallZ) / 2;
         const boxes: React.ReactNode[] = [];
+
+        // 메인구간 좌측 gap
         if (gapLeft > 0) {
           const w = gapLeft * 0.01;
           const cx = startX * 0.01 + w / 2;
@@ -1575,6 +1585,7 @@ const FreePlacementDropZone: React.FC = () => {
             </mesh>
           );
         }
+        // 메인구간 우측 gap
         if (gapRight > 0) {
           const w = gapRight * 0.01;
           const cx = endX * 0.01 - w / 2;
@@ -1585,6 +1596,42 @@ const FreePlacementDropZone: React.FC = () => {
             </mesh>
           );
         }
+
+        // 커튼박스 외벽 쪽 gap (커튼박스 구간의 벽 쪽 이격)
+        if (hasDropped && droppedWidth > 0) {
+          const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+          const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+          const curtainBoxH = (spaceInfo.height + (spaceInfo.droppedCeiling!.dropHeight || 0)) * 0.01;
+
+          if (droppedPosition === 'left') {
+            // 커튼박스가 좌측 → 좌측 벽 gap
+            const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
+            if (hasLeftWall && gapLeft > 0) {
+              const w = gapLeft * 0.01;
+              const cx = -halfW * 0.01 + w / 2;
+              boxes.push(
+                <mesh key="gap-cb-left-wall" position={[cx, curtainBoxH / 2, zOffset]}>
+                  <boxGeometry args={[w, curtainBoxH, depthThree]} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                </mesh>
+              );
+            }
+          } else {
+            // 커튼박스가 우측 → 우측 벽 gap
+            const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
+            if (hasRightWall && gapRight > 0) {
+              const w = gapRight * 0.01;
+              const cx = halfW * 0.01 - w / 2;
+              boxes.push(
+                <mesh key="gap-cb-right-wall" position={[cx, curtainBoxH / 2, zOffset]}>
+                  <boxGeometry args={[w, curtainBoxH, depthThree]} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                </mesh>
+              );
+            }
+          }
+        }
+
         return boxes;
       })()}
 
