@@ -1696,16 +1696,16 @@ const Room: React.FC<RoomProps> = ({
             // 경계선 수집 (그라데이션: 뒷벽=진한, 앞쪽=투명)
             const lines: [number, number, number, number, number, number][] = [];
 
-            // 천장-좌벽 경계: 자유배치에서 커튼박스→위로 확장(+), 단내림→아래(-), 슬롯→아래(-)
+            // 천장-좌벽 경계
             if (hasLW) {
               let leftCY = cY;
               if (isFreePlacement) {
-                // 자유배치: 벽에 인접한 구간의 천장 높이
-                // 벽 → (커튼박스) → (단내림) → 메인 순이므로, 벽에 인접한 것은 가장 바깥 구간
-                if (dcIsLeft) leftCY = cY + dcDropH;          // 커튼박스: 위로 확장
-                else if (scIsLeft) leftCY = cY - scDropHLine; // 단내림: 아래로 축소
+                // 자유배치: 커튼박스가 있으면 천장 메쉬가 처리하므로 메인 천장 높이 사용
+                // 단내림만 있으면 단내림 천장 높이 사용
+                if (dcIsLeft) leftCY = cY;                     // 커튼박스: 메쉬가 처리, 메인 높이 라인만
+                else if (scIsLeft) leftCY = cY - scDropHLine;  // 단내림: 아래로 축소
               } else {
-                if (dcIsLeft) leftCY = cY - dcDropH;          // 슬롯: 아래로 축소
+                if (dcIsLeft) leftCY = cY - dcDropH;           // 슬롯: 아래로 축소
               }
               lines.push([x1, leftCY, z1, x1, leftCY, z2]);
             }
@@ -1713,7 +1713,7 @@ const Room: React.FC<RoomProps> = ({
             if (hasRW) {
               let rightCY = cY;
               if (isFreePlacement) {
-                if (dcIsRight) rightCY = cY + dcDropH;
+                if (dcIsRight) rightCY = cY;
                 else if (scIsRight) rightCY = cY - scDropHLine;
               } else {
                 if (dcIsRight) rightCY = cY - dcDropH;
@@ -1778,11 +1778,13 @@ const Room: React.FC<RoomProps> = ({
 
               // 경계벽 수직선 (뒷벽)
               solidThemeLines.push([bx, bwBot, z1, bx, bwTop, z1]);
-              // 경계벽 하단 수평선 (droppedCeilingY에서 경계벽~외벽)
-              if (dcIsL) {
-                solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
-              } else {
-                solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
+              // 경계벽 수평선 (뒷벽) — 슬롯배치만 (자유배치는 천장 메쉬가 처리)
+              if (!isFreePlacement) {
+                if (dcIsL) {
+                  solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
+                } else {
+                  solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
+                }
               }
             }
 
