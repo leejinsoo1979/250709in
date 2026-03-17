@@ -87,15 +87,38 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
         removeModule(module.id);
       });
       
+      // 커튼박스 활성화 시 공간유형 호환성 체크
+      // 커튼박스가 있다 = 그쪽에 창문 = 그쪽에 벽 필수
+      const dcPos = droppedCeiling?.position || 'right';
+      const installTypeUpdates: Partial<typeof spaceInfo> = {};
+
+      if (dcPos === 'right') {
+        // 우측 커튼박스 → 우측벽 필수
+        if (spaceInfo.installType === 'freestanding' ||
+            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right)) {
+          // 양쪽벽으로 강제 변경
+          installTypeUpdates.installType = 'builtin';
+          installTypeUpdates.wallConfig = { left: true, right: true };
+        }
+      } else {
+        // 좌측 커튼박스 → 좌측벽 필수
+        if (spaceInfo.installType === 'freestanding' ||
+            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left)) {
+          installTypeUpdates.installType = 'builtin';
+          installTypeUpdates.wallConfig = { left: true, right: true };
+        }
+      }
+
       setSpaceInfo({
         droppedCeiling: {
           enabled: true,
-          position: droppedCeiling?.position || 'right',
+          position: dcPos,
           width: defaultWidth,
           dropHeight: droppedCeiling?.dropHeight || 200
         },
         // 단내림 구간의 도어 개수를 최소값으로 설정
-        droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount || droppedLimits.minColumns
+        droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount || droppedLimits.minColumns,
+        ...installTypeUpdates,
       });
     }
   };
@@ -107,11 +130,30 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
       // clearAllModules로 모든 가구 한번에 삭제
       clearAllModules();
 
+      // 커튼박스 위치 변경 시 공간유형 호환성 체크
+      const installTypeUpdates: Partial<typeof spaceInfo> = {};
+      if (position === 'right') {
+        // 우측 커튼박스 → 우측벽 필수
+        if (spaceInfo.installType === 'freestanding' ||
+            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right)) {
+          installTypeUpdates.installType = 'builtin';
+          installTypeUpdates.wallConfig = { left: true, right: true };
+        }
+      } else {
+        // 좌측 커튼박스 → 좌측벽 필수
+        if (spaceInfo.installType === 'freestanding' ||
+            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left)) {
+          installTypeUpdates.installType = 'builtin';
+          installTypeUpdates.wallConfig = { left: true, right: true };
+        }
+      }
+
       setSpaceInfo({
         droppedCeiling: {
           ...droppedCeiling,
           position
-        }
+        },
+        ...installTypeUpdates,
       });
 
       console.log('✅ 단내림 위치 변경 완료');

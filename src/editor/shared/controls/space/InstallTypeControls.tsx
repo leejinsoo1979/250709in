@@ -23,6 +23,27 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
 
   const currentUIType = getCurrentUIType();
 
+  // 커튼박스 위치에 따라 비활성화할 공간유형 결정
+  // 커튼박스가 있다 = 그쪽에 창문이 있다 = 그쪽에 벽이 반드시 있어야 함
+  const getDisabledTypes = (): Set<InstallTypeUI> => {
+    const disabled = new Set<InstallTypeUI>();
+    if (spaceInfo.droppedCeiling?.enabled) {
+      const pos = spaceInfo.droppedCeiling.position;
+      if (pos === 'right') {
+        // 우측 커튼박스 → 우측벽 필수 → 좌측벽만/벽없음 불가
+        disabled.add('semistanding-left');
+        disabled.add('freestanding');
+      } else if (pos === 'left') {
+        // 좌측 커튼박스 → 좌측벽 필수 → 우측벽만/벽없음 불가
+        disabled.add('semistanding-right');
+        disabled.add('freestanding');
+      }
+    }
+    return disabled;
+  };
+
+  const disabledTypes = getDisabledTypes();
+
   const handleUITypeChange = (uiType: InstallTypeUI) => {
     if (uiType === currentUIType) return;
 
@@ -108,15 +129,20 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     <div className={styles.container}>
       <div className={styles.section}>
         <div className={styles.toggleButtonGroup}>
-          {INSTALL_TYPES_UI.map((type) => (
-            <button
-              key={type.uiType}
-              className={`${styles.toggleButton} ${currentUIType === type.uiType ? styles.toggleButtonActive : ''}`}
-              onClick={() => handleUITypeChange(type.uiType)}
-            >
-              {type.label}
-            </button>
-          ))}
+          {INSTALL_TYPES_UI.map((type) => {
+            const isDisabled = disabledTypes.has(type.uiType);
+            return (
+              <button
+                key={type.uiType}
+                className={`${styles.toggleButton} ${currentUIType === type.uiType ? styles.toggleButtonActive : ''}`}
+                onClick={() => handleUITypeChange(type.uiType)}
+                disabled={isDisabled}
+                title={isDisabled ? '커튼박스가 있는 쪽에 벽이 필요합니다' : undefined}
+              >
+                {type.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

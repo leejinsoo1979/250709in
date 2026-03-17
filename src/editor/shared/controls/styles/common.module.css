@@ -281,6 +281,12 @@
   color: var(--theme-primary) !important;
 }
 
+.toggleButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ── Buttons ── */
 .button {
   padding: 7px 12px;
