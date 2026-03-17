@@ -1599,15 +1599,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      // 자유배치: 이격거리 없이 순수 너비 사용
-                      if (isFreePlacement) {
-                        return Math.round(mainWidth);
-                      }
-                      // ColumnIndexer의 실제 계산된 너비 사용
-                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zoneSlotInfo.normal.width);
-                    })()}
+                    {Math.round(mainWidth)}
                   </Text>
                 )}
 
@@ -1639,15 +1631,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      // 자유배치: 이격거리 없이 순수 너비 사용
-                      if (isFreePlacement) {
-                        return Math.round(droppedWidth);
-                      }
-                      // ColumnIndexer의 실제 계산된 너비 사용
-                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
-                    })()}
+                    {Math.round(droppedWidth)}
                   </Text>
                 )}
                 
@@ -4026,39 +4010,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
-                          leftReduction = 0;
-                          rightReduction = 0;
-                        }
-                      }
-
-                      // 자유배치: 이격거리 없이 순수 너비 사용
-                      if (isFreePlacement) {
-                        return Math.round(mainWidth);
-                      }
-                      // ColumnIndexer의 실제 계산된 너비 사용
-                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zoneSlotInfo.normal.width);
-                    })()}
+                    {Math.round(mainWidth)}
                   </Text>
                 )}
 
@@ -4091,39 +4043,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
-                          leftReduction = 0;
-                          rightReduction = 0;
-                        }
-                      }
-
-                      // 자유배치: 이격거리 없이 순수 너비 사용
-                      if (isFreePlacement) {
-                        return Math.round(droppedWidth);
-                      }
-                      // ColumnIndexer의 실제 계산된 너비 사용
-                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
-                    })()}
+                    {Math.round(droppedWidth)}
                   </Text>
                 )}
                 
@@ -4923,46 +4843,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-// console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
-                        // surroundType: spaceInfo.surroundType,
-                        // installType: spaceInfo.installType,
-                        // wallConfig: spaceInfo.wallConfig,
-                        // frameThickness,
-                        // droppedPosition: spaceInfo.droppedCeiling.position
-                      // });
-                      
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
-                        }
-                      }
-                      
-                      if (spaceInfo.droppedCeiling.position === 'left') {
-                        // 왼쪽 단내림: 메인구간은 오른쪽 프레임/엔드패널 제외
-                        return spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction;
-                      } else {
-                        // 오른쪽 단내림: 메인구간은 왼쪽 프레임/엔드패널 제외
-                        return spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction;
-                      }
-                    })()}
+                    {Math.round(spaceInfo.width - spaceInfo.droppedCeiling.width)}
                   </Text>
                   
                   {/* 단내림 구간 치수선 */}
@@ -4992,39 +4873,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                      
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
-                        }
-                      }
-                      
-                      if (spaceInfo.droppedCeiling.position === 'left') {
-                        // 왼쪽 단내림: 단내림구간은 왼쪽 프레임/엔드패널 제외
-                        return spaceInfo.droppedCeiling.width - leftReduction;
-                      } else {
-                        // 오른쪽 단내림: 단내림구간은 오른쪽 프레임/엔드패널 제외
-                        return spaceInfo.droppedCeiling.width - rightReduction;
-                      }
-                    })()}
+                    {Math.round(spaceInfo.droppedCeiling.width)}
                   </Text>
                   
                   {/* 구간 분리 가이드라인 */}
