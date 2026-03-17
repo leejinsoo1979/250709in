@@ -3604,56 +3604,6 @@ const Configurator: React.FC = () => {
             </button>
           </div>
 
-          {/* 단내림 너비/높이 입력 */}
-          {spaceInfo.stepCeiling?.enabled && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-              <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
-              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                <input
-                  type="text"
-                  defaultValue={spaceInfo.stepCeiling.width}
-                  key={`step-ceiling-width-${spaceInfo.stepCeiling.width}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                  onBlur={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (isNaN(val) || val < 100) {
-                      e.target.value = (spaceInfo.stepCeiling?.width || 900).toString();
-                      if (!isNaN(val) && val < 100) {
-                        handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, width: 100 } });
-                      }
-                      return;
-                    }
-                    const maxW = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.width : 0) - 100;
-                    const clamped = Math.min(val, maxW);
-                    handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, width: clamped } });
-                  }}
-                  className={`${styles.input} ${styles.inputWithUnitField}`}
-                  style={{ textAlign: 'center', fontSize: '12px' }}
-                />
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
-              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                <input
-                  type="text"
-                  defaultValue={(spaceInfo.height || 2400) - (spaceInfo.stepCeiling.dropHeight || 200)}
-                  key={`step-ceiling-h-${spaceInfo.height}-${spaceInfo.stepCeiling.dropHeight}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                  onBlur={(e) => {
-                    const val = parseInt(e.target.value);
-                    const totalH = spaceInfo.height || 2400;
-                    if (isNaN(val)) {
-                      e.target.value = (totalH - (spaceInfo.stepCeiling?.dropHeight || 200)).toString();
-                      return;
-                    }
-                    const dropH = Math.max(10, Math.min(totalH - 100, totalH - val));
-                    handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, dropHeight: dropH } });
-                  }}
-                  className={`${styles.input} ${styles.inputWithUnitField}`}
-                  style={{ textAlign: 'center', fontSize: '12px' }}
-                />
-              </div>
-            </div>
-          )}
         </div>)}
 
         {/* 커튼박스/단내림 설정 (슬롯모드: 단내림, 자유배치: 커튼박스) */}
