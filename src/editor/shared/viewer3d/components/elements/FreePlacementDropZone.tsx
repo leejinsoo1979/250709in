@@ -1668,6 +1668,30 @@ const FreePlacementDropZone: React.FC = () => {
           // 단내림이 벽에 직접 인접하는지 (커튼박스가 같은 쪽에 없는 경우)
           const cbSameSide = hasDropped && droppedPosition === stepPosition;
 
+          // 단내림↔메인 경계 gap 박스 (항상)
+          if (middleGap > 0) {
+            const w = middleGap * 0.01;
+            if (stepPosition === 'left') {
+              // 좌측 단내림: 단내림 끝(= -halfW + stepWidthMm) ~ 메인 시작
+              const scRightEdge = (-halfW + stepWidthMm) * 0.01;
+              boxes.push(
+                <mesh key="gap-sc-main-left" position={[scRightEdge + w / 2, spaceH / 2, zOffset]}>
+                  <boxGeometry args={[w, spaceH, depthThree]} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                </mesh>
+              );
+            } else {
+              // 우측 단내림: 메인 끝 ~ 단내림 시작(= halfW - stepWidthMm)
+              const scLeftEdge = (halfW - stepWidthMm) * 0.01;
+              boxes.push(
+                <mesh key="gap-sc-main-right" position={[scLeftEdge - w / 2, spaceH / 2, zOffset]}>
+                  <boxGeometry args={[w, spaceH, depthThree]} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                </mesh>
+              );
+            }
+          }
+
           if (!cbSameSide) {
             // 커튼박스 없이 단내림만 → 벽 쪽 gap은 메인 gap 박스에서 처리됨 (skip)
           } else if (middleGap > 0) {
