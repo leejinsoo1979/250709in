@@ -48,38 +48,12 @@ export class GuillotinePacker {
     this.kerf = kerf;
   }
 
-  packAll(panels: Rect[], stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'): PackedBin {
-    let bestResult: Strip[];
-    let bestEfficiency: number;
-
-    if (stripDirection === 'horizontal') {
-      bestResult = this.packStrips(panels, true);
-      bestEfficiency = this.calculateEfficiency(bestResult);
-    } else if (stripDirection === 'vertical') {
-      bestResult = this.packStrips(panels, false);
-      bestEfficiency = this.calculateEfficiency(bestResult);
-    } else {
-      const hResult = this.packStrips(panels, true);
-      const hEff = this.calculateEfficiency(hResult);
-      const vResult = this.packStrips(panels, false);
-      const vEff = this.calculateEfficiency(vResult);
-
-      if (hEff > vEff) {
-        bestResult = hResult;
-        bestEfficiency = hEff;
-      } else if (vEff > hEff) {
-        bestResult = vResult;
-        bestEfficiency = vEff;
-      } else {
-        if (hResult.length < vResult.length) {
-          bestResult = hResult;
-          bestEfficiency = hEff;
-        } else {
-          bestResult = vResult;
-          bestEfficiency = vEff;
-        }
-      }
-    }
+  packAll(panels: Rect[], _stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'): PackedBin {
+    // 항상 horizontal 모드 사용
+    // horizontal: height로 그룹핑(스트립=y축=L방향), width를 x축(W방향)에 배치
+    // → panel.width가 반드시 시트의 W방향(binWidth=1220)에 놓임
+    const bestResult = this.packStrips(panels, true);
+    const bestEfficiency = this.calculateEfficiency(bestResult);
 
     this.strips = bestResult;
     this.bestLayout = { strips: bestResult, efficiency: bestEfficiency };
@@ -268,7 +242,7 @@ export class GuillotinePacker {
   }
 
   /**
-   * 잔여 공간에 미배치 패널 채우기 (길로틴 컷 유지)
+   * 잔여 공간에 미배치 패널 채우기 (길로틴 컷 유지, 회전 금지)
    */
   private fillResidualAreas(
     strips: Strip[],
@@ -282,8 +256,6 @@ export class GuillotinePacker {
     residualAreas.sort((a, b) => (b.width * b.height) - (a.width * a.height));
 
     for (const area of residualAreas) {
-      // 이 잔여 공간에 길로틴 방식으로 패널 배치
-      // 잔여 공간 내에서도 스트립 방식 적용 (같은 방향)
       let fillPos = horizontal ? area.x : area.y;
       const areaFillMax = horizontal ? (area.x + area.width) : (area.y + area.height);
       const areaDimMax = horizontal ? area.height : area.width;
@@ -291,7 +263,7 @@ export class GuillotinePacker {
       for (const panel of unplaced) {
         if (placedIds.has(panel.id)) continue;
 
-        // 원본 방향으로 시도
+        // 원본 방향으로만 시도 (회전 절대 금지)
         const panelFill = horizontal ? panel.width : panel.height;
         const panelDim = horizontal ? panel.height : panel.width;
 
@@ -303,12 +275,10 @@ export class GuillotinePacker {
             rotated: false,
             stripIndex: strips.length - 1
           };
-          // 가장 가까운 스트립에 추가
           const targetStrip = this.findStripForResidual(strips, area, horizontal);
           if (targetStrip) {
             targetStrip.panels.push(placed);
           } else {
-            // 새 스트립 생성
             strips.push({
               x: horizontal ? fillPos : area.x,
               y: horizontal ? area.y : fillPos,
@@ -320,42 +290,8 @@ export class GuillotinePacker {
           }
           placedIds.add(panel.id);
           fillPos += panelFill + this.kerf;
-          continue;
         }
-
-        // 회전 시도 (grain이 없거나 NONE일 때만)
-        // rotationLocked에 원본 치수가 있으면 → 이미 non-rotated로 배치된 것이므로 회전 금지
-        const sizeKey = `${panel.width}×${panel.height}`;
-        const isRotationLocked = rotationLocked?.has(sizeKey);
-        if (!isRotationLocked && panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
-          const rotFill = horizontal ? panel.height : panel.width;
-          const rotDim = horizontal ? panel.width : panel.height;
-
-          if (rotDim <= areaDimMax && fillPos + rotFill <= areaFillMax) {
-            const placed: PlacedRect = {
-              ...panel,
-              x: horizontal ? fillPos : area.x,
-              y: horizontal ? area.y : fillPos,
-              rotated: true,
-              stripIndex: strips.length - 1
-            };
-            const targetStrip = this.findStripForResidual(strips, area, horizontal);
-            if (targetStrip) {
-              targetStrip.panels.push(placed);
-            } else {
-              strips.push({
-                x: horizontal ? fillPos : area.x,
-                y: horizontal ? area.y : fillPos,
-                width: horizontal ? panel.height : rotDim,
-                height: horizontal ? rotDim : panel.width,
-                panels: [placed],
-                horizontal
-              });
-            }
-            placedIds.add(panel.id);
-            fillPos += rotFill + this.kerf;
-          }
-        }
+        // 회전 시도 제거 — 모든 패널 회전 금지
       }
     }
   }
@@ -387,47 +323,25 @@ export class GuillotinePacker {
     fillMax: number,
     placedIds: Set<string>,
     horizontal: boolean,
-    rotationLocked?: Map<string, boolean>
+    _rotationLocked?: Map<string, boolean>
   ): void {
-    // 미배치 패널을 치수별로 그룹핑해서 스트립 생성
+    // 미배치 패널을 치수별로 그룹핑해서 스트립 생성 (회전 금지)
     let currentPos = startPos;
     const maxPos = horizontal ? this.binHeight : this.binWidth;
 
-    // 치수별 그룹핑
+    // 치수별 그룹핑 (원본 방향만)
     const groups = new Map<number, Rect[]>();
     for (const panel of unplaced) {
       if (placedIds.has(panel.id)) continue;
       const dim = horizontal ? panel.height : panel.width;
       const roundedDim = Math.round(dim);
-      if (roundedDim > remainingDim) continue; // 남은 공간에 안 들어가면 스킵
+      if (roundedDim > remainingDim) continue;
       if (!groups.has(roundedDim)) {
         groups.set(roundedDim, []);
       }
       groups.get(roundedDim)!.push(panel);
     }
-
-    // 회전 가능한 패널도 추가 시도
-    for (const panel of unplaced) {
-      if (placedIds.has(panel.id)) continue;
-      if (panel.canRotate === false || (panel.grain && panel.grain !== 'NONE')) continue;
-      // rotationLocked에 원본 치수가 있으면 회전 금지
-      const sizeKeyBottom = `${panel.width}×${panel.height}`;
-      if (rotationLocked?.has(sizeKeyBottom)) continue;
-      const rotDim = horizontal ? panel.width : panel.height;
-      const roundedRotDim = Math.round(rotDim);
-      if (roundedRotDim > remainingDim) continue;
-      // 원본 방향으로 이미 그룹에 들어간 경우 스킵
-      const origDim = Math.round(horizontal ? panel.height : panel.width);
-      if (groups.has(origDim) && groups.get(origDim)!.some(p => p.id === panel.id)) continue;
-      // 회전 방향으로도 그룹에 추가 (별도 마킹)
-      if (!groups.has(roundedRotDim)) {
-        groups.set(roundedRotDim, []);
-      }
-      const existing = groups.get(roundedRotDim)!;
-      if (!existing.some(p => p.id === panel.id)) {
-        existing.push({ ...panel, _rotateHint: true } as any);
-      }
-    }
+    // 회전 시도 제거 — 모든 패널 회전 금지
 
     const sortedDims = [...groups.keys()].sort((a, b) => b - a);
 
@@ -448,21 +362,16 @@ export class GuillotinePacker {
 
       for (const panel of groupPanels) {
         if (placedIds.has(panel.id)) continue;
-        const isRotateHint = (panel as any)._rotateHint === true;
-        const panelFillDim = isRotateHint
-          ? (horizontal ? panel.height : panel.width)
-          : (horizontal ? panel.width : panel.height);
+        const panelFillDim = horizontal ? panel.width : panel.height;
 
         if (fillPos + panelFillDim <= fillMax) {
           const placed: PlacedRect = {
             ...panel,
             x: horizontal ? fillPos : currentPos,
             y: horizontal ? currentPos : fillPos,
-            rotated: isRotateHint,
+            rotated: false,
             stripIndex: strips.length
           };
-          // _rotateHint 제거
-          delete (placed as any)._rotateHint;
           currentStrip.panels.push(placed);
           placedIds.add(panel.id);
           fillPos += panelFillDim + this.kerf;
@@ -560,57 +469,101 @@ function extractFurnitureNum(name: string): number {
 }
 
 /**
- * 측판 여부 판별 (서랍 측판 제외)
- * 측판: "좌측판", "우측판" 포함 & "서랍" 미포함
+ * 패널 카테고리 분류 — 같은 카테고리끼리만 같은 시트에 배치
+ *
+ * 카테고리 (우선순위 = 큰 패널부터 재단):
+ *   1. side    — 측판 (좌측판/우측판, 서랍 제외)
+ *   2. body    — 상판/하판/선반/칸막이/바닥판 등 본체 패널
+ *   3. frame   — 상부프레임/하부프레임 (맨 마지막 재단)
  */
-function isSidePanelName(name: string): boolean {
-  if (!name) return false;
-  if (name.includes('서랍')) return false;
-  return name.includes('좌측판') || name.includes('우측판') ||
-         name.includes('좌측') || name.includes('우측');
+function getPanelCategory(name: string): 'side' | 'body' | 'frame' {
+  if (!name) return 'body';
+  // 프레임 판별 (최하위 우선순위)
+  if (name.includes('프레임') || name.includes('프래임')) return 'frame';
+  // 측판 판별 (서랍 제외)
+  if (!name.includes('서랍')) {
+    if (name.includes('좌측판') || name.includes('우측판') ||
+        name.includes('좌측') || name.includes('우측')) return 'side';
+  }
+  // 나머지: 상판, 하판, 선반, 칸막이, 바닥판, 서랍 패널 등
+  return 'body';
 }
 
 /**
- * 패널 그룹을 가구번호별로 독립 시트에 패킹
+ * 같은 사이즈(w×h) 패널끼리 그룹핑하여 시트에 패킹
+ * - 같은 사이즈끼리 최대한 같은 시트에 모음 (재단 효율)
+ * - 큰 패널부터 먼저 배치
  */
-function packFurnitureGroups(
+function packBySizeGroups(
   panels: Rect[],
   binWidth: number,
   binHeight: number,
   kerf: number,
   stripDirection: 'horizontal' | 'vertical' | 'auto'
 ): PackedBin[] {
-  const bins: PackedBin[] = [];
+  if (panels.length === 0) return [];
 
-  // 가구번호별 그룹핑
-  const furnitureGroups = new Map<number, Rect[]>();
+  // 사이즈별 그룹핑 (w×h 키)
+  const sizeGroups = new Map<string, Rect[]>();
   for (const panel of panels) {
-    const fn = extractFurnitureNum(panel.name || '');
-    if (!furnitureGroups.has(fn)) furnitureGroups.set(fn, []);
-    furnitureGroups.get(fn)!.push(panel);
-  }
-  const sortedNums = [...furnitureGroups.keys()].sort((a, b) => a - b);
-  for (const fn of sortedNums) {
-    furnitureGroups.get(fn)!.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+    const key = `${Math.round(panel.width)}×${Math.round(panel.height)}`;
+    if (!sizeGroups.has(key)) sizeGroups.set(key, []);
+    sizeGroups.get(key)!.push(panel);
   }
 
-  // 가구 1개씩 독립 시트로 패킹
-  for (const fn of sortedNums) {
-    const group = furnitureGroups.get(fn)!;
-    const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-    const result = packer.packAll(group, stripDirection);
-    if (result.panels.length > 0) {
-      bins.push(result);
-    }
-    // 배치 못한 패널이 있으면 별도 시트
-    const placedIds = new Set(result.panels.map(p => p.id));
-    const unplaced = group.filter(p => !placedIds.has(p.id));
-    if (unplaced.length > 0) {
-      const packer2 = new GuillotinePacker(binWidth, binHeight, kerf);
-      const result2 = packer2.packAll(unplaced, stripDirection);
-      if (result2.panels.length > 0) {
-        bins.push(result2);
+  // 면적 내림차순 정렬 (큰 사이즈 그룹 먼저)
+  const sortedKeys = [...sizeGroups.keys()].sort((a, b) => {
+    const [aw, ah] = a.split('×').map(Number);
+    const [bw, bh] = b.split('×').map(Number);
+    return (bw * bh) - (aw * ah);
+  });
+
+  // 각 사이즈 그룹 내에서 가구번호순 정렬
+  for (const key of sortedKeys) {
+    sizeGroups.get(key)!.sort((a, b) => {
+      const fnA = extractFurnitureNum(a.name || '');
+      const fnB = extractFurnitureNum(b.name || '');
+      return fnA - fnB;
+    });
+  }
+
+  // 사이즈 그룹 단위로 시트에 채워넣기
+  const bins: PackedBin[] = [];
+  const allPlaced = new Set<string>();
+
+  for (const key of sortedKeys) {
+    const group = sizeGroups.get(key)!.filter(p => !allPlaced.has(p.id));
+    if (group.length === 0) continue;
+
+    // 기존 시트 중 이 사이즈가 들어갈 수 있는 시트에 우선 추가
+    let remaining = [...group];
+    for (const bin of bins) {
+      if (remaining.length === 0) break;
+      const stillRemaining: Rect[] = [];
+      for (const panel of remaining) {
+        const pos = findFreePosition(bin, panel, binWidth, binHeight, kerf, true);
+        if (pos) {
+          const placed = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
+          bin.panels.push(placed);
+          bin.usedArea = (bin.usedArea || 0) + panel.width * panel.height;
+          bin.efficiency = ((bin.usedArea || 0) / (binWidth * binHeight)) * 100;
+          allPlaced.add(panel.id);
+        } else {
+          stillRemaining.push(panel);
+        }
       }
+      remaining = stillRemaining;
+    }
+
+    // 남은 패널은 새 시트에
+    while (remaining.length > 0) {
+      const packer = new GuillotinePacker(binWidth, binHeight, kerf);
+      const result = packer.packAll(remaining, stripDirection);
+      if (result.panels.length === 0) break;
+      bins.push(result);
+      const placedIds = new Set(result.panels.map(p => p.id));
+      for (const id of placedIds) allPlaced.add(id);
+      remaining = remaining.filter(p => !placedIds.has(p.id));
     }
   }
 
@@ -621,9 +574,10 @@ function packFurnitureGroups(
  * 길로틴 방식 멀티 빈 패킹
  *
  * 핵심 원칙:
- *   1. 측판(좌측판/우측판)과 비측판(상판/하판/선반 등)은 절대 같은 시트에 섞지 않음
- *   2. 같은 가구의 같은 종류 패널은 반드시 같은 시트에 배치
- *   3. 모든 패널 회전 금지
+ *   1. 측판 / 본체(상판·하판·선반·칸막이) / 프레임 — 카테고리별로 시트 분리
+ *   2. 같은 사이즈 패널끼리 최대한 같은 시트에 배치 (재단 효율)
+ *   3. 큰 패널부터 먼저 재단, 프레임은 맨 마지막
+ *   4. 모든 패널 회전 금지
  */
 export function packGuillotine(
   panels: Rect[],
@@ -633,30 +587,24 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
-  // ── 1단계: 측판 vs 비측판 분류 ──
+  // ── 1단계: 카테고리 분류 (측판 / 본체 / 프레임) ──
   const sidePanels: Rect[] = [];
-  const otherPanels: Rect[] = [];
+  const bodyPanels: Rect[] = [];
+  const framePanels: Rect[] = [];
   for (const panel of panels) {
-    if (isSidePanelName(panel.name || '')) {
-      sidePanels.push(panel);
-    } else {
-      otherPanels.push(panel);
-    }
+    const cat = getPanelCategory(panel.name || '');
+    if (cat === 'side') sidePanels.push(panel);
+    else if (cat === 'frame') framePanels.push(panel);
+    else bodyPanels.push(panel);
   }
 
-  // ── 2단계: 각 종류별로 가구 단위 독립 패킹 ──
-  const sideBins = packFurnitureGroups(sidePanels, binWidth, binHeight, kerf, stripDirection);
-  const otherBins = packFurnitureGroups(otherPanels, binWidth, binHeight, kerf, stripDirection);
+  // ── 2단계: 각 카테고리 내에서 사이즈 기준 패킹 (큰 것부터) ──
+  const sideBins = packBySizeGroups(sidePanels, binWidth, binHeight, kerf, stripDirection);
+  const bodyBins = packBySizeGroups(bodyPanels, binWidth, binHeight, kerf, stripDirection);
+  const frameBins = packBySizeGroups(framePanels, binWidth, binHeight, kerf, stripDirection);
 
-  // ── 3단계: 같은 종류 내에서만 시트 합치기 (측판↔비측판 혼합 금지) ──
-  if (sideBins.length > 1) {
-    backfillBins(sideBins, binWidth, binHeight, kerf);
-  }
-  if (otherBins.length > 1) {
-    backfillBins(otherBins, binWidth, binHeight, kerf);
-  }
-
-  return [...sideBins, ...otherBins];
+  // 순서: 측판 → 본체 → 프레임 (큰 것부터 재단)
+  return [...sideBins, ...bodyBins, ...frameBins];
 }
 
 /**
@@ -766,21 +714,10 @@ function findFreePosition(
     addCandidate(0, r.y + r.h + kerf);                // 좌측 위
   }
 
-  // 원본 방향 + 회전 방향 시도 (noRotate 시 원본 rotated 상태만 사용)
-  const orientations: { w: number; h: number; rotated: boolean }[] = [];
-  if (noRotate) {
-    // 원본 rotated 상태 유지
-    if (panel.rotated) {
-      orientations.push({ w: panel.height, h: panel.width, rotated: true });
-    } else {
-      orientations.push({ w: panel.width, h: panel.height, rotated: false });
-    }
-  } else {
-    orientations.push({ w: panel.width, h: panel.height, rotated: false });
-    if (panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
-      orientations.push({ w: panel.height, h: panel.width, rotated: true });
-    }
-  }
+  // 회전 절대 금지 — 항상 원본 방향(width=W, height=L)으로만 배치
+  const orientations: { w: number; h: number; rotated: boolean }[] = [
+    { w: panel.width, h: panel.height, rotated: false }
+  ];
 
   // 후보 위치를 좌하단 우선 정렬
   candidates.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
