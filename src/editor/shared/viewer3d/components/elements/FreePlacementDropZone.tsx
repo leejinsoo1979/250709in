@@ -73,6 +73,8 @@ const FreePlacementDropZone: React.FC = () => {
   // 배치된 가구 이동 상태
   const [movingModuleId, setMovingModuleId] = useState<string | null>(null);
   const [isDraggingPlaced, setIsDraggingPlaced] = useState(false);
+  // 2차 클릭 이동 모드 (이격거리 라벨이 가구 Y위치로 내려옴)
+  const [isMoveMode, setIsMoveMode] = useState(false);
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
@@ -680,7 +682,12 @@ const FreePlacementDropZone: React.FC = () => {
   };
 
   const remainingGaps = useMemo(() => {
-    const { startX, endX } = spaceBounds;
+    const { startX: rawStartX, endX: rawEndX } = spaceBounds;
+    // 이격거리(gapConfig)를 반영하여 가구 배치 가능 영역 계산
+    const gapLeft = spaceInfo.gapConfig?.left || 0;
+    const gapRight = spaceInfo.gapConfig?.right || 0;
+    const startX = rawStartX + gapLeft;
+    const endX = rawEndX - gapRight;
     const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01;
 
     // 가구가 없어도 잠금이 있으면 벽 갭 표시
