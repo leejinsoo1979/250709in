@@ -1782,9 +1782,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 </>)}
 
-                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 — 자유배치에서는 숨김 ===== */}
-                {!isFreePlacement && (<>
-                {/* 메인 구간 슬롯 합계 치수선 */}
+                {/* ===== 3단: 실배치 공간 치수선 ===== */}
+                {(() => {
+                  // 자유배치: 각 구간별 이격거리를 빼서 실배치 폭 계산
+                  // 슬롯배치: ColumnIndexer의 슬롯 합계 사용
+                  const leftGapMm = spaceInfo.gapConfig?.left ?? 1.5;
+                  const rightGapMm = spaceInfo.gapConfig?.right ?? 1.5;
+                  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
+
+                  const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+                  const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+                  const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
+                  const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
+
+                  // 각 구간의 좌/우 인접 요소 판별
+                  // position=right: [벽] [메인] [단내림] [커튼박스] [벽]
+                  // position=left:  [벽] [커튼박스] [단내림] [메인] [벽]
+                  let mainPlacementWidth: number;
+                  let scPlacementWidth: number | null = null;
+                  let dcPlacementWidth: number;
+
+                  if (isFreePlacement) {
+                    // 메인 구간 이격
+                    const mainLeftGap = dcPosition === 'left'
+                      ? (hasSC ? middleGapMm : (hasDC ? middleGapMm : (hasLeftWall ? leftGapMm : 0)))
+                      : (hasLeftWall ? leftGapMm : 0);
+                    const mainRightGap = dcPosition === 'right'
+                      ? (hasSC ? middleGapMm : (hasDC ? middleGapMm : (hasRightWall ? rightGapMm : 0)))
+                      : (hasRightWall ? rightGapMm : 0);
+                    mainPlacementWidth = Math.round((mainWidth - mainLeftGap - mainRightGap) * 10) / 10;
+
+                    // 단내림 구간 이격 (양쪽 모두 경계면이므로 middleGap)
+                    if (hasSC) {
+                      scPlacementWidth = Math.round((scWidth - middleGapMm - middleGapMm) * 10) / 10;
+                    }
+
+                    // 커튼박스 구간 이격
+                    const dcLeftGap = dcPosition === 'left'
+                      ? (hasLeftWall ? leftGapMm : 0)
+                      : middleGapMm;
+                    const dcRightGap = dcPosition === 'right'
+                      ? (hasRightWall ? rightGapMm : 0)
+                      : middleGapMm;
+                    dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
+                  } else {
+                    // 슬롯배치: ColumnIndexer 계산값 사용
+                    mainPlacementWidth = mainSlotTotalWidth;
+                    dcPlacementWidth = droppedSlotTotalWidth;
+                  }
+
+                  return (<>
+                {/* 메인 구간 실배치 치수선 */}
                 <Line
                   points={[[mainStartX, slotTotalDimensionY, 0.002], [mainEndX, slotTotalDimensionY, 0.002]]}
                   color={dimensionColor}
@@ -1812,10 +1860,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {mainSlotTotalWidth}
+                    {mainPlacementWidth}
                   </Text>
                 )}
-                {/* 메인 구간 슬롯 합계 연장선 */}
+                {/* 메인 구간 실배치 연장선 */}
                 <Line
                   points={[[mainStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mainStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
@@ -1827,7 +1875,52 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
 
-                {/* 단내림 구간 슬롯 합계 치수선 */}
+                {/* 단내림(stepCeiling) 구간 실배치 치수선 — 자유배치 전용 */}
+                {hasSC && scPlacementWidth !== null && (<>
+                <Line
+                  points={[[scStartX, slotTotalDimensionY, 0.002], [scEndX, slotTotalDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([scStartX, slotTotalDimensionY, 0.002], [scStartX + 0.05, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([scEndX, slotTotalDimensionY, 0.002], [scEndX - 0.05, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[(scStartX + scEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {scPlacementWidth}
+                  </Text>
+                )}
+                {/* 단내림 구간 실배치 연장선 */}
+                <Line
+                  points={[[scStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[[scEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                </>)}
+
+                {/* 커튼박스 구간 실배치 치수선 */}
                 <Line
                   points={[[droppedStartX, slotTotalDimensionY, 0.002], [droppedEndX, slotTotalDimensionY, 0.002]]}
                   color={dimensionColor}
@@ -1855,10 +1948,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {droppedSlotTotalWidth}
+                    {dcPlacementWidth}
                   </Text>
                 )}
-                {/* 단내림 구간 슬롯 합계 연장선 */}
+                {/* 커튼박스 구간 실배치 연장선 */}
                 <Line
                   points={[[droppedStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [droppedStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
@@ -1869,7 +1962,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={subGuideColor}
                   lineWidth={1}
                 />
-                </>)}
+                  </>);
+                })()}
 
                 {/* 구간 분리 가이드라인 - 숨김 처리 */}
                 {/* <Line
@@ -1944,95 +2038,106 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
+                {/* 단내림 있으면 2개 경계면: 메인↔단내림, 단내림↔커튼박스 */}
+                {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
                 {(() => {
-                  // ColumnIndexer에서 계산된 boundaryGap 사용
-                  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                  const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
+                  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
+                  const boundaryGapY = slotDimensionY;
 
-                  const boundaryGapY = slotDimensionY; // 좌우 이격과 동일한 Y 레벨
-                  let boundaryLeftX: number;
-                  let boundaryRightX: number;
+                  // 경계면 목록 생성
+                  const boundaries: { leftX: number; rightX: number }[] = [];
 
-                  if (spaceInfo.droppedCeiling.position === 'left') {
-                    // 왼쪽 단내림: 단내림 끝 ~ 메인 시작
-                    boundaryLeftX = droppedEndX;
-                    boundaryRightX = mainStartX;
+                  if (hasSC) {
+                    // 단내림이 있으면 2개 경계면
+                    if (dcPosition === 'left') {
+                      // [커튼박스] [단내림] [메인] → 커튼박스↔단내림, 단내림↔메인
+                      boundaries.push({ leftX: droppedEndX, rightX: scStartX }); // 커튼박스↔단내림
+                      boundaries.push({ leftX: scEndX, rightX: mainStartX });     // 단내림↔메인
+                    } else {
+                      // [메인] [단내림] [커튼박스] → 메인↔단내림, 단내림↔커튼박스
+                      boundaries.push({ leftX: mainEndX, rightX: scStartX });     // 메인↔단내림
+                      boundaries.push({ leftX: scEndX, rightX: droppedStartX });  // 단내림↔커튼박스
+                    }
                   } else {
-                    // 오른쪽 단내림: 메인 끝 ~ 단내림 시작
-                    boundaryLeftX = mainEndX;
-                    boundaryRightX = droppedStartX;
+                    // 단내림 없으면 1개 경계면
+                    if (dcPosition === 'left') {
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
+                    } else {
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
+                    }
                   }
 
-                  return (
-                    <>
-                      <Line
-                        points={[[boundaryLeftX, boundaryGapY, 0.003], [boundaryRightX, boundaryGapY, 0.003]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([boundaryLeftX, boundaryGapY, 0.003], [boundaryLeftX + 0.02, boundaryGapY, 0.003])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([boundaryRightX, boundaryGapY, 0.003], [boundaryRightX - 0.02, boundaryGapY, 0.003])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      {/* 경계면 이격거리 텍스트 - 클릭 편집 */}
-                      {editingGapSide === 'middle' ? (
-                        <Html
-                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
-                          center
-                          style={{ pointerEvents: 'auto' }}
-                          zIndexRange={[10000, 10001]}
-                        >
-                          <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
-                            <input
-                              ref={gapInputRef}
-                              type="number"
-                              step="0.5"
-                              min="0"
-                              max="5"
-                              value={editingGapValue}
-                              onChange={(e) => setEditingGapValue(e.target.value)}
-                              onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
-                              onBlur={handleGapEditSubmit}
-                              style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
-                              autoFocus
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
-                          </div>
-                        </Html>
-                      ) : (
-                        <Html
-                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
-                          center
-                          style={{ pointerEvents: 'auto' }}
-                          zIndexRange={[9999, 10000]}
-                        >
-                          <div
-                            style={{
-                              padding: '2px 6px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              color: dimensionColor,
-                              cursor: 'pointer',
-                              userSelect: 'none',
-                              whiteSpace: 'nowrap',
-                              background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
-                              borderRadius: '3px',
-                            }}
-                            onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
+                  return (<>
+                    {boundaries.map((b, idx) => (
+                      <React.Fragment key={`boundary-gap-${idx}`}>
+                        <Line
+                          points={[[b.leftX, boundaryGapY, 0.003], [b.rightX, boundaryGapY, 0.003]]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        <Line
+                          points={createArrowHead([b.leftX, boundaryGapY, 0.003], [b.leftX + 0.02, boundaryGapY, 0.003])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        <Line
+                          points={createArrowHead([b.rightX, boundaryGapY, 0.003], [b.rightX - 0.02, boundaryGapY, 0.003])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {editingGapSide === 'middle' && idx === 0 ? (
+                          <Html
+                            position={[(b.leftX + b.rightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
+                            center
+                            style={{ pointerEvents: 'auto' }}
+                            zIndexRange={[10000, 10001]}
                           >
-                            {`${boundaryGapMm}`}
-                          </div>
-                        </Html>
-                      )}
-                    </>
-                  );
+                            <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                              <input
+                                ref={gapInputRef}
+                                type="number"
+                                step="0.5"
+                                min="0"
+                                max="5"
+                                value={editingGapValue}
+                                onChange={(e) => setEditingGapValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                                onBlur={handleGapEditSubmit}
+                                style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                            </div>
+                          </Html>
+                        ) : (
+                          <Html
+                            position={[(b.leftX + b.rightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
+                            center
+                            style={{ pointerEvents: 'auto' }}
+                            zIndexRange={[9999, 10000]}
+                          >
+                            <div
+                              style={{
+                                padding: '2px 6px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                color: dimensionColor,
+                                cursor: 'pointer',
+                                userSelect: 'none',
+                                whiteSpace: 'nowrap',
+                                background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                                borderRadius: '3px',
+                              }}
+                              onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', middleGapMm); }}
+                            >
+                              {`${middleGapMm}`}
+                            </div>
+                          </Html>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </>);
                 })()}
               </>
             );
