@@ -4042,6 +4042,161 @@ const Configurator: React.FC = () => {
             </div>
           ) : null)}
 
+          {/* 단내림 프레임 설정 (단내림 활성화 시) */}
+          {spaceInfo.droppedCeiling?.enabled && (
+            <div className={styles.subSetting} style={{ marginTop: '12px', borderTop: '1px solid var(--theme-border)', paddingTop: '10px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 600, marginBottom: '8px' }}>단내림 구간</div>
+              <div className={styles.frameGrid}>
+                {/* 단내림 공간 높이 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>공간 높이</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentDrop = spaceInfo.droppedCeiling?.dropHeight || 200;
+                        const newDrop = Math.min(500, currentDrop + 25);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDrop } });
+                      }}
+                      disabled={(spaceInfo.droppedCeiling?.dropHeight || 200) >= 500}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          const newDrop = (spaceInfo.height || 2400) - val;
+                          const clamped = Math.max(100, Math.min(500, newDrop));
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: clamped } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (isNaN(val) || val < 0) {
+                          // reset
+                        } else {
+                          const newDrop = Math.max(100, Math.min(500, (spaceInfo.height || 2400) - val));
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDrop } });
+                        }
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentDrop = spaceInfo.droppedCeiling?.dropHeight || 200;
+                        const newDrop = Math.max(100, currentDrop - 25);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDrop } });
+                      }}
+                      disabled={(spaceInfo.droppedCeiling?.dropHeight || 200) <= 100}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 단내림 상부프레임 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>상부프레임</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30);
+                        const newVal = Math.max(0, current - 1);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: newVal } });
+                      }}
+                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)) <= 0}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: Math.max(0, Math.min(200, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (isNaN(val)) return;
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: Math.max(0, Math.min(200, val)) } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30);
+                        const newVal = Math.min(200, current + 1);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: newVal } });
+                      }}
+                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)) >= 200}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 단내림 하부프레임 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>하부프레임</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const current = spaceInfo.droppedCeiling?.bottomFrame ?? 0;
+                        const newVal = Math.max(0, current - 1);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, bottomFrame: newVal } });
+                      }}
+                      disabled={(spaceInfo.droppedCeiling?.bottomFrame ?? 0) <= 0}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={spaceInfo.droppedCeiling?.bottomFrame ?? 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, bottomFrame: Math.max(0, Math.min(200, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (isNaN(val)) return;
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, bottomFrame: Math.max(0, Math.min(200, val)) } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const current = spaceInfo.droppedCeiling?.bottomFrame ?? 0;
+                        const newVal = Math.min(200, current + 1);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, bottomFrame: newVal } });
+                      }}
+                      disabled={(spaceInfo.droppedCeiling?.bottomFrame ?? 0) >= 200}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
         )}
 

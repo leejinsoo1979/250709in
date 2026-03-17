@@ -85,11 +85,14 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 받침대(하단 프레임) 높이
     const baseFrameHeight = spaceInfo.baseConfig?.height || 0;
     
-    // 상단 프레임 높이
-    const topFrameHeight = spaceInfo.frameSize?.top || 0;
-    
-    // 단내림 영역의 내부 높이 = 단내림 전체 높이 - 바닥마감 - 받침대 높이 - 상부프레임 높이
-    return droppedTotalHeight - floorFinishHeight - baseFrameHeight - topFrameHeight;
+    // 상단 프레임 높이 (단내림 전용 topFrame이 있으면 사용, 없으면 메인 frameSize.top)
+    const topFrameHeight = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 0);
+
+    // 하단 프레임 높이 (단내림 전용 bottomFrame)
+    const bottomFrameHeight = spaceInfo.droppedCeiling?.bottomFrame ?? 0;
+
+    // 단내림 영역의 내부 높이 = 단내림 전체 높이 - 바닥마감 - 받침대 높이 - 상부프레임 높이 - 하부프레임 높이
+    return droppedTotalHeight - floorFinishHeight - baseFrameHeight - topFrameHeight - bottomFrameHeight;
   };
   
   const droppedInternalHeight = calculateDroppedInternalHeight();
