@@ -43,17 +43,9 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
       }
     }
 
-    // 단내림(stepCeiling) 구간 제외 — 커튼박스 안쪽에 위치
+    // 단내림(stepCeiling) 구간은 제외하지 않음 — 가구 배치 허용 (높이만 조정)
     const hasStep = spaceInfo.stepCeiling?.enabled;
     const stepPosition = spaceInfo.stepCeiling?.position || 'right';
-    if (hasStep) {
-      const stepWidth = spaceInfo.stepCeiling!.width || 0;
-      if (stepPosition === 'left') {
-        startX += stepWidth;
-      } else {
-        endX -= stepWidth;
-      }
-    }
 
     // 이격거리 적용 — 벽이 있는 쪽만, 커튼박스/단내림 경계면은 middleGap
     const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
@@ -170,12 +162,63 @@ export function detectDroppedZone(
   spaceInfo: SpaceInfo,
   furnitureWidthMM?: number
 ): { zone: 'normal' | 'dropped'; droppedInternalHeight?: number } {
-  if (!spaceInfo.droppedCeiling?.enabled) {
-    return { zone: 'normal' };
+  // ── 자유배치모드: stepCeiling(단내림) 구간 감지 ──
+  if (spaceInfo.layoutMode === 'free-placement') {
+    const hasStep = spaceInfo.stepCeiling?.enabled;
+    if (!hasStep) {
+      return { zone: 'normal' };
+    }
+
+    const totalWidth = spaceInfo.width || 2400;
+    const halfTotal = totalWidth / 2;
+    const stepWidth = spaceInfo.stepCeiling!.width || 0;
+    const stepPosition = spaceInfo.stepCeiling!.position || 'right';
+    const surroundWidth = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0;
+    const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+    const halfFW = (furnitureWidthMM || 0) / 2;
+
+    // 단내림 구간의 X 범위 계산 (커튼박스 안쪽에 위치)
+    let stepStartX: number;
+    let stepEndX: number;
+
+    if (stepPosition === 'right') {
+      // 우측 단내림: 커튼박스가 우측이면 커튼박스 왼쪽에, 아니면 공간 우측 끝에서
+      const rightEdge = (droppedPosition === 'right' && spaceInfo.droppedCeiling?.enabled)
+        ? halfTotal - surroundWidth
+        : halfTotal;
+      stepEndX = rightEdge;
+      stepStartX = rightEdge - stepWidth;
+    } else {
+      // 좌측 단내림: 커튼박스가 좌측이면 커튼박스 오른쪽에, 아니면 공간 좌측 끝에서
+      const leftEdge = (droppedPosition === 'left' && spaceInfo.droppedCeiling?.enabled)
+        ? -halfTotal + surroundWidth
+        : -halfTotal;
+      stepStartX = leftEdge;
+      stepEndX = leftEdge + stepWidth;
+    }
+
+    // 가구 중심이 단내림 구간에 있는지 판별
+    const isInStep = xPositionMM >= stepStartX && xPositionMM <= stepEndX;
+
+    if (!isInStep) {
+      return { zone: 'normal' };
+    }
+
+    // 단내림 구간의 내경 높이 = stepCeiling.height - topFrame - floorFinish - base
+    const stepHeight = spaceInfo.stepCeiling!.height || spaceInfo.height;
+    const topFrameMM = spaceInfo.frameSize?.top || 30;
+    const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+    const baseHeightMM = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+    const floatHeightMM = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+    const effectiveBaseHeight = spaceInfo.baseConfig?.type === 'stand' ? floatHeightMM : baseHeightMM;
+
+    const droppedInternalHeight = stepHeight - topFrameMM - floorFinishMM - effectiveBaseHeight;
+
+    return { zone: 'dropped', droppedInternalHeight: Math.max(droppedInternalHeight, 0) };
   }
 
-  // 자유배치모드: 커튼박스는 bounds 축소로 처리, 높이 조정 없음
-  if (spaceInfo.layoutMode === 'free-placement') {
+  // ── 균등배치모드: droppedCeiling(단내림) 구간 감지 ──
+  if (!spaceInfo.droppedCeiling?.enabled) {
     return { zone: 'normal' };
   }
 
@@ -193,13 +236,6 @@ export function detectDroppedZone(
     // 단내림이 오른쪽: 가구 오른쪽 끝이 단내림 구간에 있으면
     isInDropped = (xPositionMM + halfW) > endX - droppedWidth;
   }
-
-  console.log('🔍 [detectDroppedZone]', {
-    xPositionMM, furnitureWidthMM, halfW,
-    startX, endX, droppedWidth, droppedPosition,
-    checkValue: droppedPosition === 'right' ? `${xPositionMM + halfW} > ${endX - droppedWidth}` : `${xPositionMM - halfW} < ${startX + droppedWidth}`,
-    isInDropped,
-  });
 
   if (!isInDropped) {
     return { zone: 'normal' };

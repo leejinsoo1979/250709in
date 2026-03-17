@@ -358,15 +358,16 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 평면 크기 및 위치 계산
   const planeConfig = useMemo(() => {
-    const totalWidth = spaceInfo.width;
-    const internalCenterXmm = -(totalWidth / 2) + internalSpace.startX + (internalSpace.width / 2);
-    const planeWidth = internalSpace.width * 0.01;
+    // 자유배치: spaceBounds(getInternalSpaceBoundsX)를 사용하여 단내림 구간까지 포함
+    const boundsWidth = spaceBounds.endX - spaceBounds.startX;
+    const boundsCenterXmm = (spaceBounds.startX + spaceBounds.endX) / 2;
+    const planeWidth = boundsWidth * 0.01;
     const planeHeight = spaceInfo.height * 0.01;
-    const planeCenterX = internalCenterXmm * 0.01;
+    const planeCenterX = boundsCenterXmm * 0.01;
     const planeCenterY = (spaceInfo.height / 2) * 0.01;
 
     return { planeWidth, planeHeight, planeCenterX, planeCenterY };
-  }, [spaceInfo, internalSpace]);
+  }, [spaceInfo, spaceBounds]);
 
   // 스냅 거리 (mm) - 이 거리 이내이면 가구/벽에 붙음
   const SNAP_DISTANCE_MM = 30;

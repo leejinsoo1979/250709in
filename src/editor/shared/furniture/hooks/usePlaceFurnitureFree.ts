@@ -75,7 +75,13 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   }
 
   // Y좌표 계산 (카테고리별)
-  const yPositionThree = calculateYPosition(moduleData.category, effectiveHeight, spaceInfo);
+  // 상부장이 단내림 구간에 배치될 때: 천장 기준이 stepCeiling.height여야 함
+  const yPositionThree = calculateYPosition(
+    moduleData.category,
+    effectiveHeight,
+    spaceInfo,
+    effectiveZone === 'dropped' ? droppedZone.droppedInternalHeight : undefined
+  );
 
   // 충돌 체크
   const newBounds: FurnitureBoundsX = {
@@ -159,7 +165,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 export function calculateYPosition(
   category: string,
   heightMM: number,
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  droppedInternalHeight?: number
 ): number {
   const floorFinishMM =
     spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
@@ -171,7 +178,13 @@ export function calculateYPosition(
 
   if (category === 'upper') {
     // 상부장: 천장에서 아래로 배치
+    // 단내림 구간이면 단내림 높이 기준, 아니면 전체 높이 기준
     const topFrameMM = spaceInfo.frameSize?.top || 30;
+    if (droppedInternalHeight !== undefined) {
+      // 단내림 구간: 줄어든 내경 높이 + base + floorFinish = 단내림 천장까지
+      const internalHeightMM = droppedInternalHeight + baseHeightMM;
+      return (floorFinishMM + internalHeightMM - heightMM / 2) * 0.01;
+    }
     const internalHeightMM = spaceInfo.height - topFrameMM - floorFinishMM;
     return (floorFinishMM + internalHeightMM - heightMM / 2) * 0.01;
   }
