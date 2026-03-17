@@ -571,43 +571,69 @@ export function packGuillotine(
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
   const bins: PackedBin[] = [];
-  let currentBin = 0;
 
-  // 가구번호 기준으로 정렬 → 같은 가구 패널이 같은 시트에 배치되도록
-  // 1순위: 가구번호 → 2순위: 면적 내림차순
-  const remainingPanels = [...panels].sort((a, b) => {
-    const fnA = extractFurnitureNum(a.name || '');
-    const fnB = extractFurnitureNum(b.name || '');
-    if (fnA !== fnB) return fnA - fnB;
-    return (b.width * b.height) - (a.width * a.height);
-  });
+  // ── 가구번호별 그룹핑: 같은 가구 패널은 반드시 같은 시트에 ──
+  const furnitureGroups = new Map<number, Rect[]>();
+  for (const panel of panels) {
+    const fn = extractFurnitureNum(panel.name || '');
+    if (!furnitureGroups.has(fn)) furnitureGroups.set(fn, []);
+    furnitureGroups.get(fn)!.push(panel);
+  }
+  // 가구번호 순으로 정렬, 각 그룹 내에서 면적 내림차순
+  const sortedFurnitureNums = [...furnitureGroups.keys()].sort((a, b) => a - b);
+  for (const fn of sortedFurnitureNums) {
+    furnitureGroups.get(fn)!.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+  }
 
-  while (remainingPanels.length > 0 && currentBin < maxBins) {
+  // ── 가구 그룹 단위로 시트에 채우기 ──
+  // 현재 시트에 누적할 패널 목록
+  let currentSheetPanels: Rect[] = [];
+  let currentSheetArea = 0;
+  const sheetArea = binWidth * binHeight;
+
+  for (const fn of sortedFurnitureNums) {
+    const group = furnitureGroups.get(fn)!;
+    const groupArea = group.reduce((sum, p) => sum + p.width * p.height, 0);
+
+    // 현재 시트에 이 가구 그룹을 추가해도 원장 면적 이내인지 (kerf 여유 포함)
+    // 면적 기준 대략 체크 — 실제 배치 가능 여부는 패커가 결정
+    if (currentSheetPanels.length > 0 && currentSheetArea + groupArea > sheetArea * 0.95) {
+      // 현재 시트 패킹 실행 후 새 시트 시작
+      const packer = new GuillotinePacker(binWidth, binHeight, kerf);
+      const result = packer.packAll(currentSheetPanels, stripDirection);
+      if (result.panels.length > 0) {
+        bins.push(result);
+        // 배치 안 된 패널은 다음 시트로
+        const placedIds = new Set(result.panels.map(p => p.id));
+        const unplaced = currentSheetPanels.filter(p => !placedIds.has(p.id));
+        currentSheetPanels = [...unplaced, ...group];
+        currentSheetArea = currentSheetPanels.reduce((sum, p) => sum + p.width * p.height, 0);
+      } else {
+        currentSheetPanels.push(...group);
+        currentSheetArea += groupArea;
+      }
+    } else {
+      currentSheetPanels.push(...group);
+      currentSheetArea += groupArea;
+    }
+  }
+
+  // 마지막 시트 패킹
+  while (currentSheetPanels.length > 0 && bins.length < maxBins) {
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-    const result = packer.packAll(remainingPanels, stripDirection);
+    const result = packer.packAll(currentSheetPanels, stripDirection);
 
     if (result.panels.length === 0) {
-      console.warn(`[packGuillotine] Cannot place ${remainingPanels.length} remaining panels`);
+      console.warn(`[packGuillotine] Cannot place ${currentSheetPanels.length} remaining panels`);
       break;
     }
 
-    for (const placedPanel of result.panels) {
-      const index = remainingPanels.findIndex(p =>
-        p.id === placedPanel.id &&
-        p.width === placedPanel.width &&
-        p.height === placedPanel.height
-      );
-      if (index !== -1) {
-        remainingPanels.splice(index, 1);
-      }
-    }
-
+    const placedIds = new Set(result.panels.map(p => p.id));
+    currentSheetPanels = currentSheetPanels.filter(p => !placedIds.has(p.id));
     bins.push(result);
-    currentBin++;
   }
 
   // === 후처리: 저효율 시트의 패널을 다른 시트 빈 공간에 합치기 ===
-  // 회전 금지(noRotate) 모드로 패널 원본 rotated 상태 유지
   if (bins.length > 1) {
     backfillBins(bins, binWidth, binHeight, kerf);
   }
