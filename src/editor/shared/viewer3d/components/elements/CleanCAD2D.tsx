@@ -1353,7 +1353,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasLeftWall && editingGapSide === 'left' ? (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, slotDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1376,7 +1376,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, slotDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
                 zIndexRange={[9999, 10000]}
@@ -1476,7 +1476,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 우측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasRightWall && editingGapSide === 'right' ? (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, slotDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1499,7 +1499,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, slotDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: hasRightWall ? 'auto' : 'none' }}
                 zIndexRange={[9999, 10000]}
