@@ -53,27 +53,24 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
     const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
     const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
 
-    // 메인구간 좌측/우측에 인접한 것이 무엇인지 결정
-    // 구간 순서: 벽 → 커튼박스 → 단내림 → 메인구간
-    const leftAdjacent = hasStep && stepPosition === 'left' ? 'step'
-      : hasDropped && droppedPosition === 'left' ? 'dropped'
-      : 'wall';
-    const rightAdjacent = hasStep && stepPosition === 'right' ? 'step'
-      : hasDropped && droppedPosition === 'right' ? 'dropped'
-      : 'wall';
+    // 배치 가능 영역의 좌측/우측 경계에 인접한 것이 무엇인지 결정
+    // 단내림 구간이 포함되었으므로: 벽 → 커튼박스 → (단내림+메인) 전체가 배치 영역
+    // 단내림 쪽의 벽 이격은 일반 wall gap 적용 (단내림도 벽에 붙어있으므로)
+    const leftAdjacent = hasDropped && droppedPosition === 'left' ? 'dropped' : 'wall';
+    const rightAdjacent = hasDropped && droppedPosition === 'right' ? 'dropped' : 'wall';
 
     // 좌측 이격
     if (leftAdjacent === 'wall') {
       if (hasLeftWall) startX += leftGap;
     } else {
-      startX += middleGap; // 커튼박스 or 단내림 경계
+      startX += middleGap; // 커튼박스 경계
     }
 
     // 우측 이격
     if (rightAdjacent === 'wall') {
       if (hasRightWall) endX -= rightGap;
     } else {
-      endX -= middleGap; // 커튼박스 or 단내림 경계
+      endX -= middleGap; // 커튼박스 경계
     }
   }
 
@@ -204,15 +201,21 @@ export function detectDroppedZone(
       return { zone: 'normal' };
     }
 
-    // 단내림 구간의 내경 높이 = stepCeiling.height - topFrame - floorFinish - base
-    const stepHeight = spaceInfo.stepCeiling!.height || spaceInfo.height;
+    // 단내림 구간의 내경 높이 = 전체높이 - dropHeight - topFrame - floorFinish - base
+    const stepDropHeight = spaceInfo.stepCeiling!.dropHeight || 0;
     const topFrameMM = spaceInfo.frameSize?.top || 30;
     const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseHeightMM = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
     const floatHeightMM = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
     const effectiveBaseHeight = spaceInfo.baseConfig?.type === 'stand' ? floatHeightMM : baseHeightMM;
 
-    const droppedInternalHeight = stepHeight - topFrameMM - floorFinishMM - effectiveBaseHeight;
+    const droppedInternalHeight = spaceInfo.height - stepDropHeight - topFrameMM - floorFinishMM - effectiveBaseHeight;
+
+    console.log('🔍 [detectDroppedZone] free-placement stepCeiling', {
+      xPositionMM, stepStartX, stepEndX, isInStep,
+      spaceHeight: spaceInfo.height, stepDropHeight, topFrameMM, floorFinishMM, effectiveBaseHeight,
+      droppedInternalHeight,
+    });
 
     return { zone: 'dropped', droppedInternalHeight: Math.max(droppedInternalHeight, 0) };
   }

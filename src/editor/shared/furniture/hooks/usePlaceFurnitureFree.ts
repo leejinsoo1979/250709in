@@ -67,12 +67,19 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const effectiveZone = droppedZone.zone;
   let effectiveHeight = dimensions.height;
 
-  // 키큰장(full)이 단내림 구간에 배치되면 높이를 줄임
+  // 단내림 구간에 배치되면 높이를 줄임 (full/upper 모두)
   if (effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
-    if (moduleData.category === 'full') {
+    if (moduleData.category === 'full' || moduleData.category === 'upper') {
       effectiveHeight = droppedZone.droppedInternalHeight;
     }
   }
+
+  console.log('🏗️ [placeFurnitureFree] zone detection', {
+    xPositionMM, clampedX, zone: effectiveZone,
+    originalHeight: dimensions.height, effectiveHeight,
+    droppedInternalHeight: droppedZone.droppedInternalHeight,
+    category: moduleData.category,
+  });
 
   // Y좌표 계산 (카테고리별)
   // 상부장이 단내림 구간에 배치될 때: 천장 기준이 stepCeiling.height여야 함
