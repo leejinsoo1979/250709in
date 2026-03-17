@@ -3127,7 +3127,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               return (
                 <BoxModule
                   moduleData={actualModuleData}
-                  isDragging={isDraggingThis || isEditMode} // 드래그 중 또는 더블클릭 편집 모드일 때 고스트 투명 표시
+                  isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   color={furnitureColor}
                   internalHeight={furnitureHeightMm}
                   viewMode={viewMode}
@@ -3153,7 +3153,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   slotIndex={normalizedSlotIndex} // 슬롯 인덱스 전달
                   slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
                   slotWidths={calculatedSlotWidths}
-                  isHighlighted={isSelected} // 선택 상태 전달
+                  isHighlighted={isSelected && !isEditMode} // 선택 상태 전달 (편집 모드에서는 하이라이트 비활성)
                   placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
                   customSections={adjustedCustomSections} // 사용자 정의 섹션 설정 (단내림 구간에서 조정됨)
                   showFurniture={showFurniture} // 가구 본체 표시 여부

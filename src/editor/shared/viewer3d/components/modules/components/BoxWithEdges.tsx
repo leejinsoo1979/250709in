@@ -160,9 +160,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
-    // 편집 모드에서는 원래 재질 그대로 사용
+    // 편집 모드에서는 반투명 고스트 (원래 색상 유지, 선반/서랍은 보이도록)
+    if (isEditMode && baseMaterial instanceof THREE.MeshStandardMaterial) {
+      const editGhostMaterial = baseMaterial.clone();
+      editGhostMaterial.transparent = true;
+      editGhostMaterial.opacity = 0.5;
+      editGhostMaterial.depthWrite = false;
+      editGhostMaterial.needsUpdate = true;
+      return editGhostMaterial;
+    }
     return baseMaterial;
-  }, [baseMaterial, isDragging, viewMode, renderMode, isClothingRod]);
+  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode, isClothingRod]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
