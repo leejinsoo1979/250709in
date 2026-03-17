@@ -3148,7 +3148,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 furnitureId: placedModule.id
               });
 
-              console.log('🔵🔵 FurnitureItem → BoxModule doorTopGap:', { storeDoorTopGap, placedDoorTopGap: placedModule.doorTopGap, spaceDoorTopGap: spaceInfo.doorTopGap, resolved: storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap, moduleId: placedModule.id });
               return (
                 <BoxModule
                   moduleData={actualModuleData}

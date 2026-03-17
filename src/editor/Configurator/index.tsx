@@ -344,14 +344,15 @@ const Configurator: React.FC = () => {
     const floatH = spaceInfo.baseConfig?.floatHeight || 200;
     const botGap = spaceInfo.doorBottomGap ?? (isFloat ? floatH : 25);
     setSpaceInfo({ doorTopGap: topGap, doorBottomGap: botGap });
-    setPlacedModules(prev => prev.map(m => {
+    // non-callback set으로 R3F 리렌더 보장
+    const initMods = useFurnitureStore.getState().placedModules.map(m => {
       if (!m.hasDoor) return m;
       if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
       return { ...m, doorTopGap: m.doorTopGap ?? topGap, doorBottomGap: m.doorBottomGap ?? botGap };
-    }));
+    });
+    useFurnitureStore.setState({ placedModules: initMods });
     setTimeout(() => {
-      const latest = useFurnitureStore.getState().placedModules;
-      useFurnitureStore.setState({ placedModules: [...latest] });
+      useFurnitureStore.setState({ placedModules: [...initMods] });
     }, 50);
   }, [showDoorSetup]);
 
@@ -4688,24 +4689,22 @@ const Configurator: React.FC = () => {
                     const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
 
                     setSpaceInfo({ frameOffsetBase: 'door' });
-                    setPlacedModules(prev => {
-                      const updated = prev.map(m => {
-                        if (!m.hasDoor) return m;
-                        const rawFreeH = m.freeHeight || internalHL;
-                        const maxFreeH = internalHL - floatHL;
-                        const modHeight = Math.min(rawFreeH, maxFreeH);
-                        const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
-                        return {
-                          ...m,
-                          doorTopGap: topFrameSize + 1.5,
-                          doorBottomGap: baseFrameH + 1.5,
-                        };
-                      });
-                      return updated;
+                    // non-callback set으로 R3F 리렌더 보장
+                    const doorMods = useFurnitureStore.getState().placedModules.map(m => {
+                      if (!m.hasDoor) return m;
+                      const rawFreeH = m.freeHeight || internalHL;
+                      const maxFreeH = internalHL - floatHL;
+                      const modHeight = Math.min(rawFreeH, maxFreeH);
+                      const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
+                      return {
+                        ...m,
+                        doorTopGap: topFrameSize + 1.5,
+                        doorBottomGap: baseFrameH + 1.5,
+                      };
                     });
+                    useFurnitureStore.setState({ placedModules: doorMods });
                     setTimeout(() => {
-                      const latest = useFurnitureStore.getState().placedModules;
-                      useFurnitureStore.setState({ placedModules: [...latest] });
+                      useFurnitureStore.setState({ placedModules: [...doorMods] });
                     }, 50);
                   }}
                 >
