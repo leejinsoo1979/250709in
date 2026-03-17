@@ -501,7 +501,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           {...getDragProps(item)}
         >
           {renderCheckbox(item)}
-          <div className={styles.iconThumbnail} style={{ width: thumbSize, height: thumbSize }}>
+          <div className={styles.iconThumbnail}>
             {viewMode === 'large' && item.type === 'project' && projectDesignFiles ? (
               (() => {
                 const designFiles = projectDesignFiles[item.id] || [];
