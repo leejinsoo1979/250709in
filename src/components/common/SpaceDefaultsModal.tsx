@@ -27,34 +27,7 @@ const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; 
   { id: 'no-surround', label: '노서라운드' },
 ];
 
-/* ── FormControl (collapsible section) ── */
-interface FormControlProps {
-  label: string;
-  children: React.ReactNode;
-  expanded?: boolean;
-  onToggle?: () => void;
-}
-
-const FormControl: React.FC<FormControlProps> = ({ label, children, expanded = true, onToggle }) => (
-  <div className={styles.formControl}>
-    <div className={styles.formHeader} onClick={onToggle}>
-      <div className={styles.formIndicator} />
-      <h3 className={styles.formLabel}>{label}</h3>
-      <div style={{ flex: 1 }} />
-      {onToggle && (
-        <svg
-          width="14" height="14" viewBox="0 0 24 24" fill="none"
-          className={`${styles.expandIcon} ${expanded ? styles.expanded : ''}`}
-        >
-          <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2.5" />
-        </svg>
-      )}
-    </div>
-    {expanded && <div className={styles.formContent}>{children}</div>}
-  </div>
-);
-
-/* ── NumberInput (stepper with ± buttons) ── */
+/* ── NumberInput (compact stepper) ── */
 interface NumberInputProps {
   label: string;
   value: number;
@@ -95,44 +68,12 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
   </div>
 );
 
-/* ── ToggleGroup (segmented control) ── */
-interface ToggleGroupProps {
-  options: { id: string; label: string }[];
-  selected: string;
-  onChange: (id: string) => void;
-}
-
-const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }) => (
-  <div className={commonStyles.toggleButtonGroup}>
-    {options.map(opt => (
-      <button
-        key={opt.id}
-        className={`${commonStyles.toggleButton} ${selected === opt.id ? commonStyles.toggleButtonActive : ''}`}
-        onClick={() => onChange(opt.id)}
-      >
-        {opt.label}
-      </button>
-    ))}
-  </div>
-);
-
 /* ── Main Modal ── */
 const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
   const [values, setValues] = useState<Required<SpaceConfigDefaults>>(SYSTEM_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['space', 'gap', 'frame', 'frameSize', 'furniture'])
-  );
-
-  const toggleSection = (key: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
 
   useEffect(() => {
     const load = async () => {
@@ -157,7 +98,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
     load();
   }, []);
 
-  const handleNumChange = (key: keyof SpaceConfigDefaults) => (v: number) => {
+  const h = (key: keyof SpaceConfigDefaults) => (v: number) => {
     setValues(prev => ({ ...prev, [key]: v }));
     setMessage(null);
   };
@@ -169,8 +110,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
     setSaving(false);
   };
 
-  const handleReset = () => { setValues(SYSTEM_DEFAULTS); setMessage(null); };
-
   if (loading) return null;
 
   return (
@@ -181,86 +120,80 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           <button className={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
-        <div className={styles.content}>
-          <div className={styles.rightSection}>
-            <div className={styles.notice}>새 프로젝트에서부터 적용됩니다.</div>
-            <div className={styles.panelContent}>
-              <div className={styles.formContainer}>
-                {/* 공간 크기 */}
-                <FormControl
-                  label="공간 크기"
-                  expanded={expandedSections.has('space')}
-                  onToggle={() => toggleSection('space')}
-                >
-                  <NumberInput label="전체 너비" value={values.width} onChange={handleNumChange('width')} min={1000} max={8000} step={100} />
-                  <NumberInput label="높이" value={values.height} onChange={handleNumChange('height')} min={2000} max={3000} step={100} />
-                </FormControl>
+        <div className={styles.body}>
+          <div className={styles.notice}>새 프로젝트에서부터 적용됩니다.</div>
 
-                {/* 이격거리 */}
-                <FormControl
-                  label="이격거리"
-                  expanded={expandedSections.has('gap')}
-                  onToggle={() => toggleSection('gap')}
-                >
-                  <NumberInput label="좌측 이격" value={values.gapLeft} onChange={handleNumChange('gapLeft')} min={0} max={100} step={0.5} />
-                  <NumberInput label="우측 이격" value={values.gapRight} onChange={handleNumChange('gapRight')} min={0} max={100} step={0.5} />
-                </FormControl>
-
-                {/* 프레임 타입 */}
-                <FormControl
-                  label="프레임 설정"
-                  expanded={expandedSections.has('frame')}
-                  onToggle={() => toggleSection('frame')}
-                >
-                  <ToggleGroup
-                    options={SURROUND_OPTIONS.map(o => ({ id: o.id, label: o.label }))}
-                    selected={values.surroundMode}
-                    onChange={(id) => { setValues(prev => ({ ...prev, surroundMode: id as any })); setMessage(null); }}
-                  />
-                </FormControl>
-
-                {/* 프레임 사이즈 */}
-                <FormControl
-                  label="프레임 사이즈"
-                  expanded={expandedSections.has('frameSize')}
-                  onToggle={() => toggleSection('frameSize')}
-                >
-                  <NumberInput label="상부 프레임" value={values.frameTop} onChange={handleNumChange('frameTop')} min={0} max={200} step={1} />
-                  <NumberInput label="하부 프레임" value={values.baseHeight} onChange={handleNumChange('baseHeight')} min={0} max={200} step={1} />
-                  {values.surroundMode !== 'no-surround' && (
-                    <>
-                      <NumberInput label="좌측 프레임" value={values.frameLeft} onChange={handleNumChange('frameLeft')} min={0} max={200} step={1} />
-                      <NumberInput label="우측 프레임" value={values.frameRight} onChange={handleNumChange('frameRight')} min={0} max={200} step={1} />
-                    </>
-                  )}
-                </FormControl>
-
-                {/* 가구 배치 기본 너비 */}
-                <FormControl
-                  label="가구 배치 기본 너비"
-                  expanded={expandedSections.has('furniture')}
-                  onToggle={() => toggleSection('furniture')}
-                >
-                  <NumberInput label="싱글" value={values.furnitureSingleWidth} onChange={handleNumChange('furnitureSingleWidth')} min={200} max={1200} step={10} />
-                  <NumberInput label="듀얼" value={values.furnitureDualWidth} onChange={handleNumChange('furnitureDualWidth')} min={400} max={2400} step={10} />
-                </FormControl>
-              </div>
+          {/* 공간 크기 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>공간 크기</div>
+            <div className={styles.row}>
+              <NumberInput label="너비 (W)" value={values.width} onChange={h('width')} min={1000} max={8000} step={100} />
+              <NumberInput label="높이 (H)" value={values.height} onChange={h('height')} min={2000} max={3000} step={100} />
             </div>
+          </div>
 
-            {/* 하단 버튼 */}
-            <div className={styles.panelFooter}>
-              {message && (
-                <span className={`${styles.message} ${message.type === 'success' ? styles.success : styles.error}`}>
-                  {message.text}
-                </span>
-              )}
-              <div className={styles.footerButtons}>
-                <button className={styles.resetButton} onClick={handleReset}>초기화</button>
-                <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
-                  {saving ? '저장 중...' : '저장'}
+          {/* 이격거리 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>이격거리</div>
+            <div className={styles.row}>
+              <NumberInput label="좌측" value={values.gapLeft} onChange={h('gapLeft')} min={0} max={100} step={0.5} />
+              <NumberInput label="우측" value={values.gapRight} onChange={h('gapRight')} min={0} max={100} step={0.5} />
+            </div>
+          </div>
+
+          {/* 프레임 설정 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>프레임 타입</div>
+            <div className={commonStyles.toggleButtonGroup}>
+              {SURROUND_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className={`${commonStyles.toggleButton} ${values.surroundMode === opt.id ? commonStyles.toggleButtonActive : ''}`}
+                  onClick={() => { setValues(prev => ({ ...prev, surroundMode: opt.id })); setMessage(null); }}
+                >
+                  {opt.label}
                 </button>
-              </div>
+              ))}
             </div>
+          </div>
+
+          {/* 프레임 사이즈 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>프레임 사이즈</div>
+            <div className={styles.row}>
+              <NumberInput label="상부" value={values.frameTop} onChange={h('frameTop')} min={0} max={200} step={1} />
+              <NumberInput label="하부" value={values.baseHeight} onChange={h('baseHeight')} min={0} max={200} step={1} />
+            </div>
+            {values.surroundMode !== 'no-surround' && (
+              <div className={styles.row}>
+                <NumberInput label="좌측" value={values.frameLeft} onChange={h('frameLeft')} min={0} max={200} step={1} />
+                <NumberInput label="우측" value={values.frameRight} onChange={h('frameRight')} min={0} max={200} step={1} />
+              </div>
+            )}
+          </div>
+
+          {/* 가구 배치 기본 너비 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>가구 배치 기본 너비</div>
+            <div className={styles.row}>
+              <NumberInput label="싱글" value={values.furnitureSingleWidth} onChange={h('furnitureSingleWidth')} min={200} max={1200} step={10} />
+              <NumberInput label="듀얼" value={values.furnitureDualWidth} onChange={h('furnitureDualWidth')} min={400} max={2400} step={10} />
+            </div>
+          </div>
+        </div>
+
+        {/* 푸터 */}
+        <div className={styles.footer}>
+          {message && (
+            <span className={`${styles.message} ${message.type === 'success' ? styles.success : styles.error}`}>
+              {message.text}
+            </span>
+          )}
+          <div className={styles.footerButtons}>
+            <button className={styles.resetButton} onClick={() => { setValues(SYSTEM_DEFAULTS); setMessage(null); }}>초기화</button>
+            <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
+              {saving ? '저장 중...' : '저장'}
+            </button>
           </div>
         </div>
       </div>
