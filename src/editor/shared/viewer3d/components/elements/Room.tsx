@@ -1858,7 +1858,7 @@ const Room: React.FC<RoomProps> = ({
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={edgeColor} depthTest={false} />
+                    <lineBasicMaterial color={edgeColor} depthTest={true} />
                   </lineSegments>
                 )}
               </>
