@@ -3128,6 +3128,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <BoxModule
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
+                  isEditMode={isEditMode} // 편집 모드에서 고스트 표시 (선반/서랍 유지)
                   color={furnitureColor}
                   internalHeight={furnitureHeightMm}
                   viewMode={viewMode}
