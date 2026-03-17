@@ -2355,15 +2355,16 @@ const Room: React.FC<RoomProps> = ({
               const droppedCeilingY = isFreePlacement ? ceilingY + dcDropHeight : ceilingY - dcDropHeight;
               const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
 
-              // 경계벽 수직선 (뒷벽): 자유배치=메인천장~커튼박스천장, 슬롯=단내림천장~메인천장
+              // 경계벽 수직선: 자유배치=메인천장~커튼박스천장, 슬롯=단내림천장~메인천장
               const bwBotY = isFreePlacement ? ceilingY : droppedCeilingY;
               const bwTopY = isFreePlacement ? droppedCeilingY : ceilingY;
-              solidLines.push([bx, bwBotY, z1, bx, bwTopY, z1]);
-              // 커튼박스/단내림쪽 천장 수평선 (뒷벽)
+              const dcZFront = isFreePlacement ? z1 + 0.002 : z1; // 자유배치: z-fighting 방지
+              solidLines.push([bx, bwBotY, dcZFront, bx, bwTopY, dcZFront]);
+              // 커튼박스/단내림쪽 천장 수평선
               if (isLeft) {
-                solidLines.push([x1, droppedCeilingY, z1, bx, droppedCeilingY, z1]);
+                solidLines.push([x1, droppedCeilingY, dcZFront, bx, droppedCeilingY, dcZFront]);
               } else {
-                solidLines.push([bx, droppedCeilingY, z1, x2, droppedCeilingY, z1]);
+                solidLines.push([bx, droppedCeilingY, dcZFront, x2, droppedCeilingY, dcZFront]);
               }
               // 자유배치: 내부 경계벽 그라데이션 불필요 (천장면에 사선으로 보임)
               if (!isFreePlacement) {
@@ -2381,19 +2382,19 @@ const Room: React.FC<RoomProps> = ({
             // === 단내림(stepCeiling) 경계벽 윤곽선 (자유배치 전용) ===
             if (_hasSC) {
               const scCeilingY = ceilingY - _scDropHwf;
+              const zFront = z1 + 0.002; // 뒷벽 mesh 앞에 표시 (z-fighting 방지)
 
-              // 단내림 경계벽 수직선 (뒷벽): 단내림 천장 → 메인 천장 (단차 기둥만)
-              solidLines.push([scBx, scCeilingY, z1, scBx, ceilingY, z1]);
+              // 단내림 경계벽 수직선: 단내림 천장 → 메인 천장 (단차 기둥만)
+              solidLines.push([scBx, scCeilingY, zFront, scBx, ceilingY, zFront]);
 
-              // 단내림 천장 수평선 (뒷벽): 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
+              // 단내림 천장 수평선: 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
               if (_scIsLeft) {
                 const leftEnd = hasDC && dcIsLeft ? dcBx : x1;
-                solidLines.push([leftEnd, scCeilingY, z1, scBx, scCeilingY, z1]);
+                solidLines.push([leftEnd, scCeilingY, zFront, scBx, scCeilingY, zFront]);
               } else {
                 const rightEnd = hasDC && dcIsRight ? dcBx : x2;
-                solidLines.push([scBx, scCeilingY, z1, rightEnd, scCeilingY, z1]);
+                solidLines.push([scBx, scCeilingY, zFront, rightEnd, scCeilingY, zFront]);
               }
-              // 내부 경계벽이므로 그라데이션 연결선 불필요
             }
 
             // 단색 선 positions
