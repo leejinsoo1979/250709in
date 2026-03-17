@@ -1782,8 +1782,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 </>)}
 
-                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 ===== */}
-                {(<>
+                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 — 자유배치에서는 숨김 ===== */}
+                {!isFreePlacement && (<>
                 {/* 메인 구간 슬롯 합계 치수선 */}
                 <Line
                   points={[[mainStartX, slotTotalDimensionY, 0.002], [mainEndX, slotTotalDimensionY, 0.002]]}
@@ -1983,7 +1983,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       {/* 경계면 이격거리 텍스트 - 클릭 편집 */}
                       {editingGapSide === 'middle' ? (
                         <Html
-                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY - mmToThreeUnits(30), 0.01]}
+                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
                           center
                           style={{ pointerEvents: 'auto' }}
                           zIndexRange={[10000, 10001]}
@@ -2008,7 +2008,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         </Html>
                       ) : (
                         <Html
-                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY - mmToThreeUnits(30), 0.01]}
+                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
                           center
                           style={{ pointerEvents: 'auto' }}
                           zIndexRange={[9999, 10000]}
