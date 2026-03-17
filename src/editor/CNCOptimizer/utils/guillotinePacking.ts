@@ -513,16 +513,50 @@ function extractPanelTypeKey(name: string): string {
 
 /**
  * 개별 패널 방향 정규화: width > binWidth이면 해당 패널만 스왑
- * 같은 종류 통일은 packBySizeGroups의 종류별 그룹핑에서 처리
  */
 function normalizeOrientation(panels: Rect[], binWidth: number): Rect[] {
   return panels.map(panel => {
     if (panel.width > binWidth && panel.height <= binWidth) {
-      // 이 패널만 width↔height 스왑해서 시트에 들어가게 함
       return { ...panel, width: panel.height, height: panel.width, rotated: true };
     }
     return { ...panel, rotated: false };
   });
+}
+
+/**
+ * 백패널 전용 방향 정규화
+ * - 같은 가구의 (상)(하) 백패널은 동일한 width(내경폭+10)
+ * - 가구별로 묶어서, 해당 가구의 width > binWidth이면 그 가구 전체를 스왑
+ * - 일부만 스왑하면 vertical에서 다른 그룹이 되어 분리되므로, 가구 단위 통일
+ */
+function normalizeBackPanels(panels: Rect[], binWidth: number): Rect[] {
+  if (panels.length === 0) return [];
+
+  // 가구번호별 그룹
+  const byFurniture = new Map<number, Rect[]>();
+  for (const p of panels) {
+    const fn = extractFurnitureNum(p.name || '');
+    if (!byFurniture.has(fn)) byFurniture.set(fn, []);
+    byFurniture.get(fn)!.push(p);
+  }
+
+  const result: Rect[] = [];
+  for (const [, group] of byFurniture) {
+    // 이 가구의 백패널 width (모두 동일해야 함)
+    const w = group[0].width;
+    if (w > binWidth) {
+      // 전체 스왑 — 모든 패널을 같은 방향으로
+      for (const p of group) {
+        result.push({ ...p, width: p.height, height: p.width, rotated: true });
+      }
+    } else {
+      // 스왑 불필요 — 원본 방향 유지
+      for (const p of group) {
+        result.push({ ...p, rotated: false });
+      }
+    }
+  }
+  return result;
 }
 
 /**
@@ -571,27 +605,33 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
-  // ── 0단계: 방향 정규화 (width > binWidth이면 스왑) ──
-  const normalized = normalizeOrientation(panels, binWidth);
-
-  // ── 1단계: 카테고리 분류 ──
-  const sidePanels: Rect[] = [];
-  const backPanels: Rect[] = [];
-  const bodyPanels: Rect[] = [];
-  const framePanels: Rect[] = [];
-  for (const panel of normalized) {
+  // ── 0단계: 카테고리 분류 (normalizeOrientation 전에!) ──
+  const sidePanelsRaw: Rect[] = [];
+  const backPanelsRaw: Rect[] = [];
+  const bodyPanelsRaw: Rect[] = [];
+  const framePanelsRaw: Rect[] = [];
+  for (const panel of panels) {
     const cat = getPanelCategory(panel.name || '');
-    if (cat === 'side') sidePanels.push(panel);
-    else if (cat === 'back') backPanels.push(panel);
-    else if (cat === 'frame') framePanels.push(panel);
-    else bodyPanels.push(panel);
+    if (cat === 'side') sidePanelsRaw.push(panel);
+    else if (cat === 'back') backPanelsRaw.push(panel);
+    else if (cat === 'frame') framePanelsRaw.push(panel);
+    else bodyPanelsRaw.push(panel);
   }
+
+  // ── 1단계: 카테고리별 방향 정규화 ──
+  // 측판/본체/프레임: width > binWidth이면 개별 스왑
+  const sidePanels = normalizeOrientation(sidePanelsRaw, binWidth);
+  const bodyPanels = normalizeOrientation(bodyPanelsRaw, binWidth);
+  const framePanels = normalizeOrientation(framePanelsRaw, binWidth);
+  // 백패널: 같은 가구의 (상)(하)는 동일 width → vertical에서 같은 스트립에 나란히
+  // width > binWidth인 경우만 전체를 같은 방향으로 스왑 (일부만 스왑하면 분리됨)
+  const backPanels = normalizeBackPanels(backPanelsRaw, binWidth);
 
   // ── 2단계: 카테고리별 패킹 ──
   // 측판: vertical (같은 width끼리 한 줄)
   const sideBins = packCategoryToMultiBins(sidePanels, binWidth, binHeight, kerf, 'vertical');
   // 백패널: vertical (같은 width=내경폭 끼리 한 줄, height를 y축으로 쌓음)
-  // → (상)백패널 + (하)백패널이 같은 스트립에 나란히 배치
+  // → 같은 가구의 (상)+(하) 백패널이 같은 스트립에 나란히
   const backBins = packCategoryToMultiBins(backPanels, binWidth, binHeight, kerf, 'vertical');
   // 본체(상판/하판/선반 등): horizontal
   const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
