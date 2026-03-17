@@ -1746,12 +1746,12 @@ const Room: React.FC<RoomProps> = ({
                 : droppedCY;                                    // 슬롯: 단내림 천장
 
               // 경계벽 수평 라인 (뒷벽→앞쪽 그라데이션)
-              // 자유배치: 커튼박스 천장 상단 라인은 천장 메쉬와 겹쳐 불필요, 하단(메인/단내림 천장)만 표시
+              // 자유배치: 내부 경계벽 그라데이션 불필요 (천장 면에 사선으로 보임)
               // 슬롯배치: 메인 천장 상단 + 단내림 천장 하단 표시
               if (!isFreePlacement) {
                 lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단 (슬롯만)
+                lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단 (슬롯만)
               }
-              lines.push([bx, bwBot, z1, bx, bwBot, z2]);    // 경계벽 하단
 
               // 커튼박스쪽 외벽의 천장 높이 수평 라인 (슬롯배치만 — 자유배치는 천장 메쉬가 처리)
               if (!isFreePlacement) {
@@ -1762,6 +1762,9 @@ const Room: React.FC<RoomProps> = ({
                 }
               }
             }
+
+            // 단내림(stepCeiling) 경계벽: 내부 경계벽이므로 그라데이션 라인 불필요
+            // (천장 면 위에 사선으로 보이므로 뒷벽 실선만 표시)
 
             // === 커튼박스/단내림 경계벽 뒷벽 실선 (테마색상, 그라데이션 없음) ===
             const solidThemeLines: [number, number, number, number, number, number][] = [];
@@ -1784,6 +1787,36 @@ const Room: React.FC<RoomProps> = ({
                   solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
                 } else {
                   solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
+                }
+              }
+            }
+
+            // === 단내림(stepCeiling) 경계벽 뒷벽 실선 (자유배치 전용) ===
+            if (hasSC && isFreePlacement) {
+              const scW = mmToThreeUnits(spaceInfo.stepCeiling!.width || 900);
+              const scBx = hasDC
+                ? (scIsLeft ? x1 + (hasDC && dcIsLeft ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0) + scW
+                            : x2 - (hasDC && dcIsRight ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0) - scW)
+                : (scIsLeft ? x1 + scW : x2 - scW);
+              const scCeilingY = cY - scDropHLine;
+
+              // 단내림 경계벽 수직선 (뒷벽): 메인 천장 → 단내림 천장
+              solidThemeLines.push([scBx, scCeilingY, z1, scBx, cY, z1]);
+              // 단내림 천장 수평선 (뒷벽): 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
+              if (hasDC) {
+                const dcW = mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150);
+                const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW;
+                if (scIsLeft) {
+                  solidThemeLines.push([dcBx, scCeilingY, z1, scBx, scCeilingY, z1]);
+                } else {
+                  solidThemeLines.push([scBx, scCeilingY, z1, dcBx, scCeilingY, z1]);
+                }
+              } else {
+                // 커튼박스 없이 단내림만 있는 경우
+                if (scIsLeft) {
+                  solidThemeLines.push([x1, scCeilingY, z1, scBx, scCeilingY, z1]);
+                } else {
+                  solidThemeLines.push([scBx, scCeilingY, z1, x2, scCeilingY, z1]);
                 }
               }
             }
@@ -2055,19 +2088,28 @@ const Room: React.FC<RoomProps> = ({
             </mesh>
 
             {/* 상단 가로 모서리 (천장과 뒷벽 사이) - 단내림 시 메인 구간만 */}
-            {_hasDC ? (
+            {_hasDC ? (() => {
+              // 메인 구간 너비: 커튼박스 + 단내림 제외
+              const _scEnabled = isFreePlacement && spaceInfo.stepCeiling?.enabled;
+              const _scW2 = _scEnabled ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 900) : 0;
+              const _mainW = width - _dcW - _scW2;
+              // 메인 구간 시작 X: 좌측에 CB+SC가 있으면 그만큼 오른쪽으로
+              const _mainStartX = (_dcIsLeft || (_scEnabled && spaceInfo.stepCeiling?.position === 'left'))
+                ? xOffset + _dcW + _scW2
+                : xOffset;
+              return (
               <>
                 {/* 메인 구간 천장 가로선 */}
                 <mesh
                   position={[
-                    _dcIsLeft ? (xOffset + _dcW + (width - _dcW) / 2) : (xOffset + (width - _dcW) / 2),
+                    _mainStartX + _mainW / 2,
                     panelStartY + height,
                     zOffset + panelDepth / 2
                   ]}
                   rotation={[0, 0, Math.PI / 2]}
                   renderOrder={-1}
                 >
-                  <planeGeometry args={[0.02, width - _dcW]} />
+                  <planeGeometry args={[0.02, _mainW]} />
                   <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                 </mesh>
                 {/* 커튼박스/단내림 구간 천장 가로선 */}
@@ -2151,19 +2193,19 @@ const Room: React.FC<RoomProps> = ({
             </mesh>
 
             {/* 커튼박스/단내림 경계벽 앞뒤 모서리 */}
-            {_hasDC && (
+            {_hasDC && !isFreePlacement && (
               <>
-                {/* 경계벽 상단 모서리: 자유배치=커튼박스 천장, 슬롯=메인 천장 */}
+                {/* 경계벽 상단 모서리: 슬롯=메인 천장 */}
                 <mesh
-                  position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[_bx, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[0.02, extendedPanelDepth]} />
                   <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                 </mesh>
-                {/* 경계벽 하단 모서리: 자유배치=메인 천장, 슬롯=단내림 천장 */}
+                {/* 경계벽 하단 모서리: 슬롯=단내림 천장 */}
                 <mesh
-                  position={[_bx, isFreePlacement ? panelStartY + height : panelStartY + height - _dcDropH, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[_bx, panelStartY + height - _dcDropH, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[0.02, extendedPanelDepth]} />
@@ -2171,6 +2213,45 @@ const Room: React.FC<RoomProps> = ({
                 </mesh>
               </>
             )}
+
+            {/* 단내림(stepCeiling) 경계벽 모서리 음영 (자유배치 전용) */}
+            {/* 뒷벽 수직/가로 음영선만 표시, 앞뒤 모서리는 천장면에 사선으로 보이므로 제거 */}
+            {isFreePlacement && spaceInfo.stepCeiling?.enabled && (() => {
+              const _scW = mmToThreeUnits(spaceInfo.stepCeiling!.width || 900);
+              const _scDropH2 = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
+              const _scIsLeft = spaceInfo.stepCeiling?.position === 'left';
+              const _scBx = _hasDC
+                ? (_scIsLeft ? (-width / 2 + _dcW + _scW) : (width / 2 - _dcW - _scW))
+                : (_scIsLeft ? (-width / 2 + _scW) : (width / 2 - _scW));
+              return (
+                <>
+                  {/* 단내림 경계벽 수직 음영선 (뒷벽) */}
+                  <mesh
+                    position={[_scBx, panelStartY + height - _scDropH2 / 2, zOffset + panelDepth / 2]}
+                    rotation={[0, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[0.02, _scDropH2]} />
+                    <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                  </mesh>
+                  {/* 단내림 천장 가로 음영선 (뒷벽) */}
+                  <mesh
+                    position={[
+                      _hasDC
+                        ? (_scIsLeft ? (-width / 2 + _dcW + _scW / 2) : (width / 2 - _dcW - _scW / 2))
+                        : (_scIsLeft ? (-width / 2 + _scW / 2) : (width / 2 - _scW / 2)),
+                      panelStartY + height - _scDropH2,
+                      zOffset + panelDepth / 2
+                    ]}
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[0.02, _scW]} />
+                    <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                  </mesh>
+                </>
+              );
+            })()}
             </>
             );
           })()}
@@ -2194,20 +2275,33 @@ const Room: React.FC<RoomProps> = ({
             // z축 방향(앞뒤) 그라데이션 선: [x1,y1,z1, x2,y2,z2] (z1=뒷벽=진한색, z2=앞쪽=투명)
             const gradientLines: [number, number, number, number, number, number][] = [];
 
-            // === 천장 경계선 (단내림 고려) ===
+            // === 천장 경계선 (단내림/커튼박스 고려) ===
             const hasDC = spaceInfo.droppedCeiling?.enabled;
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
             const dcW = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
-            const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW; // 경계벽 X
+            const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW; // 커튼박스 경계벽 X
 
-            if (hasDC) {
-              // 단내림이 있으면 천장 수평선을 메인 구간만
-              if (dcIsLeft) {
-                solidLines.push([dcBx, ceilingY, z1, x2, ceilingY, z1]); // 경계벽~우측
-              } else {
-                solidLines.push([x1, ceilingY, z1, dcBx, ceilingY, z1]); // 좌측~경계벽
-              }
+            // stepCeiling
+            const _hasSC = isFreePlacement && spaceInfo.stepCeiling?.enabled;
+            const _scIsLeft = _hasSC && spaceInfo.stepCeiling?.position === 'left';
+            const _scIsRight = _hasSC && spaceInfo.stepCeiling?.position === 'right';
+            const _scW = _hasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 900) : 0;
+            const _scDropHwf = _hasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+            // 단내림 경계벽 X (커튼박스 안쪽)
+            const scBx = _hasSC
+              ? (_scIsLeft
+                  ? x1 + (hasDC && dcIsLeft ? dcW : 0) + _scW
+                  : x2 - (hasDC && dcIsRight ? dcW : 0) - _scW)
+              : 0;
+
+            // 메인 천장 수평선: 단내림/커튼박스 경계까지
+            if (hasDC || _hasSC) {
+              // 메인 구간의 좌/우 끝 결정
+              // 좌측에 단내림/커튼박스가 있으면 좌측 끝은 가장 안쪽 경계(scBx or dcBx)
+              const mainLeft = (_scIsLeft ? scBx : (dcIsLeft ? dcBx : x1));
+              const mainRight = (_scIsRight ? scBx : (dcIsRight ? dcBx : x2));
+              solidLines.push([mainLeft, ceilingY, z1, mainRight, ceilingY, z1]);
             } else {
               solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]); // 전체
             }
@@ -2273,14 +2367,35 @@ const Room: React.FC<RoomProps> = ({
               } else {
                 solidLines.push([bx, droppedCeilingY, z1, x2, droppedCeilingY, z1]);
               }
-              gradientLines.push([bx, bwTopY, z1, bx, bwTopY, z2]); // 경계벽 상단 연결
-              gradientLines.push([bx, bwBotY, z1, bx, bwBotY, z2]); // 경계벽 하단 연결
+              // 자유배치: 내부 경계벽 그라데이션 불필요 (천장면에 사선으로 보임)
+              if (!isFreePlacement) {
+                gradientLines.push([bx, bwTopY, z1, bx, bwTopY, z2]); // 경계벽 상단 연결
+                gradientLines.push([bx, bwBotY, z1, bx, bwBotY, z2]); // 경계벽 하단 연결
 
-              if (isLeft && hasLeftWall) {
-                gradientLines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
-              } else if (!isLeft && hasRightWall) {
-                gradientLines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
+                if (isLeft && hasLeftWall) {
+                  gradientLines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
+                } else if (!isLeft && hasRightWall) {
+                  gradientLines.push([x2, droppedCeilingY, z1, x2, droppedCeilingY, z2]);
+                }
               }
+            }
+
+            // === 단내림(stepCeiling) 경계벽 윤곽선 (자유배치 전용) ===
+            if (_hasSC) {
+              const scCeilingY = ceilingY - _scDropHwf;
+
+              // 단내림 경계벽 수직선 (뒷벽): 메인 천장 → 단내림 천장
+              solidLines.push([scBx, scCeilingY, z1, scBx, ceilingY, z1]);
+
+              // 단내림 천장 수평선 (뒷벽): 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
+              if (_scIsLeft) {
+                const leftEnd = hasDC && dcIsLeft ? dcBx : x1;
+                solidLines.push([leftEnd, scCeilingY, z1, scBx, scCeilingY, z1]);
+              } else {
+                const rightEnd = hasDC && dcIsRight ? dcBx : x2;
+                solidLines.push([scBx, scCeilingY, z1, rightEnd, scCeilingY, z1]);
+              }
+              // 내부 경계벽이므로 그라데이션 연결선 불필요
             }
 
             // 단색 선 positions
