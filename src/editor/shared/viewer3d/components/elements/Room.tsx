@@ -1702,7 +1702,7 @@ const Room: React.FC<RoomProps> = ({
               if (isFreePlacement) {
                 // 자유배치: 커튼박스가 있으면 천장 메쉬가 처리하므로 메인 천장 높이 사용
                 // 단내림만 있으면 단내림 천장 높이 사용
-                if (dcIsLeft) leftCY = cY;                     // 커튼박스: 메쉬가 처리, 메인 높이 라인만
+                if (dcIsLeft) leftCY = cY + dcDropH;            // 커튼박스: 위로 확장
                 else if (scIsLeft) leftCY = cY - scDropHLine;  // 단내림: 아래로 축소
               } else {
                 if (dcIsLeft) leftCY = cY - dcDropH;           // 슬롯: 아래로 축소
@@ -1713,7 +1713,7 @@ const Room: React.FC<RoomProps> = ({
             if (hasRW) {
               let rightCY = cY;
               if (isFreePlacement) {
-                if (dcIsRight) rightCY = cY;
+                if (dcIsRight) rightCY = cY + dcDropH;  // 커튼박스: 위로 확장
                 else if (scIsRight) rightCY = cY - scDropHLine;
               } else {
                 if (dcIsRight) rightCY = cY - dcDropH;
@@ -1746,20 +1746,16 @@ const Room: React.FC<RoomProps> = ({
                 : droppedCY;                                    // 슬롯: 단내림 천장
 
               // 경계벽 수평 라인 (뒷벽→앞쪽 그라데이션)
-              // 자유배치: 내부 경계벽 그라데이션 불필요 (천장 면에 사선으로 보임)
+              // 자유배치: 경계벽 상단(커튼박스 천장) + 하단(메인 천장) 표시
               // 슬롯배치: 메인 천장 상단 + 단내림 천장 하단 표시
-              if (!isFreePlacement) {
-                lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단 (슬롯만)
-                lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단 (슬롯만)
-              }
+              lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단
+              lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단
 
-              // 커튼박스쪽 외벽의 천장 높이 수평 라인 (슬롯배치만 — 자유배치는 천장 메쉬가 처리)
-              if (!isFreePlacement) {
-                if (dcIsL && hasLW) {
-                  lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
-                } else if (!dcIsL && hasRW) {
-                  lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
-                }
+              // 커튼박스쪽 외벽의 천장 높이 수평 라인
+              if (dcIsL && hasLW) {
+                lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+              } else if (!dcIsL && hasRW) {
+                lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
               }
             }
 
@@ -1781,13 +1777,11 @@ const Room: React.FC<RoomProps> = ({
 
               // 경계벽 수직선 (뒷벽)
               solidThemeLines.push([bx, bwBot, z1, bx, bwTop, z1]);
-              // 경계벽 수평선 (뒷벽) — 슬롯배치만 (자유배치는 천장 메쉬가 처리)
-              if (!isFreePlacement) {
-                if (dcIsL) {
-                  solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
-                } else {
-                  solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
-                }
+              // 경계벽 수평선 (뒷벽) — 커튼박스 천장 높이
+              if (dcIsL) {
+                solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
+              } else {
+                solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
               }
             }
 
