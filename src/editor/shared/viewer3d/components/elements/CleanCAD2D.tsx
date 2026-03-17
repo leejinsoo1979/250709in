@@ -2607,6 +2607,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       >
                         {spaceInfo.height - floorFinishHeightMmGlobal}
                       </Text>
+
+                      {/* 우측 단내림 높이 치수선 (우측 벽 바깥) */}
+                      {(() => {
+                        const dropHeight = spaceInfo.droppedCeiling!.dropHeight || 200;
+                        const droppedHeight = spaceInfo.height - dropHeight;
+                        const droppedTop = mmToThreeUnits(droppedHeight);
+                        const droppedMid = (floorFinishYDrop + droppedTop) / 2;
+                        const rightWallX = mmToThreeUnits(spaceInfo.width) + leftOffset;
+                        const dimX = rightWallX + mmToThreeUnits(200);
+                        return (
+                          <>
+                            {/* 치수선 */}
+                            <NativeLine name="dimension_line"
+                              points={[[dimX, floorFinishYDrop, 0.002], [dimX, droppedTop, 0.002]]}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 하단 화살표 */}
+                            <NativeLine name="dimension_line"
+                              points={createArrowHead([dimX, floorFinishYDrop, 0.002], [dimX, floorFinishYDrop + 0.05, 0.002])}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 상단 화살표 */}
+                            <NativeLine name="dimension_line"
+                              points={createArrowHead([dimX, droppedTop, 0.002], [dimX, droppedTop - 0.05, 0.002])}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 연장선 - 단내림 상단에서 치수선까지 */}
+                            <NativeLine name="dimension_line"
+                              points={[[rightWallX, droppedTop, 0.001], [dimX + mmToThreeUnits(10), droppedTop, 0.001]]}
+                              color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 연장선 - 바닥에서 치수선까지 */}
+                            <NativeLine name="dimension_line"
+                              points={[[rightWallX, floorFinishYDrop, 0.001], [dimX + mmToThreeUnits(10), floorFinishYDrop, 0.001]]}
+                              color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 높이 텍스트 */}
+                            <Text
+                              renderOrder={1000} depthTest={false}
+                              position={[dimX + mmToThreeUnits(60), droppedMid, 0.01]}
+                              fontSize={largeFontSize} color={textColor}
+                              anchorX="center" anchorY="middle"
+                              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                              rotation={[0, 0, -Math.PI / 2]}
+                            >
+                              {droppedHeight - floorFinishHeightMmGlobal}
+                            </Text>
+                          </>
+                        );
+                      })()}
                     </>
                   );
                 })()}
