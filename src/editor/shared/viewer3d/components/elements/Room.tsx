@@ -1687,18 +1687,37 @@ const Room: React.FC<RoomProps> = ({
             const dcDropH = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
+            // stepCeiling 정보
+            const hasSC = spaceInfo.stepCeiling?.enabled;
+            const scDropHLine = hasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+            const scIsLeft = hasSC && spaceInfo.stepCeiling?.position === 'left';
+            const scIsRight = hasSC && spaceInfo.stepCeiling?.position === 'right';
 
             // 경계선 수집 (그라데이션: 뒷벽=진한, 앞쪽=투명)
             const lines: [number, number, number, number, number, number][] = [];
 
-            // 천장-좌벽 경계
+            // 천장-좌벽 경계: 자유배치에서 커튼박스→위로 확장(+), 단내림→아래(-), 슬롯→아래(-)
             if (hasLW) {
-              const leftCY = dcIsLeft ? (cY - dcDropH) : cY;
+              let leftCY = cY;
+              if (isFreePlacement) {
+                // 자유배치: 벽에 인접한 구간의 천장 높이
+                // 벽 → (커튼박스) → (단내림) → 메인 순이므로, 벽에 인접한 것은 가장 바깥 구간
+                if (dcIsLeft) leftCY = cY + dcDropH;          // 커튼박스: 위로 확장
+                else if (scIsLeft) leftCY = cY - scDropHLine; // 단내림: 아래로 축소
+              } else {
+                if (dcIsLeft) leftCY = cY - dcDropH;          // 슬롯: 아래로 축소
+              }
               lines.push([x1, leftCY, z1, x1, leftCY, z2]);
             }
             // 천장-우벽 경계
             if (hasRW) {
-              const rightCY = dcIsRight ? (cY - dcDropH) : cY;
+              let rightCY = cY;
+              if (isFreePlacement) {
+                if (dcIsRight) rightCY = cY + dcDropH;
+                else if (scIsRight) rightCY = cY - scDropHLine;
+              } else {
+                if (dcIsRight) rightCY = cY - dcDropH;
+              }
               lines.push([x2, rightCY, z1, x2, rightCY, z2]);
             }
             // 바닥-좌벽 경계
@@ -1710,18 +1729,23 @@ const Room: React.FC<RoomProps> = ({
               lines.push([x2, fY, z1, x2, fY, z2]);
             }
 
-            // === 단내림 경계벽 라인 (테마색상) ===
+            // === 커튼박스/단내림 경계벽 라인 (테마색상) ===
             if (hasDC && spaceInfo.droppedCeiling) {
               const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dcIsL = spaceInfo.droppedCeiling.position === 'left';
               const bx = dcIsL ? x1 + dcW : x2 - dcW;
-              const droppedCY = cY - dcDropH;
+              // 자유배치: 커튼박스 천장 = cY + dcDropH (위로 확장)
+              // 슬롯배치: 단내림 천장 = cY - dcDropH (아래로 축소)
+              const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
+              // 경계벽 상단/하단 높이
+              const bwTop = isFreePlacement ? droppedCY : cY;   // 커튼박스 천장 or 메인 천장
+              const bwBot = isFreePlacement ? cY : droppedCY;   // 메인 천장 or 단내림 천장
 
               // 경계벽 수직 라인 (뒷벽→앞쪽 그라데이션) - 상단/하단 2개
-              lines.push([bx, cY, z1, bx, cY, z2]);       // 경계벽 상단 (뒤→앞)
-              lines.push([bx, droppedCY, z1, bx, droppedCY, z2]); // 경계벽 하단 (뒤→앞)
+              lines.push([bx, bwTop, z1, bx, bwTop, z2]);    // 경계벽 상단 (뒤→앞)
+              lines.push([bx, bwBot, z1, bx, bwBot, z2]);    // 경계벽 하단 (뒤→앞)
 
-              // 단내림쪽 외벽의 droppedCeiling 높이 수평 라인
+              // 커튼박스/단내림쪽 외벽의 천장 높이 수평 라인
               if (dcIsL && hasLW) {
                 lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
               } else if (!dcIsL && hasRW) {
@@ -1729,16 +1753,18 @@ const Room: React.FC<RoomProps> = ({
               }
             }
 
-            // === 단내림 경계벽 뒷벽 실선 (테마색상, 그라데이션 없음) ===
+            // === 커튼박스/단내림 경계벽 뒷벽 실선 (테마색상, 그라데이션 없음) ===
             const solidThemeLines: [number, number, number, number, number, number][] = [];
             if (hasDC && spaceInfo.droppedCeiling) {
               const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dcIsL = spaceInfo.droppedCeiling.position === 'left';
               const bx = dcIsL ? x1 + dcW : x2 - dcW;
-              const droppedCY = cY - dcDropH;
+              const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
+              const bwTop = isFreePlacement ? droppedCY : cY;
+              const bwBot = isFreePlacement ? cY : droppedCY;
 
               // 경계벽 수직선 (뒷벽)
-              solidThemeLines.push([bx, droppedCY, z1, bx, cY, z1]);
+              solidThemeLines.push([bx, bwBot, z1, bx, bwTop, z1]);
               // 경계벽 하단 수평선 (droppedCeilingY에서 경계벽~외벽)
               if (dcIsL) {
                 solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
