@@ -1843,18 +1843,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 통합 배치공간(단내림+메인) 양 끝에만 gap 적용, 단내림↔메인 경계에는 gap 없음.
                     // 3단 치수선에서는 단내림↔메인 경계 gap을 별도 치수로 표시.
 
-                    // 메인 배치폭: 벽쪽은 차감, 단내림쪽은 경계이격 없음(0), 커튼박스쪽은 경계이격 흡수(확장)
-                    // 단내림↔메인: gap 없음 (단내림이 흡수)
-                    // 메인↔커튼박스: 메인이 경계이격 흡수 → 확장
-                    const mainLeftDeduct = mainLeftAdj === 'step' ? 0 : mainLeftAdj === 'dropped' ? -mainLeftGap : mainLeftGap;
-                    const mainRightDeduct = mainRightAdj === 'step' ? 0 : mainRightAdj === 'dropped' ? -mainRightGap : mainRightGap;
-                    // effectiveMainLeft/RightGap은 X좌표 계산에도 사용
-                    const effectiveMainLeftGap = mainLeftAdj === 'step' ? 0 : mainLeftAdj === 'dropped' ? -mainLeftGap : mainLeftGap;
-                    const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightAdj === 'dropped' ? -mainRightGap : mainRightGap;
-                    mainPlacementWidth = Math.round((mainWidth - mainLeftDeduct - mainRightDeduct) * 10) / 10;
+                    // 메인 배치폭: 각 쪽 이격 차감
+                    // 단내림 인접: gap 0 (단내림↔메인 gap은 단내림에서 차감)
+                    // 커튼박스 인접: middleGap 차감
+                    // 벽 인접: 벽이격 차감
+                    const effectiveMainLeftGap = mainLeftAdj === 'step' ? 0 : mainLeftGap;
+                    const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
+                    mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 메인쪽으로 경계이격만큼 확장, 외벽쪽은 이격 차감
-                    // 단내림+메인은 통합 배치공간이므로 단내림↔메인 경계 gap은 단내림이 흡수
+                    // 단내림 구간: 외벽쪽 이격 차감 + 메인쪽 경계이격도 차감
+                    // 단내림↔메인 gap은 단내림에서 차감 (메인에서는 단내림 인접 시 gap 0)
                     let scOuterGap = 0;
                     if (hasSC) {
                       // 단내림의 외벽쪽(커튼박스쪽 또는 벽쪽) 경계이격
@@ -1865,9 +1863,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      // 메인쪽 경계이격을 단내림이 흡수(확장) + 외벽쪽 이격 차감
-                      const scMainBoundaryGap = middleGapMm; // 메인↔단내림 경계
-                      scPlacementWidth = Math.round((scWidth + scMainBoundaryGap - scOuterGap) * 10) / 10;
+                      // 외벽쪽 + 메인쪽 경계이격 모두 차감
+                      const scMainBoundaryGap = middleGapMm; // 단내림↔메인 경계
+                      scPlacementWidth = Math.round((scWidth - scOuterGap - scMainBoundaryGap) * 10) / 10;
                     }
 
                     // 커튼박스 구간: 양쪽 gap 차감
@@ -1886,12 +1884,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     var scPlacEndX = scEndX;
                     if (hasSC) {
                       if (scOnLeft) {
-                        // 좌단내림: 왼쪽=외벽쪽(gap 차감), 오른쪽=메인쪽(경계이격 흡수→확장)
+                        // 좌단내림: 왼쪽=외벽쪽(gap 차감), 오른쪽=메인쪽(gap 차감)
                         scPlacStartX = scStartX + mmToThreeUnits(scOuterGap);
-                        scPlacEndX = scEndX + mmToThreeUnits(middleGapMm);
+                        scPlacEndX = scEndX - mmToThreeUnits(middleGapMm);
                       } else {
-                        // 우단내림: 왼쪽=메인쪽(경계이격 흡수→확장), 오른쪽=외벽쪽(gap 차감)
-                        scPlacStartX = scStartX - mmToThreeUnits(middleGapMm);
+                        // 우단내림: 왼쪽=메인쪽(gap 차감), 오른쪽=외벽쪽(gap 차감)
+                        scPlacStartX = scStartX + mmToThreeUnits(middleGapMm);
                         scPlacEndX = scEndX - mmToThreeUnits(scOuterGap);
                       }
                     }
