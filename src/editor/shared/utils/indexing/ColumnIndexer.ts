@@ -910,7 +910,14 @@ export class ColumnIndexer {
       
       internalStartX = -(totalWidth / 2) + leftReduction;
     } else {
-      internalStartX = -(totalWidth / 2) + frameThickness.left;
+      // 서라운드
+      if (isFreePlacement) {
+        // 자유배치: 프레임이 아닌 이격거리 사용
+        const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+        internalStartX = -(totalWidth / 2) + leftGap;
+      } else {
+        internalStartX = -(totalWidth / 2) + frameThickness.left;
+      }
     }
     
     // 각 구간의 외부 너비 (프레임 제외 전)
@@ -926,80 +933,126 @@ export class ColumnIndexer {
     if (droppedPosition === 'left') {
       // 왼쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
-        // 서라운드: 중간 경계면 이격거리 적용
-        const BOUNDARY_GAP = isFreePlacement ? 0 : (spaceInfo.gapConfig?.middle ?? 1.5);
+        if (isFreePlacement) {
+          // 자유배치 + 서라운드: 이격거리 기반 계산
+          const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+          const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
-        // 단내림구간(좌): 좌측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.left;
-        droppedStartX = internalStartX; // 수정된 internalStartX 사용
+          // 단내림구간(좌): 좌벽이격 + 경계이격
+          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap - middleGap;
+          droppedStartX = internalStartX;
 
-        // 일반구간(우): 우측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
+          // 일반구간(우): 우벽이격만
+          normalAreaInternalWidth = normalAreaOuterWidth - rightGap;
+          normalStartX = droppedStartX + droppedAreaInternalWidth;
 
-        console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
-          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
-          '프레임 두께': frameThickness,
-          '단내림 내경': droppedAreaInternalWidth,
-          '메인 내경': normalAreaInternalWidth,
-          'spaceInfo.gapConfig': spaceInfo.gapConfig,
-          'spaceInfo.wallConfig': spaceInfo.wallConfig,
-          'spaceInfo.installType': spaceInfo.installType
-        });
+          console.log('🔍 자유배치 서라운드 왼쪽 단내림 경계 계산:', {
+            '좌벽이격': leftGap,
+            '우벽이격': rightGap,
+            '경계이격': middleGap,
+            '단내림 내경': droppedAreaInternalWidth,
+            '메인 내경': normalAreaInternalWidth,
+          });
+        } else {
+          // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
+          const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
+
+          // 단내림구간(좌): 좌측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.left;
+          droppedStartX = internalStartX; // 수정된 internalStartX 사용
+
+          // 일반구간(우): 우측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
+          normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
+
+          console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
+            '중간경계이격거리(배치포함)': BOUNDARY_GAP,
+            '프레임 두께': frameThickness,
+            '단내림 내경': droppedAreaInternalWidth,
+            '메인 내경': normalAreaInternalWidth,
+            'spaceInfo.gapConfig': spaceInfo.gapConfig,
+            'spaceInfo.wallConfig': spaceInfo.wallConfig,
+            'spaceInfo.installType': spaceInfo.installType
+          });
+        }
       } else {
         // 노서라운드: 엔드패널 고려하여 계산 (단내림 우측과 동일한 로직)
-        let leftReduction = 0;
-        let rightReduction = 0;
-        const BOUNDARY_GAP = isFreePlacement ? 0 : (spaceInfo.gapConfig?.middle ?? 1.5); // 중간 경계면 이격거리
+        if (isFreePlacement) {
+          // 자유배치 + 노서라운드: 이격거리 기반 계산
+          const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+          const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
-        // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
-        // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
-        if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 슬롯은 엔드패널 포함 크기
-          leftReduction = 0;
-          rightReduction = 0;
-        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: gapConfig의 left 값을 그대로 사용
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
-          } else {
+          // 단내림구간(좌): 좌벽이격 + 경계이격
+          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap - middleGap;
+          droppedStartX = internalStartX;
+
+          // 일반구간(우): 우벽이격만
+          normalAreaInternalWidth = normalAreaOuterWidth - rightGap;
+          normalStartX = droppedStartX + droppedAreaInternalWidth;
+
+          console.log('🔍 자유배치 노서라운드 왼쪽 단내림 경계 계산:', {
+            '좌벽이격': leftGap,
+            '우벽이격': rightGap,
+            '경계이격': middleGap,
+            '단내림 내경': droppedAreaInternalWidth,
+            '메인 내경': normalAreaInternalWidth,
+          });
+        } else {
+          // 슬롯배치 + 노서라운드: 기존 로직
+          let leftReduction = 0;
+          let rightReduction = 0;
+          const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5; // 중간 경계면 이격거리
+
+          // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
+          // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
+          if (spaceInfo.installType === 'freestanding') {
+            // 벽없음: 슬롯은 엔드패널 포함 크기
             leftReduction = 0;
-          }
+            rightReduction = 0;
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            // 세미스탠딩: gapConfig의 left 값을 그대로 사용
+            if (spaceInfo.wallConfig?.left) {
+              leftReduction = spaceInfo.gapConfig?.left || 2;
+            } else {
+              leftReduction = 0;
+            }
 
-          if (spaceInfo.wallConfig?.right) {
+            if (spaceInfo.wallConfig?.right) {
+              rightReduction = spaceInfo.gapConfig?.right || 2;
+            } else {
+              rightReduction = 0;
+            }
+          } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+            // 양쪽벽: 설정된 이격거리 사용
+            leftReduction = spaceInfo.gapConfig?.left || 2;
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
-            rightReduction = 0;
+            // 기타 케이스 (엔드패널)
+            if (spaceInfo.wallConfig?.left) {
+              leftReduction = 0;
+            } else {
+              leftReduction = END_PANEL_THICKNESS;
+            }
+
+            if (spaceInfo.wallConfig?.right) {
+              rightReduction = 0;
+            } else {
+              rightReduction = END_PANEL_THICKNESS;
+            }
           }
-        } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 양쪽벽: 설정된 이격거리 사용
-          leftReduction = spaceInfo.gapConfig?.left || 2;
-          rightReduction = spaceInfo.gapConfig?.right || 2;
-        } else {
-          // 기타 케이스 (엔드패널)
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = 0;
-          } else {
-            leftReduction = END_PANEL_THICKNESS;
-          }
 
-          if (spaceInfo.wallConfig?.right) {
-            rightReduction = 0;
-          } else {
-            rightReduction = END_PANEL_THICKNESS;
-          }
-        }
+          // 단내림구간(좌): 좌측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - leftReduction;
+          droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        // 단내림구간(좌): 좌측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - leftReduction;
-        droppedStartX = internalStartX; // 수정된 internalStartX 사용
+          // 일반구간(우): 우측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+          normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
+          normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
-        // 일반구간(우): 우측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
-
-        console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
-          '단내림구간 외부너비': droppedAreaOuterWidth,
+          console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
+            '단내림구간 외부너비': droppedAreaOuterWidth,
           '좌측이격거리': leftReduction,
           '중간경계이격거리(배치포함)': BOUNDARY_GAP,
           '단내림구간 내경': droppedAreaInternalWidth,
@@ -1012,96 +1065,144 @@ export class ColumnIndexer {
           '검증 총합': droppedAreaInternalWidth + normalAreaInternalWidth + leftReduction + rightReduction,
           '전체너비': totalWidth
         });
+        }
       }
     } else {
       // 오른쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
-        // 서라운드: 중간 경계면 이격거리 적용
-        const BOUNDARY_GAP = isFreePlacement ? 0 : (spaceInfo.gapConfig?.middle ?? 1.5);
+        if (isFreePlacement) {
+          // 자유배치 + 서라운드: 이격거리 기반 계산
+          const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+          const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
-        // 일반구간(좌): 좌측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
-        normalStartX = internalStartX; // 수정된 internalStartX 사용
+          // 일반구간(좌): 좌벽이격만
+          normalAreaInternalWidth = normalAreaOuterWidth - leftGap;
+          normalStartX = internalStartX;
 
-        // 단내림구간(우): 우측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.right;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
+          // 단내림구간(우): 우벽이격 + 경계이격
+          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap - middleGap;
+          droppedStartX = normalStartX + normalAreaInternalWidth;
 
-        console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
-          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
-          '프레임 두께': frameThickness,
-          '메인 내경': normalAreaInternalWidth,
-          '단내림 내경': droppedAreaInternalWidth,
-          'spaceInfo.gapConfig': spaceInfo.gapConfig,
-          'spaceInfo.wallConfig': spaceInfo.wallConfig,
-          'spaceInfo.installType': spaceInfo.installType
-        });
+          console.log('🔍 자유배치 서라운드 오른쪽 단내림 경계 계산:', {
+            '좌벽이격': leftGap,
+            '우벽이격': rightGap,
+            '경계이격': middleGap,
+            '메인 내경': normalAreaInternalWidth,
+            '단내림 내경': droppedAreaInternalWidth,
+          });
+        } else {
+          // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
+          const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
+
+          // 일반구간(좌): 좌측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
+          normalStartX = internalStartX; // 수정된 internalStartX 사용
+
+          // 단내림구간(우): 우측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.right;
+          droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
+
+          console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
+            '중간경계이격거리(배치포함)': BOUNDARY_GAP,
+            '프레임 두께': frameThickness,
+            '메인 내경': normalAreaInternalWidth,
+            '단내림 내경': droppedAreaInternalWidth,
+            'spaceInfo.gapConfig': spaceInfo.gapConfig,
+            'spaceInfo.wallConfig': spaceInfo.wallConfig,
+            'spaceInfo.installType': spaceInfo.installType
+          });
+        }
       } else {
         // 노서라운드: 엔드패널 고려하여 계산
-        let leftReduction = 0;
-        let rightReduction = 0;
-        const BOUNDARY_GAP = isFreePlacement ? 0 : (spaceInfo.gapConfig?.middle ?? 1.5); // 중간 경계면 이격거리
+        if (isFreePlacement) {
+          // 자유배치 + 노서라운드: 이격거리 기반 계산
+          const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+          const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
-        // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
-        // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
-        if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 슬롯은 엔드패널 포함 크기
-          leftReduction = 0;
-          rightReduction = 0;
-        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: gapConfig의 left 값을 그대로 사용
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
-          } else {
+          // 일반구간(좌): 좌벽이격만
+          normalAreaInternalWidth = normalAreaOuterWidth - leftGap;
+          normalStartX = internalStartX;
+
+          // 단내림구간(우): 우벽이격 + 경계이격
+          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap - middleGap;
+          droppedStartX = normalStartX + normalAreaInternalWidth;
+
+          console.log('🔍 자유배치 노서라운드 오른쪽 단내림 경계 계산:', {
+            '좌벽이격': leftGap,
+            '우벽이격': rightGap,
+            '경계이격': middleGap,
+            '메인 내경': normalAreaInternalWidth,
+            '단내림 내경': droppedAreaInternalWidth,
+          });
+        } else {
+          // 슬롯배치 + 노서라운드: 기존 로직
+          let leftReduction = 0;
+          let rightReduction = 0;
+          const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5; // 중간 경계면 이격거리
+
+          // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
+          // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
+          if (spaceInfo.installType === 'freestanding') {
+            // 벽없음: 슬롯은 엔드패널 포함 크기
             leftReduction = 0;
-          }
+            rightReduction = 0;
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            // 세미스탠딩: gapConfig의 left 값을 그대로 사용
+            if (spaceInfo.wallConfig?.left) {
+              leftReduction = spaceInfo.gapConfig?.left || 2;
+            } else {
+              leftReduction = 0;
+            }
 
-          if (spaceInfo.wallConfig?.right) {
+            if (spaceInfo.wallConfig?.right) {
+              rightReduction = spaceInfo.gapConfig?.right || 2;
+            } else {
+              rightReduction = 0;
+            }
+          } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+            // 양쪽벽: 설정된 이격거리 사용
+            leftReduction = spaceInfo.gapConfig?.left || 2;
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
-            rightReduction = 0;
-          }
-        } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 양쪽벽: 설정된 이격거리 사용
-          leftReduction = spaceInfo.gapConfig?.left || 2;
-          rightReduction = spaceInfo.gapConfig?.right || 2;
-        } else {
-          // 기타 케이스 (엔드패널)
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = 0;
-          } else {
-            leftReduction = END_PANEL_THICKNESS;
+            // 기타 케이스 (엔드패널)
+            if (spaceInfo.wallConfig?.left) {
+              leftReduction = 0;
+            } else {
+              leftReduction = END_PANEL_THICKNESS;
+            }
+
+            if (spaceInfo.wallConfig?.right) {
+              rightReduction = 0;
+            } else {
+              rightReduction = END_PANEL_THICKNESS;
+            }
           }
 
-          if (spaceInfo.wallConfig?.right) {
-            rightReduction = 0;
-          } else {
-            rightReduction = END_PANEL_THICKNESS;
-          }
+          // 일반구간(좌): 좌측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+          normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
+          normalStartX = internalStartX; // 수정된 internalStartX 사용
+
+          // 단내림구간(우): 우측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - rightReduction;
+          droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
+
+          console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
+            '일반구간 외부너비': normalAreaOuterWidth,
+            '좌측이격거리': leftReduction,
+            '일반구간 내경': normalAreaInternalWidth,
+            '단내림구간 외부너비': droppedAreaOuterWidth,
+            '중간경계이격거리(배치포함)': BOUNDARY_GAP,
+            '우측이격거리': rightReduction,
+            '단내림구간 내경': droppedAreaInternalWidth,
+            '메인 시작X': normalStartX,
+            '메인 끝X': normalStartX + normalAreaInternalWidth,
+            '단내림 시작X': droppedStartX,
+            '검증 총합': normalAreaInternalWidth + droppedAreaInternalWidth + leftReduction + rightReduction,
+            '전체너비': totalWidth
+          });
         }
-
-        // 일반구간(좌): 좌측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
-        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
-        normalStartX = internalStartX; // 수정된 internalStartX 사용
-
-        // 단내림구간(우): 우측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-        droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - rightReduction;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
-
-        console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
-          '일반구간 외부너비': normalAreaOuterWidth,
-          '좌측이격거리': leftReduction,
-          '일반구간 내경': normalAreaInternalWidth,
-          '단내림구간 외부너비': droppedAreaOuterWidth,
-          '중간경계이격거리(배치포함)': BOUNDARY_GAP,
-          '우측이격거리': rightReduction,
-          '단내림구간 내경': droppedAreaInternalWidth,
-          '메인 시작X': normalStartX,
-          '메인 끝X': normalStartX + normalAreaInternalWidth,
-          '단내림 시작X': droppedStartX,
-          '검증 총합': normalAreaInternalWidth + droppedAreaInternalWidth + leftReduction + rightReduction,
-          '전체너비': totalWidth
-        });
       }
     }
     
