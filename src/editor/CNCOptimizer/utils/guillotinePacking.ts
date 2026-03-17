@@ -617,6 +617,8 @@ export function packGuillotine(
   let currentSheetPanels: Rect[] = [];
   let currentSheetArea = 0;
   const sheetArea = binWidth * binHeight;
+  // 무결성 체크에서 실패 경험 있는 가구는 분리 허용 (무한루프 방지)
+  const splitExemptFurniture = new Set<number>();
 
   for (const fn of sortedFurnitureNums) {
     const group = furnitureGroups.get(fn)!;
@@ -632,7 +634,10 @@ export function packGuillotine(
         // ── 가구 무결성 체크: 같은 가구의 패널이 분리되면 전부 다음 시트로 ──
         const placedIds = new Set(result.panels.map(p => p.id));
         const splitFurniture = detectSplitFurniture(currentSheetPanels, placedIds);
+        // 면제된 가구 제외
+        for (const efn of splitExemptFurniture) splitFurniture.delete(efn);
         if (splitFurniture.size > 0) {
+          for (const sfn of splitFurniture) splitExemptFurniture.add(sfn);
           // 분리된 가구의 배치된 패널을 시트에서 제거
           result.panels = result.panels.filter(p => !splitFurniture.has(extractFurnitureNum(p.name || '')));
           // 효율 재계산
@@ -657,7 +662,7 @@ export function packGuillotine(
     }
   }
 
-  // 마지막 시트 패킹
+  // 마지막 시트 패킹 (splitExemptFurniture는 위에서 선언됨 — 무한루프 방지)
   while (currentSheetPanels.length > 0 && bins.length < maxBins) {
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
     const result = packer.packAll(currentSheetPanels, stripDirection);
@@ -667,10 +672,15 @@ export function packGuillotine(
       break;
     }
 
-    // ── 가구 무결성 체크 ──
+    // ── 가구 무결성 체크 (면제된 가구 제외) ──
     const placedIds = new Set(result.panels.map(p => p.id));
     const splitFurniture = detectSplitFurniture(currentSheetPanels, placedIds);
+    // 면제된 가구 제외
+    for (const fn of splitExemptFurniture) splitFurniture.delete(fn);
+
     if (splitFurniture.size > 0) {
+      // 이 가구들은 다음에 분리 허용
+      for (const fn of splitFurniture) splitExemptFurniture.add(fn);
       result.panels = result.panels.filter(p => !splitFurniture.has(extractFurnitureNum(p.name || '')));
       result.usedArea = result.panels.reduce((sum, p) => sum + p.width * p.height, 0);
       result.efficiency = (result.usedArea / (binWidth * binHeight)) * 100;
