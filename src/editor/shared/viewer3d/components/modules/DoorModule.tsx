@@ -64,7 +64,7 @@ const BoxWithEdges: React.FC<{
           material={material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
-          renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
+          renderOrder={isEditMode ? 999 : (viewMode === '2D' ? 200000 : 0)} // 2D에서 치수선(100000) 위에 렌더링
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
@@ -86,7 +86,7 @@ const BoxWithEdges: React.FC<{
         </lineSegments>
       ) : (
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments name="door-edge" geometry={edgesGeometry} renderOrder={1001}>
+          <lineSegments name="door-edge" geometry={edgesGeometry} renderOrder={viewMode === '2D' ? 200001 : 1001}>
             <lineBasicMaterial
               color={viewMode === '2D' ? "#18CF23" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))}
               linewidth={viewMode === '2D' ? 3 : 0.5}
@@ -291,6 +291,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.transparent = false;
           mat.opacity = 1.0;
           mat.depthWrite = true;
+          mat.depthTest = false; // 2D에서 치수선 위에 렌더링
         } else if (renderMode === 'wireframe') {
           mat.transparent = true;
           mat.opacity = 0.3;
