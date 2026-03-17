@@ -1513,6 +1513,18 @@ const Room: React.FC<RoomProps> = ({
             })();
 
             const wfColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
+
+            // stepCeiling과 동시 활성: normalArea를 단내림 + 메인으로 추가 분할
+            const scWidth = hasStepCeiling ? stepWidth : 0;
+            const scDropH = hasStepCeiling ? stepDropHeight : 0;
+
+            // 단내림과 커튼박스가 같은 쪽인지 (같은 쪽이면 경계벽이 더 커야 함)
+            const stepOnSameSide = hasStepCeiling && (isLeftStep === isLeftDropped);
+            // 커튼박스 경계벽 높이: 같은 쪽이면 단내림 천장 ~ 커튼박스 천장, 아니면 메인 천장 ~ 커튼박스 천장
+            const boundaryWallTotalH = stepOnSameSide
+              ? droppedCeilingHeight + scDropH   // 단내림천장(2160) ~ 커튼박스천장(2400)
+              : droppedCeilingHeight;             // 메인천장(2360) ~ 커튼박스천장(2400)
+
             // 자유배치: 커튼박스가 메인보다 dropHeight만큼 높음 (위로 확장)
             // 슬롯배치: 단내림구간이 dropHeight만큼 낮음 (아래로 축소)
             const droppedCeilingY = isFreePlacement
@@ -1522,12 +1534,8 @@ const Room: React.FC<RoomProps> = ({
               ? panelStartY + height + 0.001                          // 메인: 공간설정 높이 그대로
               : panelStartY + height + 0.001;                         // 슬롯: 전체 높이
             const boundaryWallY = isFreePlacement
-              ? panelStartY + height + droppedCeilingHeight / 2       // 경계벽: 메인 천장 ~ 커튼박스 천장 사이
+              ? panelStartY + height + (droppedCeilingHeight - (stepOnSameSide ? scDropH : 0)) / 2  // 경계벽 중심
               : panelStartY + height - droppedCeilingHeight / 2;      // 단내림쪽 경계벽
-
-            // stepCeiling과 동시 활성: normalArea를 단내림 + 메인으로 추가 분할
-            const scWidth = hasStepCeiling ? stepWidth : 0;
-            const scDropH = hasStepCeiling ? stepDropHeight : 0;
 
             // 단내림이 normalArea 안에서 차지하는 위치 결정
             // 구간순서: 벽 → 커튼박스(바깥) → 단내림 → 메인
@@ -1637,7 +1645,7 @@ const Room: React.FC<RoomProps> = ({
                   position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
-                  <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
+                  <planeGeometry args={[extendedPanelDepth, boundaryWallTotalH]} />
                   <primitive
                     ref={droppedWallMaterialRef}
                     object={droppedWallMaterial} />
