@@ -154,6 +154,10 @@ export interface SpaceInfo {
   // left: 왼쪽 벽에서의 잠금 이격거리 (mm), undefined면 잠금 안 됨
   // right: 오른쪽 벽에서의 잠금 이격거리 (mm), undefined면 잠금 안 됨
   lockedWallGaps?: { left?: number; right?: number };
+
+  // 자유배치 가구 기본 너비 (mm)
+  furnitureSingleWidth?: number;  // 싱글 가구 기본 너비 (기본 500)
+  furnitureDualWidth?: number;    // 듀얼 가구 기본 너비 (기본 1000)
 }
 
 // 단내림 설정 인터페이스

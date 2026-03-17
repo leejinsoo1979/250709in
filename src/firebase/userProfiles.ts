@@ -759,6 +759,8 @@ export type SpaceConfigDefaults = {
   gapRight?: number;
   frameTop?: number;
   baseHeight?: number;
+  furnitureSingleWidth?: number;
+  furnitureDualWidth?: number;
 };
 
 // 공간설정 기본값 조회

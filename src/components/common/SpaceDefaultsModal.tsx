@@ -14,6 +14,8 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   gapRight: 1.5,
   frameTop: 30,
   baseHeight: 65,
+  furnitureSingleWidth: 500,
+  furnitureDualWidth: 1000,
 };
 
 const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
@@ -33,6 +35,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           gapRight: defaults.gapRight ?? SYSTEM_DEFAULTS.gapRight,
           frameTop: defaults.frameTop ?? SYSTEM_DEFAULTS.frameTop,
           baseHeight: defaults.baseHeight ?? SYSTEM_DEFAULTS.baseHeight,
+          furnitureSingleWidth: defaults.furnitureSingleWidth ?? SYSTEM_DEFAULTS.furnitureSingleWidth,
+          furnitureDualWidth: defaults.furnitureDualWidth ?? SYSTEM_DEFAULTS.furnitureDualWidth,
         });
       }
       setLoading(false);
@@ -171,6 +175,42 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
                     max={200}
                     value={values.baseHeight}
                     onChange={e => handleChange('baseHeight', e.target.value)}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <span className={styles.groupTitle}>가구 배치 기본 너비</span>
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label className={styles.label}>싱글</label>
+                <div className={styles.inputWrapper}>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min={200}
+                    max={1200}
+                    step={10}
+                    value={values.furnitureSingleWidth}
+                    onChange={e => handleChange('furnitureSingleWidth', e.target.value)}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>듀얼</label>
+                <div className={styles.inputWrapper}>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min={400}
+                    max={2400}
+                    step={10}
+                    value={values.furnitureDualWidth}
+                    onChange={e => handleChange('furnitureDualWidth', e.target.value)}
                   />
                   <span className={styles.unit}>mm</span>
                 </div>

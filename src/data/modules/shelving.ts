@@ -1370,19 +1370,18 @@ export const generateShelvingModules = (
     });
   }
   
+  // 자유배치 모드: 사용자 설정 기본 너비로 오버라이드
+  if (indexingSpaceInfo.layoutMode === 'free-placement') {
+    if (indexingSpaceInfo.furnitureSingleWidth) {
+      columnWidth = indexingSpaceInfo.furnitureSingleWidth;
+    }
+  }
+
   const modules: ModuleData[] = [];
-  
-  // console.log('🎯 슬롯 너비 정보:', {
-  //   zone: (indexingSpaceInfo as any).zone,
-  //   columnWidth,
-  //   columnCount,
-  //   slotWidths,
-  //   uniqueWidths: slotWidths ? [...new Set(slotWidths)] : []
-  // });
-  
+
   // 갤러리 표시용으로는 평균 너비의 가구만 생성 (중복 방지)
   // 가구 높이는 internalSpace.height 사용 (이미 위에서 maxHeight 선언됨)
-  
+
   // === 싱글 가구 생성 ===
   // console.log('🔨 싱글 가구 생성 시작:', {
   //   columnWidth,
@@ -1396,7 +1395,10 @@ export const generateShelvingModules = (
   // === 듀얼 가구 생성 ===
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
   let dualWidth: number;
-  if (slotWidths && slotWidths.length >= 2) {
+  if (indexingSpaceInfo.layoutMode === 'free-placement' && indexingSpaceInfo.furnitureDualWidth) {
+    // 자유배치 모드: 사용자 설정 듀얼 너비 사용
+    dualWidth = indexingSpaceInfo.furnitureDualWidth;
+  } else if (slotWidths && slotWidths.length >= 2) {
     // 실제 슬롯 너비들의 합계 사용 (예: 449 + 449 = 898)
     // 소수점 2자리로 정규화
     dualWidth = Math.round((slotWidths[0] + slotWidths[1]) * 100) / 100;

@@ -87,6 +87,8 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
             ...current.baseConfig!,
             height: defaults.baseHeight ?? current.baseConfig?.height ?? 65,
           },
+          furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
+          furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,
         });
         console.log('✅ 유저 공간설정 기본값 적용:', defaults);
       }
