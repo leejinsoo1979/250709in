@@ -380,7 +380,14 @@ export const useUIStore = create<UIState>()(
           viewMode: mode,
           // 2D 모드로 전환 시 가구 체크박스 기본 ON, 축 기본 OFF
           showFurniture: mode === '2D' ? true : state.showFurniture,
-          showAxis: mode === '2D' ? false : state.showAxis
+          showAxis: mode === '2D' ? false : state.showAxis,
+          // 3D 모드 진입 시 표시 항목 항상 ON
+          ...(mode === '3D' ? {
+            showDimensions: true,
+            showDimensionsText: true,
+            showFurnitureEditHandles: true,
+            dimensionOptionsBackup: null,
+          } : {})
         })),
         
       setActiveDroppedCeilingTab: (tab) => {
@@ -414,6 +421,8 @@ export const useUIStore = create<UIState>()(
 
       toggleDimensions: () =>
         set((state) => {
+          // 3D 모드에서는 항상 켜진 상태 유지
+          if (state.viewMode === '3D') return {};
           const nextValue = !state.showDimensions;
 // console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', nextValue);
 
@@ -444,7 +453,11 @@ export const useUIStore = create<UIState>()(
           };
         }),
       toggleDimensionsText: () =>
-        set((state) => ({ showDimensionsText: !state.showDimensionsText })),
+        set((state) => {
+          // 3D 모드에서는 항상 켜진 상태 유지
+          if (state.viewMode === '3D') return {};
+          return { showDimensionsText: !state.showDimensionsText };
+        }),
       toggleGuides: () =>
         set((state) => ({ showGuides: !state.showGuides })),
       
@@ -461,7 +474,11 @@ export const useUIStore = create<UIState>()(
         set((state) => ({ showAll: !state.showAll })),
 
       toggleFurnitureEditHandles: () =>
-        set((state) => ({ showFurnitureEditHandles: !state.showFurnitureEditHandles })),
+        set((state) => {
+          // 3D 모드에서는 항상 켜진 상태 유지
+          if (state.viewMode === '3D') return {};
+          return { showFurnitureEditHandles: !state.showFurnitureEditHandles };
+        }),
       
       // setter 함수들 구현
       setShowDimensions: (show) =>
