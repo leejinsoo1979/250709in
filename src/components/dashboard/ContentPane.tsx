@@ -78,7 +78,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       } else if (sortBy === 'date') {
         const aTime = a.updatedAt?.toMillis?.() || 0;
         const bTime = b.updatedAt?.toMillis?.() || 0;
-        cmp = bTime - aTime;
+        cmp = aTime - bTime;
       } else if (sortBy === 'type') {
         cmp = a.type.localeCompare(b.type);
       }
