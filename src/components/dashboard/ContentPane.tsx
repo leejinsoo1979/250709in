@@ -294,7 +294,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             <div className={styles.colName}>
               {renderCheckbox(item)}
               {getItemIcon(item, 16)}
-              <span className={styles.rowName}>{item.name}</span>
+              <span className={`${styles.rowName} ${item.type === 'project' ? styles.projectName : ''}`}>{item.name}</span>
             </div>
             <div className={styles.colType}>{getTypeLabel(item.type)}</div>
             <div className={styles.colSize}>
@@ -331,7 +331,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           >
             {renderCheckbox(item)}
             {getItemIcon(item, 16)}
-            <span className={styles.listName}>{item.name}</span>
+            <span className={`${styles.listName} ${item.type === 'project' ? styles.projectName : ''}`}>{item.name}</span>
             <span className={styles.listDate}>{formatDate(item.updatedAt)}</span>
           </div>
         ))}
@@ -369,7 +369,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               )}
             </div>
             <div className={styles.tileInfo}>
-              <div className={styles.tileName} title={item.name}>{item.name}</div>
+              <div className={`${styles.tileName} ${item.type === 'project' ? styles.projectName : ''}`} title={item.name}>{item.name}</div>
               <div className={styles.tileMeta}>
                 {getTypeLabel(item.type)}
                 {item.spaceSize && ` · ${item.spaceSize.width}x${item.spaceSize.depth}`}
@@ -459,7 +459,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                 )}
               </div>
               <div className={styles.saasInfoArea}>
-                <div className={styles.saasName} title={item.name}>{item.name}</div>
+                <div className={`${styles.saasName} ${item.type === 'project' ? styles.projectName : ''}`} title={item.name}>{item.name}</div>
                 <div className={styles.saasDate}>{formatDateFull(item.updatedAt)}</div>
                 {item.ownerName && (
                   <div className={styles.saasOwner}>
@@ -556,7 +556,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             </div>
           )}
           <div className={styles.iconInfo} style={{ maxWidth: thumbSize + 20 }}>
-            <div className={styles.iconName} title={item.name}>
+            <div className={`${styles.iconName} ${item.type === 'project' ? styles.projectName : ''}`} title={item.name}>
               {item.name}
             </div>
             {item.spaceSize && (

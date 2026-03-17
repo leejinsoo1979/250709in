@@ -99,6 +99,10 @@
   color: var(--theme-primary);
 }
 
+.projectName {
+  color: var(--theme-primary) !important;
+}
+
 .itemIconDesign {
   color: var(--theme-primary);
 }
