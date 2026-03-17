@@ -16,8 +16,6 @@ export interface Rect {
   material?: string;
   color?: string;
   grain?: string;
-  // 백패널/좌우측판: width↔height pre-swap 여부 (가구 높이→시트 L방향)
-  preSwapped?: boolean;
 }
 
 export interface PackedBin {
