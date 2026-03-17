@@ -726,6 +726,20 @@
   font-size: 11px;
 }
 
+.zoneInfoInline {
+  padding: 4px 8px;
+  background: var(--theme-background-secondary);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.zoneInlineText {
+  font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  font-weight: 500;
+}
+
 /* ── Help Button & Popup ── */
 .helpButton {
   width: 14px;

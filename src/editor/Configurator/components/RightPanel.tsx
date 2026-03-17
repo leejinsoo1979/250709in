@@ -1200,31 +1200,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     width={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
                   />
                   
-                  <div className={styles.zoneInfo} style={{ marginTop: '12px' }}>
-                    <div className={styles.zoneInfoItem}>
-                      <span className={styles.zoneLabel}>{t('space.width')}:</span>
-                      <span className={styles.zoneValue}>{spaceInfo.droppedCeiling.width} mm</span>
-                    </div>
-                    <div className={styles.zoneInfoItem}>
-                      <span className={styles.zoneLabel}>{t('space.height')}:</span>
-                      <span className={styles.zoneValue}>{height - spaceInfo.droppedCeiling.dropHeight} mm</span>
-                    </div>
-                    {(() => {
-                      // 단내림 영역의 실제 내경 계산
-                      const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
-                      const doorCount = spaceInfo.droppedCeilingDoorCount || 1; // 기본값 1
-                      // 소수점 1자리까지 정확히 계산
-                      const slotWidth = droppedInternalWidth ? Math.round((droppedInternalWidth / doorCount) * 10) / 10 : 0;
-                      
-                      return (
-                        <div className={styles.zoneInfoItem}>
-                          <span className={styles.zoneLabel}>{t('space.slotWidth')}:</span>
-                          <span className={styles.zoneValue}>
-                            {slotWidth} mm
-                          </span>
-                        </div>
-                      );
-                    })()}
+                  <div className={styles.zoneInfoInline} style={{ marginTop: '8px' }}>
+                    <span className={styles.zoneInlineText}>
+                      {spaceInfo.droppedCeiling.width} × {height - spaceInfo.droppedCeiling.dropHeight} mm
+                      {(() => {
+                        const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
+                        const doorCount = spaceInfo.droppedCeilingDoorCount || 1;
+                        const slotWidth = droppedInternalWidth ? Math.round((droppedInternalWidth / doorCount) * 10) / 10 : 0;
+                        return ` · 슬롯 ${slotWidth}mm`;
+                      })()}
+                    </span>
                   </div>
                 </FormControl>
                 
@@ -1248,31 +1233,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     width={spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)}
                   />
                   
-                  <div className={styles.zoneInfo} style={{ marginTop: '12px' }}>
-                    <div className={styles.zoneInfoItem}>
-                      <span className={styles.zoneLabel}>{t('space.width')}:</span>
-                      <span className={styles.zoneValue}>{spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)} mm</span>
-                    </div>
-                    <div className={styles.zoneInfoItem}>
-                      <span className={styles.zoneLabel}>{t('space.height')}:</span>
-                      <span className={styles.zoneValue}>{height} mm</span>
-                    </div>
-                    {(() => {
-                      // 일반 영역의 실제 내경 계산
-                      const normalInternalWidth = SpaceCalculator.calculateNormalZoneInternalWidth(spaceInfo);
-                      const doorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3;
-                      // 소수점 1자리까지 정확히 계산
-                      const slotWidth = normalInternalWidth ? Math.round((normalInternalWidth / doorCount) * 10) / 10 : 0;
-                      
-                      return (
-                        <div className={styles.zoneInfoItem}>
-                          <span className={styles.zoneLabel}>{t('space.slotWidth')}:</span>
-                          <span className={styles.zoneValue}>
-                            {slotWidth} mm
-                          </span>
-                        </div>
-                      );
-                    })()}
+                  <div className={styles.zoneInfoInline} style={{ marginTop: '8px' }}>
+                    <span className={styles.zoneInlineText}>
+                      {spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)} × {height} mm
+                      {(() => {
+                        const normalInternalWidth = SpaceCalculator.calculateNormalZoneInternalWidth(spaceInfo);
+                        const doorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3;
+                        const slotWidth = normalInternalWidth ? Math.round((normalInternalWidth / doorCount) * 10) / 10 : 0;
+                        return ` · 슬롯 ${slotWidth}mm`;
+                      })()}
+                    </span>
                   </div>
                 </FormControl>
               </div>
