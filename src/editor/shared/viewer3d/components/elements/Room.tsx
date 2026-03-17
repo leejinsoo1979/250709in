@@ -2347,6 +2347,8 @@ const Room: React.FC<RoomProps> = ({
             }
 
             // === 커튼박스/단내림 경계벽 윤곽선 ===
+            // 자유배치: 경계벽 선은 뒷벽 mesh 면 위에 있어 가려지므로 별도 배열(overlayLines)로 분리하여 depthTest=false로 렌더링
+            const overlayLines: [number, number, number, number, number, number][] = [];
             if (spaceInfo.droppedCeiling?.enabled) {
               const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dcDropHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
@@ -2358,13 +2360,13 @@ const Room: React.FC<RoomProps> = ({
               // 경계벽 수직선: 자유배치=메인천장~커튼박스천장, 슬롯=단내림천장~메인천장
               const bwBotY = isFreePlacement ? ceilingY : droppedCeilingY;
               const bwTopY = isFreePlacement ? droppedCeilingY : ceilingY;
-              const dcZFront = isFreePlacement ? z1 + 0.002 : z1; // 자유배치: z-fighting 방지
-              solidLines.push([bx, bwBotY, dcZFront, bx, bwTopY, dcZFront]);
+              const targetLines = isFreePlacement ? overlayLines : solidLines;
+              targetLines.push([bx, bwBotY, z1, bx, bwTopY, z1]);
               // 커튼박스/단내림쪽 천장 수평선
               if (isLeft) {
-                solidLines.push([x1, droppedCeilingY, dcZFront, bx, droppedCeilingY, dcZFront]);
+                targetLines.push([x1, droppedCeilingY, z1, bx, droppedCeilingY, z1]);
               } else {
-                solidLines.push([bx, droppedCeilingY, dcZFront, x2, droppedCeilingY, dcZFront]);
+                targetLines.push([bx, droppedCeilingY, z1, x2, droppedCeilingY, z1]);
               }
               // 자유배치: 내부 경계벽 그라데이션 불필요 (천장면에 사선으로 보임)
               if (!isFreePlacement) {
@@ -2382,18 +2384,17 @@ const Room: React.FC<RoomProps> = ({
             // === 단내림(stepCeiling) 경계벽 윤곽선 (자유배치 전용) ===
             if (_hasSC) {
               const scCeilingY = ceilingY - _scDropHwf;
-              const zFront = z1 + 0.002; // 뒷벽 mesh 앞에 표시 (z-fighting 방지)
 
               // 단내림 경계벽 수직선: 단내림 천장 → 메인 천장 (단차 기둥만)
-              solidLines.push([scBx, scCeilingY, zFront, scBx, ceilingY, zFront]);
+              overlayLines.push([scBx, scCeilingY, z1, scBx, ceilingY, z1]);
 
               // 단내림 천장 수평선: 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
               if (_scIsLeft) {
                 const leftEnd = hasDC && dcIsLeft ? dcBx : x1;
-                solidLines.push([leftEnd, scCeilingY, zFront, scBx, scCeilingY, zFront]);
+                overlayLines.push([leftEnd, scCeilingY, z1, scBx, scCeilingY, z1]);
               } else {
                 const rightEnd = hasDC && dcIsRight ? dcBx : x2;
-                solidLines.push([scBx, scCeilingY, zFront, rightEnd, scCeilingY, zFront]);
+                overlayLines.push([scBx, scCeilingY, z1, rightEnd, scCeilingY, z1]);
               }
             }
 
@@ -2401,6 +2402,12 @@ const Room: React.FC<RoomProps> = ({
             const solidPositions = new Float32Array(solidLines.length * 6);
             solidLines.forEach((line, i) => {
               for (let j = 0; j < 6; j++) solidPositions[i * 6 + j] = line[j];
+            });
+
+            // 오버레이 선 positions (depthTest=false로 항상 보이는 경계벽 선)
+            const overlayPositions = new Float32Array(overlayLines.length * 6);
+            overlayLines.forEach((line, i) => {
+              for (let j = 0; j < 6; j++) overlayPositions[i * 6 + j] = line[j];
             });
 
             // 그라데이션 선 positions + vertex colors
@@ -2431,6 +2438,15 @@ const Room: React.FC<RoomProps> = ({
                       <bufferAttribute attach="attributes-position" args={[solidPositions, 3]} />
                     </bufferGeometry>
                     <lineBasicMaterial color={wfLineColor} />
+                  </lineSegments>
+                )}
+                {/* 경계벽 오버레이 선 (depthTest=false: 뒷벽 mesh에 가려지지 않음) */}
+                {overlayLines.length > 0 && (
+                  <lineSegments renderOrder={10}>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" args={[overlayPositions, 3]} />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={wfLineColor} depthTest={false} />
                   </lineSegments>
                 )}
                 {/* z축 그라데이션 선 (뒷벽 진한색 → 앞쪽 배경색) */}
