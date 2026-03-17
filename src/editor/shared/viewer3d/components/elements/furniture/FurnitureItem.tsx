@@ -2868,9 +2868,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           setIsHovered(false);
         }}
       >
-        {isSelected && width > 0 && height > 0 && depth > 0 && (
+        {isSelected && !isEditMode && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 선택 하이라이트: 잠긴 가구는 빨간색, 일반 가구는 테마색 */}
+            {/* 선택 하이라이트: 잠긴 가구는 빨간색, 일반 가구는 테마색 (편집 모드에서는 숨김) */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
