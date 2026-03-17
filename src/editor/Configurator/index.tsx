@@ -4214,7 +4214,60 @@ const Configurator: React.FC = () => {
                 </div>
                   );
                 })()}
-                {/* 단내림 상부프레임 */}
+                {/* 서라운드일 때: 벽쪽 프레임 (우단내림→우측프레임, 좌단내림→좌측프레임) */}
+                {(spaceInfo.surroundType || 'surround') === 'surround' && (() => {
+                  const pos = spaceInfo.droppedCeiling?.position;
+                  const sideLabel = pos === 'right' ? '우측프레임' : '좌측프레임';
+                  const defaultSide = pos === 'right' ? (spaceInfo.frameSize?.right || 50) : (spaceInfo.frameSize?.left || 50);
+                  const curSide = spaceInfo.droppedCeiling?.sideFrame ?? defaultSide;
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>{sideLabel}</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const newVal = Math.max(10, curSide - 1);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, sideFrame: newVal } });
+                      }}
+                      disabled={curSide <= 10}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={curSide}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, sideFrame: Math.max(10, Math.min(100, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (isNaN(val)) return;
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, sideFrame: Math.max(10, Math.min(100, val)) } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const newVal = Math.min(100, curSide + 1);
+                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, sideFrame: newVal } });
+                      }}
+                      disabled={curSide >= 100}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
+
+                {/* 단내림 상부프레임 - 항상 표시 */}
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부프레임</label>
                   <div className={styles.frameItemInput}>
@@ -4261,7 +4314,8 @@ const Configurator: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 단내림 하부프레임 */}
+                {/* 단내림 하부프레임 - 노서라운드일 때만 표시 */}
+                {(spaceInfo.surroundType || 'surround') === 'no-surround' && (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>하부프레임</label>
                   <div className={styles.frameItemInput}>
@@ -4307,6 +4361,7 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
             </div>
           )}

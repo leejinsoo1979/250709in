@@ -169,6 +169,7 @@ export interface DroppedCeilingConfig {
   depth?: number;                // 공간 깊이 (생략 시 spaceInfo.depth 사용)
   topFrame?: number;             // 단내림 상부프레임 높이 (mm, 기본: frameSize.top과 동일)
   bottomFrame?: number;          // 단내림 하부프레임 높이 (mm, 기본: 0)
+  sideFrame?: number;            // 단내림 벽쪽 프레임 폭 (mm, 서라운드 시 사용, 기본: frameSize.left/right와 동일)
 }
 
 // 공간 설정 상태 타입
