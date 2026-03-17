@@ -994,17 +994,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
-  // 치수선 균등 간격 배치
-  // 단내림 시 4단: 전체폭 → 구간사이즈 → 가구배치공간 → 슬롯폭
-  // 단내림 없을 때 3단: 전체폭 → 구간사이즈(=가구배치공간) → 슬롯폭
+  // 치수선 균등 간격 배치: 2단 — 전체폭 → 구간사이즈 → 슬롯폭
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = hasDroppedCeiling ? 4 : 3;
+  const dimLevels = 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
   const columnDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
-  // 3단: 가구배치공간 (이격 제외 내부폭) — 단내림 시에만 별도 레벨
-  const zoneDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
   const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
@@ -1683,136 +1679,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={subGuideColor}
                   lineWidth={1}
                 />
-
-                {/* 가구배치공간 치수 (구간사이즈 한 단 아래) — 이격거리를 뺀 내부폭 */}
-                {!isFreePlacement && (() => {
-                  const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                  const mainInternalWidth = zsi.normal.width;
-                  const droppedInternalWidth = zsi.dropped?.width || 0;
-
-                  // 메인 구간: 구간 외곽(mainStartX/mainEndX)에서 이격만큼 안쪽으로
-                  const mainGapLeft = mainWidth - mainInternalWidth;
-                  // 메인구간 좌측 이격 = 전체 gap 중 좌측 비율 (간단히: 구간 시작에서 내부시작까지)
-                  // zsi.normal.startX는 ColumnIndexer 좌표계이므로 직접 쓰면 안 됨
-                  // 대신: 내부 시작 = 구간 외곽 시작 + (구간너비 - 내부너비) 의 좌측 이격 비율
-                  // 좌측 이격 = frameThickness.left (또는 gapConfig.left), 우측 = frameThickness.right
-                  const leftGap = spaceInfo.gapConfig?.left ?? frameSize.left ?? 1.5;
-                  const rightGap = spaceInfo.gapConfig?.right ?? frameSize.right ?? 1.5;
-                  const boundaryGap = zsi.boundaryGap || 0;
-
-                  // 메인 구간: position에 따라 이격 결정
-                  const isLeftDrop = spaceInfo.droppedCeiling.position === 'left';
-                  // 메인이 우측이면: 좌측=경계면이격, 우측=우이격
-                  // 메인이 좌측이면: 좌측=좌이격, 우측=경계면이격
-                  const mainLeftGapMm = isLeftDrop ? boundaryGap : leftGap;
-                  const mainRightGapMm = isLeftDrop ? rightGap : boundaryGap;
-                  const mainIntStartX = mainStartX + mmToThreeUnits(mainLeftGapMm);
-                  const mainIntEndX = mainEndX - mmToThreeUnits(mainRightGapMm);
-
-                  // 단내림 구간: position에 따라 이격 결정
-                  // 단내림이 좌측이면: 좌측=좌이격, 우측=경계면이격
-                  // 단내림이 우측이면: 좌측=경계면이격, 우측=우이격
-                  const droppedLeftGapMm = isLeftDrop ? leftGap : boundaryGap;
-                  const droppedRightGapMm = isLeftDrop ? boundaryGap : rightGap;
-                  const droppedIntStartX = droppedStartX + mmToThreeUnits(droppedLeftGapMm);
-                  const droppedIntEndX = droppedEndX - mmToThreeUnits(droppedRightGapMm);
-
-                  const dimY = zoneDimensionY;
-
-                  return (
-                    <>
-                      {/* 메인 구간 가구배치공간 */}
-                      <Line
-                        points={[[mainIntStartX, dimY, 0.002], [mainIntEndX, dimY, 0.002]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([mainIntStartX, dimY, 0.002], [mainIntStartX + 0.05, dimY, 0.002])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([mainIntEndX, dimY, 0.002], [mainIntEndX - 0.05, dimY, 0.002])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      {(showDimensionsText || isStep2) && (
-                        <Text
-                          renderOrder={1000}
-                          depthTest={false}
-                          position={[(mainIntStartX + mainIntEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
-                          fontSize={smallFontSize}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          outlineWidth={textOutlineWidth}
-                          outlineColor={textOutlineColor}
-                        >
-                          {Math.round(mainInternalWidth)}
-                        </Text>
-                      )}
-                      {/* 메인 구간 연장선 */}
-                      <Line
-                        points={[[mainIntStartX, dimY - mmToThreeUnits(20), 0.001], [mainIntStartX, dimY + mmToThreeUnits(10), 0.001]]}
-                        color={subGuideColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={[[mainIntEndX, dimY - mmToThreeUnits(20), 0.001], [mainIntEndX, dimY + mmToThreeUnits(10), 0.001]]}
-                        color={subGuideColor}
-                        lineWidth={1}
-                      />
-
-                      {/* 단내림 구간 가구배치공간 */}
-                      {droppedInternalWidth > 0 && (
-                        <>
-                          <Line
-                            points={[[droppedIntStartX, dimY, 0.002], [droppedIntEndX, dimY, 0.002]]}
-                            color={dimensionColor}
-                            lineWidth={1}
-                          />
-                          <Line
-                            points={createArrowHead([droppedIntStartX, dimY, 0.002], [droppedIntStartX + 0.05, dimY, 0.002])}
-                            color={dimensionColor}
-                            lineWidth={1}
-                          />
-                          <Line
-                            points={createArrowHead([droppedIntEndX, dimY, 0.002], [droppedIntEndX - 0.05, dimY, 0.002])}
-                            color={dimensionColor}
-                            lineWidth={1}
-                          />
-                          {(showDimensionsText || isStep2) && (
-                            <Text
-                              renderOrder={1000}
-                              depthTest={false}
-                              position={[(droppedIntStartX + droppedIntEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
-                              fontSize={smallFontSize}
-                              color={textColor}
-                              anchorX="center"
-                              anchorY="middle"
-                              outlineWidth={textOutlineWidth}
-                              outlineColor={textOutlineColor}
-                            >
-                              {Math.round(droppedInternalWidth)}
-                            </Text>
-                          )}
-                          {/* 단내림 구간 연장선 */}
-                          <Line
-                            points={[[droppedIntStartX, dimY - mmToThreeUnits(20), 0.001], [droppedIntStartX, dimY + mmToThreeUnits(10), 0.001]]}
-                            color={subGuideColor}
-                            lineWidth={1}
-                          />
-                          <Line
-                            points={[[droppedIntEndX, dimY - mmToThreeUnits(20), 0.001], [droppedIntEndX, dimY + mmToThreeUnits(10), 0.001]]}
-                            color={subGuideColor}
-                            lineWidth={1}
-                          />
-                        </>
-                      )}
-                    </>
-                  );
-                })()}
 
                 {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 (자유배치에서는 숨김) */}
                 {!isFreePlacement && (() => {
