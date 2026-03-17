@@ -996,7 +996,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 치수선 균등 간격 배치: 4단 — 전체폭 → 구간사이즈 → 슬롯합계(실배치) → 슬롯폭
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled === true;
   const dimLevels = hasDroppedCeiling ? 4 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
