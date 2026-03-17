@@ -368,8 +368,8 @@ function PageInner(){
             length = p.width;
           }
           
-          // 결방향은 항상 세로(V)로 설정 - 긴 방향이 결방향
-          const grain = 'V'; // 세로 결방향 (긴 방향)
+          // 결방향: useLivePanelData의 실제 grain 값 사용 (VERTICAL→V, HORIZONTAL→H)
+          const grain = p.grain === 'HORIZONTAL' ? 'H' : 'V';
           
           // 도어와 엔드패널은 자동으로 PET 재질로 설정
           let material = p.material || 'PB';
@@ -518,14 +518,15 @@ function PageInner(){
           length = p.width;
         }
         
-        const grain = 'V';
+        // 결방향: useLivePanelData의 실제 grain 값 사용 (VERTICAL→V, HORIZONTAL→H)
+        const grain = p.grain === 'HORIZONTAL' ? 'H' : 'V';
         let material = p.material || 'PB';
         const panelName = (p.name || '').toLowerCase();
-        if (panelName.includes('도어') || panelName.includes('door') || 
+        if (panelName.includes('도어') || panelName.includes('door') ||
             panelName.includes('엔드') || panelName.includes('end')) {
           material = 'PET';
         }
-        
+
         console.log('[CNCOptimizerPro] 패널 초기화:', p.name, {
           boringPositions: p.boringPositions,
           boringDepthPositions: p.boringDepthPositions,
