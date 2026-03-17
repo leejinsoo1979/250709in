@@ -124,11 +124,13 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
                 spaceInfo={previewSpaceInfo}
                 viewMode="3D"
                 renderMode="solid"
-                showAll={true}
+                showAll={false}
                 showDimensions={true}
                 showFrame={true}
+                showFurniture={false}
                 isEmbedded={true}
                 isStep2={true}
+                readOnly={true}
                 setViewMode={() => {}}
               />
             </div>
