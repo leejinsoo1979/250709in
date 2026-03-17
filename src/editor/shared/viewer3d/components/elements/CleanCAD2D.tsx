@@ -1843,10 +1843,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 통합 배치공간(단내림+메인) 양 끝에만 gap 적용, 단내림↔메인 경계에는 gap 없음.
                     // 3단 치수선에서는 단내림↔메인 경계 gap을 별도 치수로 표시.
 
-                    // 단내림↔메인 경계: gap 없음 → 각 구간 실배치 폭은 외벽쪽 gap만 차감
-                    const effectiveMainLeftGap = mainLeftAdj === 'step' ? 0 : mainLeftGap;
-                    const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
-                    mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
+                    // 메인 배치폭: 벽쪽은 차감, 단내림쪽은 경계이격 없음(0), 커튼박스쪽은 경계이격 흡수(확장)
+                    // 단내림↔메인: gap 없음 (단내림이 흡수)
+                    // 메인↔커튼박스: 메인이 경계이격 흡수 → 확장
+                    const mainLeftDeduct = mainLeftAdj === 'step' ? 0 : mainLeftAdj === 'dropped' ? -mainLeftGap : mainLeftGap;
+                    const mainRightDeduct = mainRightAdj === 'step' ? 0 : mainRightAdj === 'dropped' ? -mainRightGap : mainRightGap;
+                    // effectiveMainLeft/RightGap은 X좌표 계산에도 사용
+                    const effectiveMainLeftGap = mainLeftAdj === 'step' ? 0 : mainLeftAdj === 'dropped' ? -mainLeftGap : mainLeftGap;
+                    const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightAdj === 'dropped' ? -mainRightGap : mainRightGap;
+                    mainPlacementWidth = Math.round((mainWidth - mainLeftDeduct - mainRightDeduct) * 10) / 10;
 
                     // 단내림 구간: 메인쪽으로 경계이격만큼 확장, 외벽쪽은 이격 차감
                     // 단내림+메인은 통합 배치공간이므로 단내림↔메인 경계 gap은 단내림이 흡수
