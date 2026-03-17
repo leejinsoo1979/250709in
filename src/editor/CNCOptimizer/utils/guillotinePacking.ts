@@ -503,40 +503,47 @@ function packBySizeGroups(
 ): PackedBin[] {
   if (panels.length === 0) return [];
 
-  // 사이즈별 그룹핑 (w×h 키)
-  const sizeGroups = new Map<string, Rect[]>();
+  // width(W방향) 기준 그룹핑 — 같은 width끼리 같은 스트립에 들어가므로 같은 방향 보장
+  const widthGroups = new Map<number, Rect[]>();
   for (const panel of panels) {
-    const key = `${Math.round(panel.width)}×${Math.round(panel.height)}`;
-    if (!sizeGroups.has(key)) sizeGroups.set(key, []);
-    sizeGroups.get(key)!.push(panel);
+    const w = Math.round(panel.width);
+    if (!widthGroups.has(w)) widthGroups.set(w, []);
+    widthGroups.get(w)!.push(panel);
   }
 
-  // 면적 내림차순 정렬 (큰 사이즈 그룹 먼저)
-  const sortedKeys = [...sizeGroups.keys()].sort((a, b) => {
-    const [aw, ah] = a.split('×').map(Number);
-    const [bw, bh] = b.split('×').map(Number);
-    return (bw * bh) - (aw * ah);
+  // 면적 내림차순 정렬 (큰 패널 그룹 먼저)
+  const sortedWidths = [...widthGroups.keys()].sort((a, b) => {
+    // 같은 width 그룹 내 최대 면적 기준
+    const maxAreaA = Math.max(...widthGroups.get(a)!.map(p => p.width * p.height));
+    const maxAreaB = Math.max(...widthGroups.get(b)!.map(p => p.width * p.height));
+    return maxAreaB - maxAreaA;
   });
 
-  // 각 사이즈 그룹 내에서 가구번호순 정렬
-  for (const key of sortedKeys) {
-    sizeGroups.get(key)!.sort((a, b) => {
+  // 각 그룹 내에서 height 내림차순 → 가구번호순 정렬
+  for (const w of sortedWidths) {
+    widthGroups.get(w)!.sort((a, b) => {
+      // 1순위: height 내림차순 (큰 패널 먼저)
+      if (Math.round(a.height) !== Math.round(b.height)) {
+        return b.height - a.height;
+      }
+      // 2순위: 가구번호순
       const fnA = extractFurnitureNum(a.name || '');
       const fnB = extractFurnitureNum(b.name || '');
       return fnA - fnB;
     });
   }
 
-  // 사이즈 그룹 단위로 시트에 채워넣기
+  // 같은 width 그룹을 한꺼번에 GuillotinePacker로 패킹
+  // → 같은 width 패널은 같은 스트립(horizontal: height 기준)에 들어감
+  // → 자연스럽게 같은 방향 보장
   const bins: PackedBin[] = [];
   const allPlaced = new Set<string>();
 
-  for (const key of sortedKeys) {
-    const group = sizeGroups.get(key)!.filter(p => !allPlaced.has(p.id));
-    if (group.length === 0) continue;
+  for (const w of sortedWidths) {
+    let remaining = widthGroups.get(w)!.filter(p => !allPlaced.has(p.id));
+    if (remaining.length === 0) continue;
 
-    // 기존 시트 중 이 사이즈가 들어갈 수 있는 시트에 우선 추가
-    let remaining = [...group];
+    // 기존 시트에 들어갈 수 있으면 추가
     for (const bin of bins) {
       if (remaining.length === 0) break;
       const stillRemaining: Rect[] = [];
@@ -588,32 +595,13 @@ function extractPanelTypeKey(name: string): string {
 }
 
 /**
- * 방향 정규화: 같은 종류 패널은 같은 방향으로 통일
- *
- * 규칙:
- *   - width > binWidth인 패널이 있으면 → 해당 종류 전체를 width↔height 스왑 (rotated=true)
- *   - 한 종류 안에서 일부만 스왑되는 것 방지 → 그 종류 전체를 같은 방향으로 통일
+ * 개별 패널 방향 정규화: width > binWidth이면 해당 패널만 스왑
+ * 같은 종류 통일은 packBySizeGroups의 종류별 그룹핑에서 처리
  */
 function normalizeOrientation(panels: Rect[], binWidth: number): Rect[] {
-  // 패널 종류별 그룹핑
-  const typeGroups = new Map<string, Rect[]>();
-  for (const panel of panels) {
-    const typeKey = extractPanelTypeKey(panel.name || '');
-    if (!typeGroups.has(typeKey)) typeGroups.set(typeKey, []);
-    typeGroups.get(typeKey)!.push(panel);
-  }
-
-  // 각 종류별로: 하나라도 width > binWidth이면 전체 스왑
-  const swapTypes = new Set<string>();
-  for (const [typeKey, group] of typeGroups) {
-    const needsSwap = group.some(p => p.width > binWidth);
-    if (needsSwap) swapTypes.add(typeKey);
-  }
-
-  // 스왑 적용
   return panels.map(panel => {
-    const typeKey = extractPanelTypeKey(panel.name || '');
-    if (swapTypes.has(typeKey)) {
+    if (panel.width > binWidth && panel.height <= binWidth) {
+      // 이 패널만 width↔height 스왑해서 시트에 들어가게 함
       return { ...panel, width: panel.height, height: panel.width, rotated: true };
     }
     return { ...panel, rotated: false };
