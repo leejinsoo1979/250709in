@@ -3518,7 +3518,116 @@ const Configurator: React.FC = () => {
           />
         </div>
 
-        {/* 단내림 설정 */}
+        {/* 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간) */}
+        {isFreeMode && (<div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>단내림</h3>
+            <HelpBtn title="단내림" text="커튼박스 안쪽으로 천장이 내려오는 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 커튼박스가 활성화된 경우 같은 쪽에만 설정할 수 있습니다." />
+          </div>
+
+          <div className={styles.toggleButtonGroup}>
+            <button
+              className={`${styles.toggleButton} ${!spaceInfo.stepCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                if (spaceInfo.stepCeiling?.enabled) {
+                  handleSpaceInfoUpdate({
+                    stepCeiling: { ...spaceInfo.stepCeiling, enabled: false }
+                  });
+                }
+              }}
+            >
+              없음
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left' ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                const isAlready = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+                if (isAlready) return;
+                handleSpaceInfoUpdate({
+                  stepCeiling: {
+                    enabled: true,
+                    position: 'left',
+                    width: spaceInfo.stepCeiling?.width || 900,
+                    dropHeight: spaceInfo.stepCeiling?.dropHeight || 200
+                  }
+                });
+              }}
+            >
+              좌단내림
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right' ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                const isAlready = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+                if (isAlready) return;
+                handleSpaceInfoUpdate({
+                  stepCeiling: {
+                    enabled: true,
+                    position: 'right',
+                    width: spaceInfo.stepCeiling?.width || 900,
+                    dropHeight: spaceInfo.stepCeiling?.dropHeight || 200
+                  }
+                });
+              }}
+            >
+              우단내림
+            </button>
+          </div>
+
+          {/* 단내림 너비/높이 입력 */}
+          {spaceInfo.stepCeiling?.enabled && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+              <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
+              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                <input
+                  type="text"
+                  defaultValue={spaceInfo.stepCeiling.width}
+                  key={`step-ceiling-width-${spaceInfo.stepCeiling.width}`}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+                  onBlur={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (isNaN(val) || val < 100) {
+                      e.target.value = (spaceInfo.stepCeiling?.width || 900).toString();
+                      if (!isNaN(val) && val < 100) {
+                        handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, width: 100 } });
+                      }
+                      return;
+                    }
+                    const maxW = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.width : 0) - 100;
+                    const clamped = Math.min(val, maxW);
+                    handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, width: clamped } });
+                  }}
+                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  style={{ textAlign: 'center', fontSize: '12px' }}
+                />
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                <input
+                  type="text"
+                  defaultValue={(spaceInfo.height || 2400) - (spaceInfo.stepCeiling.dropHeight || 200)}
+                  key={`step-ceiling-h-${spaceInfo.height}-${spaceInfo.stepCeiling.dropHeight}`}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+                  onBlur={(e) => {
+                    const val = parseInt(e.target.value);
+                    const totalH = spaceInfo.height || 2400;
+                    if (isNaN(val)) {
+                      e.target.value = (totalH - (spaceInfo.stepCeiling?.dropHeight || 200)).toString();
+                      return;
+                    }
+                    const dropH = Math.max(10, Math.min(totalH - 100, totalH - val));
+                    handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, dropHeight: dropH } });
+                  }}
+                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  style={{ textAlign: 'center', fontSize: '12px' }}
+                />
+              </div>
+            </div>
+          )}
+        </div>)}
+
+        {/* 커튼박스/단내림 설정 (슬롯모드: 단내림, 자유배치: 커튼박스) */}
         {(<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -3636,115 +3745,6 @@ const Configurator: React.FC = () => {
               {isFreeMode ? '우측' : '우단내림'}
             </button>
           </div>
-        </div>)}
-
-        {/* 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간) */}
-        {isFreeMode && (<div className={styles.configSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>단내림</h3>
-            <HelpBtn title="단내림" text="커튼박스 안쪽으로 천장이 내려오는 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 커튼박스가 활성화된 경우 같은 쪽에만 설정할 수 있습니다." />
-          </div>
-
-          <div className={styles.toggleButtonGroup}>
-            <button
-              className={`${styles.toggleButton} ${!spaceInfo.stepCeiling?.enabled ? styles.toggleButtonActive : ''}`}
-              onClick={() => {
-                if (spaceInfo.stepCeiling?.enabled) {
-                  handleSpaceInfoUpdate({
-                    stepCeiling: { ...spaceInfo.stepCeiling, enabled: false }
-                  });
-                }
-              }}
-            >
-              없음
-            </button>
-            <button
-              className={`${styles.toggleButton} ${spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left' ? styles.toggleButtonActive : ''}`}
-              onClick={() => {
-                const isAlready = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
-                if (isAlready) return;
-                handleSpaceInfoUpdate({
-                  stepCeiling: {
-                    enabled: true,
-                    position: 'left',
-                    width: spaceInfo.stepCeiling?.width || 900,
-                    dropHeight: spaceInfo.stepCeiling?.dropHeight || 200
-                  }
-                });
-              }}
-            >
-              좌단내림
-            </button>
-            <button
-              className={`${styles.toggleButton} ${spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right' ? styles.toggleButtonActive : ''}`}
-              onClick={() => {
-                const isAlready = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
-                if (isAlready) return;
-                handleSpaceInfoUpdate({
-                  stepCeiling: {
-                    enabled: true,
-                    position: 'right',
-                    width: spaceInfo.stepCeiling?.width || 900,
-                    dropHeight: spaceInfo.stepCeiling?.dropHeight || 200
-                  }
-                });
-              }}
-            >
-              우단내림
-            </button>
-          </div>
-
-          {/* 단내림 너비/높이 입력 */}
-          {spaceInfo.stepCeiling?.enabled && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-              <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
-              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                <input
-                  type="text"
-                  defaultValue={spaceInfo.stepCeiling.width}
-                  key={`step-ceiling-width-${spaceInfo.stepCeiling.width}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                  onBlur={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (isNaN(val) || val < 100) {
-                      e.target.value = (spaceInfo.stepCeiling?.width || 900).toString();
-                      if (!isNaN(val) && val < 100) {
-                        handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, width: 100 } });
-                      }
-                      return;
-                    }
-                    const maxW = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.width : 0) - 100;
-                    const clamped = Math.min(val, maxW);
-                    handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, width: clamped } });
-                  }}
-                  className={`${styles.input} ${styles.inputWithUnitField}`}
-                  style={{ textAlign: 'center', fontSize: '12px' }}
-                />
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
-              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                <input
-                  type="text"
-                  defaultValue={(spaceInfo.height || 2400) - (spaceInfo.stepCeiling.dropHeight || 200)}
-                  key={`step-ceiling-h-${spaceInfo.height}-${spaceInfo.stepCeiling.dropHeight}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                  onBlur={(e) => {
-                    const val = parseInt(e.target.value);
-                    const totalH = spaceInfo.height || 2400;
-                    if (isNaN(val)) {
-                      e.target.value = (totalH - (spaceInfo.stepCeiling?.dropHeight || 200)).toString();
-                      return;
-                    }
-                    const dropH = Math.max(10, Math.min(totalH - 100, totalH - val));
-                    handleSpaceInfoUpdate({ stepCeiling: { ...spaceInfo.stepCeiling!, dropHeight: dropH } });
-                  }}
-                  className={`${styles.input} ${styles.inputWithUnitField}`}
-                  style={{ textAlign: 'center', fontSize: '12px' }}
-                />
-              </div>
-            </div>
-          )}
         </div>)}
 
         {/* 컬럼수 표시 - 단내림 아래 */}
