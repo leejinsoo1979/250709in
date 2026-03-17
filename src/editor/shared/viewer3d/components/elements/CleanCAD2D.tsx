@@ -2992,7 +2992,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
           const bottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const furnitureH = leftmostMod ? (leftmostMod.freeHeight || _internalHeight) : _internalHeight;
-          const effectiveH = isLeftDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
+          // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
+          const leftModInDrop = leftmostMod?.zone === 'dropped';
+          const effectiveH = (isLeftDrop && leftModInDrop) || (isLeftDrop && !leftmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
           const topFrameH = Math.max(0, effectiveH - bottomFrameH - furnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
@@ -3062,9 +3064,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
-              {/* 세로 메인 라인: 0 ~ effectiveCeiling (단내림 있으면 spaceHeight까지) */}
+              {/* 세로 메인 라인: 0 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
-                points={[[innerX, 0, 0.002], [innerX, isLeftDrop ? spaceHeight : effectiveCeilingY, 0.002]]}
+                points={[[innerX, 0, 0.002], [innerX, effectiveCeilingY, 0.002]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
@@ -3072,7 +3074,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
-                points={createArrowHead([innerX, isLeftDrop ? spaceHeight : effectiveCeilingY, 0.002], [innerX, (isLeftDrop ? spaceHeight : effectiveCeilingY) - 0.05, 0.002])}
+                points={createArrowHead([innerX, effectiveCeilingY, 0.002], [innerX, effectiveCeilingY - 0.05, 0.002])}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
 
@@ -3162,22 +3164,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 좌단내림 시 단내림 구간 치수 */}
-              {isLeftDrop && dropHeight > 0 && (
-                <>
-                  <NativeLine name="dimension_line"
-                    points={[[innerX - mmToThreeUnits(15), effectiveCeilingY, 0.002], [innerX + mmToThreeUnits(15), effectiveCeilingY, 0.002]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[innerX - mmToThreeUnits(25), (effectiveCeilingY + spaceHeight) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {dropHeight}
-                  </Text>
-                </>
-              )}
+              {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
 
               {/* ── 연장선: 각 경계점에서 수평선 ── */}
               {/* 바닥(Y=0) */}
@@ -3202,86 +3189,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 points={[[leftOffset, furnitureTopY, 0.001], [innerX - mmToThreeUnits(20), furnitureTopY, 0.001]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 단내림 경계 (effectiveCeiling != spaceHeight 일 때) */}
-              {isLeftDrop && dropHeight > 0 && (
-                <NativeLine name="dimension_line"
-                  points={[[leftOffset, effectiveCeilingY, 0.001], [innerX - mmToThreeUnits(20), effectiveCeilingY, 0.001]]}
-                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                />
-              )}
             </>
           );
         })()}
       </group>}
 
-      {/* 자유배치 커튼박스: 커튼박스 측 전체 높이(height + dropHeight) 치수선 */}
-      {showDimensions && isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
-        const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
-        const totalH = spaceInfo.height + dropH;
-        const totalHThree = mmToThreeUnits(totalH);
-        const isLeftCurtain = spaceInfo.droppedCeiling.position === 'left';
-        // 커튼박스 치수선: 좌/우 2단 치수선(leftDimensionX/-320, rightOuterX/+400)보다 더 바깥에 배치
-        const dimX = isLeftCurtain
-          ? leftDimensionX + leftOffset - mmToThreeUnits(200)                          // 좌측: 2단(-320)보다 200 더 바깥 = -520
-          : mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(600);        // 우측: 2단(+400)보다 200 더 바깥 = +600
-        const midY = totalHThree / 2;
-        return (
-          <group>
-            {/* 전체 치수선 (바닥 ~ 커튼박스 천장) */}
-            <NativeLine name="dimension_line"
-              points={[[dimX, 0, 0.002], [dimX, totalHThree, 0.002]]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 하단 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([dimX, 0, 0.002], [dimX, 0.05, 0.002])}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 상단 화살표 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([dimX, totalHThree, 0.002], [dimX, totalHThree - 0.05, 0.002])}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 전체 높이 텍스트 */}
-            <Text
-              renderOrder={1000} depthTest={false}
-              position={[dimX + (isLeftCurtain ? -mmToThreeUnits(60) : mmToThreeUnits(60)), midY, 0.01]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center" anchorY="middle"
-              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-              rotation={[0, 0, 0]}
-            >
-              {totalH}
-            </Text>
-
-            {/* 연장선: 커튼박스 천장 → 치수선 */}
-            {isLeftCurtain ? (
-              <NativeLine name="dimension_line"
-                points={[[leftOffset, totalHThree, 0.001], [dimX + mmToThreeUnits(20), totalHThree, 0.001]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-            ) : (
-              <NativeLine name="dimension_line"
-                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, totalHThree, 0.001], [dimX - mmToThreeUnits(20), totalHThree, 0.001]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-            )}
-            {/* 연장선: 바닥 → 치수선 */}
-            {isLeftCurtain ? (
-              <NativeLine name="dimension_line"
-                points={[[leftOffset, 0, 0.001], [dimX + mmToThreeUnits(20), 0, 0.001]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-            ) : (
-              <NativeLine name="dimension_line"
-                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [dimX - mmToThreeUnits(20), 0, 0.001]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-            )}
-          </group>
-        );
-      })()}
+      {/* 커튼박스 전체높이 치수선 제거됨 — 사용자 요청 */}
 
       {/* ═══ 우측 세로 치수선 (2단 구조) ═══ */}
       {showDimensions && <group>
@@ -3308,7 +3221,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const rFurnitureH = rightmostMod ? (rightmostMod.freeHeight || rInternalHeight) : rInternalHeight;
-          const rEffectiveH = isRightDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
+          // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
+          const rightModInDrop = rightmostMod?.zone === 'dropped';
+          const rEffectiveH = (isRightDrop && rightModInDrop) || (isRightDrop && !rightmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
           const rTopFrameH = Math.max(0, rEffectiveH - rBottomFrameH - rFurnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
@@ -3377,9 +3292,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
-              {/* 세로 메인 라인: 0 ~ effectiveCeiling (단내림 있으면 spaceHeight까지) */}
+              {/* 세로 메인 라인: 0 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
-                points={[[rightInnerX, 0, 0.002], [rightInnerX, isRightDrop ? spaceHeight : rEffectiveCeilingY, 0.002]]}
+                points={[[rightInnerX, 0, 0.002], [rightInnerX, rEffectiveCeilingY, 0.002]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
@@ -3387,7 +3302,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
-                points={createArrowHead([rightInnerX, isRightDrop ? spaceHeight : rEffectiveCeilingY, 0.002], [rightInnerX, (isRightDrop ? spaceHeight : rEffectiveCeilingY) - 0.05, 0.002])}
+                points={createArrowHead([rightInnerX, rEffectiveCeilingY, 0.002], [rightInnerX, rEffectiveCeilingY - 0.05, 0.002])}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
 
@@ -3477,22 +3392,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 우단내림 시 단내림 구간 치수 */}
-              {isRightDrop && dropHeight > 0 && (
-                <>
-                  <NativeLine name="dimension_line"
-                    points={[[rightInnerX - mmToThreeUnits(15), rEffectiveCeilingY, 0.002], [rightInnerX + mmToThreeUnits(15), rEffectiveCeilingY, 0.002]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[rightInnerX + mmToThreeUnits(10), (rEffectiveCeilingY + spaceHeight) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {dropHeight}
-                  </Text>
-                </>
-              )}
+              {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
 
               {/* ── 연장선: 각 경계점에서 수평선 ── */}
               {/* 바닥(Y=0) */}
@@ -3517,13 +3417,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 points={[[rightWallX, rFurnitureTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rFurnitureTopY, 0.001]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 단내림 경계 */}
-              {isRightDrop && dropHeight > 0 && (
-                <NativeLine name="dimension_line"
-                  points={[[rightWallX, rEffectiveCeilingY, 0.001], [rightInnerX + mmToThreeUnits(20), rEffectiveCeilingY, 0.001]]}
-                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                />
-              )}
+              {/* 커튼박스 단내림 경계 연장선 제거 */}
             </>
           );
         })()}
@@ -5268,14 +5162,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 단내림 위치에 따라 치수선 표시 */}
               {spaceInfo.droppedCeiling.position === 'right' ? (
                 <>
-                  {/* 우측 단내림/커튼박스 - 우측 외부 치수선에 높이차이 표시 */}
-                  {(() => {
-                    const dimBottom = isFreePlacement
-                      ? mmToThreeUnits(spaceInfo.height)
-                      : mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
-                    const dimTop = isFreePlacement
-                      ? mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight)
-                      : actualSpaceHeight;
+                  {/* 우측 커튼박스 — 커튼박스 높이차이 치수 제거 (사용자 요청) */}
+                  {/* 슬롯배치에서만 단내림 높이차이 표시 */}
+                  {!isFreePlacement && (() => {
+                    const dimBottom = mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
+                    const dimTop = actualSpaceHeight;
                     const dimMid = (dimBottom + dimTop) / 2;
                     const zPos = spaceZOffset - mmToThreeUnits(200);
                     return (
@@ -5285,19 +5176,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {/* 하단 화살표 */}
                         <Line
                           points={createArrowHead([rightDimensionX, dimBottom, zPos], [rightDimensionX, dimBottom + 0.05, zPos])}
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {/* 상단 화살표 */}
                         <Line
                           points={createArrowHead([rightDimensionX, dimTop, zPos], [rightDimensionX, dimTop - 0.05, zPos])}
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {/* 높이차이 텍스트 */}
                         {(showDimensionsText || isStep2) && (
                           <Text
                             renderOrder={1000}
@@ -5429,53 +5317,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
           )}
 
-          {/* 자유배치 커튼박스: 전체 높이(height + dropHeight) 치수선 — 좌측뷰 */}
-          {isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
-            const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
-            const totalH = spaceInfo.height + dropH;
-            const totalHThree = mmToThreeUnits(totalH);
-            const dimX = rightDimensionX + mmToThreeUnits(150); // 기존 우측 치수선(+200)보다 150 더 바깥 = +350
-            const zPos = spaceZOffset - mmToThreeUnits(200);
-            const midY = totalHThree / 2;
-            return (
-              <>
-                {/* 전체 치수선 (바닥 ~ 커튼박스 천장) */}
-                <Line
-                  points={[[dimX, 0, zPos], [dimX, totalHThree, zPos]]}
-                  color={dimensionColor} lineWidth={1}
-                />
-                {/* 하단 화살표 */}
-                <Line
-                  points={createArrowHead([dimX, 0, zPos], [dimX, 0.05, zPos])}
-                  color={dimensionColor} lineWidth={1}
-                />
-                {/* 상단 화살표 */}
-                <Line
-                  points={createArrowHead([dimX, totalHThree, zPos], [dimX, totalHThree - 0.05, zPos])}
-                  color={dimensionColor} lineWidth={1}
-                />
-                {/* 전체 높이 텍스트 */}
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                    renderOrder={1000} depthTest={false}
-                    position={[dimX + mmToThreeUnits(60), midY, zPos]}
-                    fontSize={largeFontSize}
-                    color={textColor}
-                    anchorX="center" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    rotation={[0, 0, 0]}
-                  >
-                    {totalH}
-                  </Text>
-                )}
-                {/* 연장선: 커튼박스 천장 → 치수선 */}
-                <Line
-                  points={[[actualSpaceWidth, totalHThree, spaceZOffset], [actualSpaceWidth, totalHThree, zPos + mmToThreeUnits(20)]]}
-                  color={dimensionColor} lineWidth={1}
-                />
-              </>
-            );
-          })()}
+          {/* 커튼박스 전체 높이 치수선 — 좌측뷰 (제거됨, 사용자 요청) */}
         </group>}
 
         {/* 좌측 3구간 높이 치수선 */}
