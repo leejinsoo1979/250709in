@@ -1840,17 +1840,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
 
                     // ── 3단 치수선: 각 구간의 실배치 폭 ──
-                    // 각 구간은 양쪽 경계의 이격거리를 뺀 실배치 폭을 표시
+                    // 통합 배치공간(단내림+메인): 단내림↔메인 경계에는 이격 없음
+                    // 이격은 통합 배치공간의 양 끝(외벽/커튼박스)에만 적용
 
-                    // 메인 배치폭: 양쪽 경계 이격 차감
-                    // - 단내림 인접: 경계이격(middleGap) 차감
-                    // - 커튼박스 인접: 경계이격(middleGap) 차감
-                    // - 벽 인접: 벽이격 차감
-                    const effectiveMainLeftGap = scOnLeft ? middleGapMm : mainLeftGap;
-                    const effectiveMainRightGap = scOnRight ? middleGapMm : mainRightGap;
+                    // 메인 배치폭: 단내림 인접 쪽은 이격 없음, 커튼박스/벽 인접 쪽만 차감
+                    const effectiveMainLeftGap = scOnLeft ? 0 : mainLeftGap;
+                    const effectiveMainRightGap = scOnRight ? 0 : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 배치폭: 외벽쪽 이격 + 메인쪽 경계이격 차감
+                    // 단내림 배치폭: 외벽쪽 이격만 차감 (메인쪽 경계에는 이격 없음)
                     let scOuterGap = 0;
                     if (hasSC) {
                       const sameSide = hasDC && dcPosition === scPosition;
@@ -1860,7 +1858,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      scPlacementWidth = Math.round((scWidth - scOuterGap - middleGapMm) * 10) / 10;
+                      scPlacementWidth = Math.round((scWidth - scOuterGap) * 10) / 10;
                     }
 
                     // 커튼박스 구간: 양쪽 gap 차감
@@ -1879,12 +1877,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     var scPlacEndX = scEndX;
                     if (hasSC) {
                       if (scOnLeft) {
-                        // 좌단내림: 왼쪽=외벽쪽(차감), 오른쪽=메인쪽 경계이격(차감)
+                        // 좌단내림: 왼쪽=외벽쪽(차감), 오른쪽=메인과 경계(이격 없음)
                         scPlacStartX = scStartX + mmToThreeUnits(scOuterGap);
-                        scPlacEndX = scEndX - mmToThreeUnits(middleGapMm);
+                        scPlacEndX = scEndX; // 메인과 경계: 이격 없음
                       } else {
-                        // 우단내림: 왼쪽=메인쪽 경계이격(차감), 오른쪽=외벽쪽(차감)
-                        scPlacStartX = scStartX + mmToThreeUnits(middleGapMm);
+                        // 우단내림: 왼쪽=메인과 경계(이격 없음), 오른쪽=외벽쪽(차감)
+                        scPlacStartX = scStartX; // 메인과 경계: 이격 없음
                         scPlacEndX = scEndX - mmToThreeUnits(scOuterGap);
                       }
                     }
@@ -2130,16 +2128,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // - 벽 인접 → wallGap (좌/우이격 치수선에서 별도 표시)
                   const boundaries: { leftX: number; rightX: number }[] = [];
 
-                  // 단내림↔메인 경계 이격 (항상 추가)
-                  if (hasSC) {
-                    if (scOnLeft) {
-                      // [단내림] gap [메인] — scEndX ~ mainStartX
-                      boundaries.push({ leftX: scEndX, rightX: mainStartX });
-                    } else {
-                      // [메인] gap [단내림] — mainEndX ~ scStartX
-                      boundaries.push({ leftX: mainEndX, rightX: scStartX });
-                    }
-                  }
+                  // 단내림↔메인 경계: 통합 배치공간이므로 이격 없음 (치수선 미표시)
 
                   if (hasDC && hasSC) {
                     const sameSide = dcPosition === scPosition;
@@ -2151,14 +2140,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         boundaries.push({ leftX: scEndX, rightX: droppedStartX });
                       }
                     } else {
-                      // 반대 쪽:
-                      // 단내림 벽쪽 경계
-                      if (scOnLeft) {
-                        boundaries.push({ leftX: leftOffset, rightX: scStartX });
-                      } else {
-                        boundaries.push({ leftX: scEndX, rightX: leftOffset + mmToThreeUnits(spaceInfo.width) });
-                      }
-                      // 커튼박스↔메인 경계
+                      // 반대 쪽: 커튼박스↔메인(or 통합배치공간) 경계만 표시
+                      // 단내림 벽쪽은 통합 배치공간 외벽이격으로 처리 (별도 경계 치수 불필요)
                       if (dcOnLeft) {
                         boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
                       } else {
@@ -2173,12 +2156,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                     }
                   } else if (hasSC) {
-                    // 단내림만: 벽↔단내림 경계
-                    if (scOnLeft) {
-                      boundaries.push({ leftX: leftOffset, rightX: scStartX });
-                    } else {
-                      boundaries.push({ leftX: scEndX, rightX: leftOffset + mmToThreeUnits(spaceInfo.width) });
-                    }
+                    // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
+                    // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
                   return (<>
@@ -2925,18 +2904,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 좌측 전체 높이 치수선 */}
+      {/* ═══ 좌측 세로 치수선 (2단 구조) ═══ */}
       {showDimensions && <group>
-        {/* 단내림이 있는 경우 높이 치수선 표시 */}
-        {spaceInfo.droppedCeiling?.enabled ? (
-          <>
-            {/* 단내림 위치에 따라 치수선 표시 */}
-            {spaceInfo.droppedCeiling.position === 'left' ? (
-              <>
-                {/* 좌측 단내림 - 바깥: 전체 높이, 안쪽: 프레임 분해 */}
-                {(() => {
-                  const floorFinishY = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
-                  const hasFloorFinish = floorFinishHeightMmGlobal > 0;
+        {(() => {
+          // ── 가구 데이터 수집 ──
+          const freeMods = placedModules.filter(m => m.isFreePlacement);
+          const leftmostMod = freeMods.length > 0
+            ? freeMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
+
+          // ── 공통 변수 ──
+          const outerX = leftDimensionX + leftOffset;  // 2단(바깥) X
+          const innerX = leftFrameDimensionX + leftOffset;  // 1단(안쪽) X
+          const floorFinishY = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
+          const hasFloorFinish = floorFinishHeightMmGlobal > 0;
 
                   if (isFreePlacement) {
                     // 자유배치: dropHeight 구간은 height ~ height+dropHeight (위로 확장)
