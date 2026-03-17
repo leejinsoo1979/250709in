@@ -1809,7 +1809,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 슬롯배치: ColumnIndexer의 슬롯 합계 사용
                   const leftGapMm = spaceInfo.gapConfig?.left ?? 1.5;
                   const rightGapMm = spaceInfo.gapConfig?.right ?? 1.5;
-                  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
+                  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5; // 메인↔단내림(or 메인↔커튼박스) 경계
+                  // 단내림+커튼박스 동시 활성 시 단내림↔커튼박스 경계는 middle2
+                  const middle2GapMm = (hasSC && hasDC)
+                    ? (spaceInfo.gapConfig?.middle2 ?? middleGapMm)
+                    : middleGapMm;
 
                   const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
                   const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
@@ -1844,26 +1848,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 외벽쪽 gap만 차감, 메인쪽은 gap 없음
+                    // 단내림 구간: 양쪽 경계이격을 흡수하여 확장
+                    // 단내림은 낮은 가구 배치 → 양쪽 경계이격에 간섭 없음
                     let scOuterGap = 0;
                     if (hasSC) {
+                      // 단내림의 외벽쪽(커튼박스쪽) 경계이격
                       const sameSide = hasDC && dcPosition === scPosition;
                       if (sameSide) {
-                        scOuterGap = middleGapMm;
+                        scOuterGap = middle2GapMm; // 단내림↔커튼박스 경계
                       } else {
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      scPlacementWidth = Math.round((scWidth - scOuterGap) * 10) / 10;
+                      // 메인↔단내림 경계이격도 흡수
+                      const scMainBoundaryGap = middleGapMm; // 메인↔단내림 경계
+                      scPlacementWidth = Math.round((scWidth + scMainBoundaryGap + scOuterGap) * 10) / 10;
                     }
 
                     // 커튼박스 구간: 양쪽 gap 차감
+                    // 커튼박스의 내측 경계이격 = 단내림이 있으면 middle2, 없으면 middle
+                    const dcInnerGap = hasSC ? middle2GapMm : middleGapMm;
                     const dcLeftGap = dcOnLeft
                       ? (hasLeftWall ? leftGapMm : 0)
-                      : middleGapMm;
+                      : dcInnerGap;
                     const dcRightGap = dcOnRight
                       ? (hasRightWall ? rightGapMm : 0)
-                      : middleGapMm;
+                      : dcInnerGap;
                     dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
 
                     // 실배치 X좌표 (각 구간의 실 배치 가능 영역 경계)

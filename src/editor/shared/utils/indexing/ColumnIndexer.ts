@@ -920,6 +920,14 @@ export class ColumnIndexer {
       }
     }
     
+    // normal↔dropped 경계이격 결정
+    // 단내림+커튼박스 동시 활성 → normal↔dropped = 단내림↔커튼박스 경계 → middle2
+    // 커튼박스만 활성 → normal↔dropped = 메인↔커튼박스 경계 → middle
+    const hasStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled === true;
+    const normalDroppedBoundaryGap = hasStepCeiling
+      ? (spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5)
+      : (spaceInfo.gapConfig?.middle ?? 1.5);
+
     // 각 구간의 외부 너비 (프레임 제외 전)
     const normalAreaOuterWidth = totalWidth - droppedWidth;
     const droppedAreaOuterWidth = droppedWidth;
@@ -937,10 +945,9 @@ export class ColumnIndexer {
           // 자유배치 + 서라운드: 이격거리 기반 계산
           const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
           const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
-          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
-          // 단내림구간(좌): 좌벽이격 + 경계이격
-          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap - middleGap;
+          // 단내림구간(좌): 좌벽이격 + 경계이격(단내림↔커튼박스 or 메인↔커튼박스)
+          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap - normalDroppedBoundaryGap;
           droppedStartX = internalStartX;
 
           // 일반구간(우): 우벽이격만
@@ -950,7 +957,7 @@ export class ColumnIndexer {
           console.log('🔍 자유배치 서라운드 왼쪽 단내림 경계 계산:', {
             '좌벽이격': leftGap,
             '우벽이격': rightGap,
-            '경계이격': middleGap,
+            '경계이격': normalDroppedBoundaryGap,
             '단내림 내경': droppedAreaInternalWidth,
             '메인 내경': normalAreaInternalWidth,
           });
@@ -982,10 +989,9 @@ export class ColumnIndexer {
           // 자유배치 + 노서라운드: 이격거리 기반 계산
           const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
           const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
-          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
-          // 단내림구간(좌): 좌벽이격 + 경계이격
-          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap - middleGap;
+          // 단내림구간(좌): 좌벽이격 + 경계이격(단내림↔커튼박스 or 메인↔커튼박스)
+          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap - normalDroppedBoundaryGap;
           droppedStartX = internalStartX;
 
           // 일반구간(우): 우벽이격만
@@ -995,7 +1001,7 @@ export class ColumnIndexer {
           console.log('🔍 자유배치 노서라운드 왼쪽 단내림 경계 계산:', {
             '좌벽이격': leftGap,
             '우벽이격': rightGap,
-            '경계이격': middleGap,
+            '경계이격': normalDroppedBoundaryGap,
             '단내림 내경': droppedAreaInternalWidth,
             '메인 내경': normalAreaInternalWidth,
           });
@@ -1074,20 +1080,19 @@ export class ColumnIndexer {
           // 자유배치 + 서라운드: 이격거리 기반 계산
           const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
           const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
-          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
           // 일반구간(좌): 좌벽이격만
           normalAreaInternalWidth = normalAreaOuterWidth - leftGap;
           normalStartX = internalStartX;
 
-          // 단내림구간(우): 우벽이격 + 경계이격
-          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap - middleGap;
+          // 단내림구간(우): 우벽이격 + 경계이격(단내림↔커튼박스 or 메인↔커튼박스)
+          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap - normalDroppedBoundaryGap;
           droppedStartX = normalStartX + normalAreaInternalWidth;
 
           console.log('🔍 자유배치 서라운드 오른쪽 단내림 경계 계산:', {
             '좌벽이격': leftGap,
             '우벽이격': rightGap,
-            '경계이격': middleGap,
+            '경계이격': normalDroppedBoundaryGap,
             '메인 내경': normalAreaInternalWidth,
             '단내림 내경': droppedAreaInternalWidth,
           });
@@ -1119,20 +1124,19 @@ export class ColumnIndexer {
           // 자유배치 + 노서라운드: 이격거리 기반 계산
           const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
           const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
-          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
           // 일반구간(좌): 좌벽이격만
           normalAreaInternalWidth = normalAreaOuterWidth - leftGap;
           normalStartX = internalStartX;
 
-          // 단내림구간(우): 우벽이격 + 경계이격
-          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap - middleGap;
+          // 단내림구간(우): 우벽이격 + 경계이격(단내림↔커튼박스 or 메인↔커튼박스)
+          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap - normalDroppedBoundaryGap;
           droppedStartX = normalStartX + normalAreaInternalWidth;
 
           console.log('🔍 자유배치 노서라운드 오른쪽 단내림 경계 계산:', {
             '좌벽이격': leftGap,
             '우벽이격': rightGap,
-            '경계이격': middleGap,
+            '경계이격': normalDroppedBoundaryGap,
             '메인 내경': normalAreaInternalWidth,
             '단내림 내경': droppedAreaInternalWidth,
           });
@@ -1207,7 +1211,7 @@ export class ColumnIndexer {
     }
     
     // 경계면 이격거리 — 자유배치/슬롯배치 모두 실제 이격거리 반환
-    let boundaryGap = spaceInfo.gapConfig?.middle ?? 1.5;
+    let boundaryGap = normalDroppedBoundaryGap;
 
     // 각 영역의 컬럼 수 계산
     let normalColumnCount: number;

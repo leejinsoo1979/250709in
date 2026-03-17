@@ -1549,9 +1549,13 @@ const FreePlacementDropZone: React.FC = () => {
         if (viewMode === '2D') return null;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
-        const middleGapVal = spaceInfo.gapConfig?.middle ?? 1.5;
         const hasDropped = spaceInfo.droppedCeiling?.enabled;
         const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+        // 통합 배치공간↔커튼박스 경계이격 (단내림+커튼박스: middle2, 커튼박스만: middle)
+        const hasStepForGap = spaceInfo.stepCeiling?.enabled;
+        const middleGapVal = (hasDropped && hasStepForGap)
+          ? (spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5)
+          : (spaceInfo.gapConfig?.middle ?? 1.5);
         const droppedWidth = spaceInfo.droppedCeiling?.width || 0;
         const totalWidth = spaceInfo.width || 2400;
         const halfW = totalWidth / 2;
@@ -1601,12 +1605,11 @@ const FreePlacementDropZone: React.FC = () => {
         if (effectiveLeftGap > 0) {
           const w = effectiveLeftGap * 0.01;
           const cx = startX * 0.01 + w / 2;
-          if (leftAdj === 'dropped' && dcWallH > 0) {
-            // 커튼박스 인접: 내벽 높이만 (메인천장~커튼박스천장)
-            const gapY = spaceH + dcWallH / 2;
+          if (leftAdj === 'dropped') {
+            // 커튼박스 인접: 메인 천장 높이까지 (바닥~메인천장 = 커튼박스 내벽 아랫면)
             boxes.push(
-              <mesh key="gap-left" position={[cx, gapY, zOffset]}>
-                <boxGeometry args={[w, dcWallH, depthThree]} />
+              <mesh key="gap-left" position={[cx, spaceH / 2, zOffset]}>
+                <boxGeometry args={[w, spaceH, depthThree]} />
                 <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );

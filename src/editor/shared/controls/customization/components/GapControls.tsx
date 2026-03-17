@@ -19,6 +19,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left ?? 1.5);
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right ?? 1.5);
   const [middleGap, setMiddleGap] = useState(spaceInfo?.gapConfig?.middle ?? 1.5);
+  const [middle2Gap, setMiddle2Gap] = useState(spaceInfo?.gapConfig?.middle2 ?? spaceInfo?.gapConfig?.middle ?? 1.5);
 
   // 단내림/커튼박스 활성화 여부
   const hasDroppedCeiling = spaceInfo?.droppedCeiling?.enabled === true;
@@ -40,7 +41,8 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
     setLeftGap(spaceInfo?.gapConfig?.left ?? 1.5);
     setRightGap(spaceInfo?.gapConfig?.right ?? 1.5);
     setMiddleGap(spaceInfo?.gapConfig?.middle ?? 1.5);
-  }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right, spaceInfo?.gapConfig?.middle]);
+    setMiddle2Gap(spaceInfo?.gapConfig?.middle2 ?? spaceInfo?.gapConfig?.middle ?? 1.5);
+  }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right, spaceInfo?.gapConfig?.middle, spaceInfo?.gapConfig?.middle2]);
 
   if (!forceShow) {
     // 기존 로직: 노서라운드가 아니면 숨김
@@ -102,12 +104,13 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
     }
   }
 
-  const updateGap = (side: 'left' | 'right' | 'middle', value: number) => {
+  const updateGap = (side: 'left' | 'right' | 'middle' | 'middle2', value: number) => {
     const newGapConfig = {
       left: spaceInfo.gapConfig?.left ?? 1.5,
       right: spaceInfo.gapConfig?.right ?? 1.5,
       top: spaceInfo.gapConfig?.top ?? 0,
       middle: spaceInfo.gapConfig?.middle ?? 1.5,
+      middle2: spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5,
       [side]: value
     };
 
@@ -116,28 +119,22 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
     });
   };
 
-  const handleInputChange = (side: 'left' | 'right' | 'middle', value: string) => {
+  const handleInputChange = (side: 'left' | 'right' | 'middle' | 'middle2', value: string) => {
     const numValue = parseFloat(value) || 0;
-    if (side === 'left') {
-      setLeftGap(numValue);
-    } else if (side === 'right') {
-      setRightGap(numValue);
-    } else {
-      setMiddleGap(numValue);
-    }
+    if (side === 'left') setLeftGap(numValue);
+    else if (side === 'right') setRightGap(numValue);
+    else if (side === 'middle') setMiddleGap(numValue);
+    else setMiddle2Gap(numValue);
   };
 
-  const handleInputBlur = (side: 'left' | 'right' | 'middle') => {
-    const value = side === 'left' ? leftGap : side === 'right' ? rightGap : middleGap;
-    const clampedValue = Math.max(0, Math.min(5, Math.round(value * 2) / 2)); // 0-5mm 범위, 0.5 단위
+  const handleInputBlur = (side: 'left' | 'right' | 'middle' | 'middle2') => {
+    const value = side === 'left' ? leftGap : side === 'right' ? rightGap : side === 'middle' ? middleGap : middle2Gap;
+    const clampedValue = Math.max(0, Math.min(5, Math.round(value * 2) / 2));
 
-    if (side === 'left') {
-      setLeftGap(clampedValue);
-    } else if (side === 'right') {
-      setRightGap(clampedValue);
-    } else {
-      setMiddleGap(clampedValue);
-    }
+    if (side === 'left') setLeftGap(clampedValue);
+    else if (side === 'right') setRightGap(clampedValue);
+    else if (side === 'middle') setMiddleGap(clampedValue);
+    else setMiddle2Gap(clampedValue);
 
     updateGap(side, clampedValue);
   };
@@ -246,11 +243,12 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
             </div>
           </div>
           )}
-          {/* 경계 이격거리 — 단내림+커튼박스 동시 활성 시 표시 */}
-          {hasMultipleBoundaries && (
-          <div className={styles.gapItem} style={{ gridColumn: '1 / -1' }}>
+          {/* 경계 이격거리 — 단내림+커튼박스 동시 활성 시 2개 표시 */}
+          {hasMultipleBoundaries && (<>
+          {/* 메인↔단내림 경계이격 (middle) */}
+          <div className={styles.gapItem}>
             <label className={styles.gapLabel}>
-              경계이격
+              {dcPosition === 'left' ? '단↔메' : '메↔단'}
             </label>
             <div className={styles.gapControl}>
               <button
@@ -285,7 +283,45 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
               </button>
             </div>
           </div>
-          )}
+          {/* 단내림↔커튼박스 경계이격 (middle2) */}
+          <div className={styles.gapItem}>
+            <label className={styles.gapLabel}>
+              {dcPosition === 'left' ? '커↔단' : '단↔커'}
+            </label>
+            <div className={styles.gapControl}>
+              <button
+                className={styles.controlButton}
+                onClick={() => {
+                  const newValue = Math.max(0, Math.round((middle2Gap - 0.5) * 10) / 10);
+                  setMiddle2Gap(newValue);
+                  updateGap('middle2', newValue);
+                }}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={middle2Gap}
+                onChange={(e) => handleInputChange('middle2', e.target.value)}
+                onBlur={() => handleInputBlur('middle2')}
+                className={styles.gapInput}
+                min="0"
+                max="5"
+                step="0.5"
+              />
+              <button
+                className={styles.controlButton}
+                onClick={() => {
+                  const newValue = Math.min(5, Math.round((middle2Gap + 0.5) * 10) / 10);
+                  setMiddle2Gap(newValue);
+                  updateGap('middle2', newValue);
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          </>)}
         </div>
         {(() => {
           const leftVal = isLeftBoundaryMiddle ? middleGap : leftGap;

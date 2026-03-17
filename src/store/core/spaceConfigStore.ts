@@ -47,7 +47,8 @@ export interface GapConfig {
   left: number;  // 좌측 이격거리 (mm 단위)
   right: number; // 우측 이격거리 (mm 단위)
   top?: number;  // 상부 이격거리 (mm 단위) - 선택적
-  middle?: number; // 메인/단내림 구간 경계 이격거리 (mm 단위) - 단내림 활성시
+  middle?: number; // 메인↔단내림(또는 메인↔커튼박스) 경계 이격거리 (mm 단위)
+  middle2?: number; // 단내림↔커튼박스 경계 이격거리 (mm 단위) - 단내림+커튼박스 동시 활성시
 }
 
 export interface BaseConfig {

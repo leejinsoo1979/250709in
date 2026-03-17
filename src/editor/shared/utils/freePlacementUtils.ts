@@ -29,9 +29,14 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
   if (spaceInfo.layoutMode === 'free-placement') {
     const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
     const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
-    const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
     const hasDropped = spaceInfo.droppedCeiling?.enabled;
     const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+    const hasStep = spaceInfo.stepCeiling?.enabled;
+    // 통합 배치공간(메인+단내림)↔커튼박스 경계이격
+    // 단내림+커튼박스 동시: middle2 (단내림↔커튼박스), 커튼박스만: middle (메인↔커튼박스)
+    const normalDroppedGap = (hasDropped && hasStep)
+      ? (spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5)
+      : (spaceInfo.gapConfig?.middle ?? 1.5);
 
     // 커튼박스 구간 제외
     if (hasDropped) {
@@ -44,7 +49,6 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
     }
 
     // 단내림(stepCeiling) 구간은 제외하지 않음 — 가구 배치 허용 (높이만 조정)
-    const hasStep = spaceInfo.stepCeiling?.enabled;
     const stepPosition = spaceInfo.stepCeiling?.position || 'right';
 
     // 이격거리 적용 — 벽이 있는 쪽만, 커튼박스/단내림 경계면은 middleGap
@@ -63,14 +67,14 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
     if (leftAdjacent === 'wall') {
       if (hasLeftWall) startX += leftGap;
     } else {
-      startX += middleGap; // 커튼박스 경계
+      startX += normalDroppedGap; // 커튼박스 경계
     }
 
     // 우측 이격
     if (rightAdjacent === 'wall') {
       if (hasRightWall) endX -= rightGap;
     } else {
-      endX -= middleGap; // 커튼박스 경계
+      endX -= normalDroppedGap; // 커튼박스 경계
     }
   }
 
