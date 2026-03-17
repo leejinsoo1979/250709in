@@ -2925,7 +2925,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
-                  {/* 잠금 버튼 */}
+                  {/* 잠금 버튼 (자유배치 모드에서는 숨김) */}
+                  {spaceInfo.layoutMode !== 'free-placement' && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2965,6 +2966,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       )}
                     </svg>
                   </button>
+                  )}
 
                   {/* 삭제 버튼 */}
                   <button
@@ -3042,8 +3044,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           </>
         )}
 
-        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관, readOnly 모드에서는 숨김) */}
-        {placedModule.isLocked && !readOnly && (
+        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관, readOnly/자유배치 모드에서는 숨김) */}
+        {placedModule.isLocked && !readOnly && spaceInfo.layoutMode !== 'free-placement' && (
           <Html
             position={[0, 0, 0]}
             center
