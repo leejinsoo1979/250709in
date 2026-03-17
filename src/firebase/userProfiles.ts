@@ -758,6 +758,8 @@ export type SpaceConfigDefaults = {
   gapLeft?: number;
   gapRight?: number;
   frameTop?: number;
+  frameLeft?: number;
+  frameRight?: number;
   baseHeight?: number;
   furnitureSingleWidth?: number;
   furnitureDualWidth?: number;

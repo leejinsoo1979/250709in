@@ -82,6 +82,8 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           frameSize: {
             ...current.frameSize!,
             top: defaults.frameTop ?? current.frameSize?.top ?? 30,
+            left: defaults.frameLeft ?? current.frameSize?.left ?? 18,
+            right: defaults.frameRight ?? current.frameSize?.right ?? 18,
           },
           baseConfig: {
             ...current.baseConfig!,

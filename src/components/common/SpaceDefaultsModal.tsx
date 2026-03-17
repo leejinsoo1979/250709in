@@ -14,6 +14,8 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   gapLeft: 1.5,
   gapRight: 1.5,
   frameTop: 30,
+  frameLeft: 18,
+  frameRight: 18,
   baseHeight: 65,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
@@ -42,6 +44,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           gapLeft: defaults.gapLeft ?? SYSTEM_DEFAULTS.gapLeft,
           gapRight: defaults.gapRight ?? SYSTEM_DEFAULTS.gapRight,
           frameTop: defaults.frameTop ?? SYSTEM_DEFAULTS.frameTop,
+          frameLeft: defaults.frameLeft ?? SYSTEM_DEFAULTS.frameLeft,
+          frameRight: defaults.frameRight ?? SYSTEM_DEFAULTS.frameRight,
           baseHeight: defaults.baseHeight ?? SYSTEM_DEFAULTS.baseHeight,
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? SYSTEM_DEFAULTS.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? SYSTEM_DEFAULTS.furnitureDualWidth,
@@ -94,7 +98,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
       hasFloorFinish: false,
       surroundType,
       frameConfig,
-      frameSize: { top: values.frameTop, bottom: 0, left: 18, right: 18 },
+      frameSize: { top: values.frameTop, bottom: 0, left: values.frameLeft, right: values.frameRight },
       gapConfig: { left: values.gapLeft, right: values.gapRight },
       baseConfig: { height: values.baseHeight, depth: 600, hasFrontBoard: false, frontBoardThickness: 0, frontBoardHeight: 0 },
       furnitureSingleWidth: values.furnitureSingleWidth,
@@ -221,7 +225,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
               </div>
 
               <div className={styles.fieldGroup}>
-                <span className={styles.groupTitle}>프레임 높이</span>
+                <span className={styles.groupTitle}>프레임 사이즈</span>
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
                     <label className={styles.label}>상부프레임</label>
@@ -252,6 +256,38 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
                     </div>
                   </div>
                 </div>
+                {values.surroundMode !== 'no-surround' && (
+                  <div className={styles.fieldRow}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>좌측프레임</label>
+                      <div className={styles.inputWrapper}>
+                        <input
+                          className={styles.input}
+                          type="number"
+                          min={0}
+                          max={200}
+                          value={values.frameLeft}
+                          onChange={e => handleChange('frameLeft', e.target.value)}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>우측프레임</label>
+                      <div className={styles.inputWrapper}>
+                        <input
+                          className={styles.input}
+                          type="number"
+                          min={0}
+                          max={200}
+                          value={values.frameRight}
+                          onChange={e => handleChange('frameRight', e.target.value)}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className={styles.fieldGroup}>
