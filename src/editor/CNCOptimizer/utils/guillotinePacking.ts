@@ -560,35 +560,42 @@ function extractFurnitureNum(name: string): number {
 }
 
 /**
- * 길로틴 방식 멀티 빈 패킹
+ * 측판 여부 판별 (서랍 측판 제외)
+ * 측판: "좌측판", "우측판" 포함 & "서랍" 미포함
  */
-export function packGuillotine(
+function isSidePanelName(name: string): boolean {
+  if (!name) return false;
+  if (name.includes('서랍')) return false;
+  return name.includes('좌측판') || name.includes('우측판') ||
+         name.includes('좌측') || name.includes('우측');
+}
+
+/**
+ * 패널 그룹을 가구번호별로 독립 시트에 패킹
+ */
+function packFurnitureGroups(
   panels: Rect[],
   binWidth: number,
   binHeight: number,
-  kerf: number = 5,
-  maxBins: number = 999,
-  stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
+  kerf: number,
+  stripDirection: 'horizontal' | 'vertical' | 'auto'
 ): PackedBin[] {
   const bins: PackedBin[] = [];
 
-  // ── 가구번호별 그룹핑: 같은 가구 패널은 반드시 같은 시트에 ──
+  // 가구번호별 그룹핑
   const furnitureGroups = new Map<number, Rect[]>();
   for (const panel of panels) {
     const fn = extractFurnitureNum(panel.name || '');
     if (!furnitureGroups.has(fn)) furnitureGroups.set(fn, []);
     furnitureGroups.get(fn)!.push(panel);
   }
-  // 가구번호 순으로 정렬, 각 그룹 내에서 면적 내림차순
-  const sortedFurnitureNums = [...furnitureGroups.keys()].sort((a, b) => a - b);
-  for (const fn of sortedFurnitureNums) {
+  const sortedNums = [...furnitureGroups.keys()].sort((a, b) => a - b);
+  for (const fn of sortedNums) {
     furnitureGroups.get(fn)!.sort((a, b) => (b.width * b.height) - (a.width * a.height));
   }
 
-  // ── 가구 1개씩 독립 시트로 패킹 ──
-  // 같은 가구의 패널은 반드시 같은 시트에 배치 (상하부 측판, 백패널 등)
-  // 가구 1개의 패널은 시트 1장에 항상 들어감 (최대 1200×2400 < 시트 1220×2440)
-  for (const fn of sortedFurnitureNums) {
+  // 가구 1개씩 독립 시트로 패킹
+  for (const fn of sortedNums) {
     const group = furnitureGroups.get(fn)!;
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
     const result = packer.packAll(group, stripDirection);
@@ -607,12 +614,49 @@ export function packGuillotine(
     }
   }
 
-  // === 후처리: 저효율 시트의 패널을 다른 시트 빈 공간에 합치기 ===
-  if (bins.length > 1) {
-    backfillBins(bins, binWidth, binHeight, kerf);
+  return bins;
+}
+
+/**
+ * 길로틴 방식 멀티 빈 패킹
+ *
+ * 핵심 원칙:
+ *   1. 측판(좌측판/우측판)과 비측판(상판/하판/선반 등)은 절대 같은 시트에 섞지 않음
+ *   2. 같은 가구의 같은 종류 패널은 반드시 같은 시트에 배치
+ *   3. 모든 패널 회전 금지
+ */
+export function packGuillotine(
+  panels: Rect[],
+  binWidth: number,
+  binHeight: number,
+  kerf: number = 5,
+  maxBins: number = 999,
+  stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
+): PackedBin[] {
+  // ── 1단계: 측판 vs 비측판 분류 ──
+  const sidePanels: Rect[] = [];
+  const otherPanels: Rect[] = [];
+  for (const panel of panels) {
+    if (isSidePanelName(panel.name || '')) {
+      sidePanels.push(panel);
+    } else {
+      otherPanels.push(panel);
+    }
   }
 
-  return bins;
+  // ── 2단계: 각 종류별로 가구 단위 독립 패킹 ──
+  const sideBins = packFurnitureGroups(sidePanels, binWidth, binHeight, kerf, stripDirection);
+  const otherBins = packFurnitureGroups(otherPanels, binWidth, binHeight, kerf, stripDirection);
+
+  // ── 3단계: 같은 종류 내에서만 시트 합치기 (측판↔비측판 혼합 금지) ──
+  if (sideBins.length > 1) {
+    backfillBins(sideBins, binWidth, binHeight, kerf);
+  }
+  if (otherBins.length > 1) {
+    backfillBins(otherBins, binWidth, binHeight, kerf);
+  }
+
+  return [...sideBins, ...otherBins];
 }
 
 /**
