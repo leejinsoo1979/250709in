@@ -1896,16 +1896,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     mainPlacementWidth = Math.round((mainWidth + mainLeftDelta + mainRightDelta) * 10) / 10;
 
-                    // 커튼박스 구간: 양쪽 gap 차감
-                    // 커튼박스의 내측 경계이격 = 단내림이 있으면 middle2, 없으면 middle
-                    const dcInnerGap = hasSC ? middle2GapMm : middleGapMm;
-                    const dcLeftGap = dcOnLeft
-                      ? (hasLeftWall ? leftGapMm : 0)
-                      : dcInnerGap;
-                    const dcRightGap = dcOnRight
-                      ? (hasRightWall ? rightGapMm : 0)
-                      : dcInnerGap;
-                    dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
+                    // 커튼박스 구간: 양쪽 gap 차감 (커튼박스 활성일 때만)
+                    let dcLeftGap = 0;
+                    let dcRightGap = 0;
+                    if (hasDC) {
+                      const dcInnerGap = hasSC ? middle2GapMm : middleGapMm;
+                      dcLeftGap = dcOnLeft
+                        ? (hasLeftWall ? leftGapMm : 0)
+                        : dcInnerGap;
+                      dcRightGap = dcOnRight
+                        ? (hasRightWall ? rightGapMm : 0)
+                        : dcInnerGap;
+                      dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
+                    } else {
+                      dcPlacementWidth = 0;
+                    }
 
                     // 실배치 X좌표 (각 구간의 실 배치 가능 영역 경계)
                     var scPlacStartX = scStartX;
@@ -2041,8 +2046,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 </>)}
 
-                {/* 커튼박스 구간 실배치 치수선 */}
-                {(() => {
+                {/* 커튼박스 구간 실배치 치수선 — 커튼박스 활성일 때만 */}
+                {hasDC && (() => {
                   const dsx = isFreePlacement ? dcPlacStartX : droppedStartX;
                   const dex = isFreePlacement ? dcPlacEndX : droppedEndX;
                   return (<>
