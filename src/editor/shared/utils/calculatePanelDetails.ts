@@ -273,7 +273,62 @@ export const calculatePanelDetails = (
         });
       }
 
-      // 백패널과 보강대는 sections.forEach 루프 밖에서 가구 전체 단위로 생성
+      // === 백패널 (섹션별로 분리) ===
+      // 백패널 계산:
+      // - 가로: innerWidth + 10 (내경폭에서 좌우 5mm씩 확장)
+      // - 세로: 섹션 내경높이 + 10 (섹션 내경높이에서 상하 5mm씩 확장)
+      // 예: 가구 586×1000 → 백패널 560×974
+      //     가로: 586-(18+18)+10=560, 세로: 1000-(18+18)+10=974
+
+      // 백패널 높이 계산 (BaseFurnitureShell.tsx 3D 렌더링과 동일)
+      // 기본: 섹션높이 - 상하판(36) + heightExtension(10) + 상하확장(26) = 섹션높이
+      // 2hanging 상부: 추가로 -basicThickness(18) = 섹션높이 - 18
+      // 2hanging 하부: 추가로 +lowerHeightBonus(18) = 섹션높이 + 18
+      const heightExtension = 10; // backPanelConfig.heightExtension
+      const totalHeightExtension = 26; // 위아래 13mm씩
+      const lowerHeightBonus = 18; // backPanelConfig.lowerHeightBonus
+      const is2Hanging = moduleData.id.includes('2hanging') && !moduleData.id.includes('2drawer');
+      const baseBackPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
+      let backPanelHeight: number;
+      if (is2Hanging && sections.length === 2) {
+        if (sectionIndex === 0) {
+          // 하부 백패널: + lowerHeightBonus
+          backPanelHeight = baseBackPanelHeight + lowerHeightBonus;
+        } else {
+          // 상부 백패널: - basicThickness
+          backPanelHeight = baseBackPanelHeight - basicThickness;
+        }
+      } else {
+        backPanelHeight = baseBackPanelHeight;
+      }
+
+      targetPanel.push({
+        name: `${sectionPrefix}백패널`,
+        width: innerWidth + 10, // 내경폭 + 좌우 5mm씩 확장
+        height: backPanelHeight, // 내경높이 + 상하 5mm씩 확장
+        thickness: backPanelThickness, // 9mm
+        material: 'MDF'
+      });
+
+      // 백패널 보강대 (상단/하단) - 60mm 높이, 15mm 깊이
+      // 양쪽 0.5mm씩 축소 (총 1mm)
+      const reinforcementHeight = 60; // mm
+      const reinforcementDepth = 15; // mm
+      const reinforcementWidth = innerWidth - 1; // 양쪽 0.5mm씩 축소
+      targetPanel.push({
+        name: `${sectionPrefix}후면 보강대`,
+        width: reinforcementWidth,
+        height: reinforcementHeight,
+        thickness: reinforcementDepth,
+        material: 'PB'
+      });
+      targetPanel.push({
+        name: `${sectionPrefix}후면 보강대`,
+        width: reinforcementWidth,
+        height: reinforcementHeight,
+        thickness: reinforcementDepth,
+        material: 'PB'
+      });
 
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
       if (section.type === 'drawer' && section.count) {
@@ -451,44 +506,8 @@ export const calculatePanelDetails = (
         // CNC 절단 목록에 추가할 항목 없음
       }
     });
-
-    // === 백패널 (가구 전체 단위 — 1장) ===
-    // 가로: innerWidth + 10 (내경폭에서 좌우 5mm씩 확장)
-    // 세로: 전체 높이 기준 — height - 상하판(36) + heightExtension(10) + 상하확장(26) = height
-    const heightExtension = 10; // backPanelConfig.heightExtension
-    const totalHeightExtension = 26; // 위아래 13mm씩
-    const unifiedBackPanelHeight = height - basicThickness * 2 + heightExtension + totalHeightExtension;
-
-    // 백패널을 상부장 패널 목록에 추가 (상부장이 없으면 하부장에)
-    const backPanelTarget = panels.upper.length > 0 ? panels.upper : panels.lower;
-    backPanelTarget.push({
-      name: '백패널',
-      width: innerWidth + 10, // 내경폭 + 좌우 5mm씩 확장
-      height: unifiedBackPanelHeight,
-      thickness: backPanelThickness, // 9mm
-      material: 'MDF'
-    });
-
-    // 후면 보강대 (상단/하단) - 60mm 높이, 15mm 깊이
-    const reinforcementHeight = 60;
-    const reinforcementDepth = 15;
-    const reinforcementWidth = innerWidth - 1; // 양쪽 0.5mm씩 축소
-    backPanelTarget.push({
-      name: '후면 보강대',
-      width: reinforcementWidth,
-      height: reinforcementHeight,
-      thickness: reinforcementDepth,
-      material: 'PB'
-    });
-    backPanelTarget.push({
-      name: '후면 보강대',
-      width: reinforcementWidth,
-      height: reinforcementHeight,
-      thickness: reinforcementDepth,
-      material: 'PB'
-    });
   }
-
+  
 
   // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
   if (hasDoor) {
