@@ -550,15 +550,15 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
             )}
           </div>
-          {item.type === 'project' && projectDesignFiles && (
-            <div className={styles.iconFileCount}>
-              {(projectDesignFiles[item.id] || []).length}개 파일
-            </div>
-          )}
           <div className={styles.iconInfo} style={{ maxWidth: thumbSize + 20 }}>
             <div className={`${styles.iconName} ${item.type === 'project' ? styles.projectName : ''}`} title={item.name}>
               {item.name}
             </div>
+            {item.type === 'project' && projectDesignFiles && (
+              <div className={styles.iconFileCount}>
+                {(projectDesignFiles[item.id] || []).length}개 파일
+              </div>
+            )}
             {item.spaceSize && (
               <div className={styles.iconSpaceSize}>
                 {item.spaceSize.width} × {item.spaceSize.depth} × {item.spaceSize.height}
