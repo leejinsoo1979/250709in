@@ -2070,27 +2070,38 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const boundaryGapY = slotDimensionY;
 
                   // 경계면 목록 생성
+                  // 이격(middleGap)은 외벽~가구 배치 영역 경계에만 존재
+                  // 단내림↔메인 사이에는 이격 없음 (하나의 연속 배치 공간)
                   const boundaries: { leftX: number; rightX: number }[] = [];
 
-                  if (hasSC) {
-                    // 단내림이 있으면 2개 경계면
-                    if (dcPosition === 'left') {
-                      // [커튼박스] [단내림] [메인] → 커튼박스↔단내림, 단내림↔메인
-                      boundaries.push({ leftX: droppedEndX, rightX: scStartX }); // 커튼박스↔단내림
-                      boundaries.push({ leftX: scEndX, rightX: mainStartX });     // 단내림↔메인
+                  if (hasDC && hasSC) {
+                    // 커튼박스 + 단내림 모두 있는 경우
+                    const sameSide = dcPosition === scPosition;
+                    if (sameSide) {
+                      // 같은 쪽: 커튼박스↔단내림 경계만 (단내림↔메인은 이격 없음)
+                      if (dcOnLeft) {
+                        boundaries.push({ leftX: droppedEndX, rightX: scStartX }); // 커튼박스↔단내림
+                      } else {
+                        boundaries.push({ leftX: scEndX, rightX: droppedStartX }); // 단내림↔커튼박스
+                      }
                     } else {
-                      // [메인] [단내림] [커튼박스] → 메인↔단내림, 단내림↔커튼박스
-                      boundaries.push({ leftX: mainEndX, rightX: scStartX });     // 메인↔단내림
-                      boundaries.push({ leftX: scEndX, rightX: droppedStartX });  // 단내림↔커튼박스
+                      // 반대 쪽: 커튼박스↔메인 경계 + 단내림↔메인 경계는 이격 없으므로
+                      // 메인↔커튼박스 경계만
+                      if (dcOnLeft) {
+                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX }); // 커튼박스↔메인
+                      } else {
+                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX }); // 메인↔커튼박스
+                      }
                     }
-                  } else {
-                    // 단내림 없으면 1개 경계면
-                    if (dcPosition === 'left') {
+                  } else if (hasDC) {
+                    // 커튼박스만
+                    if (dcOnLeft) {
                       boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
                     } else {
                       boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                     }
                   }
+                  // 단내림만 있고 커튼박스 없으면 이격 경계면 없음 (벽 이격은 좌/우이격에서 처리)
 
                   return (<>
                     {boundaries.map((b, idx) => (
