@@ -1690,14 +1690,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const mainInternalWidth = zsi.normal.width;
                   const droppedInternalWidth = zsi.dropped?.width || 0;
 
-                  // 메인 구간 내부 시작/끝
-                  const mainIntStartX = leftOffset + mmToThreeUnits(zsi.normal.startX);
-                  const mainIntEndX = leftOffset + mmToThreeUnits(zsi.normal.startX + mainInternalWidth);
+                  // 메인 구간: 구간 외곽(mainStartX/mainEndX)에서 이격만큼 안쪽으로
+                  const mainGapLeft = mainWidth - mainInternalWidth;
+                  // 메인구간 좌측 이격 = 전체 gap 중 좌측 비율 (간단히: 구간 시작에서 내부시작까지)
+                  // zsi.normal.startX는 ColumnIndexer 좌표계이므로 직접 쓰면 안 됨
+                  // 대신: 내부 시작 = 구간 외곽 시작 + (구간너비 - 내부너비) 의 좌측 이격 비율
+                  // 좌측 이격 = frameThickness.left (또는 gapConfig.left), 우측 = frameThickness.right
+                  const leftGap = spaceInfo.gapConfig?.left ?? frameSize.left ?? 1.5;
+                  const rightGap = spaceInfo.gapConfig?.right ?? frameSize.right ?? 1.5;
+                  const boundaryGap = zsi.boundaryGap || 0;
 
-                  // 단내림 구간 내부 시작/끝
-                  const droppedInt = zsi.dropped;
-                  const droppedIntStartX = droppedInt ? leftOffset + mmToThreeUnits(droppedInt.startX) : 0;
-                  const droppedIntEndX = droppedInt ? leftOffset + mmToThreeUnits(droppedInt.startX + droppedInternalWidth) : 0;
+                  // 메인 구간: position에 따라 이격 결정
+                  const isLeftDrop = spaceInfo.droppedCeiling.position === 'left';
+                  // 메인이 우측이면: 좌측=경계면이격, 우측=우이격
+                  // 메인이 좌측이면: 좌측=좌이격, 우측=경계면이격
+                  const mainLeftGapMm = isLeftDrop ? boundaryGap : leftGap;
+                  const mainRightGapMm = isLeftDrop ? rightGap : boundaryGap;
+                  const mainIntStartX = mainStartX + mmToThreeUnits(mainLeftGapMm);
+                  const mainIntEndX = mainEndX - mmToThreeUnits(mainRightGapMm);
+
+                  // 단내림 구간: position에 따라 이격 결정
+                  // 단내림이 좌측이면: 좌측=좌이격, 우측=경계면이격
+                  // 단내림이 우측이면: 좌측=경계면이격, 우측=우이격
+                  const droppedLeftGapMm = isLeftDrop ? leftGap : boundaryGap;
+                  const droppedRightGapMm = isLeftDrop ? boundaryGap : rightGap;
+                  const droppedIntStartX = droppedStartX + mmToThreeUnits(droppedLeftGapMm);
+                  const droppedIntEndX = droppedEndX - mmToThreeUnits(droppedRightGapMm);
 
                   const dimY = zoneDimensionY;
 
@@ -1747,7 +1765,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       />
 
                       {/* 단내림 구간 가구배치공간 */}
-                      {droppedInt && droppedInternalWidth > 0 && (
+                      {droppedInternalWidth > 0 && (
                         <>
                           <Line
                             points={[[droppedIntStartX, dimY, 0.002], [droppedIntEndX, dimY, 0.002]]}
