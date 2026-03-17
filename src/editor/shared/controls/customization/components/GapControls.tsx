@@ -18,7 +18,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
 
   const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left ?? 1.5);
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right ?? 1.5);
-  const [middleGap, setMiddleGap] = useState(spaceInfo?.gapConfig?.middle ?? 2);
+  const [middleGap, setMiddleGap] = useState(spaceInfo?.gapConfig?.middle ?? 1.5);
 
   // 단내림 활성화 여부
   const hasDroppedCeiling = spaceInfo?.droppedCeiling?.enabled === true;
@@ -27,7 +27,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   useEffect(() => {
     setLeftGap(spaceInfo?.gapConfig?.left ?? 1.5);
     setRightGap(spaceInfo?.gapConfig?.right ?? 1.5);
-    setMiddleGap(spaceInfo?.gapConfig?.middle ?? 2);
+    setMiddleGap(spaceInfo?.gapConfig?.middle ?? 1.5);
   }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right, spaceInfo?.gapConfig?.middle]);
 
   if (!forceShow) {
@@ -95,7 +95,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
       left: spaceInfo.gapConfig?.left ?? 1.5,
       right: spaceInfo.gapConfig?.right ?? 1.5,
       top: spaceInfo.gapConfig?.top ?? 0,
-      middle: spaceInfo.gapConfig?.middle ?? 2,
+      middle: spaceInfo.gapConfig?.middle ?? 1.5,
       [side]: value
     };
 

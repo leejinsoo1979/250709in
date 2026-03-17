@@ -5186,7 +5186,7 @@ const Configurator: React.FC = () => {
 
               const internalW = totalW - leftReduction - rightReduction;
               const hasReduction = leftReduction > 0 || rightReduction > 0;
-              const gapM = spaceInfo.gapConfig?.middle ?? 2;
+              const gapM = spaceInfo.gapConfig?.middle ?? 1.5;
               const hasDropped = spaceInfo.droppedCeiling?.enabled === true;
               const droppedW = spaceInfo.droppedCeiling?.width || ((spaceInfo.layoutMode === 'free-placement') ? 150 : 900);
               const droppedPos = spaceInfo.droppedCeiling?.position || 'right';

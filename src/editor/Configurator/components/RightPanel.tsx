@@ -874,7 +874,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       const mainOuter = width - spaceInfo.droppedCeiling.width;
                       const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 1.5;
                       const pos = spaceInfo.droppedCeiling.position || 'right';
                       const mainW = Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
                       return `${mainW} × ${height}`;
