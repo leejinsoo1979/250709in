@@ -315,13 +315,18 @@ const Configurator: React.FC = () => {
   const handleIndividualDoorGapChange = (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => {
     const num = parseFloat(val);
     if (!isNaN(num)) {
+      // 글로벌 spaceInfo도 함께 업데이트 (DoorModule의 fallback 값)
+      setSpaceInfo({ [field]: num });
+
       if (doorGapAllSync) {
-        setPlacedModules(prev => prev.map(m =>
+        // 전체 동기화: 모든 도어 가구에 동일 값 적용
+        const newModules = useFurnitureStore.getState().placedModules.map(m =>
           m.hasDoor ? { ...m, [field]: num } : m
-        ));
+        );
+        useFurnitureStore.setState({ placedModules: newModules });
+        // R3F 리렌더 보장
         setTimeout(() => {
-          const latest = useFurnitureStore.getState().placedModules;
-          useFurnitureStore.setState({ placedModules: [...latest] });
+          useFurnitureStore.setState({ placedModules: [...newModules] });
         }, 50);
       } else {
         updatePlacedModule(moduleId, { [field]: num });
@@ -4655,12 +4660,13 @@ const Configurator: React.FC = () => {
                     const spaceFitBottom = isFloat ? floatH : 25;
 
                     setSpaceInfo({ frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    setPlacedModules(prev => prev.map(m =>
+                    // non-callback set으로 R3F 리렌더 보장
+                    const newMods = useFurnitureStore.getState().placedModules.map(m =>
                       m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
-                    ));
+                    );
+                    useFurnitureStore.setState({ placedModules: newMods });
                     setTimeout(() => {
-                      const latest = useFurnitureStore.getState().placedModules;
-                      useFurnitureStore.setState({ placedModules: [...latest] });
+                      useFurnitureStore.setState({ placedModules: [...newMods] });
                     }, 50);
                   }}
                 >
@@ -5204,11 +5210,12 @@ const Configurator: React.FC = () => {
                       setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
-                    // 슬롯→자유배치 전환 시 커튼박스 기본값: 없음
+                    // 슬롯→자유배치 전환 시 단내림 유지 (커튼박스 기본값으로 변환)
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
                         ...spaceInfo.droppedCeiling,
-                        enabled: false,
+                        width: 150,
+                        dropHeight: Math.max(10, 2400 - (spaceInfo.height || 2360)),
                       };
                     }
                     handleSpaceInfoUpdate(updates);
