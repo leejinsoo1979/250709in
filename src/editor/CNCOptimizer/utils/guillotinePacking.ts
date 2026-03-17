@@ -472,14 +472,17 @@ function extractFurnitureNum(name: string): number {
  * 패널 카테고리 분류 — 같은 카테고리끼리만 같은 시트에 배치
  *
  * 카테고리 (우선순위 = 큰 패널부터 재단):
- *   1. side    — 측판 (좌측판/우측판, 서랍 제외)
- *   2. body    — 상판/하판/선반/칸막이/바닥판 등 본체 패널
- *   3. frame   — 상부프레임/하부프레임 (맨 마지막 재단)
+ *   1. side    — 측판 (좌측/우측, 서랍·백패널 제외)
+ *   2. back    — 백패널 (같은 width끼리 strip에 나란히)
+ *   3. body    — 상판/하판/선반/칸막이/바닥판/서랍 등 본체 패널
+ *   4. frame   — 상부프레임/하부프레임 (맨 마지막 재단)
  */
-function getPanelCategory(name: string): 'side' | 'body' | 'frame' {
+function getPanelCategory(name: string): 'side' | 'back' | 'body' | 'frame' {
   if (!name) return 'body';
   // 프레임 판별 (최하위 우선순위)
   if (name.includes('프레임') || name.includes('프래임')) return 'frame';
+  // 백패널 판별 (측판보다 먼저! '백패널'이 포함되면 무조건 back)
+  if (name.includes('백패널')) return 'back';
   // 측판 판별 (서랍 제외)
   if (!name.includes('서랍')) {
     if (name.includes('좌측판') || name.includes('우측판') ||
@@ -573,22 +576,30 @@ export function packGuillotine(
 
   // ── 1단계: 카테고리 분류 ──
   const sidePanels: Rect[] = [];
+  const backPanels: Rect[] = [];
   const bodyPanels: Rect[] = [];
   const framePanels: Rect[] = [];
   for (const panel of normalized) {
     const cat = getPanelCategory(panel.name || '');
     if (cat === 'side') sidePanels.push(panel);
+    else if (cat === 'back') backPanels.push(panel);
     else if (cat === 'frame') framePanels.push(panel);
     else bodyPanels.push(panel);
   }
 
   // ── 2단계: 카테고리별 패킹 ──
+  // 측판: vertical (같은 width끼리 한 줄)
   const sideBins = packCategoryToMultiBins(sidePanels, binWidth, binHeight, kerf, 'vertical');
+  // 백패널: vertical (같은 width=내경폭 끼리 한 줄, height를 y축으로 쌓음)
+  // → (상)백패널 + (하)백패널이 같은 스트립에 나란히 배치
+  const backBins = packCategoryToMultiBins(backPanels, binWidth, binHeight, kerf, 'vertical');
+  // 본체(상판/하판/선반 등): horizontal
   const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
+  // 프레임: horizontal (맨 마지막)
   const frameBins = packCategoryToMultiBins(framePanels, binWidth, binHeight, kerf, 'horizontal');
 
-  // 순서: 측판 → 본체 → 프레임
-  return [...sideBins, ...bodyBins, ...frameBins];
+  // 순서: 측판 → 백패널 → 본체 → 프레임
+  return [...sideBins, ...backBins, ...bodyBins, ...frameBins];
 }
 
 /**
