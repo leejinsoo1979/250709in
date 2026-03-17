@@ -1544,9 +1544,8 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
-      {/* 이격 구간 — 붉은색 투명 박스 (3D에서만) */}
+      {/* 이격 구간 — 붉은색 투명 박스 (2D/3D/orthographic 모두 표시) */}
       {(() => {
-        if (viewMode === '2D') return null;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
         const hasDropped = spaceInfo.droppedCeiling?.enabled;
