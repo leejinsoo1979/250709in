@@ -109,31 +109,6 @@ const FreePlacementDropZone: React.FC = () => {
     setIsMoveMode(false);
   }, [editingFreeModuleId]);
 
-  // 2차 클릭 이동 모드 진입 / 3차 클릭 배치 확정 이벤트 리스너
-  const moveModeRef = useRef(false);
-  moveModeRef.current = isMoveMode;
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.moduleId && detail.moduleId === editingFreeModuleId) {
-        if (moveModeRef.current) {
-          // 이미 이동 모드 → 배치 확정
-          window.dispatchEvent(new CustomEvent('furniture-drag-end'));
-          setIsDraggingPlaced(false);
-          setIsMoveMode(false);
-        } else {
-          // 이동 모드 진입
-          setIsMoveMode(true);
-          setMovingModuleId(detail.moduleId);
-          setIsDraggingPlaced(true);
-        }
-      }
-    };
-    window.addEventListener('furniture-enter-move-mode', handler);
-    return () => window.removeEventListener('furniture-enter-move-mode', handler);
-  }, [editingFreeModuleId]);
-
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
   const spaceBounds = useMemo(() => getInternalSpaceBoundsX(spaceInfo), [spaceInfo]);
@@ -1059,7 +1034,7 @@ const FreePlacementDropZone: React.FC = () => {
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
   }, [selectedFurnitureId]);
 
-  // 편집 중인 가구 드래그 시작 (더블클릭 후 드래그)
+  // 편집 중인 가구 드래그 시작 (더블클릭 후 드래그) / 이동 모드 진입·배치 확정
   const handleEditDragPointerDown = useCallback((e: any) => {
     if (!editingFreeModuleId) return;
     // 이격거리 편집 중이면 드래그 시작하지 않음
@@ -1068,6 +1043,15 @@ const FreePlacementDropZone: React.FC = () => {
     // R3F Html 툴바 버튼 클릭 시 이 핸들러가 호출되지 않도록
     // __r3fClickHandled 플래그 확인
     if ((window as any).__r3fClickHandled) return;
+
+    // 이동 모드 중 아무 곳 클릭 → 배치 확정
+    if (isMoveMode) {
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+      setIsDraggingPlaced(false);
+      setIsMoveMode(false);
+      return;
+    }
 
     // 클릭 지점이 가구 위인지 확인 — 아니면 선택 해제 + 팝업 닫기
     const mod = placedModules.find(m => m.id === editingFreeModuleId);
@@ -1103,8 +1087,9 @@ const FreePlacementDropZone: React.FC = () => {
     e.stopPropagation();
     setMovingModuleId(editingFreeModuleId);
     setIsDraggingPlaced(true);
+    setIsMoveMode(true);
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
-  }, [editingFreeModuleId, editingGapIndex, placedModules]);
+  }, [editingFreeModuleId, editingGapIndex, placedModules, isMoveMode]);
 
   // 이동 시 zone 변경에 따른 높이/Y 재계산
   const recalcZoneUpdate = useCallback((mod: typeof placedModules[0], newXmm: number) => {
@@ -1168,7 +1153,16 @@ const FreePlacementDropZone: React.FC = () => {
     if (!isFreePlacement) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape') return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape' && e.key !== 'Enter') return;
+
+      // Enter: 이동 모드 배치 확정
+      if (e.key === 'Enter' && isMoveMode) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+        setIsDraggingPlaced(false);
+        setIsMoveMode(false);
+        return;
+      }
 
       if (e.key === 'Escape') {
         // 1) 배치 대기 중(고스트 표시)인 경우: 배치 취소
@@ -1221,7 +1215,7 @@ const FreePlacementDropZone: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate]);
+  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate, isMoveMode]);
 
   // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && activeDimensions);
@@ -1511,7 +1505,7 @@ const FreePlacementDropZone: React.FC = () => {
         <mesh
           ref={dragPlaneRef}
           position={[planeConfig.planeCenterX, planeConfig.planeCenterY, 0.02]}
-          onPointerDown={isMoveMode ? handleDragPointerUp : (!isDraggingPlaced ? handleEditDragPointerDown : undefined)}
+          onPointerDown={(isMoveMode || !isDraggingPlaced) ? handleEditDragPointerDown : undefined}
           onPointerMove={handleDragPointerMove}
           onPointerUp={handleDragPointerUp}
           onPointerLeave={handleDragPointerUp}

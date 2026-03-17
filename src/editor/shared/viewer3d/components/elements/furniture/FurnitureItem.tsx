@@ -2688,12 +2688,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return;
     }
 
-    // 편집 모드(이동 모드 포함)에서는 일반 드래그 시작 방지
-    if (isEditMode) {
-      e.stopPropagation();
-      return;
-    }
-
     if (isColumnCFront && !isDragMode) {
       // Column C 기둥 앞 가구는 리사이즈 모드
       columnCResize.handlePointerDown(e);
@@ -2711,17 +2705,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   };
 
-  const handlePointerUp = (e?: ThreeEvent<PointerEvent>) => {
+  const handlePointerUp = () => {
     if (columnCResize.isResizing) {
       columnCResize.handlePointerUp();
-    } else if (isEditMode) {
-      // 편집/이동 모드에서 pointerUp → 이동 모드 진입 또는 배치 확정
-      // 버블링 차단하여 드래그 플레인의 onPointerUp이 즉시 종료하는 것 방지
-      e?.stopPropagation();
-      (window as any).__furnitureMoveHandled = true;
-      window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
-        detail: { moduleId: placedModule.id },
-      }));
     } else {
       onPointerUp();
     }
@@ -2848,12 +2834,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         onClick={(e) => {
           // 가구 클릭 → 허공 클릭 deselect 방지 플래그 설정
           (window as any).__r3fClickHandled = true;
-          // 편집/이동 모드에서 pointerUp이 이미 처리한 경우 스킵
-          if ((window as any).__furnitureMoveHandled) {
-            (window as any).__furnitureMoveHandled = false;
-            e.stopPropagation();
-            return;
-          }
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
@@ -3807,10 +3787,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 e.stopPropagation();
                 (window as any).__r3fClickHandled = true;
                 if (isEditMode) {
-                  // 편집 모드 중 연필 아이콘 클릭 → 이동 모드 전환
-                  window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
-                    detail: { moduleId: placedModule.id },
-                  }));
+                  // 이미 편집 모드라면 팝업 닫기
+                  const closeAllPopups = useUIStore.getState().closeAllPopups;
+                  closeAllPopups();
                 } else {
                   // 편집 모드가 아니면 팝업 열기
                   onDoubleClick(e as any, placedModule.id);
