@@ -1300,8 +1300,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 (자유배치에서는 미표시) */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && (isFreePlacement || spaceInfo.surroundType === 'no-surround') && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1415,8 +1415,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
       
-      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 (자유배치에서는 미표시) */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 */}
+      {showDimensions && !isStep2 && (isFreePlacement || spaceInfo.surroundType === 'no-surround') && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
