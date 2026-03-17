@@ -2022,12 +2022,13 @@ const Room: React.FC<RoomProps> = ({
             const _dcDropH = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             const _dcW = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
 
-            // 단내림 고려한 좌/우 벽 높이
-            const leftWallH = _dcIsLeft ? (height - _dcDropH) : height;
-            const rightWallH = _dcIsRight ? (height - _dcDropH) : height;
-            // 단내림 고려한 좌/우 천장 Y
-            const leftCeilingY = _dcIsLeft ? (panelStartY + height - _dcDropH) : (panelStartY + height);
-            const rightCeilingY = _dcIsRight ? (panelStartY + height - _dcDropH) : (panelStartY + height);
+            // 커튼박스/단내림 고려한 좌/우 벽 높이
+            // 자유배치: 커튼박스=위로 확장(+), 슬롯배치: 단내림=아래로(-)
+            const leftWallH = _dcIsLeft ? (isFreePlacement ? height + _dcDropH : height - _dcDropH) : height;
+            const rightWallH = _dcIsRight ? (isFreePlacement ? height + _dcDropH : height - _dcDropH) : height;
+            // 좌/우 천장 Y
+            const leftCeilingY = _dcIsLeft ? (isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH) : (panelStartY + height);
+            const rightCeilingY = _dcIsRight ? (isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH) : (panelStartY + height);
             // 경계벽 X 위치
             const _bx = _dcIsLeft ? (xOffset + _dcW) : (xOffset + width - _dcW);
 
@@ -2069,11 +2070,11 @@ const Room: React.FC<RoomProps> = ({
                   <planeGeometry args={[0.02, width - _dcW]} />
                   <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                 </mesh>
-                {/* 단내림 구간 천장 가로선 (낮은 높이) */}
+                {/* 커튼박스/단내림 구간 천장 가로선 */}
                 <mesh
                   position={[
                     _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
-                    panelStartY + height - _dcDropH,
+                    isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
                     zOffset + panelDepth / 2
                   ]}
                   rotation={[0, 0, Math.PI / 2]}
@@ -2082,9 +2083,9 @@ const Room: React.FC<RoomProps> = ({
                   <planeGeometry args={[0.02, _dcW]} />
                   <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                 </mesh>
-                {/* 경계벽 수직 가로선 (뒷벽) */}
+                {/* 경계벽 수직 음영선 (뒷벽) */}
                 <mesh
-                  position={[_bx, panelStartY + height - _dcDropH / 2, zOffset + panelDepth / 2]}
+                  position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset + panelDepth / 2]}
                   rotation={[0, 0, 0]}
                   renderOrder={-1}
                 >
@@ -2149,18 +2150,20 @@ const Room: React.FC<RoomProps> = ({
               <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
             </mesh>
 
-            {/* 단내림 경계벽 앞뒤 모서리 */}
+            {/* 커튼박스/단내림 경계벽 앞뒤 모서리 */}
             {_hasDC && (
               <>
+                {/* 경계벽 상단 모서리: 자유배치=커튼박스 천장, 슬롯=메인 천장 */}
                 <mesh
-                  position={[_bx, panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[0.02, extendedPanelDepth]} />
                   <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                 </mesh>
+                {/* 경계벽 하단 모서리: 자유배치=메인 천장, 슬롯=단내림 천장 */}
                 <mesh
-                  position={[_bx, panelStartY + height - _dcDropH, extendedZOffset + extendedPanelDepth / 2]}
+                  position={[_bx, isFreePlacement ? panelStartY + height : panelStartY + height - _dcDropH, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[0.02, extendedPanelDepth]} />
@@ -2210,12 +2213,18 @@ const Room: React.FC<RoomProps> = ({
             }
 
             if (hasLeftWall) {
-              // 좌벽이 단내림 영역이면 droppedCeilingY, 아니면 ceilingY
-              const leftCeilingY = dcIsLeft ? (ceilingY - mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200)) : ceilingY;
+              // 좌벽이 커튼박스/단내림 영역이면 해당 천장높이, 아니면 메인 ceilingY
+              const leftDcDropH = dcIsLeft ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+              const leftCeilingY = dcIsLeft
+                ? (isFreePlacement ? ceilingY + leftDcDropH : ceilingY - leftDcDropH)
+                : ceilingY;
               gradientLines.push([x1, leftCeilingY, z1, x1, leftCeilingY, z2]); // 천장-좌벽
             }
             if (hasRightWall) {
-              const rightCeilingY = dcIsRight ? (ceilingY - mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200)) : ceilingY;
+              const rightDcDropH = dcIsRight ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+              const rightCeilingY = dcIsRight
+                ? (isFreePlacement ? ceilingY + rightDcDropH : ceilingY - rightDcDropH)
+                : ceilingY;
               gradientLines.push([x2, rightCeilingY, z1, x2, rightCeilingY, z2]); // 천장-우벽
             }
 
@@ -2229,34 +2238,43 @@ const Room: React.FC<RoomProps> = ({
               gradientLines.push([x2, floorY, z1, x2, floorY, z2]); // 바닥-우벽
             }
 
-            // === 뒷벽 수직 경계선 (단내림 측은 droppedCeilingY까지) ===
+            // === 뒷벽 수직 경계선 ===
             const dcDropH = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             if (hasLeftWall) {
-              const leftTopY = dcIsLeft ? (ceilingY - dcDropH) : ceilingY;
+              // 자유배치 커튼박스: 위로 확장(+), 슬롯 단내림: 아래로(-)
+              const leftTopY = dcIsLeft
+                ? (isFreePlacement ? ceilingY + dcDropH : ceilingY - dcDropH)
+                : ceilingY;
               solidLines.push([x1, floorY, z1, x1, leftTopY, z1]); // 뒷벽-좌벽
             }
             if (hasRightWall) {
-              const rightTopY = dcIsRight ? (ceilingY - dcDropH) : ceilingY;
+              const rightTopY = dcIsRight
+                ? (isFreePlacement ? ceilingY + dcDropH : ceilingY - dcDropH)
+                : ceilingY;
               solidLines.push([x2, floorY, z1, x2, rightTopY, z1]); // 뒷벽-우벽
             }
 
-            // === 단내림 경계벽 윤곽선 ===
+            // === 커튼박스/단내림 경계벽 윤곽선 ===
             if (spaceInfo.droppedCeiling?.enabled) {
               const dcWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dcDropHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
               const isLeft = spaceInfo.droppedCeiling.position === 'left';
-              const droppedCeilingY = ceilingY - dcDropHeight;
+              // 자유배치: 커튼박스 천장 = 위로 확장, 슬롯: 단내림 천장 = 아래로 축소
+              const droppedCeilingY = isFreePlacement ? ceilingY + dcDropHeight : ceilingY - dcDropHeight;
               const bx = isLeft ? x1 + dcWidth : x2 - dcWidth;
 
-              solidLines.push([bx, droppedCeilingY, z1, bx, ceilingY, z1]); // 경계벽 수직선 (뒷벽)
-              // 경계벽 하단 뒷벽 수평선 (droppedCeilingY에서 경계벽~외벽)
+              // 경계벽 수직선 (뒷벽): 자유배치=메인천장~커튼박스천장, 슬롯=단내림천장~메인천장
+              const bwBotY = isFreePlacement ? ceilingY : droppedCeilingY;
+              const bwTopY = isFreePlacement ? droppedCeilingY : ceilingY;
+              solidLines.push([bx, bwBotY, z1, bx, bwTopY, z1]);
+              // 커튼박스/단내림쪽 천장 수평선 (뒷벽)
               if (isLeft) {
                 solidLines.push([x1, droppedCeilingY, z1, bx, droppedCeilingY, z1]);
               } else {
                 solidLines.push([bx, droppedCeilingY, z1, x2, droppedCeilingY, z1]);
               }
-              gradientLines.push([bx, ceilingY, z1, bx, ceilingY, z2]); // 경계벽 상단 연결
-              gradientLines.push([bx, droppedCeilingY, z1, bx, droppedCeilingY, z2]); // 경계벽 하단 연결
+              gradientLines.push([bx, bwTopY, z1, bx, bwTopY, z2]); // 경계벽 상단 연결
+              gradientLines.push([bx, bwBotY, z1, bx, bwBotY, z2]); // 경계벽 하단 연결
 
               if (isLeft && hasLeftWall) {
                 gradientLines.push([x1, droppedCeilingY, z1, x1, droppedCeilingY, z2]);
