@@ -3428,37 +3428,80 @@ const Configurator: React.FC = () => {
             <button
               className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
               onClick={() => {
-                // 단내림 비활성화
-                clearAllModules();
-                handleSpaceInfoUpdate({
-                  droppedCeiling: {
-                    ...spaceInfo.droppedCeiling,
-                    enabled: false
-                  },
-                  mainDoorCount: undefined,
-                  droppedCeilingDoorCount: undefined
-                });
-                setActiveRightPanelTab('placement');
+                if (spaceInfo.droppedCeiling?.enabled) {
+                  clearAllModules();
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      ...spaceInfo.droppedCeiling,
+                      enabled: false
+                    },
+                    mainDoorCount: undefined,
+                    droppedCeilingDoorCount: undefined
+                  });
+                  setActiveRightPanelTab('placement');
+                }
               }}
             >
               없음
             </button>
             <button
-              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
               disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
-                if (!spaceInfo.droppedCeiling?.enabled) {
-                  // 단내림 활성화
-                  clearAllModules();
+                const isAlreadyLeftEnabled = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'left';
+                if (isAlreadyLeftEnabled) return;
 
+                if (!spaceInfo.droppedCeiling?.enabled) {
+                  clearAllModules();
                   const totalWidth = spaceInfo.width || 4800;
-                  const droppedWidth = isFreeMode ? 150 : 900; // 자유배치: 커튼박스 150mm, 슬롯: 단내림 900mm
+                  const droppedWidth = isFreeMode ? 150 : 900;
                   const mainWidth = totalWidth - droppedWidth;
                   const mainRange = calculateDoorRange(mainWidth);
                   const currentCount = getCurrentColumnCount();
                   const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+                  const frameThickness = 50;
+                  const droppedInternalWidth = droppedWidth - frameThickness;
+                  const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
 
-                  // 단내림 구간의 내경폭으로 적절한 도어 개수 계산
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      enabled: true,
+                      width: droppedWidth,
+                      dropHeight: isFreeMode ? Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)) : 200,
+                      position: 'left'
+                    },
+                    droppedCeilingDoorCount: droppedDoorCount,
+                    mainDoorCount: adjustedMainDoorCount
+                  });
+                } else {
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      ...spaceInfo.droppedCeiling,
+                      enabled: true,
+                      position: 'left'
+                    }
+                  });
+                }
+                setActiveRightPanelTab('placement');
+              }}
+            >
+              {isFreeMode ? '좌측' : '좌단내림'}
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
+              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
+              onClick={() => {
+                const isAlreadyRightEnabled = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'right';
+                if (isAlreadyRightEnabled) return;
+
+                if (!spaceInfo.droppedCeiling?.enabled) {
+                  clearAllModules();
+                  const totalWidth = spaceInfo.width || 4800;
+                  const droppedWidth = isFreeMode ? 150 : 900;
+                  const mainWidth = totalWidth - droppedWidth;
+                  const mainRange = calculateDoorRange(mainWidth);
+                  const currentCount = getCurrentColumnCount();
+                  const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
                   const frameThickness = 50;
                   const droppedInternalWidth = droppedWidth - frameThickness;
                   const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
@@ -3473,50 +3516,21 @@ const Configurator: React.FC = () => {
                     droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
                   });
-                  setActiveRightPanelTab('placement');
+                } else {
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      ...spaceInfo.droppedCeiling,
+                      enabled: true,
+                      position: 'right'
+                    }
+                  });
                 }
+                setActiveRightPanelTab('placement');
               }}
             >
-              있음
+              {isFreeMode ? '우측' : '우단내림'}
             </button>
           </div>
-
-          {/* 단내림이 활성화된 경우 위치 선택 */}
-          {spaceInfo.droppedCeiling?.enabled && (
-            <div style={{ marginTop: '6px' }}>
-              <div className={styles.inputLabel} style={{ marginBottom: '4px' }}>위치</div>
-              <div className={styles.toggleButtonGroup}>
-                <button
-                  className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => {
-                    handleSpaceInfoUpdate({
-                      droppedCeiling: {
-                        ...spaceInfo.droppedCeiling,
-                        enabled: true,
-                        position: 'left'
-                      }
-                    });
-                  }}
-                >
-                  좌측
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
-                  onClick={() => {
-                    handleSpaceInfoUpdate({
-                      droppedCeiling: {
-                        ...spaceInfo.droppedCeiling,
-                        enabled: true,
-                        position: 'right'
-                      }
-                    });
-                  }}
-                >
-                  우측
-                </button>
-              </div>
-            </div>
-          )}
         </div>)}
 
         {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
