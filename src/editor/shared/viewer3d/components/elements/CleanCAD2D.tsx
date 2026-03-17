@@ -1606,6 +1606,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
+                    {Math.round(mainWidth)}
+                  </Text>
+                )}
+                {/* 메인 구간 슬롯 합계 (실배치 공간) */}
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[(mainStartX + mainEndX) / 2, subDimensionY - mmToThreeUnits(30), 0.01]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
                     {mainSlotTotalWidth}
                   </Text>
                 )}
@@ -1631,6 +1647,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   renderOrder={1000}
                   depthTest={false}
                     position={[(droppedStartX + droppedEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {Math.round(droppedWidth)}
+                  </Text>
+                )}
+                {/* 단내림 구간 슬롯 합계 (실배치 공간) */}
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[(droppedStartX + droppedEndX) / 2, subDimensionY - mmToThreeUnits(30), 0.01]}
                     fontSize={smallFontSize}
                     color={textColor}
                     anchorX="center"
