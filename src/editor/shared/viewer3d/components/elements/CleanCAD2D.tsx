@@ -2452,56 +2452,114 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 단내림 위치에 따라 치수선 표시 */}
             {spaceInfo.droppedCeiling.position === 'left' ? (
               <>
-                {/* 좌측 단내림/커튼박스 - 좌측 외부 치수선에 높이차이 표시 */}
+                {/* 좌측 단내림 - 좌측 외부 치수선에 단내림 공간 높이 + 높이차이 표시 */}
                 {(() => {
-                  // 자유배치: dropHeight 구간은 height ~ height+dropHeight (위로 확장)
-                  // 슬롯배치: dropHeight 구간은 height-dropHeight ~ height (아래로 축소)
-                  const dimBottom = isFreePlacement
-                    ? mmToThreeUnits(spaceInfo.height)
-                    : mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
-                  const dimTop = isFreePlacement
-                    ? mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight)
-                    : spaceHeight;
-                  const dimMid = (dimBottom + dimTop) / 2;
+                  const floorFinishY = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
+                  const hasFloorFinish = floorFinishHeightMmGlobal > 0;
+
+                  if (isFreePlacement) {
+                    // 자유배치: dropHeight 구간은 height ~ height+dropHeight (위로 확장)
+                    const dimBottom = mmToThreeUnits(spaceInfo.height);
+                    const dimTop = mmToThreeUnits(spaceInfo.height + spaceInfo.droppedCeiling.dropHeight);
+                    const dimMid = (dimBottom + dimTop) / 2;
+                    return (
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[leftDimensionX + leftOffset, dimBottom, 0.002], [leftDimensionX + leftOffset, dimTop, 0.002]]}
+                          color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([leftDimensionX + leftOffset, dimBottom, 0.002], [leftDimensionX + leftOffset, dimBottom + 0.05, 0.002])}
+                          color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([leftDimensionX + leftOffset, dimTop, 0.002], [leftDimensionX + leftOffset, dimTop - 0.05, 0.002])}
+                          color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                        />
+                        <Text renderOrder={1000} depthTest={false}
+                          position={[leftDimensionX + leftOffset - mmToThreeUnits(60), dimMid, 0.01]}
+                          fontSize={largeFontSize} color={textColor}
+                          anchorX="center" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {spaceInfo.droppedCeiling.dropHeight}
+                        </Text>
+                      </>
+                    );
+                  }
+
+                  // 슬롯배치: 바닥 ~ 단내림 천장 (단내림 공간 높이) + 단내림 천장 ~ 전체 천장 (높이차이)
+                  const droppedCeilingTopY = mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
+                  const droppedSectionHeightMm = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - floorFinishHeightMmGlobal;
+                  const dropDiffMm = spaceInfo.droppedCeiling.dropHeight;
+
+                  // 공간높이 구간 중간점 (마감재 상단 ~ 단내림 천장)
+                  const sectionMidY = floorFinishY + (droppedCeilingTopY - floorFinishY) / 2;
+                  // 높이차이 구간 중간점 (단내림 천장 ~ 전체 천장)
+                  const dropDiffMidY = (droppedCeilingTopY + spaceHeight) / 2;
+                  // 마감재 중간점
+                  const floorFinishMidY = floorFinishY / 2;
+
                   return (
                     <>
+                      {/* 전체 치수선 (바닥 ~ 전체 천장) */}
                       <NativeLine name="dimension_line"
-                        points={[[leftDimensionX + leftOffset, dimBottom, 0.002], [leftDimensionX + leftOffset, dimTop, 0.002]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                        renderOrder={100000}
-                        depthTest={false}
+                        points={[[leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                       />
                       {/* 하단 화살표 */}
                       <NativeLine name="dimension_line"
-                        points={createArrowHead([leftDimensionX + leftOffset, dimBottom, 0.002], [leftDimensionX + leftOffset, dimBottom + 0.05, 0.002])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                        renderOrder={100000}
-                        depthTest={false}
+                        points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                       />
                       {/* 상단 화살표 */}
                       <NativeLine name="dimension_line"
-                        points={createArrowHead([leftDimensionX + leftOffset, dimTop, 0.002], [leftDimensionX + leftOffset, dimTop - 0.05, 0.002])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                        renderOrder={100000}
-                        depthTest={false}
+                        points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                       />
-                      {/* 높이차이 텍스트 */}
-                      <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), dimMid, 0.01]}
-                        fontSize={largeFontSize}
-                        color={textColor}
-                        anchorX="center"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                        rotation={[0, 0, 0]}
+
+                      {/* 단내림 천장 구분 틱 */}
+                      <NativeLine name="dimension_line"
+                        points={[[leftDimensionX + leftOffset - mmToThreeUnits(30), droppedCeilingTopY, 0.002], [leftDimensionX + leftOffset + mmToThreeUnits(30), droppedCeilingTopY, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+
+                      {/* 바닥마감재 구분 틱 & 치수 */}
+                      {hasFloorFinish && (
+                        <>
+                          <NativeLine name="dimension_line"
+                            points={[[leftDimensionX + leftOffset - mmToThreeUnits(30), floorFinishY, 0.002], [leftDimensionX + leftOffset + mmToThreeUnits(30), floorFinishY, 0.002]]}
+                            color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                          />
+                          <Text renderOrder={1000} depthTest={false}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), floorFinishMidY, 0.01]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          >
+                            {floorFinishHeightMmGlobal}
+                          </Text>
+                        </>
+                      )}
+
+                      {/* 단내림 공간 높이 텍스트 (마감재 상단 ~ 단내림 천장) */}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), sectionMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="center" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                       >
-                        {spaceInfo.droppedCeiling.dropHeight}
+                        {droppedSectionHeightMm}
+                      </Text>
+
+                      {/* 높이차이 텍스트 (단내림 천장 ~ 전체 천장) */}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), dropDiffMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="center" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {dropDiffMm}
                       </Text>
                     </>
                   );
