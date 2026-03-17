@@ -435,6 +435,11 @@
   outline: none;
 }
 
+.sortSelect option {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
 .sortSelect:focus {
   border-color: var(--theme-primary);
 }
