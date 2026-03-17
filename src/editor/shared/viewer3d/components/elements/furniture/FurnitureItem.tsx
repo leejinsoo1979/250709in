@@ -2688,6 +2688,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return;
     }
 
+    // 편집 모드(이동 모드 포함)에서는 일반 드래그 시작 방지
+    if (isEditMode) {
+      return;
+    }
+
     if (isColumnCFront && !isDragMode) {
       // Column C 기둥 앞 가구는 리사이즈 모드
       columnCResize.handlePointerDown(e);
