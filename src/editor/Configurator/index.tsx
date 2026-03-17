@@ -3428,8 +3428,8 @@ const Configurator: React.FC = () => {
           </div>
         </div>
 
-        {/* 단내림이 있을 때 메인/단내림 구간 사이즈 한 줄 표시 */}
-        {spaceInfo.droppedCeiling?.enabled && (
+        {/* 단내림/커튼박스/stepCeiling이 있을 때 메인 구간 사이즈 표시 */}
+        {(spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled)) && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
@@ -3448,8 +3448,8 @@ const Configurator: React.FC = () => {
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
                   type="text"
-                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)))}
-                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900))}`}
+                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0))}
+                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0) - (spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 0) : 0)}`}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
                   onBlur={(e) => {
                     const inputValue = e.target.value;
@@ -3498,9 +3498,38 @@ const Configurator: React.FC = () => {
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
             </div>
 
-            {/* 우단내림이면 메인 다음에 단내림 표시 */}
-            {spaceInfo.droppedCeiling?.position !== 'left' && (
+            {/* 우단내림(커튼박스)이면 메인 다음에 표시 */}
+            {spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position !== 'left' && (
               <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+            )}
+
+            {/* stepCeiling 구간 사이즈 (자유배치 전용) */}
+            {isFreeMode && spaceInfo.stepCeiling?.enabled && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
+                <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                  <input
+                    type="text"
+                    defaultValue={spaceInfo.stepCeiling.width}
+                    key={`sc-zone-w-${spaceInfo.stepCeiling.width}`}
+                    readOnly
+                    style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                  />
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+                <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                  <input
+                    type="text"
+                    defaultValue={(spaceInfo.height || 2400) - (spaceInfo.stepCeiling.dropHeight || 200)}
+                    key={`sc-zone-h-${spaceInfo.height}-${spaceInfo.stepCeiling.dropHeight}`}
+                    readOnly
+                    style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                  />
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
+              </div>
             )}
           </div>
         )}
@@ -5473,7 +5502,7 @@ const Configurator: React.FC = () => {
               </div>
             )}
             <Space3DView
-              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}`}
+              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}`}
               spaceInfo={spaceInfo}
               viewMode={viewMode}
               setViewMode={setViewMode}

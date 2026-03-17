@@ -1628,6 +1628,48 @@ const FreePlacementDropZone: React.FC = () => {
           }
         }
 
+        // 단내림(stepCeiling) 외벽 쪽 gap — 커튼박스가 없어 단내림이 벽에 직접 인접한 경우
+        const hasStep = spaceInfo.stepCeiling?.enabled;
+        const stepPosition = spaceInfo.stepCeiling?.position || 'right';
+        const stepWidthMm = spaceInfo.stepCeiling?.width || 0;
+        if (hasStep && stepWidthMm > 0) {
+          const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+          const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+          const scDropH = spaceInfo.stepCeiling!.dropHeight || 200;
+          const stepH = (spaceInfo.height - scDropH) * 0.01; // 단내림 천장 높이
+
+          // 단내림이 벽에 직접 인접하는지 (커튼박스가 같은 쪽에 없는 경우)
+          const cbSameSide = hasDropped && droppedPosition === stepPosition;
+
+          if (!cbSameSide) {
+            if (stepPosition === 'left') {
+              const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
+              if (hasLeftWall && gapLeft > 0) {
+                const w = gapLeft * 0.01;
+                const cx = -halfW * 0.01 + w / 2;
+                boxes.push(
+                  <mesh key="gap-sc-left-wall" position={[cx, stepH / 2, zOffset]}>
+                    <boxGeometry args={[w, stepH, depthThree]} />
+                    <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  </mesh>
+                );
+              }
+            } else {
+              const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
+              if (hasRightWall && gapRight > 0) {
+                const w = gapRight * 0.01;
+                const cx = halfW * 0.01 - w / 2;
+                boxes.push(
+                  <mesh key="gap-sc-right-wall" position={[cx, stepH / 2, zOffset]}>
+                    <boxGeometry args={[w, stepH, depthThree]} />
+                    <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  </mesh>
+                );
+              }
+            }
+          }
+        }
+
         return boxes;
       })()}
 

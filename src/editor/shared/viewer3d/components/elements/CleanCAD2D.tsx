@@ -1168,6 +1168,70 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
+      {/* stepCeiling 단내림 구간 표시 (해칭) - 2D 모드, 자유배치에서만 */}
+      {isFreePlacement && spaceInfo.stepCeiling?.enabled && currentViewDirection !== '3D' && (() => {
+        const scWidthMm = spaceInfo.stepCeiling!.width || 900;
+        const scDropMm = spaceInfo.stepCeiling!.dropHeight || 200;
+        const scWidth = mmToThreeUnits(scWidthMm);
+        const scDropH = mmToThreeUnits(scDropMm);
+        const totalHeight = mmToThreeUnits(spaceInfo.height);
+        const normalHeight = totalHeight - scDropH; // 단내림 천장 높이
+
+        // 커튼박스가 차지하는 영역 고려
+        const cbWidthMm = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0;
+
+        const scStartX = spaceInfo.stepCeiling!.position === 'left'
+          ? leftOffset + mmToThreeUnits(cbWidthMm * (spaceInfo.droppedCeiling?.position === 'left' ? 1 : 0))
+          : leftOffset + mmToThreeUnits(spaceInfo.width - scWidthMm - cbWidthMm * (spaceInfo.droppedCeiling?.position === 'right' ? 1 : 0));
+        const scEndX = scStartX + scWidth;
+
+        // 해칭 패턴
+        const hatchLines: JSX.Element[] = [];
+        const hatchSpacing = mmToThreeUnits(40);
+        const startOff = -scDropH;
+        const endOff = scWidth;
+        const hatchCount = Math.ceil((endOff - startOff) / hatchSpacing) + 1;
+
+        for (let i = 0; i <= hatchCount; i++) {
+          const off = startOff + i * hatchSpacing;
+          const sx = scStartX + off;
+          const sy = normalHeight;
+          const ex = sx + scDropH;
+          const ey = totalHeight;
+
+          let cx1 = sx, cy1 = sy, cx2 = ex, cy2 = ey;
+          if (sx < scStartX) { const d = scStartX - sx; cx1 = scStartX; cy1 = sy + d; }
+          if (ex > scEndX) { const d = ex - scEndX; cx2 = scEndX; cy2 = ey - d; }
+
+          if (cx1 < scEndX && cx2 > scStartX && cy1 < totalHeight && cy2 > normalHeight) {
+            hatchLines.push(
+              <Line
+                key={`sc-hatch-${i}`}
+                points={[[cx1, cy1, 0.001], [cx2, cy2, 0.001]]}
+                color={theme === 'dark' ? '#FFD700' : '#999999'}
+                lineWidth={0.5}
+                opacity={0.6}
+              />
+            );
+          }
+        }
+
+        return (
+          <group>
+            {/* 반투명 배경 */}
+            <mesh position={[(scStartX + scEndX) / 2, (normalHeight + totalHeight) / 2, 0.0005]}>
+              <planeGeometry args={[scWidth, scDropH]} />
+              <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
+            </mesh>
+            {/* 경계선 */}
+            <Line points={[[scStartX, normalHeight, 0.002], [scStartX, totalHeight, 0.002]]} color={theme === 'dark' ? '#FFD700' : '#999999'} lineWidth={0.8} />
+            <Line points={[[scEndX, normalHeight, 0.002], [scEndX, totalHeight, 0.002]]} color={theme === 'dark' ? '#FFD700' : '#999999'} lineWidth={0.8} />
+            <Line points={[[scStartX, normalHeight, 0.002], [scEndX, normalHeight, 0.002]]} color={theme === 'dark' ? '#FFD700' : '#999999'} lineWidth={0.8} />
+            {hatchLines}
+          </group>
+        );
+      })()}
+
       {/* 바닥마감재 해치 표시 - 2D 모드에서만 */}
       {floorFinishHeightMmGlobal > 0 && currentViewDirection !== '3D' && (() => {
         const floorFinishH = mmToThreeUnits(floorFinishHeightMmGlobal);

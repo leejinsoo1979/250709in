@@ -43,27 +43,45 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
       }
     }
 
-    // 이격거리 적용 — 벽이 있는 쪽만, 커튼박스 경계면은 middleGap
+    // 단내림(stepCeiling) 구간 제외 — 커튼박스 안쪽에 위치
+    const hasStep = spaceInfo.stepCeiling?.enabled;
+    const stepPosition = spaceInfo.stepCeiling?.position || 'right';
+    if (hasStep) {
+      const stepWidth = spaceInfo.stepCeiling!.width || 0;
+      if (stepPosition === 'left') {
+        startX += stepWidth;
+      } else {
+        endX -= stepWidth;
+      }
+    }
+
+    // 이격거리 적용 — 벽이 있는 쪽만, 커튼박스/단내림 경계면은 middleGap
     const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
     const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
     const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
     const hasRightWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.right);
 
-    if (hasDropped) {
-      // 커튼박스가 있으면: 벽쪽은 벽이격, 커튼박스 경계쪽은 경계이격
-      if (droppedPosition === 'left') {
-        // 메인구간: 좌측=경계이격, 우측=벽이격
-        startX += middleGap;
-        if (hasRightWall) endX -= rightGap;
-      } else {
-        // 메인구간: 좌측=벽이격, 우측=경계이격
-        if (hasLeftWall) startX += leftGap;
-        endX -= middleGap;
-      }
-    } else {
-      // 커튼박스 없음: 양쪽 벽이격만
+    // 메인구간 좌측/우측에 인접한 것이 무엇인지 결정
+    // 구간 순서: 벽 → 커튼박스 → 단내림 → 메인구간
+    const leftAdjacent = hasStep && stepPosition === 'left' ? 'step'
+      : hasDropped && droppedPosition === 'left' ? 'dropped'
+      : 'wall';
+    const rightAdjacent = hasStep && stepPosition === 'right' ? 'step'
+      : hasDropped && droppedPosition === 'right' ? 'dropped'
+      : 'wall';
+
+    // 좌측 이격
+    if (leftAdjacent === 'wall') {
       if (hasLeftWall) startX += leftGap;
+    } else {
+      startX += middleGap; // 커튼박스 or 단내림 경계
+    }
+
+    // 우측 이격
+    if (rightAdjacent === 'wall') {
       if (hasRightWall) endX -= rightGap;
+    } else {
+      endX -= middleGap; // 커튼박스 or 단내림 경계
     }
   }
 

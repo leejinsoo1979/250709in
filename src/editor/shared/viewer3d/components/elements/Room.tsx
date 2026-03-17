@@ -1208,10 +1208,12 @@ const Room: React.FC<RoomProps> = ({
                   // 'droppedHeight(Three.js)': (spaceInfo.height - dropHeight) * 0.01
                 // });
 
-                // 왼쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
+                // stepCeiling 좌측 확인
+                const hasLeftStep = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+                const leftStepDropH = hasLeftStep ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+
+                // 왼쪽이 단내림(커튼박스) 영역인 경우
                 if (hasDroppedCeiling && isLeftDropped) {
-                  // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
-                  // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
                   const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
@@ -1227,7 +1229,24 @@ const Room: React.FC<RoomProps> = ({
                   ) : null;
                 }
 
-                // 단내림이 없거나 오른쪽 단내림인 경우 기존 렌더링
+                // 왼쪽이 stepCeiling 영역인 경우 (커튼박스 없고 단내림만)
+                if (hasLeftStep && !isLeftDropped) {
+                  const stepWallHeight = height - leftStepDropH;
+                  const stepCenterY = panelStartY + stepWallHeight / 2;
+
+                  return renderMode === 'solid' ? (
+                    <mesh
+                      position={[-width / 2 - 0.01, stepCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                      renderOrder={1}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, stepWallHeight]} />
+                      <primitive object={opaqueLeftWallMaterial} />
+                    </mesh>
+                  ) : null;
+                }
+
+                // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1270,10 +1289,12 @@ const Room: React.FC<RoomProps> = ({
                   // '벽 렌더링 조건': (viewMode === '3D' || viewMode === '3d')
                 // });
 
-                // 오른쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
+                // stepCeiling 우측 확인
+                const hasRightStep = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+                const rightStepDropH = hasRightStep ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+
+                // 오른쪽이 커튼박스 영역인 경우
                 if (hasDroppedCeiling && isRightDropped) {
-                  // 자유배치모드: 커튼박스 벽은 메인높이 + dropHeight (위로 확장)
-                  // 슬롯배치: 단내림 벽은 전체높이 - dropHeight (아래로 축소)
                   const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
@@ -1289,7 +1310,24 @@ const Room: React.FC<RoomProps> = ({
                   ) : null;
                 }
 
-                // 단내림이 없거나 왼쪽에 있는 경우 전체 높이로 렌더링
+                // 오른쪽이 stepCeiling 영역인 경우 (커튼박스 없고 단내림만)
+                if (hasRightStep && !isRightDropped) {
+                  const stepWallHeight = height - rightStepDropH;
+                  const stepCenterY = panelStartY + stepWallHeight / 2;
+
+                  return renderMode === 'solid' ? (
+                    <mesh
+                      position={[width / 2 + 0.01, stepCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
+                      renderOrder={1}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, stepWallHeight]} />
+                      <primitive object={opaqueRightWallMaterial} />
+                    </mesh>
+                  ) : null;
+                }
+
+                // 그 외: 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
                   return renderMode === 'solid' ? (
                     <mesh
@@ -1321,8 +1359,14 @@ const Room: React.FC<RoomProps> = ({
               : 0;
             const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
-            if (!hasDroppedCeiling) {
-              // 단내림이 없는 경우 기존처럼 전체 천장 렌더링
+            // stepCeiling (자유배치 전용 단내림)
+            const hasStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled;
+            const stepWidth = hasStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 900) : 0;
+            const stepDropHeight = hasStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+            const isLeftStep = spaceInfo.stepCeiling?.position === 'left';
+
+            if (!hasDroppedCeiling && !hasStepCeiling) {
+              // 단내림도 커튼박스도 없는 경우 전체 천장 렌더링
               return renderMode === 'solid' ? (
                 <mesh
                   position={[xOffset + width / 2, panelStartY + height + 0.001, extendedZOffset + extendedPanelDepth / 2]}
@@ -1333,6 +1377,57 @@ const Room: React.FC<RoomProps> = ({
                     ref={topWallMaterialRef}
                     object={topWallMaterial} />
                 </mesh>
+              ) : null;
+            }
+
+            if (!hasDroppedCeiling && hasStepCeiling) {
+              // 커튼박스 없이 단내림만 있는 경우: 2구간 분할 (단내림 + 메인)
+              const stepAreaWidth = stepWidth;
+              const mainAreaWidth = width - stepWidth;
+              const stepAreaX = isLeftStep
+                ? xOffset + stepAreaWidth / 2
+                : xOffset + mainAreaWidth + stepAreaWidth / 2;
+              const mainAreaX = isLeftStep
+                ? xOffset + stepAreaWidth + mainAreaWidth / 2
+                : xOffset + mainAreaWidth / 2;
+              const stepCeilingY = panelStartY + height - stepDropHeight + 0.001;
+              const mainCeilingY = panelStartY + height + 0.001;
+              // 경계벽: 단내림쪽 천장~메인 천장 사이
+              const stepBoundaryX = isLeftStep
+                ? xOffset + stepAreaWidth
+                : xOffset + mainAreaWidth;
+              const stepBoundaryY = panelStartY + height - stepDropHeight / 2;
+
+              return renderMode === 'solid' ? (
+                <>
+                  {/* 단내림 영역 천장 (낮은 높이) */}
+                  <mesh
+                    position={[stepAreaX, stepCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[stepAreaWidth, extendedPanelDepth]} />
+                    <primitive object={opaqueTopWallMaterial} />
+                  </mesh>
+                  {/* 메인 영역 천장 */}
+                  <mesh
+                    position={[mainAreaX, mainCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[mainAreaWidth, extendedPanelDepth]} />
+                    <primitive ref={topWallMaterialRef} object={topWallMaterial} />
+                  </mesh>
+                  {/* 단내림 경계 수직 벽 */}
+                  <mesh
+                    renderOrder={-1}
+                    position={[stepBoundaryX, stepBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    <planeGeometry args={[extendedPanelDepth, stepDropHeight]} />
+                    <primitive ref={droppedWallMaterialRef} object={droppedWallMaterial} />
+                  </mesh>
+                </>
               ) : null;
             }
 
@@ -1430,9 +1525,60 @@ const Room: React.FC<RoomProps> = ({
               ? panelStartY + height + droppedCeilingHeight / 2       // 경계벽: 메인 천장 ~ 커튼박스 천장 사이
               : panelStartY + height - droppedCeilingHeight / 2;      // 단내림쪽 경계벽
 
+            // stepCeiling과 동시 활성: normalArea를 단내림 + 메인으로 추가 분할
+            const scWidth = hasStepCeiling ? stepWidth : 0;
+            const scDropH = hasStepCeiling ? stepDropHeight : 0;
+
+            // 단내림이 normalArea 안에서 차지하는 위치 결정
+            // 구간순서: 벽 → 커튼박스(바깥) → 단내림 → 메인
+            // 커튼박스 반대쪽에 단내림이 오려면, 단내림은 커튼박스 쪽(normalArea의 dropped 인접 쪽)
+            let actualMainWidth = normalAreaWidth - scWidth;
+            let stepAreaX2: number;
+            let mainAreaX2: number;
+            let stepBoundaryX2: number;
+
+            if (hasStepCeiling) {
+              // 단내림은 커튼박스 인접 쪽 (normalArea에서 커튼박스에 가까운 쪽)
+              if (isLeftDropped) {
+                // 커튼박스=좌측 → normalArea 좌단(커튼박스 옆)에 단내림
+                if (isLeftStep) {
+                  // 단내림도 좌측: normalArea 왼쪽 edge
+                  stepAreaX2 = (isLeftDropped ? xOffset + droppedAreaWidth : xOffset) + scWidth / 2;
+                  mainAreaX2 = stepAreaX2 + scWidth / 2 + actualMainWidth / 2;
+                  stepBoundaryX2 = stepAreaX2 + scWidth / 2;
+                } else {
+                  // 단내림 우측: normalArea 오른쪽 edge
+                  mainAreaX2 = (isLeftDropped ? xOffset + droppedAreaWidth : xOffset) + actualMainWidth / 2;
+                  stepAreaX2 = mainAreaX2 + actualMainWidth / 2 + scWidth / 2;
+                  stepBoundaryX2 = mainAreaX2 + actualMainWidth / 2;
+                }
+              } else {
+                // 커튼박스=우측 → normalArea 우단(커튼박스 옆)에 단내림
+                if (isLeftStep) {
+                  // 단내림 좌측: normalArea 왼쪽 edge
+                  stepAreaX2 = xOffset + scWidth / 2;
+                  mainAreaX2 = stepAreaX2 + scWidth / 2 + actualMainWidth / 2;
+                  stepBoundaryX2 = stepAreaX2 + scWidth / 2;
+                } else {
+                  // 단내림 우측: normalArea 오른쪽 edge
+                  mainAreaX2 = xOffset + actualMainWidth / 2;
+                  stepAreaX2 = mainAreaX2 + actualMainWidth / 2 + scWidth / 2;
+                  stepBoundaryX2 = mainAreaX2 + actualMainWidth / 2;
+                }
+              }
+            } else {
+              actualMainWidth = normalAreaWidth;
+              stepAreaX2 = 0;
+              mainAreaX2 = normalAreaX;
+              stepBoundaryX2 = 0;
+            }
+
+            const stepCeilingY2 = panelStartY + height - scDropH + 0.001;
+            const stepBoundaryY2 = panelStartY + height - scDropH / 2;
+
             return renderMode === 'solid' ? (
               <>
-                {/* 단내림/커튼박스 영역 천장 */}
+                {/* 커튼박스 영역 천장 */}
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
@@ -1443,19 +1589,49 @@ const Room: React.FC<RoomProps> = ({
                     object={opaqueTopWallMaterial} />
                 </mesh>
 
-                {/* 메인/일반 영역 천장 */}
-                <mesh
-                  position={[normalAreaX, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
-                  rotation={[Math.PI / 2, 0, 0]}
-                  renderOrder={-1}
-                >
-                  <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
-                  <primitive
-                    ref={topWallMaterialRef}
-                    object={topWallMaterial} />
-                </mesh>
+                {hasStepCeiling ? (
+                  <>
+                    {/* 단내림 영역 천장 (낮은 높이) */}
+                    <mesh
+                      position={[stepAreaX2, stepCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[Math.PI / 2, 0, 0]}
+                      renderOrder={-1}
+                    >
+                      <planeGeometry args={[scWidth, extendedPanelDepth]} />
+                      <primitive object={opaqueTopWallMaterial} />
+                    </mesh>
+                    {/* 메인 영역 천장 */}
+                    <mesh
+                      position={[mainAreaX2, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[Math.PI / 2, 0, 0]}
+                      renderOrder={-1}
+                    >
+                      <planeGeometry args={[actualMainWidth, extendedPanelDepth]} />
+                      <primitive ref={topWallMaterialRef} object={topWallMaterial} />
+                    </mesh>
+                    {/* 단내림 경계 수직 벽 */}
+                    <mesh
+                      renderOrder={-1}
+                      position={[stepBoundaryX2, stepBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, scDropH]} />
+                      <primitive object={droppedWallMaterial} />
+                    </mesh>
+                  </>
+                ) : (
+                  /* 메인/일반 영역 천장 (단내림 없음) */
+                  <mesh
+                    position={[normalAreaX, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
+                    <primitive ref={topWallMaterialRef} object={topWallMaterial} />
+                  </mesh>
+                )}
 
-                {/* 경계 수직 벽 */}
+                {/* 커튼박스 경계 수직 벽 */}
                 <mesh
                   renderOrder={-1}
                   position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
