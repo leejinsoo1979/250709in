@@ -997,13 +997,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 치수선 균등 간격 배치: 4단 — 전체폭 → 구간사이즈 → 슬롯합계(실배치) → 슬롯폭
   // 자유배치+단내림: 슬롯합계 불필요 → 3단으로 축소
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : isFreePlacement ? 4 : 3;
+  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
-  // 2단: 자유배치 시 가구 합산 너비, 일반 시 구간사이즈
+  // 2단: 구간사이즈 (2700 / 900)
   const columnDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
-  // 자유배치 전용: 가구 합산 너비 단 (topDimensionY 바로 아래)
-  const freePlacementTotalY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 1));
   // 3단: 슬롯 합계 너비 (실배치 공간) — 단내림 있을 때만
   const slotTotalDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
@@ -2540,54 +2538,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
             {/* 가구 우측 끝 연장선 */}
-            <NativeLine name="dimension_line"
-              points={[[furnitureRight, spaceHeight, 0.001], [furnitureRight, topDimensionY + extLen, 0.001]]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-          </group>
-        );
-      })()}
-
-      {/* 자유배치 모드: 가구 합산 너비 치수선 (상단 전체폭 바로 아래 단) */}
-      {isFreePlacement && furnitureDimensions && furnitureDimensions.length > 0 && (() => {
-        const validDims = furnitureDimensions.filter((d): d is NonNullable<typeof d> => d !== null);
-        if (validDims.length === 0) return null;
-        const edges = validDims.map(d => ({
-          left: d.moduleX - mmToThreeUnits(d.actualWidth / 2),
-          right: d.moduleX + mmToThreeUnits(d.actualWidth / 2),
-        }));
-        const furnitureLeft = Math.min(...edges.map(e => e.left));
-        const furnitureRight = Math.max(...edges.map(e => e.right));
-        const furnitureTotalMm = Math.round((furnitureRight - furnitureLeft) * 100);
-        const extLen = mmToThreeUnits(EXTENSION_LENGTH);
-
-        return (
-          <group key="free-placement-total-width">
-            {/* 합산 너비 치수선 */}
-            <NativeLine name="dimension_line"
-              points={[[furnitureLeft, freePlacementTotalY, 0.002], [furnitureRight, freePlacementTotalY, 0.002]]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={createArrowHead([furnitureLeft, freePlacementTotalY, 0.002], [furnitureLeft + 0.03, freePlacementTotalY, 0.002], 0.01)}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={createArrowHead([furnitureRight, freePlacementTotalY, 0.002], [furnitureRight - 0.03, freePlacementTotalY, 0.002], 0.01)}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <Text renderOrder={1000} depthTest={false}
-              position={[(furnitureLeft + furnitureRight) / 2, freePlacementTotalY + mmToThreeUnits(20), 0.01]}
-              fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
-              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-            >
-              {furnitureTotalMm}
-            </Text>
-            {/* 연장선 */}
-            <NativeLine name="dimension_line"
-              points={[[furnitureLeft, spaceHeight, 0.001], [furnitureLeft, topDimensionY + extLen, 0.001]]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
             <NativeLine name="dimension_line"
               points={[[furnitureRight, spaceHeight, 0.001], [furnitureRight, topDimensionY + extLen, 0.001]]}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
