@@ -8,7 +8,7 @@ import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
-import { getInternalSpaceBoundsX, checkFreeCollision, FurnitureBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { getInternalSpaceBoundsX, getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -483,27 +483,54 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           : module.dimensions;
         const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
 
-        // 중앙부터 시작해 빈 자리 찾기
-        const centerX = (startX + endX) / 2;
-        const step = dims.width;
+        // 좌측부터 순서대로 빈 자리 찾기
+        const furnitureWidth = dims.width;
+        const halfW = furnitureWidth / 2;
+        const newCategory = (moduleData.category || 'full') as 'full' | 'upper' | 'lower';
         let targetX: number | null = null;
 
-        // 중앙 → 좌우 교대로 탐색
-        for (let offset = 0; offset <= (endX - startX); offset += step) {
-          for (const sign of [0, 1, -1]) {
-            const tryX = centerX + offset * sign;
-            if (tryX - dims.width / 2 < startX || tryX + dims.width / 2 > endX) continue;
-            const bounds: FurnitureBoundsX = {
-              left: tryX - dims.width / 2,
-              right: tryX + dims.width / 2,
-              category: moduleData.category as 'full' | 'upper' | 'lower',
-            };
-            if (!checkFreeCollision(placedModules, bounds)) {
-              targetX = tryX;
-              break;
+        const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
+        const sortedBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+        // 후보 빈 공간: 왼쪽 벽부터 오른쪽 벽까지 순서대로
+        const candidates: { left: number; right: number }[] = [];
+        if (sortedBounds.length === 0) {
+          candidates.push({ left: startX, right: endX });
+        } else {
+          // 왼쪽 벽 ~ 첫 가구
+          if (sortedBounds[0].left > startX) {
+            candidates.push({ left: startX, right: sortedBounds[0].left });
+          }
+          // 가구 사이
+          for (let i = 0; i < sortedBounds.length - 1; i++) {
+            if (sortedBounds[i + 1].left > sortedBounds[i].right) {
+              candidates.push({ left: sortedBounds[i].right, right: sortedBounds[i + 1].left });
             }
           }
-          if (targetX !== null) break;
+          // 마지막 가구 ~ 오른쪽 벽
+          const lastRight = sortedBounds[sortedBounds.length - 1].right;
+          if (endX > lastRight) {
+            candidates.push({ left: lastRight, right: endX });
+          }
+        }
+
+        // upper/lower 공존: 다른 카테고리 가구 위에도 배치 가능
+        if (newCategory === 'upper' || newCategory === 'lower') {
+          const coexistCategory = newCategory === 'upper' ? 'lower' : 'upper';
+          for (const b of sortedBounds) {
+            if (b.category === coexistCategory && (b.right - b.left) >= furnitureWidth) {
+              candidates.push({ left: b.left, right: b.right });
+            }
+          }
+          candidates.sort((a, b) => a.left - b.left);
+        }
+
+        // 좌측부터 순서대로 들어갈 수 있는 첫 빈 공간에 배치
+        for (const gap of candidates) {
+          if ((gap.right - gap.left) >= furnitureWidth) {
+            targetX = gap.left + halfW;
+            break;
+          }
         }
 
         if (targetX === null) {
