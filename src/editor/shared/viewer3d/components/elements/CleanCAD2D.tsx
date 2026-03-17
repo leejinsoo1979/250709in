@@ -1599,11 +1599,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      if (isFreePlacement) return Math.round(mainWidth);
-                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zsi.normal.width);
-                    })()}
+                    {Math.round(mainWidth)}
                   </Text>
                 )}
 
@@ -1635,11 +1631,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      if (isFreePlacement) return Math.round(droppedWidth);
-                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zsi.dropped?.width || droppedWidth);
-                    })()}
+                    {Math.round(droppedWidth)}
                   </Text>
                 )}
                 
@@ -4022,11 +4014,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {(() => {
-                      if (isFreePlacement) return Math.round(mainWidth);
-                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zsi.normal.width);
-                    })()}
+                    {Math.round(mainWidth)}
                   </Text>
                 )}
 
@@ -4059,11 +4047,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {(() => {
-                      if (isFreePlacement) return Math.round(droppedWidth);
-                      const zsi = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zsi.dropped?.width || droppedWidth);
-                    })()}
+                    {Math.round(droppedWidth)}
                   </Text>
                 )}
                 
