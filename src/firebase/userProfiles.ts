@@ -764,6 +764,11 @@ export type SpaceConfigDefaults = {
   furnitureSingleWidth?: number;
   furnitureDualWidth?: number;
   surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
+  installType?: 'builtin' | 'semistanding' | 'freestanding';
+  droppedCeilingEnabled?: boolean;
+  droppedCeilingPosition?: 'left' | 'right';
+  droppedCeilingWidth?: number;
+  droppedCeilingDropHeight?: number;
 };
 
 // 공간설정 기본값 조회

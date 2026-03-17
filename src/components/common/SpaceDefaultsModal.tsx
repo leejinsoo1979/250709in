@@ -19,6 +19,11 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
   surroundMode: 'full-surround',
+  installType: 'builtin',
+  droppedCeilingEnabled: false,
+  droppedCeilingPosition: 'right',
+  droppedCeilingWidth: 1300,
+  droppedCeilingDropHeight: 200,
 };
 
 const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; label: string }[] = [
@@ -27,7 +32,13 @@ const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; 
   { id: 'no-surround', label: '노서라운드' },
 ];
 
-/* ── NumberInput (compact stepper) ── */
+const INSTALL_OPTIONS: { id: NonNullable<SpaceConfigDefaults['installType']>; label: string }[] = [
+  { id: 'builtin', label: '빌트인' },
+  { id: 'semistanding', label: '반빌트인' },
+  { id: 'freestanding', label: '스탠딩' },
+];
+
+/* ── NumberInput ── */
 interface NumberInputProps {
   label: string;
   value: number;
@@ -42,29 +53,24 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
   <div className={styles.numberInput}>
     <div className={styles.inputLabel}>{label}</div>
     <div className={styles.inputGroup}>
-      <button
-        className={styles.inputButton}
-        onClick={() => onChange(Math.max(min || 0, value - step))}
-        disabled={value <= (min || 0)}
-      >−</button>
+      <button className={styles.inputButton} onClick={() => onChange(Math.max(min || 0, value - step))} disabled={value <= (min || 0)}>−</button>
       <div className={styles.inputField}>
-        <input
-          type="number"
-          value={value}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            onChange(Math.max(min || 0, Math.min(max || Infinity, v)));
-          }}
-          min={min} max={max} step={step}
-        />
+        <input type="number" value={value} onChange={(e) => { const v = Number(e.target.value); onChange(Math.max(min || 0, Math.min(max || Infinity, v))); }} min={min} max={max} step={step} />
         <span className={styles.inputUnit}>{unit}</span>
       </div>
-      <button
-        className={styles.inputButton}
-        onClick={() => onChange(Math.min(max || Infinity, value + step))}
-        disabled={value >= (max || Infinity)}
-      >+</button>
+      <button className={styles.inputButton} onClick={() => onChange(Math.min(max || Infinity, value + step))} disabled={value >= (max || Infinity)}>+</button>
     </div>
+  </div>
+);
+
+/* ── ToggleGroup ── */
+const Toggle: React.FC<{ options: { id: string; label: string }[]; selected: string; onChange: (id: string) => void }> = ({ options, selected, onChange }) => (
+  <div className={commonStyles.toggleButtonGroup}>
+    {options.map(opt => (
+      <button key={opt.id} className={`${commonStyles.toggleButton} ${selected === opt.id ? commonStyles.toggleButtonActive : ''}`} onClick={() => onChange(opt.id)}>
+        {opt.label}
+      </button>
+    ))}
   </div>
 );
 
@@ -79,29 +85,22 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
     const load = async () => {
       const defaults = await getSpaceConfigDefaults();
       if (defaults) {
-        setValues({
-          width: defaults.width ?? SYSTEM_DEFAULTS.width,
-          height: defaults.height ?? SYSTEM_DEFAULTS.height,
-          gapLeft: defaults.gapLeft ?? SYSTEM_DEFAULTS.gapLeft,
-          gapRight: defaults.gapRight ?? SYSTEM_DEFAULTS.gapRight,
-          frameTop: defaults.frameTop ?? SYSTEM_DEFAULTS.frameTop,
-          frameLeft: defaults.frameLeft ?? SYSTEM_DEFAULTS.frameLeft,
-          frameRight: defaults.frameRight ?? SYSTEM_DEFAULTS.frameRight,
-          baseHeight: defaults.baseHeight ?? SYSTEM_DEFAULTS.baseHeight,
-          furnitureSingleWidth: defaults.furnitureSingleWidth ?? SYSTEM_DEFAULTS.furnitureSingleWidth,
-          furnitureDualWidth: defaults.furnitureDualWidth ?? SYSTEM_DEFAULTS.furnitureDualWidth,
-          surroundMode: defaults.surroundMode ?? SYSTEM_DEFAULTS.surroundMode,
-        });
+        setValues(prev => ({
+          ...prev,
+          ...Object.fromEntries(Object.entries(defaults).filter(([, v]) => v !== undefined)),
+        }));
       }
       setLoading(false);
     };
     load();
   }, []);
 
-  const h = (key: keyof SpaceConfigDefaults) => (v: number) => {
-    setValues(prev => ({ ...prev, [key]: v }));
+  const set = <K extends keyof SpaceConfigDefaults>(key: K, value: SpaceConfigDefaults[K]) => {
+    setValues(prev => ({ ...prev, [key]: value }));
     setMessage(null);
   };
+
+  const h = (key: keyof SpaceConfigDefaults) => (v: number) => set(key, v);
 
   const handleSave = async () => {
     setSaving(true);
@@ -123,6 +122,12 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
         <div className={styles.body}>
           <div className={styles.notice}>새 프로젝트에서부터 적용됩니다.</div>
 
+          {/* 공간유형 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>공간유형</div>
+            <Toggle options={INSTALL_OPTIONS} selected={values.installType} onChange={(id) => set('installType', id as any)} />
+          </div>
+
           {/* 공간 크기 */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>공간 크기</div>
@@ -130,6 +135,32 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
               <NumberInput label="너비 (W)" value={values.width} onChange={h('width')} min={1000} max={8000} step={100} />
               <NumberInput label="높이 (H)" value={values.height} onChange={h('height')} min={2000} max={3000} step={100} />
             </div>
+          </div>
+
+          {/* 단내림 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>단내림</div>
+            <Toggle
+              options={[{ id: 'no', label: '없음' }, { id: 'yes', label: '있음' }]}
+              selected={values.droppedCeilingEnabled ? 'yes' : 'no'}
+              onChange={(id) => set('droppedCeilingEnabled', id === 'yes')}
+            />
+            {values.droppedCeilingEnabled && (
+              <>
+                <div className={styles.row} style={{ marginTop: 6 }}>
+                  <div className={styles.numberInput}>
+                    <div className={styles.inputLabel}>위치</div>
+                    <Toggle
+                      options={[{ id: 'left', label: '좌측' }, { id: 'right', label: '우측' }]}
+                      selected={values.droppedCeilingPosition}
+                      onChange={(id) => set('droppedCeilingPosition', id as any)}
+                    />
+                  </div>
+                  <NumberInput label="내림높이" value={values.droppedCeilingDropHeight} onChange={h('droppedCeilingDropHeight')} min={50} max={500} step={10} />
+                </div>
+                <NumberInput label="단내림 너비" value={values.droppedCeilingWidth} onChange={h('droppedCeilingWidth')} min={600} max={2400} step={100} />
+              </>
+            )}
           </div>
 
           {/* 이격거리 */}
@@ -141,20 +172,10 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
             </div>
           </div>
 
-          {/* 프레임 설정 */}
+          {/* 프레임 타입 */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>프레임 타입</div>
-            <div className={commonStyles.toggleButtonGroup}>
-              {SURROUND_OPTIONS.map(opt => (
-                <button
-                  key={opt.id}
-                  className={`${commonStyles.toggleButton} ${values.surroundMode === opt.id ? commonStyles.toggleButtonActive : ''}`}
-                  onClick={() => { setValues(prev => ({ ...prev, surroundMode: opt.id })); setMessage(null); }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <Toggle options={SURROUND_OPTIONS} selected={values.surroundMode} onChange={(id) => set('surroundMode', id as any)} />
           </div>
 
           {/* 프레임 사이즈 */}

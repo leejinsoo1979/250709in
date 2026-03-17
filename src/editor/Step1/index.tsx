@@ -100,6 +100,17 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
                 ? { left: true, right: true, top: false, bottom: false }
                 : { left: false, right: false, top: true, bottom: false },
           } : {}),
+          // 공간유형
+          ...(defaults.installType ? { installType: defaults.installType } : {}),
+          // 단내림
+          ...(defaults.droppedCeilingEnabled !== undefined ? {
+            droppedCeiling: {
+              enabled: defaults.droppedCeilingEnabled,
+              position: defaults.droppedCeilingPosition ?? 'right',
+              width: defaults.droppedCeilingWidth ?? 1300,
+              dropHeight: defaults.droppedCeilingDropHeight ?? 200,
+            },
+          } : {}),
         });
         console.log('✅ 유저 공간설정 기본값 적용:', defaults);
       }
