@@ -2098,44 +2098,45 @@ const Room: React.FC<RoomProps> = ({
                 ? xOffset + _dcW + _scW2
                 : xOffset;
               return (
-              <>
-                {/* 메인 구간 천장 가로선 */}
-                <mesh
-                  position={[
-                    _mainStartX + _mainW / 2,
-                    panelStartY + height,
-                    zOffset + panelDepth / 2
-                  ]}
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={-1}
-                >
-                  <planeGeometry args={[0.02, _mainW]} />
-                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-                </mesh>
-                {/* 커튼박스/단내림 구간 천장 가로선 */}
-                <mesh
-                  position={[
-                    _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
-                    isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
-                    zOffset + panelDepth / 2
-                  ]}
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={-1}
-                >
-                  <planeGeometry args={[0.02, _dcW]} />
-                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-                </mesh>
-                {/* 경계벽 수직 음영선 (뒷벽) */}
-                <mesh
-                  position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset + panelDepth / 2]}
-                  rotation={[0, 0, 0]}
-                  renderOrder={-1}
-                >
-                  <planeGeometry args={[0.02, _dcDropH]} />
-                  <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
-                </mesh>
-              </>
-            ) : (
+                <>
+                  {/* 메인 구간 천장 가로선 */}
+                  <mesh
+                    position={[
+                      _mainStartX + _mainW / 2,
+                      panelStartY + height,
+                      zOffset + panelDepth / 2
+                    ]}
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[0.02, _mainW]} />
+                    <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                  </mesh>
+                  {/* 커튼박스/단내림 구간 천장 가로선 */}
+                  <mesh
+                    position={[
+                      _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
+                      isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
+                      zOffset + panelDepth / 2
+                    ]}
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[0.02, _dcW]} />
+                    <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                  </mesh>
+                  {/* 경계벽 수직 음영선 (뒷벽) */}
+                  <mesh
+                    position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset + panelDepth / 2]}
+                    rotation={[0, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[0.02, _dcDropH]} />
+                    <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+                  </mesh>
+                </>
+              );
+            })() : (
               <mesh
                 position={[xOffset + width / 2, panelStartY + height, zOffset + panelDepth / 2]}
                 rotation={[0, 0, Math.PI / 2]}
