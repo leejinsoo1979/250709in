@@ -1598,8 +1598,8 @@ const FreePlacementDropZone: React.FC = () => {
         // - 커튼박스 인접: 커튼박스 내벽 높이만 (메인천장~커튼박스천장)
         // - 벽 인접: 전체 높이 (바닥~천장)
         const stepDropH = (spaceInfo.stepCeiling?.dropHeight || 0);
-        const dcHeightMm = spaceInfo.droppedCeiling?.height || spaceInfo.height;
-        const dcWallH = (dcHeightMm - spaceInfo.height) * 0.01; // 커튼박스 내벽 높이 (메인천장 위 부분)
+        const dcDropHeightMm = spaceInfo.droppedCeiling?.dropHeight || 0;
+        const dcWallH = dcDropHeightMm * 0.01; // 커튼박스 내벽 높이 (메인천장~커튼박스천장)
 
         // 좌측 gap
         if (effectiveLeftGap > 0) {
