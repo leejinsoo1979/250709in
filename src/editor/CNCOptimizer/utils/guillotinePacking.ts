@@ -92,6 +92,10 @@ export class GuillotinePacker {
   private packStrips(panels: Rect[], horizontal: boolean): Strip[] {
     const strips: Strip[] = [];
 
+    // 회전 일관성: 같은 원본 치수(w×h)의 패널은 모두 같은 rotated 상태로 유지
+    // 메인 스트립에서 non-rotated로 배치된 치수는 잔여/하단에서도 회전 금지
+    const rotationLocked = new Map<string, boolean>(); // "w×h" → false(회전금지)
+
     // 1단계: 스트립 방향 치수로 그룹핑 (같은 높이/너비끼리)
     const groups = new Map<number, Rect[]>();
     for (const panel of panels) {
@@ -106,9 +110,21 @@ export class GuillotinePacker {
     // 2단계: 그룹을 치수 내림차순으로 정렬 (큰 패널 먼저)
     const sortedDims = [...groups.keys()].sort((a, b) => b - a);
 
-    // 각 그룹 내에서 채우기 방향 치수 내림차순 정렬
+    // 각 그룹 내에서 정렬: 패널 종류(좌/우) → 가구번호 → 채우기 치수
+    // 이렇게 하면 같은 좌/우 측판이 연속 배치되어 보링 작업 효율적
     for (const [, groupPanels] of groups) {
       groupPanels.sort((a, b) => {
+        // 1순위: 패널 종류 — 같은 좌/우 끼리 묶기
+        const sideA = this.extractPanelSide(a.name || '');
+        const sideB = this.extractPanelSide(b.name || '');
+        if (sideA !== sideB) return sideA.localeCompare(sideB);
+
+        // 2순위: 가구번호 순서 (같은 좌/우 내에서 가구별 정렬)
+        const fnA = this.extractFurnitureNumber(a.name || '');
+        const fnB = this.extractFurnitureNumber(b.name || '');
+        if (fnA !== fnB) return fnA - fnB;
+
+        // 3순위: 채우기 방향 치수 내림차순
         const fillA = horizontal ? a.width : a.height;
         const fillB = horizontal ? b.width : b.height;
         return fillB - fillA;
@@ -161,6 +177,9 @@ export class GuillotinePacker {
           currentStrip.panels.push(placed);
           placedPanelIds.add(panel.id);
           fillPos += panelFillDim + this.kerf;
+          // 이 치수의 패널은 non-rotated로 배치됨 → 같은 치수 패널 회전 금지
+          const sizeKey = `${panel.width}×${panel.height}`;
+          rotationLocked.set(sizeKey, false);
         } else {
           // 현재 스트립이 꽉 참 → 스트립 저장 후 새 스트립
           if (currentStrip.panels.length > 0) {
@@ -195,6 +214,8 @@ export class GuillotinePacker {
             currentStrip.panels.push(placed);
             placedPanelIds.add(panel.id);
             fillPos += panelFillDim + this.kerf;
+            const sizeKey = `${panel.width}×${panel.height}`;
+            rotationLocked.set(sizeKey, false);
           }
         }
       }
@@ -216,7 +237,7 @@ export class GuillotinePacker {
       .sort((a, b) => (b.width * b.height) - (a.width * a.height));
 
     if (allUnplaced.length > 0 && residualAreas.length > 0) {
-      this.fillResidualAreas(strips, allUnplaced, residualAreas, placedPanelIds, horizontal);
+      this.fillResidualAreas(strips, allUnplaced, residualAreas, placedPanelIds, horizontal, rotationLocked);
     }
 
     // 5단계: 시트 하단 잔여 공간 활용 (스트립 아래 남은 전체 영역)
@@ -228,7 +249,7 @@ export class GuillotinePacker {
         .sort((a, b) => (b.width * b.height) - (a.width * a.height));
 
       if (bottomUnplaced.length > 0 && bottomRemaining > 0) {
-        this.fillBottomArea(strips, bottomUnplaced, currentPos, bottomRemaining, bottomFillMax, placedPanelIds, horizontal);
+        this.fillBottomArea(strips, bottomUnplaced, currentPos, bottomRemaining, bottomFillMax, placedPanelIds, horizontal, rotationLocked);
       }
     }
 
@@ -264,7 +285,8 @@ export class GuillotinePacker {
     unplaced: Rect[],
     residualAreas: ResidualArea[],
     placedIds: Set<string>,
-    horizontal: boolean
+    horizontal: boolean,
+    rotationLocked?: Map<string, boolean>
   ): void {
     // 잔여 공간을 면적 내림차순 정렬 (큰 공간부터)
     residualAreas.sort((a, b) => (b.width * b.height) - (a.width * a.height));
@@ -312,7 +334,10 @@ export class GuillotinePacker {
         }
 
         // 회전 시도 (grain이 없거나 NONE일 때만)
-        if (panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
+        // rotationLocked에 원본 치수가 있으면 → 이미 non-rotated로 배치된 것이므로 회전 금지
+        const sizeKey = `${panel.width}×${panel.height}`;
+        const isRotationLocked = rotationLocked?.has(sizeKey);
+        if (!isRotationLocked && panel.canRotate !== false && (!panel.grain || panel.grain === 'NONE')) {
           const rotFill = horizontal ? panel.height : panel.width;
           const rotDim = horizontal ? panel.width : panel.height;
 
@@ -371,7 +396,8 @@ export class GuillotinePacker {
     remainingDim: number,
     fillMax: number,
     placedIds: Set<string>,
-    horizontal: boolean
+    horizontal: boolean,
+    rotationLocked?: Map<string, boolean>
   ): void {
     // 미배치 패널을 치수별로 그룹핑해서 스트립 생성
     let currentPos = startPos;
@@ -394,6 +420,9 @@ export class GuillotinePacker {
     for (const panel of unplaced) {
       if (placedIds.has(panel.id)) continue;
       if (panel.canRotate === false || (panel.grain && panel.grain !== 'NONE')) continue;
+      // rotationLocked에 원본 치수가 있으면 회전 금지
+      const sizeKeyBottom = `${panel.width}×${panel.height}`;
+      if (rotationLocked?.has(sizeKeyBottom)) continue;
       const rotDim = horizontal ? panel.width : panel.height;
       const roundedRotDim = Math.round(rotDim);
       if (roundedRotDim > remainingDim) continue;
@@ -455,6 +484,25 @@ export class GuillotinePacker {
         currentPos += dim + this.kerf;
       }
     }
+  }
+
+  /**
+   * 패널 이름에서 좌/우 종류 추출 (보링 쌍 맞추기용)
+   * 예: "[3]듀얼 2단서랍+옷장 (상)우측" → "우측"
+   */
+  private extractPanelSide(name: string): string {
+    // (상)좌측, (하)우측, 좌측판, 우측판 등에서 좌/우 추출
+    const match = name.match(/(좌측|우측|좌측판|우측판)/);
+    return match ? match[1] : '';
+  }
+
+  /**
+   * 패널 이름에서 가구 번호 추출
+   * 예: "[3]듀얼 2단서랍+옷장 (상)우측" → 3
+   */
+  private extractFurnitureNumber(name: string): number {
+    const match = name.match(/^\[(\d+)\]/);
+    return match ? parseInt(match[1], 10) : 0;
   }
 
   private calculateEfficiency(strips: Strip[]): number {
