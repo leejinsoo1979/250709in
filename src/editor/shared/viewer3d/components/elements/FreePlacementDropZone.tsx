@@ -1483,11 +1483,12 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
-      {/* 잠긴 이격 구간 — 붉은색 투명 박스 (3D에서만) */}
+      {/* 이격 구간 — 붉은색 투명 박스 (3D에서만) */}
       {(() => {
         if (viewMode === '2D') return null;
-        const lockedGaps = spaceInfo.lockedWallGaps;
-        if (!lockedGaps) return null;
+        const gapLeft = spaceInfo.gapConfig?.left ?? 0;
+        const gapRight = spaceInfo.gapConfig?.right ?? 0;
+        if (gapLeft <= 0 && gapRight <= 0) return null;
         const { startX, endX } = spaceBounds;
         const spaceH = spaceInfo.height * 0.01;
         const panelDepthMm = spaceInfo.depth || 600;
@@ -1497,25 +1498,24 @@ const FreePlacementDropZone: React.FC = () => {
         const furnitureZOffset = -panelDepth / 2 + (panelDepth - furnitureDepth) / 2;
         const furnitureFrontZ = furnitureZOffset + furnitureDepth / 2;
         const backWallZ = -panelDepth;
-        // 가구 앞면 ~ 뒷벽 전체 깊이
         const depthThree = furnitureFrontZ - backWallZ;
         const zOffset = (furnitureFrontZ + backWallZ) / 2;
         const boxes: React.ReactNode[] = [];
-        if (lockedGaps.left != null && lockedGaps.left > 0) {
-          const w = lockedGaps.left * 0.01;
+        if (gapLeft > 0) {
+          const w = gapLeft * 0.01;
           const cx = startX * 0.01 + w / 2;
           boxes.push(
-            <mesh key="locked-left" position={[cx, spaceH / 2, zOffset]}>
+            <mesh key="gap-left" position={[cx, spaceH / 2, zOffset]}>
               <boxGeometry args={[w, spaceH, depthThree]} />
               <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
           );
         }
-        if (lockedGaps.right != null && lockedGaps.right > 0) {
-          const w = lockedGaps.right * 0.01;
+        if (gapRight > 0) {
+          const w = gapRight * 0.01;
           const cx = endX * 0.01 - w / 2;
           boxes.push(
-            <mesh key="locked-right" position={[cx, spaceH / 2, zOffset]}>
+            <mesh key="gap-right" position={[cx, spaceH / 2, zOffset]}>
               <boxGeometry args={[w, spaceH, depthThree]} />
               <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
