@@ -544,11 +544,16 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               {item.name}
             </div>
             <div className={styles.iconMeta}>
-              {formatDate(item.updatedAt)}
+              {formatDateFull(item.updatedAt)}
               {item.type === 'project' && projectDesignFiles && (
                 <span> · {(projectDesignFiles[item.id] || []).length}개 파일</span>
               )}
             </div>
+            {item.spaceSize && (
+              <div className={styles.iconSpaceSize}>
+                {item.spaceSize.width} × {item.spaceSize.depth} × {item.spaceSize.height}
+              </div>
+            )}
           </div>
         </div>
       ))}
