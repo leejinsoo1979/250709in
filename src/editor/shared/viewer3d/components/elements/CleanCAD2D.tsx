@@ -1824,29 +1824,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   let dcPlacementWidth: number;
 
                   if (isFreePlacement) {
-                    // 메인 구간 이격
-                    const mainLeftGap = dcPosition === 'left'
-                      ? (hasSC ? middleGapMm : (hasDC ? middleGapMm : (hasLeftWall ? leftGapMm : 0)))
-                      : (hasLeftWall ? leftGapMm : 0);
-                    const mainRightGap = dcPosition === 'right'
-                      ? (hasSC ? middleGapMm : (hasDC ? middleGapMm : (hasRightWall ? rightGapMm : 0)))
-                      : (hasRightWall ? rightGapMm : 0);
-                    mainPlacementWidth = Math.round((mainWidth - mainLeftGap - mainRightGap) * 10) / 10;
+                    // getInternalSpaceBoundsX 로직과 일치시킴:
+                    // 통합 배치공간(단내림+메인)에서 각 구간의 실배치 폭 계산
+                    // 이격은 통합 배치공간의 양 끝에만 적용 (구간 경계에는 이격 없음)
 
-                    // 단내림 구간: 양쪽 경계이격을 흡수하여 확장
-                    // 단내림은 낮은 가구 배치 → 양쪽 경계이격(메인↔단내림, 단내림↔커튼박스)에 간섭 없음
-                    // 따라서 실배치 = 구간폭 + 좌측경계이격 + 우측경계이격
+                    // 메인 구간 좌/우에 인접한 것 → 해당 쪽 이격 결정
+                    const mainLeftAdj = scOnLeft ? 'step' : dcOnLeft ? 'dropped' : 'wall';
+                    const mainRightAdj = scOnRight ? 'step' : dcOnRight ? 'dropped' : 'wall';
+                    const mainLeftGap = mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm;
+                    const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
+
+                    // 단내림↔메인 경계에는 이격 없음 → 메인에서만 한쪽 gap 차감
+                    // 단내림 반대쪽(벽 또는 커튼박스)의 gap은 단내림 구간에서 차감
+                    const mainGapTotal = mainLeftGap + mainRightGap;
+                    // 단내림이 인접하면 그 쪽 gap은 0 (단내림↔메인 경계에 이격 없음)
+                    const effectiveMainLeftGap = mainLeftAdj === 'step' ? 0 : mainLeftGap;
+                    const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
+                    mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
+
+                    // 단내림 구간: 외벽쪽(벽 or 커튼박스) gap만 차감, 메인쪽은 이격 없음
                     if (hasSC) {
-                      const scLeftBoundaryGap = middleGapMm;  // 메인↔단내림 경계
-                      const scRightBoundaryGap = middleGapMm; // 단내림↔커튼박스 경계
-                      scPlacementWidth = Math.round((scWidth + scLeftBoundaryGap + scRightBoundaryGap) * 10) / 10;
+                      // 단내림의 외벽쪽(벽 or 커튼박스) 인접 결정
+                      const sameSide = hasDC && dcPosition === scPosition;
+                      let scOuterGap: number;
+                      if (sameSide) {
+                        scOuterGap = middleGapMm; // 커튼박스↔단내림 경계
+                      } else {
+                        // 벽에 직접 인접
+                        const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
+                        scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
+                      }
+                      scPlacementWidth = Math.round((scWidth - scOuterGap) * 10) / 10;
                     }
 
-                    // 커튼박스 구간 이격
-                    const dcLeftGap = dcPosition === 'left'
+                    // 커튼박스 구간: 양쪽 이격 차감
+                    const dcLeftGap = dcOnLeft
                       ? (hasLeftWall ? leftGapMm : 0)
-                      : middleGapMm;
-                    const dcRightGap = dcPosition === 'right'
+                      : middleGapMm; // 메인/단내림↔커튼박스 경계
+                    const dcRightGap = dcOnRight
                       ? (hasRightWall ? rightGapMm : 0)
                       : middleGapMm;
                     dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
