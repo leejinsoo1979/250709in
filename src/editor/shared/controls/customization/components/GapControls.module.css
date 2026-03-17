@@ -46,33 +46,25 @@
   margin: 0;
 }
 
-/* 갭 그리드 */
-.gapGrid {
+/* 갭 2줄 레이아웃: 1행 라벨, 2행 숫자 */
+.gapRow {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 6px;
 }
 
-.gapItem {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
+.gapCellLabel {
   flex: 1;
   min-width: 0;
-}
-
-.gapLabel {
   font-size: 11px;
   font-weight: 500;
   color: var(--theme-text-secondary);
-  text-align: left;
-  min-width: 24px;
-  flex-shrink: 0;
+  text-align: center;
 }
 
-/* 갭 컨트롤 */
-.gapControl {
+.gapCellControl {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   background: var(--theme-background-secondary);
@@ -80,29 +72,18 @@
   border-radius: 6px;
   overflow: hidden;
   height: 26px;
-  flex: 1;
 }
 
-.gapControl:hover:not(.disabled) {
+.gapCellControl:hover {
   border-color: var(--theme-primary);
 }
 
-.gapControl:focus-within:not(.disabled) {
+.gapCellControl:focus-within {
   border-color: var(--theme-primary);
   box-shadow: 0 0 0 2px var(--theme-primary-light);
 }
 
-/* 비활성화된 갭 컨트롤 */
-.gapControl.disabled {
-  opacity: 0.5;
-  background: var(--theme-background);
-  cursor: not-allowed;
-}
-
-.gapControl.disabled .controlButton,
-.gapControl.disabled .gapInput {
-  cursor: not-allowed;
-}
+/* (기존 gapControl은 gapCellControl로 대체) */
 
 /* 컨트롤 버튼 */
 .controlButton {
@@ -208,7 +189,7 @@
 
 /* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
-  .gapControl {
+  .gapCellControl {
     background: var(--theme-background);
   }
 

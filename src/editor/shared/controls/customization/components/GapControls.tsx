@@ -143,6 +143,33 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   const showLeft = hasLeftWall;
   const showRight = hasRightWall;
 
+  // 표시할 gap 항목 목록 구성
+  type GapEntry = { label: string; key: 'left' | 'right' | 'middle' | 'middle2'; value: number; setter: (v: number) => void };
+  const gapEntries: GapEntry[] = [];
+
+  if (showLeft) {
+    const key = isLeftBoundaryMiddle ? 'middle' as const : 'left' as const;
+    const value = isLeftBoundaryMiddle ? middleGap : leftGap;
+    const setter = isLeftBoundaryMiddle ? setMiddleGap : setLeftGap;
+    gapEntries.push({ label: '좌이격', key, value, setter });
+  }
+  if (hasMultipleBoundaries) {
+    gapEntries.push({
+      label: droppedPosition === 'left' ? '단↔메' : '메↔단',
+      key: 'middle', value: middleGap, setter: setMiddleGap
+    });
+    gapEntries.push({
+      label: droppedPosition === 'left' ? '커↔단' : '단↔커',
+      key: 'middle2', value: middle2Gap, setter: setMiddle2Gap
+    });
+  }
+  if (showRight) {
+    const key = isRightBoundaryMiddle ? 'middle' as const : 'right' as const;
+    const value = isRightBoundaryMiddle ? middleGap : rightGap;
+    const setter = isRightBoundaryMiddle ? setMiddleGap : setRightGap;
+    gapEntries.push({ label: '우이격', key, value, setter });
+  }
+
   return (
     <div className={styles.configSection}>
       <div className={styles.sectionHeader}>
@@ -151,183 +178,48 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
       </div>
 
       <div className={styles.content}>
-        <div className={styles.gapGrid}>
-          {/* 좌측 이격거리 */}
-          {/* 좌단내림 시: "좌이격" = middle (단내림-메인 경계) */}
-          {showLeft && (
-          <div className={styles.gapItem}>
-            <label className={styles.gapLabel}>
-              좌이격
-            </label>
-            <div className={styles.gapControl}>
+        {/* 1행: 라벨 */}
+        <div className={styles.gapRow}>
+          {gapEntries.map((entry) => (
+            <span key={`label-${entry.key}`} className={styles.gapCellLabel}>{entry.label}</span>
+          ))}
+        </div>
+        {/* 2행: 숫자 컨트롤 */}
+        <div className={styles.gapRow}>
+          {gapEntries.map((entry) => (
+            <div key={`ctrl-${entry.key}`} className={styles.gapCellControl}>
               <button
                 className={styles.controlButton}
                 onClick={() => {
-                  const key = isLeftBoundaryMiddle ? 'middle' : 'left';
-                  const current = isLeftBoundaryMiddle ? middleGap : leftGap;
-                  const newValue = Math.max(0, Math.round((current - 0.5) * 10) / 10);
-                  if (isLeftBoundaryMiddle) { setMiddleGap(newValue); } else { setLeftGap(newValue); }
-                  updateGap(key, newValue);
+                  const newValue = Math.max(0, Math.round((entry.value - 0.5) * 10) / 10);
+                  entry.setter(newValue);
+                  updateGap(entry.key, newValue);
                 }}
-              >
-                −
-              </button>
+              >−</button>
               <input
                 type="number"
-                value={isLeftBoundaryMiddle ? middleGap : leftGap}
-                onChange={(e) => handleInputChange(isLeftBoundaryMiddle ? 'middle' : 'left', e.target.value)}
-                onBlur={() => handleInputBlur(isLeftBoundaryMiddle ? 'middle' : 'left')}
+                value={entry.value}
+                onChange={(e) => handleInputChange(entry.key, e.target.value)}
+                onBlur={() => handleInputBlur(entry.key)}
                 className={styles.gapInput}
-                min="0"
-                max="5"
-                step="0.5"
+                min="0" max="5" step="0.5"
               />
               <button
                 className={styles.controlButton}
                 onClick={() => {
-                  const key = isLeftBoundaryMiddle ? 'middle' : 'left';
-                  const current = isLeftBoundaryMiddle ? middleGap : leftGap;
-                  const newValue = Math.min(5, Math.round((current + 0.5) * 10) / 10);
-                  if (isLeftBoundaryMiddle) { setMiddleGap(newValue); } else { setLeftGap(newValue); }
-                  updateGap(key, newValue);
+                  const newValue = Math.min(5, Math.round((entry.value + 0.5) * 10) / 10);
+                  entry.setter(newValue);
+                  updateGap(entry.key, newValue);
                 }}
-              >
-                +
-              </button>
+              >+</button>
             </div>
-          </div>
-          )}
-
-          {/* 우측 이격거리 */}
-          {/* 우단내림 시: "우이격" = middle (메인-단내림 경계) */}
-          {showRight && (
-          <div className={styles.gapItem}>
-            <label className={styles.gapLabel}>
-              우이격
-            </label>
-            <div className={styles.gapControl}>
-              <button
-                className={styles.controlButton}
-                onClick={() => {
-                  const key = isRightBoundaryMiddle ? 'middle' : 'right';
-                  const current = isRightBoundaryMiddle ? middleGap : rightGap;
-                  const newValue = Math.max(0, Math.round((current - 0.5) * 10) / 10);
-                  if (isRightBoundaryMiddle) { setMiddleGap(newValue); } else { setRightGap(newValue); }
-                  updateGap(key, newValue);
-                }}
-              >
-                −
-              </button>
-              <input
-                type="number"
-                value={isRightBoundaryMiddle ? middleGap : rightGap}
-                onChange={(e) => handleInputChange(isRightBoundaryMiddle ? 'middle' : 'right', e.target.value)}
-                onBlur={() => handleInputBlur(isRightBoundaryMiddle ? 'middle' : 'right')}
-                className={styles.gapInput}
-                min="0"
-                max="5"
-                step="0.5"
-              />
-              <button
-                className={styles.controlButton}
-                onClick={() => {
-                  const key = isRightBoundaryMiddle ? 'middle' : 'right';
-                  const current = isRightBoundaryMiddle ? middleGap : rightGap;
-                  const newValue = Math.min(5, Math.round((current + 0.5) * 10) / 10);
-                  if (isRightBoundaryMiddle) { setMiddleGap(newValue); } else { setRightGap(newValue); }
-                  updateGap(key, newValue);
-                }}
-              >
-                +
-              </button>
-            </div>
-          </div>
-          )}
-          {/* 경계 이격거리 — 단내림+커튼박스 동시 활성 시 2개 표시 */}
-          {hasMultipleBoundaries && (<>
-          {/* 메인↔단내림 경계이격 (middle) */}
-          <div className={styles.gapItem}>
-            <label className={styles.gapLabel}>
-              {droppedPosition === 'left' ? '단↔메' : '메↔단'}
-            </label>
-            <div className={styles.gapControl}>
-              <button
-                className={styles.controlButton}
-                onClick={() => {
-                  const newValue = Math.max(0, Math.round((middleGap - 0.5) * 10) / 10);
-                  setMiddleGap(newValue);
-                  updateGap('middle', newValue);
-                }}
-              >
-                −
-              </button>
-              <input
-                type="number"
-                value={middleGap}
-                onChange={(e) => handleInputChange('middle', e.target.value)}
-                onBlur={() => handleInputBlur('middle')}
-                className={styles.gapInput}
-                min="0"
-                max="5"
-                step="0.5"
-              />
-              <button
-                className={styles.controlButton}
-                onClick={() => {
-                  const newValue = Math.min(5, Math.round((middleGap + 0.5) * 10) / 10);
-                  setMiddleGap(newValue);
-                  updateGap('middle', newValue);
-                }}
-              >
-                +
-              </button>
-            </div>
-          </div>
-          {/* 단내림↔커튼박스 경계이격 (middle2) */}
-          <div className={styles.gapItem}>
-            <label className={styles.gapLabel}>
-              {droppedPosition === 'left' ? '커↔단' : '단↔커'}
-            </label>
-            <div className={styles.gapControl}>
-              <button
-                className={styles.controlButton}
-                onClick={() => {
-                  const newValue = Math.max(0, Math.round((middle2Gap - 0.5) * 10) / 10);
-                  setMiddle2Gap(newValue);
-                  updateGap('middle2', newValue);
-                }}
-              >
-                −
-              </button>
-              <input
-                type="number"
-                value={middle2Gap}
-                onChange={(e) => handleInputChange('middle2', e.target.value)}
-                onBlur={() => handleInputBlur('middle2')}
-                className={styles.gapInput}
-                min="0"
-                max="5"
-                step="0.5"
-              />
-              <button
-                className={styles.controlButton}
-                onClick={() => {
-                  const newValue = Math.min(5, Math.round((middle2Gap + 0.5) * 10) / 10);
-                  setMiddle2Gap(newValue);
-                  updateGap('middle2', newValue);
-                }}
-              >
-                +
-              </button>
-            </div>
-          </div>
-          </>)}
+          ))}
         </div>
         {(() => {
           const leftVal = isLeftBoundaryMiddle ? middleGap : leftGap;
           const rightVal = isRightBoundaryMiddle ? middleGap : rightGap;
           return ((showLeft && leftVal < 1.5) || (showRight && rightVal < 1.5)) ? (
-            <p style={{ color: '#e53e3e', fontSize: '11px', margin: '6px 0 0', fontWeight: 500 }}>
+            <p style={{ color: '#e53e3e', fontSize: '11px', margin: '4px 0 0', fontWeight: 500 }}>
               이격거리 1.5mm 이상을 권장
             </p>
           ) : null;
