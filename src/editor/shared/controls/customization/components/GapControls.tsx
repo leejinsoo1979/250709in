@@ -248,7 +248,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
           {/* 메인↔단내림 경계이격 (middle) */}
           <div className={styles.gapItem}>
             <label className={styles.gapLabel}>
-              {dcPosition === 'left' ? '단↔메' : '메↔단'}
+              {droppedPosition === 'left' ? '단↔메' : '메↔단'}
             </label>
             <div className={styles.gapControl}>
               <button
@@ -286,7 +286,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
           {/* 단내림↔커튼박스 경계이격 (middle2) */}
           <div className={styles.gapItem}>
             <label className={styles.gapLabel}>
-              {dcPosition === 'left' ? '커↔단' : '단↔커'}
+              {droppedPosition === 'left' ? '커↔단' : '단↔커'}
             </label>
             <div className={styles.gapControl}>
               <button
