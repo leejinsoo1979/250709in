@@ -1833,32 +1833,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 이격은 통합 배치공간의 양 끝에만 적용 (구간 경계에는 이격 없음)
 
                     // 메인 구간 좌/우에 인접한 것 → 해당 쪽 이격 결정
-                    const mainLeftAdj = scOnLeft ? 'step' : dcOnLeft ? 'dropped' : 'wall';
-                    const mainRightAdj = scOnRight ? 'step' : dcOnRight ? 'dropped' : 'wall';
+                    // 단내림(step)은 통합 배치공간에 포함 → 'wall'로 처리 (경계이격은 별도 치수로 표시)
+                    const mainLeftAdj = dcOnLeft ? 'dropped' : 'wall';
+                    const mainRightAdj = dcOnRight ? 'dropped' : 'wall';
                     const mainLeftGap = mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm;
                     const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
 
                     // ── 3단 치수선: 각 구간의 실배치 폭 ──
-                    // getInternalSpaceBoundsX 로직 기준:
-                    // 통합 배치공간(단내림+메인) 양 끝에만 gap 적용, 단내림↔메인 경계에는 gap 없음.
-                    // 3단 치수선에서는 단내림↔메인 경계 gap을 별도 치수로 표시.
+                    // 각 구간은 양쪽 경계의 이격거리를 뺀 실배치 폭을 표시
 
-                    // ── 3행 배치폭: 각 구간은 인접 구간 쪽으로 경계이격만큼 밀림(확장) ──
-                    // 단내림→메인 방향으로 1.5 밀림, 메인→커튼박스 방향으로 1.5 밀림
-                    // 결과: 단내림·메인은 원래 구간 너비 유지, 커튼박스는 양쪽 차감
-
-                    // 메인 배치폭:
-                    // - 단내림 인접: 단내림에서 밀려옴 → 메인이 커튼박스쪽으로 밀림 → 상쇄 → 0
-                    // - 커튼박스 인접: 메인이 커튼박스쪽으로 밀림 → 커튼박스가 흡수 → 상쇄 → 0
+                    // 메인 배치폭: 양쪽 경계 이격 차감
+                    // - 단내림 인접: 경계이격(middleGap) 차감
+                    // - 커튼박스 인접: 경계이격(middleGap) 차감
                     // - 벽 인접: 벽이격 차감
-                    const effectiveMainLeftGap = mainLeftAdj === 'wall' ? mainLeftGap : 0;
-                    const effectiveMainRightGap = mainRightAdj === 'wall' ? mainRightGap : 0;
+                    const effectiveMainLeftGap = scOnLeft ? middleGapMm : mainLeftGap;
+                    const effectiveMainRightGap = scOnRight ? middleGapMm : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 배치폭:
-                    // - 외벽쪽(커튼박스/벽): 이격 차감
-                    // - 메인쪽: 밀림(+middleGap) → 확장
-                    // 결과: scWidth - outerGap + middleGap = 900 - 1.5 + 1.5 = 900
+                    // 단내림 배치폭: 외벽쪽 이격 + 메인쪽 경계이격 차감
                     let scOuterGap = 0;
                     if (hasSC) {
                       const sameSide = hasDC && dcPosition === scPosition;
@@ -1868,7 +1860,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      scPlacementWidth = Math.round((scWidth - scOuterGap + middleGapMm) * 10) / 10;
+                      scPlacementWidth = Math.round((scWidth - scOuterGap - middleGapMm) * 10) / 10;
                     }
 
                     // 커튼박스 구간: 양쪽 gap 차감
@@ -1887,12 +1879,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     var scPlacEndX = scEndX;
                     if (hasSC) {
                       if (scOnLeft) {
-                        // 좌단내림: 왼쪽=외벽쪽(차감), 오른쪽=메인쪽(확장)
+                        // 좌단내림: 왼쪽=외벽쪽(차감), 오른쪽=메인쪽 경계이격(차감)
                         scPlacStartX = scStartX + mmToThreeUnits(scOuterGap);
-                        scPlacEndX = scEndX + mmToThreeUnits(middleGapMm);
+                        scPlacEndX = scEndX - mmToThreeUnits(middleGapMm);
                       } else {
-                        // 우단내림: 왼쪽=메인쪽(확장), 오른쪽=외벽쪽(차감)
-                        scPlacStartX = scStartX - mmToThreeUnits(middleGapMm);
+                        // 우단내림: 왼쪽=메인쪽 경계이격(차감), 오른쪽=외벽쪽(차감)
+                        scPlacStartX = scStartX + mmToThreeUnits(middleGapMm);
                         scPlacEndX = scEndX - mmToThreeUnits(scOuterGap);
                       }
                     }
