@@ -936,7 +936,7 @@ const Header: React.FC<HeaderProps> = ({
             onClick={toggleMode}
             title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
           >
-            {theme.mode === 'dark' ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
+            {theme.mode === 'dark' ? <Moon size={18} strokeWidth={1.8} /> : <Sun size={18} strokeWidth={1.8} />}
           </button>
         </div>
       </div>
