@@ -2488,13 +2488,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     );
                   }
 
-                  // 슬롯배치: 바닥 ~ 단내림 천장 (단내림 공간 높이) + 단내림 천장 ~ 전체 천장 (높이차이)
+                  // 슬롯배치: 바닥 ~ 단내림 천장 (하부프레임 + 내부공간 + 상부프레임) + 단내림 천장 ~ 전체 천장 (높이차이)
                   const droppedCeilingTopY = mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
                   const droppedSectionHeightMm = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - floorFinishHeightMmGlobal;
                   const dropDiffMm = spaceInfo.droppedCeiling.dropHeight;
 
-                  // 공간높이 구간 중간점 (마감재 상단 ~ 단내림 천장)
-                  const sectionMidY = floorFinishY + (droppedCeilingTopY - floorFinishY) / 2;
+                  // 단내림 구간 프레임 사이즈
+                  const dropTopFrame = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 0);
+                  const dropBottomFrame = spaceInfo.droppedCeiling?.bottomFrame ?? 0;
+                  const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+                  // 단내림 내부 공간 높이 = 단내림 구간 전체 - 받침대 - 바닥마감재 - 상부프레임 - 하부프레임
+                  const dropInternalHeight = droppedSectionHeightMm - baseHeight - dropTopFrame - dropBottomFrame;
+
+                  // Y 좌표 계산 (아래→위 순서: 바닥마감재 → 받침대 → 하부프레임 → 내부공간 → 상부프레임 → 단내림천장)
+                  const baseTopY = mmToThreeUnits(floorFinishHeightMmGlobal + baseHeight);
+                  const dropBottomFrameTopY = mmToThreeUnits(floorFinishHeightMmGlobal + baseHeight + dropBottomFrame);
+                  const dropTopFrameBottomY = mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - dropTopFrame);
+
                   // 높이차이 구간 중간점 (단내림 천장 ~ 전체 천장)
                   const dropDiffMidY = (droppedCeilingTopY + spaceHeight) / 2;
                   // 마감재 중간점
@@ -2542,14 +2552,68 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         </>
                       )}
 
-                      {/* 단내림 공간 높이 텍스트 (마감재 상단 ~ 단내림 천장) */}
+                      {/* 받침대 구분 틱 & 치수 */}
+                      {baseHeight > 0 && (
+                        <>
+                          <NativeLine name="dimension_line"
+                            points={[[leftDimensionX + leftOffset - mmToThreeUnits(30), baseTopY, 0.002], [leftDimensionX + leftOffset + mmToThreeUnits(30), baseTopY, 0.002]]}
+                            color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                          />
+                          <Text renderOrder={1000} depthTest={false}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (floorFinishY + baseTopY) / 2, 0.01]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          >
+                            {baseHeight}
+                          </Text>
+                        </>
+                      )}
+
+                      {/* 하부프레임 구분 틱 & 치수 */}
+                      {dropBottomFrame > 0 && (
+                        <>
+                          <NativeLine name="dimension_line"
+                            points={[[leftDimensionX + leftOffset - mmToThreeUnits(30), dropBottomFrameTopY, 0.002], [leftDimensionX + leftOffset + mmToThreeUnits(30), dropBottomFrameTopY, 0.002]]}
+                            color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                          />
+                          <Text renderOrder={1000} depthTest={false}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (baseTopY + dropBottomFrameTopY) / 2, 0.01]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          >
+                            {dropBottomFrame}
+                          </Text>
+                        </>
+                      )}
+
+                      {/* 상부프레임 구분 틱 & 치수 */}
+                      {dropTopFrame > 0 && (
+                        <>
+                          <NativeLine name="dimension_line"
+                            points={[[leftDimensionX + leftOffset - mmToThreeUnits(30), dropTopFrameBottomY, 0.002], [leftDimensionX + leftOffset + mmToThreeUnits(30), dropTopFrameBottomY, 0.002]]}
+                            color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                          />
+                          <Text renderOrder={1000} depthTest={false}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (dropTopFrameBottomY + droppedCeilingTopY) / 2, 0.01]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          >
+                            {dropTopFrame}
+                          </Text>
+                        </>
+                      )}
+
+                      {/* 내부 공간 높이 텍스트 (하부프레임 상단 ~ 상부프레임 하단) */}
                       <Text renderOrder={1000} depthTest={false}
-                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), sectionMidY, 0.01]}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (dropBottomFrameTopY + dropTopFrameBottomY) / 2, 0.01]}
                         fontSize={largeFontSize} color={textColor}
                         anchorX="center" anchorY="middle"
                         outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                       >
-                        {droppedSectionHeightMm}
+                        {dropInternalHeight}
                       </Text>
 
                       {/* 높이차이 텍스트 (단내림 천장 ~ 전체 천장) */}
