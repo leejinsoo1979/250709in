@@ -1005,7 +1005,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const slotTotalDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
-  const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
+  const leftDimensionX = -mmToThreeUnits(320); // 좌측 전체높이 치수선 (프레임 분해 치수선보다 바깥)
+  const leftFrameDimensionX = -mmToThreeUnits(200); // 좌측 프레임 분해 치수선 (공간에 가까운 안쪽)
 
   // 좌측 오프셋 (가로 공간치수의 절반)
   const leftOffset = -mmToThreeUnits(spaceInfo.width / 2);
@@ -2817,7 +2818,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           </>
         ) : (
           <>
-            {/* 단내림이 없는 경우 전체 높이 치수선 (바닥마감재 포함) */}
+            {/* 단내림이 없는 경우 전체 높이 치수선 (바닥마감재 포함) + 프레임 분해 치수 */}
             {(() => {
               const floorFinishY = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
               const hasFloorFinish = floorFinishHeightMmGlobal > 0;
@@ -2825,9 +2826,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const spaceMidY = floorFinishY + (spaceHeight - floorFinishY) / 2;
               // 마감재 구간 (바닥 ~ 마감재 상단)
               const floorFinishMidY = floorFinishY / 2;
+
+              // 프레임 분해 치수용 계산
+              const mainTopFrame = frameSize.top ?? 30;
+              const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+              const mainInternalHeight = spaceInfo.height - mainTopFrame - baseHeight - floorFinishHeightMmGlobal;
+              const baseTopY = mmToThreeUnits(floorFinishHeightMmGlobal + baseHeight);
+              const topFrameBottomY = spaceHeight - mmToThreeUnits(mainTopFrame);
+              const fX = leftFrameDimensionX + leftOffset; // 프레임 분해 치수선 X
+
               return (
                 <>
-                  {/* 전체 치수선 (바닥부터 천장까지) */}
+                  {/* ── 바깥쪽: 전체 높이 치수선 (바닥부터 천장까지) ── */}
                   <NativeLine name="dimension_line"
                     points={[[leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
                     color={dimensionColor}
@@ -2835,8 +2845,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     renderOrder={100000}
                     depthTest={false}
                   />
-
-                  {/* 하단 화살표 (바닥) */}
                   <NativeLine name="dimension_line"
                     points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
                     color={dimensionColor}
@@ -2844,8 +2852,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     renderOrder={100000}
                     depthTest={false}
                   />
-
-                  {/* 상단 화살표 (천장) */}
                   <NativeLine name="dimension_line"
                     points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
                     color={dimensionColor}
@@ -2857,7 +2863,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {/* 바닥마감재 구분 틱 & 치수 */}
                   {hasFloorFinish && (
                     <>
-                      {/* 마감재 상단 구분선 (틱) */}
                       <NativeLine name="dimension_line"
                         points={[[leftDimensionX + leftOffset - mmToThreeUnits(30), floorFinishY, 0.002], [leftDimensionX + leftOffset + mmToThreeUnits(30), floorFinishY, 0.002]]}
                         color={dimensionColor}
@@ -2865,8 +2870,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         renderOrder={100000}
                         depthTest={false}
                       />
-
-                      {/* 바닥마감재 두께 텍스트 */}
                       <Text
                         renderOrder={1000}
                         depthTest={false}
@@ -2884,7 +2887,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     </>
                   )}
 
-                  {/* 공간 높이 치수 텍스트 (마감재 상단 ~ 천장) */}
+                  {/* 공간 높이 치수 텍스트 */}
                   <Text
                     renderOrder={1000}
                     depthTest={false}
@@ -2899,6 +2902,125 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {spaceInfo.height - floorFinishHeightMmGlobal}
                   </Text>
+
+                  {/* ── 안쪽: 메인구간 프레임 분해 치수선 (받침대 + 내부공간 + 상부프레임) ── */}
+                  {/* 전체 세로선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[fX, 0, 0.002], [fX, spaceHeight, 0.002]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([fX, 0, 0.002], [fX, 0.05, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([fX, spaceHeight, 0.002], [fX, spaceHeight - 0.05, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
+                  />
+
+                  {/* 받침대 구분 틱 */}
+                  {baseHeight > 0 && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[fX - mmToThreeUnits(20), baseTopY, 0.002], [fX + mmToThreeUnits(20), baseTopY, 0.002]]}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+                      <Text
+                        renderOrder={1000} depthTest={false}
+                        position={[fX + mmToThreeUnits(30), (hasFloorFinish ? floorFinishY : 0) + (baseTopY - (hasFloorFinish ? floorFinishY : 0)) / 2, 0.01]}
+                        fontSize={baseFontSize}
+                        color={textColor}
+                        anchorX="left"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, 0, 0]}
+                      >
+                        {baseHeight}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* 상부프레임 구분 틱 */}
+                  {mainTopFrame > 0 && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[fX - mmToThreeUnits(20), topFrameBottomY, 0.002], [fX + mmToThreeUnits(20), topFrameBottomY, 0.002]]}
+                        color={frameDimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+                      <Text
+                        renderOrder={1000} depthTest={false}
+                        position={[fX + mmToThreeUnits(30), topFrameBottomY + (spaceHeight - topFrameBottomY) / 2, 0.01]}
+                        fontSize={baseFontSize}
+                        color={frameDimensionColor}
+                        anchorX="left"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, 0, 0]}
+                      >
+                        {mainTopFrame}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* 내부공간 높이 텍스트 */}
+                  {mainInternalHeight > 0 && (
+                    <Text
+                      renderOrder={1000} depthTest={false}
+                      position={[fX + mmToThreeUnits(30), baseTopY + (topFrameBottomY - baseTopY) / 2, 0.01]}
+                      fontSize={baseFontSize}
+                      color={textColor}
+                      anchorX="left"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                      rotation={[0, 0, 0]}
+                    >
+                      {mainInternalHeight}
+                    </Text>
+                  )}
+
+                  {/* 바닥마감재 구분 틱 (프레임 분해 치수선) */}
+                  {hasFloorFinish && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[fX - mmToThreeUnits(20), floorFinishY, 0.002], [fX + mmToThreeUnits(20), floorFinishY, 0.002]]}
+                        color={dimensionColor}
+                        lineWidth={1}
+                        renderOrder={100000}
+                        depthTest={false}
+                      />
+                      <Text
+                        renderOrder={1000} depthTest={false}
+                        position={[fX + mmToThreeUnits(30), floorFinishMidY, 0.01]}
+                        fontSize={baseFontSize}
+                        color={textColor}
+                        anchorX="left"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, 0, 0]}
+                      >
+                        {floorFinishHeightMmGlobal}
+                      </Text>
+                    </>
+                  )}
                 </>
               );
             })()}
