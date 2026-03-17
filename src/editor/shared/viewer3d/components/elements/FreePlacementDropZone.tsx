@@ -1703,10 +1703,11 @@ const FreePlacementDropZone: React.FC = () => {
         const hasStep = spaceInfo.stepCeiling?.enabled;
         const stepPosition = spaceInfo.stepCeiling?.position || 'right';
         const stepWidthMm = spaceInfo.stepCeiling?.width || 0;
-        const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
+        const middleGap = spaceInfo.gapConfig?.middle ?? 1.5; // 메인↔단내림 경계이격
+        const middle2Gap = (hasDropped && spaceInfo.stepCeiling?.enabled)
+          ? (spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5)
+          : middleGap; // 커튼박스↔단내림 경계이격
         if (hasStep && stepWidthMm > 0) {
-          const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
-          const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
           const scDropH = spaceInfo.stepCeiling!.dropHeight || 200;
           const stepH = (spaceInfo.height - scDropH) * 0.01; // 단내림 천장 높이
 
@@ -1719,7 +1720,9 @@ const FreePlacementDropZone: React.FC = () => {
             const dropHThree = scDropH * 0.01; // 단내림 기둥 높이 (dropHeight)
             const gapBoxY = spaceH - dropHThree / 2; // 천장에서 기둥 절반만큼 아래
             if (stepPosition === 'left') {
-              const scRightEdge = (-halfW + stepWidthMm) * 0.01;
+              // 좌측: 커튼박스 있으면 커튼박스 다음에 단내림 위치
+              const scOffset = cbSameSide ? droppedWidth : 0;
+              const scRightEdge = (-halfW + scOffset + stepWidthMm) * 0.01;
               boxes.push(
                 <mesh key="gap-sc-main-left" position={[scRightEdge + w / 2, gapBoxY, zOffset]}>
                   <boxGeometry args={[w, dropHThree, depthThree]} />
@@ -1727,7 +1730,9 @@ const FreePlacementDropZone: React.FC = () => {
                 </mesh>
               );
             } else {
-              const scLeftEdge = (halfW - stepWidthMm) * 0.01;
+              // 우측: 커튼박스 있으면 커튼박스 다음에 단내림 위치
+              const scOffset = cbSameSide ? droppedWidth : 0;
+              const scLeftEdge = (halfW - scOffset - stepWidthMm) * 0.01;
               boxes.push(
                 <mesh key="gap-sc-main-right" position={[scLeftEdge - w / 2, gapBoxY, zOffset]}>
                   <boxGeometry args={[w, dropHThree, depthThree]} />
@@ -1739,11 +1744,10 @@ const FreePlacementDropZone: React.FC = () => {
 
           if (!cbSameSide) {
             // 커튼박스 없이 단내림만 → 벽 쪽 gap은 메인 gap 박스에서 처리됨 (skip)
-          } else if (middleGap > 0) {
-            // 커튼박스 + 단내림 같은 쪽 → 커튼박스↔단내림 사이 middleGap
-            // 구간순서: 벽 → 커튼박스 → [middleGap] → 단내림 → [middleGap] → 메인
-            // 커튼박스 안쪽 edge = 벽에서 droppedWidth만큼 안쪽
-            const w = middleGap * 0.01;
+          } else if (middle2Gap > 0) {
+            // 커튼박스 + 단내림 같은 쪽 → 커튼박스↔단내림 사이 middle2Gap
+            // 구간순서: 벽 → 커튼박스 → [middle2Gap] → 단내림 → [middleGap] → 메인
+            const w = middle2Gap * 0.01;
             if (stepPosition === 'left') {
               // 좌측: 벽(-halfW) → 커튼박스(droppedWidth) → [gap] → 단내림
               const gapCenterX = (-halfW + droppedWidth) * 0.01 + w / 2;
