@@ -2995,6 +2995,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const effectiveH = isLeftDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
           const topFrameH = Math.max(0, effectiveH - bottomFrameH - furnitureH);
 
+          // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
+          let sectionHeights: number[] = []; // 각 섹션의 mm 높이
+          if (leftmostMod) {
+            const modData = getModuleById(
+              leftmostMod.moduleId,
+              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              spaceInfo
+            );
+            const sections = modData?.modelConfig?.sections;
+            if (sections && sections.length >= 2) {
+              // 섹션 높이 계산 (absolute vs percentage)
+              sectionHeights = sections.map(s => {
+                if (s.heightType === 'absolute') return s.height;
+                return Math.round(furnitureH * s.height / 100);
+              });
+            }
+          }
+          const hasSectionSplit = sectionHeights.length >= 2;
+
           // Y 좌표 (1단용)
           const bottomFrameTopY = mmToThreeUnits(bottomFrameH);
           const furnitureTopY = mmToThreeUnits(bottomFrameH + furnitureH);
@@ -3074,18 +3093,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 가구(내경) 높이 구분 틱 & 치수 */}
-              <NativeLine name="dimension_line"
-                points={[[innerX - mmToThreeUnits(15), furnitureTopY, 0.002], [innerX + mmToThreeUnits(15), furnitureTopY, 0.002]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <Text renderOrder={1000} depthTest={false}
-                position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, 0.01]}
-                fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-              >
-                {furnitureH}
-              </Text>
+              {/* 가구(내경) 높이 — 섹션 분할 표시 */}
+              {hasSectionSplit ? (
+                <>
+                  {/* 섹션별 구분 틱 & 치수 (하부→상부 순서) */}
+                  {sectionHeights.map((secH, idx) => {
+                    const secBottomMm = bottomFrameH + sectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
+                    const secTopMm = secBottomMm + secH;
+                    const secBottomY = mmToThreeUnits(secBottomMm);
+                    const secTopY = mmToThreeUnits(secTopMm);
+                    return (
+                      <React.Fragment key={`left-sec-${idx}`}>
+                        {/* 섹션 상단 구분 틱 */}
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(15), secTopY, 0.002], [innerX + mmToThreeUnits(15), secTopY, 0.002]]}
+                          color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                        />
+                        {/* 섹션 높이 텍스트 */}
+                        <Text renderOrder={1000} depthTest={false}
+                          position={[innerX - mmToThreeUnits(25), (secBottomY + secTopY) / 2, 0.01]}
+                          fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {secH}
+                        </Text>
+                        {/* 섹션 경계 연장선 */}
+                        {idx < sectionHeights.length - 1 && (
+                          <NativeLine name="dimension_line"
+                            points={[[leftOffset, secTopY, 0.001], [innerX - mmToThreeUnits(20), secTopY, 0.001]]}
+                            color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  {/* 단일 내경 높이 표시 */}
+                  <NativeLine name="dimension_line"
+                    points={[[innerX - mmToThreeUnits(15), furnitureTopY, 0.002], [innerX + mmToThreeUnits(15), furnitureTopY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <Text renderOrder={1000} depthTest={false}
+                    position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, 0.01]}
+                    fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                  >
+                    {furnitureH}
+                  </Text>
+                </>
+              )}
 
               {/* 상부프레임 구분 틱 & 치수 */}
               {topFrameH > 0 && (
@@ -3253,6 +3311,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rEffectiveH = isRightDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
           const rTopFrameH = Math.max(0, rEffectiveH - rBottomFrameH - rFurnitureH);
 
+          // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
+          let rSectionHeights: number[] = [];
+          if (rightmostMod) {
+            const rModData = getModuleById(
+              rightmostMod.moduleId,
+              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              spaceInfo
+            );
+            const rSections = rModData?.modelConfig?.sections;
+            if (rSections && rSections.length >= 2) {
+              rSectionHeights = rSections.map(s => {
+                if (s.heightType === 'absolute') return s.height;
+                return Math.round(rFurnitureH * s.height / 100);
+              });
+            }
+          }
+          const rHasSectionSplit = rSectionHeights.length >= 2;
+
           // Y 좌표 (1단용)
           const rBottomFrameTopY = mmToThreeUnits(rBottomFrameH);
           const rFurnitureTopY = mmToThreeUnits(rBottomFrameH + rFurnitureH);
@@ -3332,18 +3408,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 가구(내경) 높이 구분 틱 & 치수 */}
-              <NativeLine name="dimension_line"
-                points={[[rightInnerX - mmToThreeUnits(15), rFurnitureTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rFurnitureTopY, 0.002]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <Text renderOrder={1000} depthTest={false}
-                position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, 0.01]}
-                fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-              >
-                {rFurnitureH}
-              </Text>
+              {/* 가구(내경) 높이 — 섹션 분할 표시 */}
+              {rHasSectionSplit ? (
+                <>
+                  {/* 섹션별 구분 틱 & 치수 (하부→상부 순서) */}
+                  {rSectionHeights.map((secH, idx) => {
+                    const secBottomMm = rBottomFrameH + rSectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
+                    const secTopMm = secBottomMm + secH;
+                    const secBottomY = mmToThreeUnits(secBottomMm);
+                    const secTopY = mmToThreeUnits(secTopMm);
+                    return (
+                      <React.Fragment key={`right-sec-${idx}`}>
+                        {/* 섹션 상단 구분 틱 */}
+                        <NativeLine name="dimension_line"
+                          points={[[rightInnerX - mmToThreeUnits(15), secTopY, 0.002], [rightInnerX + mmToThreeUnits(15), secTopY, 0.002]]}
+                          color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                        />
+                        {/* 섹션 높이 텍스트 */}
+                        <Text renderOrder={1000} depthTest={false}
+                          position={[rightInnerX + mmToThreeUnits(10), (secBottomY + secTopY) / 2, 0.01]}
+                          fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {secH}
+                        </Text>
+                        {/* 섹션 경계 연장선 */}
+                        {idx < rSectionHeights.length - 1 && (
+                          <NativeLine name="dimension_line"
+                            points={[[rightWallX, secTopY, 0.001], [rightInnerX + mmToThreeUnits(20), secTopY, 0.001]]}
+                            color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  {/* 단일 내경 높이 표시 */}
+                  <NativeLine name="dimension_line"
+                    points={[[rightInnerX - mmToThreeUnits(15), rFurnitureTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rFurnitureTopY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <Text renderOrder={1000} depthTest={false}
+                    position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, 0.01]}
+                    fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                  >
+                    {rFurnitureH}
+                  </Text>
+                </>
+              )}
 
               {/* 상부프레임 구분 틱 & 치수 */}
               {rTopFrameH > 0 && (
