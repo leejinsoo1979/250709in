@@ -617,7 +617,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const effectiveFurnitureWidth = isFree
     ? (storeFreeWidth || moduleWidth)
     : moduleWidth;
-  const isDualFurniture = effectiveFurnitureWidth > 600;
+  const isDualFurniture = Math.round(effectiveFurnitureWidth) >= 601;
 
   // 도어 크기 계산
   let actualDoorWidth: number;
