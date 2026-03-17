@@ -2575,9 +2575,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                         />
                         <Text renderOrder={1000} depthTest={false}
-                          position={[leftDimensionX + leftOffset - mmToThreeUnits(60), dimMid, 0.01]}
+                          position={[leftDimensionX + leftOffset - mmToThreeUnits(10), dimMid, 0.01]}
                           fontSize={largeFontSize} color={textColor}
-                          anchorX="center" anchorY="middle"
+                          anchorX="right" anchorY="middle"
                           outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                         >
                           {spaceInfo.droppedCeiling.dropHeight}
@@ -2640,9 +2640,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                           />
                           <Text renderOrder={1000} depthTest={false}
-                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), floorFinishMidY, 0.01]}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(10), floorFinishMidY, 0.01]}
                             fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
+                            anchorX="right" anchorY="middle"
                             outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                           >
                             {floorFinishHeightMmGlobal}
@@ -2658,9 +2658,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                           />
                           <Text renderOrder={1000} depthTest={false}
-                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (floorFinishY + baseTopY) / 2, 0.01]}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(10), (floorFinishY + baseTopY) / 2, 0.01]}
                             fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
+                            anchorX="right" anchorY="middle"
                             outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                           >
                             {baseHeight}
@@ -2676,9 +2676,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                           />
                           <Text renderOrder={1000} depthTest={false}
-                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (baseTopY + dropBottomFrameTopY) / 2, 0.01]}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(10), (baseTopY + dropBottomFrameTopY) / 2, 0.01]}
                             fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
+                            anchorX="right" anchorY="middle"
                             outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                           >
                             {dropBottomFrame}
@@ -2694,9 +2694,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                           />
                           <Text renderOrder={1000} depthTest={false}
-                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (dropTopFrameBottomY + droppedCeilingTopY) / 2, 0.01]}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(10), (dropTopFrameBottomY + droppedCeilingTopY) / 2, 0.01]}
                             fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
+                            anchorX="right" anchorY="middle"
                             outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                           >
                             {dropTopFrame}
@@ -2706,9 +2706,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       {/* 내부 공간 높이 텍스트 (하부프레임 상단 ~ 상부프레임 하단) */}
                       <Text renderOrder={1000} depthTest={false}
-                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), (dropBottomFrameTopY + dropTopFrameBottomY) / 2, 0.01]}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(10), (dropBottomFrameTopY + dropTopFrameBottomY) / 2, 0.01]}
                         fontSize={largeFontSize} color={textColor}
-                        anchorX="center" anchorY="middle"
+                        anchorX="right" anchorY="middle"
                         outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                       >
                         {dropInternalHeight}
@@ -2716,9 +2716,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                       {/* 높이차이 텍스트 (단내림 천장 ~ 전체 천장) */}
                       <Text renderOrder={1000} depthTest={false}
-                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), dropDiffMidY, 0.01]}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(10), dropDiffMidY, 0.01]}
                         fontSize={largeFontSize} color={textColor}
-                        anchorX="center" anchorY="middle"
+                        anchorX="right" anchorY="middle"
                         outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                       >
                         {dropDiffMm}
@@ -2780,10 +2780,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           <Text
                             renderOrder={1000}
                             depthTest={false}
-                            position={[leftDimensionX + leftOffset - mmToThreeUnits(60), floorFinishMidYDrop, 0.01]}
+                            position={[leftDimensionX + leftOffset - mmToThreeUnits(10), floorFinishMidYDrop, 0.01]}
                             fontSize={largeFontSize}
                             color={textColor}
-                            anchorX="center"
+                            anchorX="right"
                             anchorY="middle"
                             outlineWidth={textOutlineWidth}
                             outlineColor={textOutlineColor}
@@ -2798,10 +2798,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       <Text
                         renderOrder={1000}
                         depthTest={false}
-                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), spaceMidYDrop, 0.01]}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(10), spaceMidYDrop, 0.01]}
                         fontSize={largeFontSize}
                         color={textColor}
-                        anchorX="center"
+                        anchorX="right"
                         anchorY="middle"
                         outlineWidth={textOutlineWidth}
                         outlineColor={textOutlineColor}
@@ -2962,10 +2962,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       <Text
                         renderOrder={1000}
                         depthTest={false}
-                        position={[leftDimensionX + leftOffset - mmToThreeUnits(60), floorFinishMidY, 0.01]}
+                        position={[leftDimensionX + leftOffset - mmToThreeUnits(10), floorFinishMidY, 0.01]}
                         fontSize={largeFontSize}
                         color={textColor}
-                        anchorX="center"
+                        anchorX="right"
                         anchorY="middle"
                         outlineWidth={textOutlineWidth}
                         outlineColor={textOutlineColor}
@@ -2980,10 +2980,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[leftDimensionX + leftOffset - mmToThreeUnits(60), spaceMidY, 0.01]}
+                    position={[leftDimensionX + leftOffset - mmToThreeUnits(10), spaceMidY, 0.01]}
                     fontSize={largeFontSize}
                     color={textColor}
-                    anchorX="center"
+                    anchorX="right"
                     anchorY="middle"
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
@@ -3313,10 +3313,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight / 2), 0.01]}
+                    position={[rightDimensionX + mmToThreeUnits(10), mmToThreeUnits(floatHeight / 2), 0.01]}
                     fontSize={baseFontSize}
                     color={textColor}
-                    anchorX="center"
+                    anchorX="left"
                     anchorY="middle"
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
@@ -3355,10 +3355,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (bottomY + bottomFrameTopY) / 2, 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(10), (bottomY + bottomFrameTopY) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
-                  anchorX="center"
+                  anchorX="left"
                   anchorY="middle"
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
@@ -3396,10 +3396,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm / 2), 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(10), mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
-                  anchorX="center"
+                  anchorX="left"
                   anchorY="middle"
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
@@ -3440,10 +3440,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), furnitureTextY, 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(10), furnitureTextY, 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
-                  anchorX="center"
+                  anchorX="left"
                   anchorY="middle"
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
@@ -3481,10 +3481,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm / 2), 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(10), mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
-                  anchorX="center"
+                  anchorX="left"
                   anchorY="middle"
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
@@ -3527,10 +3527,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (cabinetAreaTopY + topFrameLineTopY) / 2, 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(10), (cabinetAreaTopY + topFrameLineTopY) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                  anchorX="center"
+                  anchorX="left"
                   anchorY="middle"
                   rotation={[0, 0, 0]}
                 >
@@ -3570,10 +3570,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (topFrameLineTopY + mmToThreeUnits(spaceInfo.height)) / 2, 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(10), (topFrameLineTopY + mmToThreeUnits(spaceInfo.height)) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
-                  anchorX="center"
+                  anchorX="left"
                   anchorY="middle"
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
