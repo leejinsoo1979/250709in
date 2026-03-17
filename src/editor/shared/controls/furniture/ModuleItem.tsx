@@ -119,15 +119,21 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
     const furnitureWidth = dims.width;
 
-    // 공간 경계 계산 (잠긴 이격거리 반영)
+    // 공간 경계 계산 (이격거리 반영)
     const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+    const gapLeft = spaceInfo.gapConfig?.left || 0;
+    const gapRight = spaceInfo.gapConfig?.right || 0;
     const lockedGaps = spaceInfo.lockedWallGaps;
-    const effStartX = (lockedGaps?.left != null && lockedGaps.left > 0) ? startX + lockedGaps.left : startX;
-    const effEndX = (lockedGaps?.right != null && lockedGaps.right > 0) ? endX - lockedGaps.right : endX;
+    // 잠긴 이격거리 또는 gapConfig 중 더 큰 값 적용
+    const effStartX = startX + Math.max(gapLeft, (lockedGaps?.left != null ? lockedGaps.left : 0));
+    const effEndX = endX - Math.max(gapRight, (lockedGaps?.right != null ? lockedGaps.right : 0));
 
     // 배치된 가구 바운드를 왼쪽→오른쪽 정렬
     const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
     const sortedBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+    console.log('🔍 [자동배치] 공간:', { startX, endX, gapLeft, gapRight, effStartX, effEndX, furnitureWidth });
+    console.log('🔍 [자동배치] 기존가구:', sortedBounds.map(b => `[${b.left.toFixed(1)}~${b.right.toFixed(1)}]`));
 
     // 카테고리 (upper/lower 공존 가능)
     const newCategory = moduleData.category || 'full';
@@ -176,10 +182,13 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       candidates.sort((a, b) => a.left - b.left);
     }
 
+    console.log('🔍 [자동배치] 후보빈공간:', candidates.map(c => `[${c.left.toFixed(1)}~${c.right.toFixed(1)} w=${(c.right-c.left).toFixed(1)}]`));
+
     for (const gap of candidates) {
       const gapWidth = gap.right - gap.left;
       if (gapWidth >= furnitureWidth) {
         targetX = gap.left + halfW;
+        console.log('🎯 [자동배치] 선택된 위치:', targetX.toFixed(1), 'gap:', `[${gap.left.toFixed(1)}~${gap.right.toFixed(1)}]`);
         break;
       }
     }
