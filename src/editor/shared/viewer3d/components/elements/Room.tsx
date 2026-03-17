@@ -2257,8 +2257,11 @@ const Room: React.FC<RoomProps> = ({
             );
           })()}
 
-          {/* 은선모드: 천장-벽 경계 모서리 라인 */}
-          {renderMode === 'wireframe' && (() => {
+        </>
+      )}
+
+      {/* 공간 윤곽선: wireframe 모드 또는 3D orthographic 모드 */}
+      {viewMode !== '2D' && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
             const wfLineColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
             const hasLeftWall = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.left);
@@ -2448,8 +2451,6 @@ const Room: React.FC<RoomProps> = ({
               </>
             );
           })()}
-        </>
-      )}
 
       {/* 바닥 마감재가 있는 경우 - 전체 가구 폭으로 설치 */}
       {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
