@@ -1546,6 +1546,7 @@ const FreePlacementDropZone: React.FC = () => {
 
       {/* 이격 구간 — 붉은색 투명 박스 (2D/3D/orthographic 모두 표시) */}
       {(() => {
+        const gapOpacity = viewMode === '2D' ? 0.35 : 0.08;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
         const hasDropped = spaceInfo.droppedCeiling?.enabled;
@@ -1610,7 +1611,7 @@ const FreePlacementDropZone: React.FC = () => {
             boxes.push(
               <mesh key="gap-left" position={[cx, gapY, zOffset]}>
                 <boxGeometry args={[w, dcWallH, depthThree]} />
-                <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
           } else if (hasStepLocal && stepPosLocal === 'left') {
@@ -1619,14 +1620,14 @@ const FreePlacementDropZone: React.FC = () => {
             boxes.push(
               <mesh key="gap-left" position={[cx, h / 2, zOffset]}>
                 <boxGeometry args={[w, h, depthThree]} />
-                <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
           } else {
             boxes.push(
               <mesh key="gap-left" position={[cx, spaceH / 2, zOffset]}>
                 <boxGeometry args={[w, spaceH, depthThree]} />
-                <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
           }
@@ -1641,7 +1642,7 @@ const FreePlacementDropZone: React.FC = () => {
             boxes.push(
               <mesh key="gap-right" position={[cx, gapY, zOffset]}>
                 <boxGeometry args={[w, dcWallH, depthThree]} />
-                <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
           } else if (hasStepLocal && stepPosLocal === 'right') {
@@ -1650,14 +1651,14 @@ const FreePlacementDropZone: React.FC = () => {
             boxes.push(
               <mesh key="gap-right" position={[cx, h / 2, zOffset]}>
                 <boxGeometry args={[w, h, depthThree]} />
-                <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
           } else {
             boxes.push(
               <mesh key="gap-right" position={[cx, spaceH / 2, zOffset]}>
                 <boxGeometry args={[w, spaceH, depthThree]} />
-                <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             );
           }
@@ -1678,7 +1679,7 @@ const FreePlacementDropZone: React.FC = () => {
               boxes.push(
                 <mesh key="gap-cb-left-wall" position={[cx, curtainBoxH / 2, zOffset]}>
                   <boxGeometry args={[w, curtainBoxH, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
             }
@@ -1691,7 +1692,7 @@ const FreePlacementDropZone: React.FC = () => {
               boxes.push(
                 <mesh key="gap-cb-right-wall" position={[cx, curtainBoxH / 2, zOffset]}>
                   <boxGeometry args={[w, curtainBoxH, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
             }
@@ -1722,7 +1723,7 @@ const FreePlacementDropZone: React.FC = () => {
               boxes.push(
                 <mesh key="gap-sc-main-left" position={[scRightEdge + w / 2, gapBoxY, zOffset]}>
                   <boxGeometry args={[w, dropHThree, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
             } else {
@@ -1730,7 +1731,7 @@ const FreePlacementDropZone: React.FC = () => {
               boxes.push(
                 <mesh key="gap-sc-main-right" position={[scLeftEdge - w / 2, gapBoxY, zOffset]}>
                   <boxGeometry args={[w, dropHThree, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
             }
@@ -1749,7 +1750,7 @@ const FreePlacementDropZone: React.FC = () => {
               boxes.push(
                 <mesh key="gap-cb-sc-left" position={[gapCenterX, stepH / 2, zOffset]}>
                   <boxGeometry args={[w, stepH, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
             } else {
@@ -1758,7 +1759,7 @@ const FreePlacementDropZone: React.FC = () => {
               boxes.push(
                 <mesh key="gap-cb-sc-right" position={[gapCenterX, stepH / 2, zOffset]}>
                   <boxGeometry args={[w, stepH, depthThree]} />
-                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={gapOpacity} side={THREE.DoubleSide} depthWrite={false} />
                 </mesh>
               );
             }
