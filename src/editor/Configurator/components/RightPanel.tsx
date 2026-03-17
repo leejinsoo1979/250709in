@@ -876,7 +876,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
                       const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
                       const pos = spaceInfo.droppedCeiling.position || 'right';
-                      return Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
+                      const mainW = Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
+                      return `${mainW} × ${height}`;
                     })()} mm</span>
                   </div>
                   <div className={styles.zoneInfoItem}>
@@ -885,7 +886,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       const droppedOuter = spaceInfo.droppedCeiling.width;
                       const pos = spaceInfo.droppedCeiling.position || 'right';
                       const gap = pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
-                      return Math.round(droppedOuter - gap);
+                      const droppedW = Math.round(droppedOuter - gap);
+                      const droppedH = height - (spaceInfo.droppedCeiling.dropHeight || 0);
+                      return `${droppedW} × ${droppedH}`;
                     })()} mm</span>
                   </div>
                 </div>
@@ -1008,52 +1011,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 </>
               )}
             </FormControl>)}
-
-            {/* 메인구간 사이즈 - 단내림 활성화되고 메인구간 탭일 때, 균등분할 모드에서만 표시 */}
-            {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && isEqualDivision && (
-              <FormControl
-                label={t('space.mainSectionSize')}
-                expanded={expandedSections.has('mainSpace')}
-                onToggle={() => toggleSection('mainSpace')}
-                helpText="단내림이 없는 메인 구간의 너비와 높이를 확인합니다. 공간 설정에서 자동 계산됩니다."
-              >
-                <div className={styles.numberInput}>
-                  <div className={styles.inputLabel}>{t('space.width')}</div>
-                  <div className={styles.inputGroup}>
-                    <div className={styles.inputField}>
-                      <input
-                        type="number"
-                        value={(() => {
-                          const mainOuter = width - spaceInfo.droppedCeiling.width;
-                          const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                          const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                          const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                          const pos = spaceInfo.droppedCeiling.position || 'right';
-                          return Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
-                        })()}
-                        readOnly
-                        style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
-                      />
-                      <span className={styles.inputUnit}>mm</span>
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.numberInput}>
-                  <div className={styles.inputLabel}>{t('space.height')}</div>
-                  <div className={styles.inputGroup}>
-                    <div className={styles.inputField}>
-                      <input
-                        type="number"
-                        value={height}
-                        readOnly
-                        style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
-                      />
-                      <span className={styles.inputUnit}>mm</span>
-                    </div>
-                  </div>
-                </div>
-              </FormControl>
-            )}
 
             {/* 배치 방식 */}
             <FormControl
