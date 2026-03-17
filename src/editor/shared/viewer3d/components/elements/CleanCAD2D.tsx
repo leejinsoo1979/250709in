@@ -1834,58 +1834,52 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const mainLeftGap = mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm;
                     const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
 
-                    // 단내림↔메인 경계에도 middleGap 적용 (각 구간별 치수 표시를 위해)
-                    const effectiveMainLeftGap = mainLeftGap;
-                    const effectiveMainRightGap = mainRightGap;
+                    // ── 3단 치수선: 각 구간의 실배치 폭 ──
+                    // getInternalSpaceBoundsX 로직 기준:
+                    // 통합 배치공간(단내림+메인) 양 끝에만 gap 적용, 단내림↔메인 경계에는 gap 없음.
+                    // 3단 치수선에서는 단내림↔메인 경계 gap을 별도 치수로 표시.
+
+                    // 단내림↔메인 경계: gap 없음 → 각 구간 실배치 폭은 외벽쪽 gap만 차감
+                    const effectiveMainLeftGap = mainLeftAdj === 'step' ? 0 : mainLeftGap;
+                    const effectiveMainRightGap = mainRightAdj === 'step' ? 0 : mainRightGap;
                     mainPlacementWidth = Math.round((mainWidth - effectiveMainLeftGap - effectiveMainRightGap) * 10) / 10;
 
-                    // 단내림 구간: 양쪽 gap 차감
-                    // - 외벽쪽(벽 or 커튼박스): wallGap or middleGap
-                    // - 메인쪽: middleGap
-                    let scOuterGap = 0; // 외벽쪽 gap
-                    let scInnerGap = 0; // 메인쪽 gap
+                    // 단내림 구간: 외벽쪽 gap만 차감, 메인쪽은 gap 없음
+                    let scOuterGap = 0;
                     if (hasSC) {
-                      // 외벽쪽 인접 결정
                       const sameSide = hasDC && dcPosition === scPosition;
                       if (sameSide) {
-                        scOuterGap = middleGapMm; // 커튼박스↔단내림 경계
+                        scOuterGap = middleGapMm;
                       } else {
-                        // 벽에 직접 인접
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = scOnWallSide ? (scOnLeft ? leftGapMm : rightGapMm) : 0;
                       }
-                      scInnerGap = middleGapMm; // 단내림↔메인 경계
-                      scPlacementWidth = Math.round((scWidth - scOuterGap - scInnerGap) * 10) / 10;
+                      scPlacementWidth = Math.round((scWidth - scOuterGap) * 10) / 10;
                     }
 
-                    // 커튼박스 구간: 양쪽 이격 차감
+                    // 커튼박스 구간: 양쪽 gap 차감
                     const dcLeftGap = dcOnLeft
                       ? (hasLeftWall ? leftGapMm : 0)
-                      : middleGapMm; // 메인/단내림↔커튼박스 경계
+                      : middleGapMm;
                     const dcRightGap = dcOnRight
                       ? (hasRightWall ? rightGapMm : 0)
                       : middleGapMm;
                     dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
 
-                    // 3단 치수선용 실배치 X좌표 계산 (이격 반영)
-                    // 단내림 실배치 영역: 양쪽 gap 모두 반영
+                    // 실배치 X좌표 (각 구간의 실 배치 가능 영역 경계)
                     var scPlacStartX = scStartX;
                     var scPlacEndX = scEndX;
                     if (hasSC) {
                       if (scOnLeft) {
-                        // 좌측 단내림: 좌=외벽gap, 우=메인gap
                         scPlacStartX = scStartX + mmToThreeUnits(scOuterGap);
-                        scPlacEndX = scEndX - mmToThreeUnits(scInnerGap);
+                        // scPlacEndX = scEndX (메인쪽, gap 없음)
                       } else {
-                        // 우측 단내림: 좌=메인gap, 우=외벽gap
-                        scPlacStartX = scStartX + mmToThreeUnits(scInnerGap);
+                        // scPlacStartX = scStartX (메인쪽, gap 없음)
                         scPlacEndX = scEndX - mmToThreeUnits(scOuterGap);
                       }
                     }
-                    // 메인 실배치 영역
                     var mainPlacStartX = mainStartX + mmToThreeUnits(effectiveMainLeftGap);
                     var mainPlacEndX = mainEndX - mmToThreeUnits(effectiveMainRightGap);
-                    // 커튼박스 실배치 영역
                     var dcPlacStartX = droppedStartX + mmToThreeUnits(dcLeftGap);
                     var dcPlacEndX = droppedEndX - mmToThreeUnits(dcRightGap);
                   } else {
@@ -2038,93 +2032,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 3단 치수선: 실배치 구간 사이 이격 치수선 (자유배치 전용) */}
-                {isFreePlacement && (() => {
-                  // 인접 실배치 구간 사이의 gap 치수선 (slotTotalDimensionY 레벨)
-                  const placGaps: { leftX: number; rightX: number; gapMm: number }[] = [];
-
-                  // 구간 순서: 좌→우 정렬
-                  // 커튼박스, 단내림, 메인 구간의 실배치 영역 사이 gap
-                  if (hasDC && hasSC) {
-                    const sameSide = dcPosition === scPosition;
-                    if (sameSide) {
-                      if (dcOnLeft) {
-                        // [DC] gap [SC] [Main] — DC↔SC gap
-                        if (Math.abs(dcPlacEndX - scPlacStartX) > 0.0001) {
-                          placGaps.push({ leftX: dcPlacEndX, rightX: scPlacStartX, gapMm: Math.round(Math.abs(scPlacStartX - dcPlacEndX) / 0.01 * 10) / 10 });
-                        }
-                      } else {
-                        // [Main] [SC] gap [DC] — SC↔DC gap
-                        if (Math.abs(scPlacEndX - dcPlacStartX) > 0.0001) {
-                          placGaps.push({ leftX: scPlacEndX, rightX: dcPlacStartX, gapMm: Math.round(Math.abs(dcPlacStartX - scPlacEndX) / 0.01 * 10) / 10 });
-                        }
-                      }
-                    } else {
-                      // 반대 쪽: 커튼박스↔메인 gap, 메인↔단내림 gap (= 0)
-                      if (dcOnLeft) {
-                        // [DC] gap [Main] [SC] — DC↔Main gap
-                        if (Math.abs(dcPlacEndX - mainPlacStartX) > 0.0001) {
-                          placGaps.push({ leftX: dcPlacEndX, rightX: mainPlacStartX, gapMm: Math.round(Math.abs(mainPlacStartX - dcPlacEndX) / 0.01 * 10) / 10 });
-                        }
-                      } else {
-                        // [SC] [Main] gap [DC] — Main↔DC gap
-                        if (Math.abs(mainPlacEndX - dcPlacStartX) > 0.0001) {
-                          placGaps.push({ leftX: mainPlacEndX, rightX: dcPlacStartX, gapMm: Math.round(Math.abs(dcPlacStartX - mainPlacEndX) / 0.01 * 10) / 10 });
-                        }
-                      }
-                    }
-                  } else if (hasDC) {
-                    // 커튼박스만: DC↔Main gap
-                    if (dcOnLeft) {
-                      if (Math.abs(dcPlacEndX - mainPlacStartX) > 0.0001) {
-                        placGaps.push({ leftX: dcPlacEndX, rightX: mainPlacStartX, gapMm: Math.round(Math.abs(mainPlacStartX - dcPlacEndX) / 0.01 * 10) / 10 });
-                      }
-                    } else {
-                      if (Math.abs(mainPlacEndX - dcPlacStartX) > 0.0001) {
-                        placGaps.push({ leftX: mainPlacEndX, rightX: dcPlacStartX, gapMm: Math.round(Math.abs(dcPlacStartX - mainPlacEndX) / 0.01 * 10) / 10 });
-                      }
-                    }
-                  }
-
-                  if (placGaps.length === 0) return null;
-
-                  return (<>
-                    {placGaps.map((g, idx) => (
-                      <React.Fragment key={`plac-gap-${idx}`}>
-                        <Line
-                          points={[[g.leftX, slotTotalDimensionY, 0.003], [g.rightX, slotTotalDimensionY, 0.003]]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        <Line
-                          points={createArrowHead([g.leftX, slotTotalDimensionY, 0.003], [g.leftX + 0.01, slotTotalDimensionY, 0.003])}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        <Line
-                          points={createArrowHead([g.rightX, slotTotalDimensionY, 0.003], [g.rightX - 0.01, slotTotalDimensionY, 0.003])}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        {(showDimensionsText || isStep2) && (
-                          <Text
-                            renderOrder={1000}
-                            depthTest={false}
-                            position={[(g.leftX + g.rightX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                            fontSize={baseFontSize * 0.85}
-                            color={textColor}
-                            anchorX="center"
-                            anchorY="middle"
-                            outlineWidth={textOutlineWidth}
-                            outlineColor={textOutlineColor}
-                          >
-                            {g.gapMm}
-                          </Text>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </>);
-                })()}
                   </>);
                 })()}
 
@@ -2213,24 +2120,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // - 벽 인접 → wallGap (좌/우이격 치수선에서 별도 표시)
                   const boundaries: { leftX: number; rightX: number }[] = [];
 
+                  // 단내림↔메인 경계 이격 (항상 추가)
+                  if (hasSC) {
+                    if (scOnLeft) {
+                      // [단내림] gap [메인] — scEndX ~ mainStartX
+                      boundaries.push({ leftX: scEndX, rightX: mainStartX });
+                    } else {
+                      // [메인] gap [단내림] — mainEndX ~ scStartX
+                      boundaries.push({ leftX: mainEndX, rightX: scStartX });
+                    }
+                  }
+
                   if (hasDC && hasSC) {
                     const sameSide = dcPosition === scPosition;
                     if (sameSide) {
-                      // 같은 쪽: 커튼박스↔단내림 경계 (middleGap)
+                      // 같은 쪽: 커튼박스↔단내림 경계
                       if (dcOnLeft) {
                         boundaries.push({ leftX: droppedEndX, rightX: scStartX });
                       } else {
                         boundaries.push({ leftX: scEndX, rightX: droppedStartX });
                       }
                     } else {
-                      // 반대 쪽: 양쪽 모두 middleGap 경계
-                      // 단내림 쪽 (벽↔배치영역 경계에 middleGap 적용)
+                      // 반대 쪽:
+                      // 단내림 벽쪽 경계
                       if (scOnLeft) {
-                        boundaries.push({ leftX: leftOffset, rightX: scStartX }); // 벽↔단내림
+                        boundaries.push({ leftX: leftOffset, rightX: scStartX });
                       } else {
-                        boundaries.push({ leftX: scEndX, rightX: leftOffset + mmToThreeUnits(spaceInfo.width) }); // 단내림↔벽
+                        boundaries.push({ leftX: scEndX, rightX: leftOffset + mmToThreeUnits(spaceInfo.width) });
                       }
-                      // 커튼박스 쪽 (배치영역↔커튼박스 경계에 middleGap 적용)
+                      // 커튼박스↔메인 경계
                       if (dcOnLeft) {
                         boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
                       } else {
@@ -2245,7 +2163,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                     }
                   } else if (hasSC) {
-                    // 단내림만: 벽↔배치영역 경계 (middleGap 적용)
+                    // 단내림만: 벽↔단내림 경계
                     if (scOnLeft) {
                       boundaries.push({ leftX: leftOffset, rightX: scStartX });
                     } else {
