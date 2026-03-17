@@ -1005,8 +1005,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const slotTotalDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
-  const leftDimensionX = -mmToThreeUnits(320); // 좌측 전체높이 치수선 (프레임 분해 치수선보다 바깥)
   const leftFrameDimensionX = -mmToThreeUnits(200); // 좌측 프레임 분해 치수선 (공간에 가까운 안쪽)
+  const leftDimensionX = leftFrameDimensionX - mmToThreeUnits(120); // 좌측 전체높이 치수선 (프레임 분해보다 바깥)
 
   // 좌측 오프셋 (가로 공간치수의 절반)
   const leftOffset = -mmToThreeUnits(spaceInfo.width / 2);
@@ -2839,12 +2839,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             {baseHeight > 0 && (
                               <>
                                 <NativeLine name="dimension_line"
-                                  points={[[fX - mmToThreeUnits(20), baseTopYFrame, 0.002], [fX + mmToThreeUnits(20), baseTopYFrame, 0.002]]}
+                                  points={[[fX - mmToThreeUnits(15), baseTopYFrame, 0.002], [fX + mmToThreeUnits(15), baseTopYFrame, 0.002]]}
                                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                                 />
                                 <Text renderOrder={1000} depthTest={false}
-                                  position={[fX + mmToThreeUnits(30), (hasFloorFinishDrop ? floorFinishYDrop : 0) + (baseTopYFrame - (hasFloorFinishDrop ? floorFinishYDrop : 0)) / 2, 0.01]}
-                                  fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                                  position={[fX - mmToThreeUnits(25), (hasFloorFinishDrop ? floorFinishYDrop : 0) + (baseTopYFrame - (hasFloorFinishDrop ? floorFinishYDrop : 0)) / 2, 0.01]}
+                                  fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                                 >
                                   {baseHeight}
@@ -2856,12 +2856,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             {mainTopFrame > 0 && (
                               <>
                                 <NativeLine name="dimension_line"
-                                  points={[[fX - mmToThreeUnits(20), topFrameBottomYFrame, 0.002], [fX + mmToThreeUnits(20), topFrameBottomYFrame, 0.002]]}
+                                  points={[[fX - mmToThreeUnits(15), topFrameBottomYFrame, 0.002], [fX + mmToThreeUnits(15), topFrameBottomYFrame, 0.002]]}
                                   color={frameDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                                 />
                                 <Text renderOrder={1000} depthTest={false}
-                                  position={[fX + mmToThreeUnits(30), topFrameBottomYFrame + (spaceHeight - topFrameBottomYFrame) / 2, 0.01]}
-                                  fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
+                                  position={[fX - mmToThreeUnits(25), topFrameBottomYFrame + (spaceHeight - topFrameBottomYFrame) / 2, 0.01]}
+                                  fontSize={baseFontSize} color={frameDimensionColor} anchorX="right" anchorY="middle"
                                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                                 >
                                   {mainTopFrame}
@@ -2872,8 +2872,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             {/* 내부공간 높이 텍스트 */}
                             {mainInternalHeight > 0 && (
                               <Text renderOrder={1000} depthTest={false}
-                                position={[fX + mmToThreeUnits(30), baseTopYFrame + (topFrameBottomYFrame - baseTopYFrame) / 2, 0.01]}
-                                fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                                position={[fX - mmToThreeUnits(25), baseTopYFrame + (topFrameBottomYFrame - baseTopYFrame) / 2, 0.01]}
+                                fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                                 outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                               >
                                 {mainInternalHeight}
@@ -2884,12 +2884,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             {hasFloorFinishDrop && (
                               <>
                                 <NativeLine name="dimension_line"
-                                  points={[[fX - mmToThreeUnits(20), floorFinishYDrop, 0.002], [fX + mmToThreeUnits(20), floorFinishYDrop, 0.002]]}
+                                  points={[[fX - mmToThreeUnits(15), floorFinishYDrop, 0.002], [fX + mmToThreeUnits(15), floorFinishYDrop, 0.002]]}
                                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                                 />
                                 <Text renderOrder={1000} depthTest={false}
-                                  position={[fX + mmToThreeUnits(30), floorFinishMidYDrop, 0.01]}
-                                  fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                                  position={[fX - mmToThreeUnits(25), floorFinishMidYDrop, 0.01]}
+                                  fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                                 >
                                   {floorFinishHeightMmGlobal}
@@ -3020,22 +3020,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {baseHeight > 0 && (
                     <>
                       <NativeLine name="dimension_line"
-                        points={[[fX - mmToThreeUnits(20), baseTopY, 0.002], [fX + mmToThreeUnits(20), baseTopY, 0.002]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                        renderOrder={100000}
-                        depthTest={false}
+                        points={[[fX - mmToThreeUnits(15), baseTopY, 0.002], [fX + mmToThreeUnits(15), baseTopY, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                       />
-                      <Text
-                        renderOrder={1000} depthTest={false}
-                        position={[fX + mmToThreeUnits(30), (hasFloorFinish ? floorFinishY : 0) + (baseTopY - (hasFloorFinish ? floorFinishY : 0)) / 2, 0.01]}
-                        fontSize={baseFontSize}
-                        color={textColor}
-                        anchorX="left"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                        rotation={[0, 0, 0]}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[fX - mmToThreeUnits(25), (hasFloorFinish ? floorFinishY : 0) + (baseTopY - (hasFloorFinish ? floorFinishY : 0)) / 2, 0.01]}
+                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                       >
                         {baseHeight}
                       </Text>
@@ -3046,22 +3037,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {mainTopFrame > 0 && (
                     <>
                       <NativeLine name="dimension_line"
-                        points={[[fX - mmToThreeUnits(20), topFrameBottomY, 0.002], [fX + mmToThreeUnits(20), topFrameBottomY, 0.002]]}
-                        color={frameDimensionColor}
-                        lineWidth={1}
-                        renderOrder={100000}
-                        depthTest={false}
+                        points={[[fX - mmToThreeUnits(15), topFrameBottomY, 0.002], [fX + mmToThreeUnits(15), topFrameBottomY, 0.002]]}
+                        color={frameDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                       />
-                      <Text
-                        renderOrder={1000} depthTest={false}
-                        position={[fX + mmToThreeUnits(30), topFrameBottomY + (spaceHeight - topFrameBottomY) / 2, 0.01]}
-                        fontSize={baseFontSize}
-                        color={frameDimensionColor}
-                        anchorX="left"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                        rotation={[0, 0, 0]}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[fX - mmToThreeUnits(25), topFrameBottomY + (spaceHeight - topFrameBottomY) / 2, 0.01]}
+                        fontSize={baseFontSize} color={frameDimensionColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                       >
                         {mainTopFrame}
                       </Text>
@@ -3070,16 +3052,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   {/* 내부공간 높이 텍스트 */}
                   {mainInternalHeight > 0 && (
-                    <Text
-                      renderOrder={1000} depthTest={false}
-                      position={[fX + mmToThreeUnits(30), baseTopY + (topFrameBottomY - baseTopY) / 2, 0.01]}
-                      fontSize={baseFontSize}
-                      color={textColor}
-                      anchorX="left"
-                      anchorY="middle"
-                      outlineWidth={textOutlineWidth}
-                      outlineColor={textOutlineColor}
-                      rotation={[0, 0, 0]}
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[fX - mmToThreeUnits(25), baseTopY + (topFrameBottomY - baseTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                     >
                       {mainInternalHeight}
                     </Text>
@@ -3089,22 +3065,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {hasFloorFinish && (
                     <>
                       <NativeLine name="dimension_line"
-                        points={[[fX - mmToThreeUnits(20), floorFinishY, 0.002], [fX + mmToThreeUnits(20), floorFinishY, 0.002]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                        renderOrder={100000}
-                        depthTest={false}
+                        points={[[fX - mmToThreeUnits(15), floorFinishY, 0.002], [fX + mmToThreeUnits(15), floorFinishY, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                       />
-                      <Text
-                        renderOrder={1000} depthTest={false}
-                        position={[fX + mmToThreeUnits(30), floorFinishMidY, 0.01]}
-                        fontSize={baseFontSize}
-                        color={textColor}
-                        anchorX="left"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                        rotation={[0, 0, 0]}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[fX - mmToThreeUnits(25), floorFinishMidY, 0.01]}
+                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor} rotation={[0, 0, 0]}
                       >
                         {floorFinishHeightMmGlobal}
                       </Text>
