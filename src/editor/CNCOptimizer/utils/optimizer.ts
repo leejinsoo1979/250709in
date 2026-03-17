@@ -368,6 +368,13 @@ export const optimizePanelsMultiple = async (
   const rectangles: Rect[] = [];
   const panelMap = new Map<string, Panel>();
 
+  // 백패널/좌우측판 판별 (서랍 측판 제외) — 가구 높이를 시트 L방향(2440mm)으로 배치
+  const isSidePanelOrBackPanel = (name: string | undefined): boolean => {
+    if (!name) return false;
+    if (name.includes('서랍')) return false; // 서랍 측판은 제외
+    return name.includes('좌측판') || name.includes('우측판') || name.includes('백패널');
+  };
+
   console.log('[OPTIMIZER] Input panels count:', panels.length);
   panels.forEach(panel => {
     // 보링 디버그 로그
@@ -378,16 +385,19 @@ export const optimizePanelsMultiple = async (
     for (let i = 0; i < panel.quantity; i++) {
       const id = `${panel.id}-${i}`;
       const canRotate = panel.grain && panel.grain !== 'NONE' ? false : (panel.canRotate !== false);
+      // 백패널/좌우측판: width↔height swap (가구 높이→시트 X축=L=2440mm)
+      const shouldPreSwap = isSidePanelOrBackPanel(panel.name);
       rectangles.push({
         id,
-        width: panel.width,
-        height: panel.height,
+        width: shouldPreSwap ? panel.height : panel.width,
+        height: shouldPreSwap ? panel.width : panel.height,
         // 패널의 추가 정보를 저장
         grain: panel.grain || 'NONE',
         material: panel.material,
         color: panel.color,
         name: panel.name,
-        canRotate: canRotate
+        canRotate: shouldPreSwap ? false : canRotate, // pre-swap된 패널은 회전 금지
+        preSwapped: shouldPreSwap || undefined,
       });
       panelMap.set(id, panel);
     }
@@ -459,6 +469,10 @@ export const optimizePanelsMultiple = async (
       const originalPanel = panelMap.get(rect.id!)!;
       // 회전된 경우 실제 배치된 크기 사용
       const isRotated = rect.rotated || false;
+      // pre-swap된 패널(백패널/좌우측판): 회전 상태 반전
+      // pre-swap + packer rotated=false → 실제 rotated=true (원본 대비 90° 회전됨)
+      // pre-swap + packer rotated=true → 실제 rotated=false (이중 swap = 원래대로)
+      const actualRotated = rect.preSwapped ? !isRotated : isRotated;
 
       // 보링 디버그 로그
       if (originalPanel.boringPositions && originalPanel.boringPositions.length > 0) {
@@ -473,7 +487,7 @@ export const optimizePanelsMultiple = async (
         // 원본 크기를 유지하고 rotated 플래그로 회전 표시
         width: originalPanel.width,
         height: originalPanel.height,
-        rotated: isRotated,
+        rotated: actualRotated,
         quantity: 1,
         grain: originalPanel.grain || 'NONE',
         material: originalPanel.material,

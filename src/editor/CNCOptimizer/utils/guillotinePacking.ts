@@ -636,6 +636,8 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     // 이 시트의 모든 패널을 다른 시트에 넣을 수 있는지 시도
     const panelsToMove = [...srcBin.panels];
     const movedPanels: Rect[] = [];
+    // 이동된 패널 임시 추적 (실패 시 롤백)
+    const moveLog: { dstIdx: number; panel: Rect }[] = [];
 
     for (const panel of panelsToMove) {
       let placed = false;
@@ -645,7 +647,7 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
         if (dstIdx === srcIdx || removedBins.has(dstIdx)) continue;
         const dstBin = bins[dstIdx];
 
-        // 회전 금지 모드로 위치 찾기 (원본 rotated 상태 유지)
+        // 회전 금지 — 백패널 등은 높이가 항상 L방향(2440)에 있어야 함
         const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, true);
         if (pos) {
           const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
@@ -653,12 +655,26 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
           dstBin.usedArea = (dstBin.usedArea || 0) + panel.width * panel.height;
           dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
           movedPanels.push(panel);
+          moveLog.push({ dstIdx, panel: movedPanel });
           placed = true;
           break;
         }
       }
 
-      if (!placed) break; // 하나라도 못 옮기면 이 시트는 유지
+      if (!placed) {
+        // 하나라도 못 옮기면 이 시트는 유지 → 이미 옮긴 패널 롤백
+        for (const log of moveLog) {
+          const dstBin = bins[log.dstIdx];
+          const idx = dstBin.panels.indexOf(log.panel);
+          if (idx !== -1) {
+            dstBin.panels.splice(idx, 1);
+            dstBin.usedArea = (dstBin.usedArea || 0) - log.panel.width * log.panel.height;
+            dstBin.efficiency = ((dstBin.usedArea || 0) / (binWidth * binHeight)) * 100;
+          }
+        }
+        movedPanels.length = 0;
+        break;
+      }
     }
 
     // 모든 패널을 옮겼으면 시트 제거
@@ -692,12 +708,23 @@ function findFreePosition(
     h: p.rotated ? p.width : p.height
   }));
 
-  // 후보 위치 생성
-  const candidates: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+  // 후보 위치 생성 — 더 많은 후보를 생성하여 빈 공간 활용도 향상
+  const candidateSet = new Set<string>();
+  const candidates: { x: number; y: number }[] = [];
+  const addCandidate = (x: number, y: number) => {
+    const key = `${Math.round(x)},${Math.round(y)}`;
+    if (!candidateSet.has(key) && x >= 0 && y >= 0 && x < binWidth && y < binHeight) {
+      candidateSet.add(key);
+      candidates.push({ x, y });
+    }
+  };
+  addCandidate(0, 0);
   for (const r of placed) {
-    candidates.push({ x: r.x + r.w + kerf, y: r.y });       // 우측
-    candidates.push({ x: r.x, y: r.y + r.h + kerf });       // 상단
-    candidates.push({ x: r.x + r.w + kerf, y: r.y + r.h + kerf }); // 대각
+    addCandidate(r.x + r.w + kerf, r.y);              // 우측
+    addCandidate(r.x, r.y + r.h + kerf);              // 상단
+    addCandidate(r.x + r.w + kerf, r.y + r.h + kerf); // 대각
+    addCandidate(r.x + r.w + kerf, 0);                // 우측 바닥
+    addCandidate(0, r.y + r.h + kerf);                // 좌측 위
   }
 
   // 원본 방향 + 회전 방향 시도 (noRotate 시 원본 rotated 상태만 사용)
