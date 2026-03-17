@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ThemeSelector from './ThemeSelector';
+import SpaceDefaultsModal from './SpaceDefaultsModal';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useUIStore } from '@/store/uiStore';
 import styles from './SettingsPanel.module.css';
@@ -12,6 +13,7 @@ interface SettingsPanelProps {
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
   const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, dashboardLayout, setDashboardLayout } = useUIStore();
+  const [showSpaceDefaults, setShowSpaceDefaults] = useState(false);
   
   useEffect(() => {
     // 언어 변경 시 컴포넌트 리렌더링을 위한 이벤트 리스너
@@ -52,6 +54,22 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className={styles.content}>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>공간설정 기본값</h3>
+            <div className={styles.settingGroup}>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>새 디자인 기본값</span>
+                  <span className={styles.settingDescription}>새 디자인 생성 시 적용될 공간 설정</span>
+                </div>
+                <button className={styles.segmentButton} style={{ background: 'var(--theme-background-secondary, #f3f4f6)', borderRadius: 8, padding: '6px 14px' }} onClick={() => setShowSpaceDefaults(true)}>
+                  설정
+                </button>
+              </div>
+            </div>
+          </div>
+          {showSpaceDefaults && <SpaceDefaultsModal onClose={() => setShowSpaceDefaults(false)} />}
+
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('settings.theme')}</h3>
             <div className={styles.themeContainer}>
