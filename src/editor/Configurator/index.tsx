@@ -3347,202 +3347,106 @@ const Configurator: React.FC = () => {
           </div>
         </div>
 
-        {/* 단내림이 있을 때 메인구간 사이즈 표시 — 공간 설정 바로 아래 */}
+        {/* 단내림이 있을 때 메인/단내림 구간 사이즈 한 줄 표시 */}
         {spaceInfo.droppedCeiling?.enabled && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
-              <HelpBtn title="메인구간 사이즈" text="단내림이 없는 메인 구간의 실제 사용 가능한 너비와 높이를 표시합니다. 전체 공간 너비에서 단내림 구간 너비를 뺀 값이며, 이격거리가 반영된 순수 내경입니다. 이 영역에 배치되는 가구는 전체 높이를 사용합니다." />
+              <h3 className={styles.sectionTitle}>구간 사이즈</h3>
+              <HelpBtn title="구간 사이즈" text="메인 구간과 단내림 구간의 실제 사용 가능한 너비×높이를 표시합니다. 너비를 직접 입력하면 구간 비율이 조정됩니다." />
             </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
-                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    min="100"
-                    max={(spaceInfo.width || 4800) - 100}
-                    step="10"
-                    defaultValue={(() => {
-                      const dcDefaultW = isFreeMode ? 150 : 900;
-                      const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || dcDefaultW);
-                      if (isFreeMode) return Math.round(mainOuter);
-                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                      const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const internal = pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight;
-                      return Math.round(internal);
-                    })()}
-                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900))}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}`}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                    onBlur={(e) => {
-                      const inputValue = e.target.value;
-                      const totalWidth = spaceInfo.width || 4800;
-                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
-                      const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                      const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
-                      const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? gapLeft + gapMiddle : gapMiddle + gapRight);
-                      const currentMainOuter = totalWidth - currentDroppedWidth;
-                      const currentMainInternal = Math.round(currentMainOuter - gapToAdd);
-                      if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentMainInternal.toString(); return; }
-                      const mainInternal = parseInt(inputValue);
-                      const mainOuter = Math.round(mainInternal + gapToAdd);
-                      const newDroppedWidth = totalWidth - mainOuter;
-                      if (newDroppedWidth < 100) {
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
-                      } else if (newDroppedWidth > totalWidth - 100) {
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
-                      } else {
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
-                      }
-                    }}
-                    className={`${styles.input} ${styles.inputWithUnitField}`}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
+            {/* 메인구간 한 줄 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>메인</span>
+              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                <input
+                  type="text"
+                  defaultValue={(() => {
+                    const dcDefaultW = isFreeMode ? 150 : 900;
+                    const mainOuter = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || dcDefaultW);
+                    if (isFreeMode) return Math.round(mainOuter);
+                    const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                    const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                    const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                    const pos = spaceInfo.droppedCeiling?.position || 'right';
+                    return Math.round(pos === 'right' ? mainOuter - gapLeft - gapMiddle : mainOuter - gapMiddle - gapRight);
+                  })()}
+                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900))}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}-${spaceInfo.gapConfig?.middle}`}`}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+                  onBlur={(e) => {
+                    const inputValue = e.target.value;
+                    const totalWidth = spaceInfo.width || 4800;
+                    const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
+                    const pos = spaceInfo.droppedCeiling?.position || 'right';
+                    const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                    const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                    const gapMiddle = spaceInfo.gapConfig?.middle ?? 2;
+                    const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? gapLeft + gapMiddle : gapMiddle + gapRight);
+                    const currentMainOuter = totalWidth - currentDroppedWidth;
+                    const currentMainInternal = Math.round(currentMainOuter - gapToAdd);
+                    if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentMainInternal.toString(); return; }
+                    const mainInternal = parseInt(inputValue);
+                    const mainOuter = Math.round(mainInternal + gapToAdd);
+                    const newDroppedWidth = totalWidth - mainOuter;
+                    if (newDroppedWidth < 100) {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
+                    } else if (newDroppedWidth > totalWidth - 100) {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
+                    } else {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
+                    }
+                  }}
+                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  style={{ textAlign: 'center', fontSize: '12px' }}
+                />
               </div>
-
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
-                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    defaultValue={spaceInfo.height || 2400}
-                    key={`main-height-${spaceInfo.height || 2400}`}
-                    readOnly={isFreeMode}
-                    style={isFreeMode ? { opacity: 0.6, cursor: 'default' } : undefined}
-                    onChange={(e) => { const value = e.target.value; if (value === '' || /^\d+$/.test(value)) { /* local only */ } }}
-                    onBlur={(e) => {
-                      if (isFreeMode) return;
-                      const value = e.target.value;
-                      const totalHeight = spaceInfo.height || 2400;
-                      if (value === '') { e.target.value = totalHeight.toString(); return; }
-                      const numValue = parseInt(value);
-                      const minValue = 1800; const maxValue = 3000;
-                      if (numValue < minValue) { e.target.value = minValue.toString(); handleSpaceInfoUpdate({ height: minValue }); }
-                      else if (numValue > maxValue) { e.target.value = maxValue.toString(); handleSpaceInfoUpdate({ height: maxValue }); }
-                      else { handleSpaceInfoUpdate({ height: numValue }); }
-                    }}
-                    onKeyDown={(e) => {
-                      if (isFreeMode) return;
-                      if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
-                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const totalHeight = spaceInfo.height || 2400;
-                        const currentValue = parseInt((e.target as HTMLInputElement).value) || totalHeight;
-                        const minValue = 1800; const maxValue = 3000;
-                        const newValue = e.key === 'ArrowUp' ? Math.min(currentValue + 1, maxValue) : Math.max(currentValue - 1, minValue);
-                        if (newValue !== currentValue) { (e.target as HTMLInputElement).value = newValue.toString(); handleSpaceInfoUpdate({ height: newValue }); }
-                      }
-                    }}
-                    className={`${styles.input} ${styles.inputWithUnitField}`}
-                    placeholder={isFreeMode ? '' : '1800-3000'}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 단내림 구간 사이즈 — 공간 설정 바로 아래 */}
-        {spaceInfo.droppedCeiling?.enabled && (
-          <div className={styles.configSection}>
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'}</h3>
-              <HelpBtn title={isFreeMode ? '커튼박스 구간 사이즈' : '단내림 구간 사이즈'} text={isFreeMode
-                ? "커튼박스 구간의 너비를 표시합니다. 이 영역은 커튼레일 박스가 차지하는 공간으로, 가구가 배치되지 않습니다."
-                : "단내림 구간의 실제 사용 가능한 너비와 높이를 표시합니다. 높이는 전체 높이에서 단 높이를 뺀 값이며, 이 영역에 배치되는 가구는 줄어든 높이에 맞게 자동 조절됩니다."
-              } />
+              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+              <span style={{ fontSize: '12px', color: 'var(--theme-text)', fontWeight: 500 }}>{spaceInfo.height || 2400}</span>
+              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
-                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    min="100"
-                    max={(spaceInfo.width || 4800) - 100}
-                    step="10"
-                    defaultValue={(() => {
-                      const dcDefaultW = isFreeMode ? 150 : 900;
-                      const droppedOuter = spaceInfo.droppedCeiling?.width || dcDefaultW;
-                      if (isFreeMode) return Math.round(droppedOuter);
-                      const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
-                      const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
-                      const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const internal = pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft;
-                      return Math.round(internal);
-                    })()}
-                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}`}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                    onBlur={(e) => {
-                      const inputValue = e.target.value;
-                      const totalWidth = spaceInfo.width || 4800;
-                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
-                      const pos = spaceInfo.droppedCeiling?.position || 'right';
-                      const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5));
-                      if (inputValue === '' || isNaN(parseInt(inputValue))) { const currentInternal = Math.round(currentDroppedWidth - gapToAdd); e.target.value = currentInternal.toString(); return; }
-                      const internalWidth = parseInt(inputValue);
-                      const droppedWidth = Math.round(internalWidth + gapToAdd);
-                      if (droppedWidth < 100) {
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
-                      } else if (droppedWidth > totalWidth - 100) {
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
-                      } else {
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: droppedWidth } });
-                      }
-                    }}
-                    className={`${styles.input} ${styles.inputWithUnitField}`}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
+            {/* 단내림구간 한 줄 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : '단내림'}</span>
+              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+                <input
+                  type="text"
+                  defaultValue={(() => {
+                    const dcDefaultW = isFreeMode ? 150 : 900;
+                    const droppedOuter = spaceInfo.droppedCeiling?.width || dcDefaultW;
+                    if (isFreeMode) return Math.round(droppedOuter);
+                    const gapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+                    const gapRight = spaceInfo.gapConfig?.right ?? 1.5;
+                    const pos = spaceInfo.droppedCeiling?.position || 'right';
+                    return Math.round(pos === 'right' ? droppedOuter - gapRight : droppedOuter - gapLeft);
+                  })()}
+                  key={`dropped-width-${spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900)}-${isFreeMode ? 'free' : `${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}`}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+                  onBlur={(e) => {
+                    const inputValue = e.target.value;
+                    const totalWidth = spaceInfo.width || 4800;
+                    const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
+                    const pos = spaceInfo.droppedCeiling?.position || 'right';
+                    const gapToAdd = isFreeMode ? 0 : (pos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5));
+                    if (inputValue === '' || isNaN(parseInt(inputValue))) { const currentInternal = Math.round(currentDroppedWidth - gapToAdd); e.target.value = currentInternal.toString(); return; }
+                    const internalWidth = parseInt(inputValue);
+                    const droppedWidth = Math.round(internalWidth + gapToAdd);
+                    if (droppedWidth < 100) {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
+                    } else if (droppedWidth > totalWidth - 100) {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
+                    } else {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: droppedWidth } });
+                    }
+                  }}
+                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  style={{ textAlign: 'center', fontSize: '12px' }}
+                />
               </div>
-
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
-                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    min="1800"
-                    max="2900"
-                    step="10"
-                    defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-                    key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                    onBlur={(e) => {
-                      const inputValue = e.target.value;
-                      const totalHeight = spaceInfo.height || 2400;
-                      if (isFreeMode) {
-                        const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
-                        if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentCurtainH.toString(); return; }
-                        const newCurtainH = parseInt(inputValue);
-                        const newDropHeight = newCurtainH - totalHeight;
-                        const clampedDrop = Math.max(10, Math.min(500, newDropHeight));
-                        e.target.value = (totalHeight + clampedDrop).toString();
-                        handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: clampedDrop } });
-                      } else {
-                        const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
-                        if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentDroppedHeight.toString(); return; }
-                        const droppedHeight = parseInt(inputValue);
-                        const newDropHeight = totalHeight - droppedHeight;
-                        if (newDropHeight < 100) { e.target.value = (totalHeight - 100).toString(); handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 100 } }); }
-                        else if (newDropHeight > 500) { e.target.value = (totalHeight - 500).toString(); handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 500 } }); }
-                        else { handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDropHeight } }); }
-                      }
-                    }}
-                    className={`${styles.input} ${styles.inputWithUnitField}`}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
+              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+              <span style={{ fontSize: '12px', color: 'var(--theme-text)', fontWeight: 500 }}>{isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}</span>
+              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
             </div>
           </div>
         )}
