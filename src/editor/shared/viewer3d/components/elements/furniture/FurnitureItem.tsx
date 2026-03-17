@@ -2852,6 +2852,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             e.stopPropagation();
             const updateModule = useFurnitureStore.getState().updateModule;
             updateModule(placedModule.id, { isLocked: false });
+          } else if (isEditMode) {
+            // 편집 모드 중 가구 재클릭 → 이동 모드 진입
+            e.stopPropagation();
+            (window as any).__r3fClickHandled = true;
+            window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
+              detail: { moduleId: placedModule.id },
+            }));
           } else {
             // 원클릭으로 편집 팝업 열기 (고스트 활성화)
             onDoubleClick(e, placedModule.id);

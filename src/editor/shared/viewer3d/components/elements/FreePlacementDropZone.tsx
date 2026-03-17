@@ -113,18 +113,33 @@ const FreePlacementDropZone: React.FC = () => {
     setIsMoveMode(false);
   }, [editingFreeModuleId, setIsMoveMode]);
 
-  // 가구 위 클릭으로 배치 확정 이벤트 수신
+  // 가구 위 클릭: 이동 모드 진입 또는 배치 확정
   useEffect(() => {
-    const handler = () => {
+    // 이동 모드 진입 (가구 위 2차 클릭)
+    const enterHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.moduleId && detail.moduleId === editingFreeModuleId && !isMoveMode) {
+        setIsMoveMode(true);
+        setMovingModuleId(detail.moduleId);
+        setIsDraggingPlaced(true);
+        window.dispatchEvent(new CustomEvent('furniture-drag-start'));
+      }
+    };
+    // 배치 확정 (가구 위 3차 클릭)
+    const confirmHandler = () => {
       if (isMoveMode) {
         window.dispatchEvent(new CustomEvent('furniture-drag-end'));
         setIsDraggingPlaced(false);
         setIsMoveMode(false);
       }
     };
-    window.addEventListener('furniture-confirm-placement', handler);
-    return () => window.removeEventListener('furniture-confirm-placement', handler);
-  }, [isMoveMode, setIsMoveMode]);
+    window.addEventListener('furniture-enter-move-mode', enterHandler);
+    window.addEventListener('furniture-confirm-placement', confirmHandler);
+    return () => {
+      window.removeEventListener('furniture-enter-move-mode', enterHandler);
+      window.removeEventListener('furniture-confirm-placement', confirmHandler);
+    };
+  }, [editingFreeModuleId, isMoveMode, setIsMoveMode]);
 
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
