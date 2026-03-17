@@ -778,9 +778,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isFullSurround = originalSpaceInfo.surroundType === 'surround' &&
       originalSpaceInfo.frameConfig?.top === true && originalSpaceInfo.frameConfig?.bottom === true;
     const effectiveTopFrame = perFurnitureTopFrame ?? topFrameHeightValue;
-    const defaultTopGap = isFullSurround ? (effectiveTopFrame + 1.5) : 1.5;
 
-    const topGap = doorTopGap ?? defaultTopGap;
+    // 전체서라운드: doorTopGap(사용자 설정 이격) + 상부프레임 높이
+    // 노서라운드/양쪽서라운드: doorTopGap만 사용
+    const topGap = isFullSurround
+      ? (doorTopGap + effectiveTopFrame)
+      : doorTopGap;
     const bottomGap = doorBottomGap ?? (placementType === 'float' ? floatHeight : 25);
     const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
