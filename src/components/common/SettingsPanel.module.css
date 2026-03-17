@@ -293,6 +293,26 @@ input:checked + .slider:before {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* 액션 버튼 (설정 열기 등) */
+.actionButton {
+  padding: 6px 16px;
+  border: 1px solid var(--theme-border, #d1d5db);
+  border-radius: 8px;
+  background: var(--theme-background-secondary, #f3f4f6);
+  color: var(--theme-text, #374151);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.actionButton:hover {
+  border-color: var(--theme-primary, #10b981);
+  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.1));
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .panel {

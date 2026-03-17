@@ -13,11 +13,12 @@
 
 .modal {
   background: var(--theme-surface, white);
+  border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   width: 420px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px var(--theme-shadow, rgba(0, 0, 0, 0.2));
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -117,18 +118,23 @@
 .input {
   width: 100%;
   padding: 8px 12px;
+  padding-right: 36px;
   border: 1px solid var(--theme-border, #d1d5db);
   border-radius: 8px;
-  background: var(--theme-surface, white);
+  background: var(--theme-background-secondary, #f3f4f6);
   color: var(--theme-text, #374151);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.input:hover {
+  border-color: var(--theme-border-hover, #444444);
 }
 
 .input:focus {
   border-color: var(--theme-primary, #10b981);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(16, 185, 129, 0.1));
 }
 
 .unit {
@@ -177,7 +183,7 @@
 }
 
 .saveButton:hover {
-  opacity: 0.9;
+  background: var(--theme-primary-hover, #059669);
 }
 
 .saveButton:disabled {
@@ -192,9 +198,9 @@
 }
 
 .success {
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-success, #10b981);
 }
 
 .error {
-  color: #ef4444;
+  color: var(--theme-danger, #ef4444);
 }

@@ -62,7 +62,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
                   <span className={styles.settingLabel}>새 디자인 기본값</span>
                   <span className={styles.settingDescription}>새 디자인 생성 시 적용될 공간 설정</span>
                 </div>
-                <button className={styles.segmentButton} style={{ background: 'var(--theme-background-secondary, #f3f4f6)', borderRadius: 8, padding: '6px 14px' }} onClick={() => setShowSpaceDefaults(true)}>
+                <button className={styles.actionButton} onClick={() => setShowSpaceDefaults(true)}>
                   설정
                 </button>
               </div>
