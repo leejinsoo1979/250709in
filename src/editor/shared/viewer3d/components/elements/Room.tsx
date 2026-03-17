@@ -1784,6 +1784,7 @@ const Room: React.FC<RoomProps> = ({
                 color="#ffffff"
                 transparent={true}
                 opacity={0.0}
+                depthWrite={false}
                 side={THREE.DoubleSide}
               />
             </mesh>
