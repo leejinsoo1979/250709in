@@ -1628,10 +1628,11 @@ const FreePlacementDropZone: React.FC = () => {
           }
         }
 
-        // 단내림(stepCeiling) 외벽 쪽 gap — 커튼박스가 없어 단내림이 벽에 직접 인접한 경우
+        // 단내림(stepCeiling) gap 처리
         const hasStep = spaceInfo.stepCeiling?.enabled;
         const stepPosition = spaceInfo.stepCeiling?.position || 'right';
         const stepWidthMm = spaceInfo.stepCeiling?.width || 0;
+        const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
         if (hasStep && stepWidthMm > 0) {
           const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
           const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
@@ -1642,6 +1643,7 @@ const FreePlacementDropZone: React.FC = () => {
           const cbSameSide = hasDropped && droppedPosition === stepPosition;
 
           if (!cbSameSide) {
+            // 커튼박스 없이 단내림만 → 벽 쪽 gap
             if (stepPosition === 'left') {
               const hasLeftWall = isBuiltIn || (isSemiStanding && spaceInfo.wallConfig?.left);
               if (hasLeftWall && gapLeft > 0) {
@@ -1666,6 +1668,30 @@ const FreePlacementDropZone: React.FC = () => {
                   </mesh>
                 );
               }
+            }
+          } else if (middleGap > 0) {
+            // 커튼박스 + 단내림 같은 쪽 → 커튼박스↔단내림 사이 middleGap
+            // 구간순서: 벽 → 커튼박스 → [middleGap] → 단내림 → [middleGap] → 메인
+            // 커튼박스 안쪽 edge = 벽에서 droppedWidth만큼 안쪽
+            const w = middleGap * 0.01;
+            if (stepPosition === 'left') {
+              // 좌측: 벽(-halfW) → 커튼박스(droppedWidth) → [gap] → 단내림
+              const gapCenterX = (-halfW + droppedWidth) * 0.01 + w / 2;
+              boxes.push(
+                <mesh key="gap-cb-sc-left" position={[gapCenterX, stepH / 2, zOffset]}>
+                  <boxGeometry args={[w, stepH, depthThree]} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                </mesh>
+              );
+            } else {
+              // 우측: 단내림 → [gap] → 커튼박스(droppedWidth) ← 벽(halfW)
+              const gapCenterX = (halfW - droppedWidth) * 0.01 - w / 2;
+              boxes.push(
+                <mesh key="gap-cb-sc-right" position={[gapCenterX, stepH / 2, zOffset]}>
+                  <boxGeometry args={[w, stepH, depthThree]} />
+                  <meshBasicMaterial color="#ff0000" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
+                </mesh>
+              );
             }
           }
         }
