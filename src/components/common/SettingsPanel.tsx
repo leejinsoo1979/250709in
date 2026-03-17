@@ -55,7 +55,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
         
         <div className={styles.content}>
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>공간설정 기본값</h3>
+            <h3 className={styles.sectionTitle}>초기설정값 셋팅</h3>
             <div className={styles.settingGroup}>
               <div className={styles.settingItem}>
                 <div className={styles.settingInfo}>
