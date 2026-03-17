@@ -104,6 +104,25 @@ const FreePlacementDropZone: React.FC = () => {
     return mod ? mod.id : null;
   }, [activePopup, placedModules]);
 
+  // editingFreeModuleId가 바뀌면 이동 모드 리셋
+  useEffect(() => {
+    setIsMoveMode(false);
+  }, [editingFreeModuleId]);
+
+  // 2차 클릭 이동 모드 진입 이벤트 리스너
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.moduleId && detail.moduleId === editingFreeModuleId) {
+        setIsMoveMode(true);
+        setMovingModuleId(detail.moduleId);
+        setIsDraggingPlaced(true);
+      }
+    };
+    window.addEventListener('furniture-enter-move-mode', handler);
+    return () => window.removeEventListener('furniture-enter-move-mode', handler);
+  }, [editingFreeModuleId]);
+
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
   const spaceBounds = useMemo(() => getInternalSpaceBoundsX(spaceInfo), [spaceInfo]);
@@ -1394,7 +1413,7 @@ const FreePlacementDropZone: React.FC = () => {
       })()}
 
       {/* 드래그 이동 중인 가구의 실시간 이격거리 가이드 (편집 팝업 시에는 remainingGaps 사용) */}
-      {editingDistanceGuides && isDraggingPlaced && (
+      {editingDistanceGuides && (isDraggingPlaced || isMoveMode) && (
         <>
           {/* 가구 좌우 수직 연장선 */}
           <DynamicLine points={[
@@ -1531,7 +1550,7 @@ const FreePlacementDropZone: React.FC = () => {
         return boxes;
       })()}
 
-      {!isDraggingPlaced && remainingGaps.map((gap, i) => {
+      {!isDraggingPlaced && !isMoveMode && remainingGaps.map((gap, i) => {
         const lineColor = themeColor;
 
         return (

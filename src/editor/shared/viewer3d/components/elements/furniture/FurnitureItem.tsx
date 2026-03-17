@@ -2845,6 +2845,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             e.stopPropagation();
             const updateModule = useFurnitureStore.getState().updateModule;
             updateModule(placedModule.id, { isLocked: false });
+          } else if (isEditMode) {
+            // 편집 모드 중 가구 재클릭 → 이동 모드 전환
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
+              detail: { moduleId: placedModule.id },
+            }));
           } else {
             // 원클릭으로 편집 팝업 열기 (고스트 활성화)
             onDoubleClick(e, placedModule.id);
@@ -3786,10 +3792,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 (window as any).__r3fClickHandled = true;
-                // 이미 편집 모드라면 팝업 닫기
                 if (isEditMode) {
-                  const closeAllPopups = useUIStore.getState().closeAllPopups;
-                  closeAllPopups();
+                  // 편집 모드 중 연필 아이콘 클릭 → 이동 모드 전환
+                  window.dispatchEvent(new CustomEvent('furniture-enter-move-mode', {
+                    detail: { moduleId: placedModule.id },
+                  }));
                 } else {
                   // 편집 모드가 아니면 팝업 열기
                   onDoubleClick(e as any, placedModule.id);
