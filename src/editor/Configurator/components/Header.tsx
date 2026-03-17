@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, User, ChevronDown, Undo, Redo, FileText } from 'lucide-react';
+import { Settings, User, ChevronDown, Undo, Redo, FileText, Sun, Moon } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { RxDashboard } from 'react-icons/rx';
@@ -166,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({
   // UIStore에서 카메라 및 그래픽 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
   const { colors } = useThemeColors();
-  useTheme(); // 테마 컨텍스트 연결 유지
+  const { theme, toggleMode } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -928,6 +928,15 @@ const Header: React.FC<HeaderProps> = ({
             title="설정"
           >
             <Settings size={18} strokeWidth={1.8} />
+          </button>
+
+          {/* 다크/라이트 모드 토글 */}
+          <button
+            className={styles.settingsButton}
+            onClick={toggleMode}
+            title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
+          >
+            {theme.mode === 'dark' ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
           </button>
         </div>
       </div>
