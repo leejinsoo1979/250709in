@@ -559,7 +559,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                 {(projectDesignFiles[item.id] || []).length}개 파일
               </div>
             )}
-            {item.spaceSize && (
+            {item.type === 'design' && item.spaceSize && (
               <div className={styles.iconSpaceSize}>
                 {item.spaceSize.width} × {item.spaceSize.depth} × {item.spaceSize.height}
               </div>
