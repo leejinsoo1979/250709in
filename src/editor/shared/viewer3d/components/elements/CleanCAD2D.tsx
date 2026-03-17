@@ -2608,40 +2608,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         {spaceInfo.height - floorFinishHeightMmGlobal}
                       </Text>
 
-                      {/* 우측 단내림 높이 치수선 (우측 벽 바깥, 좌측 치수선과 동일 패턴) */}
-                      {(() => {
-                        const dropHeight = spaceInfo.droppedCeiling!.dropHeight || 200;
-                        const droppedHeight = spaceInfo.height - dropHeight - floorFinishHeightMmGlobal;
-                        const droppedTopY = mmToThreeUnits(spaceInfo.height - dropHeight);
-                        const droppedMidY = (floorFinishYDrop + droppedTopY) / 2;
-                        const rDimX = -leftDimensionX + mmToThreeUnits(spaceInfo.width) + leftOffset;
-                        return (
-                          <>
-                            <NativeLine name="dimension_line"
-                              points={[[rDimX, floorFinishYDrop, 0.002], [rDimX, droppedTopY, 0.002]]}
-                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                            />
-                            <NativeLine name="dimension_line"
-                              points={createArrowHead([rDimX, floorFinishYDrop, 0.002], [rDimX, floorFinishYDrop + 0.05, 0.002])}
-                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                            />
-                            <NativeLine name="dimension_line"
-                              points={createArrowHead([rDimX, droppedTopY, 0.002], [rDimX, droppedTopY - 0.05, 0.002])}
-                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                            />
-                            <Text
-                              renderOrder={1000} depthTest={false}
-                              position={[rDimX + mmToThreeUnits(60), droppedMidY, 0.01]}
-                              fontSize={largeFontSize} color={textColor}
-                              anchorX="center" anchorY="middle"
-                              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                              rotation={[0, 0, -Math.PI / 2]}
-                            >
-                              {droppedHeight}
-                            </Text>
-                          </>
-                        );
-                      })()}
                     </>
                   );
                 })()}
@@ -2836,7 +2802,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 띄워서 배치인지 확인
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-          
+
+          // 우측 단내림이 있으면 단내림 높이를 기준으로 치수 계산
+          const hasRightDrop = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right';
+          const dropHeight = hasRightDrop ? (spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+          const effectiveHeight = spaceInfo.height - dropHeight; // 단내림 구간의 실제 높이
+
           // 상부프레임 = 공간높이 - 받침대 - 맨 오른쪽 가구 높이 (실제 렌더링과 동일)
           const globalTopFrame = frameSize.top ?? 0;
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
@@ -2849,12 +2820,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? (rightmostMod.freeHeight || internalHeight)
             : 0;
           const topFrameHeight = rightmostMod
-            ? Math.max(0, spaceInfo.height - bottomFrameHeight - rightmostFurnitureHeight - floatHeight)
+            ? Math.max(0, effectiveHeight - bottomFrameHeight - rightmostFurnitureHeight - floatHeight)
             : globalTopFrame; // 상부 프레임 높이
           const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
           const cabinetPlacementHeight = rightmostMod
             ? rightmostFurnitureHeight  // 가구가 있으면 가구 높이가 캐비넷 영역
-            : Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0);
+            : Math.max(effectiveHeight - topFrameHeight - bottomFrameHeight - floatHeight, 0);
 
           const floorFinishH = floorFinishHeightMmGlobal; // 바닥마감재 높이 (mm)
           const bottomY = mmToThreeUnits(floatHeight); // 바닥 시작점
@@ -3176,7 +3147,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   depthTest={false}
                   position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), topFrameHeight < 50
                     ? topFrameLineTopY + mmToThreeUnits(30)
-                    : mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), 0.01]}
+                    : (cabinetAreaTopY + topFrameLineTopY) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                   anchorX="center"
@@ -3184,6 +3155,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {topFrameHeight}
+                </Text>
+              </group>
+              )}
+
+              {/* 3-1. 단내림 기둥높이 (우측 단내림이 있을 때만 표시) */}
+              {hasRightDrop && dropHeight > 0 && (
+              <group>
+                <NativeLine name="dimension_line"
+                  points={[[rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                {dropHeight >= 30 && (
+                <>
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, topFrameLineTopY + 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height) - 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                </>
+                )}
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (topFrameLineTopY + mmToThreeUnits(spaceInfo.height)) / 2, 0.01]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {dropHeight}
                 </Text>
               </group>
               )}
@@ -3265,6 +3281,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {hasExtraFurnitureHeight && (
               <Line
                 points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, maxFurnitureTop, 0.001], [extraFurnitureX + mmToThreeUnits(10), maxFurnitureTop, 0.001]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              )}
+              {/* 단내림 상단(=공간 천장) 연장선 — 우측 단내림이 있을 때만 */}
+              {hasRightDrop && dropHeight > 0 && (
+              <Line
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, mmToThreeUnits(spaceInfo.height), 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), mmToThreeUnits(spaceInfo.height), 0.001]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />
