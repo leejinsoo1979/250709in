@@ -3145,9 +3145,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), topFrameHeight < 50
-                    ? topFrameLineTopY + mmToThreeUnits(30)
-                    : (cabinetAreaTopY + topFrameLineTopY) / 2, 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (cabinetAreaTopY + topFrameLineTopY) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                   anchorX="center"
@@ -3159,14 +3157,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
 
-              {/* 3-1. 단내림 기둥높이 (단내림이 있을 때만 표시) — 우측 치수선 옆 별도 열 */}
-              {hasDrop && dropHeight > 0 && (() => {
-                const dropDimX = rightDimensionX + mmToThreeUnits(70); // 기존 우측 치수선 옆에 별도 열
-                const spaceTopY = mmToThreeUnits(spaceInfo.height);
-                return (
+              {/* 3-1. 단내림 기둥높이 (단내림이 있을 때만 표시) — 같은 치수선에 연속 */}
+              {hasDrop && dropHeight > 0 && (
               <group>
                 <NativeLine name="dimension_line"
-                  points={[[dropDimX, topFrameLineTopY, 0.002], [dropDimX, spaceTopY, 0.002]]}
+                  points={[[rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
@@ -3175,14 +3170,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {dropHeight >= 30 && (
                 <>
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([dropDimX, topFrameLineTopY, 0.002], [dropDimX, topFrameLineTopY + 0.03, 0.002])}
+                  points={createArrowHead([rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, topFrameLineTopY + 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
                   depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([dropDimX, spaceTopY, 0.002], [dropDimX, spaceTopY - 0.03, 0.002])}
+                  points={createArrowHead([rightDimensionX, mmToThreeUnits(spaceInfo.height), 0.002], [rightDimensionX, mmToThreeUnits(spaceInfo.height) - 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
@@ -3193,7 +3188,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[dropDimX + mmToThreeUnits(is3DMode ? 30 : 60), (topFrameLineTopY + spaceTopY) / 2, 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), (topFrameLineTopY + mmToThreeUnits(spaceInfo.height)) / 2, 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
                   anchorX="center"
@@ -3204,21 +3199,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 >
                   {dropHeight}
                 </Text>
-                {/* 연장선: topFrameLineTopY → dropDimX */}
-                <Line
-                  points={[[rightDimensionX, topFrameLineTopY, 0.001], [dropDimX + mmToThreeUnits(10), topFrameLineTopY, 0.001]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                {/* 연장선: spaceTopY → dropDimX */}
-                <Line
-                  points={[[rightDimensionX, spaceTopY, 0.001], [dropDimX + mmToThreeUnits(10), spaceTopY, 0.001]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
               </group>
-                );
-              })()}
+              )}
 
               {/* 4. 상부 프레임 이상으로 올라온 가구 높이 */}
               {hasExtraFurnitureHeight && (
