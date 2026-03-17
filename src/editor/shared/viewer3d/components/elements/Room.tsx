@@ -2359,6 +2359,10 @@ const Room: React.FC<RoomProps> = ({
               const bwBotY = isFreePlacement ? ceilingY : droppedCeilingY;
               const bwTopY = isFreePlacement ? droppedCeilingY : ceilingY;
               solidLines.push([bx, bwBotY, z1, bx, bwTopY, z1]);
+              // 자유배치: 경계벽 전체 수직선 (바닥~메인천장) — 내벽 구분선
+              if (isFreePlacement) {
+                solidLines.push([bx, floorY, z1, bx, ceilingY, z1]);
+              }
               // 커튼박스/단내림쪽 천장 수평선 (뒷벽)
               if (isLeft) {
                 solidLines.push([x1, droppedCeilingY, z1, bx, droppedCeilingY, z1]);
@@ -2382,7 +2386,9 @@ const Room: React.FC<RoomProps> = ({
             if (_hasSC) {
               const scCeilingY = ceilingY - _scDropHwf;
 
-              // 단내림 경계벽 수직선 (뒷벽): 메인 천장 → 단내림 천장
+              // 단내림 경계벽 수직선 (뒷벽): 바닥 → 메인 천장 (전체 높이 내벽 구분선)
+              solidLines.push([scBx, floorY, z1, scBx, ceilingY, z1]);
+              // 단내림 경계벽 수직선 (뒷벽): 메인 천장 → 단내림 천장 (단차 표시)
               solidLines.push([scBx, scCeilingY, z1, scBx, ceilingY, z1]);
 
               // 단내림 천장 수평선 (뒷벽): 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
