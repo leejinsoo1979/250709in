@@ -271,7 +271,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, doorsOpen } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore();
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
@@ -280,11 +280,7 @@ const Room: React.FC<RoomProps> = ({
   // 자유배치 모드에서는 프레임 숨김 (사용자가 직접 추가)
   const effectiveShowFrame = isFreePlacement ? false : showFrame;
 
-  // 3D 모드에서 도어가 닫혀있으면 공간 윤곽선 숨김
-  const modulesForDoorCheck = placedModules || placedModulesFromStore || [];
-  const anyModuleHasDoor = modulesForDoorCheck.some((m: any) => m.hasDoor);
-  const doorsAreClosed = anyModuleHasDoor && doorsOpen !== true;
-  const effectiveHideEdges = hideEdges || (viewMode === '3D' && renderMode === 'solid' && doorsAreClosed);
+  // hideEdges: PDF 캡처용 외곽선 숨김 (prop으로 제어)
 
   // 전체서라운드 여부: surround + frameConfig.top/bottom 모두 명시적 true → 상부 프레임이 좌우와 같은 Z축
   const isFullSurround = spaceInfo.surroundType === 'surround' &&
@@ -1474,8 +1470,8 @@ const Room: React.FC<RoomProps> = ({
             ) : null;
           })()}
 
-          {/* 솔리드모드: 천장/바닥-벽 경계선 (테마색상) - 도어 닫힘 시 숨김 */}
-          {viewMode !== '2D' && renderMode === 'solid' && !effectiveHideEdges && (() => {
+          {/* 솔리드모드: 천장/바닥-벽 경계선 (테마색상) */}
+          {viewMode !== '2D' && renderMode === 'solid' && (() => {
             const wc = spaceInfo.wallConfig || { left: true, right: true };
             const hasLW = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wc.left);
@@ -1597,20 +1593,20 @@ const Room: React.FC<RoomProps> = ({
             return (
               <>
                 {lines.length > 0 && (
-                  <lineSegments renderOrder={100}>
+                  <lineSegments renderOrder={0}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[positions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial vertexColors depthTest={false} />
+                    <lineBasicMaterial vertexColors depthTest={true} />
                   </lineSegments>
                 )}
                 {solidThemePositions && (
-                  <lineSegments renderOrder={100}>
+                  <lineSegments renderOrder={0}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={edgeColor} depthTest={false} />
+                    <lineBasicMaterial color={edgeColor} depthTest={true} />
                   </lineSegments>
                 )}
               </>
@@ -1793,8 +1789,8 @@ const Room: React.FC<RoomProps> = ({
             </mesh>
           )}
 
-          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe/도어닫힘에서는 숨김) */}
-          {renderMode === 'solid' && !effectiveHideEdges && (() => {
+          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe에서는 숨김) */}
+          {renderMode === 'solid' && (() => {
             const _hasDC = spaceInfo.droppedCeiling?.enabled;
             const _dcIsLeft = _hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const _dcIsRight = _hasDC && spaceInfo.droppedCeiling?.position === 'right';
@@ -2099,7 +2095,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 바닥 마감재가 있는 경우 - 전체 가구 폭으로 설치 */}
       {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
         <BoxWithEdges
-          hideEdges={effectiveHideEdges}
+          hideEdges={hideEdges}
           isOuterFrame
           args={[width, floorFinishHeight, extendedPanelDepth]}
           position={[xOffset + width / 2, yOffset + floorFinishHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2338,7 +2334,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
-                hideEdges={effectiveHideEdges}
+                hideEdges={hideEdges}
                 isOuterFrame
                 key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
@@ -2381,7 +2377,7 @@ const Room: React.FC<RoomProps> = ({
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
-                  hideEdges={effectiveHideEdges}
+                  hideEdges={hideEdges}
                   isOuterFrame
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
@@ -2472,7 +2468,7 @@ const Room: React.FC<RoomProps> = ({
 // console.log('🎯🎯🎯 [왼쪽 일반 구간 프레임 position]', leftPosition, 'sideFrameCenterY:', sideFrameCenterY, 'adjustedPanelHeight:', adjustedPanelHeight);
         return (!(hasDroppedCeiling && isLeftDropped) ? (
           <BoxWithEdges
-            hideEdges={effectiveHideEdges}
+            hideEdges={hideEdges}
             isOuterFrame
             key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
@@ -2649,7 +2645,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
-                hideEdges={effectiveHideEdges}
+                hideEdges={hideEdges}
                 isOuterFrame
                 key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
@@ -2715,7 +2711,7 @@ const Room: React.FC<RoomProps> = ({
 
         return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
-            hideEdges={effectiveHideEdges}
+            hideEdges={hideEdges}
             isOuterFrame
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
@@ -2863,7 +2859,7 @@ const Room: React.FC<RoomProps> = ({
                   return (
                     <React.Fragment key={`free-top-strip-${group.id}-${mod.id}`}>
                       <BoxWithEdges
-                        hideEdges={effectiveHideEdges}
+                        hideEdges={hideEdges}
                         isOuterFrame
                         name="top-frame"
                         args={topArgs}
@@ -2906,7 +2902,7 @@ const Room: React.FC<RoomProps> = ({
                   const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
                     <>
-                      <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
+                      <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
                         args={epArgs} position={epPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                       {isLeftHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
@@ -2924,9 +2920,9 @@ const Room: React.FC<RoomProps> = ({
                 const frontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
                 return (
                   <>
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
                       args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
                       args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isLeftHighlighted && (
                       <>
@@ -2959,7 +2955,7 @@ const Room: React.FC<RoomProps> = ({
                   const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
                     <>
-                      <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
+                      <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
                         args={epArgs} position={epPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                       {isRightHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
@@ -2977,9 +2973,9 @@ const Room: React.FC<RoomProps> = ({
                 const rFrontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
                 return (
                   <>
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
                       args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
                       args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isRightHighlighted && (
                       <>
@@ -3024,11 +3020,11 @@ const Room: React.FC<RoomProps> = ({
 
                 return (
                   <group key={`free-middle-surround-${idx}`}>
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key={`free-mid-lside-${idx}`} name={`middle-surround-left-side-${idx}`}
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key={`free-mid-lside-${idx}`} name={`middle-surround-left-side-${idx}`}
                       args={mLSideArgs} position={mLSidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key={`free-mid-rside-${idx}`} name={`middle-surround-right-side-${idx}`}
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key={`free-mid-rside-${idx}`} name={`middle-surround-right-side-${idx}`}
                       args={mRSideArgs} position={mRSidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame key={`free-mid-front-${idx}`} name={`middle-surround-front-${idx}`}
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame key={`free-mid-front-${idx}`} name={`middle-surround-front-${idx}`}
                       args={mFrontArgs} position={mFrontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isMiddleHighlighted && (
                       <>
@@ -3087,9 +3083,9 @@ const Room: React.FC<RoomProps> = ({
 
                 return (
                   <group key="curtain-box-finish">
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame name="curtain-box-front"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-front"
                       args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={effectiveHideEdges} isOuterFrame name="curtain-box-side"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-side"
                       args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isCBHighlighted && (
                       <>
@@ -3173,7 +3169,7 @@ const Room: React.FC<RoomProps> = ({
 
               return (
                 <BoxWithEdges
-                  hideEdges={effectiveHideEdges}
+                  hideEdges={hideEdges}
                   isOuterFrame
                   name="top-frame"
                   args={[
@@ -3323,7 +3319,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시 */}
                   {showDroppedFrame && (
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       isOuterFrame
                       args={[
                         droppedFrameWidth,
@@ -3346,7 +3342,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 일반 영역 상부 프레임 - 측면뷰에서 일반 구간 선택시만 표시 */}
                   {showNormalFrame && (
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       isOuterFrame
                       args={[
                         normalFrameWidth,
@@ -3426,7 +3422,7 @@ const Room: React.FC<RoomProps> = ({
             if (frameSegments.length === 0) {
               return (
                 <BoxWithEdges
-                  hideEdges={effectiveHideEdges}
+                  hideEdges={hideEdges}
                   isOuterFrame
                   args={[
                     frameWidth, // 노서라운드 모드에서는 전체 너비 사용
@@ -3464,7 +3460,7 @@ const Room: React.FC<RoomProps> = ({
 
               return (
                 <BoxWithEdges
-                  hideEdges={effectiveHideEdges}
+                  hideEdges={hideEdges}
                   isOuterFrame
                   key={`top-frame-segment-${index}`}
                   args={[
@@ -3530,7 +3526,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
                 >
                   <BoxWithEdges
-                    hideEdges={effectiveHideEdges}
+                    hideEdges={hideEdges}
                     args={[
                       adjustedSubFrameWidth, // 엔드패널이 있으면 조정된 너비 사용
                       mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
@@ -3604,7 +3600,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
                 >
                   <BoxWithEdges
-                    hideEdges={effectiveHideEdges}
+                    hideEdges={hideEdges}
                     args={[
                       finalPanelWidth,
                       mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
@@ -3631,7 +3627,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
               >
                 <BoxWithEdges
-                  hideEdges={effectiveHideEdges}
+                  hideEdges={hideEdges}
                   args={[
                     segment.width,
                     mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
@@ -3683,7 +3679,7 @@ const Room: React.FC<RoomProps> = ({
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       key={`left-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -3705,7 +3701,7 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                   >
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       key={`left-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameThickness.left,
@@ -3737,7 +3733,7 @@ const Room: React.FC<RoomProps> = ({
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       key={`left-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -3789,7 +3785,7 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                   >
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameThickness.right,
@@ -3813,7 +3809,7 @@ const Room: React.FC<RoomProps> = ({
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -3845,7 +3841,7 @@ const Room: React.FC<RoomProps> = ({
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       key={`right-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -3927,7 +3923,7 @@ const Room: React.FC<RoomProps> = ({
                   return (
                     <React.Fragment key={`free-base-strip-${group.id}-${mod.id}`}>
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       isOuterFrame
                       name="base-frame"
                       args={baseArgs}
@@ -4046,7 +4042,7 @@ const Room: React.FC<RoomProps> = ({
 
                   return (
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       isOuterFrame
                       key={`base-frame-zone-${zoneIndex}`}
                       name="base-frame"
@@ -4129,7 +4125,7 @@ const Room: React.FC<RoomProps> = ({
                 if (frameSegments.length === 0) {
                   return (
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       isOuterFrame
                       key={`base-frame-zone-${zoneIndex}`}
                       args={[
@@ -4171,7 +4167,7 @@ const Room: React.FC<RoomProps> = ({
 
                   return (
                     <BoxWithEdges
-                      hideEdges={effectiveHideEdges}
+                      hideEdges={hideEdges}
                       isOuterFrame
                       key={`base-frame-zone-${zoneIndex}-segment-${segmentIndex}`}
                       args={[
