@@ -2608,26 +2608,53 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         {spaceInfo.height - floorFinishHeightMmGlobal}
                       </Text>
 
-                      {/* 우측 단내림 높이 치수선 (단내림 구간 내부 중앙) */}
+                      {/* 우측 단내림 높이 치수선 (우측 벽 바깥) */}
                       {(() => {
                         const dropHeight = spaceInfo.droppedCeiling!.dropHeight || 200;
                         const droppedHeight = spaceInfo.height - dropHeight;
-                        const droppedTop = mmToThreeUnits(droppedHeight);
-                        const droppedMid = droppedTop / 2;
-                        // 단내림 구간 중앙 X
-                        const droppedWidth = spaceInfo.droppedCeiling!.width || 900;
-                        const droppedCenterX = mmToThreeUnits(spaceInfo.width - droppedWidth / 2) + leftOffset;
+                        const droppedTopY = mmToThreeUnits(droppedHeight);
+                        const droppedMidY = (floorFinishYDrop + droppedTopY) / 2;
+                        const rightWallX = mmToThreeUnits(spaceInfo.width) + leftOffset;
+                        const dimX = rightWallX + mmToThreeUnits(200);
                         return (
-                          <Text
-                            renderOrder={1000} depthTest={false}
-                            position={[droppedCenterX, droppedMid, 0.01]}
-                            fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
-                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                            rotation={[0, 0, -Math.PI / 2]}
-                          >
-                            {droppedHeight}
-                          </Text>
+                          <>
+                            {/* 치수선 */}
+                            <NativeLine name="dimension_line"
+                              points={[[dimX, floorFinishYDrop, 0.002], [dimX, droppedTopY, 0.002]]}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 하단 화살표 */}
+                            <NativeLine name="dimension_line"
+                              points={createArrowHead([dimX, floorFinishYDrop, 0.002], [dimX, floorFinishYDrop + 0.05, 0.002])}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 상단 화살표 */}
+                            <NativeLine name="dimension_line"
+                              points={createArrowHead([dimX, droppedTopY, 0.002], [dimX, droppedTopY - 0.05, 0.002])}
+                              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 연장선 - 단내림 상단 */}
+                            <NativeLine name="dimension_line"
+                              points={[[rightWallX, droppedTopY, 0.001], [dimX + mmToThreeUnits(10), droppedTopY, 0.001]]}
+                              color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 연장선 - 바닥 */}
+                            <NativeLine name="dimension_line"
+                              points={[[rightWallX, floorFinishYDrop, 0.001], [dimX + mmToThreeUnits(10), floorFinishYDrop, 0.001]]}
+                              color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 단내림 높이 텍스트 */}
+                            <Text
+                              renderOrder={1000} depthTest={false}
+                              position={[dimX + mmToThreeUnits(60), droppedMidY, 0.01]}
+                              fontSize={largeFontSize} color={textColor}
+                              anchorX="center" anchorY="middle"
+                              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                              rotation={[0, 0, -Math.PI / 2]}
+                            >
+                              {droppedHeight - floorFinishHeightMmGlobal}
+                            </Text>
+                          </>
                         );
                       })()}
                     </>
