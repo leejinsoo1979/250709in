@@ -13,6 +13,10 @@ import {
   detectDroppedZone,
   getModuleCategory,
   FurnitureBoundsX,
+  getZonePlacementBounds,
+  detectHoverZoneType,
+  getZoneRemainingWidth,
+  calculateOptimalFurnitureWidth,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import BoxModule from '../modules/BoxModule';
@@ -68,6 +72,7 @@ const FreePlacementDropZone: React.FC = () => {
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
   const [isColliding, setIsColliding] = useState(false);
   const [isSnapped, setIsSnapped] = useState(false);
+  const [hoverZoneWidth, setHoverZoneWidth] = useState<number | null>(null);
   const planeRef = useRef<THREE.Mesh>(null);
 
   // 배치된 가구 이동 상태
@@ -144,6 +149,17 @@ const FreePlacementDropZone: React.FC = () => {
   // 내부 공간 계산
   const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
   const spaceBounds = useMemo(() => getInternalSpaceBoundsX(spaceInfo), [spaceInfo]);
+
+  // 구간별 배치가능 범위 (메인/단내림/커튼박스)
+  const zonePlacementBounds = useMemo(() => {
+    if (!isFreePlacement) return [];
+    return getZonePlacementBounds(spaceInfo);
+  }, [spaceInfo, isFreePlacement]);
+
+  // 선택된 가구가 듀얼인지 감지
+  const isSelectedDual = useMemo(() => {
+    return selectedFurnitureId?.includes('dual-') || false;
+  }, [selectedFurnitureId]);
 
   // 자유배치 모듈 및 정렬된 bounds 캐싱 (드래그 중 반복 계산 방지)
   const freeModules = useMemo(() => placedModules.filter(m => m.isFreePlacement), [placedModules]);
@@ -340,7 +356,7 @@ const FreePlacementDropZone: React.FC = () => {
     return baseModule;
   }, [selectedFurnitureId, internalSpace, spaceInfo, pendingPlacement, lastCustomDimensions, maxRemainingWidth]);
 
-  // 활성 가구 치수
+  // 활성 가구 치수 (기본값 — zone 최적화 전)
   const activeDimensions = useMemo(() => {
     if (!activeModuleData) return null;
     return {
@@ -349,6 +365,13 @@ const FreePlacementDropZone: React.FC = () => {
       depth: activeModuleData.dimensions.depth,
     };
   }, [activeModuleData]);
+
+  // 구간 최적화 적용된 치수 (고스트/배치/충돌에 사용)
+  const effectiveDimensions = useMemo(() => {
+    if (!activeDimensions) return null;
+    if (hoverZoneWidth === null) return activeDimensions;
+    return { ...activeDimensions, width: hoverZoneWidth };
+  }, [activeDimensions, hoverZoneWidth]);
 
   // 활성 카테고리
   const activeCategory = useMemo(() => {
@@ -374,6 +397,27 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 충돌 체크 + hover 상태 업데이트 (스냅 포함)
   const updateHoverState = useCallback((xMm: number, widthMm: number, category: string) => {
+    // ── 구간별 최적 너비 계산 ──
+    // 사용자 지정 너비(커스텀 가구/lastCustomDimensions/pendingPlacement)가 있으면 zone 최적화 스킵
+    const dimKey = selectedFurnitureId ? getCustomDimensionKey(selectedFurnitureId) : '';
+    const hasUserSetWidth = !!(lastCustomDimensions[dimKey]?.width) || !!pendingPlacement;
+    if (hasUserSetWidth || zonePlacementBounds.length === 0) {
+      setHoverZoneWidth(null);
+    } else {
+      const hoverZone = detectHoverZoneType(xMm, spaceInfo);
+      const zoneInfo = zonePlacementBounds.find(z => z.zone === hoverZone);
+      if (zoneInfo) {
+        const zoneRemaining = getZoneRemainingWidth(zoneInfo, freeModules);
+        let effectiveWidth = calculateOptimalFurnitureWidth(zoneRemaining, isSelectedDual);
+        effectiveWidth = Math.max(200, effectiveWidth);
+        setHoverZoneWidth(effectiveWidth);
+        // 최적화된 너비로 업데이트
+        widthMm = effectiveWidth;
+      } else {
+        setHoverZoneWidth(null);
+      }
+    }
+
     let clampedX = clampToSpaceBoundsX(xMm, widthMm, spaceInfo);
     const halfWidth = widthMm / 2;
     const { startX, endX } = spaceBounds;
@@ -479,7 +523,7 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     setHoverXmm(clampedX);
-  }, [spaceInfo, placedModules, spaceBounds]);
+  }, [spaceInfo, placedModules, spaceBounds, zonePlacementBounds, freeModules, isSelectedDual, selectedFurnitureId, lastCustomDimensions, pendingPlacement]);
 
   // 배치 실행 공통 함수 — 성공 시 배치된 모듈 ID 반환, 실패 시 null
   const executePlacement = useCallback((moduleId: string, xMm: number, dims: { width: number; height: number; depth: number }, modData: any, skipCollision?: boolean): string | null => {
@@ -523,7 +567,7 @@ const FreePlacementDropZone: React.FC = () => {
   // R3F onClick - 클릭하면 즉시 배치, 배치 모드가 아니면 선택 해제
   const handleClick = useCallback(
     (e: any) => {
-      if (!activeModuleId || !activeModuleData || !activeDimensions || hoverXmm === null || isColliding) {
+      if (!activeModuleId || !activeModuleData || !effectiveDimensions || hoverXmm === null || isColliding) {
         // 배치 모드가 아닌 경우: 허공 클릭 시 선택 해제 및 팝업 닫기
         e.stopPropagation();
         (window as any).__r3fClickHandled = true; // HTML레벨 deselect 중복 방지
@@ -534,7 +578,7 @@ const FreePlacementDropZone: React.FC = () => {
       }
       e.stopPropagation();
       const isDesignMode = useUIStore.getState().isLayoutBuilderOpen;
-      const placedId = executePlacement(activeModuleId, hoverXmm, activeDimensions, activeModuleData, isSnapped);
+      const placedId = executePlacement(activeModuleId, hoverXmm, effectiveDimensions, activeModuleData, isSnapped);
       if (placedId) {
         // 배치 성공 후 배치 모드 해제 (고스트 제거)
         useFurnitureStore.getState().setFurniturePlacementMode(false);
@@ -558,42 +602,42 @@ const FreePlacementDropZone: React.FC = () => {
         }
       }
     },
-    [activeModuleId, activeModuleData, activeDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
+    [activeModuleId, activeModuleData, effectiveDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
   );
 
   // 단내림 구간 감지 → 고스트 높이 조정
   const ghostDroppedZone = useMemo(() => {
     const hasAnyDropZone = spaceInfo.droppedCeiling?.enabled ||
       (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled);
-    if (hoverXmm === null || !activeDimensions || !hasAnyDropZone) {
+    if (hoverXmm === null || !effectiveDimensions || !hasAnyDropZone) {
       return { zone: 'normal' as const, droppedInternalHeight: undefined };
     }
-    const result = detectDroppedZone(hoverXmm, spaceInfo, activeDimensions.width);
+    const result = detectDroppedZone(hoverXmm, spaceInfo, effectiveDimensions.width);
     return result;
-  }, [hoverXmm, spaceInfo, activeDimensions]);
+  }, [hoverXmm, spaceInfo, effectiveDimensions]);
 
   const ghostEffectiveHeight = useMemo(() => {
-    if (!activeDimensions) return 0;
+    if (!effectiveDimensions) return 0;
     // full 카테고리만 단내림 높이 적용 (placeFurnitureFree와 동일 로직)
     if (ghostDroppedZone.zone === 'dropped' && ghostDroppedZone.droppedInternalHeight !== undefined
       && activeCategory === 'full') {
       return ghostDroppedZone.droppedInternalHeight;
     }
-    return activeDimensions.height;
-  }, [activeDimensions, ghostDroppedZone, activeCategory]);
+    return effectiveDimensions.height;
+  }, [effectiveDimensions, ghostDroppedZone, activeCategory]);
 
   // 고스트 Y 위치 계산 — calculateYPosition과 동일 로직 사용
   const ghostYThree = useMemo(() => {
-    if (!activeDimensions) return 0;
+    if (!effectiveDimensions) return 0;
     return calculateYPosition(activeCategory, ghostEffectiveHeight, spaceInfo);
-  }, [activeDimensions, activeCategory, spaceInfo, ghostEffectiveHeight]);
+  }, [effectiveDimensions, activeCategory, spaceInfo, ghostEffectiveHeight]);
 
   // 고스트 이동 중 실시간 이격거리 계산 (좌/우 벽 또는 가구와의 거리)
   const ghostDistanceGuides = useMemo(() => {
-    if (hoverXmm === null || !activeDimensions) return null;
+    if (hoverXmm === null || !effectiveDimensions) return null;
 
-    const ghostLeft = hoverXmm - activeDimensions.width / 2;
-    const ghostRight = hoverXmm + activeDimensions.width / 2;
+    const ghostLeft = hoverXmm - effectiveDimensions.width / 2;
+    const ghostRight = hoverXmm + effectiveDimensions.width / 2;
     const { startX, endX } = spaceBounds;
 
     // 배치된 가구의 X범위 (캐싱된 값 사용)
@@ -621,7 +665,7 @@ const FreePlacementDropZone: React.FC = () => {
     const guideY = ghostYThree;
 
     return { leftObstacle, rightObstacle, leftDistance, rightDistance, ghostLeft, ghostRight, guideY };
-  }, [hoverXmm, activeDimensions, spaceBounds, placedModules, ghostYThree]);
+  }, [hoverXmm, effectiveDimensions, spaceBounds, placedModules, ghostYThree]);
 
   // 편집/이동 중인 가구의 실시간 이격거리 계산
   const editingDistanceGuides = useMemo(() => {
@@ -681,7 +725,7 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 고스트 Z 위치 계산 (SlotDropZonesSimple과 동일한 로직)
   const ghostZPosition = useMemo(() => {
-    if (!activeDimensions) return 0;
+    if (!effectiveDimensions) return 0;
     const panelDepthMm = spaceInfo.depth || 600;
     const panelDepth = panelDepthMm * 0.01;
     const furnitureDepthMm = Math.min(panelDepthMm, 600);
@@ -689,9 +733,9 @@ const FreePlacementDropZone: React.FC = () => {
     const zOffset = -panelDepth / 2;
     const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
     const doorThickness = 20 * 0.01;
-    const previewDepth = activeDimensions.depth * 0.01;
+    const previewDepth = effectiveDimensions.depth * 0.01;
     return furnitureZOffset + furnitureDepth / 2 - doorThickness - previewDepth / 2;
-  }, [activeDimensions, spaceInfo.depth]);
+  }, [effectiveDimensions, spaceInfo.depth]);
 
   // 치수선 Z 좌표 (가구 앞면에 표시)
   const guideZPosition = useMemo(() => {
@@ -706,9 +750,9 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 고스트 위치
   const ghostPosition = useMemo(() => {
-    if (hoverXmm === null || !activeDimensions) return null;
+    if (hoverXmm === null || !effectiveDimensions) return null;
     return { x: hoverXmm * 0.01, y: ghostYThree, z: ghostZPosition };
-  }, [hoverXmm, activeDimensions, ghostYThree, ghostZPosition]);
+  }, [hoverXmm, effectiveDimensions, ghostYThree, ghostZPosition]);
 
   // 남은 공간 사이즈 계산 (배치된 가구 사이의 갭)
   type GapInfo = {
@@ -1253,7 +1297,7 @@ const FreePlacementDropZone: React.FC = () => {
   }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate, isMoveMode]);
 
   // 렌더링 조건: 자유배치 모드가 아니면 null
-  const hasActiveModule = !!(activeModuleId && activeDimensions);
+  const hasActiveModule = !!(activeModuleId && effectiveDimensions);
   if (!isFreePlacement) return null;
 
   return (
@@ -1273,15 +1317,15 @@ const FreePlacementDropZone: React.FC = () => {
       )}
 
       {/* 고스트 프리뷰 - 실제 BoxModule 사용 */}
-      {ghostPosition && activeDimensions && ghostModuleData && !isColliding && (
+      {ghostPosition && effectiveDimensions && ghostModuleData && !isColliding && (
         <group position={[ghostPosition.x, ghostPosition.y, ghostPosition.z]}>
           <BoxModule
             moduleData={ghostModuleData}
             color={theme.color}
             isDragging={true}
             hasDoor={false}
-            customDepth={activeDimensions.depth}
-            adjustedWidth={activeDimensions.width}
+            customDepth={effectiveDimensions.depth}
+            adjustedWidth={effectiveDimensions.width}
             internalHeight={ghostEffectiveHeight}
             spaceInfo={spaceInfo}
             customConfig={pendingCustomConfig || (pendingPlacement?.customConfig) || undefined}
@@ -1290,14 +1334,14 @@ const FreePlacementDropZone: React.FC = () => {
       )}
 
       {/* 충돌 시 빨간 박스 고스트 */}
-      {ghostPosition && activeDimensions && isColliding && (
+      {ghostPosition && effectiveDimensions && isColliding && (
         <group position={[ghostPosition.x, ghostPosition.y, ghostPosition.z]}>
           <mesh>
             <boxGeometry
               args={[
-                activeDimensions.width * 0.01,
+                effectiveDimensions.width * 0.01,
                 ghostEffectiveHeight * 0.01,
-                activeDimensions.depth * 0.01,
+                effectiveDimensions.depth * 0.01,
               ]}
             />
             <meshBasicMaterial
@@ -1311,9 +1355,9 @@ const FreePlacementDropZone: React.FC = () => {
             <edgesGeometry
               args={[
                 new THREE.BoxGeometry(
-                  activeDimensions.width * 0.01,
+                  effectiveDimensions.width * 0.01,
                   ghostEffectiveHeight * 0.01,
-                  activeDimensions.depth * 0.01
+                  effectiveDimensions.depth * 0.01
                 ),
               ]}
             />
@@ -1323,7 +1367,7 @@ const FreePlacementDropZone: React.FC = () => {
       )}
 
       {/* 실시간 이격거리 가이드 (고스트 이동 중) */}
-      {ghostDistanceGuides && ghostPosition && activeDimensions && !isColliding && (
+      {ghostDistanceGuides && ghostPosition && effectiveDimensions && !isColliding && (
         <>
           {/* 왼쪽 이격거리 */}
           {ghostDistanceGuides.leftDistance > 2 && (
@@ -1396,11 +1440,11 @@ const FreePlacementDropZone: React.FC = () => {
       )}
 
       {/* 고스트 가구 너비 치수 (상단 CAD 스타일) + 전체 공간 폭 치수 */}
-      {ghostPosition && activeDimensions && !isColliding && (() => {
+      {ghostPosition && effectiveDimensions && !isColliding && (() => {
         const slotDimY = spaceInfo.height * 0.01 + 120 * 0.01;
         const topDimY = spaceInfo.height * 0.01 + 120 * 0.01 * 3; // 전체 폭 치수선 Y (3단)
-        const ghostLeftX = ghostPosition.x - (activeDimensions.width * 0.01) / 2;
-        const ghostRightX = ghostPosition.x + (activeDimensions.width * 0.01) / 2;
+        const ghostLeftX = ghostPosition.x - (effectiveDimensions.width * 0.01) / 2;
+        const ghostRightX = ghostPosition.x + (effectiveDimensions.width * 0.01) / 2;
         const ghostTopY = ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2;
         const spaceLeftX = -(spaceInfo.width * 0.01) / 2;
         const spaceRightX = (spaceInfo.width * 0.01) / 2;
@@ -1427,7 +1471,7 @@ const FreePlacementDropZone: React.FC = () => {
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
               }}>
-                {activeDimensions.width}mm
+                {effectiveDimensions.width}mm
               </div>
             </Html>
 
