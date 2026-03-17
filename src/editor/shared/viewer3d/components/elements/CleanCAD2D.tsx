@@ -1647,8 +1647,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
 
-                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 — 자유배치에서는 숨김 (슬롯 개념 없음) ===== */}
-                {!isFreePlacement && (<>
+                {/* ===== 3단: 슬롯 합계 너비 (실배치 공간) 치수선 ===== */}
+                {(<>
                 {/* 메인 구간 슬롯 합계 치수선 */}
                 <Line
                   points={[[mainStartX, slotTotalDimensionY, 0.002], [mainEndX, slotTotalDimensionY, 0.002]]}
