@@ -1670,7 +1670,7 @@ const FreePlacementDropZone: React.FC = () => {
                       handleGapLabelClick(i, gap.width);
                     }}
                   >
-                    {gap.width}mm
+                    {gap.width}
                   </div>
                 </div>
               </Html>
