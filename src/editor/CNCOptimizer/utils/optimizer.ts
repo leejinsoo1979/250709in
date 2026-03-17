@@ -368,11 +368,12 @@ export const optimizePanelsMultiple = async (
   const rectangles: Rect[] = [];
   const panelMap = new Map<string, Panel>();
 
-  // 백패널/좌우측판 판별 (서랍 측판 제외) — 회전 금지 대상
-  const isSidePanelOrBackPanel = (name: string | undefined): boolean => {
+  // 좌우측판 판별 (서랍 측판 제외) — 회전 금지 대상
+  // 백패널은 회전 가능 (같은 시트에 효율적으로 배치하기 위해)
+  const isSidePanel = (name: string | undefined): boolean => {
     if (!name) return false;
     if (name.includes('서랍')) return false;
-    return name.includes('좌측판') || name.includes('우측판') || name.includes('백패널');
+    return name.includes('좌측판') || name.includes('우측판');
   };
 
   console.log('[OPTIMIZER] Input panels count:', panels.length);
@@ -385,8 +386,8 @@ export const optimizePanelsMultiple = async (
     for (let i = 0; i < panel.quantity; i++) {
       const id = `${panel.id}-${i}`;
       const canRotate = panel.grain && panel.grain !== 'NONE' ? false : (panel.canRotate !== false);
-      // 백패널/좌우측판: 회전 금지 (height=2440방향, width=1220방향 그대로 유지)
-      const noRotatePanel = isSidePanelOrBackPanel(panel.name);
+      // 좌우측판만 회전 금지 (보링 방향 유지), 백패널은 회전 허용
+      const noRotatePanel = isSidePanel(panel.name);
       rectangles.push({
         id,
         width: panel.width,

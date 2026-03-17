@@ -673,8 +673,9 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
         if (dstIdx === srcIdx || removedBins.has(dstIdx)) continue;
         const dstBin = bins[dstIdx];
 
-        // 회전 금지 — 백패널 등은 높이가 항상 L방향(2440)에 있어야 함
-        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, true);
+        // canRotate=false인 패널(좌우측판)만 회전 금지, 백패널 등은 회전 허용
+        const noRotate = panel.canRotate === false;
+        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, noRotate);
         if (pos) {
           const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
           dstBin.panels.push(movedPanel);
