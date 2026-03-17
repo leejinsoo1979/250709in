@@ -16,8 +16,8 @@ import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateSh
  * - 서랍 바닥/MDF 패널: NONE (결 무관, 회전 허용)
  */
 function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' {
-  // MDF 재질 패널 (결 방향 없음)
-  if (panelName.includes('백패널')) return 'VERTICAL';
+  // MDF 재질 패널 (결 방향 없음, 회전 허용)
+  if (panelName.includes('백패널')) return 'NONE';
   if (panelName.includes('바닥') && panelName.includes('서랍')) return 'NONE'; // 서랍 바닥 (MDF)
 
   // 서랍 부품
