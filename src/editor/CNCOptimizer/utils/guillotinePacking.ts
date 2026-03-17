@@ -606,9 +606,11 @@ export function packGuillotine(
     currentBin++;
   }
 
-  // 후처리 비활성화: backfillBins가 패널을 개별 이동하면서
-  // 가구 그룹핑, 스트립 방향 일관성, 회전 상태를 깨뜨림
-  // 패킹 자체(packStrips + 잔여/하단 공간 활용)로 충분한 효율 달성
+  // === 후처리: 저효율 시트의 패널을 다른 시트 빈 공간에 합치기 ===
+  // 회전 금지(noRotate) 모드로 패널 원본 rotated 상태 유지
+  if (bins.length > 1) {
+    backfillBins(bins, binWidth, binHeight, kerf);
+  }
 
   return bins;
 }
