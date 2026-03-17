@@ -160,12 +160,25 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
-    // 편집 모드에서는 반투명 고스트 (원래 색상 유지, 선반/서랍은 보이도록)
+    // 편집 모드에서는 드래그와 동일한 고스트 (테마색 + 반투명, 선반/서랍은 보이도록)
     if (isEditMode && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const editGhostMaterial = baseMaterial.clone();
       editGhostMaterial.transparent = true;
-      editGhostMaterial.opacity = 0.5;
-      editGhostMaterial.depthWrite = false;
+      editGhostMaterial.opacity = 0.6;
+
+      // 테마 색상 가져오기
+      const getThemeColor = () => {
+        if (typeof window !== "undefined") {
+          const computedStyle = getComputedStyle(document.documentElement);
+          const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
+          if (primaryColor) {
+            return primaryColor;
+          }
+        }
+        return "#10b981";
+      };
+
+      editGhostMaterial.color = new THREE.Color(getThemeColor());
       editGhostMaterial.needsUpdate = true;
       return editGhostMaterial;
     }
