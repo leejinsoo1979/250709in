@@ -1329,23 +1329,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         return (
           <group>
-            {/* 치수선 - zoneDimensionY (보라색 슬롯 치수와 같은 높이) */}
+            {/* 치수선 - columnDimensionY (보라색 슬롯 치수와 같은 높이) */}
             <Line
-              points={[[leftOffset, zoneDimensionY, 0.002], [leftOffset + mmToThreeUnits(leftValue), zoneDimensionY, 0.002]]}
+              points={[[leftOffset, columnDimensionY, 0.002], [leftOffset + mmToThreeUnits(leftValue), columnDimensionY, 0.002]]}
               color={dimensionColor}
               lineWidth={1}
             />
 
             {/* 좌측 화살표 */}
             <Line
-              points={createArrowHead([leftOffset, zoneDimensionY, 0.002], [leftOffset + 0.02, zoneDimensionY, 0.002])}
+              points={createArrowHead([leftOffset, columnDimensionY, 0.002], [leftOffset + 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
             />
 
             {/* 우측 화살표 */}
             <Line
-              points={createArrowHead([leftOffset + mmToThreeUnits(leftValue), zoneDimensionY, 0.002], [leftOffset + mmToThreeUnits(leftValue) - 0.02, zoneDimensionY, 0.002])}
+              points={createArrowHead([leftOffset + mmToThreeUnits(leftValue), columnDimensionY, 0.002], [leftOffset + mmToThreeUnits(leftValue) - 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
             />
@@ -1353,7 +1353,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasLeftWall && editingGapSide === 'left' ? (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, zoneDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, columnDimensionY - mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1376,7 +1376,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, zoneDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, columnDimensionY - mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
                 zIndexRange={[9999, 10000]}
@@ -1402,12 +1402,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 */}
             <Line
-              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, zoneDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, columnDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
             <Line
-              points={[[leftOffset + mmToThreeUnits(leftValue), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(leftValue), zoneDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftOffset + mmToThreeUnits(leftValue), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(leftValue), columnDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
@@ -1446,9 +1446,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         return (
           <group>
-            {/* 치수선 - zoneDimensionY (보라색 슬롯 치수와 같은 높이) */}
+            {/* 치수선 - columnDimensionY (보라색 슬롯 치수와 같은 높이) */}
             <NativeLine name="dimension_line"
-              points={[[rightEdge - mmToThreeUnits(rightValue), zoneDimensionY, 0.002], [rightEdge, zoneDimensionY, 0.002]]}
+              points={[[rightEdge - mmToThreeUnits(rightValue), columnDimensionY, 0.002], [rightEdge, columnDimensionY, 0.002]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -1457,7 +1457,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 좌측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([rightEdge - mmToThreeUnits(rightValue), zoneDimensionY, 0.002], [rightEdge - mmToThreeUnits(rightValue) + 0.02, zoneDimensionY, 0.002])}
+              points={createArrowHead([rightEdge - mmToThreeUnits(rightValue), columnDimensionY, 0.002], [rightEdge - mmToThreeUnits(rightValue) + 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -1466,7 +1466,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 우측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([rightEdge, zoneDimensionY, 0.002], [rightEdge - 0.02, zoneDimensionY, 0.002])}
+              points={createArrowHead([rightEdge, columnDimensionY, 0.002], [rightEdge - 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -1476,7 +1476,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 우측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasRightWall && editingGapSide === 'right' ? (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, zoneDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, columnDimensionY - mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1499,7 +1499,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, zoneDimensionY - mmToThreeUnits(30), 0.01]}
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, columnDimensionY - mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: hasRightWall ? 'auto' : 'none' }}
                 zIndexRange={[9999, 10000]}
@@ -1525,12 +1525,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 */}
             <Line
-              points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), zoneDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), columnDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
             <Line
-              points={[[rightEdge, spaceHeight, 0.001], [rightEdge, zoneDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightEdge, spaceHeight, 0.001], [rightEdge, columnDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
