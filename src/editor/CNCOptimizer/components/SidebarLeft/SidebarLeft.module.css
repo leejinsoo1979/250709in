@@ -1,5 +1,5 @@
 .section {
-  background: white;
+  background: var(--theme-surface);
   border: 1px solid hsl(var(--theme) / 0.15);
   border-radius: 8px;
   overflow: hidden;
@@ -49,7 +49,7 @@
 .sectionHeader h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--theme-text);
   margin: 0;
   flex: 1;
 }
@@ -110,7 +110,7 @@
 
 .tableContainer::-webkit-scrollbar-track,
 .stockTableContainer::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: var(--theme-background-secondary);
   border-radius: 3px;
 }
 
@@ -211,7 +211,7 @@
 .table thead {
   position: sticky;
   top: 0;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary);
   z-index: 1;
 }
 
@@ -219,7 +219,7 @@
 .stockTable thead {
   position: sticky;
   top: 0;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary);
   z-index: 1;
 }
 
@@ -304,7 +304,7 @@
 
 .table td {
   padding: 3px 2px;
-  color: #374151;
+  color: var(--theme-text-secondary);
   vertical-align: middle;
   font-size: 11px;
 }
@@ -312,7 +312,7 @@
 .input {
   width: 100%;
   padding: 3px 6px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--theme-border);
   background: white !important;
   color: #333 !important;
   font-size: 11px;
@@ -340,7 +340,7 @@
 .inputSmall {
   width: 36px;
   padding: 2px 1px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--theme-border);
   background: white !important;
   color: #333 !important;
   font-size: 11px;
@@ -366,7 +366,7 @@
 .inputTiny {
   width: 32px;
   padding: 3px 2px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--theme-border);
   background: white !important;
   color: #333 !important;
   font-size: 11px;
@@ -391,7 +391,7 @@
   width: 100%;
   max-width: 36px;
   padding: 2px 0;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--theme-border);
   background: white !important;
   color: #333 !important;
   font-size: 10px;
@@ -416,7 +416,7 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #666;
+  color: var(--theme-text-muted);
   justify-content: center;
 }
 
@@ -428,7 +428,7 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: #999;
+  color: var(--theme-text-muted);
   cursor: pointer;
   border-radius: 3px;
   transition: all 0.2s;
@@ -445,7 +445,7 @@
 .radioGroup > span {
   font-size: 11px;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text-secondary);
   margin-bottom: 4px;
 }
 
@@ -460,8 +460,8 @@
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
@@ -491,7 +491,7 @@
 
 .radioButton span {
   flex: 1;
-  color: #374151;
+  color: var(--theme-text-secondary);
   transition: all 0.2s;
 }
 
@@ -512,10 +512,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--theme-surface);
   border: 1px solid #d0d0d0;
   border-radius: 3px;
-  color: #999;
+  color: var(--theme-text-muted);
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
@@ -524,9 +524,9 @@
 }
 
 .grainButton:hover {
-  background: #fff;
-  border-color: #999;
-  color: #666;
+  background: var(--theme-surface);
+  border-color: var(--theme-text-muted);
+  color: var(--theme-text-muted);
 }
 
 .grainButton.active {
@@ -546,10 +546,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 3px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -587,7 +587,7 @@
 
 .empty {
   text-align: center;
-  color: #999;
+  color: var(--theme-text-muted);
   font-style: italic;
   padding: 32px 16px;
   font-size: 13px;
@@ -608,7 +608,7 @@
 }
 
 .options::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: var(--theme-background-secondary);
   border-radius: 3px;
 }
 
@@ -637,7 +637,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #333;
+  color: var(--theme-text);
   cursor: pointer;
   transition: all 0.2s ease;
   height: 20px;
@@ -661,7 +661,7 @@
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .inlineNumberInput span {
@@ -673,8 +673,8 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   padding: 2px 6px 2px 4px;
   transition: all 0.2s ease;
@@ -702,7 +702,7 @@
 
 .unit {
   font-size: 11px;
-  color: #999;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 
@@ -712,7 +712,7 @@
   flex-direction: column;
   gap: 3px;
   padding: 4px;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary);
   border-radius: 4px;
   margin: 2px 0;
 }
@@ -731,7 +731,7 @@
 
 .numberInputCompact span {
   font-size: 10px;
-  color: #666;
+  color: var(--theme-text-muted);
   min-width: 24px;
 }
 
@@ -751,10 +751,10 @@
   width: 100%;
   padding: 6px 8px;
   margin: 4px 0;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
-  color: #374151;
+  color: var(--theme-text-secondary);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -762,18 +762,18 @@
 }
 
 .gapToggleButton:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: var(--theme-secondary-bg);
+  border-color: var(--theme-border);
 }
 
 .gapToggleButton:active {
-  background: #e5e7eb;
+  background: var(--theme-secondary-bg-hover);
 }
 
 .gapToggleButton svg {
   width: 14px;
   height: 14px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 /* 체크박스 그리드 레이아웃 */
@@ -813,7 +813,7 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background: white;
+  background: var(--theme-surface);
   border: 1px solid #d0d0d0;
   border-radius: 2px;
   transition: all 0.2s ease;
@@ -821,7 +821,7 @@
 }
 
 .checkboxCompact input[type="checkbox"]:checked {
-  background-color: white;
+  background-color: var(--theme-surface);
   border-color: hsl(var(--theme));
   border-width: 1px;
 }
@@ -845,7 +845,7 @@
 .checkboxCompact span {
   font-size: 10px;
   font-weight: 500;
-  color: #333;
+  color: var(--theme-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -859,14 +859,14 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background: white;
+  background: var(--theme-surface);
   border: 1px solid #d0d0d0;
   border-radius: 2px;
   transition: all 0.2s ease;
 }
 
 .optionGroup input[type="checkbox"]:checked {
-  background-color: white;
+  background-color: var(--theme-surface);
   border-color: hsl(var(--theme));
   border-width: 1px;
 }
@@ -891,7 +891,7 @@
 .resetLink {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
   display: flex;
   justify-content: center;
 }

@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -20,7 +20,7 @@
 .header h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin: 0;
 }
 
@@ -33,12 +33,12 @@
 .tab {
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .tab:hover {
@@ -59,7 +59,7 @@
 
 .sheetInfo {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .preview {
@@ -69,12 +69,12 @@
   overflow: hidden;
   margin: 12px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--theme-border);
 }
 
 .sheet {
   position: absolute;
-  background: white;
+  background: var(--theme-surface);
   border: 2px solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }

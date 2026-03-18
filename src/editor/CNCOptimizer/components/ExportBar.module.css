@@ -28,9 +28,9 @@
 .exportMainButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #e5e7eb;
-  border-color: #d1d5db;
-  color: #9ca3af;
+  background: var(--theme-secondary-bg-hover);
+  border-color: var(--theme-border);
+  color: var(--theme-text-muted);
 }
 
 .chevron {
@@ -47,8 +47,8 @@
   top: calc(100% + 6px);
   right: 0;
   min-width: 280px;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06);
   z-index: 1000;
@@ -69,11 +69,11 @@
 
 .menuHeader {
   padding: 10px 14px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary);
+  border-bottom: 1px solid var(--theme-border);
   font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -84,7 +84,7 @@
   gap: 12px;
   width: 100%;
   padding: 10px 14px;
-  background: white;
+  background: var(--theme-surface);
   border: none;
   text-align: left;
   cursor: pointer;
@@ -126,7 +126,7 @@
 .menuItemTitle {
   font-size: 13px;
   font-weight: 500;
-  color: #111827;
+  color: var(--theme-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -134,7 +134,7 @@
 
 .menuItemDesc {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -146,7 +146,7 @@
 
 .menuDivider {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--theme-secondary-bg-hover);
   margin: 4px 0;
 }
 
@@ -180,14 +180,14 @@
 @media (prefers-color-scheme: dark) {
   .dropdownMenu {
     background: #1f2937;
-    border-color: #374151;
+    border-color: var(--theme-text-secondary);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
   }
   
   .menuHeader {
     background: #111827;
-    border-color: #374151;
-    color: #9ca3af;
+    border-color: var(--theme-text-secondary);
+    color: var(--theme-text-muted);
   }
   
   .menuItem {
@@ -207,7 +207,7 @@
   }
   
   .menuItemDesc {
-    color: #9ca3af;
+    color: var(--theme-text-muted);
   }
   
   .menuDivider {

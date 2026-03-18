@@ -1,6 +1,6 @@
 .container {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -14,7 +14,7 @@
 .header h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin: 0;
 }
 
@@ -39,12 +39,12 @@
 
 .label {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 
 .value {
   font-size: 14px;
-  color: #111827;
+  color: var(--theme-text);
   font-weight: 600;
 }

@@ -23,7 +23,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--theme-surface);
   border-radius: 12px;
   width: 420px;
   max-width: 90vw;
@@ -48,13 +48,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .title {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--theme-text);
   margin: 0;
 }
 
@@ -67,14 +67,14 @@
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .closeButton:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--theme-secondary-bg);
+  color: var(--theme-text);
 }
 
 .content {
@@ -97,14 +97,14 @@
 .message {
   font-size: 16px;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--theme-text);
   margin: 0 0 8px 0;
   line-height: 1.5;
 }
 
 .subMessage {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -113,8 +113,8 @@
   display: flex;
   gap: 12px;
   padding: 20px 24px;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary);
+  border-top: 1px solid var(--theme-border);
 }
 
 .cancelButton,
@@ -130,14 +130,14 @@
 }
 
 .cancelButton {
-  background: white;
-  color: #374151;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
   border: 1px solid #d1d5db;
 }
 
 .cancelButton:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-text-muted);
 }
 
 .confirmButton {

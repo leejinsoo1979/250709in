@@ -29,7 +29,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #9ca3af;
+  color: var(--theme-text-muted);
 }
 
 .emptyIcon {
@@ -61,14 +61,14 @@
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .headerToolButton:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--theme-secondary-bg);
+  color: var(--theme-text-secondary);
 }
 
 .headerToolButton:active {
@@ -83,7 +83,7 @@
 .headerDivider {
   width: 1px;
   height: 20px;
-  background: #e5e7eb;
+  background: var(--theme-secondary-bg-hover);
   margin: 0 4px;
 }
 
@@ -91,8 +91,8 @@
   display: flex;
   align-items: stretch;
   height: 28px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -105,25 +105,25 @@
   padding: 0 8px;
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.15s;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
 .textSizeBtnSmall:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--theme-secondary-bg);
+  color: var(--theme-text-secondary);
 }
 
 .textSizeBtnSmall:active {
-  background: #e5e7eb;
+  background: var(--theme-secondary-bg-hover);
 }
 
 .textSizeBtnSmall .textSmall {
   font-size: 10px;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--theme-text-muted);
 }
 
 .textSizeBtnSmall .textLarge {
@@ -134,11 +134,11 @@
 .zoomLevel {
   font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   min-width: 40px;
   text-align: center;
   padding: 2px 4px;
-  background: #f9fafb;
+  background: var(--theme-background-secondary);
   border-radius: 3px;
 }
 
@@ -146,8 +146,8 @@
   display: flex;
   align-items: stretch;
   height: 34px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -160,25 +160,25 @@
   padding: 0 10px;
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.2s;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
 .textSizeBtn:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--theme-secondary-bg);
+  color: var(--theme-text-secondary);
 }
 
 .textSizeBtn:active {
-  background: #e5e7eb;
+  background: var(--theme-secondary-bg-hover);
 }
 
 .textSizeBtn .textSmall {
   font-size: 12px;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--theme-text-muted);
 }
 
 .textSizeBtn .textLarge {
@@ -188,7 +188,7 @@
 
 .divider {
   width: 1px;
-  background: #e5e7eb;
+  background: var(--theme-secondary-bg-hover);
   margin: 4px 0;
 }
 
@@ -207,19 +207,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
-  color: #666;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .rotateButton:hover {
-  background: #f8f9fa;
-  border-color: #999;
-  color: #333;
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-text-muted);
+  color: var(--theme-text);
   transform: rotate(45deg);
 }
 
@@ -229,19 +229,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
-  color: #666;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .resetButton:hover {
-  background: #f8f9fa;
-  border-color: #999;
-  color: #333;
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-text-muted);
+  color: var(--theme-text);
   transform: scale(1.1);
 }
 
@@ -278,14 +278,14 @@
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .headerNavButton:hover:not(:disabled) {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--theme-secondary-bg);
+  color: var(--theme-text-secondary);
 }
 
 .headerNavButton:disabled {
@@ -298,7 +298,7 @@
   align-items: center;
   font-size: 13px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--theme-text);
   white-space: nowrap;
   min-width: 150px;
   text-align: center;
@@ -308,7 +308,7 @@
 .sheetInfo {
   font-size: 12px;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin-left: 4px;
 }
 
@@ -318,7 +318,7 @@
   gap: 4px;
   cursor: pointer;
   font-size: 11px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   font-weight: 500;
   padding: 2px 4px;
   border-radius: 3px;
@@ -326,7 +326,7 @@
 }
 
 .optimizationTypeLabel:hover {
-  background: #f9fafb;
+  background: var(--theme-background-secondary);
 }
 
 .optimizationTypeLabel input[type="radio"] {
@@ -385,7 +385,7 @@
   padding: 12px 20px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--theme-border);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 20;
@@ -397,18 +397,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .simulationControls button:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-  color: #374151;
+  background: var(--theme-secondary-bg);
+  border-color: var(--theme-text-muted);
+  color: var(--theme-text-secondary);
 }
 
 .simulationControls button:disabled {
@@ -441,7 +441,7 @@
 .speedControl label {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   white-space: nowrap;
 }
 
@@ -454,7 +454,7 @@
 .cutInfo {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--theme-text-secondary);
   white-space: nowrap;
 }
 
