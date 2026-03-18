@@ -2229,6 +2229,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
+  // 수동 EP가 있으면 도어 확장/이동 비활성화 — EP는 가구 본체 일부이므로 도어는 축소된 본체에 맞춤
+  if (placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel) {
+    doorWidthExpansion = 0;
+    doorXOffset = 0;
+  }
+
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
   let originalSlotCenterX: number;
 
