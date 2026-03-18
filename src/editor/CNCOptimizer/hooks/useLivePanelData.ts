@@ -383,63 +383,102 @@ export function useLivePanelData() {
       });
 
       // 서라운드 패널 추가 — 좌측은 맨 좌측 가구에, 우측은 맨 우측 가구에 귀속
+      // 자유배치: freeSurround 설정에서 패널 생성
+      // 균등배치: surroundType + frameSize에서 패널 생성
+      let surroundPanelList: any[] = [];
+      const spaceH = spaceInfo.height || 2400;
+      const floorFinishForSurround = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+      const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+        ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+      const surroundH = spaceH - floorFinishForSurround - floatH;
+
       if (spaceInfo.freeSurround) {
-        const spaceH = spaceInfo.height || 2400;
-        const floorFinishForSurround = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
-        const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
-          ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-        const surroundH = spaceH - floorFinishForSurround - floatH;
-        const surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
-
-        if (surroundPanelList.length > 0) {
-          // 맨 좌측/우측 가구 인덱스 판별 (slotIndex 기준, 없으면 배열 순서)
-          let leftMostIdx = 0;
-          let rightMostIdx = placedModules.length - 1;
-          if (placedModules.length > 1) {
-            let minSlot = Infinity, maxSlot = -Infinity;
-            placedModules.forEach((pm, idx) => {
-              const slot = pm.slotIndex ?? idx;
-              if (slot < minSlot) { minSlot = slot; leftMostIdx = idx; }
-              if (slot > maxSlot) { maxSlot = slot; rightMostIdx = idx; }
-            });
-          }
-
-          const leftFurnitureNumber = leftMostIdx + 1;
-          const rightFurnitureNumber = rightMostIdx + 1;
-          const leftLabel = placedModules.length > 1 ? `[${leftFurnitureNumber}]` : '';
-          const rightLabel = placedModules.length > 1 ? `[${rightFurnitureNumber}]` : '';
-
-          console.log(`서라운드 패널 ${surroundPanelList.length}개: 좌측→가구${leftFurnitureNumber}, 우측→가구${rightFurnitureNumber}`);
-
-          surroundPanelList.forEach((panel: any, idx: number) => {
-            const isLeft = panel.name.includes('좌측');
-            const isRight = panel.name.includes('우측');
-            // 좌측 서라운드 → 맨 좌측 가구, 우측 서라운드 → 맨 우측 가구, 중간 → 별도
-            let furnitureId = 'surround';
-            let namePrefix = '';
-            if (isLeft) {
-              furnitureId = placedModules[leftMostIdx].id;
-              namePrefix = leftLabel ? `${leftLabel} ` : '';
-            } else if (isRight) {
-              furnitureId = placedModules[rightMostIdx].id;
-              namePrefix = rightLabel ? `${rightLabel} ` : '';
-            }
-
-            allPanels.push({
-              id: `surround_p${idx}`,
-              name: `${namePrefix}${panel.name}`,
-              width: panel.width || 0,
-              height: panel.height || 0,
-              thickness: panel.thickness,
-              material: panel.material || 'PB',
-              color: placedModules[0]?.color || 'MW',
-              quantity: 1,
-              grain: getDefaultGrain(panel.name),
-              meshName: panel.name,
-              furnitureId,
-            });
+        // 자유배치 서라운드
+        surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+      } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
+        // 균등배치 서라운드 — frameSize에서 직접 패널 생성
+        const fs = spaceInfo.frameSize;
+        const surroundThickness = 18;
+        // 서라운드 높이 = 공간높이 - 상부프레임높이 - 바닥마감재 - 띄움높이
+        const panelH = surroundH - (fs.top || 0);
+        if (fs.left > 0) {
+          surroundPanelList.push({
+            name: '좌측 서라운드 프레임',
+            width: fs.left,
+            height: panelH,
+            thickness: surroundThickness,
+            material: 'PB',
           });
         }
+        if (fs.right > 0) {
+          surroundPanelList.push({
+            name: '우측 서라운드 프레임',
+            width: fs.right,
+            height: panelH,
+            thickness: surroundThickness,
+            material: 'PB',
+          });
+        }
+        if (fs.top > 0) {
+          // 상부 프레임: 너비 = 공간 전체 너비
+          surroundPanelList.push({
+            name: '상부 서라운드 프레임',
+            width: spaceInfo.width,
+            height: fs.top,
+            thickness: surroundThickness,
+            material: 'PB',
+          });
+        }
+      }
+
+      if (surroundPanelList.length > 0) {
+        // 맨 좌측/우측 가구 인덱스 판별 (slotIndex 기준, 없으면 배열 순서)
+        let leftMostIdx = 0;
+        let rightMostIdx = placedModules.length - 1;
+        if (placedModules.length > 1) {
+          let minSlot = Infinity, maxSlot = -Infinity;
+          placedModules.forEach((pm, idx) => {
+            const slot = pm.slotIndex ?? idx;
+            if (slot < minSlot) { minSlot = slot; leftMostIdx = idx; }
+            if (slot > maxSlot) { maxSlot = slot; rightMostIdx = idx; }
+          });
+        }
+
+        const leftFurnitureNumber = leftMostIdx + 1;
+        const rightFurnitureNumber = rightMostIdx + 1;
+        const leftLabel = placedModules.length > 1 ? `[${leftFurnitureNumber}]` : '';
+        const rightLabel = placedModules.length > 1 ? `[${rightFurnitureNumber}]` : '';
+
+        console.log(`서라운드 패널 ${surroundPanelList.length}개: 좌측→가구${leftFurnitureNumber}, 우측→가구${rightFurnitureNumber}`);
+
+        surroundPanelList.forEach((panel: any, idx: number) => {
+          const isLeft = panel.name.includes('좌측');
+          const isRight = panel.name.includes('우측');
+          // 좌측 서라운드 → 맨 좌측 가구, 우측 서라운드 → 맨 우측 가구, 중간 → 별도
+          let furnitureId = 'surround';
+          let namePrefix = '';
+          if (isLeft) {
+            furnitureId = placedModules[leftMostIdx].id;
+            namePrefix = leftLabel ? `${leftLabel} ` : '';
+          } else if (isRight) {
+            furnitureId = placedModules[rightMostIdx].id;
+            namePrefix = rightLabel ? `${rightLabel} ` : '';
+          }
+
+          allPanels.push({
+            id: `surround_p${idx}`,
+            name: `${namePrefix}${panel.name}`,
+            width: panel.width || 0,
+            height: panel.height || 0,
+            thickness: panel.thickness,
+            material: panel.material || 'PB',
+            color: placedModules[0]?.color || 'MW',
+            quantity: 1,
+            grain: getDefaultGrain(panel.name),
+            meshName: panel.name,
+            furnitureId,
+          });
+        });
       }
 
       console.log('========================================');
@@ -813,60 +852,94 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
     });
 
     // 서라운드 패널 추가 — 좌측은 맨 좌측 가구에, 우측은 맨 우측 가구에 귀속
+    // 자유배치: freeSurround / 균등배치: surroundType + frameSize
+    let surroundPanelList2: any[] = [];
+    const spaceH2 = spaceInfo.height || 2400;
+    const floorFinishForSurround2 = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+    const floatH2 = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+      ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+    const surroundH2 = spaceH2 - floorFinishForSurround2 - floatH2;
+
     if (spaceInfo.freeSurround) {
-      const spaceH2 = spaceInfo.height || 2400;
-      const floorFinishForSurround2 = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
-      const floatH2 = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
-        ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-      const surroundH2 = spaceH2 - floorFinishForSurround2 - floatH2;
-      const surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2);
-
-      if (surroundPanelList2.length > 0) {
-        // 맨 좌측/우측 가구 인덱스 판별
-        let leftMostIdx2 = 0;
-        let rightMostIdx2 = placedModules.length - 1;
-        if (placedModules.length > 1) {
-          let minSlot2 = Infinity, maxSlot2 = -Infinity;
-          placedModules.forEach((pm, idx) => {
-            const slot = pm.slotIndex ?? idx;
-            if (slot < minSlot2) { minSlot2 = slot; leftMostIdx2 = idx; }
-            if (slot > maxSlot2) { maxSlot2 = slot; rightMostIdx2 = idx; }
-          });
-        }
-
-        const leftFn2 = leftMostIdx2 + 1;
-        const rightFn2 = rightMostIdx2 + 1;
-        const leftLbl2 = placedModules.length > 1 ? `[${leftFn2}]` : '';
-        const rightLbl2 = placedModules.length > 1 ? `[${rightFn2}]` : '';
-
-        surroundPanelList2.forEach((panel: any, idx: number) => {
-          const isLeft = panel.name.includes('좌측');
-          const isRight = panel.name.includes('우측');
-          let furnitureId2 = 'surround';
-          let namePrefix2 = '';
-          if (isLeft) {
-            furnitureId2 = placedModules[leftMostIdx2].id;
-            namePrefix2 = leftLbl2 ? `${leftLbl2} ` : '';
-          } else if (isRight) {
-            furnitureId2 = placedModules[rightMostIdx2].id;
-            namePrefix2 = rightLbl2 ? `${rightLbl2} ` : '';
-          }
-
-          allPanels.push({
-            id: `surround_p${idx}`,
-            name: `${namePrefix2}${panel.name}`,
-            width: panel.width || 0,
-            height: panel.height || 0,
-            thickness: panel.thickness,
-            material: panel.material || 'PB',
-            color: placedModules[0]?.color || 'MW',
-            quantity: 1,
-            grain: getDefaultGrain(panel.name),
-            meshName: panel.name,
-            furnitureId: furnitureId2,
-          });
+      surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2);
+    } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
+      const fs2 = spaceInfo.frameSize;
+      const surroundThickness2 = 18;
+      const panelH2 = surroundH2 - (fs2.top || 0);
+      if (fs2.left > 0) {
+        surroundPanelList2.push({
+          name: '좌측 서라운드 프레임',
+          width: fs2.left,
+          height: panelH2,
+          thickness: surroundThickness2,
+          material: 'PB',
         });
       }
+      if (fs2.right > 0) {
+        surroundPanelList2.push({
+          name: '우측 서라운드 프레임',
+          width: fs2.right,
+          height: panelH2,
+          thickness: surroundThickness2,
+          material: 'PB',
+        });
+      }
+      if (fs2.top > 0) {
+        surroundPanelList2.push({
+          name: '상부 서라운드 프레임',
+          width: spaceInfo.width,
+          height: fs2.top,
+          thickness: surroundThickness2,
+          material: 'PB',
+        });
+      }
+    }
+
+    if (surroundPanelList2.length > 0) {
+      // 맨 좌측/우측 가구 인덱스 판별
+      let leftMostIdx2 = 0;
+      let rightMostIdx2 = placedModules.length - 1;
+      if (placedModules.length > 1) {
+        let minSlot2 = Infinity, maxSlot2 = -Infinity;
+        placedModules.forEach((pm, idx) => {
+          const slot = pm.slotIndex ?? idx;
+          if (slot < minSlot2) { minSlot2 = slot; leftMostIdx2 = idx; }
+          if (slot > maxSlot2) { maxSlot2 = slot; rightMostIdx2 = idx; }
+        });
+      }
+
+      const leftFn2 = leftMostIdx2 + 1;
+      const rightFn2 = rightMostIdx2 + 1;
+      const leftLbl2 = placedModules.length > 1 ? `[${leftFn2}]` : '';
+      const rightLbl2 = placedModules.length > 1 ? `[${rightFn2}]` : '';
+
+      surroundPanelList2.forEach((panel: any, idx: number) => {
+        const isLeft = panel.name.includes('좌측');
+        const isRight = panel.name.includes('우측');
+        let furnitureId2 = 'surround';
+        let namePrefix2 = '';
+        if (isLeft) {
+          furnitureId2 = placedModules[leftMostIdx2].id;
+          namePrefix2 = leftLbl2 ? `${leftLbl2} ` : '';
+        } else if (isRight) {
+          furnitureId2 = placedModules[rightMostIdx2].id;
+          namePrefix2 = rightLbl2 ? `${rightLbl2} ` : '';
+        }
+
+        allPanels.push({
+          id: `surround_p${idx}`,
+          name: `${namePrefix2}${panel.name}`,
+          width: panel.width || 0,
+          height: panel.height || 0,
+          thickness: panel.thickness,
+          material: panel.material || 'PB',
+          color: placedModules[0]?.color || 'MW',
+          quantity: 1,
+          grain: getDefaultGrain(panel.name),
+          meshName: panel.name,
+          furnitureId: furnitureId2,
+        });
+      });
     }
 
     callback(allPanels);
