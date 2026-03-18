@@ -1305,6 +1305,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureHeightMm = placedModule.freeHeight;
   } else {
     furnitureHeightMm = actualModuleData?.dimensions.height || 0;
+    // 슬롯모드: 개별 가구 프레임 높이 변경 시 가구 body 높이 보정
+    // internalSpace.height는 전역 프레임값 기준이므로, 개별 delta만큼 보정
+    if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
+      if (placedModule.topFrameThickness !== undefined) {
+        const globalTop = spaceInfo.frameSize?.top ?? 30;
+        furnitureHeightMm -= (placedModule.topFrameThickness - globalTop);
+      }
+      if (placedModule.baseFrameHeight !== undefined) {
+        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+        furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
+      }
+    }
   }
 
   // customSections는 placedModule에 직접 저장된 것만 사용
