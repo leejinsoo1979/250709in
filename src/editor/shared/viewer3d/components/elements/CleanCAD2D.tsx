@@ -2992,9 +2992,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
           const globalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // per-furniture 프레임 오버라이드 적용
-          const bottomFrameH = leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH;
-          const perTopFrame = leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame;
+          // per-furniture 프레임 오버라이드 적용 (토글 OFF 시 0)
+          const bottomFrameH = leftmostMod?.hasBottomFrame === false ? 0
+            : (leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH);
+          const perTopFrame = leftmostMod?.hasTopFrame === false ? 0
+            : (leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame);
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const leftModInDrop = leftmostMod?.zone === 'dropped';
           const effectiveH = (isLeftDrop && leftModInDrop) || (isLeftDrop && !leftmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
@@ -3249,9 +3251,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const rGlobalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // per-furniture 프레임 오버라이드 적용
-          const rBottomFrameH = rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH;
-          const rPerTopFrame = rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame;
+          // per-furniture 프레임 오버라이드 적용 (토글 OFF 시 0)
+          const rBottomFrameH = rightmostMod?.hasBottomFrame === false ? 0
+            : (rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH);
+          const rPerTopFrame = rightmostMod?.hasTopFrame === false ? 0
+            : (rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame);
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const rightModInDrop = rightmostMod?.zone === 'dropped';
           const rEffectiveH = (isRightDrop && rightModInDrop) || (isRightDrop && !rightmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
