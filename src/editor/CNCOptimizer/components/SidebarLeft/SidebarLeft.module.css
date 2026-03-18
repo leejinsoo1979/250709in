@@ -142,32 +142,36 @@
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-  width: 95px; /* 치수 */
+  width: 85px; /* 치수 */
+  padding: 2px !important;
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-  width: 30px; /* 두께 */
+  width: 24px; /* 두께 */
   text-align: center;
+  padding: 2px !important;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 38px; /* 재질 */
+  width: 34px; /* 재질 */
   padding: 2px !important;
   overflow: hidden;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 28px; /* 결방향 */
+  width: 22px; /* 결방향 */
   text-align: center;
+  padding: 2px !important;
 }
 
 .table th:last-child,
 .table td:last-child {
-  width: 22px; /* 삭제 */
+  width: 20px; /* 삭제 */
   text-align: center;
+  padding: 2px !important;
 }
 
 /* 원자재 테이블 열 너비 지정 */
@@ -344,8 +348,8 @@
 }
 
 .inputSmall {
-  width: 42px;
-  padding: 3px 2px;
+  width: 36px;
+  padding: 2px 1px;
   border: 1px solid #e0e0e0;
   background: white !important;
   color: #333 !important;
