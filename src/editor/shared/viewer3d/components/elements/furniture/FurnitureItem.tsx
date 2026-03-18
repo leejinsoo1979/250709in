@@ -1330,10 +1330,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 하부프레임 토글 꺼짐 → 가구 높이에 하부프레임 높이를 더해서 상부 섹션이 흡수
+  // 하부프레임 토글 꺼짐 → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움 높이만큼 차감
   if (placedModule.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
     const hiddenBaseH = placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65;
-    furnitureHeightMm += hiddenBaseH;
+    const indivFloat = placedModule.individualFloatHeight ?? 0;
+    furnitureHeightMm += hiddenBaseH - indivFloat;
   }
 
   // customSections는 placedModule에 직접 저장된 것만 사용
@@ -1386,7 +1387,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const configSections = placedModule.customConfig?.sections;
         const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
         const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65)));
-        const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
+        // 하부프레임 OFF + 개별 띄움 높이
+        const indivFloatMm = (placedModule.hasBase === false) ? (placedModule.individualFloatHeight ?? 0) : 0;
+        const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units
 
         // 바닥 마감재 높이
         const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
@@ -1396,7 +1399,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 가구 높이 (단내림 구간에서 조정된 높이 사용)
         const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
-        // Y 위치 계산: 바닥마감재높이 + 받침대높이 + 가구높이/2
+        // Y 위치 계산: 바닥마감재높이 + 받침대높이(+개별띄움) + 가구높이/2
         const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
 
         // 단내림 구간 Y 위치 디버깅
@@ -1478,8 +1481,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 자유배치 표준 모듈: EP 두께만큼 가구 본체 너비 축소
-  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+  // 표준 모듈: EP 두께만큼 가구 본체 너비 축소
+  if (!placedModule.customConfig) {
     const epThk = placedModule.endPanelThickness || 18;
     if (placedModule.hasLeftEndPanel) furnitureWidthMm -= epThk;
     if (placedModule.hasRightEndPanel) furnitureWidthMm -= epThk;
@@ -2633,7 +2636,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 자유배치 EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   let freeEpOffsetX = 0;
-  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+  if (!placedModule.customConfig) {
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
@@ -3318,8 +3321,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               return null;
             })()}
 
-            {/* 자유배치 표준 모듈 엔드패널 렌더링 — 바닥까지 내려옴 */}
-            {placedModule.isFreePlacement && !placedModule.customConfig && (() => {
+            {/* 표준 모듈 엔드패널 렌더링 — 바닥까지 내려옴 */}
+            {!placedModule.customConfig && (() => {
               const hasLeft = placedModule.hasLeftEndPanel;
               const hasRight = placedModule.hasRightEndPanel;
               if (!hasLeft && !hasRight) return null;
@@ -3348,7 +3351,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       position={[-(width / 2) - epW / 2, epYRelative, leftEpOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
-                      useFrameColor={placedModule.isFreePlacement}
+                      useFrameColor={true}
                     />
                   )}
                   {hasRight && (
@@ -3359,7 +3362,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       position={[(width / 2) + epW / 2, epYRelative, rightEpOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={renderMode}
-                      useFrameColor={placedModule.isFreePlacement}
+                      useFrameColor={true}
                     />
                   )}
                 </>
