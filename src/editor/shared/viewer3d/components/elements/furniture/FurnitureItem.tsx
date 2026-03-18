@@ -2229,11 +2229,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 수동 EP가 있으면 도어 확장/이동 비활성화
-  // 본체가 epOffsetX로 이동하면 내부 도어도 자연히 따라감 (BoxModule은 본체 그룹 안)
+  // 수동 EP가 있으면 도어 확장 비활성화 + 슬롯 모드에서 본체 이동 역보정
+  // 본체는 epOffsetX로 이동하지만 도어는 원래 슬롯 중앙에 있어야 하므로 역방향 오프셋
   if (placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel) {
     doorWidthExpansion = 0;
-    doorXOffset = 0;
+    if (!placedModule.isFreePlacement && !placedModule.customConfig) {
+      // 슬롯 모드: 본체가 epOffsetX만큼 이동하므로 도어를 역방향으로 되돌림
+      const epThkDoor = mmToThreeUnits(placedModule.endPanelThickness || 18);
+      const leftEpDoor = placedModule.hasLeftEndPanel ? epThkDoor : 0;
+      const rightEpDoor = placedModule.hasRightEndPanel ? epThkDoor : 0;
+      doorXOffset = -(leftEpDoor - rightEpDoor) / 2; // epOffsetX의 역방향
+    } else {
+      doorXOffset = 0;
+    }
   }
 
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
@@ -2641,10 +2649,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 일반: 계산된 위치 사용
 
-  // 자유배치 EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
-  // 슬롯 모드에서는 불필요 — 본체는 슬롯 중앙 고정, EP는 본체 옆에 붙음
+  // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
+  // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정
+  // 도어는 본체 그룹 안에서 렌더링되므로 자동으로 따라감
   let epOffsetX = 0;
-  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+  if (!placedModule.customConfig) {
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
