@@ -2992,16 +2992,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
           const globalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // per-furniture 프레임 오버라이드 적용 (토글 OFF → 띄움 높이, 상부: hasTopFrame OFF → 0)
-          const bottomFrameH = leftmostMod?.hasBase === false
-            ? (leftmostMod.individualFloatHeight ?? 0)
-            : (leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH);
-          const perTopFrame = leftmostMod?.hasTopFrame === false ? 0
-            : (leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame);
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const leftModInDrop = leftmostMod?.zone === 'dropped';
           const effectiveH = (isLeftDrop && leftModInDrop) || (isLeftDrop && !leftmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
-          // 가구 내경 높이: per-furniture 프레임이 있으면 effectiveH에서 직접 계산
+
+          // per-furniture 실제 프레임 size (토글 무관 — 가구 내경 계산용)
+          const actualBottomSize = leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH;
+          const actualTopSize = leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame;
+
+          // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let furnitureH: number;
           if (leftmostMod) {
             if (leftmostMod.freeHeight) {
@@ -3009,12 +3008,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else {
-              // 슬롯배치: effectiveH에서 per-furniture 프레임을 빼서 내경 계산
-              furnitureH = Math.max(0, effectiveH - bottomFrameH - perTopFrame);
+              furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+              // hasBase=false → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움만큼 차감 (FurnitureItem.tsx:1338-1342)
+              if (leftmostMod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
+                const hiddenBaseH = actualBottomSize;
+                const indivFloat = leftmostMod.individualFloatHeight ?? 0;
+                furnitureH += hiddenBaseH - indivFloat;
+              }
             }
           } else {
             furnitureH = _internalHeight;
           }
+
+          // 치수가이드 표시용 프레임 높이 (토글 반영)
+          // 하부: OFF → 띄움 높이(individualFloatHeight) 표시, ON → 실제 size
+          const bottomFrameH = leftmostMod?.hasBase === false
+            ? (leftmostMod.individualFloatHeight ?? 0)
+            : actualBottomSize;
+          // 상부: OFF → 갭(가구~천장) 표시, ON → 실제 size
           const topFrameH = Math.max(0, effectiveH - bottomFrameH - furnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
@@ -3252,16 +3263,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const rGlobalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // per-furniture 프레임 오버라이드 적용 (토글 OFF → 띄움 높이, 상부: hasTopFrame OFF → 0)
-          const rBottomFrameH = rightmostMod?.hasBase === false
-            ? (rightmostMod.individualFloatHeight ?? 0)
-            : (rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH);
-          const rPerTopFrame = rightmostMod?.hasTopFrame === false ? 0
-            : (rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame);
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const rightModInDrop = rightmostMod?.zone === 'dropped';
           const rEffectiveH = (isRightDrop && rightModInDrop) || (isRightDrop && !rightmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
-          // 가구 내경 높이: per-furniture 프레임이 있으면 effectiveH에서 직접 계산
+
+          // per-furniture 실제 프레임 size (토글 무관 — 가구 내경 계산용)
+          const rActualBottomSize = rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH;
+          const rActualTopSize = rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame;
+
+          // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let rFurnitureH: number;
           if (rightmostMod) {
             if (rightmostMod.freeHeight) {
@@ -3269,12 +3279,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else {
-              // 슬롯배치: effectiveH에서 per-furniture 프레임을 빼서 내경 계산
-              rFurnitureH = Math.max(0, rEffectiveH - rBottomFrameH - rPerTopFrame);
+              rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+              // hasBase=false → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움만큼 차감 (FurnitureItem.tsx:1338-1342)
+              if (rightmostMod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
+                const rHiddenBaseH = rActualBottomSize;
+                const rIndivFloat = rightmostMod.individualFloatHeight ?? 0;
+                rFurnitureH += rHiddenBaseH - rIndivFloat;
+              }
             }
           } else {
             rFurnitureH = rInternalHeight;
           }
+
+          // 치수가이드 표시용 프레임 높이 (토글 반영)
+          const rBottomFrameH = rightmostMod?.hasBase === false
+            ? (rightmostMod.individualFloatHeight ?? 0)
+            : rActualBottomSize;
           const rTopFrameH = Math.max(0, rEffectiveH - rBottomFrameH - rFurnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
