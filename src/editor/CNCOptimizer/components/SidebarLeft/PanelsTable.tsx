@@ -304,7 +304,7 @@ export default function PanelsTable(){
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: '4%', textAlign: 'center' }}>
+                <th>
                   <input
                     type="checkbox"
                     className={styles.panelCheckbox}
@@ -330,12 +330,12 @@ export default function PanelsTable(){
                     title="전체 선택/해제"
                   />
                 </th>
-                <th style={{ width: '24%', textAlign: 'center' }}>{t('cnc.name')}</th>
-                <th style={{ width: '20%', textAlign: 'center' }}>{t('cnc.dimensions')}</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
-                <th style={{ width: '21%', textAlign: 'center' }}>{t('cnc.material')}</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingRight: '3px' }}>{t('cnc.grain')}</th>
-                <th style={{ width: '7%', textAlign: 'center' }}></th>
+                <th>{t('cnc.name')}</th>
+                <th>{t('cnc.dimensions')}</th>
+                <th>{t('cnc.thickness')}</th>
+                <th>{t('cnc.material')}</th>
+                <th>{t('cnc.grain')}</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -369,7 +369,7 @@ export default function PanelsTable(){
                   }}
                   data-panel-id={p.id}
                 >
-                  <td style={{ padding: '6px 2px 6px 6px', textAlign: 'center' }}>
+                  <td>
                     <input
                       type="checkbox"
                       className={styles.panelCheckbox}
@@ -440,7 +440,7 @@ export default function PanelsTable(){
                       className={styles.inputTiny}
                     />
                   </td>
-                  <td style={{ padding: '2px' }}>
+                  <td>
                     <select
                       value={p.material}
                       onChange={e => onChange(i, 'material', e.target.value)}
@@ -455,7 +455,7 @@ export default function PanelsTable(){
                       <option value="LPM">LPM</option>
                     </select>
                   </td>
-                  <td style={{ paddingLeft: '2px' }}>
+                  <td>
                     <button
                       className={styles.grainToggle}
                       onClick={(e) => {
@@ -487,8 +487,8 @@ export default function PanelsTable(){
                       {p.grain === 'V' ? '↑' : '→'}
                     </button>
                   </td>
-                  <td style={{ padding: '6px 6px 6px 0', textAlign: 'center' }}>
-                    <button 
+                  <td>
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         delRow(i);
