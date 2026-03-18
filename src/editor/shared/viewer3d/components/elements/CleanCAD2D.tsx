@@ -3044,26 +3044,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               });
               const rawSum = rawHeights.reduce((a, b) => a + b, 0);
               if (rawSum > 0 && Math.abs(rawSum - furnitureH) > 1) {
-                // useBaseFurniture.ts와 동일한 로직:
-                // drawer 섹션이 있으면 drawer 고정 + non-drawer만 조정
-                // drawer 섹션이 없으면 전체 비례 조정
-                const drawerTotal = sections.reduce((sum, s, i) =>
-                  sum + (s.heightType === 'absolute' && s.type === 'drawer' ? rawHeights[i] : 0), 0);
-                const nonDrawerTotal = rawSum - drawerTotal;
-                const hasDrawerSections = drawerTotal > 0 && nonDrawerTotal > 0;
-
-                if (hasDrawerSections) {
-                  const remainingHeight = furnitureH - drawerTotal;
-                  const nonDrawerRatio = remainingHeight / nonDrawerTotal;
-                  sectionHeights = sections.map((s, i) => {
-                    if (s.type === 'drawer') return rawHeights[i];
-                    return Math.round(rawHeights[i] * nonDrawerRatio);
-                  });
-                } else {
-                  // drawer 없음 → 전체 비례 조정
-                  const ratio = furnitureH / rawSum;
-                  sectionHeights = rawHeights.map(h => Math.round(h * ratio));
-                }
+                // 하부 섹션 고정, 마지막(상부) 섹션이 차이 흡수
+                const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                sectionHeights = [
+                  ...rawHeights.slice(0, -1),
+                  Math.max(0, furnitureH - fixedSum)
+                ];
               } else {
                 sectionHeights = rawHeights;
               }
@@ -3326,23 +3312,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               });
               const rRawSum = rRawHeights.reduce((a, b) => a + b, 0);
               if (rRawSum > 0 && Math.abs(rRawSum - rFurnitureH) > 1) {
-                // useBaseFurniture.ts와 동일한 로직
-                const rDrawerTotal = rSections.reduce((sum, s, i) =>
-                  sum + (s.heightType === 'absolute' && s.type === 'drawer' ? rRawHeights[i] : 0), 0);
-                const rNonDrawerTotal = rRawSum - rDrawerTotal;
-                const rHasDrawerSections = rDrawerTotal > 0 && rNonDrawerTotal > 0;
-
-                if (rHasDrawerSections) {
-                  const rRemainingHeight = rFurnitureH - rDrawerTotal;
-                  const rNonDrawerRatio = rRemainingHeight / rNonDrawerTotal;
-                  rSectionHeights = rSections.map((s, i) => {
-                    if (s.type === 'drawer') return rRawHeights[i];
-                    return Math.round(rRawHeights[i] * rNonDrawerRatio);
-                  });
-                } else {
-                  const rRatio = rFurnitureH / rRawSum;
-                  rSectionHeights = rRawHeights.map(h => Math.round(h * rRatio));
-                }
+                // 하부 섹션 고정, 마지막(상부) 섹션이 차이 흡수
+                const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                rSectionHeights = [
+                  ...rRawHeights.slice(0, -1),
+                  Math.max(0, rFurnitureH - rFixedSum)
+                ];
               } else {
                 rSectionHeights = rRawHeights;
               }

@@ -130,40 +130,24 @@ export const useBaseFurniture = (
       return originalModelConfig;
     }
 
-    // drawer 섹션은 고정, 나머지 섹션만 높이 변화 흡수
-    const drawerTotal = originalModelConfig.sections.reduce((sum: number, s: SectionConfig) => {
-      return sum + (s.heightType === 'absolute' && s.type === 'drawer' ? s.height : 0);
-    }, 0);
-    const nonDrawerTotal = originalSectionsTotal - drawerTotal;
-    const hasDrawerSections = drawerTotal > 0 && nonDrawerTotal > 0;
+    // 하부 섹션(마지막 제외)은 고정, 마지막(상부) 섹션이 높이 변화를 흡수
+    // 물리적으로 하부 칸막이 위치는 고정이고 상부만 가변
+    const sections = originalModelConfig.sections;
+    const fixedSum = sections.slice(0, -1).reduce((sum: number, s: SectionConfig) => sum + s.height, 0);
+    const lastSection = sections[sections.length - 1];
+    const lastSectionNewHeight = Math.max(0, renderHeightMm - fixedSum);
+    const lastSectionRatio = lastSection.height > 0 ? lastSectionNewHeight / lastSection.height : 1;
 
-    const scaledSections = originalModelConfig.sections.map((section: SectionConfig) => {
-      if (section.heightType !== 'absolute') {
-        return section;
+    const scaledSections = sections.map((section: SectionConfig, idx: number) => {
+      if (idx < sections.length - 1) {
+        return section; // 하부 섹션은 고정
       }
-
-      if (hasDrawerSections) {
-        // drawer 섹션 고정, non-drawer 섹션만 조정
-        if (section.type === 'drawer') {
-          return section; // 서랍은 고정
-        }
-        // non-drawer 섹션: 잔여 높이를 비례 배분
-        const remainingHeight = renderHeightMm - drawerTotal;
-        const nonDrawerRatio = remainingHeight / nonDrawerTotal;
-        return {
-          ...section,
-          height: Math.round(section.height * nonDrawerRatio),
-          shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * nonDrawerRatio))
-        };
-      } else {
-        // drawer 섹션이 없으면 기존처럼 전체 비례 조정
-        const preciseRatio = renderHeightMm / originalSectionsTotal;
-        return {
-          ...section,
-          height: Math.round(section.height * preciseRatio),
-          shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * preciseRatio))
-        };
-      }
+      // 마지막(상부) 섹션만 조정
+      return {
+        ...section,
+        height: Math.round(lastSectionNewHeight),
+        shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * lastSectionRatio))
+      };
     });
 
     return {
