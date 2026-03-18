@@ -1,6 +1,6 @@
 import React from 'react';
 import { useUIStore, type EditorTab } from '@/store/uiStore';
-import { Menu } from 'lucide-react';
+import { FaFolderOpen } from 'react-icons/fa6';
 import styles from './TabBar.module.css';
 
 interface TabBarProps {
@@ -25,7 +25,7 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
           onClick={onFileTreeToggle}
           title="파일 트리 열기/닫기"
         >
-          <Menu size={16} />
+          <FaFolderOpen size={16} />
         </button>
       )}
       {openTabs.map((tab) => (
