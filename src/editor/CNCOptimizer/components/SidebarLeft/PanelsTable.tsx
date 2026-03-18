@@ -333,7 +333,6 @@ export default function PanelsTable(){
                 <th style={{ width: '24%', textAlign: 'center' }}>{t('cnc.name')}</th>
                 <th style={{ width: '20%', textAlign: 'center' }}>{t('cnc.dimensions')}</th>
                 <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>{t('cnc.quantity')}</th>
                 <th style={{ width: '21%', textAlign: 'center' }}>{t('cnc.material')}</th>
                 <th style={{ width: '8%', textAlign: 'center', paddingRight: '3px' }}>{t('cnc.grain')}</th>
                 <th style={{ width: '7%', textAlign: 'center' }}></th>
@@ -437,15 +436,6 @@ export default function PanelsTable(){
                       type="number"
                       value={p.thickness} 
                       onChange={e => onChange(i, 'thickness', e.target.value)}
-                      onClick={e => e.stopPropagation()}
-                      className={styles.inputTiny}
-                    />
-                  </td>
-                  <td style={{ paddingLeft: '15px' }}>
-                    <input 
-                      type="number"
-                      value={p.quantity} 
-                      onChange={e => onChange(i, 'quantity', e.target.value)}
                       onClick={e => e.stopPropagation()}
                       className={styles.inputTiny}
                     />

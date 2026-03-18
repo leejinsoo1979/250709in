@@ -153,19 +153,13 @@
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 28px; /* 수량 */
-  text-align: center;
-}
-
-.table th:nth-child(5),
-.table td:nth-child(5) {
   width: 38px; /* 재질 */
   padding: 2px !important;
   overflow: hidden;
 }
 
-.table th:nth-child(6),
-.table td:nth-child(6) {
+.table th:nth-child(5),
+.table td:nth-child(5) {
   width: 28px; /* 결방향 */
   text-align: center;
 }
