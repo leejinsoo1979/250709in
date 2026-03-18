@@ -306,6 +306,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 내경 높이 (per-furniture delta 보정 적용)
   let adjustedInternalHeightMm = globalAdjustedInternalHeightMm;
+  // 바닥마감재: 가구 높이에서 차감 (FurnitureItem과 동일)
+  if (floorFinishHeightMm > 0) {
+    adjustedInternalHeightMm -= floorFinishHeightMm;
+  }
   if (!isFreePlacementMode && selectedMod) {
     if (selectedMod.topFrameThickness !== undefined) {
       adjustedInternalHeightMm -= (selectedMod.topFrameThickness - globalTopFrameHeightMm);
