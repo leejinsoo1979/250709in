@@ -85,7 +85,13 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
  * PlacedModule의 X 범위 반환 (mm 단위)
  */
 export function getModuleBoundsX(module: PlacedModule): FurnitureBoundsX {
-  const widthMM = module.freeWidth || module.moduleWidth || 450;
+  // 너비 우선순위: freeWidth(자유배치) > customWidth(슬롯/슬롯듀얼) > adjustedWidth(기둥침범) > moduleWidth > moduleId 파싱 > 450
+  let widthMM = module.freeWidth || module.customWidth || module.adjustedWidth || module.moduleWidth || 0;
+  if (!widthMM) {
+    // moduleId에서 너비 파싱 (예: "full-1200" → 1200, "dual-upper-4drawer-1800" → 1800)
+    const match = module.moduleId?.match(/-(\d{3,})(?:$|-)/);
+    widthMM = match ? parseInt(match[1], 10) : 450;
+  }
   // position.x는 Three.js 단위 (mm * 0.01), 중심점
   const centerXmm = module.position.x * 100; // Three.js → mm
   const halfWidth = widthMM / 2;
