@@ -1320,7 +1320,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 바닥마감재 적용: 가구 높이에서 차감 (상부 섹션이 흡수)
-  if (placedModule.isFreePlacement) {
+  // calculateInternalSpace에서 받침대가 있을 때 바닥마감재를 별도 차감하지 않으므로
+  // 여기서 슬롯/자유배치 모두 furnitureHeightMm에서 직접 차감
+  {
     const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
       ? spaceInfo.floorFinish.height : 0;
     if (floorFinishForHeight > 0) {
