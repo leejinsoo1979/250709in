@@ -133,6 +133,65 @@ const DoorGapInput: React.FC<{
   );
 };
 
+/** 프레임 size/옵셋 입력 행 — 로컬 상태 기반 (편집 중 store 업데이트로 인한 덮어쓰기 방지) */
+const FrameOffsetRow: React.FC<{
+  num: number; label: string; enabled: boolean; sizeMM: number; offset: number;
+  onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void;
+  highlightKey: string; toAlpha: (n: number) => string; styles: any;
+  setHighlightedFrame: (key: string | null) => void;
+}> = ({ num, label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, highlightKey, toAlpha, styles, setHighlightedFrame }) => {
+  const [sizeText, setSizeText] = useState(String(sizeMM || ''));
+  const [offsetText, setOffsetText] = useState(offset !== 0 ? String(offset) : '');
+  const sizeFocusRef = useRef(false);
+  const offsetFocusRef = useRef(false);
+
+  useEffect(() => { if (!sizeFocusRef.current) setSizeText(sizeMM ? String(sizeMM) : ''); }, [sizeMM]);
+  useEffect(() => { if (!offsetFocusRef.current) setOffsetText(offset !== 0 ? String(offset) : ''); }, [offset]);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+      <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}{label}</span>
+      <button onClick={onToggle} className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`} />
+      {enabled ? (
+        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
+            <input type="text" inputMode="numeric" value={sizeText} placeholder="0"
+              onFocus={() => { sizeFocusRef.current = true; setHighlightedFrame(highlightKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setSizeText(String(next)); onSizeChange(next);
+                } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
+              onBlur={(e) => { sizeFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(c)); onSizeChange(c); }}
+              className={styles.frameNumberInput}
+            />
+          </div>
+          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+            <input type="text" inputMode="numeric" value={offsetText} placeholder="0"
+              onFocus={() => { offsetFocusRef.current = true; setHighlightedFrame(highlightKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setOffsetText(String(next)); onOffsetChange(next);
+                } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
+              onBlur={(e) => { offsetFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(c)); onOffsetChange(c); }}
+              className={styles.frameNumberInput}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 /** 단내림 구간 사이즈 한 줄 (좌/우 단내림 순서 대응용) */
 const ZoneSizeDroppedRow: React.FC<{
   spaceInfo: any; isFreeMode: boolean; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
@@ -4651,79 +4710,6 @@ const Configurator: React.FC = () => {
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
 
-          const renderFrameOffsetRow = (
-            num: number,
-            label: string,
-            enabled: boolean,
-            sizeMM: number,
-            offset: number,
-            onToggle: () => void,
-            onSizeChange: (val: number) => void,
-            onOffsetChange: (val: number) => void,
-            highlightKey: string,
-          ) => (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}{label}</span>
-              <button
-                onClick={onToggle}
-                className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
-              />
-              {enabled ? (
-                <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={sizeMM || ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(highlightKey)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + delta)));
-                        }
-                      }}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={offset !== 0 ? offset : ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(highlightKey)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + delta)));
-                        }
-                      }}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        const parsed = parseInt(e.target.value) || 0;
-                        onOffsetChange(Math.max(-200, Math.min(200, parsed)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          );
-
           let topNum = 0;
           let baseNum = 0;
           return (
@@ -4824,19 +4810,20 @@ const Configurator: React.FC = () => {
                     ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
                   const effectiveSpaceHeight = spaceInfo.height - stepDrop - dcDrop;
                   const actualTopFrameSize = Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight);
-                  return <React.Fragment key={`top-${mod.id}`}>{renderFrameOffsetRow(tn, '(상)',
-                    mod.hasTopFrame !== false, actualTopFrameSize, mod.topFrameOffset ?? 0,
-                    () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                    (v) => {
-                      // 상부프레임 size 변경 → freeHeight 역산 (가구 높이 조정)
+                  return <FrameOffsetRow key={`top-${mod.id}`}
+                    num={tn} label="(상)"
+                    enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
+                    onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                    onSizeChange={(v) => {
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
                       updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
-                    },
-                    (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
-                    `top-${mod.id}`,
-                  )}</React.Fragment>;
+                    }}
+                    onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                    highlightKey={`top-${mod.id}`}
+                    toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                  />;
                 })}
                 {/* 하부프레임 — 띄워서 배치(stand)면 받침대 없으므로 숨김 */}
                 {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
