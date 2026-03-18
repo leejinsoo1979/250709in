@@ -2991,16 +2991,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // ── 1단 분해 계산 (가구 유무 무관 — 항상 표시) ──
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
           const globalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+          const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
           // per-furniture 프레임 오버라이드 적용
           const bottomFrameH = leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH;
-          const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
           const perTopFrame = leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame;
-          const furnitureH = leftmostMod
-            ? (leftmostMod.freeHeight || leftmostMod.customHeight || _internalHeight)
-            : _internalHeight;
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const leftModInDrop = leftmostMod?.zone === 'dropped';
           const effectiveH = (isLeftDrop && leftModInDrop) || (isLeftDrop && !leftmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
+          // 가구 내경 높이: per-furniture 프레임이 있으면 effectiveH에서 직접 계산
+          let furnitureH: number;
+          if (leftmostMod) {
+            if (leftmostMod.freeHeight) {
+              furnitureH = leftmostMod.freeHeight;
+            } else if (leftmostMod.customHeight) {
+              furnitureH = leftmostMod.customHeight;
+            } else {
+              // 슬롯배치: effectiveH에서 per-furniture 프레임을 빼서 내경 계산
+              furnitureH = Math.max(0, effectiveH - bottomFrameH - perTopFrame);
+            }
+          } else {
+            furnitureH = _internalHeight;
+          }
           const topFrameH = Math.max(0, effectiveH - bottomFrameH - furnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
@@ -3226,14 +3237,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // ── 1단 분해 계산 (가구 유무 무관 — 항상 표시) ──
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+          const rGlobalTopFrame = spaceInfo.frameSize?.top ?? 30;
           // per-furniture 프레임 오버라이드 적용
           const rBottomFrameH = rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH;
-          const rFurnitureH = rightmostMod
-            ? (rightmostMod.freeHeight || rightmostMod.customHeight || rInternalHeight)
-            : rInternalHeight;
+          const rPerTopFrame = rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame;
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const rightModInDrop = rightmostMod?.zone === 'dropped';
           const rEffectiveH = (isRightDrop && rightModInDrop) || (isRightDrop && !rightmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
+          // 가구 내경 높이: per-furniture 프레임이 있으면 effectiveH에서 직접 계산
+          let rFurnitureH: number;
+          if (rightmostMod) {
+            if (rightmostMod.freeHeight) {
+              rFurnitureH = rightmostMod.freeHeight;
+            } else if (rightmostMod.customHeight) {
+              rFurnitureH = rightmostMod.customHeight;
+            } else {
+              // 슬롯배치: effectiveH에서 per-furniture 프레임을 빼서 내경 계산
+              rFurnitureH = Math.max(0, rEffectiveH - rBottomFrameH - rPerTopFrame);
+            }
+          } else {
+            rFurnitureH = rInternalHeight;
+          }
           const rTopFrameH = Math.max(0, rEffectiveH - rBottomFrameH - rFurnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
