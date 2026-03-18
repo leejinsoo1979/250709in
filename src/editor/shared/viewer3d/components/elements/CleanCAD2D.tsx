@@ -2992,9 +2992,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
           const globalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // per-furniture 프레임 오버라이드 적용 (토글 OFF 시 0)
-          // 하부: hasBase, 상부: hasTopFrame
-          const bottomFrameH = leftmostMod?.hasBase === false ? 0
+          // per-furniture 프레임 오버라이드 적용 (토글 OFF → 띄움 높이, 상부: hasTopFrame OFF → 0)
+          const bottomFrameH = leftmostMod?.hasBase === false
+            ? (leftmostMod.individualFloatHeight ?? 0)
             : (leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH);
           const perTopFrame = leftmostMod?.hasTopFrame === false ? 0
             : (leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame);
@@ -3252,9 +3252,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const rGlobalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // per-furniture 프레임 오버라이드 적용 (토글 OFF 시 0)
-          // 하부: hasBase, 상부: hasTopFrame
-          const rBottomFrameH = rightmostMod?.hasBase === false ? 0
+          // per-furniture 프레임 오버라이드 적용 (토글 OFF → 띄움 높이, 상부: hasTopFrame OFF → 0)
+          const rBottomFrameH = rightmostMod?.hasBase === false
+            ? (rightmostMod.individualFloatHeight ?? 0)
             : (rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH);
           const rPerTopFrame = rightmostMod?.hasTopFrame === false ? 0
             : (rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame);
