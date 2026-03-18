@@ -3582,11 +3582,11 @@ const Room: React.FC<RoomProps> = ({
                     .map((mod) => {
                       const bounds = getModuleBoundsX(mod);
                       let modWidthMM = bounds.right - bounds.left;
-                      // EP 두께만큼 프레임 너비 축소
+                      let modCenterXmm = (bounds.left + bounds.right) / 2;
+                      // EP 두께만큼 프레임 너비 축소 + 중심 보정
                       const epThk = mod.endPanelThickness || 18;
-                      if (mod.hasLeftEndPanel) modWidthMM -= epThk;
-                      if (mod.hasRightEndPanel) modWidthMM -= epThk;
-                      const modCenterXmm = (bounds.left + bounds.right) / 2;
+                      if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                      if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       let modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                       const modTopHeight = mmToThreeUnits(modTopThickness);
                       const modTopY = panelStartY + height - modTopHeight / 2;
@@ -4496,11 +4496,11 @@ const Room: React.FC<RoomProps> = ({
                         .map((mod) => {
                           const bounds = getModuleBoundsX(mod);
                           let modWidthMM = bounds.right - bounds.left;
-                          // EP 두께만큼 프레임 너비 축소
+                          let modCenterXmm = (bounds.left + bounds.right) / 2;
+                          // EP 두께만큼 프레임 너비 축소 + 중심 보정
                           const epThk = mod.endPanelThickness || 18;
-                          if (mod.hasLeftEndPanel) modWidthMM -= epThk;
-                          if (mod.hasRightEndPanel) modWidthMM -= epThk;
-                          const modCenterXmm = (bounds.left + bounds.right) / 2;
+                          if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                          if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                           const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                           const modBaseH = mmToThreeUnits(modBaseHeight);
                           const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
