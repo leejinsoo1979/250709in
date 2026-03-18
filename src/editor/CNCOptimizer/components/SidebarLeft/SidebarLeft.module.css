@@ -254,6 +254,19 @@
   font-weight: 700;
 }
 
+.table tbody tr.selected td .input {
+  color: hsl(var(--theme)) !important;
+  font-weight: 700;
+}
+
+.table tbody tr.selected td .dimensions,
+.table tbody tr.selected td .inputSmall,
+.table tbody tr.selected td .inputTiny,
+.table tbody tr.selected td .select {
+  color: hsl(var(--theme)) !important;
+  font-weight: 600;
+}
+
 /* 은선 효과 제거됨 — 아래는 사용하지 않음 */
 .table__unused_hidden_overlay::after {
   content: '';
