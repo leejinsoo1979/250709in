@@ -67,7 +67,7 @@ export function useLivePanelData() {
 
     const extractPanels = () => {
       setIsLoading(true);
-      
+      try {
       // 가구가 배치되지 않은 경우 빈 배열 반환
       if (!placedModules || placedModules.length === 0) {
         console.log('No modules placed, returning empty panels');
@@ -498,7 +498,13 @@ export function useLivePanelData() {
       console.log('All panels:', allPanels);
 
       setPanels(allPanels);
-      setIsLoading(false);
+      } catch (error) {
+        console.error('❌ extractPanels error:', error);
+        console.error('❌ Stack:', error instanceof Error ? error.stack : '');
+        setPanels([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     extractPanels();
