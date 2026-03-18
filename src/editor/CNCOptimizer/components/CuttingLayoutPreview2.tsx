@@ -1322,7 +1322,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const isFurnitureSidePanel = (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))
         && !panel.name?.includes('서랍') // 서랍 측판 제외
         && !panel.name?.includes('도어') // 도어 제외
-        && !panel.name?.includes('Door'); // 도어 제외
+        && !panel.name?.includes('Door') // 도어 제외
+        && !panel.name?.includes('서라운드'); // 서라운드 프레임 제외
       if (showGrooves && isFurnitureSidePanel) {
         ctx.save();
 
