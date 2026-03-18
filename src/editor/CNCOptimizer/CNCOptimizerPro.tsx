@@ -1211,6 +1211,14 @@ function PageInner(){
     }
   }, [allCutSteps, setSawStats]);
 
+  // 화면상 시트 방향 판별 (rotation 반영)
+  const isVisuallyPortrait = (() => {
+    const sp = optimizationResults[currentSheetIndex]?.stockPanel;
+    if (!sp) return false;
+    const isRotated = Math.abs(viewerRotation % 180) === 90;
+    return isRotated ? sp.width > sp.height : sp.height > sp.width;
+  })();
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -1349,7 +1357,7 @@ function PageInner(){
               </div>
             </div>
           ) : optimizationResults.length > 0 ? (
-            <div className={`${styles.viewerContainer} ${optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.viewerContainerPortrait : ''}`}>
+            <div className={`${styles.viewerContainer} ${isVisuallyPortrait ? styles.viewerContainerPortrait : ''}`}>
               <div className={styles.mainViewer}>
                 <CuttingLayoutPreview2
                   result={optimizationResults[currentSheetIndex]}
@@ -1397,8 +1405,8 @@ function PageInner(){
                 />
               </div>
 
-              <div className={optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.thumbnailBarVertical : styles.thumbnailBar}>
-                <div className={optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.thumbnailScrollVertical : styles.thumbnailScroll}>
+              <div className={isVisuallyPortrait ? styles.thumbnailBarVertical : styles.thumbnailBar}>
+                <div className={isVisuallyPortrait ? styles.thumbnailScrollVertical : styles.thumbnailScroll}>
                   {optimizationResults.map((result, index) => (
                     <SheetThumbnail
                       key={index}
