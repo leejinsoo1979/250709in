@@ -420,10 +420,10 @@ export function useLivePanelData() {
           });
         }
         if (fs.top > 0) {
-          // 상부 프레임: 너비 = 공간 전체 너비
+          // 상부 프레임: 너비 = 공간 너비 - 좌/우 서라운드 (좌/우 사이에 끼움)
           surroundPanelList.push({
             name: '상부 서라운드 프레임',
-            width: spaceInfo.width,
+            width: spaceInfo.width - (fs.left || 0) - (fs.right || 0),
             height: fs.top,
             thickness: surroundThickness,
             material: 'PB',
@@ -893,7 +893,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       if (fs2.top > 0) {
         surroundPanelList2.push({
           name: '상부 서라운드 프레임',
-          width: spaceInfo.width,
+          width: spaceInfo.width - (fs2.left || 0) - (fs2.right || 0),
           height: fs2.top,
           thickness: surroundThickness2,
           material: 'PB',
