@@ -1152,18 +1152,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     );
   }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase]);
 
-  // 서라운드 패널 계산 (공간 전체 단위)
+  // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
-    if (!spaceInfo.freeSurround) return [];
+    if (!spaceInfo.freeSurround || !currentPlacedModule) return [];
     // 서라운드 높이 = 공간높이 - 바닥마감재 - 띄움높이
     const spaceH = spaceInfo.height || 2400;
     const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
       ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
     const surroundH = spaceH - floorFinishH - floatH;
-    const panels = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
-    if (panels.length === 0) return [];
-    return [{ name: '=== 서라운드 ===' }, ...panels];
-  }, [spaceInfo.freeSurround, spaceInfo.height, spaceInfo.baseConfig, floorFinishH]);
+    const allSurroundPanels = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+    if (allSurroundPanels.length === 0) return [];
+
+    // 맨 좌측/우측 가구 판별
+    let minSlot = Infinity, maxSlot = -Infinity;
+    placedModules.forEach((pm, idx) => {
+      const slot = pm.slotIndex ?? idx;
+      if (slot < minSlot) minSlot = slot;
+      if (slot > maxSlot) maxSlot = slot;
+    });
+    const currentSlot = currentPlacedModule.slotIndex ?? placedModules.indexOf(currentPlacedModule);
+    const isLeftMost = currentSlot === minSlot;
+    const isRightMost = currentSlot === maxSlot;
+
+    // 현재 가구에 해당하는 서라운드만 필터
+    const filtered = allSurroundPanels.filter((p: any) => {
+      const isLeft = p.name.includes('좌측');
+      const isRight = p.name.includes('우측');
+      const isMiddle = !isLeft && !isRight; // 중간 서라운드
+      if (isLeft) return isLeftMost;
+      if (isRight) return isRightMost;
+      return isMiddle; // 중간 서라운드는 모든 가구에 표시하지 않음 (별도)
+    });
+    // 중간 서라운드는 어떤 가구에도 표시하지 않음
+    const finalFiltered = filtered.filter((p: any) => p.name.includes('좌측') || p.name.includes('우측'));
+
+    if (finalFiltered.length === 0) return [];
+    return [{ name: '=== 서라운드 ===' }, ...finalFiltered];
+  }, [spaceInfo.freeSurround, spaceInfo.height, spaceInfo.baseConfig, floorFinishH, currentPlacedModule, placedModules]);
 
   // panelDetails + surroundPanels 합산
   const allPanelDetails = React.useMemo(() => {
