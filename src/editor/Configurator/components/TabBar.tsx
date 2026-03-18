@@ -25,7 +25,7 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
           onClick={onFileTreeToggle}
           title="파일 트리 열기/닫기"
         >
-          <FaFolderOpen size={16} />
+          <FaFolderOpen size={20} />
         </button>
       )}
       {openTabs.map((tab) => (
