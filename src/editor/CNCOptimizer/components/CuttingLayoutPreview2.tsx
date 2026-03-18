@@ -712,7 +712,53 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       }
       
 
-      // Grain direction removed - no grain lines
+      // Grain direction arrow — 결방향 화살표 표시
+      if (panel.grain && panel.grain !== 'NONE' && width > 30 && height > 30) {
+        ctx.save();
+        const arrowColor = panel.material === 'MDF' ? 'rgba(100, 60, 20, 0.5)' : 'rgba(120, 120, 120, 0.45)';
+        ctx.strokeStyle = arrowColor;
+        ctx.fillStyle = arrowColor;
+        ctx.lineWidth = 2 / (baseScale * scale);
+
+        const isVerticalGrain = panel.grain === 'VERTICAL' || panel.grain === 'LENGTH';
+        const cx = x + width / 2;
+        const cy = y + height / 2;
+        const arrowLen = Math.min(isVerticalGrain ? height * 0.3 : width * 0.3, 60);
+        const headLen = Math.min(8, arrowLen * 0.3);
+
+        if (isVerticalGrain) {
+          // 세로 화살표 (↑) — 아래→위
+          const fromY = cy + arrowLen / 2;
+          const toY = cy - arrowLen / 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, fromY);
+          ctx.lineTo(cx, toY);
+          ctx.stroke();
+          // 화살촉
+          ctx.beginPath();
+          ctx.moveTo(cx, toY);
+          ctx.lineTo(cx - headLen * 0.5, toY + headLen);
+          ctx.lineTo(cx + headLen * 0.5, toY + headLen);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // 가로 화살표 (→) — 왼→오
+          const fromX = cx - arrowLen / 2;
+          const toX = cx + arrowLen / 2;
+          ctx.beginPath();
+          ctx.moveTo(fromX, cy);
+          ctx.lineTo(toX, cy);
+          ctx.stroke();
+          // 화살촉
+          ctx.beginPath();
+          ctx.moveTo(toX, cy);
+          ctx.lineTo(toX - headLen, cy - headLen * 0.5);
+          ctx.lineTo(toX - headLen, cy + headLen * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
 
       // Rotation indicator
       if (panel.rotated) {
