@@ -589,6 +589,87 @@ function packCategoryToMultiBins(
 }
 
 /**
+ * 백패널 전용 멀티 시트 패킹 — 같은 가구의 (상)+(하) 백패널 반드시 같은 시트
+ *
+ * 핵심 원칙:
+ *   - 같은 가구의 백패널은 절대 분리하지 않음
+ *   - 가구 최대 크기 1200×2400, 원장 1220×2440 → 한 가구의 백패널은 항상 한 시트에 수용 가능
+ *   - 여러 가구의 백패널을 같은 시트에 합칠 수 있으면 합침 (효율 향상)
+ */
+function packBackPanelsToMultiBins(
+  panels: Rect[],
+  binWidth: number,
+  binHeight: number,
+  kerf: number
+): PackedBin[] {
+  if (panels.length === 0) return [];
+
+  // 1단계: 가구번호별 그룹핑
+  const byFurniture = new Map<number, Rect[]>();
+  for (const p of panels) {
+    const fn = extractFurnitureNum(p.name || '');
+    if (!byFurniture.has(fn)) byFurniture.set(fn, []);
+    byFurniture.get(fn)!.push(p);
+  }
+
+  // 2단계: 가구 그룹을 총면적 내림차순 정렬 (큰 가구 먼저)
+  const furnitureGroups = [...byFurniture.values()]
+    .sort((a, b) => {
+      const areaA = a.reduce((s, p) => s + p.width * p.height, 0);
+      const areaB = b.reduce((s, p) => s + p.width * p.height, 0);
+      return areaB - areaA;
+    });
+
+  // 3단계: 가구 그룹 단위로 시트에 배치
+  const bins: PackedBin[] = [];
+  const packedGroupIdx = new Set<number>();
+
+  for (let gi = 0; gi < furnitureGroups.length; gi++) {
+    if (packedGroupIdx.has(gi)) continue;
+
+    // 현재 가구 그룹을 시트에 넣기
+    const sheetPanels: Rect[] = [...furnitureGroups[gi]];
+    packedGroupIdx.add(gi);
+
+    // 다른 가구 그룹도 같은 시트에 넣을 수 있는지 시도 (작은 것부터)
+    for (let gj = gi + 1; gj < furnitureGroups.length; gj++) {
+      if (packedGroupIdx.has(gj)) continue;
+
+      // 시험 패킹: 합쳐서 모든 패널이 한 시트에 들어가는지 확인
+      const trial = [...sheetPanels, ...furnitureGroups[gj]];
+      const trialPacker = new GuillotinePacker(binWidth, binHeight, kerf);
+      const trialResult = trialPacker.packAll(trial, 'vertical');
+
+      if (trialResult.panels.length === trial.length) {
+        // 모두 수용 가능 → 합침
+        sheetPanels.push(...furnitureGroups[gj]);
+        packedGroupIdx.add(gj);
+      }
+    }
+
+    // 최종 패킹
+    const packer = new GuillotinePacker(binWidth, binHeight, kerf);
+    const result = packer.packAll(sheetPanels, 'vertical');
+    if (result.panels.length > 0) {
+      bins.push(result);
+
+      // 혹시 일부 패널이 배치 안 됐으면 다음 시트로 (안전장치)
+      const placedIds = new Set(result.panels.map(p => p.id));
+      const unplaced = sheetPanels.filter(p => !placedIds.has(p.id));
+      if (unplaced.length > 0) {
+        const fallbackPacker = new GuillotinePacker(binWidth, binHeight, kerf);
+        const fallbackResult = fallbackPacker.packAll(unplaced, 'vertical');
+        if (fallbackResult.panels.length > 0) {
+          bins.push(fallbackResult);
+        }
+      }
+    }
+  }
+
+  return bins;
+}
+
+/**
  * 길로틴 방식 멀티 빈 패킹
  *
  * 핵심 원칙:
@@ -630,9 +711,8 @@ export function packGuillotine(
   // ── 2단계: 카테고리별 패킹 ──
   // 측판: vertical (같은 width끼리 한 줄)
   const sideBins = packCategoryToMultiBins(sidePanels, binWidth, binHeight, kerf, 'vertical');
-  // 백패널: vertical (같은 width=내경폭 끼리 한 줄, height를 y축으로 쌓음)
-  // → 같은 가구의 (상)+(하) 백패널이 같은 스트립에 나란히
-  const backBins = packCategoryToMultiBins(backPanels, binWidth, binHeight, kerf, 'vertical');
+  // 백패널: 가구별 그룹 패킹 — 같은 가구의 (상)+(하) 백패널은 반드시 같은 시트
+  const backBins = packBackPanelsToMultiBins(backPanels, binWidth, binHeight, kerf);
   // 본체(상판/하판/선반 등): horizontal
   const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
   // 프레임: horizontal (맨 마지막)
