@@ -1307,9 +1307,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>띄움</span>
                               <input type="text" inputMode="numeric"
                                 value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.individualFloatHeight ?? 0; updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.individualFloatHeight ?? 0; updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
                                 onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) }); }}
-                                onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                                onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(500, parseInt(e.target.value) || 0)) }); }}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                               />
                             </div>

@@ -4892,11 +4892,11 @@ const Configurator: React.FC = () => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   const cur = mod.individualFloatHeight ?? 0;
-                                  updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                                  updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                                 }
                               }}
                               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) }); }}
-                              onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                              onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(500, parseInt(e.target.value) || 0)) }); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -5113,11 +5113,11 @@ const Configurator: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = mod.individualFloatHeight ?? 0;
-                            updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                            updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) }); }}
-                        onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                        onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(500, parseInt(e.target.value) || 0)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
