@@ -4339,14 +4339,17 @@ const Room: React.FC<RoomProps> = ({
                   // 개별 가구 하이라이트 or 기본 base material
                   const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
                   const baseMat = baseFrameMaterial ?? createFrameMaterial('base');
+                  // 바닥마감재 적용: 프레임 원래 높이 유지, Y만 바닥마감재 위로
+                  const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+                  const modBaseH = mmToThreeUnits(modBaseHeightMm);
                   const baseArgs: [number, number, number] = [
                     mmToThreeUnits(modWidthMM),
-                    visualBaseFrameHeight,
+                    modBaseH,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ];
                   const basePos: [number, number, number] = [
                     mmToThreeUnits(modCenterXmm),
-                    panelStartY + floatHeight + visualBaseFrameHeight / 2,
+                    panelStartY + floatHeight + modBaseH / 2,
                     baseZPosition
                   ];
                   return (
@@ -4591,12 +4594,12 @@ const Room: React.FC<RoomProps> = ({
                       key={`base-frame-zone-${zoneIndex}`}
                       args={[
                         frameWidth,
-                        visualBaseFrameHeight,
+                        baseFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                       ]}
                       position={[
                         frameX, // 중앙 정렬
-                        panelStartY + floatHeight + visualBaseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
+                        panelStartY + floatHeight + baseFrameHeight / 2, // 바닥마감재 위 + 원래 높이
                         // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                         // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
@@ -4633,12 +4636,12 @@ const Room: React.FC<RoomProps> = ({
                       key={`base-frame-zone-${zoneIndex}-segment-${segmentIndex}`}
                       args={[
                         segment.width,
-                        visualBaseFrameHeight,
+                        baseFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                       ]}
                       position={[
                         segment.x, // 분절된 위치
-                        panelStartY + floatHeight + visualBaseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
+                        panelStartY + floatHeight + baseFrameHeight / 2, // 바닥마감재 위 + 원래 높이
                         // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
                         // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(END_PANEL_THICKNESS) -
