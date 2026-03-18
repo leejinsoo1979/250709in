@@ -414,6 +414,7 @@
     "singleSheetOnly": "仅单张板材",
     "alignVerticalCuts": "对齐垂直切割",
     "exitConfirmMessage": "确定要退出CNC优化器吗？",
-    "unsavedChangesWarning": "您可能有未保存的更改。"
+    "unsavedChangesWarning": "您可能有未保存的更改。",
+    "settings": "设置"
   }
 }

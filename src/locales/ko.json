@@ -449,6 +449,7 @@
     "singleSheetOnly": "단일 시트만 사용",
     "alignVerticalCuts": "세로 컷팅 정렬",
     "exitConfirmMessage": "CNC 옵티마이저를 종료하시겠습니까?",
-    "unsavedChangesWarning": "저장되지 않은 변경사항이 있을 수 있습니다."
+    "unsavedChangesWarning": "저장되지 않은 변경사항이 있을 수 있습니다.",
+    "settings": "설정"
   }
 }

@@ -456,6 +456,7 @@
     "singleSheetOnly": "Single Sheet Only",
     "alignVerticalCuts": "Align Vertical Cuts",
     "exitConfirmMessage": "Are you sure you want to exit CNC Optimizer?",
-    "unsavedChangesWarning": "You may have unsaved changes."
+    "unsavedChangesWarning": "You may have unsaved changes.",
+    "settings": "Settings"
   }
 }

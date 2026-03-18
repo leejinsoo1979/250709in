@@ -423,6 +423,7 @@
     "singleSheetOnly": "単一シートのみ",
     "alignVerticalCuts": "垂直カットを整列",
     "exitConfirmMessage": "CNCオプティマイザーを終了しますか？",
-    "unsavedChangesWarning": "保存されていない変更がある可能性があります。"
+    "unsavedChangesWarning": "保存されていない変更がある可能性があります。",
+    "settings": "設定"
   }
 }

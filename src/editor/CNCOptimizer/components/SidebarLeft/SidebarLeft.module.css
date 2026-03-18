@@ -9,11 +9,10 @@
   flex-grow: 0;
 }
 
-/* 패널 목록 섹션 - 고정 높이 */
+/* 패널 목록 섹션 - 유연한 높이 */
 .section:has(.tableContainer) {
-  height: 240px;
-  min-height: 240px;
-  max-height: 240px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* 원자재 섹션 - 고정 높이 */
@@ -86,9 +85,8 @@
 
 .tableContainer {
   padding: 0;
-  height: 180px;
-  min-height: 180px;
-  max-height: 180px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;

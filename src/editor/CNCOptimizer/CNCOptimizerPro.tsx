@@ -17,9 +17,8 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 
 // Components
 import PanelsTable from './components/SidebarLeft/PanelsTable';
-import StockTable from './components/SidebarLeft/StockTable';
-import OptionsCard from './components/SidebarLeft/OptionsCard';
 import ExportBar from './components/ExportBar';
+import SettingsModal from './components/SettingsModal';
 import CuttingLayoutPreview2 from './components/CuttingLayoutPreview2';
 import SheetThumbnail from './components/SheetThumbnail';
 import ModeTabs from './components/ModeTabs';
@@ -249,6 +248,9 @@ function PageInner(){
   
   // Exit confirmation state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // Settings modal state
+  const [showSettings, setShowSettings] = useState(false);
 
   // Simulation complete stats popup state
   const [showSimulationStats, setShowSimulationStats] = useState(false);
@@ -1268,7 +1270,16 @@ function PageInner(){
             />
           </div>
           <div className={styles.divider} />
-          <button 
+          <button
+            className={styles.settingsButton}
+            onClick={() => setShowSettings(true)}
+            title={t('cnc.settings')}
+            type="button"
+          >
+            <Settings2 size={16} />
+          </button>
+          <div className={styles.divider} />
+          <button
             className={styles.exitButton}
             onClick={(e) => {
               e.preventDefault();
@@ -1288,8 +1299,6 @@ function PageInner(){
         {/* Left Sidebar */}
         <div className={styles.leftSidebar}>
           <PanelsTable />
-          <StockTable />
-          <OptionsCard onSettingsChange={handleOptimize} />
         </div>
 
         {/* Center - Preview */}
@@ -1847,6 +1856,13 @@ function PageInner(){
         isOpen={showSimulationStats && simulationStatsData !== null}
         onClose={() => setShowSimulationStats(false)}
         stats={simulationStatsData || { sheetCount: 0, totalPanels: 0, totalCutLength: 0, avgEfficiency: 0 }}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onSettingsChange={handleOptimize}
       />
 
       {/* Exit Confirmation Modal */}
