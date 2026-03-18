@@ -3024,15 +3024,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const sections = modData?.modelConfig?.sections;
             if (sections && sections.length >= 2) {
-              // 섹션 높이 계산 (absolute vs percentage)
+              // 섹션 높이 계산: absolute 섹션은 고정, 마지막(상부) 섹션이 나머지 흡수
               const rawHeights = sections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(furnitureH * s.height / 100);
               });
-              // absolute 합이 furnitureH와 다르면 비례 스케일링
               const rawSum = rawHeights.reduce((a, b) => a + b, 0);
               if (rawSum > 0 && Math.abs(rawSum - furnitureH) > 1) {
-                sectionHeights = rawHeights.map(h => Math.round(h * furnitureH / rawSum));
+                // 하부(고정) 섹션 유지, 상부(마지막) 섹션 = furnitureH - 하부 합
+                const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                sectionHeights = [
+                  ...rawHeights.slice(0, -1),
+                  Math.max(0, furnitureH - fixedSum)
+                ];
               } else {
                 sectionHeights = rawHeights;
               }
@@ -3281,10 +3285,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(rFurnitureH * s.height / 100);
               });
-              // absolute 합이 rFurnitureH와 다르면 비례 스케일링
+              // 하부(고정) 섹션 유지, 상부(마지막) 섹션 = furnitureH - 하부 합
               const rRawSum = rRawHeights.reduce((a, b) => a + b, 0);
               if (rRawSum > 0 && Math.abs(rRawSum - rFurnitureH) > 1) {
-                rSectionHeights = rRawHeights.map(h => Math.round(h * rFurnitureH / rRawSum));
+                const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                rSectionHeights = [
+                  ...rRawHeights.slice(0, -1),
+                  Math.max(0, rFurnitureH - rFixedSum)
+                ];
               } else {
                 rSectionHeights = rRawHeights;
               }
