@@ -51,14 +51,16 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     state.spaceInfo.baseConfig?.type === 'stand' &&
     state.spaceInfo.baseConfig?.placementType === 'float'
   );
-  // placedFurnitureId로 baseFrameOffset, hasBase 조회
-  const { baseFrameOffset, hasBase } = useFurnitureStore(state => {
-    if (!placedFurnitureId) return { baseFrameOffset: 0, hasBase: true };
+  // placedFurnitureId로 baseFrameOffset, hasBase 조회 (primitive 반환으로 무한 렌더 방지)
+  const baseFrameOffset = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
-    return {
-      baseFrameOffset: mod?.baseFrameOffset ?? 0,
-      hasBase: mod?.hasBase !== false,
-    };
+    return mod?.baseFrameOffset ?? 0;
+  });
+  const hasBase = useFurnitureStore(state => {
+    if (!placedFurnitureId) return true;
+    const mod = state.placedModules.find(m => m.id === placedFurnitureId);
+    return mod?.hasBase !== false;
   });
 
   // Store 값 우선, prop은 폴백
