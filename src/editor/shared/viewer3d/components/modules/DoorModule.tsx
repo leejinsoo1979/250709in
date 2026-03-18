@@ -783,8 +783,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const topGap = isFullSurround
       ? (doorTopGap + effectiveTopFrame)
       : doorTopGap;
-    const bottomGap = doorBottomGap ?? (placementType === 'float' ? floatHeight : 25);
     const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
+    // 띄움배치 시 bottomGap 계산:
+    // doorBottomGap이 명시적으로 설정되고 floatHeight보다 작으면 → 가구에 맞춤 모드
+    //   → doorBottomGap을 가구 하단 기준으로 적용 (actualBase를 상쇄)
+    // doorBottomGap이 없거나 floatHeight 이상이면 → 공간에 맞춤 모드 또는 기본값
+    //   → 기존 로직 유지 (바닥 기준으로 갭 적용)
+    const bottomGap = (() => {
+      if (doorBottomGap !== undefined && doorBottomGap !== null) {
+        if (placementType === 'float' && doorBottomGap < actualBase) {
+          // 가구에 맞춤: doorBottomGap은 가구 하단 기준이므로 actualBase를 상쇄
+          return actualBase + doorBottomGap;
+        }
+        return doorBottomGap;
+      }
+      return placementType === 'float' ? floatHeight : 25;
+    })();
     const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
     doorTopLocal = cabinetTopLocal + distToTop - topGap;
     doorBottomLocal = cabinetBottomLocal - actualBase + bottomGap;
