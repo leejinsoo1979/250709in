@@ -134,44 +134,43 @@
   table-layout: fixed;
 }
 
-/* 패널 테이블 열 너비 최적화 */
+/* 패널 테이블 열 너비 최적화 — 이름 칼럼 최대화 */
 .table th:first-child,
 .table td:first-child {
   width: auto; /* 이름 - 나머지 공간 모두 사용 */
-  min-width: 100px;
 }
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-  width: 110px; /* 치수 - 충분한 공간 확보 */
+  width: 95px; /* 치수 */
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-  width: 45px; /* 두께 */
+  width: 30px; /* 두께 */
   text-align: center;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 40px; /* 수량 */
+  width: 28px; /* 수량 */
   text-align: center;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 50px; /* 재질 */
+  width: 42px; /* 재질 */
 }
 
 .table th:nth-child(6),
 .table td:nth-child(6) {
-  width: 35px; /* 결방향 */
+  width: 28px; /* 결방향 */
   text-align: center;
 }
 
 .table th:last-child,
 .table td:last-child {
-  width: 24px; /* 삭제 */
+  width: 22px; /* 삭제 */
   text-align: center;
 }
 
