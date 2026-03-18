@@ -2642,7 +2642,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 자유배치 EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   let freeEpOffsetX = 0;
-  if (!placedModule.customConfig) {
+  if (placedModule.isFreePlacement && !placedModule.customConfig) {
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
