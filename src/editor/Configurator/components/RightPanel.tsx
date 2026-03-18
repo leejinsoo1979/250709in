@@ -625,8 +625,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onFrameTypeChange
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { placedModules, clearAllModules } = useFurnitureStore();
-  const { setActiveDroppedCeilingTab } = useUIStore();
+  const { placedModules, clearAllModules, updatePlacedModule } = useFurnitureStore();
+  const { setActiveDroppedCeilingTab, selectedFurnitureId, setHighlightedFrame } = useUIStore();
   const { t, currentLanguage } = useTranslation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -1134,6 +1134,100 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 />
               </FormControl>
             )}
+
+            {/* 슬롯배치: 선택된 가구의 상,하부프레임 개별 설정 */}
+            {(() => {
+              if (spaceInfo.layoutMode === 'free-placement') return null;
+              const selMod = selectedFurnitureId ? placedModules.find(m => m.id === selectedFurnitureId) : null;
+              if (!selMod || selMod.isSurroundPanel) return null;
+              const globalTop = spaceInfo.frameSize?.top ?? 30;
+              const globalBase = spaceInfo.baseConfig?.height ?? 65;
+
+              const FrameRow = ({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey }: {
+                label: string; enabled: boolean; sizeMM: number; offset: number;
+                onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
+              }) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                  <span style={{ minWidth: '34px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
+                  <button
+                    onClick={onToggle}
+                    style={{
+                      width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                      backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+                      position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+                      backgroundColor: '#fff', transition: 'left 0.2s',
+                      left: enabled ? '18px' : '2px',
+                    }} />
+                  </button>
+                  {enabled && (
+                    <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                        <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
+                        <input type="text" inputMode="numeric"
+                          value={sizeMM || ''} placeholder="0"
+                          onFocus={() => setHighlightedFrame(hlKey)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1))));
+                            }
+                          }}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10)); }}
+                          onBlur={(e) => { setHighlightedFrame(null); onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0))); }}
+                          style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                        <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+                        <input type="text" inputMode="numeric"
+                          value={offset !== 0 ? offset : ''} placeholder="0"
+                          onFocus={() => setHighlightedFrame(hlKey)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1))));
+                            }
+                          }}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10)); }}
+                          onBlur={(e) => { setHighlightedFrame(null); onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0))); }}
+                          style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+
+              return (
+                <FormControl
+                  label="상,하부프레임"
+                  expanded={expandedSections.has('slotFrame')}
+                  onToggle={() => toggleSection('slotFrame')}
+                  helpText="선택된 가구의 상부/하부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다."
+                >
+                  <FrameRow label="A(상)" enabled={selMod.hasTopFrame !== false}
+                    sizeMM={selMod.topFrameThickness ?? globalTop} offset={selMod.topFrameOffset ?? 0}
+                    onToggle={() => updatePlacedModule(selMod.id, { hasTopFrame: !(selMod.hasTopFrame !== false) })}
+                    onSizeChange={(v) => updatePlacedModule(selMod.id, { topFrameThickness: v })}
+                    onOffsetChange={(v) => updatePlacedModule(selMod.id, { topFrameOffset: v })}
+                    hlKey={`top-${selMod.id}`}
+                  />
+                  {spaceInfo.baseConfig?.type !== 'stand' && (
+                    <FrameRow label="A(하)" enabled={selMod.hasBase !== false}
+                      sizeMM={selMod.baseFrameHeight ?? globalBase} offset={selMod.baseFrameOffset ?? 0}
+                      onToggle={() => updatePlacedModule(selMod.id, { hasBase: !(selMod.hasBase !== false) })}
+                      onSizeChange={(v) => updatePlacedModule(selMod.id, { baseFrameHeight: v })}
+                      onOffsetChange={(v) => updatePlacedModule(selMod.id, { baseFrameOffset: v })}
+                      hlKey={`base-${selMod.id}`}
+                    />
+                  )}
+                </FormControl>
+              );
+            })()}
 
             {/* 자유배치 도어 셋업 방식 (도어가 달린 가구가 있을 때만) */}
             {spaceInfo.layoutMode === 'free-placement' && placedModules.some(m => m.isFreePlacement && m.hasDoor) && (
