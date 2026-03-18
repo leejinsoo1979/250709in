@@ -1148,7 +1148,21 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const FrameRow = ({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey }: {
                 label: string; enabled: boolean; sizeMM: number; offset: number;
                 onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
-              }) => (
+              }) => {
+                const [sizeText, setSizeText] = React.useState(String(sizeMM || ''));
+                const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+                const sizeEditingRef = React.useRef(false);
+                const offsetEditingRef = React.useRef(false);
+
+                // 외부 prop 변경 시 (편집 중이 아닐 때만) 동기화
+                React.useEffect(() => {
+                  if (!sizeEditingRef.current) setSizeText(sizeMM ? String(sizeMM) : '');
+                }, [sizeMM]);
+                React.useEffect(() => {
+                  if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
+                }, [offset]);
+
+                return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                   <span style={{ minWidth: '34px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
                   <button
@@ -1170,39 +1184,44 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
                         <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
                         <input type="text" inputMode="numeric"
-                          value={sizeMM || ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame(hlKey)}
+                          value={sizeText} placeholder="0"
+                          onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1))));
+                              const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              setSizeText(String(next));
+                              onSizeChange(next);
                             }
                           }}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10)); }}
-                          onBlur={(e) => { setHighlightedFrame(null); onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0))); }}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { setSizeText(v); onSizeChange(v === '' ? 0 : parseInt(v, 10)); } }}
+                          onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
                           style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                         />
                       </div>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
                         <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
                         <input type="text" inputMode="numeric"
-                          value={offset !== 0 ? offset : ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame(hlKey)}
+                          value={offsetText} placeholder="0"
+                          onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1))));
+                              const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              setOffsetText(String(next));
+                              onOffsetChange(next);
                             }
                           }}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10)); }}
-                          onBlur={(e) => { setHighlightedFrame(null); onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0))); }}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { setOffsetText(v); onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10)); } }}
+                          onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
                           style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                         />
                       </div>
                     </div>
                   )}
                 </div>
-              );
+                );
+              };
 
               let topNum = 0;
               let baseNum = 0;
