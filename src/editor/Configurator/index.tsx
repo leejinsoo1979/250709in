@@ -4921,6 +4921,130 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
+        {/* 슬롯배치: 모든 가구의 상,하부프레임 개별 설정 */}
+        {!isFreeMode && (() => {
+          const slotMods = placedModules.filter(m => !m.isSurroundPanel);
+          if (slotMods.length === 0) return null;
+          const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
+          const toAlpha = (n: number) => String.fromCharCode(64 + n);
+          const globalTop = spaceInfo.frameSize?.top ?? 30;
+          const globalBase = spaceInfo.baseConfig?.height ?? 65;
+
+          const SlotFrameRow = ({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey }: {
+            label: string; enabled: boolean; sizeMM: number; offset: number;
+            onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
+          }) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+              <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
+              <button
+                onClick={onToggle}
+                className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
+              />
+              {enabled ? (
+                <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={sizeMM || ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(hlKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + delta)));
+                        }
+                      }}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset !== 0 ? offset : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(hlKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + delta)));
+                        }
+                      }}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          );
+
+          let topNum = 0;
+          let baseNum = 0;
+          return (
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>상,하부프레임</h3>
+                <HelpBtn title="상,하부프레임" text="각 가구별 상부/하부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
+                <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              </div>
+              {!isFrameSectionCollapsed && (
+                <div className={styles.subSetting}>
+                  {/* 상부프레임 — 좌→우 순서 */}
+                  {sorted.map((mod) => {
+                    topNum++;
+                    return (
+                      <SlotFrameRow key={`top-${mod.id}`}
+                        label={`${toAlpha(topNum)}(상)`}
+                        enabled={mod.hasTopFrame !== false}
+                        sizeMM={mod.topFrameThickness ?? globalTop}
+                        offset={mod.topFrameOffset ?? 0}
+                        onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                        onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: v })}
+                        onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                        hlKey={`top-${mod.id}`}
+                      />
+                    );
+                  })}
+                  {/* 하부프레임 — stand 타입이면 숨김 */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
+                    baseNum++;
+                    return (
+                      <SlotFrameRow key={`base-${mod.id}`}
+                        label={`${toAlpha(baseNum)}(하)`}
+                        enabled={mod.hasBase !== false}
+                        sizeMM={mod.baseFrameHeight ?? globalBase}
+                        offset={mod.baseFrameOffset ?? 0}
+                        onToggle={() => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) })}
+                        onSizeChange={(v) => updatePlacedModule(mod.id, { baseFrameHeight: v })}
+                        onOffsetChange={(v) => updatePlacedModule(mod.id, { baseFrameOffset: v })}
+                        hlKey={`base-${mod.id}`}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* 배치방식 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
