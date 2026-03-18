@@ -1379,7 +1379,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // customConfig.sections에서 bottomPanelRaise 확인 (customSections가 아닌 customConfig가 실제 데이터 소스)
         const configSections = placedModule.customConfig?.sections;
         const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
-        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65));
+        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65)));
         const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
 
         // 바닥 마감재 높이

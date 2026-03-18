@@ -3227,7 +3227,12 @@ const Room: React.FC<RoomProps> = ({
                     effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
                     effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
                   }
-                  const totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
+                  let totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
+                  // 하부프레임 토글 꺼짐 → 하부프레임 높이만큼 상부프레임에 더해서 상단 공백 매꿈
+                  if (mod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
+                    const modBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65;
+                    totalFrameHeightMM += modBaseH;
+                  }
                   const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
                   // 프레임 상단 = 해당 구간 천장에 맞추고 아래로 확장
                   const modFrameCenterY = effectiveTopY - modFrameHeight / 2;
@@ -3583,7 +3588,12 @@ const Room: React.FC<RoomProps> = ({
                       const bounds = getModuleBoundsX(mod);
                       const modWidthMM = bounds.right - bounds.left;
                       const modCenterXmm = (bounds.left + bounds.right) / 2;
-                      const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                      let modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                      // 하부프레임 토글 꺼짐 → 하부프레임 높이만큼 상부프레임에 더해서 상단 공백 매꿈
+                      if (mod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
+                        const modBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65;
+                        modTopThickness += modBaseH;
+                      }
                       const modTopHeight = mmToThreeUnits(modTopThickness);
                       const modTopY = panelStartY + height - modTopHeight / 2;
                       const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;

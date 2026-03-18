@@ -51,11 +51,14 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     state.spaceInfo.baseConfig?.type === 'stand' &&
     state.spaceInfo.baseConfig?.placementType === 'float'
   );
-  // placedFurnitureId로 baseFrameOffset 조회
-  const baseFrameOffset = useFurnitureStore(state => {
-    if (!placedFurnitureId) return 0;
+  // placedFurnitureId로 baseFrameOffset, hasBase 조회
+  const { baseFrameOffset, hasBase } = useFurnitureStore(state => {
+    if (!placedFurnitureId) return { baseFrameOffset: 0, hasBase: true };
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
-    return mod?.baseFrameOffset ?? 0;
+    return {
+      baseFrameOffset: mod?.baseFrameOffset ?? 0,
+      hasBase: mod?.hasBase !== false,
+    };
   });
 
   // Store 값 우선, prop은 폴백
@@ -70,6 +73,11 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
 
   // 띄움배치일 때는 발통 렌더링 안 함
   if (effectiveIsFloating) {
+    return null;
+  }
+
+  // 하부프레임 토글 꺼짐 → 조절발도 함께 숨김
+  if (!hasBase) {
     return null;
   }
 
