@@ -1135,11 +1135,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 슬롯배치: 선택된 가구의 상,하부프레임 개별 설정 */}
+            {/* 슬롯배치: 모든 가구의 상,하부프레임 개별 설정 (자유배치와 동일 형태) */}
             {(() => {
               if (spaceInfo.layoutMode === 'free-placement') return null;
-              const selMod = selectedFurnitureId ? placedModules.find(m => m.id === selectedFurnitureId) : null;
-              if (!selMod || selMod.isSurroundPanel) return null;
+              const slotMods = placedModules.filter(m => !m.isSurroundPanel);
+              if (slotMods.length === 0) return null;
+              const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
+              const toAlpha = (n: number) => String.fromCharCode(64 + n);
               const globalTop = spaceInfo.frameSize?.top ?? 30;
               const globalBase = spaceInfo.baseConfig?.height ?? 65;
 
@@ -1202,29 +1204,47 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 </div>
               );
 
+              let topNum = 0;
+              let baseNum = 0;
               return (
                 <FormControl
                   label="상,하부프레임"
                   expanded={expandedSections.has('slotFrame')}
                   onToggle={() => toggleSection('slotFrame')}
-                  helpText="선택된 가구의 상부/하부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다."
+                  helpText="각 가구별 상부/하부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다."
                 >
-                  <FrameRow label="A(상)" enabled={selMod.hasTopFrame !== false}
-                    sizeMM={selMod.topFrameThickness ?? globalTop} offset={selMod.topFrameOffset ?? 0}
-                    onToggle={() => updatePlacedModule(selMod.id, { hasTopFrame: !(selMod.hasTopFrame !== false) })}
-                    onSizeChange={(v) => updatePlacedModule(selMod.id, { topFrameThickness: v })}
-                    onOffsetChange={(v) => updatePlacedModule(selMod.id, { topFrameOffset: v })}
-                    hlKey={`top-${selMod.id}`}
-                  />
-                  {spaceInfo.baseConfig?.type !== 'stand' && (
-                    <FrameRow label="A(하)" enabled={selMod.hasBase !== false}
-                      sizeMM={selMod.baseFrameHeight ?? globalBase} offset={selMod.baseFrameOffset ?? 0}
-                      onToggle={() => updatePlacedModule(selMod.id, { hasBase: !(selMod.hasBase !== false) })}
-                      onSizeChange={(v) => updatePlacedModule(selMod.id, { baseFrameHeight: v })}
-                      onOffsetChange={(v) => updatePlacedModule(selMod.id, { baseFrameOffset: v })}
-                      hlKey={`base-${selMod.id}`}
-                    />
-                  )}
+                  {/* 상부프레임 — 좌→우 순서 */}
+                  {sorted.map((mod) => {
+                    topNum++;
+                    return (
+                      <FrameRow key={`top-${mod.id}`}
+                        label={`${toAlpha(topNum)}(상)`}
+                        enabled={mod.hasTopFrame !== false}
+                        sizeMM={mod.topFrameThickness ?? globalTop}
+                        offset={mod.topFrameOffset ?? 0}
+                        onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                        onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: v })}
+                        onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                        hlKey={`top-${mod.id}`}
+                      />
+                    );
+                  })}
+                  {/* 하부프레임 — stand 타입이면 숨김 */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
+                    baseNum++;
+                    return (
+                      <FrameRow key={`base-${mod.id}`}
+                        label={`${toAlpha(baseNum)}(하)`}
+                        enabled={mod.hasBase !== false}
+                        sizeMM={mod.baseFrameHeight ?? globalBase}
+                        offset={mod.baseFrameOffset ?? 0}
+                        onToggle={() => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) })}
+                        onSizeChange={(v) => updatePlacedModule(mod.id, { baseFrameHeight: v })}
+                        onOffsetChange={(v) => updatePlacedModule(mod.id, { baseFrameOffset: v })}
+                        hlKey={`base-${mod.id}`}
+                      />
+                    );
+                  })}
                 </FormControl>
               );
             })()}
