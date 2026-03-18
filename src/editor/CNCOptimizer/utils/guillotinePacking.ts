@@ -976,7 +976,8 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
       let allFit = true;
 
       for (const panel of panelsToMove) {
-        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, false);
+        const noRotate = panel.canRotate === false;
+        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, noRotate);
         if (pos) {
           const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
           dstBin.panels.push(movedPanel);
