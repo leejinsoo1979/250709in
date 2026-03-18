@@ -128,9 +128,8 @@ export function useLivePanelData() {
         }
         console.log(`Module ${moduleIndex}: Found module data`, moduleData);
 
-        // 가구 식별 라벨: "가구1(2단서랍+옷장)" 형태
-        const moduleName = moduleData.name?.replace(/\s*[\d.]+mm$/, '') || moduleId;
-        const furnitureLabel = placedModules.length > 1 ? `[${furnitureNumber}]${moduleName}` : '';
+        // 가구 식별 라벨: "[1]" 형태 (간결하게)
+        const furnitureLabel = placedModules.length > 1 ? `[${furnitureNumber}]` : '';
 
         // Get actual module configuration
         const width = placedModule.width || moduleData.dimensions.width;
@@ -407,18 +406,8 @@ export function useLivePanelData() {
 
           const leftFurnitureNumber = leftMostIdx + 1;
           const rightFurnitureNumber = rightMostIdx + 1;
-          const leftModuleData = (placedModules[leftMostIdx] as any).moduleData
-            || getModuleById(placedModules[leftMostIdx].moduleId || '', internalSpace, spaceInfo)
-            || buildModuleDataFromPlacedModule(placedModules[leftMostIdx]);
-          const rightModuleData = (placedModules[rightMostIdx] as any).moduleData
-            || getModuleById(placedModules[rightMostIdx].moduleId || '', internalSpace, spaceInfo)
-            || buildModuleDataFromPlacedModule(placedModules[rightMostIdx]);
-          const leftLabel = placedModules.length > 1
-            ? `[${leftFurnitureNumber}]${leftModuleData?.name?.replace(/\s*[\d.]+mm$/, '') || ''}`
-            : '';
-          const rightLabel = placedModules.length > 1
-            ? `[${rightFurnitureNumber}]${rightModuleData?.name?.replace(/\s*[\d.]+mm$/, '') || ''}`
-            : '';
+          const leftLabel = placedModules.length > 1 ? `[${leftFurnitureNumber}]` : '';
+          const rightLabel = placedModules.length > 1 ? `[${rightFurnitureNumber}]` : '';
 
           console.log(`서라운드 패널 ${surroundPanelList.length}개: 좌측→가구${leftFurnitureNumber}, 우측→가구${rightFurnitureNumber}`);
 
@@ -581,10 +570,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         };
       }
 
-      // 가구 식별 라벨 생성
+      // 가구 식별 라벨 생성 (간결하게)
       const furnitureNumber2 = moduleIndex + 1;
-      const moduleName2 = moduleData.name?.replace(/\s*[\d.]+mm$/, '') || moduleId;
-      const furnitureLabel2 = placedModules.length > 1 ? `[${furnitureNumber2}]${moduleName2}` : '';
+      const furnitureLabel2 = placedModules.length > 1 ? `[${furnitureNumber2}]` : '';
 
       const width = placedModule.width || moduleData.dimensions.width;
       const depth = placedModule.depth || moduleData.dimensions.depth;
@@ -848,18 +836,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
         const leftFn2 = leftMostIdx2 + 1;
         const rightFn2 = rightMostIdx2 + 1;
-        const leftMd2 = (placedModules[leftMostIdx2] as any).moduleData
-          || getModuleById(placedModules[leftMostIdx2].moduleId || '', internalSpace, spaceInfo)
-          || buildModuleDataFromPlacedModule(placedModules[leftMostIdx2]);
-        const rightMd2 = (placedModules[rightMostIdx2] as any).moduleData
-          || getModuleById(placedModules[rightMostIdx2].moduleId || '', internalSpace, spaceInfo)
-          || buildModuleDataFromPlacedModule(placedModules[rightMostIdx2]);
-        const leftLbl2 = placedModules.length > 1
-          ? `[${leftFn2}]${leftMd2?.name?.replace(/\s*[\d.]+mm$/, '') || ''}`
-          : '';
-        const rightLbl2 = placedModules.length > 1
-          ? `[${rightFn2}]${rightMd2?.name?.replace(/\s*[\d.]+mm$/, '') || ''}`
-          : '';
+        const leftLbl2 = placedModules.length > 1 ? `[${leftFn2}]` : '';
+        const rightLbl2 = placedModules.length > 1 ? `[${rightFn2}]` : '';
 
         surroundPanelList2.forEach((panel: any, idx: number) => {
           const isLeft = panel.name.includes('좌측');
