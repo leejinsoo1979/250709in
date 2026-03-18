@@ -3581,7 +3581,11 @@ const Room: React.FC<RoomProps> = ({
                     })
                     .map((mod) => {
                       const bounds = getModuleBoundsX(mod);
-                      const modWidthMM = bounds.right - bounds.left;
+                      let modWidthMM = bounds.right - bounds.left;
+                      // EP 두께만큼 프레임 너비 축소
+                      const epThk = mod.endPanelThickness || 18;
+                      if (mod.hasLeftEndPanel) modWidthMM -= epThk;
+                      if (mod.hasRightEndPanel) modWidthMM -= epThk;
                       const modCenterXmm = (bounds.left + bounds.right) / 2;
                       let modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                       const modTopHeight = mmToThreeUnits(modTopThickness);
@@ -4491,7 +4495,11 @@ const Room: React.FC<RoomProps> = ({
                         })
                         .map((mod) => {
                           const bounds = getModuleBoundsX(mod);
-                          const modWidthMM = bounds.right - bounds.left;
+                          let modWidthMM = bounds.right - bounds.left;
+                          // EP 두께만큼 프레임 너비 축소
+                          const epThk = mod.endPanelThickness || 18;
+                          if (mod.hasLeftEndPanel) modWidthMM -= epThk;
+                          if (mod.hasRightEndPanel) modWidthMM -= epThk;
                           const modCenterXmm = (bounds.left + bounds.right) / 2;
                           const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                           const modBaseH = mmToThreeUnits(modBaseHeight);

@@ -1317,6 +1317,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
     }
+    // 슬롯 기반 키큰장: 띄움배치 시 floatHeight만큼 가구 높이 축소
+    if (isTallCabinetForY && floatHeightMm > 0) {
+      furnitureHeightMm -= floatHeightMm;
+    }
   }
 
   // 바닥마감재 적용: 가구 높이에서 차감 (상부 섹션이 흡수)
@@ -3351,12 +3355,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const epDepthMm = placedModule.endPanelDepth ?? (actualDepthMm || 580);
               const epD = mmToThreeUnits(epDepthMm);
 
-              // EP는 바닥(Y=0)부터 천장(공간 높이)까지
-              const spaceH = mmToThreeUnits(spaceInfo.height); // 공간 전체 높이
+              // EP 높이 모드 분기: 'floor' = 바닥~천장, 'furniture' = 가구 높이에 맞춤
+              const epHeightMode = placedModule.endPanelHeightMode ?? 'floor';
               const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
-              const epH = spaceH; // 바닥~천장
-              const epCenterWorldY = spaceH / 2; // EP 월드 중심 Y
-              const epYRelative = epCenterWorldY - groupY; // 가구 그룹 내 EP 중심 Y
+              let epH: number;
+              let epYRelative: number;
+              if (epHeightMode === 'furniture') {
+                // 가구에 맞춤: EP 높이 = 가구 높이, EP 중심 = 가구 중심 (그룹 내 0)
+                epH = height; // 이미 Three.js 단위인 가구 높이
+                epYRelative = 0;
+              } else {
+                // 바닥에 맞춤 (기본): 바닥~천장
+                const spaceH = mmToThreeUnits(spaceInfo.height);
+                epH = spaceH;
+                const epCenterWorldY = spaceH / 2;
+                epYRelative = epCenterWorldY - groupY;
+              }
 
               return (
                 <>

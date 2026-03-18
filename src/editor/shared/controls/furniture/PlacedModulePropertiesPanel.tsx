@@ -3002,6 +3002,34 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
                 <>
+                  {/* EP 높이 모드 토글 */}
+                  <div style={{ marginTop: '8px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 높이</label>
+                    <div style={{ display: 'flex', gap: '0', border: '1px solid var(--theme-border)', borderRadius: '6px', overflow: 'hidden' }}>
+                      {(['floor', 'furniture'] as const).map((mode) => {
+                        const isActive = (currentPlacedModule.endPanelHeightMode ?? 'floor') === mode;
+                        return (
+                          <button
+                            key={mode}
+                            onClick={() => updatePlacedModule(currentPlacedModule.id, { endPanelHeightMode: mode })}
+                            style={{
+                              flex: 1,
+                              padding: '5px 8px',
+                              fontSize: '12px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              backgroundColor: isActive ? 'var(--theme-primary)' : 'var(--theme-bg-secondary)',
+                              color: isActive ? '#fff' : 'var(--theme-text-secondary)',
+                              fontWeight: isActive ? 600 : 400,
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {mode === 'floor' ? '바닥에 맞춤' : '가구에 맞춤'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div style={{ marginTop: '8px' }}>
                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 두께</label>
                     <div className={styles.inputWithUnit}>
