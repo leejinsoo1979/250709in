@@ -1059,8 +1059,30 @@ function findFreePosition(
     orientations.push({ w: panel.height, h: panel.width, rotated: true });
   }
 
-  // 후보 위치를 좌하단 우선 정렬
-  candidates.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+  // 기존 패널에 인접한 위치 우선 정렬
+  // 각 후보의 "인접 점수" 계산: 기존 패널과 맞닿는 변이 있으면 높은 점수
+  const adjacencyScore = (cx: number, cy: number, cw: number, ch: number): number => {
+    if (placed.length === 0) return 0;
+    let score = 0;
+    for (const r of placed) {
+      // 수평 맞닿음 (위/아래로 인접)
+      const hOverlap = Math.max(0, Math.min(cx + cw, r.x + r.w) - Math.max(cx, r.x));
+      if (hOverlap > 0) {
+        if (Math.abs(cy - (r.y + r.h + kerf)) < 1) score += hOverlap; // 기존 패널 아래에
+        if (Math.abs((cy + ch + kerf) - r.y) < 1) score += hOverlap; // 기존 패널 위에
+      }
+      // 수직 맞닿음 (좌/우로 인접)
+      const vOverlap = Math.max(0, Math.min(cy + ch, r.y + r.h) - Math.max(cy, r.y));
+      if (vOverlap > 0) {
+        if (Math.abs(cx - (r.x + r.w + kerf)) < 1) score += vOverlap; // 기존 패널 오른쪽에
+        if (Math.abs((cx + cw + kerf) - r.x) < 1) score += vOverlap; // 기존 패널 왼쪽에
+      }
+    }
+    return score;
+  };
+
+  // 모든 (후보위치 × 방향) 조합을 평가
+  const validPlacements: { x: number; y: number; w: number; h: number; rotated: boolean; score: number }[] = [];
 
   for (const { w, h, rotated } of orientations) {
     for (const { x, y } of candidates) {
@@ -1074,10 +1096,21 @@ function findFreePosition(
         y < r.y + r.h - margin && y + h > r.y + margin
       );
       if (!overlaps) {
-        return { x, y, rotated };
+        const score = adjacencyScore(x, y, w, h);
+        validPlacements.push({ x, y, w, h, rotated, score });
       }
     }
   }
 
-  return null;
+  if (validPlacements.length === 0) return null;
+
+  // 인접 점수 높은 순 → 같으면 y 작은 순 → x 작은 순
+  validPlacements.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.y !== b.y) return a.y - b.y;
+    return a.x - b.x;
+  });
+
+  const best = validPlacements[0];
+  return { x: best.x, y: best.y, rotated: best.rotated };
 }
