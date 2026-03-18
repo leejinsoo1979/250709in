@@ -1330,11 +1330,8 @@ function PageInner(){
                 />
               </div>
             </div>
-          ) : optimizationResults.length > 0 ? (() => {
-            const currentResult = optimizationResults[currentSheetIndex];
-            const isPortraitSheet = currentResult && currentResult.stockPanel.height > currentResult.stockPanel.width;
-            return (
-            <div className={`${styles.viewerContainer} ${isPortraitSheet ? styles.viewerContainerPortrait : ''}`}>
+          ) : optimizationResults.length > 0 ? (
+            <div className={`${styles.viewerContainer} ${optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.viewerContainerPortrait : ''}`}>
               {/* Keyboard navigation hint */}
               {optimizationResults.length > 1 && (
                 <div className={styles.keyboardHint}>
@@ -1388,8 +1385,8 @@ function PageInner(){
                 />
               </div>
 
-              <div className={isPortraitSheet ? styles.thumbnailBarVertical : styles.thumbnailBar}>
-                <div className={isPortraitSheet ? styles.thumbnailScrollVertical : styles.thumbnailScroll}>
+              <div className={optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.thumbnailBarVertical : styles.thumbnailBar}>
+                <div className={optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.thumbnailScrollVertical : styles.thumbnailScroll}>
                   {optimizationResults.map((result, index) => (
                     <SheetThumbnail
                       key={index}
@@ -1407,8 +1404,6 @@ function PageInner(){
                 </div>
               </div>
             </div>
-            );
-          })()
           ) : (
             <div className={styles.emptyPreview}>
               <Cpu size={48} />
