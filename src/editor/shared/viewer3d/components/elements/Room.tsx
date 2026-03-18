@@ -3538,90 +3538,62 @@ const Room: React.FC<RoomProps> = ({
             const hasDeepColumns = columns.some(column => column.depth >= 730);
 
             if ((columns.length === 0 || !hasDeepColumns) && !hasDroppedCeiling) {
-              // 가구별 개별 프레임 설정이 있는지 확인
+              // 슬롯배치: 항상 가구별 개별 상부프레임 렌더링 (가구 없으면 프레임 없음)
               const slotModsForFrame = placedModulesFromStore.filter(m => !m.isSurroundPanel);
-              const hasPerFurnitureFrameSettings = slotModsForFrame.some(m =>
-                m.topFrameThickness !== undefined || m.hasTopFrame === false
-              );
+              if (slotModsForFrame.length === 0) return null; // 가구 없으면 상부프레임 없음
 
               const topZPos = isFullSurround
                 ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                 : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                   mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
 
-              if (hasPerFurnitureFrameSettings && slotModsForFrame.length > 0) {
-                // 가구별 개별 상부프레임 렌더링
-                const globalTopFrameMm = spaceInfo.frameSize?.top ?? 30;
-                const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
-                return (
-                  <>
-                    {slotModsForFrame
-                      .filter(mod => mod.hasTopFrame !== false)
-                      .map((mod) => {
-                        const bounds = getModuleBoundsX(mod);
-                        const modWidthMM = bounds.right - bounds.left;
-                        const modCenterXmm = (bounds.left + bounds.right) / 2;
-                        const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
-                        const modTopHeight = mmToThreeUnits(modTopThickness);
-                        const modTopY = panelStartY + height - modTopHeight / 2;
-                        const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
-                        const isHighlighted = highlightedFrame === `top-${mod.id}`;
-                        const args: [number, number, number] = [
-                          mmToThreeUnits(modWidthMM),
-                          modTopHeight,
-                          mmToThreeUnits(END_PANEL_THICKNESS)
-                        ];
-                        const pos: [number, number, number] = [
-                          mmToThreeUnits(modCenterXmm),
-                          modTopY,
-                          topZPos + modTopZOffset
-                        ];
-                        return (
-                          <React.Fragment key={`slot-top-${mod.id}`}>
-                            <BoxWithEdges
-                              hideEdges={hideEdges}
-                              isOuterFrame
-                              name="top-frame"
-                              args={args}
-                              position={pos}
-                              material={topFrameMat}
-                              renderMode={renderMode}
-                              shadowEnabled={shadowEnabled}
-                            />
-                            {isHighlighted && (
-                              <mesh position={pos}>
-                                <boxGeometry args={args} />
-                                <primitive object={highlightOverlayMaterial} attach="material" />
-                              </mesh>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                  </>
-                );
-              }
-
-              // 개별 설정 없으면 기존처럼 하나의 프레임으로 렌더링
+              const globalTopFrameMm = spaceInfo.frameSize?.top ?? 30;
+              const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
               return (
-                <BoxWithEdges
-                  hideEdges={hideEdges}
-                  isOuterFrame
-                  name="top-frame"
-                  args={[
-                    frameWidth,
-                    topBottomFrameHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
-                  ]}
-                  position={[
-                    frameX,
-                    topElementsY,
-                    topZPos
-                  ]}
-                  material={topFrameMaterial ?? createFrameMaterial('top')}
-                  renderMode={renderMode}
-
-                  shadowEnabled={shadowEnabled}
-                />
+                <>
+                  {slotModsForFrame
+                    .filter(mod => mod.hasTopFrame !== false)
+                    .map((mod) => {
+                      const bounds = getModuleBoundsX(mod);
+                      const modWidthMM = bounds.right - bounds.left;
+                      const modCenterXmm = (bounds.left + bounds.right) / 2;
+                      const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                      const modTopHeight = mmToThreeUnits(modTopThickness);
+                      const modTopY = panelStartY + height - modTopHeight / 2;
+                      const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                      const isHighlighted = highlightedFrame === `top-${mod.id}`;
+                      const args: [number, number, number] = [
+                        mmToThreeUnits(modWidthMM),
+                        modTopHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ];
+                      const pos: [number, number, number] = [
+                        mmToThreeUnits(modCenterXmm),
+                        modTopY,
+                        topZPos + modTopZOffset
+                      ];
+                      return (
+                        <React.Fragment key={`slot-top-${mod.id}`}>
+                          <BoxWithEdges
+                            hideEdges={hideEdges}
+                            isOuterFrame
+                            name="top-frame"
+                            args={args}
+                            position={pos}
+                            material={topFrameMat}
+                            renderMode={renderMode}
+                            shadowEnabled={shadowEnabled}
+                          />
+                          {isHighlighted && (
+                            <mesh position={pos}>
+                              <boxGeometry args={args} />
+                              <primitive object={highlightOverlayMaterial} attach="material" />
+                            </mesh>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                </>
               );
             }
 
@@ -4460,89 +4432,60 @@ const Room: React.FC<RoomProps> = ({
                 // });
 
                 if (columns.length === 0 || !hasDeepColumns) {
-                  // 가구별 개별 하부프레임 설정이 있는지 확인
+                  // 슬롯배치: 항상 가구별 개별 하부프레임 렌더링 (가구 없으면 프레임 없음)
                   const slotModsForBase = placedModulesFromStore.filter(m => !m.isSurroundPanel);
-                  const hasPerFurnitureBaseSettings = slotModsForBase.some(m =>
-                    m.baseFrameHeight !== undefined || m.hasBase === false
-                  );
+                  if (slotModsForBase.length === 0) return null; // 가구 없으면 하부프레임 없음
 
                   const baseZPos = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
                     mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
 
-                  if (hasPerFurnitureBaseSettings && slotModsForBase.length > 0) {
-                    // 가구별 개별 하부프레임 렌더링
-                    const globalBaseHeightMm = spaceInfo.baseConfig?.height ?? 65;
-                    const baseMat = zoneMaterial;
-                    return (
-                      <React.Fragment key={`base-frame-zone-${zoneIndex}`}>
-                        {slotModsForBase
-                          .filter(mod => mod.hasBase !== false)
-                          .map((mod) => {
-                            const bounds = getModuleBoundsX(mod);
-                            const modWidthMM = bounds.right - bounds.left;
-                            const modCenterXmm = (bounds.left + bounds.right) / 2;
-                            const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
-                            const modBaseH = mmToThreeUnits(modBaseHeight);
-                            const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
-                            const isHighlighted = highlightedFrame === `base-${mod.id}`;
-                            const args: [number, number, number] = [
-                              mmToThreeUnits(modWidthMM),
-                              modBaseH,
-                              mmToThreeUnits(END_PANEL_THICKNESS)
-                            ];
-                            const pos: [number, number, number] = [
-                              mmToThreeUnits(modCenterXmm),
-                              panelStartY + floatHeight + modBaseH / 2,
-                              baseZPos + modBaseZOffset
-                            ];
-                            return (
-                              <React.Fragment key={`slot-base-${mod.id}`}>
-                                <BoxWithEdges
-                                  hideEdges={hideEdges}
-                                  isOuterFrame
-                                  name="base-frame"
-                                  args={args}
-                                  position={pos}
-                                  material={baseMat}
-                                  renderMode={renderMode}
-                                  shadowEnabled={shadowEnabled}
-                                />
-                                {isHighlighted && (
-                                  <mesh position={pos}>
-                                    <boxGeometry args={args} />
-                                    <primitive object={highlightOverlayMaterial} attach="material" />
-                                  </mesh>
-                                )}
-                              </React.Fragment>
-                            );
-                          })}
-                      </React.Fragment>
-                    );
-                  }
-
-                  // 개별 설정 없으면 기존처럼 하나의 프레임으로 렌더링
+                  const globalBaseHeightMm = spaceInfo.baseConfig?.height ?? 65;
+                  const baseMat = zoneMaterial;
                   return (
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      key={`base-frame-zone-${zoneIndex}`}
-                      name="base-frame"
-                      args={[
-                        frameWidth,
-                        visualBaseFrameHeight,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ]}
-                      position={[
-                        frameX,
-                        panelStartY + floatHeight + visualBaseFrameHeight / 2,
-                        baseZPos
-                      ]}
-                      material={zoneMaterial}
-                      renderMode={renderMode}
-
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <React.Fragment key={`base-frame-zone-${zoneIndex}`}>
+                      {slotModsForBase
+                        .filter(mod => mod.hasBase !== false)
+                        .map((mod) => {
+                          const bounds = getModuleBoundsX(mod);
+                          const modWidthMM = bounds.right - bounds.left;
+                          const modCenterXmm = (bounds.left + bounds.right) / 2;
+                          const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
+                          const modBaseH = mmToThreeUnits(modBaseHeight);
+                          const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+                          const isHighlighted = highlightedFrame === `base-${mod.id}`;
+                          const args: [number, number, number] = [
+                            mmToThreeUnits(modWidthMM),
+                            modBaseH,
+                            mmToThreeUnits(END_PANEL_THICKNESS)
+                          ];
+                          const pos: [number, number, number] = [
+                            mmToThreeUnits(modCenterXmm),
+                            panelStartY + floatHeight + modBaseH / 2,
+                            baseZPos + modBaseZOffset
+                          ];
+                          return (
+                            <React.Fragment key={`slot-base-${mod.id}`}>
+                              <BoxWithEdges
+                                hideEdges={hideEdges}
+                                isOuterFrame
+                                name="base-frame"
+                                args={args}
+                                position={pos}
+                                material={baseMat}
+                                renderMode={renderMode}
+                                shadowEnabled={shadowEnabled}
+                              />
+                              {isHighlighted && (
+                                <mesh position={pos}>
+                                  <boxGeometry args={args} />
+                                  <primitive object={highlightOverlayMaterial} attach="material" />
+                                </mesh>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                    </React.Fragment>
                   );
                 }
 
