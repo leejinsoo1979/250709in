@@ -134,6 +134,7 @@ export interface PlacedModule {
   hasBottomFrame?: boolean;  // 자유배치 하부프레임 표시 여부 (기본: full/lower=true, upper=false)
   topFrameOffset?: number;   // 자유배치 상부프레임 Z축 옵셋 (mm, 양수=앞, 음수=뒤)
   baseFrameOffset?: number;  // 자유배치 하부프레임 Z축 옵셋 (mm, 양수=앞, 음수=뒤)
+  baseFrameHeight?: number;  // 가구별 하부프레임(받침대) 높이 (mm, undefined = 공간 설정값 사용)
   freeLeftGap?: number;      // 자유배치 노서라운드 좌측 이격거리 (mm)
   freeRightGap?: number;     // 자유배치 노서라운드 우측 이격거리 (mm)
   freeLeftGapLocked?: boolean;  // 좌측 이격 잠금 (너비 변경 시 유지)
