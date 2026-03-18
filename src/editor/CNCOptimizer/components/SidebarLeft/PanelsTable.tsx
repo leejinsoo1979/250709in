@@ -33,7 +33,7 @@ function panelTypePriority(label: string): number {
 
 export default function PanelsTable(){
   const { t } = useTranslation();
-  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion } = useCNCStore();
+  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion, placements, setCurrentSheetIndex, setSelectedSheetId, stock } = useCNCStore();
   const { panels: livePanels } = useLivePanelData();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -205,7 +205,23 @@ export default function PanelsTable(){
   };
 
   const selectPanel = (id: string) => {
-    setSelectedPanelId(selectedPanelId === id ? null : id);
+    const newId = selectedPanelId === id ? null : id;
+    setSelectedPanelId(newId);
+
+    // 패널이 선택되면 해당 패널이 배치된 시트로 이동
+    if (newId && placements.length > 0) {
+      // placements의 panelId는 "{panel.id}-{index}" 형식
+      const placement = placements.find(pl => pl.panelId.startsWith(id + '-') || pl.panelId === id);
+      if (placement) {
+        // sheetId로 시트 인덱스 찾기
+        const uniqueSheetIds = [...new Set(placements.map(pl => pl.sheetId))];
+        const sheetIdx = uniqueSheetIds.indexOf(placement.sheetId);
+        if (sheetIdx >= 0) {
+          setCurrentSheetIndex(sheetIdx);
+          setSelectedSheetId(placement.sheetId);
+        }
+      }
+    }
   };
 
   // CSV 파일 업로드 처리
@@ -433,15 +449,13 @@ export default function PanelsTable(){
                     />
                   </td>
                   <td>
-                    <input 
-                      value={p.label} 
-                      onChange={e => onChange(i, 'label', e.target.value)}
-                      onClick={e => e.stopPropagation()}
+                    <input
+                      value={p.label}
+                      readOnly
                       className={styles.input}
-                      title={p.label}  // 툴팁으로 전체 이름 표시
+                      title={p.label}
                       data-panel-id={p.id}
-                      data-field="label"
-                      placeholder={t('cnc.panelNamePlaceholder')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
                     />
                   </td>
                   <td>
