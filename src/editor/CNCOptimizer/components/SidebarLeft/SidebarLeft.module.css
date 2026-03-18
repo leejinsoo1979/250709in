@@ -569,6 +569,30 @@
   transform: scale(0.95);
 }
 
+.grainToggleV {
+  background: hsla(210, 80%, 55%, 0.12);
+  border-color: hsla(210, 80%, 55%, 0.35);
+  color: hsl(210, 80%, 45%);
+}
+
+.grainToggleV:hover {
+  background: hsla(210, 80%, 55%, 0.2);
+  border-color: hsla(210, 80%, 55%, 0.5);
+  color: hsl(210, 80%, 40%);
+}
+
+.grainToggleH {
+  background: hsla(25, 90%, 50%, 0.12);
+  border-color: hsla(25, 90%, 50%, 0.35);
+  color: hsl(25, 90%, 42%);
+}
+
+.grainToggleH:hover {
+  background: hsla(25, 90%, 50%, 0.2);
+  border-color: hsla(25, 90%, 50%, 0.5);
+  color: hsl(25, 90%, 38%);
+}
+
 /* 패널 제외 체크박스 */
 .panelCheckbox {
   width: 13px;

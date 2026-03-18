@@ -521,16 +521,16 @@ export default function PanelsTable(){
                   </td>
                   <td>
                     <button
-                      className={styles.grainToggle}
+                      className={`${styles.grainToggle} ${p.grain === 'V' ? styles.grainToggleV : styles.grainToggleH}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         // 현재 값이 V면 H로, 그 외에는 V로 토글
                         const newGrain = p.grain === 'V' ? 'H' : 'V';
-                        
+
                         // 결방향이 변경되면 width와 length를 바꿈
                         const currentWidth = p.width;
                         const currentLength = p.length;
-                        
+
                         // 패널을 업데이트
                         const next = panels.map((panel, index) => {
                           if (index === i) {
