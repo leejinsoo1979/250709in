@@ -1010,6 +1010,19 @@ function PageInner(){
     }
   }, [livePanels, panels, stock, settings.optimizationType, handleOptimize]);
 
+  // 패널 수정(결방향 변경 등) 시 자동 재최적화
+  const prevPanelsRef = useRef<string>('');
+  useEffect(() => {
+    if (!hasAutoOptimized.current || panels.length === 0 || stock.length === 0) return;
+    // panels의 grain/width/length 변경 감지 (JSON 직렬화로 비교)
+    const panelsSig = panels.map(p => `${p.id}:${p.grain}:${p.width}:${p.length}`).join('|');
+    if (prevPanelsRef.current && prevPanelsRef.current !== panelsSig) {
+      console.log('🔄 패널 변경 감지 → 자동 재최적화');
+      handleOptimize();
+    }
+    prevPanelsRef.current = panelsSig;
+  }, [panels, stock, handleOptimize]);
+
   // URL 파라미터에서 프로젝트명 읽기 (fallback용)
   const urlProjectName = useMemo(() => {
     const searchParams = new URLSearchParams(location.search);
