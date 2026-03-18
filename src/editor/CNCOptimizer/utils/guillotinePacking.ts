@@ -596,6 +596,15 @@ function packCategoryToMultiBins(
  *   - 가구 최대 크기 1200×2400, 원장 1220×2440 → 한 가구의 백패널은 항상 한 시트에 수용 가능
  *   - 여러 가구의 백패널을 같은 시트에 합칠 수 있으면 합침 (효율 향상)
  */
+/**
+ * 백패널 전용 멀티 시트 패킹 — 같은 가구의 (상)+(하) 백패널 반드시 같은 시트
+ *
+ * GuillotinePacker를 쓰지 않고 직접 배치:
+ *   - vertical 방향: 스트립 width = 패널의 width (x축), 패널의 height가 y축으로 쌓임
+ *   - 같은 가구의 백패널을 한 스트립에 y축으로 연속 배치
+ *   - 스트립 width는 해당 가구 백패널 중 가장 큰 width 사용
+ *   - 시트 x축(1220)에 여러 스트립이 들어가면 합침
+ */
 function packBackPanelsToMultiBins(
   panels: Rect[],
   binWidth: number,
@@ -612,58 +621,81 @@ function packBackPanelsToMultiBins(
     byFurniture.get(fn)!.push(p);
   }
 
-  // 2단계: 가구 그룹을 총면적 내림차순 정렬 (큰 가구 먼저)
-  const furnitureGroups = [...byFurniture.values()]
-    .sort((a, b) => {
-      const areaA = a.reduce((s, p) => s + p.width * p.height, 0);
-      const areaB = b.reduce((s, p) => s + p.width * p.height, 0);
-      return areaB - areaA;
-    });
+  // 2단계: 가구별 스트립 정보 계산
+  interface FurnitureStrip {
+    fn: number;
+    panels: Rect[];
+    stripWidth: number;   // 스트립이 차지하는 x축 폭 (= max panel.width)
+    totalFillH: number;   // y축 총 높이 (패널 heights + kerfs)
+  }
 
-  // 3단계: 가구 그룹 단위로 시트에 배치
+  const furnitureStrips: FurnitureStrip[] = [];
+  for (const [fn, group] of byFurniture) {
+    const stripWidth = Math.max(...group.map(p => p.width));
+    // y축으로 쌓이는 높이: 큰 패널 먼저 (상부 → 하부)
+    group.sort((a, b) => b.height - a.height);
+    const totalFillH = group.reduce((sum, p) => sum + p.height, 0) + (group.length - 1) * kerf;
+    furnitureStrips.push({ fn, panels: group, stripWidth, totalFillH });
+  }
+
+  // 총면적 내림차순 정렬 (큰 가구 먼저)
+  furnitureStrips.sort((a, b) => {
+    const areaA = a.panels.reduce((s, p) => s + p.width * p.height, 0);
+    const areaB = b.panels.reduce((s, p) => s + p.width * p.height, 0);
+    return areaB - areaA;
+  });
+
+  // 3단계: 시트에 배치 — 가구 스트립을 x축으로 나란히 배치
   const bins: PackedBin[] = [];
-  const packedGroupIdx = new Set<number>();
+  const packed = new Set<number>(); // packed furniture indices
 
-  for (let gi = 0; gi < furnitureGroups.length; gi++) {
-    if (packedGroupIdx.has(gi)) continue;
+  for (let i = 0; i < furnitureStrips.length; i++) {
+    if (packed.has(i)) continue;
 
-    // 현재 가구 그룹을 시트에 넣기
-    const sheetPanels: Rect[] = [...furnitureGroups[gi]];
-    packedGroupIdx.add(gi);
+    // 이 시트에 배치할 가구 스트립들 모으기
+    const sheetStrips: FurnitureStrip[] = [furnitureStrips[i]];
+    packed.add(i);
+    let usedX = furnitureStrips[i].stripWidth;
 
-    // 다른 가구 그룹도 같은 시트에 넣을 수 있는지 시도 (작은 것부터)
-    for (let gj = gi + 1; gj < furnitureGroups.length; gj++) {
-      if (packedGroupIdx.has(gj)) continue;
-
-      // 시험 패킹: 합쳐서 모든 패널이 한 시트에 들어가는지 확인
-      const trial = [...sheetPanels, ...furnitureGroups[gj]];
-      const trialPacker = new GuillotinePacker(binWidth, binHeight, kerf);
-      const trialResult = trialPacker.packAll(trial, 'vertical');
-
-      if (trialResult.panels.length === trial.length) {
-        // 모두 수용 가능 → 합침
-        sheetPanels.push(...furnitureGroups[gj]);
-        packedGroupIdx.add(gj);
+    // 남은 x 공간에 다른 가구 스트립 넣을 수 있는지 시도
+    for (let j = i + 1; j < furnitureStrips.length; j++) {
+      if (packed.has(j)) continue;
+      const needed = usedX + kerf + furnitureStrips[j].stripWidth;
+      if (needed <= binWidth && furnitureStrips[j].totalFillH <= binHeight) {
+        sheetStrips.push(furnitureStrips[j]);
+        packed.add(j);
+        usedX = needed;
       }
     }
 
-    // 최종 패킹
-    const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-    const result = packer.packAll(sheetPanels, 'vertical');
-    if (result.panels.length > 0) {
-      bins.push(result);
+    // 시트 내 패널 좌표 계산
+    const placedPanels: Rect[] = [];
+    let xPos = 0;
 
-      // 혹시 일부 패널이 배치 안 됐으면 다음 시트로 (안전장치)
-      const placedIds = new Set(result.panels.map(p => p.id));
-      const unplaced = sheetPanels.filter(p => !placedIds.has(p.id));
-      if (unplaced.length > 0) {
-        const fallbackPacker = new GuillotinePacker(binWidth, binHeight, kerf);
-        const fallbackResult = fallbackPacker.packAll(unplaced, 'vertical');
-        if (fallbackResult.panels.length > 0) {
-          bins.push(fallbackResult);
-        }
+    for (const strip of sheetStrips) {
+      let yPos = 0;
+      for (const panel of strip.panels) {
+        placedPanels.push({
+          ...panel,
+          x: xPos,
+          y: yPos,
+          rotated: false
+        });
+        yPos += panel.height + kerf;
       }
+      xPos += strip.stripWidth + kerf;
     }
+
+    // PackedBin 생성
+    const usedArea = placedPanels.reduce((s, p) => s + p.width * p.height, 0);
+    const totalArea = binWidth * binHeight;
+    bins.push({
+      width: binWidth,
+      height: binHeight,
+      panels: placedPanels,
+      efficiency: (usedArea / totalArea) * 100,
+      usedArea
+    });
   }
 
   return bins;
