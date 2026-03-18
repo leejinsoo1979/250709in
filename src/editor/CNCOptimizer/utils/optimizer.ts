@@ -400,21 +400,10 @@ export const optimizePanelsMultiple = async (
   console.log('🎯 optimizer.ts optimizationType:', optimizationType);
 
   if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
-    // L방향 우선: 첫 컷이 L방향(2440mm)을 따라 = 시트를 위아래로 분리 = 가로 스트립
-    // 스트립이 가로(W방향)로 쌓이고, 패널은 스트립 내에서 L방향으로 배열
-    console.log('📍 BY_LENGTH selected → horizontal strip (L방향 우선)');
-    bins = packGuillotine(
-      rectangles,
-      stockPanel.width,
-      stockPanel.height,
-      kerf,
-      maxSheets,
-      'horizontal'
-    );
-  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
-    // W방향 우선: 첫 컷이 W방향(1220mm)을 따라 = 시트를 좌우로 분리 = 세로 스트립
-    // 스트립이 세로(L방향)로 쌓이고, 패널은 스트립 내에서 W방향으로 배열
-    console.log('📍 BY_WIDTH selected → vertical strip (W방향 우선)');
+    // L방향 우선: 패널의 결방향(width)이 L방향(2440=binHeight)으로 배치
+    // → vertical 스트립: 패널 width로 그룹핑, 스트립이 x축(W방향)으로 쌓이고
+    //   패널은 스트립 내에서 y축(L방향)으로 나열
+    console.log('📍 BY_LENGTH selected → vertical strip (패널 width를 L방향에 배치)');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
@@ -422,6 +411,19 @@ export const optimizePanelsMultiple = async (
       kerf,
       maxSheets,
       'vertical'
+    );
+  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
+    // W방향 우선: 패널의 결방향(width)이 W방향(1220=binWidth)으로 배치
+    // → horizontal 스트립: 패널 height로 그룹핑, 스트립이 y축(L방향)으로 쌓이고
+    //   패널은 스트립 내에서 x축(W방향)으로 나열
+    console.log('📍 BY_WIDTH selected → horizontal strip (패널 width를 W방향에 배치)');
+    bins = packGuillotine(
+      rectangles,
+      stockPanel.width,
+      stockPanel.height,
+      kerf,
+      maxSheets,
+      'horizontal'
     );
   } else {
     // OPTIMAL_CNC (Nesting): 길로틴 auto — 가로/세로 중 효율+재단길이 최적 방향 자동 선택
