@@ -2640,17 +2640,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 일반: 계산된 위치 사용
 
-  // 자유배치 EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
-  let freeEpOffsetX = 0;
-  if (placedModule.isFreePlacement && !placedModule.customConfig) {
+  // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
+  // 슬롯/자유배치 공통 — 본체 너비가 EP만큼 줄었으므로 중앙 정렬 보정 필요
+  let epOffsetX = 0;
+  if (!placedModule.customConfig) {
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
-    freeEpOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
+    epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
   }
 
   const furnitureGroupPosition: [number, number, number] = [
-    adjustedPosition.x + positionAdjustmentForEndPanel + freeEpOffsetX,
+    adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
     furnitureZ
   ];
