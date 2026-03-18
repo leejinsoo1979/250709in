@@ -159,7 +159,9 @@
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 42px; /* 재질 */
+  width: 38px; /* 재질 */
+  padding: 2px !important;
+  overflow: hidden;
 }
 
 .table th:nth-child(6),
@@ -399,7 +401,8 @@
 
 .select {
   width: 100%;
-  padding: 2px 1px;
+  max-width: 36px;
+  padding: 2px 0;
   border: 1px solid #e0e0e0;
   background: white !important;
   color: #333 !important;
@@ -407,6 +410,10 @@
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 3px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  text-align: center;
 }
 
 .select:focus {
