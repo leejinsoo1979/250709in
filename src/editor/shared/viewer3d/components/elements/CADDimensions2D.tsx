@@ -149,46 +149,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
 
-  // 프레임 높이
-  const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
-  const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
+  // 프레임 높이 (전역값)
+  const globalTopFrameHeightMm = spaceInfo.frameSize?.top || 0;
 
-  // 바닥레일/받침대 높이 계산
+  // 바닥레일/받침대 높이 계산 (전역값)
   // - floor 타입: 받침대 높이 (calculateBaseFrameHeight 사용)
   // - stand 타입 + 띄움 배치: 바닥 프레임 없음 (0)
   // - stand 타입 + 일반 배치: 바닥레일 높이 (baseConfig.height)
   const isStandType = spaceInfo.baseConfig?.type === 'stand';
-  const railOrBaseHeightMm = isStandType
+  const globalRailOrBaseHeightMm = isStandType
     ? (isFloating ? 0 : (spaceInfo.baseConfig?.height || 0))  // 띄움 배치면 바닥 프레임 없음
     : calculateBaseFrameHeight(spaceInfo);
-  const railOrBaseHeight = mmToThreeUnits(railOrBaseHeightMm);
 
-  // 내경 높이 조정
-  // - stand 타입: 바닥레일 높이 빼기
-  // - 띄움 배치: 띄움 높이도 빼기 (가구가 공간에 맞춰 높이 조정됨)
+  const isFreePlacementMode = spaceInfo.layoutMode === 'free-placement';
+
+  // 내경 높이 (전역 기준 — 후에 per-furniture delta 보정)
   const floatHeightMmForCalc = isFloating ? floatHeightMm : 0;
-  const adjustedInternalHeightMm = isStandType
-    ? internalSpace.height - railOrBaseHeightMm - floatHeightMmForCalc
+  const globalAdjustedInternalHeightMm = isStandType
+    ? internalSpace.height - globalRailOrBaseHeightMm - floatHeightMmForCalc
     : internalSpace.height;
-  const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
-
-  // 내부 공간을 상부/하부 섹션으로 분할 (50%씩)
-  const upperSectionHeight = internalHeight / 2;
-  const lowerSectionHeight = internalHeight / 2;
-
   // 바닥마감재 높이
   const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-
-  // 하위 호환성을 위한 변수 (기존 코드에서 사용)
-  // 띄움 배치에서는 띄움 높이를 받침대 높이 변수에 설정 (치수 표시용)
-  const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
-  const baseFrameDisplayMm = Math.max(0, baseFrameHeightMm - (isFloating ? 0 : floorFinishHeightMm)); // 치수 표시용 (바닥마감재 차감)
-  const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
-
-  // 가구 및 치수선 시작 Y 위치
-  // - 띄움 배치: floatHeight만 사용 (baseFrameHeight는 텍스트 표시용으로만 사용)
-  // - 일반 배치: baseFrameHeight 사용 (floatHeight는 0)
-  const furnitureBaseY = isFloating ? floatHeight : baseFrameHeight;
 
   // 단내림 설정
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
@@ -305,6 +286,35 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   };
 
   const visibleFurniture = getVisibleFurnitureForSideView();
+
+  // 슬롯모드: 선택된 가구의 개별 프레임 값 우선 사용
+  const selectedMod = visibleFurniture[0] as PlacedModule | undefined;
+  const topFrameHeightMm = (!isFreePlacementMode && selectedMod?.topFrameThickness !== undefined)
+    ? selectedMod.topFrameThickness
+    : globalTopFrameHeightMm;
+  const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
+  const railOrBaseHeightMm = (!isFreePlacementMode && selectedMod?.baseFrameHeight !== undefined && !isStandType)
+    ? selectedMod.baseFrameHeight
+    : globalRailOrBaseHeightMm;
+  const railOrBaseHeight = mmToThreeUnits(railOrBaseHeightMm);
+
+  // per-furniture 받침대/치수 변수
+  const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
+  const baseFrameDisplayMm = Math.max(0, baseFrameHeightMm - (isFloating ? 0 : floorFinishHeightMm));
+  const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
+  const furnitureBaseY = isFloating ? floatHeight : baseFrameHeight;
+
+  // 내경 높이 (per-furniture delta 보정 적용)
+  let adjustedInternalHeightMm = globalAdjustedInternalHeightMm;
+  if (!isFreePlacementMode && selectedMod) {
+    if (selectedMod.topFrameThickness !== undefined) {
+      adjustedInternalHeightMm -= (selectedMod.topFrameThickness - globalTopFrameHeightMm);
+    }
+    if (selectedMod.baseFrameHeight !== undefined && !isStandType) {
+      adjustedInternalHeightMm -= (selectedMod.baseFrameHeight - globalRailOrBaseHeightMm);
+    }
+  }
+  const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
 
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
@@ -491,8 +501,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
-          const moduleHeightMm = (module as PlacedModule).freeHeight ?? (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'left');
+          // 슬롯모드: 개별 프레임 보정이 반영된 adjustedInternalHeightMm 사용
+          const mod = module as PlacedModule;
+          const moduleHeightMm = mod.freeHeight ?? mod.customHeight ?? (mod.isFreePlacement ? moduleData.dimensions.height : adjustedInternalHeightMm);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) {
             return null;
           }
@@ -504,8 +516,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
-          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 공간 내경 높이
-          const moduleFreeH = (module as PlacedModule).freeHeight;
+          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 보정된 내경 높이
+          const moduleFreeH = mod.freeHeight;
           const cabinetHeight = moduleFreeH ? mmToThreeUnits(moduleFreeH) : internalHeight;
           const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
@@ -1277,8 +1289,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
-          const moduleHeightMm = (module as PlacedModule).freeHeight ?? (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'right');
+          // 슬롯모드: 개별 프레임 보정이 반영된 adjustedInternalHeightMm 사용
+          const mod = module as PlacedModule;
+          const moduleHeightMm = mod.freeHeight ?? mod.customHeight ?? (mod.isFreePlacement ? moduleData.dimensions.height : adjustedInternalHeightMm);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
           if (sectionConfigs.length === 0) {
             return null;
           }
@@ -1290,8 +1304,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
-          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 공간 내경 높이
-          const moduleFreeH = (module as PlacedModule).freeHeight;
+          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 보정된 내경 높이
+          const moduleFreeH = mod.freeHeight;
           const cabinetHeight = moduleFreeH ? mmToThreeUnits(moduleFreeH) : internalHeight;
           const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
