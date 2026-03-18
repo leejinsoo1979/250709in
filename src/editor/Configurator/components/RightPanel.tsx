@@ -625,14 +625,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onFrameTypeChange
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { placedModules, clearAllModules } = useFurnitureStore();
-  const { setActiveDroppedCeilingTab } = useUIStore();
+  const { placedModules, clearAllModules, updatePlacedModule } = useFurnitureStore();
+  const { setActiveDroppedCeilingTab, selectedFurnitureId } = useUIStore();
   const { t, currentLanguage } = useTranslation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['space', 'layoutMode', 'layout'])
   );
-  
+
+  // 선택된 가구의 프레임 높이 개별 설정
+  const selectedModule = selectedFurnitureId
+    ? placedModules.find(m => m.id === selectedFurnitureId)
+    : null;
+  const [selTopFrameInput, setSelTopFrameInput] = useState('');
+  const [selBaseFrameInput, setSelBaseFrameInput] = useState('');
+
+  useEffect(() => {
+    if (selectedModule) {
+      const globalTop = spaceInfo.frameSize?.top ?? 30;
+      const globalBase = spaceInfo.baseConfig?.height ?? 65;
+      setSelTopFrameInput(String(selectedModule.topFrameThickness ?? globalTop));
+      setSelBaseFrameInput(String(selectedModule.baseFrameHeight ?? globalBase));
+    }
+  }, [selectedModule?.id, selectedModule?.topFrameThickness, selectedModule?.baseFrameHeight, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.height]);
+
   // 초기 렌더링 시 UIStore 동기화
   useEffect(() => {
     if (spaceInfo.droppedCeiling?.enabled) {
@@ -1163,6 +1179,82 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {(spaceInfo.doorSetupMode || 'default') === 'default'
                     ? '각 가구 높이에 맞게 도어가 개별 적용됩니다.'
                     : '상부 프레임을 가리도록 모든 도어 높이가 통일됩니다.'}
+                </p>
+              </FormControl>
+            )}
+
+            {/* 선택된 가구의 프레임 높이 개별 설정 */}
+            {selectedModule && !selectedModule.isSurroundPanel && (
+              <FormControl
+                label="가구별 프레임 높이"
+                expanded={expandedSections.has('furnitureFrame')}
+                onToggle={() => toggleSection('furnitureFrame')}
+                helpText="선택된 가구의 상부/하부 프레임 높이를 개별 설정합니다. 비워두면 전역 설정값을 사용합니다."
+              >
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>상부프레임</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={selTopFrameInput}
+                        onChange={e => {
+                          setSelTopFrameInput(e.target.value);
+                          const num = parseInt(e.target.value, 10);
+                          if (!isNaN(num) && num >= 10 && num <= 200) {
+                            updatePlacedModule(selectedModule.id, { topFrameThickness: num });
+                          }
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = parseInt(selTopFrameInput, 10) || 0;
+                            const next = Math.max(10, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                            setSelTopFrameInput(next.toString());
+                            updatePlacedModule(selectedModule.id, { topFrameThickness: next });
+                          }
+                        }}
+                        style={{ width: '60px', padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '6px', fontSize: '13px', textAlign: 'center', color: '#000', backgroundColor: '#fff' }}
+                        placeholder={String(spaceInfo.frameSize?.top ?? 30)}
+                      />
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                    </div>
+                  </div>
+                  {spaceInfo.baseConfig?.type === 'floor' && (
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>하부프레임</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={selBaseFrameInput}
+                          onChange={e => {
+                            setSelBaseFrameInput(e.target.value);
+                            const num = parseInt(e.target.value, 10);
+                            if (!isNaN(num) && num >= 0 && num <= 200) {
+                              updatePlacedModule(selectedModule.id, { baseFrameHeight: num });
+                            }
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = parseInt(selBaseFrameInput, 10) || 0;
+                              const next = Math.max(0, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              setSelBaseFrameInput(next.toString());
+                              updatePlacedModule(selectedModule.id, { baseFrameHeight: next });
+                            }
+                          }}
+                          style={{ width: '60px', padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '6px', fontSize: '13px', textAlign: 'center', color: '#000', backgroundColor: '#fff' }}
+                          placeholder={String(spaceInfo.baseConfig?.height ?? 65)}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '4px 0 0 0' }}>
+                  상부: 10~200mm{spaceInfo.baseConfig?.type === 'floor' ? ', 하부: 0~200mm' : ''}
                 </p>
               </FormControl>
             )}
