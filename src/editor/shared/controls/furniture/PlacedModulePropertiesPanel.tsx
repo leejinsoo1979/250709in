@@ -571,8 +571,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperSectionDepth, setUpperSectionDepth] = useState<number | undefined>(undefined); // 상부 섹션 깊이
   const [lowerDepthInput, setLowerDepthInput] = useState<string>(''); // 하부 섹션 깊이 입력 필드
   const [upperDepthInput, setUpperDepthInput] = useState<string>(''); // 상부 섹션 깊이 입력 필드
-  const [topFrameInput, setTopFrameInput] = useState<string>('');
-  const [baseFrameInput, setBaseFrameInput] = useState<string>('');
   const [lowerDepthDirection, setLowerDepthDirection] = useState<'front' | 'back'>('front'); // 하부 깊이 줄이는 방향
   const [upperDepthDirection, setUpperDepthDirection] = useState<'front' | 'back'>('front'); // 상부 깊이 줄이는 방향
   const [lowerTopOffset, setLowerTopOffset] = useState<number>(0); // 하부 섹션 상판 옵셋 (mm)
@@ -842,12 +840,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 섹션별 깊이 입력 필드 초기화
       setLowerDepthInput(lowerDepth?.toString() ?? '');
       setUpperDepthInput(upperDepth?.toString() ?? '');
-
-      // 프레임 높이 초기화
-      const globalTop = spaceInfo.frameSize?.top ?? 30;
-      const globalBase = spaceInfo.baseConfig?.height ?? 65;
-      setTopFrameInput(String(currentPlacedModule.topFrameThickness ?? globalTop));
-      setBaseFrameInput(String(currentPlacedModule.baseFrameHeight ?? globalBase));
 
       const lowerOffset = currentPlacedModule.lowerSectionTopOffset ?? moduleDefaultLowerTopOffset;
       setLowerTopOffset(lowerOffset);
@@ -1638,23 +1630,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleUpperHeightChange = (value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
       setUpperHeightInput(value);
-    }
-  };
-
-  // 프레임 높이 개별 설정 핸들러
-  const handleTopFrameChange = (value: string) => {
-    setTopFrameInput(value);
-    const num = parseInt(value, 10);
-    if (!isNaN(num) && num >= 10 && num <= 200 && currentPlacedModule) {
-      updatePlacedModule(currentPlacedModule.id, { topFrameThickness: num });
-    }
-  };
-
-  const handleBaseFrameChange = (value: string) => {
-    setBaseFrameInput(value);
-    const num = parseInt(value, 10);
-    if (!isNaN(num) && num >= 0 && num <= 200 && currentPlacedModule) {
-      updatePlacedModule(currentPlacedModule.id, { baseFrameHeight: num });
     }
   };
 
@@ -3356,60 +3331,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 {columnPlacementMode === 'beside'
                   ? '가구가 기둥 옆에 배치됩니다 (기본)'
                   : '가구가 기둥 앞에 배치되어 기둥을 가립니다'}
-              </div>
-            </div>
-          )}
-
-          {/* 프레임 높이 개별 설정 (슬롯모드/자유배치 공통) */}
-          {!showDetails && (
-            <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>프레임 높이</h5>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>상부프레임</label>
-                  <div className={styles.inputWithUnit}>
-                    <input type="text" inputMode="numeric"
-                      value={topFrameInput}
-                      onChange={e => handleTopFrameChange(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const cur = parseInt(topFrameInput, 10) || 0;
-                          const next = Math.max(10, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                          handleTopFrameChange(next.toString());
-                        }
-                      }}
-                      className={styles.depthInput} placeholder="30"
-                      style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
-                    />
-                    <span className={styles.unit}>mm</span>
-                  </div>
-                </div>
-                {spaceInfo.baseConfig?.type === 'floor' && (
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>하부프레임</label>
-                    <div className={styles.inputWithUnit}>
-                      <input type="text" inputMode="numeric"
-                        value={baseFrameInput}
-                        onChange={e => handleBaseFrameChange(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                            e.preventDefault();
-                            const cur = parseInt(baseFrameInput, 10) || 0;
-                            const next = Math.max(0, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                            handleBaseFrameChange(next.toString());
-                          }
-                        }}
-                        className={styles.depthInput} placeholder="65"
-                        style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className={styles.depthRange}>
-                상부: 10~200mm{spaceInfo.baseConfig?.type === 'floor' ? ', 하부: 0~200mm' : ''}
               </div>
             </div>
           )}
