@@ -928,7 +928,13 @@ export function packGuillotine(
   const frameBins = packCategoryToMultiBins(framePanels, binWidth, binHeight, kerf, 'horizontal');
 
   // 순서: 측판 → 백패널 → 본체 → 프레임
-  return [...sideBins, ...backBins, ...bodyBins, ...frameBins];
+  const allBins = [...sideBins, ...backBins, ...bodyBins, ...frameBins];
+
+  // ── 3단계: 후처리 — 저효율 시트의 패널을 다른 시트의 빈 공간에 합치기 ──
+  // 같은 재질(material) 시트끼리만 합침 (카테고리 무관)
+  backfillBins(allBins, binWidth, binHeight, kerf);
+
+  return allBins;
 }
 
 /**
@@ -954,16 +960,23 @@ function backfillBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     // (같은 가구 패널 분리 방지: 시트 전체를 하나의 대상으로만 이동)
     const panelsToMove = [...srcBin.panels];
 
+    // 소스 시트의 재질/두께 식별 (첫 패널 기준)
+    const srcMaterial = srcBin.panels[0]?.material || '';
+    const srcColor = srcBin.panels[0]?.color || '';
+
     for (let dstIdx = 0; dstIdx < bins.length; dstIdx++) {
       if (dstIdx === srcIdx || removedBins.has(dstIdx)) continue;
 
-      // 이 대상 시트에 srcBin의 모든 패널이 들어가는지 시도
+      // 같은 재질/두께 시트만 합침 대상
       const dstBin = bins[dstIdx];
+      const dstMaterial = dstBin.panels?.[0]?.material || '';
+      const dstColor = dstBin.panels?.[0]?.color || '';
+      if (srcMaterial !== dstMaterial || srcColor !== dstColor) continue;
       const moveLog: { panel: Rect }[] = [];
       let allFit = true;
 
       for (const panel of panelsToMove) {
-        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, true);
+        const pos = findFreePosition(dstBin, panel, binWidth, binHeight, kerf, false);
         if (pos) {
           const movedPanel = { ...panel, x: pos.x, y: pos.y, rotated: pos.rotated };
           dstBin.panels.push(movedPanel);
@@ -1038,10 +1051,13 @@ function findFreePosition(
     addCandidate(0, r.y + r.h + kerf);                // 좌측 위
   }
 
-  // 회전 절대 금지 — 항상 원본 방향(width=W, height=L)으로만 배치
+  // 원본 방향 우선, noRotate=false면 회전도 시도
   const orientations: { w: number; h: number; rotated: boolean }[] = [
     { w: panel.width, h: panel.height, rotated: false }
   ];
+  if (!noRotate && panel.width !== panel.height) {
+    orientations.push({ w: panel.height, h: panel.width, rotated: true });
+  }
 
   // 후보 위치를 좌하단 우선 정렬
   candidates.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
