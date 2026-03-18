@@ -1332,12 +1332,6 @@ function PageInner(){
             </div>
           ) : optimizationResults.length > 0 ? (
             <div className={`${styles.viewerContainer} ${optimizationResults[currentSheetIndex]?.stockPanel.height > optimizationResults[currentSheetIndex]?.stockPanel.width ? styles.viewerContainerPortrait : ''}`}>
-              {/* Keyboard navigation hint */}
-              {optimizationResults.length > 1 && (
-                <div className={styles.keyboardHint}>
-                  <span>← → {t('cnc.keyboardNavigationHint')}</span>
-                </div>
-              )}
               <div className={styles.mainViewer}>
                 <CuttingLayoutPreview2
                   result={optimizationResults[currentSheetIndex]}
