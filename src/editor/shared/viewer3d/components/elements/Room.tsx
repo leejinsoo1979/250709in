@@ -3538,35 +3538,84 @@ const Room: React.FC<RoomProps> = ({
             const hasDeepColumns = columns.some(column => column.depth >= 730);
 
             if ((columns.length === 0 || !hasDeepColumns) && !hasDroppedCeiling) {
-              // 기둥도 없고 단내림도 없으면 기존처럼 하나의 프레임으로 렌더링
-// console.log('🔧 상부프레임 엔드패널 조정:', {
-                // 원래너비: normalZone.width,
-                // 조정된너비: frameWidth,
-                // 왼쪽엔드패널: endPanelPositions.left,
-                // 오른쪽엔드패널: endPanelPositions.right,
-                // frameStartX,
-                // frameEndX,
-                // frameX
-              // });
+              // 가구별 개별 프레임 설정이 있는지 확인
+              const slotModsForFrame = placedModulesFromStore.filter(m => !m.isSurroundPanel);
+              const hasPerFurnitureFrameSettings = slotModsForFrame.some(m =>
+                m.topFrameThickness !== undefined || m.hasTopFrame === false
+              );
 
+              const topZPos = isFullSurround
+                ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                  mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
+
+              if (hasPerFurnitureFrameSettings && slotModsForFrame.length > 0) {
+                // 가구별 개별 상부프레임 렌더링
+                const globalTopFrameMm = spaceInfo.frameSize?.top ?? 30;
+                const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
+                return (
+                  <>
+                    {slotModsForFrame
+                      .filter(mod => mod.hasTopFrame !== false)
+                      .map((mod) => {
+                        const bounds = getModuleBoundsX(mod);
+                        const modWidthMM = bounds.right - bounds.left;
+                        const modCenterXmm = (bounds.left + bounds.right) / 2;
+                        const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                        const modTopHeight = mmToThreeUnits(modTopThickness);
+                        const modTopY = panelStartY + height - modTopHeight / 2;
+                        const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                        const isHighlighted = highlightedFrame === `top-${mod.id}`;
+                        const args: [number, number, number] = [
+                          mmToThreeUnits(modWidthMM),
+                          modTopHeight,
+                          mmToThreeUnits(END_PANEL_THICKNESS)
+                        ];
+                        const pos: [number, number, number] = [
+                          mmToThreeUnits(modCenterXmm),
+                          modTopY,
+                          topZPos + modTopZOffset
+                        ];
+                        return (
+                          <React.Fragment key={`slot-top-${mod.id}`}>
+                            <BoxWithEdges
+                              hideEdges={hideEdges}
+                              isOuterFrame
+                              name="top-frame"
+                              args={args}
+                              position={pos}
+                              material={topFrameMat}
+                              renderMode={renderMode}
+                              shadowEnabled={shadowEnabled}
+                            />
+                            {isHighlighted && (
+                              <mesh position={pos}>
+                                <boxGeometry args={args} />
+                                <primitive object={highlightOverlayMaterial} attach="material" />
+                              </mesh>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                  </>
+                );
+              }
+
+              // 개별 설정 없으면 기존처럼 하나의 프레임으로 렌더링
               return (
                 <BoxWithEdges
                   hideEdges={hideEdges}
                   isOuterFrame
                   name="top-frame"
                   args={[
-                    frameWidth, // 이미 엔드패널이 조정된 너비
+                    frameWidth,
                     topBottomFrameHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[
-                    frameX, // 이미 엔드패널이 조정된 위치
+                    frameX,
                     topElementsY,
-                    // 전체서라운드: 좌우 프레임과 같은 Z축, 그 외: 뒤쪽
-                    isFullSurround
-                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                    topZPos
                   ]}
                   material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -4411,17 +4460,68 @@ const Room: React.FC<RoomProps> = ({
                 // });
 
                 if (columns.length === 0 || !hasDeepColumns) {
-                  // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
-// console.log('🔧 하부프레임 엔드패널 조정:', {
-                    // 원래너비: renderZone.width,
-                    // 조정된너비: frameWidth,
-                    // 왼쪽엔드패널: endPanelPositions.left,
-                    // 오른쪽엔드패널: endPanelPositions.right,
-                    // frameStartX,
-                    // frameEndX,
-                    // frameX
-                  // });
+                  // 가구별 개별 하부프레임 설정이 있는지 확인
+                  const slotModsForBase = placedModulesFromStore.filter(m => !m.isSurroundPanel);
+                  const hasPerFurnitureBaseSettings = slotModsForBase.some(m =>
+                    m.baseFrameHeight !== undefined || m.hasBase === false
+                  );
 
+                  const baseZPos = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
+                    mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
+
+                  if (hasPerFurnitureBaseSettings && slotModsForBase.length > 0) {
+                    // 가구별 개별 하부프레임 렌더링
+                    const globalBaseHeightMm = spaceInfo.baseConfig?.height ?? 65;
+                    const baseMat = zoneMaterial;
+                    return (
+                      <React.Fragment key={`base-frame-zone-${zoneIndex}`}>
+                        {slotModsForBase
+                          .filter(mod => mod.hasBase !== false)
+                          .map((mod) => {
+                            const bounds = getModuleBoundsX(mod);
+                            const modWidthMM = bounds.right - bounds.left;
+                            const modCenterXmm = (bounds.left + bounds.right) / 2;
+                            const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
+                            const modBaseH = mmToThreeUnits(modBaseHeight);
+                            const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+                            const isHighlighted = highlightedFrame === `base-${mod.id}`;
+                            const args: [number, number, number] = [
+                              mmToThreeUnits(modWidthMM),
+                              modBaseH,
+                              mmToThreeUnits(END_PANEL_THICKNESS)
+                            ];
+                            const pos: [number, number, number] = [
+                              mmToThreeUnits(modCenterXmm),
+                              panelStartY + floatHeight + modBaseH / 2,
+                              baseZPos + modBaseZOffset
+                            ];
+                            return (
+                              <React.Fragment key={`slot-base-${mod.id}`}>
+                                <BoxWithEdges
+                                  hideEdges={hideEdges}
+                                  isOuterFrame
+                                  name="base-frame"
+                                  args={args}
+                                  position={pos}
+                                  material={baseMat}
+                                  renderMode={renderMode}
+                                  shadowEnabled={shadowEnabled}
+                                />
+                                {isHighlighted && (
+                                  <mesh position={pos}>
+                                    <boxGeometry args={args} />
+                                    <primitive object={highlightOverlayMaterial} attach="material" />
+                                  </mesh>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                      </React.Fragment>
+                    );
+                  }
+
+                  // 개별 설정 없으면 기존처럼 하나의 프레임으로 렌더링
                   return (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -4429,18 +4529,14 @@ const Room: React.FC<RoomProps> = ({
                       key={`base-frame-zone-${zoneIndex}`}
                       name="base-frame"
                       args={[
-                        frameWidth, // 이미 엔드패널이 조정된 너비
+                        frameWidth,
                         visualBaseFrameHeight,
-                        mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
+                        mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[
-                        frameX, // 이미 엔드패널이 조정된 위치
-                        panelStartY + floatHeight + visualBaseFrameHeight / 2, // 띄움배치 시 floatHeight 추가
-                        // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                        // 받침대 깊이만큼 뒤로 이동
-                        furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
-                        mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
+                        frameX,
+                        panelStartY + floatHeight + visualBaseFrameHeight / 2,
+                        baseZPos
                       ]}
                       material={zoneMaterial}
                       renderMode={renderMode}
