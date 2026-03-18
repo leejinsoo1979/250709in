@@ -1330,6 +1330,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
+  // 하부프레임 토글 꺼짐 → 가구 높이에 하부프레임 높이를 더해서 상부 섹션이 흡수
+  if (placedModule.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
+    const hiddenBaseH = placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65;
+    furnitureHeightMm += hiddenBaseH;
+  }
+
   // customSections는 placedModule에 직접 저장된 것만 사용
   // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
   const adjustedCustomSections = placedModule.customSections;
