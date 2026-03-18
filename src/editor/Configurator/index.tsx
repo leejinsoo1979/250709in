@@ -245,7 +245,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules, updatePlacedModule } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -4930,10 +4930,10 @@ const Configurator: React.FC = () => {
           const globalTop = spaceInfo.frameSize?.top ?? 30;
           const globalBase = spaceInfo.baseConfig?.height ?? 65;
 
-          const SlotFrameRow = ({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey }: {
-            label: string; enabled: boolean; sizeMM: number; offset: number;
-            onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
-          }) => (
+          const renderSlotFrameRow = (
+            label: string, enabled: boolean, sizeMM: number, offset: number,
+            onToggle: () => void, onSizeChange: (v: number) => void, onOffsetChange: (v: number) => void, hlKey: string,
+          ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
               <button
@@ -5010,34 +5010,30 @@ const Configurator: React.FC = () => {
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {
                     topNum++;
-                    return (
-                      <SlotFrameRow key={`top-${mod.id}`}
-                        label={`${toAlpha(topNum)}(상)`}
-                        enabled={mod.hasTopFrame !== false}
-                        sizeMM={mod.topFrameThickness ?? globalTop}
-                        offset={mod.topFrameOffset ?? 0}
-                        onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
-                        onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: v })}
-                        onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
-                        hlKey={`top-${mod.id}`}
-                      />
-                    );
+                    return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
+                      `${toAlpha(topNum)}(상)`,
+                      mod.hasTopFrame !== false,
+                      mod.topFrameThickness ?? globalTop,
+                      mod.topFrameOffset ?? 0,
+                      () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
+                      (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
+                      (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
+                      `top-${mod.id}`,
+                    )}</React.Fragment>;
                   })}
                   {/* 하부프레임 — stand 타입이면 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
-                    return (
-                      <SlotFrameRow key={`base-${mod.id}`}
-                        label={`${toAlpha(baseNum)}(하)`}
-                        enabled={mod.hasBase !== false}
-                        sizeMM={mod.baseFrameHeight ?? globalBase}
-                        offset={mod.baseFrameOffset ?? 0}
-                        onToggle={() => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) })}
-                        onSizeChange={(v) => updatePlacedModule(mod.id, { baseFrameHeight: v })}
-                        onOffsetChange={(v) => updatePlacedModule(mod.id, { baseFrameOffset: v })}
-                        hlKey={`base-${mod.id}`}
-                      />
-                    );
+                    return <React.Fragment key={`base-${mod.id}`}>{renderSlotFrameRow(
+                      `${toAlpha(baseNum)}(하)`,
+                      mod.hasBase !== false,
+                      mod.baseFrameHeight ?? globalBase,
+                      mod.baseFrameOffset ?? 0,
+                      () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
+                      (v) => updatePlacedModule(mod.id, { baseFrameHeight: v }),
+                      (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
+                      `base-${mod.id}`,
+                    )}</React.Fragment>;
                   })}
                 </div>
               )}
@@ -5561,7 +5557,7 @@ const Configurator: React.FC = () => {
           )}
 
           {/* 3D 뷰어 */}
-          <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`}>
+          <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어가 설치된 경우에만 뷰어 상단에 Close/Open 토글 버튼 표시 */}
             {hasDoorsInstalled && (
               <div className={styles.viewerDoorToggle}>
