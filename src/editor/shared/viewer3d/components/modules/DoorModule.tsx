@@ -797,13 +797,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorBottomLocal = cabinetBottomLocal - actualBase + bottomGap;
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
 
-// console.log('🚪📏 키큰장 actualDoorHeight:', {
-      // doorTopLocal,
-      // doorBottomLocal,
-      // actualDoorHeight,
-      // floatHeight,
-      // 설명: '상단 - 하단 = 도어 높이'
-    // });
 
     const resolveSectionHeightsForDoor = () => {
       if (sectionHeightsMm?.length === totalSections) {

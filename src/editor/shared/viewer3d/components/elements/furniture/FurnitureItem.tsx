@@ -1317,10 +1317,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
     }
-    // 슬롯 기반 키큰장: 띄움배치 시 floatHeight만큼 가구 높이 축소
-    if (isTallCabinetForY && floatHeightMm > 0) {
-      furnitureHeightMm -= floatHeightMm;
-    }
+    // 슬롯 기반 키큰장: shelving.ts가 이미 floatHeight를 차감한 모듈을 생성하므로
+    // 여기서 추가 차감하면 이중 차감됨 → 제거
+    // (자유배치는 위의 if 분기에서 별도 처리)
   }
 
   // 바닥마감재 적용: 가구 높이에서 차감 (상부 섹션이 흡수)
@@ -2821,7 +2820,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 위치 변경 로깅은 이미 상단에서 처리됨
 
-  // 🔴🔴🔴 최종 Y 위치 확인
   const finalYPosition = adjustedPosition.y;
 
   if (isUpperCabinet) {
