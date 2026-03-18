@@ -767,15 +767,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // ── 자유배치 / 슬롯 배치 공통: 천장바닥 기준 도어 이격 적용 ──
     // 전체서라운드: 상부프레임이 도어 앞까지 나오므로 도어 상단이 프레임 아래에서 시작
-    const isFullSurround = originalSpaceInfo.surroundType === 'surround' &&
-      originalSpaceInfo.frameConfig?.top === true && originalSpaceInfo.frameConfig?.bottom === true;
-    const effectiveTopFrame = perFurnitureTopFrame ?? topFrameHeightValue;
-
-    // 전체서라운드: doorTopGap(사용자 설정 이격) + 상부프레임 높이
-    // 노서라운드/양쪽서라운드: doorTopGap만 사용
-    const topGap = isFullSurround
-      ? (doorTopGap + effectiveTopFrame)
-      : doorTopGap;
+    // 상단갭은 항상 천장 기준 (서라운드 타입 무관)
+    // gap=0이면 도어 상단이 천장에 맞닿음 → 도어 높이 = 공간 높이
+    const topGap = doorTopGap;
     const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     // bottomGap 계산: 상하단 갭은 항상 바닥/천장 기준 (사용자 설정값 우선)
     const bottomGap = (() => {
