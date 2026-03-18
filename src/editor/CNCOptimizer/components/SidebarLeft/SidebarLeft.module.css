@@ -247,22 +247,11 @@
 
 .table tbody tr.selected {
   background: hsl(var(--theme) / 0.06);
-  position: relative;
 }
 
-.table tbody tr.selected::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: hsl(var(--theme));
-}
-
-/* 선택된 패널이 있을 때 다른 패널 — 은선 효과 제거, 정상 표시 */
-.table:has(tr.selected) tbody tr:not(.selected) {
-  position: relative;
+.table tbody tr.selected td {
+  color: hsl(var(--theme));
+  font-weight: 700;
 }
 
 /* 은선 효과 제거됨 — 아래는 사용하지 않음 */
