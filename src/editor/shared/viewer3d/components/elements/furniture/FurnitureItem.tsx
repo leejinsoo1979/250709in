@@ -2229,14 +2229,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 수동 EP가 있으면 도어 확장 비활성화 + 도어도 본체와 동일하게 EP 비대칭 보정
+  // 수동 EP가 있으면 도어 확장/이동 비활성화
+  // 본체가 epOffsetX로 이동하면 내부 도어도 자연히 따라감 (BoxModule은 본체 그룹 안)
   if (placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel) {
     doorWidthExpansion = 0;
-    // 본체가 epOffsetX만큼 이동하므로 도어도 동일하게 이동 (슬롯 모드에서 도어는 절대좌표 기준)
-    const epThkDoor = mmToThreeUnits(placedModule.endPanelThickness || 18);
-    const leftEpDoor = placedModule.hasLeftEndPanel ? epThkDoor : 0;
-    const rightEpDoor = placedModule.hasRightEndPanel ? epThkDoor : 0;
-    doorXOffset = (leftEpDoor - rightEpDoor) / 2; // 본체 epOffsetX와 동일한 값
+    doorXOffset = 0;
   }
 
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
