@@ -876,14 +876,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setColumnPlacementMode(placementModeVal);
       setOriginalColumnPlacementMode(placementModeVal);
 
-      // 자유배치 모드 치수 초기화
-      if (currentPlacedModule.isFreePlacement) {
-        setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || moduleData.dimensions.width).toString());
+      // 치수 초기화 (슬롯/자유배치 공통)
+      {
+        setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || customWidth || moduleData.dimensions.width).toString());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
-        setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || moduleData.dimensions.depth).toString());
+        setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || customDepth || moduleData.dimensions.depth).toString());
 
         // EP 깊이 초기화
-        const epFurnitureDepth = currentPlacedModule.freeDepth ?? moduleData.dimensions.depth;
+        const epFurnitureDepth = currentPlacedModule.freeDepth ?? customDepth ?? moduleData.dimensions.depth;
         setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
 
         // 좌우 이격거리 초기화
@@ -2341,59 +2341,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
           
-          {/* 가구 치수 (슬롯배치: W·H·D 모두 읽기전용) */}
-          {!showDetails && !currentPlacedModule?.isFreePlacement && (
-          <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}>가구 치수</h5>
-            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-              {/* 너비 (읽기전용) */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>W</label>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="text"
-                    value={customWidth}
-                    readOnly
-                    className={`${styles.depthInput} furniture-depth-input`}
-                    style={{ color: '#000000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px', cursor: 'default' }}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-              <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
-              {/* 높이 (읽기전용) */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>H</label>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="text"
-                    value={moduleData.dimensions.height}
-                    readOnly
-                    className={`${styles.depthInput} furniture-depth-input`}
-                    style={{ color: '#000000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px', cursor: 'default' }}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-              <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
-              {/* 깊이 (읽기전용) */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>D</label>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="text"
-                    value={customDepth}
-                    readOnly
-                    className={`${styles.depthInput} furniture-depth-input`}
-                    style={{ color: '#000000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px', cursor: 'default' }}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          )}
-
           {/* 너비 설정 (기둥 C인 경우만 표시) */}
           {isColumnC && (
             <div className={styles.propertySection}>
@@ -2426,8 +2373,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 자유배치 모드 치수 편집 — 한 줄 가로 배치 */}
-          {currentPlacedModule?.isFreePlacement && (
+          {/* 가구 치수 편집 — 한 줄 가로 배치 */}
+          {currentPlacedModule && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>가구 치수</h5>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -2657,8 +2604,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 섹션별 치수 설정 (자유배치 + 2섹션 이상 가구: customConfig 또는 modelConfig) */}
-          {currentPlacedModule?.isFreePlacement && (() => {
+          {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) */}
+          {currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
             const ccSections = cc?.sections;
             const mcSections = moduleData?.modelConfig?.sections;
@@ -3021,8 +2968,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
-          {/* 엔드패널(EP) 토글 (자유배치 모드) */}
-          {currentPlacedModule?.isFreePlacement && moduleData && (
+          {/* 엔드패널(EP) 토글 */}
+          {currentPlacedModule && moduleData && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>엔드패널</h5>
               <div style={{ display: 'flex', gap: '16px' }}>
@@ -3197,8 +3144,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 노서라운드 좌우 이격거리 (자유배치 + 노서라운드 모드) */}
-          {currentPlacedModule?.isFreePlacement &&
+          {/* 노서라운드 좌우 이격거리 (노서라운드 모드) */}
+          {currentPlacedModule &&
            spaceInfo.surroundType === 'no-surround' && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>좌우 이격거리</h5>
@@ -3711,8 +3658,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
           */}
 
-          {/* 도어 셋팅 (자유배치 모드, 도어가 있을 때만) — 우측바와 동일 */}
-          {!showDetails && currentPlacedModule?.isFreePlacement && moduleData.hasDoor && hasDoor && (() => {
+          {/* 도어 셋팅 (도어가 있을 때만) */}
+          {!showDetails && currentPlacedModule && moduleData.hasDoor && hasDoor && (() => {
             const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
             return (
             <div className={styles.propertySection}>
