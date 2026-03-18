@@ -607,12 +607,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hsCenterDepthInput, setHsCenterDepthInput] = useState<Record<number, string>>({});
 
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
-  const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-  const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-  const defaultDoorBottomGap = isFloatPlacement ? floatHeight : 25;
-  const [doorTopGap, setDoorTopGap] = useState<number>(5); // 병합 모드: 천장에서 아래로
-  const [doorBottomGap, setDoorBottomGap] = useState<number>(defaultDoorBottomGap); // 병합 모드: 바닥에서 위로
-  const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
+  const [doorTopGap, setDoorTopGap] = useState<number>(0); // 병합 모드: 천장에서 아래로 (바닥/천장 기준)
+  const [doorBottomGap, setDoorBottomGap] = useState<number>(0); // 병합 모드: 바닥에서 위로 (바닥/천장 기준)
+  const [doorTopGapInput, setDoorTopGapInput] = useState<string>('0');
 
   // 분할 모드용 섹션별 이격거리
   const [upperDoorTopGap, setUpperDoorTopGap] = useState<number>(0); // 상부: 천장에서 아래로
@@ -623,9 +620,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperDoorBottomGapInput, setUpperDoorBottomGapInput] = useState<string>('0');
   const [lowerDoorTopGapInput, setLowerDoorTopGapInput] = useState<string>('0');
   const [lowerDoorBottomGapInput, setLowerDoorBottomGapInput] = useState<string>('0');
-  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>(defaultDoorBottomGap.toString());
-  const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5);
-  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(defaultDoorBottomGap);
+  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('0');
+  const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(0);
+  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(0);
 
   // 도어 셋팅 (자유배치 모드)
   const [doorSettingMode, setDoorSettingMode] = useState<'auto' | 'manual'>('auto');
@@ -973,12 +970,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
       // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
-      const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
-      // 바닥배치인데 doorBottomGap이 0이면 기본값 25 사용
-      const initialBottomGap = currentPlacedModule.doorBottomGap !== undefined &&
-                                (isFloatPlacement || currentPlacedModule.doorBottomGap > 0)
-        ? currentPlacedModule.doorBottomGap
-        : defaultDoorBottomGap;
+      const initialTopGap = currentPlacedModule.doorTopGap ?? 0;
+      // 도어 상하갭은 항상 바닥/천장 기준 (받침대/띄움 무관, 0이면 공간 높이)
+      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 0;
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
 
@@ -1091,29 +1085,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
-  // 띄움 높이 또는 배치 타입이 변경될 때 모든 가구의 바닥 이격거리 자동 업데이트
-  // 단, 도어에 맞춤(frameOffsetBase === 'door') 상태에서는 프레임 포함 값을 유지
-  useEffect(() => {
-    // 도어에 맞춤 상태면 프레임 포함 값이므로 자동 업데이트 건너뜀
-    if (spaceInfo.frameOffsetBase === 'door') return;
-
-    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-    const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-    const targetBottomGap = isFloatPlacement ? floatHeight : 25;
-
-    // 모든 배치된 가구에 일괄 적용
-    placedModules.forEach(module => {
-      if (module.doorBottomGap !== targetBottomGap) {
-        updatePlacedModule(module.id, { doorBottomGap: targetBottomGap });
-      }
-    });
-
-    // 현재 선택된 가구의 UI 상태도 업데이트
-    if (currentPlacedModule) {
-      setDoorBottomGap(targetBottomGap);
-      setDoorBottomGapInput(targetBottomGap.toString());
-    }
-  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.frameOffsetBase]);
+  // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
+  // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
