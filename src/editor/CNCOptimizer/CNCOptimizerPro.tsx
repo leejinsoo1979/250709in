@@ -581,72 +581,68 @@ function PageInner(){
     return names;
   }, [excludedPanelIds, panels]);
 
-  const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
+  const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC', silent?: boolean) => {
     // overrideOptimizationType이 주어지면 그 값을 사용, 아니면 settings에서 가져옴
     const effectiveOptimizationType = overrideOptimizationType || settings.optimizationType;
-    console.log('⚡ handleOptimize called with optimizationType:', effectiveOptimizationType);
+    console.log('⚡ handleOptimize called with optimizationType:', effectiveOptimizationType, silent ? '(silent)' : '');
 
     if (panels.length === 0) {
-      showToast(t('cnc.noPanelsError'), 'error', t('common.confirm'));
+      if (!silent) showToast(t('cnc.noPanelsError'), 'error', t('common.confirm'));
       return;
     }
 
     if (stock.length === 0) {
-      showToast(t('cnc.noStockError'), 'error', t('common.confirm'));
+      if (!silent) showToast(t('cnc.noStockError'), 'error', t('common.confirm'));
       return;
     }
 
     setIsOptimizing(true);
     setMethodChanged(false); // Calculate 시 강조 제거
-    
+
     // Clear previous results immediately for cleaner experience
     setOptimizationResults([]);
     pendingResultsRef.current = []; // Clear any pending results
-    
-    // AI 로딩 모달 표시
-    setShowAILoading(true);
-    setAILoadingProgress(0);
-    
-    // Track animation start time for minimum duration
-    const animationStartTime = Date.now();
-    
+
     // 설정값을 전역 변수로 저장 (뷰어에서 접근 가능하도록)
     (window as any).cncSettings = { ...settings, optimizationType: effectiveOptimizationType };
-    
-    // Calculate total panels to estimate loading time
-    const totalPanels = panels.reduce((sum, p) => sum + (p.quantity || 1), 0);
-    
-    // Determine loading duration based on estimated sheet count
-    // Rough estimate: ~10 panels per sheet
-    const estimatedSheets = Math.ceil(totalPanels / 10);
-    let loadingDuration = 3000; // Default 3 seconds for <5 sheets
-    
-    if (estimatedSheets >= 30) {
-      loadingDuration = 8000; // 8 seconds for 30+ sheets
-    } else if (estimatedSheets >= 20) {
-      loadingDuration = 6000; // 6 seconds for 20-30 sheets
-    } else if (estimatedSheets >= 10) {
-      loadingDuration = 4000; // 4 seconds for 10-20 sheets
-    } else if (estimatedSheets >= 5) {
-      loadingDuration = 3500; // 3.5 seconds for 5-10 sheets
-    }
-    
-    // Set the loading duration for the modal
-    setAILoadingDuration(loadingDuration);
-    
-    // Smooth progress based on calculated duration
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - animationStartTime;
-      const progress = Math.min((elapsed / loadingDuration) * 100, 95); // 0 to 95% over duration
-      setAILoadingProgress(progress);
-      
-      if (elapsed >= loadingDuration) {
-        clearInterval(progressInterval);
+
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
+
+    if (!silent) {
+      // AI 로딩 모달 표시 (수동 계산하기 버튼 클릭 시에만)
+      setShowAILoading(true);
+      setAILoadingProgress(0);
+
+      const animationStartTime = Date.now();
+
+      const totalPanels = panels.reduce((sum, p) => sum + (p.quantity || 1), 0);
+      const estimatedSheets = Math.ceil(totalPanels / 10);
+      let loadingDuration = 3000;
+
+      if (estimatedSheets >= 30) {
+        loadingDuration = 8000;
+      } else if (estimatedSheets >= 20) {
+        loadingDuration = 6000;
+      } else if (estimatedSheets >= 10) {
+        loadingDuration = 4000;
+      } else if (estimatedSheets >= 5) {
+        loadingDuration = 3500;
       }
-    }, 50); // Update every 50ms for smooth animation
-    
-    // Delay the actual optimization to make loading feel more natural
-    await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setAILoadingDuration(loadingDuration);
+
+      progressInterval = setInterval(() => {
+        const elapsed = Date.now() - animationStartTime;
+        const progress = Math.min((elapsed / loadingDuration) * 100, 95);
+        setAILoadingProgress(progress);
+
+        if (elapsed >= loadingDuration) {
+          clearInterval(progressInterval!);
+        }
+      }, 50);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
     
     try {
 
@@ -886,53 +882,69 @@ function PageInner(){
         actualLoadingDuration = 3500; // 3.5 seconds for 5-10 sheets
       }
       
-      // Ensure minimum loading duration based on sheet count
-      const elapsedTime = Date.now() - animationStartTime;
-      const remainingTime = Math.max(0, actualLoadingDuration - elapsedTime);
-      
-      // Complete to 100% after minimum time
-      setTimeout(() => {
-        // Clear any remaining interval
-        clearInterval(progressInterval);
-        
-        // Animate to 100%
-        setAILoadingProgress(100);
-        
-        // Hide AI loading modal after showing 100% briefly
-        setTimeout(async () => {
-          setShowAILoading(false);
-          setAILoadingProgress(0);
-          
-          if (allResults.length > 0) {
-            const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
-            const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
-            
-            // Show success popup and wait for confirmation
-            await showToast(t('cnc.optimizationComplete', { panels: totalPanels, sheets: allResults.length, efficiency: avgEfficiency.toFixed(1) }), 'success', t('common.confirm'));
-            
-            // After user clicks confirm, show the results
-            setOptimizationResults(pendingResultsRef.current);
-            
-            // Set appropriate sheet index
-            if (currentSheetIndex >= pendingResultsRef.current.length && pendingResultsRef.current.length > 0) {
-              setCurrentSheetIndex(pendingResultsRef.current.length - 1);
-            } else if (currentSheetIndex < 0 && pendingResultsRef.current.length > 0) {
-              setCurrentSheetIndex(0);
-            }
-            
-            // Clear pending results
-            pendingResultsRef.current = [];
-          } else {
-            await showToast(t('cnc.optimizationFailed'), 'error', t('common.confirm'));
+      if (silent) {
+        // silent 모드: 로딩 UI 없이 즉시 결과 적용
+        if (allResults.length > 0) {
+          setOptimizationResults(pendingResultsRef.current);
+          if (currentSheetIndex >= pendingResultsRef.current.length && pendingResultsRef.current.length > 0) {
+            setCurrentSheetIndex(pendingResultsRef.current.length - 1);
+          } else if (currentSheetIndex < 0 && pendingResultsRef.current.length > 0) {
+            setCurrentSheetIndex(0);
           }
-        }, 300); // Show 100% for 300ms
-      }, remainingTime);
+          pendingResultsRef.current = [];
+        }
+        setIsOptimizing(false);
+      } else {
+        // Ensure minimum loading duration based on sheet count
+        const elapsedTime = Date.now() - animationStartTime;
+        const remainingTime = Math.max(0, actualLoadingDuration - elapsedTime);
+
+        // Complete to 100% after minimum time
+        setTimeout(() => {
+          // Clear any remaining interval
+          if (progressInterval) clearInterval(progressInterval);
+
+          // Animate to 100%
+          setAILoadingProgress(100);
+
+          // Hide AI loading modal after showing 100% briefly
+          setTimeout(async () => {
+            setShowAILoading(false);
+            setAILoadingProgress(0);
+
+            if (allResults.length > 0) {
+              const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
+              const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
+
+              // Show success popup and wait for confirmation
+              await showToast(t('cnc.optimizationComplete', { panels: totalPanels, sheets: allResults.length, efficiency: avgEfficiency.toFixed(1) }), 'success', t('common.confirm'));
+
+              // After user clicks confirm, show the results
+              setOptimizationResults(pendingResultsRef.current);
+
+              // Set appropriate sheet index
+              if (currentSheetIndex >= pendingResultsRef.current.length && pendingResultsRef.current.length > 0) {
+                setCurrentSheetIndex(pendingResultsRef.current.length - 1);
+              } else if (currentSheetIndex < 0 && pendingResultsRef.current.length > 0) {
+                setCurrentSheetIndex(0);
+              }
+
+              // Clear pending results
+              pendingResultsRef.current = [];
+            } else {
+              await showToast(t('cnc.optimizationFailed'), 'error', t('common.confirm'));
+            }
+          }, 300); // Show 100% for 300ms
+        }, remainingTime);
+      }
     } catch (error) {
       // console.error('Optimization error:', error);
-      clearInterval(progressInterval);
-      setShowAILoading(false);
-      setAILoadingProgress(0);
-      showToast(t('cnc.optimizationError'), 'error', t('common.confirm'));
+      if (progressInterval) clearInterval(progressInterval);
+      if (!silent) {
+        setShowAILoading(false);
+        setAILoadingProgress(0);
+        showToast(t('cnc.optimizationError'), 'error', t('common.confirm'));
+      }
     } finally {
       setIsOptimizing(false);
     }
@@ -1018,8 +1030,8 @@ function PageInner(){
     const excludedSig = [...excludedPanelIds].sort().join(',');
     const panelsSig = panels.map(p => `${p.id}:${p.grain}:${p.width}:${p.length}`).join('|') + '||' + excludedSig;
     if (prevPanelsRef.current && prevPanelsRef.current !== panelsSig) {
-      console.log('🔄 패널 변경 감지 → 자동 재최적화');
-      handleOptimize();
+      console.log('🔄 패널 변경 감지 → 자동 재최적화 (silent)');
+      handleOptimize(undefined, true);
     }
     prevPanelsRef.current = panelsSig;
   }, [panels, stock, excludedPanelIds, handleOptimize]);
