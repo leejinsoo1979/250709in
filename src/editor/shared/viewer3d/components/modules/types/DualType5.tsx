@@ -1523,6 +1523,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               width={width}
               depth={depth}
               yOffset={-height / 2}
+              placedFurnitureId={placedFurnitureId}
               renderMode={renderMode}
               isHighlighted={false}
               isFloating={isFloating}

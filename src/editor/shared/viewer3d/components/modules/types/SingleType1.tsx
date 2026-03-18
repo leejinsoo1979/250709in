@@ -252,6 +252,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
             width={width}
             depth={lowerSectionDepthUnits}
             yOffset={-height / 2}
+            placedFurnitureId={placedFurnitureId}
             renderMode={renderMode}
             isHighlighted={false}
             isFloating={isFloating}

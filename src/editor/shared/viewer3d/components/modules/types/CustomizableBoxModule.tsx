@@ -2281,6 +2281,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
           const footProps = {
             yOffset: -H / 2,
+            placedFurnitureId,
             renderMode,
             isHighlighted,
             isFloating: spaceInfo.baseConfig?.placementType === 'float',
@@ -2334,6 +2335,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               width={footWidth}
               depth={footDepth}
               yOffset={-H / 2}
+              placedFurnitureId={placedFurnitureId}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
               isFloating={spaceInfo.baseConfig?.placementType === 'float'}

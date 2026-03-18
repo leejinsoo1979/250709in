@@ -385,6 +385,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               depth={depth}
               yOffset={-height / 2}
               backZOffset={sectionDepths && sectionDepths[0] ? (lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) : 0) : 0}
+              placedFurnitureId={placedFurnitureId}
               renderMode={renderMode}
               isHighlighted={false}
               isFloating={isFloating}

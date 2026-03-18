@@ -234,6 +234,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           width={adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width}
           depth={baseFurniture.depth}
           yOffset={-adjustedHeight / 2}
+          placedFurnitureId={placedFurnitureId}
           renderMode={renderMode}
           isHighlighted={false}
           isFloating={isFloating}

@@ -3,12 +3,14 @@ import * as THREE from 'three';
 import { AdjustableFoot } from './AdjustableFoot';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 interface AdjustableFootsRendererProps {
   width: number; // 가구 폭 (Three.js units)
   depth: number; // 가구 깊이 (Three.js units)
   yOffset?: number; // Y축 오프셋 (가구 하단 위치)
   backZOffset?: number; // 뒤쪽 조절발 Z축 오프셋 (섹션 깊이 조정용)
+  placedFurnitureId?: string; // 배치된 가구 ID (baseFrameOffset 조회용)
   material?: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
@@ -30,6 +32,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   depth,
   yOffset = 0,
   backZOffset = 0,
+  placedFurnitureId,
   renderMode = 'solid',
   isHighlighted = false,
   isFloating = false,
@@ -48,6 +51,12 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     state.spaceInfo.baseConfig?.type === 'stand' &&
     state.spaceInfo.baseConfig?.placementType === 'float'
   );
+  // placedFurnitureId로 baseFrameOffset 조회
+  const baseFrameOffset = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const mod = state.placedModules.find(m => m.id === placedFurnitureId);
+    return mod?.baseFrameOffset ?? 0;
+  });
 
   // Store 값 우선, prop은 폴백
   const effectiveBaseDepth = storeBaseDepth;
@@ -83,10 +92,11 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const rightX = furnitureWidth / 2 - plateHalf;
 
   // Z축 위치
-  // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로
+  // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로 + 하부프레임 옵셋
   // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽 (받침대 깊이 영향 없음)
   const baseDepthOffset = mmToThreeUnits(effectiveBaseDepth);
-  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset;
+  const baseFrameZOffset = mmToThreeUnits(baseFrameOffset);
+  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset + baseFrameZOffset;
   const backZ = -furnitureDepth / 2 + plateHalf;
 
   // 발통 위치 배열 (네 모서리, 회전 없음)
