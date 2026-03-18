@@ -232,37 +232,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return virtualSlotModuleIds.has(module.id);
         });
       } else {
-        // 슬롯 기반 배치: 기존 로직
-        filteredBySlot = placedModules.filter(module => {
-          if (module.slotIndex === undefined) return false;
-
-          let moduleGlobalSlotIndex = module.slotIndex;
-
-          let isInDroppedZone = module.zone === 'dropped';
-
-          if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
-            const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
-            const moduleXMm = module.position.x * 100;
-            const normalWidth = zones.normal.width;
-            const droppedWidth = zones.dropped.width;
-
-            if (droppedPosition === 'left') {
-              isInDroppedZone = moduleXMm < droppedWidth;
-            } else {
-              isInDroppedZone = moduleXMm >= normalWidth;
-            }
-          }
-
-          if (hasDroppedCeiling && isInDroppedZone) {
-            moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
-          }
-
-          if (module.isDualSlot) {
-            return moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex;
-          }
-
-          return moduleGlobalSlotIndex === selectedSlotIndex;
-        });
+        // 슬롯 기반 배치: 자유배치와 동일하게 전체 가구에서 좌/우 끝 가구 선택
+        // (selectedSlotIndex 필터 없이 전체 가구에서 가장 가까운 가구 표시)
+        filteredBySlot = placedModules.filter(m => !m.isSurroundPanel);
       }
     }
 
