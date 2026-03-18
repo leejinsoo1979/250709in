@@ -708,13 +708,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 상부장 도어 높이 = 캐비넷 높이 - 위쪽 간격 + 아래 확장
     actualDoorHeight = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
 
-// console.log('🚪🔴 상부장 도어 높이 계산:', {
+// console.log('🚪🔴 상부장 도어 높이:', {
       // moduleId: moduleData?.id,
-      // 캐비넷높이: upperCabinetHeight,
-      // 천장간격: UPPER_CABINET_TOP_GAP,
-      // 아래확장: UPPER_CABINET_BOTTOM_EXTENSION,
-      // 도어높이: actualDoorHeight,
-      // 설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
+      // upperCabinetHeight,
+      // actualDoorHeight,
     // });
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치, 아래로 확장
@@ -740,11 +737,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 // console.log('🚪📏 하부장 도어 높이:', {
       // moduleId: moduleData?.id,
       // 캐비넷높이: lowerCabinetHeight,
-      // 아래확장: LOWER_CABINET_BOTTOM_EXTENSION,
-      // 위확장: LOWER_CABINET_TOP_EXTENSION,
       // actualDoorHeight,
-      // type: '하부장',
-      // 설명: '하부장 상단과 일치, 아래로 60mm 확장'
     // });
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
