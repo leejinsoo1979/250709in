@@ -401,7 +401,9 @@ const FreePlacementDropZone: React.FC = () => {
     // 사용자 지정 너비(커스텀 가구/lastCustomDimensions/pendingPlacement)가 있으면 zone 최적화 스킵
     const dimKey = selectedFurnitureId ? getCustomDimensionKey(selectedFurnitureId) : '';
     const hasUserSetWidth = !!(lastCustomDimensions[dimKey]?.width) || !!pendingPlacement;
-    if (hasUserSetWidth || zonePlacementBounds.length === 0) {
+    // 표준 모듈(고정 너비)은 존 너비 최적화 스킵 — customizable 모듈만 최적화 적용
+    const isCustomizable = selectedFurnitureId?.startsWith('customizable-') || false;
+    if (hasUserSetWidth || !isCustomizable || zonePlacementBounds.length === 0) {
       setHoverZoneWidth(null);
     } else {
       const hoverZone = detectHoverZoneType(xMm, spaceInfo);
