@@ -377,7 +377,8 @@ export const optimizePanelsMultiple = async (
 
     for (let i = 0; i < panel.quantity; i++) {
       const id = `${panel.id}-${i}`;
-      // 모든 패널 회전 금지 (보링·결방향·재단 일관성 보장)
+      // grain이 NONE인 패널(백패널 등)만 회전 허용, 나머지는 결방향 고정
+      const isGrainFree = !panel.grain || panel.grain === 'NONE';
       rectangles.push({
         id,
         width: panel.width,
@@ -386,7 +387,7 @@ export const optimizePanelsMultiple = async (
         material: panel.material,
         color: panel.color,
         name: panel.name,
-        canRotate: false,
+        canRotate: isGrainFree,
       });
       panelMap.set(id, panel);
     }
