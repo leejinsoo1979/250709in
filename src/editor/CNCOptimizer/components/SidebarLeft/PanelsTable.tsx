@@ -6,6 +6,31 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { useLivePanelData } from '../../hooks/useLivePanelData';
 import styles from './SidebarLeft.module.css';
 
+/**
+ * 패널 이름에서 가구번호 추출: "[N]..." → N, 없으면 0
+ */
+function extractFurnitureNumber(label: string): number {
+  const m = label.match(/^\[(\d+)\]/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+/**
+ * 패널 유형 우선순위 (낮을수록 먼저)
+ * 측판 → 상판/바닥 → 선반/칸막이 → 백패널 → 보강대 → 프레임 → 서랍 → 도어
+ */
+function panelTypePriority(label: string): number {
+  const name = label.toLowerCase();
+  if (name.includes('좌측') || name.includes('우측') || name.includes('측판')) return 1;
+  if (name.includes('상판') || name.includes('바닥')) return 2;
+  if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 3;
+  if (name.includes('백패널') || name.includes('뒷판')) return 4;
+  if (name.includes('보강')) return 5;
+  if (name.includes('프레임')) return 6;
+  if (name.includes('서랍') || name.includes('마이다')) return 7;
+  if (name.includes('도어') || name.includes('door')) return 8;
+  return 9;
+}
+
 export default function PanelsTable(){
   const { t } = useTranslation();
   const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion } = useCNCStore();
@@ -14,6 +39,18 @@ export default function PanelsTable(){
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newlyAddedPanelId, setNewlyAddedPanelId] = useState<string | null>(null);
+
+  // 패널 정렬: 가구번호 → 패널유형 순서
+  const sortedPanelIndices = useMemo(() => {
+    return panels
+      .map((p, i) => ({ index: i, fn: extractFurnitureNumber(p.label), tp: panelTypePriority(p.label), label: p.label }))
+      .sort((a, b) => {
+        if (a.fn !== b.fn) return a.fn - b.fn;
+        if (a.tp !== b.tp) return a.tp - b.tp;
+        return a.label.localeCompare(b.label, 'ko');
+      })
+      .map(item => item.index);
+  }, [panels]);
 
   // 패널 ID → meshName/furnitureId 매핑 (3D 하이라이트용)
   const panelHighlightMap = useMemo(() => {
@@ -339,9 +376,22 @@ export default function PanelsTable(){
               </tr>
             </thead>
             <tbody>
-              {panels.map((p, i) => {
+              {sortedPanelIndices.map((i, sortIdx) => {
+                const p = panels[i];
                 const isNewPanel = p.label === '' && p.width === 0 && p.length === 0;
+
+                // 가구 그룹 구분: 이전 패널과 가구번호가 다르면 구분선 표시
+                const currentFn = extractFurnitureNumber(p.label);
+                const prevFn = sortIdx > 0 ? extractFurnitureNumber(panels[sortedPanelIndices[sortIdx - 1]].label) : currentFn;
+                const showGroupSeparator = sortIdx > 0 && currentFn !== prevFn;
+
                 return (
+                <React.Fragment key={p.id}>
+                {showGroupSeparator && (
+                  <tr className={styles.groupSeparator}>
+                    <td colSpan={7} style={{ padding: 0, height: '2px', background: 'var(--border-color, #e5e7eb)' }}></td>
+                  </tr>
+                )}
                 <tr
                   key={p.id}
                   ref={selectedPanelId === p.id ? selectedRowRef : null}
@@ -499,6 +549,7 @@ export default function PanelsTable(){
                     </button>
                   </td>
                 </tr>
+                </React.Fragment>
               );
               })}
             </tbody>
