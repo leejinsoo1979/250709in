@@ -2969,10 +2969,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* ═══ 좌측 세로 치수선 (2단 구조) ═══ */}
       {showDimensions && <group>
         {(() => {
-          // ── 가구 데이터 수집 ──
-          const freeMods = placedModules.filter(m => m.isFreePlacement);
-          const leftmostMod = freeMods.length > 0
-            ? freeMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
+          // ── 가구 데이터 수집 (자유배치 + 슬롯배치 공통) ──
+          const allMods = placedModules.filter(m => !m.isSurroundPanel);
+          const leftmostMod = allMods.length > 0
+            ? allMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
 
           // ── 공통 변수 ──
           const outerX = leftDimensionX + leftOffset;  // 2단(바깥) X
@@ -2990,8 +2990,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // ── 1단 분해 계산 (가구 유무 무관 — 항상 표시) ──
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
-          const bottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-          const furnitureH = leftmostMod ? (leftmostMod.freeHeight || _internalHeight) : _internalHeight;
+          const globalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+          // per-furniture 프레임 오버라이드 적용
+          const bottomFrameH = leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH;
+          const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
+          const perTopFrame = leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame;
+          const furnitureH = leftmostMod
+            ? (leftmostMod.freeHeight || leftmostMod.customHeight || _internalHeight)
+            : _internalHeight;
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const leftModInDrop = leftmostMod?.zone === 'dropped';
           const effectiveH = (isLeftDrop && leftModInDrop) || (isLeftDrop && !leftmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
@@ -3199,10 +3205,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* ═══ 우측 세로 치수선 (2단 구조) ═══ */}
       {showDimensions && <group>
         {(() => {
-          // ── 가구 데이터 수집 ──
-          const freeMods_R = placedModules.filter(m => m.isFreePlacement);
-          const rightmostMod = freeMods_R.length > 0
-            ? freeMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
+          // ── 가구 데이터 수집 (자유배치 + 슬롯배치 공통) ──
+          const allMods_R = placedModules.filter(m => !m.isSurroundPanel);
+          const rightmostMod = allMods_R.length > 0
+            ? allMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
 
           // ── 공통 변수 ──
           const rightWallX = mmToThreeUnits(spaceInfo.width) + leftOffset;
@@ -3219,8 +3225,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const isRightDrop = hasDrop && spaceInfo.droppedCeiling!.position === 'right';
           // ── 1단 분해 계산 (가구 유무 무관 — 항상 표시) ──
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
-          const rBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-          const rFurnitureH = rightmostMod ? (rightmostMod.freeHeight || rInternalHeight) : rInternalHeight;
+          const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+          // per-furniture 프레임 오버라이드 적용
+          const rBottomFrameH = rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH;
+          const rFurnitureH = rightmostMod
+            ? (rightmostMod.freeHeight || rightmostMod.customHeight || rInternalHeight)
+            : rInternalHeight;
           // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
           const rightModInDrop = rightmostMod?.zone === 'dropped';
           const rEffectiveH = (isRightDrop && rightModInDrop) || (isRightDrop && !rightmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
