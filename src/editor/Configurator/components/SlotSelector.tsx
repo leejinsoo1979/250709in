@@ -34,13 +34,16 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   // 실제 방향 결정 (4분할 뷰에서는 splitViewDirection 사용)
   const effectiveDirection = forSplitView ? splitViewDirection : view2DDirection;
 
-  // 측면뷰가 아닐 때 selectedSlotIndex를 null로 리셋 (4분할 뷰가 아닌 경우에만)
+  // 측면뷰 진입 시 1번 슬롯 자동 선택, 측면뷰 아닐 때 리셋
   React.useEffect(() => {
     if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {
       // 측면뷰가 아닐 때 슬롯 선택 해제
       if (selectedSlotIndex !== null) {
         setSelectedSlotIndex(null);
       }
+    } else if (!forSplitView && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex === null) {
+      // 측면뷰 진입 시 첫 번째 슬롯 자동 선택
+      setSelectedSlotIndex(0);
     }
   }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, forSplitView]);
 
