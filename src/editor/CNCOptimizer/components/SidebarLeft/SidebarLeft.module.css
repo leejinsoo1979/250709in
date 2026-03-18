@@ -137,9 +137,8 @@
 /* 패널 테이블 열 너비 최적화 */
 .table th:first-child,
 .table td:first-child {
-  width: 25%; /* 이름 - 비율로 설정하여 유연하게 */
-  min-width: 80px;
-  max-width: 120px;
+  width: auto; /* 이름 - 나머지 공간 모두 사용 */
+  min-width: 100px;
 }
 
 .table th:nth-child(2),
