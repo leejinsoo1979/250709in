@@ -3172,7 +3172,20 @@ const Room: React.FC<RoomProps> = ({
                 // 각 모듈별 개별 상부프레임 생성
                 const isDoorBase = spaceInfo.frameOffsetBase === 'door';
                 const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
-                return group.modules.filter((mod) => mod.hasTopFrame !== false).map((mod) => {
+                return group.modules.filter((mod) => {
+                  if (mod.hasTopFrame === false) return false;
+                  // 측면뷰에서 선택된 슬롯의 가구만 표시
+                  const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+                  if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
+                    const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+                    if (isDual) {
+                      if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+                    } else {
+                      if (mod.slotIndex !== selectedSlotIndex) return false;
+                    }
+                  }
+                  return true;
+                }).map((mod) => {
                   // 개별 가구 하이라이트 or 서라운드-top 하이라이트
                   const isThisTopHighlighted = highlightedFrame === `top-${mod.id}` || highlightedFrame === 'surround-top';
                   const topSurrMat = topFrameMaterial ?? createFrameMaterial('top');
@@ -3552,7 +3565,20 @@ const Room: React.FC<RoomProps> = ({
               return (
                 <>
                   {slotModsForFrame
-                    .filter(mod => mod.hasTopFrame !== false)
+                    .filter(mod => {
+                      if (mod.hasTopFrame === false) return false;
+                      // 측면뷰에서 선택된 슬롯의 가구만 표시
+                      const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+                      if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
+                        const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+                        if (isDual) {
+                          if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+                        } else {
+                          if (mod.slotIndex !== selectedSlotIndex) return false;
+                        }
+                      }
+                      return true;
+                    })
                     .map((mod) => {
                       const bounds = getModuleBoundsX(mod);
                       const modWidthMM = bounds.right - bounds.left;
@@ -4442,10 +4468,24 @@ const Room: React.FC<RoomProps> = ({
 
                   const globalBaseHeightMm = spaceInfo.baseConfig?.height ?? 65;
                   const baseMat = zoneMaterial;
+                  // 측면뷰 슬롯 필터링 여부
+                  const isSideViewBase = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
                   return (
                     <React.Fragment key={`base-frame-zone-${zoneIndex}`}>
                       {slotModsForBase
-                        .filter(mod => mod.hasBase !== false)
+                        .filter(mod => {
+                          if (mod.hasBase === false) return false;
+                          // 측면뷰에서 선택된 슬롯의 가구만 표시
+                          if (isSideViewBase && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
+                            const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+                            if (isDual) {
+                              if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+                            } else {
+                              if (mod.slotIndex !== selectedSlotIndex) return false;
+                            }
+                          }
+                          return true;
+                        })
                         .map((mod) => {
                           const bounds = getModuleBoundsX(mod);
                           const modWidthMM = bounds.right - bounds.left;
