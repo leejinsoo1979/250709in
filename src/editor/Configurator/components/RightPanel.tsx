@@ -1192,9 +1192,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                               setSizeText(String(next));
                               onSizeChange(next);
+                            } else if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
                             }
                           }}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { setSizeText(v); onSizeChange(v === '' ? 0 : parseInt(v, 10)); } }}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
                           onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
                           style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                         />
@@ -1210,9 +1212,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                               setOffsetText(String(next));
                               onOffsetChange(next);
+                            } else if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
                             }
                           }}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { setOffsetText(v); onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10)); } }}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
                           onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
                           style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                         />
