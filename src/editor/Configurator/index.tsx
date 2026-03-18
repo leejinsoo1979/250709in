@@ -4844,13 +4844,79 @@ const Configurator: React.FC = () => {
                   if (cat !== 'lower' && cat !== 'full') return null;
                   baseNum++;
                   const bn = baseNum;
-                  return <React.Fragment key={`base-${mod.id}`}>{renderFrameOffsetRow(bn, '(하)',
-                    mod.hasBase !== false, spaceInfo.baseConfig?.height || 65, mod.baseFrameOffset || 0,
-                    () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
-                    (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: v } }),
-                    (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
-                    `base-${mod.id}`,
-                  )}</React.Fragment>;
+                  const freeBaseEnabled = mod.hasBase !== false;
+                  return (
+                    <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                      <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(bn)}(하)</span>
+                      <button
+                        onClick={() => updatePlacedModule(mod.id, {
+                          hasBase: !freeBaseEnabled,
+                          ...(freeBaseEnabled ? { individualFloatHeight: 0 } : {}),
+                        })}
+                        className={`${styles.miniToggle} ${freeBaseEnabled ? styles.miniToggleActive : ''}`}
+                      />
+                      {freeBaseEnabled ? (
+                        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={(spaceInfo.baseConfig?.height || 65) || ''} placeholder="0"
+                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const cur = spaceInfo.baseConfig?.height || 65;
+                                  setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) } });
+                                }
+                              }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: v === '' ? 0 : parseInt(v, 10) } }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) } }); }}
+                              className={styles.frameNumberInput}
+                            />
+                          </div>
+                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={(mod.baseFrameOffset || 0) !== 0 ? (mod.baseFrameOffset || 0) : ''} placeholder="0"
+                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const cur = mod.baseFrameOffset || 0;
+                                  updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                                }
+                              }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
+                              className={styles.frameNumberInput}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>띄움</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const cur = mod.individualFloatHeight ?? 0;
+                                  updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                                }
+                              }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) }); }}
+                              onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                              className={styles.frameNumberInput}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
                 })}
               </div>
               </>}
@@ -4995,6 +5061,85 @@ const Configurator: React.FC = () => {
             </div>
           );
 
+          const renderSlotBaseFrameRow = (
+            mod: typeof sorted[0],
+            label: string,
+          ) => {
+            const enabled = mod.hasBase !== false;
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
+                <button
+                  onClick={() => updatePlacedModule(mod.id, {
+                    hasBase: !enabled,
+                    ...(enabled ? { individualFloatHeight: 0 } : {}),
+                  })}
+                  className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
+                />
+                {enabled ? (
+                  <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                    <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
+                      <input
+                        type="text" inputMode="numeric"
+                        value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
+                        onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = mod.baseFrameHeight ?? globalBase;
+                            updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                          }
+                        }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameHeight: v === '' ? 0 : parseInt(v, 10) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                        className={styles.frameNumberInput}
+                      />
+                    </div>
+                    <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+                      <input
+                        type="text" inputMode="numeric"
+                        value={(mod.baseFrameOffset ?? 0) !== 0 ? (mod.baseFrameOffset ?? 0) : ''} placeholder="0"
+                        onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = mod.baseFrameOffset ?? 0;
+                            updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                          }
+                        }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
+                        className={styles.frameNumberInput}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                    <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>띄움</span>
+                      <input
+                        type="text" inputMode="numeric"
+                        value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = mod.individualFloatHeight ?? 0;
+                            updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                          }
+                        }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) }); }}
+                        onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                        className={styles.frameNumberInput}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          };
+
           let topNum = 0;
           let baseNum = 0;
           return (
@@ -5024,15 +5169,9 @@ const Configurator: React.FC = () => {
                   {/* 하부프레임 — stand 타입이면 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
-                    return <React.Fragment key={`base-${mod.id}`}>{renderSlotFrameRow(
+                    return <React.Fragment key={`base-${mod.id}`}>{renderSlotBaseFrameRow(
+                      mod,
                       `${toAlpha(baseNum)}(하)`,
-                      mod.hasBase !== false,
-                      mod.baseFrameHeight ?? globalBase,
-                      mod.baseFrameOffset ?? 0,
-                      () => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) }),
-                      (v) => updatePlacedModule(mod.id, { baseFrameHeight: v }),
-                      (v) => updatePlacedModule(mod.id, { baseFrameOffset: v }),
-                      `base-${mod.id}`,
                     )}</React.Fragment>;
                   })}
                 </div>

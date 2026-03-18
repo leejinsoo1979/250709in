@@ -129,6 +129,7 @@ export interface PlacedModule {
   freeHeight?: number;       // 자유배치 모드에서 사용자 지정 높이 (mm)
   freeDepth?: number;        // 자유배치 모드에서 사용자 지정 깊이 (mm)
   hasBase?: boolean;         // 자유배치 걸래받이 표시 여부 (기본: full/lower=true, upper=false)
+  individualFloatHeight?: number; // 하부프레임 OFF 시 개별 띄움 높이 (mm, 기본 0)
   hasTopFrame?: boolean;     // 자유배치 상부프레임 표시 여부 (기본: full/upper=true, lower=false)
   topFrameThickness?: number; // 자유배치 상부프레임 두께 (mm, undefined = 공간 설정값 사용)
   hasBottomFrame?: boolean;  // 자유배치 하부프레임 표시 여부 (기본: full/lower=true, upper=false)

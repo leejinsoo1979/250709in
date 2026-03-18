@@ -1232,17 +1232,67 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {/* 하부프레임 — stand 타입이면 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
+                    const baseEnabled = mod.hasBase !== false;
                     return (
-                      <FrameRow key={`base-${mod.id}`}
-                        label={`${toAlpha(baseNum)}(하)`}
-                        enabled={mod.hasBase !== false}
-                        sizeMM={mod.baseFrameHeight ?? globalBase}
-                        offset={mod.baseFrameOffset ?? 0}
-                        onToggle={() => updatePlacedModule(mod.id, { hasBase: !(mod.hasBase !== false) })}
-                        onSizeChange={(v) => updatePlacedModule(mod.id, { baseFrameHeight: v })}
-                        onOffsetChange={(v) => updatePlacedModule(mod.id, { baseFrameOffset: v })}
-                        hlKey={`base-${mod.id}`}
-                      />
+                      <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                        <span style={{ minWidth: '34px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
+                        <button
+                          onClick={() => updatePlacedModule(mod.id, {
+                            hasBase: !baseEnabled,
+                            ...( baseEnabled ? { individualFloatHeight: 0 } : {}),
+                          })}
+                          style={{
+                            width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                            backgroundColor: baseEnabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+                            position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+                          }}
+                        >
+                          <span style={{
+                            position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+                            backgroundColor: '#fff', transition: 'left 0.2s',
+                            left: baseEnabled ? '18px' : '2px',
+                          }} />
+                        </button>
+                        {baseEnabled ? (
+                          <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
+                              <input type="text" inputMode="numeric"
+                                value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
+                                onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? globalBase; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameHeight: v === '' ? 0 : parseInt(v, 10) }); }}
+                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+                              <input type="text" inputMode="numeric"
+                                value={(mod.baseFrameOffset ?? 0) !== 0 ? (mod.baseFrameOffset ?? 0) : ''} placeholder="0"
+                                onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameOffset ?? 0; updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
+                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
+                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>띄움</span>
+                              <input type="text" inputMode="numeric"
+                                value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.individualFloatHeight ?? 0; updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) }); }}
+                                onBlur={(e) => { updatePlacedModule(mod.id, { individualFloatHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </FormControl>
