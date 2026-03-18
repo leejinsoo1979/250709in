@@ -149,29 +149,29 @@
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-  width: 82px; /* 치수 */
+  width: 95px; /* 치수 */
   padding: 0 2px !important;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 24px; /* 두께 */
+  width: 30px; /* 두께 */
   text-align: center;
-  padding: 0 1px !important;
+  padding: 0 2px !important;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 34px; /* 재질 */
-  padding: 0 1px !important;
+  width: 40px; /* 재질 */
+  padding: 0 2px !important;
   overflow: hidden;
 }
 
 .table th:nth-child(6),
 .table td:nth-child(6) {
-  width: 20px; /* 결방향 */
+  width: 24px; /* 결방향 */
   text-align: center;
-  padding: 0 1px !important;
+  padding: 0 2px !important;
 }
 
 .table th:last-child,
