@@ -450,9 +450,9 @@ export default function PanelsTable(){
                       className={styles.inputTiny}
                     />
                   </td>
-                  <td style={{ paddingLeft: '20px', paddingRight: '2px' }}>
-                    <select 
-                      value={p.material} 
+                  <td style={{ padding: '2px' }}>
+                    <select
+                      value={p.material}
                       onChange={e => onChange(i, 'material', e.target.value)}
                       onClick={e => e.stopPropagation()}
                       className={styles.select}

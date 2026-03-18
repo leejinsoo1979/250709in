@@ -399,11 +399,11 @@
 
 .select {
   width: 100%;
-  padding: 3px 6px;
+  padding: 2px 1px;
   border: 1px solid #e0e0e0;
   background: white !important;
   color: #333 !important;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 3px;
