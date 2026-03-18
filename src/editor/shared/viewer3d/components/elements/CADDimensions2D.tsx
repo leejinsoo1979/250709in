@@ -302,7 +302,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
   const baseFrameDisplayMm = Math.max(0, baseFrameHeightMm - (isFloating ? 0 : floorFinishHeightMm));
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
-  const furnitureBaseY = isFloating ? floatHeight : baseFrameHeight;
+  const floorFinishY = isFloating ? 0 : mmToThreeUnits(floorFinishHeightMm);
+  const furnitureBaseY = (isFloating ? floatHeight : baseFrameHeight) + floorFinishY;
 
   // 내경 높이 (per-furniture delta 보정 적용)
   let adjustedInternalHeightMm = globalAdjustedInternalHeightMm;
