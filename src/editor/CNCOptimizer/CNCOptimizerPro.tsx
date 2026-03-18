@@ -834,9 +834,13 @@ function PageInner(){
         }
       }
 
-      // console.log('=== Initial Optimization Complete ===');
-      // console.log('Total sheets generated:', allResults.length);
-      
+      console.log('=== Initial Optimization Complete ===');
+      console.log('Total sheets generated:', allResults.length);
+      console.log('panelGroups count:', panelGroups.size);
+      if (allResults.length === 0) {
+        console.error('❌ allResults is empty! panelGroups:', [...panelGroups.entries()].map(([k, v]) => `${k}: ${v.length} panels`));
+      }
+
       // 재최적화 비활성화 - 시트 낭비 방지
       const finalResults = [...allResults];
       
@@ -938,7 +942,7 @@ function PageInner(){
         }, remainingTime);
       }
     } catch (error) {
-      // console.error('Optimization error:', error);
+      console.error('❌ Optimization error:', error);
       if (progressInterval) clearInterval(progressInterval);
       if (!silent) {
         setShowAILoading(false);
