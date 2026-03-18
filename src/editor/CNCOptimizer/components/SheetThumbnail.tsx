@@ -89,19 +89,23 @@ export default function SheetThumbnail({
     // 패널 그리기
     result.panels.forEach(panel => {
       let x, y, width, height;
-      
+
+      // 패널이 실제로 시트 위에서 차지하는 크기
+      const placedW = panel.rotated ? panel.height : panel.width;
+      const placedH = panel.rotated ? panel.width : panel.height;
+
       if (isPortrait) {
-        // 세로형 시트를 가로로 회전
+        // 세로형 시트를 가로로 회전: 시트의 x→y, y→x 매핑
         x = offsetX + panel.y * scale;
-        y = offsetY + (originalWidth - panel.x - panel.width) * scale;
-        width = (panel.rotated ? panel.width : panel.height) * scale;
-        height = (panel.rotated ? panel.height : panel.width) * scale;
+        y = offsetY + (originalWidth - panel.x - placedW) * scale;
+        width = placedH * scale;
+        height = placedW * scale;
       } else {
         // 가로형 시트는 그대로
         x = offsetX + panel.x * scale;
         y = offsetY + panel.y * scale;
-        width = (panel.rotated ? panel.height : panel.width) * scale;
-        height = (panel.rotated ? panel.width : panel.height) * scale;
+        width = placedW * scale;
+        height = placedH * scale;
       }
       
       // 패널 배경 (재질별 색상 - MDF는 고유 갈색)
