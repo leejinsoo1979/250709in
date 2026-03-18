@@ -3025,10 +3025,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const sections = modData?.modelConfig?.sections;
             if (sections && sections.length >= 2) {
               // 섹션 높이 계산 (absolute vs percentage)
-              sectionHeights = sections.map(s => {
+              const rawHeights = sections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(furnitureH * s.height / 100);
               });
+              // absolute 합이 furnitureH와 다르면 비례 스케일링
+              const rawSum = rawHeights.reduce((a, b) => a + b, 0);
+              if (rawSum > 0 && Math.abs(rawSum - furnitureH) > 1) {
+                sectionHeights = rawHeights.map(h => Math.round(h * furnitureH / rawSum));
+              } else {
+                sectionHeights = rawHeights;
+              }
             }
           }
           const hasSectionSplit = sectionHeights.length >= 2;
@@ -3270,10 +3277,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const rSections = rModData?.modelConfig?.sections;
             if (rSections && rSections.length >= 2) {
-              rSectionHeights = rSections.map(s => {
+              const rRawHeights = rSections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(rFurnitureH * s.height / 100);
               });
+              // absolute 합이 rFurnitureH와 다르면 비례 스케일링
+              const rRawSum = rRawHeights.reduce((a, b) => a + b, 0);
+              if (rRawSum > 0 && Math.abs(rRawSum - rFurnitureH) > 1) {
+                rSectionHeights = rRawHeights.map(h => Math.round(h * rFurnitureH / rRawSum));
+              } else {
+                rSectionHeights = rRawHeights;
+              }
             }
           }
           const rHasSectionSplit = rSectionHeights.length >= 2;
