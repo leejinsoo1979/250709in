@@ -1,6 +1,6 @@
 .section {
   background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid hsl(var(--theme) / 0.15);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -43,13 +43,13 @@
 .sectionHeader svg {
   width: 16px;
   height: 16px;
-  color: #666;
+  color: hsl(var(--theme));
 }
 
 .sectionHeader h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #1f2937;
   margin: 0;
   flex: 1;
 }
@@ -225,14 +225,14 @@
 
 .table th {
   padding: 4px 2px;
-  color: #6b7280;
+  color: hsl(var(--theme) / 0.7);
   font-weight: 600;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
-  border-bottom: 2px solid #e5e7eb;
-  background: #f8f9fa;
+  border-bottom: 2px solid hsl(var(--theme) / 0.2);
+  background: hsl(var(--theme) / 0.03);
 }
 
 .table tbody tr {
@@ -242,7 +242,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fafbfc;
+  background: hsl(var(--theme) / 0.04);
 }
 
 .table tbody tr.selected {
