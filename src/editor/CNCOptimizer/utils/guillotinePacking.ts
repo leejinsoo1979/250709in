@@ -512,13 +512,34 @@ function extractPanelTypeKey(name: string): string {
 }
 
 /**
- * 개별 패널 방향 정규화: width > binWidth이면 해당 패널만 스왑
+ * 개별 패널 방향 정규화
+ * - width > binWidth이면 스왑 (시트에 안 들어가므로 필수)
+ * - stripDirection에 따라 패널 긴 쪽을 올바른 축에 배치:
+ *   vertical strip (L방향 우선): 긴 쪽 → height(y축=L방향)
+ *   horizontal strip (W방향 우선): 긴 쪽 → width(x축=W방향)
  */
-function normalizeOrientation(panels: Rect[], binWidth: number): Rect[] {
+function normalizeOrientation(panels: Rect[], binWidth: number, stripDirection?: 'horizontal' | 'vertical' | 'auto'): Rect[] {
   return panels.map(panel => {
+    // 1) 시트에 안 들어가는 경우 필수 스왑
     if (panel.width > binWidth && panel.height <= binWidth) {
       return { ...panel, width: panel.height, height: panel.width, rotated: true };
     }
+
+    // 2) 결방향 있는 패널(canRotate=false)은 스왑 금지
+    if (panel.canRotate === false) {
+      return { ...panel, rotated: false };
+    }
+
+    // 3) L방향 우선(vertical strip): 긴 쪽이 height(L방향=y축)로 가도록
+    if (stripDirection === 'vertical' && panel.width > panel.height) {
+      return { ...panel, width: panel.height, height: panel.width, rotated: true };
+    }
+
+    // 4) W방향 우선(horizontal strip): 긴 쪽이 width(W방향=x축)로 가도록
+    if (stripDirection === 'horizontal' && panel.height > panel.width) {
+      return { ...panel, width: panel.height, height: panel.width, rotated: true };
+    }
+
     return { ...panel, rotated: false };
   });
 }
@@ -909,23 +930,27 @@ export function packGuillotine(
   }
 
   // ── 1단계: 카테고리별 방향 정규화 ──
-  // 측판/본체/프레임: width > binWidth이면 개별 스왑
-  const sidePanels = normalizeOrientation(sidePanelsRaw, binWidth);
-  const bodyPanels = normalizeOrientation(bodyPanelsRaw, binWidth);
-  const framePanels = normalizeOrientation(framePanelsRaw, binWidth);
-  // 백패널: 같은 가구의 (상)(하)는 동일 width → vertical에서 같은 스트립에 나란히
-  // width > binWidth인 경우만 전체를 같은 방향으로 스왑 (일부만 스왑하면 분리됨)
+  // stripDirection에 따라 패널 긴 쪽을 올바른 축에 배치
+  const sidePanels = normalizeOrientation(sidePanelsRaw, binWidth, stripDirection);
+  const bodyPanels = normalizeOrientation(bodyPanelsRaw, binWidth, stripDirection);
+  const framePanels = normalizeOrientation(framePanelsRaw, binWidth, stripDirection);
+  // 백패널: 같은 가구의 (상)(하)는 동일 width → 가구 단위 스왑
   const backPanels = normalizeBackPanels(backPanelsRaw, binWidth);
 
   // ── 2단계: 카테고리별 패킹 ──
-  // 측판: vertical (같은 width끼리 한 줄)
-  const sideBins = packCategoryToMultiBins(sidePanels, binWidth, binHeight, kerf, 'vertical');
+  // stripDirection 결정: auto면 카테고리별 기본값, 아니면 전달받은 방향 사용
+  const sideDir = stripDirection === 'auto' ? 'vertical' : stripDirection;
+  const bodyDir = stripDirection === 'auto' ? 'horizontal' : stripDirection;
+  const frameDir = stripDirection === 'auto' ? 'horizontal' : stripDirection;
+
+  // 측판
+  const sideBins = packCategoryToMultiBins(sidePanels, binWidth, binHeight, kerf, sideDir);
   // 백패널: 가구별 그룹 패킹 — 같은 가구의 (상)+(하) 백패널은 반드시 같은 시트
   const backBins = packBackPanelsToMultiBins(backPanels, binWidth, binHeight, kerf);
-  // 본체(상판/하판/선반 등): horizontal
-  const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, 'horizontal');
-  // 프레임: horizontal (맨 마지막)
-  const frameBins = packCategoryToMultiBins(framePanels, binWidth, binHeight, kerf, 'horizontal');
+  // 본체(상판/하판/선반 등)
+  const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, bodyDir);
+  // 프레임 (맨 마지막)
+  const frameBins = packCategoryToMultiBins(framePanels, binWidth, binHeight, kerf, frameDir);
 
   // 순서: 측판 → 백패널 → 본체 → 프레임
   const allBins = [...sideBins, ...backBins, ...bodyBins, ...frameBins];
