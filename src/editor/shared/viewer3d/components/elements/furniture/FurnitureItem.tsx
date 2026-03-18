@@ -1319,6 +1319,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
+  // 바닥마감재 적용: 가구 높이에서 차감 (상부 섹션이 흡수)
+  if (placedModule.isFreePlacement) {
+    const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
+      ? spaceInfo.floorFinish.height : 0;
+    if (floorFinishForHeight > 0) {
+      furnitureHeightMm -= floorFinishForHeight;
+    }
+  }
+
   // customSections는 placedModule에 직접 저장된 것만 사용
   // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
   const adjustedCustomSections = placedModule.customSections;
@@ -1379,8 +1388,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 가구 높이 (단내림 구간에서 조정된 높이 사용)
         const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
-        // Y 위치 계산: 받침대높이 + 가구높이/2 (바닥마감재는 조절발로 흡수되므로 Y 위치에 영향 없음)
-        const yPos = baseHeight + (furnitureHeight / 2);
+        // Y 위치 계산: 바닥마감재높이 + 받침대높이 + 가구높이/2
+        const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
 
         // 단내림 구간 Y 위치 디버깅
         if (placedModule.zone === 'dropped') {
