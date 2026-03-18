@@ -280,6 +280,26 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 프레임 두께 계산
   const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
   
+  // 배치된 가구의 슬롯 인덱스 Set 생성 (zone별)
+  const getOccupiedSlots = (zoneType: string): Set<number> => {
+    const occupied = new Set<number>();
+    placedModules.forEach(mod => {
+      // zone 매칭: 'full'이면 모든 모듈, 'main'이면 normal/undefined, 'dropped'이면 dropped
+      const matchesZone = zoneType === 'full'
+        || (zoneType === 'main' && (!mod.zone || mod.zone === 'normal'))
+        || (zoneType === 'dropped' && mod.zone === 'dropped');
+      if (!matchesZone) return;
+      if (mod.slotIndex === undefined) return;
+      occupied.add(mod.slotIndex);
+      // 듀얼 가구는 다음 슬롯도 차지
+      const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+      if (isDual) {
+        occupied.add(mod.slotIndex + 1);
+      }
+    });
+    return occupied;
+  };
+
   // 슬롯 가이드 렌더링 헬퍼 함수
   const renderSlotGuides = (
     startX: number,
@@ -502,43 +522,52 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           />
         );
         
-        // 3D에서만 Z축 가이드 표시
+        // 3D에서만 Z축 가이드 표시 (배치된 슬롯 인접 경계는 제외)
         if (viewMode === '3D') {
-          // 바닥 Z축 가이드
-          guides.push(
-            <Line
-              key={`${zoneType}-z-guide-floor-${index}`}
-              points={[
-                new THREE.Vector3(xPos, floorY, backZ),
-                new THREE.Vector3(xPos, floorY, frontZ)
-              ]}
-              color={zoneColor}
-              lineWidth={zoneLineWidth}
-              dashed
-              dashSize={0.2}
-              gapSize={0.1}
-              opacity={zoneOpacity}
-              transparent
-            />
-          );
-          
-          // 천장 Z축 가이드
-          guides.push(
-            <Line
-              key={`${zoneType}-z-guide-ceiling-${index}`}
-              points={[
-                new THREE.Vector3(xPos, ceilingY, backZ),
-                new THREE.Vector3(xPos, ceilingY, frontZ)
-              ]}
-              color={zoneColor}
-              lineWidth={zoneLineWidth}
-              dashed
-              dashSize={0.2}
-              gapSize={0.1}
-              opacity={zoneOpacity}
-              transparent
-            />
-          );
+          // boundary[index]는 슬롯 index-1(좌)과 index(우)의 경계
+          // 인접 슬롯 중 하나라도 가구가 배치되어 있으면 Z축 가이드 숨김
+          const occupiedSet = getOccupiedSlots(zoneType);
+          const leftSlotOccupied = index > 0 && occupiedSet.has(index - 1);
+          const rightSlotOccupied = index < columnCount && occupiedSet.has(index);
+          const hideZGuide = leftSlotOccupied || rightSlotOccupied;
+
+          if (!hideZGuide) {
+            // 바닥 Z축 가이드
+            guides.push(
+              <Line
+                key={`${zoneType}-z-guide-floor-${index}`}
+                points={[
+                  new THREE.Vector3(xPos, floorY, backZ),
+                  new THREE.Vector3(xPos, floorY, frontZ)
+                ]}
+                color={zoneColor}
+                lineWidth={zoneLineWidth}
+                dashed
+                dashSize={0.2}
+                gapSize={0.1}
+                opacity={zoneOpacity}
+                transparent
+              />
+            );
+
+            // 천장 Z축 가이드
+            guides.push(
+              <Line
+                key={`${zoneType}-z-guide-ceiling-${index}`}
+                points={[
+                  new THREE.Vector3(xPos, ceilingY, backZ),
+                  new THREE.Vector3(xPos, ceilingY, frontZ)
+                ]}
+                color={zoneColor}
+                lineWidth={zoneLineWidth}
+                dashed
+                dashSize={0.2}
+                gapSize={0.1}
+                opacity={zoneOpacity}
+                transparent
+              />
+            );
+          }
         }
       }
     });
