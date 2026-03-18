@@ -1417,6 +1417,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 panelGrainDirections={panelGrainDirections}
               />
               
+
               {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
@@ -1562,10 +1563,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (() => {
+              {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
+              {(viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
                 const segments = (() => {
-                  const isFrontView = view2DDirection === 'front';
+                  const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
                   const longDash = 2.4;
                   const shortDash = 0.9;
@@ -1673,7 +1674,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 })();
 
                 const indicatorRotation = dualLeftDoorSpring.rotation.to(value => {
-                  if (!isSide2DView) {
+                  if (viewMode === '3D' || !isSide2DView) {
                     return 0;
                   }
                   const orientationSign = 1; // 측면뷰에서는 항상 동일한 방향 유지
@@ -1966,10 +1967,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (() => {
+              {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
+              {(viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
                 const segments = (() => {
-                  const isFrontView = view2DDirection === 'front';
+                  const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
                   const longDash = 2.4;
                   const shortDash = 0.9;
@@ -2077,7 +2078,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 })();
 
                 const indicatorRotation = dualRightDoorSpring.rotation.to(value => {
-                  if (!isSide2DView) {
+                  if (viewMode === '3D' || !isSide2DView) {
                     return 0;
                   }
                   const orientationSign = 1; // 측면뷰에서는 항상 동일한 방향 유지
@@ -2282,6 +2283,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
             </lineSegments>
 
+
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
@@ -2483,12 +2485,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
 
-            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰) - 정면은 항상, 측면은 열렸을 때만 */}
-            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (() => {
+            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 정면은 항상, 측면은 열렸을 때만 */}
+            {(viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {
-                  if (!isSide2DView) {
+                  if (viewMode === '3D' || !isSide2DView) {
                     return 0;
                   }
                   const orientationSign = 1; // 측면뷰에서는 항상 동일한 방향 유지
@@ -2504,7 +2506,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 >
                 {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                 {(() => {
-                  const isFrontView = view2DDirection === 'front';
+                  const isFrontView = viewMode === '3D' || view2DDirection === 'front';
 
                   // 패턴 정의: [긴 대시, 공백, 짧은 대시, 공백]의 반복
                   const longDash = 2.4;
