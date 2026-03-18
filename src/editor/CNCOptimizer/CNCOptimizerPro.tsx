@@ -607,13 +607,12 @@ function PageInner(){
     (window as any).cncSettings = { ...settings, optimizationType: effectiveOptimizationType };
 
     let progressInterval: ReturnType<typeof setInterval> | null = null;
+    const animationStartTime = Date.now();
 
     if (!silent) {
       // AI 로딩 모달 표시 (수동 계산하기 버튼 클릭 시에만)
       setShowAILoading(true);
       setAILoadingProgress(0);
-
-      const animationStartTime = Date.now();
 
       const totalPanels = panels.reduce((sum, p) => sum + (p.quantity || 1), 0);
       const estimatedSheets = Math.ceil(totalPanels / 10);
@@ -943,11 +942,13 @@ function PageInner(){
       }
     } catch (error) {
       console.error('❌ Optimization error:', error);
+      console.error('❌ Stack:', error instanceof Error ? error.stack : '');
       if (progressInterval) clearInterval(progressInterval);
       if (!silent) {
         setShowAILoading(false);
         setAILoadingProgress(0);
-        showToast(t('cnc.optimizationError'), 'error', t('common.confirm'));
+        const errMsg = error instanceof Error ? error.message : String(error);
+        showToast(`최적화 실패: ${errMsg}`, 'error', t('common.confirm'));
       }
     } finally {
       setIsOptimizing(false);
