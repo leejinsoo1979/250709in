@@ -595,16 +595,188 @@ function packCategoryToMultiBins(
  *   - 같은 가구의 백패널은 절대 분리하지 않음
  *   - 가구 최대 크기 1200×2400, 원장 1220×2440 → 한 가구의 백패널은 항상 한 시트에 수용 가능
  *   - 여러 가구의 백패널을 같은 시트에 합칠 수 있으면 합침 (효율 향상)
+ *   - 결방향 변경으로 패널 width/height가 스왑된 경우 회전 배치로 해결
  */
+
 /**
- * 백패널 전용 멀티 시트 패킹 — 같은 가구의 (상)+(하) 백패널 반드시 같은 시트
- *
- * GuillotinePacker를 쓰지 않고 직접 배치:
- *   - vertical 방향: 스트립 width = 패널의 width (x축), 패널의 height가 y축으로 쌓임
- *   - 같은 가구의 백패널을 한 스트립에 y축으로 연속 배치
- *   - 스트립 width는 해당 가구 백패널 중 가장 큰 width 사용
- *   - 시트 x축(1220)에 여러 스트립이 들어가면 합침
+ * 한 가구의 백패널들을 시트 내에 최적 배치 (회전 허용)
+ * 반환: 배치된 패널 배열 [{...panel, x, y, rotated, width, height}]
+ *       또는 null (시트에 수용 불가)
  */
+function placeFurnitureBackPanels(
+  panels: Rect[],
+  binWidth: number,
+  binHeight: number,
+  kerf: number,
+  startX: number = 0,
+  startY: number = 0
+): { placed: Rect[]; usedWidth: number; usedHeight: number } | null {
+  if (panels.length === 0) return null;
+  if (panels.length === 1) {
+    const p = panels[0];
+    // 원본 방향
+    if (p.width <= binWidth - startX && p.height <= binHeight - startY) {
+      return {
+        placed: [{ ...p, x: startX, y: startY, rotated: false }],
+        usedWidth: p.width,
+        usedHeight: p.height
+      };
+    }
+    // 회전
+    if (p.height <= binWidth - startX && p.width <= binHeight - startY) {
+      return {
+        placed: [{ ...p, x: startX, y: startY, width: p.height, height: p.width, rotated: true }],
+        usedWidth: p.height,
+        usedHeight: p.width
+      };
+    }
+    return null;
+  }
+
+  // 면적 기준 내림차순 정렬 (가장 큰 패널 먼저)
+  const sorted = [...panels].sort((a, b) => (b.width * b.height) - (a.width * a.height));
+
+  // 여러 배치 전략을 시도하고 가장 좋은 결과 선택
+  const candidates: { placed: Rect[]; usedWidth: number; usedHeight: number }[] = [];
+
+  // === 전략 생성: 첫 패널의 방향(원본/회전) × 나머지 패널 배치 방식 ===
+  for (const firstRotated of [false, true]) {
+    const first = sorted[0];
+    const fw = firstRotated ? first.height : first.width;
+    const fh = firstRotated ? first.width : first.height;
+
+    // 첫 패널이 시트에 안 들어가면 스킵
+    if (fw > binWidth - startX || fh > binHeight - startY) continue;
+
+    const placedFirst: Rect = {
+      ...first,
+      x: startX,
+      y: startY,
+      width: fw,
+      height: fh,
+      rotated: firstRotated
+    };
+
+    const remaining = sorted.slice(1);
+    if (remaining.length === 0) {
+      candidates.push({ placed: [placedFirst], usedWidth: fw, usedHeight: fh });
+      continue;
+    }
+
+    // 나머지 패널 배치 — 2가지 영역 시도:
+    // 영역 A: 첫 패널 아래 (x=startX, y=startY+fh+kerf, availW=binWidth-startX, availH=binHeight-startY-fh-kerf)
+    // 영역 B: 첫 패널 오른쪽 (x=startX+fw+kerf, y=startY, availW=binWidth-startX-fw-kerf, availH=binHeight-startY)
+
+    const regionBelow = {
+      x: startX, y: startY + fh + kerf,
+      w: binWidth - startX, h: binHeight - startY - fh - kerf
+    };
+    const regionRight = {
+      x: startX + fw + kerf, y: startY,
+      w: binWidth - startX - fw - kerf, h: binHeight - startY
+    };
+
+    // 전략 A: 나머지를 아래 영역에 쌓기
+    const belowResult = tryPlaceRemainingInRegion(remaining, regionBelow, kerf);
+    if (belowResult) {
+      candidates.push({
+        placed: [placedFirst, ...belowResult.placed],
+        usedWidth: Math.max(fw, belowResult.maxX - startX),
+        usedHeight: fh + kerf + belowResult.maxY - regionBelow.y
+      });
+    }
+
+    // 전략 B: 나머지를 오른쪽 영역에 쌓기
+    if (regionRight.w > 0) {
+      const rightResult = tryPlaceRemainingInRegion(remaining, regionRight, kerf);
+      if (rightResult) {
+        candidates.push({
+          placed: [placedFirst, ...rightResult.placed],
+          usedWidth: fw + kerf + rightResult.maxX - regionRight.x,
+          usedHeight: Math.max(fh, rightResult.maxY - startY)
+        });
+      }
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  // 가장 효율적인 배치 선택 (usedWidth × usedHeight가 작은 것)
+  candidates.sort((a, b) => (a.usedWidth * a.usedHeight) - (b.usedWidth * b.usedHeight));
+  return candidates[0];
+}
+
+/**
+ * 남은 패널들을 주어진 직사각형 영역 내에 배치 시도 (회전 허용)
+ */
+function tryPlaceRemainingInRegion(
+  panels: Rect[],
+  region: { x: number; y: number; w: number; h: number },
+  kerf: number
+): { placed: Rect[]; maxX: number; maxY: number } | null {
+  const placed: Rect[] = [];
+  let curX = region.x;
+  let curY = region.y;
+  let rowHeight = 0;
+  let maxX = region.x;
+  let maxY = region.y;
+
+  for (const panel of panels) {
+    let fitted = false;
+
+    // 원본 방향으로 현재 행에 배치 시도
+    if (panel.width <= region.x + region.w - curX && panel.height <= region.y + region.h - curY) {
+      placed.push({ ...panel, x: curX, y: curY, rotated: false });
+      maxX = Math.max(maxX, curX + panel.width);
+      maxY = Math.max(maxY, curY + panel.height);
+      rowHeight = Math.max(rowHeight, panel.height);
+      curX += panel.width + kerf;
+      fitted = true;
+    }
+
+    // 회전해서 배치 시도
+    if (!fitted && panel.height <= region.x + region.w - curX && panel.width <= region.y + region.h - curY) {
+      placed.push({ ...panel, x: curX, y: curY, width: panel.height, height: panel.width, rotated: true });
+      maxX = Math.max(maxX, curX + panel.height);
+      maxY = Math.max(maxY, curY + panel.width);
+      rowHeight = Math.max(rowHeight, panel.width);
+      curX += panel.height + kerf;
+      fitted = true;
+    }
+
+    // 현재 행에 안 들어가면 다음 행으로
+    if (!fitted) {
+      curX = region.x;
+      curY += rowHeight + kerf;
+      rowHeight = 0;
+
+      // 원본 방향
+      if (panel.width <= region.w && panel.height <= region.y + region.h - curY) {
+        placed.push({ ...panel, x: curX, y: curY, rotated: false });
+        maxX = Math.max(maxX, curX + panel.width);
+        maxY = Math.max(maxY, curY + panel.height);
+        rowHeight = panel.height;
+        curX += panel.width + kerf;
+        fitted = true;
+      }
+
+      // 회전
+      if (!fitted && panel.height <= region.w && panel.width <= region.y + region.h - curY) {
+        placed.push({ ...panel, x: curX, y: curY, width: panel.height, height: panel.width, rotated: true });
+        maxX = Math.max(maxX, curX + panel.height);
+        maxY = Math.max(maxY, curY + panel.width);
+        rowHeight = panel.width;
+        curX += panel.height + kerf;
+        fitted = true;
+      }
+
+      if (!fitted) return null; // 어디에도 안 들어감
+    }
+  }
+
+  return { placed, maxX, maxY };
+}
+
 function packBackPanelsToMultiBins(
   panels: Rect[],
   binWidth: number,
@@ -621,72 +793,77 @@ function packBackPanelsToMultiBins(
     byFurniture.get(fn)!.push(p);
   }
 
-  // 2단계: 가구별 스트립 정보 계산
-  interface FurnitureStrip {
+  // 2단계: 가구별 배치 정보 계산 (스마트 배치 — 회전 허용)
+  interface FurnitureLayout {
     fn: number;
-    panels: Rect[];
-    stripWidth: number;   // 스트립이 차지하는 x축 폭 (= max panel.width)
-    totalFillH: number;   // y축 총 높이 (패널 heights + kerfs)
+    placed: Rect[];       // 배치된 패널들 (x, y 좌표 포함)
+    usedWidth: number;    // 이 가구가 차지하는 x축 폭
+    usedHeight: number;   // 이 가구가 차지하는 y축 높이
+    totalArea: number;
   }
 
-  const furnitureStrips: FurnitureStrip[] = [];
+  const furnitureLayouts: FurnitureLayout[] = [];
   for (const [fn, group] of byFurniture) {
-    const stripWidth = Math.max(...group.map(p => p.width));
-    // y축으로 쌓이는 높이: 큰 패널 먼저 (상부 → 하부)
-    group.sort((a, b) => b.height - a.height);
-    const totalFillH = group.reduce((sum, p) => sum + p.height, 0) + (group.length - 1) * kerf;
-    furnitureStrips.push({ fn, panels: group, stripWidth, totalFillH });
+    const result = placeFurnitureBackPanels(group, binWidth, binHeight, kerf);
+    if (result) {
+      const totalArea = group.reduce((s, p) => s + p.width * p.height, 0);
+      furnitureLayouts.push({ fn, placed: result.placed, usedWidth: result.usedWidth, usedHeight: result.usedHeight, totalArea });
+    } else {
+      // 배치 실패 시 원본 그대로 강제 배치 (오버플로우 감수)
+      const sorted = [...group].sort((a, b) => (b.width * b.height) - (a.width * a.height));
+      let yPos = 0;
+      const placed: Rect[] = [];
+      for (const p of sorted) {
+        placed.push({ ...p, x: 0, y: yPos, rotated: false });
+        yPos += p.height + kerf;
+      }
+      const totalArea = group.reduce((s, p) => s + p.width * p.height, 0);
+      furnitureLayouts.push({
+        fn, placed,
+        usedWidth: Math.max(...group.map(p => p.width)),
+        usedHeight: yPos - kerf,
+        totalArea
+      });
+    }
   }
 
   // 총면적 내림차순 정렬 (큰 가구 먼저)
-  furnitureStrips.sort((a, b) => {
-    const areaA = a.panels.reduce((s, p) => s + p.width * p.height, 0);
-    const areaB = b.panels.reduce((s, p) => s + p.width * p.height, 0);
-    return areaB - areaA;
-  });
+  furnitureLayouts.sort((a, b) => b.totalArea - a.totalArea);
 
-  // 3단계: 시트에 배치 — 가구 스트립을 x축으로 나란히 배치
+  // 3단계: 시트에 배치 — 가구 레이아웃을 x축으로 나란히 배치
   const bins: PackedBin[] = [];
-  const packed = new Set<number>(); // packed furniture indices
+  const packed = new Set<number>();
 
-  for (let i = 0; i < furnitureStrips.length; i++) {
+  for (let i = 0; i < furnitureLayouts.length; i++) {
     if (packed.has(i)) continue;
 
-    // 이 시트에 배치할 가구 스트립들 모으기
-    const sheetStrips: FurnitureStrip[] = [furnitureStrips[i]];
+    const sheetLayouts: { layout: FurnitureLayout; offsetX: number }[] = [];
     packed.add(i);
-    let usedX = furnitureStrips[i].stripWidth;
+    let usedX = furnitureLayouts[i].usedWidth;
+    sheetLayouts.push({ layout: furnitureLayouts[i], offsetX: 0 });
 
-    // 남은 x 공간에 다른 가구 스트립 넣을 수 있는지 시도
-    for (let j = i + 1; j < furnitureStrips.length; j++) {
+    // 남은 x 공간에 다른 가구 넣을 수 있는지 시도
+    for (let j = i + 1; j < furnitureLayouts.length; j++) {
       if (packed.has(j)) continue;
-      const needed = usedX + kerf + furnitureStrips[j].stripWidth;
-      if (needed <= binWidth && furnitureStrips[j].totalFillH <= binHeight) {
-        sheetStrips.push(furnitureStrips[j]);
+      const needed = usedX + kerf + furnitureLayouts[j].usedWidth;
+      if (needed <= binWidth && furnitureLayouts[j].usedHeight <= binHeight) {
+        sheetLayouts.push({ layout: furnitureLayouts[j], offsetX: usedX + kerf });
         packed.add(j);
         usedX = needed;
       }
     }
 
-    // 시트 내 패널 좌표 계산
+    // 시트 내 패널 좌표 조정 (각 가구의 offsetX 적용)
     const placedPanels: Rect[] = [];
-    let xPos = 0;
-
-    for (const strip of sheetStrips) {
-      let yPos = 0;
-      for (const panel of strip.panels) {
+    for (const { layout, offsetX } of sheetLayouts) {
+      for (const panel of layout.placed) {
         placedPanels.push({
           ...panel,
-          x: xPos,
-          y: yPos,
-          rotated: false
+          x: panel.x + offsetX,
         });
-        yPos += panel.height + kerf;
       }
-      xPos += strip.stripWidth + kerf;
     }
 
-    // PackedBin 생성
     const usedArea = placedPanels.reduce((s, p) => s + p.width * p.height, 0);
     const totalArea = binWidth * binHeight;
     bins.push({
