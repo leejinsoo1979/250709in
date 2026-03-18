@@ -27,7 +27,7 @@
   border: none;
   border-right: 1px solid var(--theme-border, #e0e0e0);
   background: transparent;
-  color: var(--theme-text-muted, #8c959f);
+  color: var(--theme-primary, #21b691);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.12s ease, color 0.12s ease;
@@ -35,7 +35,7 @@
 
 .fileTreeButton:hover {
   background: var(--theme-background-secondary, #f6f8fa);
-  color: var(--theme-text, #24292f);
+  color: var(--theme-primary, #21b691);
 }
 
 .fileTreeButton.active {
