@@ -18,7 +18,7 @@ interface BaseControlsProps {
 const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabled = false, renderMode }) => {
   const { placedModules, updatePlacedModule, setPlacedModules } = useFurnitureStore();
 
-  console.log('🔧 BaseControls - disabled 상태:', disabled);
+
 
   // 자유배치 가구 freeHeight 재계산 (float 전환/변경 시)
   // 슬롯배치는 shelving.ts에서 모듈 생성 시 floatHeight 반영하지만,
@@ -142,125 +142,28 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     recalcFreePlacementHeights(updates);
   };
 
-  // 높이 입력 처리
+  // 높이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
   const handleHeightChange = (value: string) => {
-    console.log('🔧 BaseControls - handleHeightChange 호출됨:', value);
-    
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
-      console.log('🔧 BaseControls - 입력값 검증 통과:', value);
       setBaseHeight(value);
-      
-      // 빈 문자열이면 업데이트하지 않음 (사용자가 입력 중)
-      if (value === '') {
-        return;
-      }
-      
-      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
-      if (!isNaN(Number(value))) {
-        let validatedValue = parseInt(value);
-        
-        // 바닥마감재가 있으면 표시된 값에 바닥마감재 높이를 더해서 저장
-        if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
-          const floorFinishHeight = spaceInfo.floorFinish.height || 0;
-          validatedValue = validatedValue + floorFinishHeight;
-        }
-        
-        // baseConfig가 없으면 기본값으로 생성
-        const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
-        
-        console.log('🔧 BaseControls - store 업데이트:', {
-          표시값: value,
-          저장값: validatedValue,
-          바닥마감재: spaceInfo.floorFinish?.height || 0
-        });
-        
-        // 즉시 store 업데이트
-        onUpdate({
-          baseConfig: {
-            ...currentBaseConfig,
-            height: validatedValue,
-          },
-        });
-      }
-    } else {
-      console.log('🔧 BaseControls - 입력값 검증 실패:', value);
     }
   };
 
-  // 깊이 입력 처리
+  // 깊이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
   const handleDepthChange = (value: string) => {
-    console.log('🔧 BaseControls - handleDepthChange 호출됨:', value);
-
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
-      console.log('🔧 BaseControls - depth 입력값 검증 통과:', value);
       setBaseDepth(value);
-
-      // 빈 문자열이면 0으로 즉시 업데이트 (가구 사라지는 것 방지)
-      if (value === '') {
-        const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
-        console.log('🔧 BaseControls - 빈 문자열, depth=0으로 업데이트');
-        onUpdate({
-          baseConfig: {
-            ...currentBaseConfig,
-            depth: 0,
-          },
-        });
-      } else {
-        // 실시간 업데이트
-        const validatedValue = parseInt(value);
-        const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
-        console.log('🔧 BaseControls - depth store 업데이트:', {
-          입력값: value,
-          저장값: validatedValue,
-          현재baseConfig: currentBaseConfig,
-          새baseConfig: { ...currentBaseConfig, depth: validatedValue }
-        });
-        onUpdate({
-          baseConfig: {
-            ...currentBaseConfig,
-            depth: validatedValue,
-          },
-        });
-      }
-    } else {
-      console.log('🔧 BaseControls - depth 입력값 검증 실패:', value);
     }
   };
 
   // 띄움 높이 입력 처리
+  // 띄움 높이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
   const handleFloatHeightChange = (value: string) => {
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
       setFloatHeight(value);
-      
-      // 빈 문자열이면 업데이트하지 않음 (사용자가 입력 중)
-      if (value === '') {
-        return;
-      }
-      
-      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
-      if (!isNaN(Number(value))) {
-        const validatedValue = parseInt(value);
-        
-        // 범위 검증은 blur 시에만 적용
-        
-        // baseConfig가 없으면 기본값으로 생성
-        const currentBaseConfig = spaceInfo.baseConfig || { type: 'stand', height: 0, floatHeight: 60 };
-        
-        // 즉시 store 업데이트
-        const updates: Partial<SpaceInfo> = {
-          baseConfig: {
-            ...currentBaseConfig,
-            floatHeight: validatedValue,
-          },
-        };
-        onUpdate(updates);
-
-        // 자유배치 가구 freeHeight 재계산
-        recalcFreePlacementHeights(updates);
-      }
     }
   };
 
@@ -298,12 +201,15 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     // 값이 변경된 경우만 업데이트
     if (saveValue !== currentBaseConfig.height) {
-      onUpdate({
+      const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
           height: saveValue,
         },
-      });
+      };
+      onUpdate(updates);
+      // 자유배치 가구 freeHeight 재계산
+      recalcFreePlacementHeights(updates);
     }
   };
 
@@ -370,12 +276,15 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     // 값이 변경된 경우만 업데이트
     if (value !== currentBaseConfig.floatHeight) {
-      onUpdate({
+      const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
           floatHeight: value,
         },
-      });
+      };
+      onUpdate(updates);
+      // 자유배치 가구 freeHeight 재계산
+      recalcFreePlacementHeights(updates);
     }
   };
 
