@@ -232,9 +232,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return virtualSlotModuleIds.has(module.id);
         });
       } else {
-        // 슬롯 기반 배치: 자유배치와 동일하게 전체 가구에서 좌/우 끝 가구 선택
-        // (selectedSlotIndex 필터 없이 전체 가구에서 가장 가까운 가구 표시)
-        filteredBySlot = placedModules.filter(m => !m.isSurroundPanel);
+        // 슬롯 기반 배치: 선택된 슬롯의 가구만 필터링 (자유배치와 동일하게 선택된 슬롯 기준)
+        filteredBySlot = placedModules.filter(module =>
+          !module.isSurroundPanel && module.slotIndex === selectedSlotIndex
+        );
       }
     }
 
@@ -259,13 +260,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   const visibleFurniture = getVisibleFurnitureForSideView();
 
-  // 슬롯모드: 선택된 가구의 개별 프레임 값 우선 사용
+  // 선택된 가구의 개별 프레임 값 우선 사용 (자유배치/슬롯 공통)
   const selectedMod = visibleFurniture[0] as PlacedModule | undefined;
-  const topFrameHeightMm = (!isFreePlacementMode && selectedMod?.topFrameThickness !== undefined)
+  const topFrameHeightMm = (selectedMod?.topFrameThickness !== undefined)
     ? selectedMod.topFrameThickness
     : globalTopFrameHeightMm;
   const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
-  const railOrBaseHeightMm = (!isFreePlacementMode && selectedMod?.baseFrameHeight !== undefined && !isStandType)
+  const railOrBaseHeightMm = (selectedMod?.baseFrameHeight !== undefined && !isStandType)
     ? selectedMod.baseFrameHeight
     : globalRailOrBaseHeightMm;
   const railOrBaseHeight = mmToThreeUnits(railOrBaseHeightMm);
@@ -283,7 +284,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   if (floorFinishHeightMm > 0) {
     adjustedInternalHeightMm -= floorFinishHeightMm;
   }
-  if (!isFreePlacementMode && selectedMod) {
+  // 개별 프레임 높이 변경 시 내경 높이 보정 (자유배치/슬롯 공통)
+  if (selectedMod) {
     if (selectedMod.topFrameThickness !== undefined) {
       adjustedInternalHeightMm -= (selectedMod.topFrameThickness - globalTopFrameHeightMm);
     }
