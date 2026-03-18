@@ -2641,10 +2641,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 일반: 계산된 위치 사용
 
-  // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
-  // 슬롯/자유배치 공통 — 본체 너비가 EP만큼 줄었으므로 중앙 정렬 보정 필요
+  // 자유배치 EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
+  // 슬롯 모드에서는 불필요 — 본체는 슬롯 중앙 고정, EP는 본체 옆에 붙음
   let epOffsetX = 0;
-  if (!placedModule.customConfig) {
+  if (placedModule.isFreePlacement && !placedModule.customConfig) {
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
