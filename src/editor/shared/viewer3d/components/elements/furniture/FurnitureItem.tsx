@@ -1390,9 +1390,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 가구 높이 (단내림 구간에서 조정된 높이 사용)
         const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
-        // Y 위치 계산: 받침대높이 + 가구높이/2
-        // 바닥마감재는 조절발이 흡수하므로 Y 위치에 영향 없음
-        const yPos = baseHeight + (furnitureHeight / 2);
+        // Y 위치 계산: 바닥마감재높이 + 받침대높이 + 가구높이/2
+        const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
 
         // 단내림 구간 Y 위치 디버깅
         if (placedModule.zone === 'dropped') {

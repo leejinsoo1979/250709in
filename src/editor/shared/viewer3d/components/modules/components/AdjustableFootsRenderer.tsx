@@ -51,8 +51,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
 
   // Store 값 우선, prop은 폴백
   const effectiveBaseDepth = storeBaseDepth;
-  // baseConfig.height는 바닥마감재 높이를 포함하므로 시각적 발통 높이에서 차감
-  const effectiveBaseHeight = Math.max(0, storeBaseHeight - storeFloorFinishHeight);
+  // 조절발 크기는 바닥마감재와 무관하게 받침대 높이 그대로 사용
+  const effectiveBaseHeight = storeBaseHeight;
   const effectiveIsFloating = storeIsFloating || isFloating;
 
   const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';
