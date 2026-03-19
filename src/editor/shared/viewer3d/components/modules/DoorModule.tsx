@@ -1310,7 +1310,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   // 2D 정면뷰: 도어 반투명 면 overlay 정보 (기존 도어 렌더링에 추가)
-  const showDoorOverlay = viewMode === '2D' && view2DDirection === 'front' && !isDoorOpen;
+  const showDoorOverlay = viewMode === '2D' && view2DDirection === 'front';
   const doorOverlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
 
   if (isDualFurniture) {
@@ -1409,18 +1409,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
-        {/* 2D 정면뷰: 도어 반투명 면 overlay */}
-        {showDoorOverlay && (
-          <mesh position={[0, doorYPosition, doorDepth / 2 + 0.001]} renderOrder={9999}>
-            <planeGeometry args={[mmToThreeUnits(totalWidth), doorHeight]} />
-            <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
-          </mesh>
-        )}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
         <group position={[leftHingeX + leftEpTrimShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
+              {/* 2D 정면뷰: 좌측 도어 반투명 overlay */}
+              {showDoorOverlay && (
+                <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
+                  <planeGeometry args={[leftDoorWidthUnits, doorHeight]} />
+                  <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                </mesh>
+              )}
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
                 key={`left-door-${leftDoorMaterial.uuid}`}
@@ -1826,6 +1826,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         <group position={[rightHingeX + rightEpTrimShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
+              {/* 2D 정면뷰: 우측 도어 반투명 overlay */}
+              {showDoorOverlay && (
+                <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
+                  <planeGeometry args={[rightDoorWidthUnits, doorHeight]} />
+                  <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                </mesh>
+              )}
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
                 key={`right-door-${rightDoorMaterial.uuid}`}
@@ -2272,15 +2279,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
-        {/* 2D 정면뷰: 도어 반투명 면 overlay */}
-        {showDoorOverlay && (
-          <mesh position={[doorPositionX, 0, 0.001]} renderOrder={9999}>
-            <planeGeometry args={[doorWidthUnits, doorHeight]} />
-            <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
-          </mesh>
-        )}
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0, 0]}>
+            {/* 2D 정면뷰: 싱글 도어 반투명 overlay */}
+            {showDoorOverlay && (
+              <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
+                <planeGeometry args={[doorWidthUnits, doorHeight]} />
+                <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+              </mesh>
+            )}
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
             <BoxWithEdges
               key={`single-door-${doorMaterial.uuid}`}
