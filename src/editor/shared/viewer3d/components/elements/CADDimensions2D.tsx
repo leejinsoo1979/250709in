@@ -54,39 +54,36 @@ const computeSectionHeightsInfo = (
     };
   }
 
-  const availableHeightMm = Math.max(internalHeightMm - basicThicknessMm * 2, 0);
-  const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
-
+  // useBaseFurniture.ts와 동일한 방식: 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
+  // 모든 섹션이 absolute인 경우에도 internalHeightMm 변경이 반영됨
   let heightsMm: number[];
 
-  if (hasCalculatedHeights) {
-    heightsMm = rawSections.map(section => {
+  const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
+
+  if (hasCalculatedHeights && rawSections.length > 0) {
+    // calculatedHeight가 있는 경우: 합산 후 internalHeightMm과 비교하여 마지막 섹션 보정
+    const calcHeights = rawSections.map(section => {
       const calc = (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight;
       return Math.max(calc ?? 0, 0);
     });
+    const calcTotal = calcHeights.reduce((sum, h) => sum + h, 0);
+    const renderTotal = internalHeightMm - basicThicknessMm * 2;
+    if (Math.abs(calcTotal - renderTotal) > 1 && rawSections.length > 1) {
+      // 하부 고정, 마지막(상부) 섹션이 차이 흡수
+      const fixedSum = calcHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
+      calcHeights[calcHeights.length - 1] = Math.max(0, renderTotal - fixedSum);
+    }
+    heightsMm = calcHeights;
   } else {
-    const absoluteSections = rawSections.filter(section => section.heightType === 'absolute');
-    const totalFixedMm = absoluteSections.reduce((sum, section) => {
-      const value = typeof section.height === 'number' ? section.height : 0;
-      return sum + Math.min(value, availableHeightMm);
-    }, 0);
+    // 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수 (useBaseFurniture 방식)
+    const fixedSum = rawSections.slice(0, -1).reduce((sum, section) => sum + (section.height ?? 0), 0);
+    const lastSectionNewHeight = Math.max(0, internalHeightMm - basicThicknessMm * 2 - fixedSum);
 
-    const remainingMm = Math.max(availableHeightMm - totalFixedMm, 0);
-    const percentageSections = rawSections.filter(section => section.heightType !== 'absolute');
-    const totalPercentage = percentageSections.reduce((sum, section) => sum + (section.height ?? 0), 0);
-    const percentageCount = percentageSections.length;
-
-    heightsMm = rawSections.map(section => {
-      if (section.heightType === 'absolute') {
-        // 절대 높이 섹션: 측판 높이와 동일하게 section.height 그대로 사용
-        return section.height ?? 0;
+    heightsMm = rawSections.map((section, idx) => {
+      if (idx < rawSections.length - 1) {
+        return section.height ?? 0; // 하부 섹션 고정
       }
-
-      if (totalPercentage > 0) {
-        return remainingMm * ((section.height ?? 0) / totalPercentage);
-      }
-
-      return percentageCount > 0 ? remainingMm / percentageCount : remainingMm;
+      return lastSectionNewHeight; // 상부(마지막) 섹션이 나머지 흡수
     });
   }
 
