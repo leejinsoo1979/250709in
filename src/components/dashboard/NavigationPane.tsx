@@ -178,37 +178,35 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           </div>
         )}
 
-        {/* 빠른 액세스 */}
-        <div className={styles.section}>
-          <div className={styles.sectionTitle}>빠른 액세스</div>
-          {quickAccessItems.map(item => (
-            <button
-              key={item.key}
-              className={`${styles.menuItem} ${
-                activeMenu === item.key && !currentProjectId ? styles.menuItemActive : ''
-              }`}
-              onClick={() => {
-                onMenuChange(item.key);
-                onNavigate(null, null, item.label);
-              }}
-            >
-              <span className={styles.menuIcon}>{item.icon}</span>
-              <span className={styles.menuLabel}>{item.label}</span>
-              {menuCounts?.[item.key] !== undefined && menuCounts[item.key]! > 0 && (
-                <span className={styles.menuBadge}>{menuCounts[item.key]}</span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* 빠른 액세스 (에디터 모드에서는 숨김) */}
+        {!showProjectTree && (
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>빠른 액세스</div>
+            {quickAccessItems.map(item => (
+              <button
+                key={item.key}
+                className={`${styles.menuItem} ${
+                  activeMenu === item.key && !currentProjectId ? styles.menuItemActive : ''
+                }`}
+                onClick={() => {
+                  onMenuChange(item.key);
+                  onNavigate(null, null, item.label);
+                }}
+              >
+                <span className={styles.menuIcon}>{item.icon}</span>
+                <span className={styles.menuLabel}>{item.label}</span>
+                {menuCounts?.[item.key] !== undefined && menuCounts[item.key]! > 0 && (
+                  <span className={styles.menuBadge}>{menuCounts[item.key]}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* 프로젝트 트리 (showProjectTree=true일 때만 표시) */}
+        {/* 프로젝트 트리 (showProjectTree=true일 때만 표시, 빠른 액세스 자리에 배치) */}
         {showProjectTree && filteredProjects.length > 0 && (
-          <>
-            <hr className={styles.divider} />
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                {quickAccessItems.find(item => item.key === activeMenu)?.label || '프로젝트'}
-              </div>
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>진행중 프로젝트</div>
               {filteredProjects.map(project => {
                 const isExpanded = expandedProjects.has(project.id);
                 const isSelected = currentProjectId === project.id && !currentFolderId;
@@ -290,8 +288,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                   </div>
                 );
               })}
-            </div>
-          </>
+          </div>
         )}
       </div>
 
