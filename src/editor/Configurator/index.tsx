@@ -415,6 +415,23 @@ const Configurator: React.FC = () => {
     }, 50);
   }, [showDoorSetup]);
 
+  // 하부프레임 OFF (hasBase=false) + 띄움높이 변경 시 → 도어 하단갭 자동 동기화
+  const hasBaseFloatKey = placedModules
+    .filter(m => m.hasDoor)
+    .map(m => `${m.id}:${m.hasBase}:${m.individualFloatHeight}`)
+    .join(',');
+  React.useEffect(() => {
+    const mods = useFurnitureStore.getState().placedModules;
+    mods.forEach(mod => {
+      if (!mod.hasDoor) return;
+      if (mod.hasBase === false) {
+        const floatH = mod.individualFloatHeight ?? 0;
+        if (mod.doorBottomGap !== floatH) {
+          updatePlacedModule(mod.id, { doorBottomGap: floatH });
+        }
+      }
+    });
+  }, [hasBaseFloatKey]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
