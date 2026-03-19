@@ -425,6 +425,7 @@ const Configurator: React.FC = () => {
     mods.forEach(mod => {
       if (!mod.hasDoor) return;
       if (mod.hasBase === false) {
+        // 하부프레임 OFF → 도어 하단갭 = 띄움높이
         const floatH = mod.individualFloatHeight ?? 0;
         if (mod.doorBottomGap !== floatH) {
           updatePlacedModule(mod.id, { doorBottomGap: floatH });

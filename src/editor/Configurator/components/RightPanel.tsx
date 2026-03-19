@@ -1264,7 +1264,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             hasBase: !baseEnabled,
                             ...( baseEnabled
                               ? { individualFloatHeight: 0 }  // OFF: 띄움높이 초기화
-                              : { doorBottomGap: 0 }),         // ON: 하단갭 초기화
+                              : { doorBottomGap: mod.baseFrameHeight ?? globalBase }),  // ON: 하단갭 = 받침대 높이로 복원
                           })}
                           style={{
                             width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
