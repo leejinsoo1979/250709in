@@ -2676,13 +2676,17 @@ const Room: React.FC<RoomProps> = ({
         const stepDropH = mmToThreeUnits(stepDropHeight);
 
         // stepCeiling: 왼쪽이 단내림 영역인 경우 높이를 단내림 천장에 맞춤
-        // 커튼박스가 같은 쪽에 있으면 단내림 프레임 생성 안 함 (커튼박스는 별도 프레임 시스템)
-        const hasLeftCurtainBox = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left';
-        if (hasLeftStepCeiling && !hasLeftCurtainBox) {
+        // 커튼박스가 같은 쪽에 있으면 커튼박스에 패널이 있으므로 프레임 불필요
+        const hasLeftCB = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left';
+        if (hasLeftStepCeiling && hasLeftCB) {
+          return null;
+        }
+        if (hasLeftStepCeiling) {
           const droppedH = adjustedPanelHeight - stepDropH; // 단내림 천장까지의 높이
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropH; // 단내림 천장 ~ 메인 천장
           const upperCY = sideFrameStartY + droppedH + upperH / 2;
+          const stepFrameXL = xOffset + frameThickness.left / 2;
 
           return (
             <>
@@ -2705,8 +2709,8 @@ const Room: React.FC<RoomProps> = ({
                   spaceInfo.surroundType === 'no-surround'
                     ? (indexingForCheck.threeUnitBoundaries.length > 0
                       ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
-                      : xOffset + frameThickness.left / 2)
-                    : xOffset + frameThickness.left / 2,
+                      : stepFrameXL)
+                    : stepFrameXL,
                   droppedCY,
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
@@ -2740,8 +2744,8 @@ const Room: React.FC<RoomProps> = ({
                     spaceInfo.surroundType === 'no-surround'
                       ? (indexingForCheck.threeUnitBoundaries.length > 0
                         ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
-                        : xOffset + frameThickness.left / 2)
-                      : xOffset + frameThickness.left / 2,
+                        : stepFrameXL)
+                      : stepFrameXL,
                     upperCY,
                     spaceInfo.surroundType === 'no-surround'
                       ? (wallConfig?.left
@@ -3023,15 +3027,19 @@ const Room: React.FC<RoomProps> = ({
         const stepDropHR = mmToThreeUnits(stepDropHeightR);
 
         // stepCeiling: 오른쪽이 단내림 영역인 경우 높이를 단내림 천장에 맞춤
-        // 커튼박스가 같은 쪽에 있으면 단내림 프레임 생성 안 함 (커튼박스는 별도 프레임 시스템)
-        const hasRightCurtainBox = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right';
-        if (hasRightStepCeiling && !hasRightCurtainBox) {
+        // 커튼박스가 같은 쪽에 있으면 커튼박스에 패널이 있으므로 프레임 불필요
+        const hasRightCB = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right';
+        if (hasRightStepCeiling && hasRightCB) {
+          // 커튼박스+단내림 동시: 커튼박스 쪽 프레임 생성 안 함
+          return null;
+        }
+        if (hasRightStepCeiling) {
+
           const droppedH = adjustedPanelHeight - stepDropHR; // 단내림 천장까지의 높이
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropHR; // 단내림 천장 ~ 메인 천장
           const upperCY = sideFrameStartY + droppedH + upperH / 2;
-
-          // 커튼박스가 같은 쪽에 있어도 프레임 위치는 변하지 않음 (커튼박스는 별도 프레임)
+          const stepFrameX = xOffset + width - frameThickness.right / 2;
 
           return (
             <>
@@ -3054,10 +3062,10 @@ const Room: React.FC<RoomProps> = ({
                   spaceInfo.surroundType === 'no-surround'
                     ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
                       ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
-                      : xOffset + width - frameThickness.right / 2)
+                      : stepFrameX)
                     : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
                       ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
-                      : xOffset + width - frameThickness.right / 2),
+                      : stepFrameX),
                   droppedCY,
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
@@ -3091,10 +3099,10 @@ const Room: React.FC<RoomProps> = ({
                     spaceInfo.surroundType === 'no-surround'
                       ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
                         ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
-                        : xOffset + width - frameThickness.right / 2)
+                        : stepFrameX)
                       : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
                         ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
-                        : xOffset + width - frameThickness.right / 2),
+                        : stepFrameX),
                     upperCY,
                     spaceInfo.surroundType === 'no-surround'
                       ? (wallConfig?.right
@@ -3114,7 +3122,7 @@ const Room: React.FC<RoomProps> = ({
           );
         }
 
-        // 오른쪽이 단내림 영역인 경우
+        // 오른쪽이 단내림(슬롯모드/커튼박스) 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
           // 서라운드 모드에서도 단내림 프레임 렌더링 (띄움높이 반영)
 
