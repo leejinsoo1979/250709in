@@ -35,6 +35,15 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
       const frameThickness = calculateFrameThickness(spaceInfo);
       startX += frameThickness.leftMm;
       endX -= frameThickness.rightMm;
+      // 커튼박스 구간 제외 (서라운드/양면 모드에서도 커튼박스 영역에는 가구 배치 불가)
+      if (spaceInfo.droppedCeiling?.enabled) {
+        const cbWidth = spaceInfo.droppedCeiling.width || 150;
+        if (spaceInfo.droppedCeiling.position === 'left') {
+          startX += cbWidth;
+        } else {
+          endX -= cbWidth;
+        }
+      }
       return { startX, endX };
     }
 
