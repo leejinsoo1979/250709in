@@ -4522,6 +4522,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
 
+      {/* 자유배치 가구 간 갭 치수 (slotDimensionY 레벨) */}
+      {showDimensions && isFreePlacement && furnitureDimensions && furnitureDimensions.length > 1 && (() => {
+        // 각 가구의 오른쪽 갭을 렌더링 (hasAdjacentRight=true이면 인접 가구까지의 거리)
+        const gapSegments: { leftX: number; rightX: number; gapMm: number; moduleId: string }[] = [];
+        for (const dim of furnitureDimensions) {
+          if (!dim) continue;
+          if (dim.hasAdjacentRight && dim.nearestRightDistance >= 1) {
+            gapSegments.push({
+              leftX: dim.moduleRight,
+              rightX: dim.moduleRight + dim.nearestRightDistance * 0.01,
+              gapMm: Math.round(dim.nearestRightDistance),
+              moduleId: dim.module.id,
+            });
+          }
+        }
+        if (gapSegments.length === 0) return null;
+        return (
+          <group>
+            {gapSegments.map((seg, i) => (
+              <group key={`free-gap-${i}`}>
+                <NativeLine name="dimension_line"
+                  points={[[seg.leftX, slotDimensionY, 0.002], [seg.rightX, slotDimensionY, 0.002]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([seg.leftX, slotDimensionY, 0.002], [seg.leftX + 0.02, slotDimensionY, 0.002])}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([seg.rightX, slotDimensionY, 0.002], [seg.rightX - 0.02, slotDimensionY, 0.002])}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                {showDimensionsText && (
+                  <Html position={[(seg.leftX + seg.rightX) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                    center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+                    <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor,
+                      cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                      background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                      borderRadius: '3px' }}
+                      onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('right', seg.moduleId, seg.gapMm); }}>
+                      {seg.gapMm}
+                    </div>
+                  </Html>
+                )}
+              </group>
+            ))}
+          </group>
+        );
+      })()}
+
       {/* 기둥별 치수선 (개별 기둥 너비) - 불필요하므로 비활성화 */}
       {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
         const columnWidthM = column.width * 0.01;
