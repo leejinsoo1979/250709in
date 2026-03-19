@@ -1601,8 +1601,6 @@ const FreePlacementDropZone: React.FC = () => {
       {(() => {
         // 2D 측면뷰(left, right)에서는 이격거리 박스 숨김
         if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) return null;
-        // surround/both-sides: 프레임이 좌우를 담당하므로 이격 박스 불필요
-        if (spaceInfo.surroundType !== 'no-surround') return null;
         const gapOpacity = viewMode === '2D' ? 0.35 : 0.08;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
