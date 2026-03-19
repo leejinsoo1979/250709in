@@ -1,6 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
@@ -398,41 +398,63 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
   }, [position, args]);
 
+  // group ref로 실제 월드 좌표 추출
+  const groupRef = React.useRef<THREE.Group>(null);
+  const worldPosRef = React.useRef<THREE.Vector3>(new THREE.Vector3());
+  const [worldPos, setWorldPos] = React.useState<THREE.Vector3>(new THREE.Vector3());
+  const worldPosInitialized = React.useRef(false);
+
+  // useFrame: 첫 프레임에서 월드 좌표 확정 (부모 group 매트릭스 반영 후)
+  useFrame(() => {
+    if (groupRef.current && !worldPosInitialized.current) {
+      const wp = new THREE.Vector3();
+      groupRef.current.getWorldPosition(wp);
+      if (!wp.equals(worldPosRef.current)) {
+        worldPosRef.current.copy(wp);
+        setWorldPos(wp.clone());
+      }
+      worldPosInitialized.current = true;
+    }
+  });
+
+  // position 변경 시 재계산 트리거
+  React.useEffect(() => {
+    worldPosInitialized.current = false;
+  }, [position[0], position[1], position[2]]);
+
   // 2D 모드 깊이 기반 edge opacity 계산
-  // 부모 position 포함 월드 좌표 기준으로 깊이 산출 → 패널 간 원근 차이 반영
+  // 실제 월드 좌표 기준으로 깊이 산출 → 패널 간 원근 차이 반영
   const getDepthOpacity = React.useCallback((p1: [number, number, number], p2: [number, number, number]): number => {
     if (viewMode !== '2D' || isHighlighted || isClothingRod) return 1;
     if (edgeOpacity !== undefined) return edgeOpacity;
     if (isBackPanel && view2DDirection === 'front') return 0.1;
 
-    // 로컬 좌표 + 부모 position = 월드 좌표 기준 깊이
+    // 로컬 좌표의 중간점 + 월드 위치 = 실제 월드 깊이
     let depthVal: number;
     if (view2DDirection === 'front') {
-      // 정면: Z축 — +Z가 카메라에 가까움
-      depthVal = (p1[2] + p2[2]) / 2 + position[2];
+      depthVal = (p1[2] + p2[2]) / 2 + worldPos.z;
+      // DEBUG: 패널별 월드 Z 확인
+      if (panelName && (panelName.includes('마이다') || panelName.includes('앞판') || panelName.includes('뒷판') || panelName.includes('좌측판'))) {
+        console.log(`🔍 depth opacity [${panelName}] worldZ=${worldPos.z.toFixed(3)} localEdgeZ=${((p1[2]+p2[2])/2).toFixed(3)} depthVal=${depthVal.toFixed(3)}`);
+      }
     } else if (view2DDirection === 'left') {
-      // 좌측면: -X가 카메라에 가까움
-      depthVal = -((p1[0] + p2[0]) / 2 + position[0]);
+      depthVal = -((p1[0] + p2[0]) / 2 + worldPos.x);
     } else if (view2DDirection === 'right') {
-      // 우측면: +X가 카메라에 가까움
-      depthVal = (p1[0] + p2[0]) / 2 + position[0];
+      depthVal = (p1[0] + p2[0]) / 2 + worldPos.x;
     } else if (view2DDirection === 'top') {
-      // 평면: +Y가 카메라에 가까움
-      depthVal = (p1[1] + p2[1]) / 2 + position[1];
+      depthVal = (p1[1] + p2[1]) / 2 + worldPos.y;
     } else {
       return 1;
     }
 
-    // 가구 전체 깊이(depth prop의 Three units) 기준으로 정규화
-    // depth 범위 추정: position 기준 ±가구깊이/2 정도
-    // 절대값 기반: depthVal이 클수록 가까움 → 진하게
-    // 가구 깊이 기준으로 0~1 매핑 (대략 ±3 Three units = ±300mm)
-    const approxRange = 3.0; // Three units (≈300mm 가구 깊이)
+    // 월드 좌표 기반: depthVal = 로컬 edge 중간점 + 월드 위치
+    // 가구 깊이 약 580mm = 5.8 Three units → 범위 ±3.5 정도
+    const approxRange = 5.0;
     const normalized = (depthVal + approxRange) / (2 * approxRange);
     const clamped = Math.max(0, Math.min(1, normalized));
-    // 가까울수록(1) 진하게, 멀수록(0) 흐리게 — 범위: 0.15 ~ 1.0
-    return 0.15 + clamped * 0.85;
-  }, [viewMode, view2DDirection, position, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+    // 앞(1.0) → opacity 1.0, 뒤(0.0) → opacity 0.25
+    return 0.25 + clamped * 0.75;
+  }, [viewMode, view2DDirection, worldPos, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
 
   // 2D 모드에서 개별 라인 렌더링 (깊이별 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
@@ -504,7 +526,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, getDepthOpacity]);
 
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
