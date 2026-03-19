@@ -45,7 +45,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   backPanelThickness: backPanelThicknessProp,
   lowerSectionTopOffset,
   zone, // 단내림 영역 정보
-  hasBase
+  hasBase,
+  individualFloatHeight
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -1558,6 +1559,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
           zone={zone}
           hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
         />
       )}
     </>

@@ -49,7 +49,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   panelGrainDirections: propsPanelGrainDirections,
   backPanelThickness,
   zone, // 단내림 영역 정보
-  hasBase
+  hasBase,
+  individualFloatHeight
 }) => {
   console.log('🔍🔍🔍 [DualType1] Props 확인 - 렌더링됨!');
   console.log('  moduleId:', moduleData.id);
@@ -157,6 +158,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
         zone={zone}
         hasBase={hasBase}
+        individualFloatHeight={individualFloatHeight}
       />
     ) : (
       <>
@@ -185,6 +187,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
           zone={zone}
           hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
         />
 
         <DoorModule
@@ -212,6 +215,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
           zone={zone}
           hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
         />
       </>
     )

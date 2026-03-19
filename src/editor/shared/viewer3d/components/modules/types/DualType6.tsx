@@ -54,7 +54,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   lowerSectionTopOffset,
   zone, // 단내림 영역 정보
-  hasBase
+  hasBase,
+  individualFloatHeight
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -1062,6 +1063,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
             zone={zone}
             hasBase={hasBase}
+            individualFloatHeight={individualFloatHeight}
           />
         ) : (
           // 분할 모드: 상/하부 도어 각각
@@ -1088,6 +1090,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
               zone={zone}
               hasBase={hasBase}
+              individualFloatHeight={individualFloatHeight}
             />
             {/* 상부 도어 */}
             <DoorModule
@@ -1111,6 +1114,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
               zone={zone}
               hasBase={hasBase}
+              individualFloatHeight={individualFloatHeight}
             />
           </>
         )

@@ -41,7 +41,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   backPanelThickness,
   renderMode: renderModeProp,
   zone, // 단내림 영역 정보
-  hasBase
+  hasBase,
+  individualFloatHeight
 }) => {
   console.log('🏠 [LowerCabinet] Props 확인:', {
     moduleId: moduleData.id,
@@ -227,6 +228,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           furnitureId={placedFurnitureId}
           zone={zone}
           hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
         />
       )}
 

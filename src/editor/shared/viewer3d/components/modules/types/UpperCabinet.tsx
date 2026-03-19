@@ -38,7 +38,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   backPanelThickness,
   renderMode: renderModeProp,
   zone, // 단내림 영역 정보
-  hasBase
+  hasBase,
+  individualFloatHeight
 }) => {
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
@@ -183,6 +184,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
           zone={zone}
           hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
         />
       )}
     </>

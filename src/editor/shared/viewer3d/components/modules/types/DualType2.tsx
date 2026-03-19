@@ -54,7 +54,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   panelGrainDirections: propsPanelGrainDirections,
   backPanelThickness: backPanelThicknessProp,
   zone, // 단내림 영역 정보
-  hasBase
+  hasBase,
+  individualFloatHeight
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -745,6 +746,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               internalHeight={internalHeight}
               zone={zone}
               hasBase={hasBase}
+              individualFloatHeight={individualFloatHeight}
             />
           ) : (
             // 분할 모드: 상하부 도어 각각
@@ -775,6 +777,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 internalHeight={internalHeight}
                 zone={zone}
                 hasBase={hasBase}
+                individualFloatHeight={individualFloatHeight}
               />
 
               {/* 하부 섹션 도어 */}
@@ -803,6 +806,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 internalHeight={internalHeight}
                 zone={zone}
                 hasBase={hasBase}
+                individualFloatHeight={individualFloatHeight}
               />
             </>
           )}
