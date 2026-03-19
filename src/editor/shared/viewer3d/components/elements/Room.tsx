@@ -2662,6 +2662,11 @@ const Room: React.FC<RoomProps> = ({
           // wallConfigLeft: wallConfig?.left,
           // isEndPanel: !wallConfig?.left
         // });
+        // 커튼박스가 이 쪽(좌측)에 있으면 프레임 불필요 (커튼박스에 패널이 있음)
+        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left' && isFreePlacement) {
+          return null;
+        }
+
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -2670,17 +2675,11 @@ const Room: React.FC<RoomProps> = ({
           : 0;
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
-        // stepCeiling 단내림 관련 변수 (자유배치 전용이지만, isFreePlacement 체크 없이 stepCeiling 존재 여부로 판단)
+        // stepCeiling 단내림 관련 변수
         const hasLeftStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
         const stepDropHeight = hasLeftStepCeiling ? (spaceInfo.stepCeiling!.dropHeight || 200) : 0;
         const stepDropH = mmToThreeUnits(stepDropHeight);
 
-        // stepCeiling: 왼쪽이 단내림 영역인 경우 높이를 단내림 천장에 맞춤
-        // 커튼박스가 같은 쪽에 있으면 커튼박스에 패널이 있으므로 프레임 불필요
-        const hasLeftCB = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left';
-        if (hasLeftStepCeiling && hasLeftCB) {
-          return null;
-        }
         if (hasLeftStepCeiling) {
           const droppedH = adjustedPanelHeight - stepDropH; // 단내림 천장까지의 높이
           const droppedCY = sideFrameStartY + droppedH / 2;
@@ -3013,6 +3012,11 @@ const Room: React.FC<RoomProps> = ({
         return null;
       })()}
       {effectiveShowFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+        // 커튼박스가 이 쪽(우측)에 있으면 프레임 불필요 (커튼박스에 패널이 있음)
+        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right' && isFreePlacement) {
+          return null;
+        }
+
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
@@ -3021,18 +3025,11 @@ const Room: React.FC<RoomProps> = ({
           : 0;
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
-        // stepCeiling 단내림 관련 변수 (isFreePlacement 체크 없이 stepCeiling 존재 여부로 판단)
+        // stepCeiling 단내림 관련 변수
         const hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
         const stepDropHeightR = hasRightStepCeiling ? (spaceInfo.stepCeiling!.dropHeight || 200) : 0;
         const stepDropHR = mmToThreeUnits(stepDropHeightR);
 
-        // stepCeiling: 오른쪽이 단내림 영역인 경우 높이를 단내림 천장에 맞춤
-        // 커튼박스가 같은 쪽에 있으면 커튼박스에 패널이 있으므로 프레임 불필요
-        const hasRightCB = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right';
-        if (hasRightStepCeiling && hasRightCB) {
-          // 커튼박스+단내림 동시: 커튼박스 쪽 프레임 생성 안 함
-          return null;
-        }
         if (hasRightStepCeiling) {
 
           const droppedH = adjustedPanelHeight - stepDropHR; // 단내림 천장까지의 높이
@@ -4317,15 +4314,14 @@ const Room: React.FC<RoomProps> = ({
             const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
             const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
 
-            // 왼쪽이 단내림(커튼박스) 영역인 경우
-            if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
-              // 자유배치에서 커튼박스+stepCeiling 동시 활성 시, 서브프레임 생성 안 함
-              const hasLeftStepCeilingToo = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
-              if (hasLeftStepCeilingToo) {
-                return null;
-              }
+            // 커튼박스가 좌측에 있으면 자유배치에서는 서브프레임 불필요
+            if (droppedCeilingEnabled && droppedCeilingPosition === 'left' && isFreePlacement) {
+              return null;
+            }
 
-              // 커튼박스만 (슬롯모드): 기존 로직
+            // 왼쪽이 단내림(커튼박스) 영역인 경우 (슬롯모드)
+            if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
+              // 슬롯모드: 기존 로직
               const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               const droppedFrameHeight = droppedHeight - floatHeight;
               const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight / 2;
@@ -4489,15 +4485,14 @@ const Room: React.FC<RoomProps> = ({
             const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
             const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
 
-            // 오른쪽이 단내림(커튼박스) 영역인 경우
-            if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
-              // 자유배치에서 커튼박스+stepCeiling 동시 활성 시, 서브프레임 생성 안 함
-              const hasRightStepCeilingToo = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
-              if (hasRightStepCeilingToo) {
-                return null;
-              }
+            // 커튼박스가 우측에 있으면 자유배치에서는 서브프레임 불필요
+            if (droppedCeilingEnabled && droppedCeilingPosition === 'right' && isFreePlacement) {
+              return null;
+            }
 
-              // 커튼박스만 (슬롯모드): 기존 로직
+            // 오른쪽이 단내림(커튼박스) 영역인 경우 (슬롯모드)
+            if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
+              // 슬롯모드: 기존 로직
               const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               const subFrameH = droppedHeight - floatHeight;
               const subFrameCY = panelStartY + floatHeight + subFrameH / 2;
