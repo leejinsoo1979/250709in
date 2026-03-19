@@ -33,16 +33,21 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
     // surroundType가 surround/both-sides이면 프레임 두께를 경계에 반영
     if (spaceInfo.surroundType !== 'no-surround') {
       const frameThickness = calculateFrameThickness(spaceInfo);
-      startX += frameThickness.leftMm;
-      endX -= frameThickness.rightMm;
-      // 커튼박스 구간 제외 (서라운드/양면 모드에서도 커튼박스 영역에는 가구 배치 불가)
-      if (spaceInfo.droppedCeiling?.enabled) {
-        const cbWidth = spaceInfo.droppedCeiling.width || 150;
-        if (spaceInfo.droppedCeiling.position === 'left') {
-          startX += cbWidth;
-        } else {
-          endX -= cbWidth;
-        }
+      const hasCB = spaceInfo.droppedCeiling?.enabled;
+      const cbPos = spaceInfo.droppedCeiling?.position || 'right';
+      const cbWidth = hasCB ? (spaceInfo.droppedCeiling.width || 150) : 0;
+
+      // 커튼박스 쪽: 커튼박스 너비만 제외 (프레임 이격 없음 — 커튼박스에 자체 패널 있음)
+      // 반대쪽: 프레임 이격 적용
+      if (hasCB && cbPos === 'left') {
+        startX += cbWidth;
+        endX -= frameThickness.rightMm;
+      } else if (hasCB && cbPos === 'right') {
+        startX += frameThickness.leftMm;
+        endX -= cbWidth;
+      } else {
+        startX += frameThickness.leftMm;
+        endX -= frameThickness.rightMm;
       }
       return { startX, endX };
     }
