@@ -5193,12 +5193,12 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 배치방식 */}
+        {/* 받침대 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>배치방식</h3>
-            <HelpBtn title="배치방식" text="가구 하단의 바닥 처리 방식을 선택합니다. 받침대: 고정된 베이스 위에 가구를 올립니다. 조절발: 바닥 수평이 맞지 않을 때 높이 조절이 가능한 발을 사용합니다. 띄움(플로팅): 벽에 고정하여 바닥에서 떠 있는 형태로 설치하며, 띄움 높이를 지정할 수 있습니다." />
+            <h3 className={styles.sectionTitle}>받침대</h3>
+            <HelpBtn title="받침대" text="가구 하단 받침대의 높이와 깊이를 설정합니다. 개별 가구의 받침대 제거 및 띄움은 가구 선택 후 우측 패널에서 설정할 수 있습니다." />
           </div>
           <BaseControls
             spaceInfo={spaceInfo}

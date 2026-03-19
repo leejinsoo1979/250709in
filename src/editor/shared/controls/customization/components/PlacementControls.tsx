@@ -1,158 +1,98 @@
 import React from 'react';
 import { BaseConfig } from '@/store/core/spaceConfigStore';
-import { useUIStore, HighlightedFrame } from '@/store/uiStore';
-import { useTranslation } from '@/i18n/useTranslation';
+import { useUIStore } from '@/store/uiStore';
 import styles from '../../styles/common.module.css';
 
 interface PlacementControlsProps {
   baseConfig?: BaseConfig;
   baseHeight: string;
   baseDepth: string;
-  floatHeight: string;
-  onPlacementTypeChange: (placementType: 'ground' | 'float') => void;
   onHeightChange: (value: string) => void;
   onDepthChange: (value: string) => void;
-  onFloatHeightChange: (value: string) => void;
   onHeightBlur: () => void;
   onDepthBlur: () => void;
-  onFloatHeightBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onDepthKeyDown: (e: React.KeyboardEvent) => void;
-  onFloatKeyDown: (e: React.KeyboardEvent) => void;
   disabled?: boolean;
 }
 
 const PlacementControls: React.FC<PlacementControlsProps> = ({
-  baseConfig,
   baseHeight,
   baseDepth,
-  floatHeight,
-  onPlacementTypeChange,
   onHeightChange,
   onDepthChange,
-  onFloatHeightChange,
   onHeightBlur,
   onDepthBlur,
-  onFloatHeightBlur,
   onKeyDown,
   onDepthKeyDown,
-  onFloatKeyDown,
   disabled = false
 }) => {
-  const { t } = useTranslation();
   const { setHighlightedFrame } = useUIStore();
-  const isFloor = baseConfig?.type === 'floor' || !baseConfig;
-  const isStand = baseConfig?.type === 'stand';
-  const isGround = baseConfig?.placementType === 'ground';
-  const isFloat = baseConfig?.placementType === 'float';
 
-  // 입력 필드 포커스 핸들러
   const handleInputFocus = () => {
     setHighlightedFrame('base');
   };
 
-  // 입력 필드 블러 핸들러
   const handleInputBlur = () => {
     setHighlightedFrame(null);
     onHeightBlur();
   };
 
-  // 깊이 블러 핸들러
   const handleDepthInputBlur = () => {
     setHighlightedFrame(null);
     onDepthBlur();
   };
 
-  // 띄움 높이 블러 핸들러
-  const handleFloatInputBlur = () => {
-    setHighlightedFrame(null);
-    onFloatHeightBlur();
-  };
-
   return (
-    <>
-      {/* 받침대 있음 - 높이/깊이 설정 (인라인) */}
-      {isFloor && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span className={styles.inputLabel} style={{ flexShrink: 0, margin: 0 }}>높이</span>
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: 'var(--theme-background-secondary, #f9fafb)',
-            border: '1px solid var(--theme-border)',
-            borderRadius: '6px', overflow: 'hidden', flex: 1
-          }}>
-            <input
-              type="text"
-              value={baseHeight}
-              onChange={(e) => onHeightChange(e.target.value)}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              onKeyDown={onKeyDown}
-              style={{
-                border: 'none', background: 'transparent', textAlign: 'center',
-                fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
-                padding: 0, width: '100%', height: '24px', outline: 'none'
-              }}
-              placeholder="65"
-              disabled={disabled}
-            />
-          </div>
-          <span className={styles.inputLabel} style={{ flexShrink: 0, margin: 0 }}>깊이</span>
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: 'var(--theme-background-secondary, #f9fafb)',
-            border: '1px solid var(--theme-border)',
-            borderRadius: '6px', overflow: 'hidden', flex: 1
-          }}>
-            <input
-              type="text"
-              value={baseDepth}
-              onChange={(e) => onDepthChange(e.target.value)}
-              onFocus={handleInputFocus}
-              onBlur={handleDepthInputBlur}
-              onKeyDown={onDepthKeyDown}
-              style={{
-                border: 'none', background: 'transparent', textAlign: 'center',
-                fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
-                padding: 0, width: '100%', height: '24px', outline: 'none'
-              }}
-              placeholder="0"
-              disabled={disabled}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 띄워서 배치 - 띄움 높이 설정 (인라인) */}
-      {isStand && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span className={styles.inputLabel} style={{ flexShrink: 0, margin: 0 }}>{t('frame.floatHeight')}</span>
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: 'var(--theme-background-secondary, #f9fafb)',
-            border: '1px solid var(--theme-border)',
-            borderRadius: '6px', overflow: 'hidden', flex: 1
-          }}>
-            <input
-              type="text"
-              value={floatHeight}
-              onChange={(e) => onFloatHeightChange(e.target.value)}
-              onFocus={handleInputFocus}
-              onBlur={handleFloatInputBlur}
-              onKeyDown={onFloatKeyDown}
-              style={{
-                border: 'none', background: 'transparent', textAlign: 'center',
-                fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
-                padding: 0, width: '100%', height: '24px', outline: 'none'
-              }}
-              placeholder="60"
-              disabled={disabled}
-            />
-          </div>
-        </div>
-      )}
-    </>
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <span className={styles.inputLabel} style={{ flexShrink: 0, margin: 0 }}>높이</span>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'var(--theme-background-secondary, #f9fafb)',
+        border: '1px solid var(--theme-border)',
+        borderRadius: '6px', overflow: 'hidden', flex: 1
+      }}>
+        <input
+          type="text"
+          value={baseHeight}
+          onChange={(e) => onHeightChange(e.target.value)}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          onKeyDown={onKeyDown}
+          style={{
+            border: 'none', background: 'transparent', textAlign: 'center',
+            fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
+            padding: 0, width: '100%', height: '24px', outline: 'none'
+          }}
+          placeholder="65"
+          disabled={disabled}
+        />
+      </div>
+      <span className={styles.inputLabel} style={{ flexShrink: 0, margin: 0 }}>깊이</span>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: 'var(--theme-background-secondary, #f9fafb)',
+        border: '1px solid var(--theme-border)',
+        borderRadius: '6px', overflow: 'hidden', flex: 1
+      }}>
+        <input
+          type="text"
+          value={baseDepth}
+          onChange={(e) => onDepthChange(e.target.value)}
+          onFocus={handleInputFocus}
+          onBlur={handleDepthInputBlur}
+          onKeyDown={onDepthKeyDown}
+          style={{
+            border: 'none', background: 'transparent', textAlign: 'center',
+            fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)',
+            padding: 0, width: '100%', height: '24px', outline: 'none'
+          }}
+          placeholder="0"
+          disabled={disabled}
+        />
+      </div>
+    </div>
   );
 };
 
-export default PlacementControls; 
+export default PlacementControls;
