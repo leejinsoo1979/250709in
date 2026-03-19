@@ -1838,7 +1838,7 @@ const FreePlacementDropZone: React.FC = () => {
         return boxes;
       })()}
 
-      {!isDraggingPlaced && !isMoveMode && remainingGaps.map((gap, i) => {
+      {!isDraggingPlaced && !isMoveMode && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && remainingGaps.map((gap, i) => {
         const lineColor = themeColor;
 
         return (
