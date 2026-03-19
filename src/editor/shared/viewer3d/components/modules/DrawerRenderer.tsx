@@ -425,7 +425,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 1. 수직 패널 (세로로 긴 패널, 전체 높이)
   // 깊이: 기존에서 앞뒤 18mm씩 축소 (수평 패널과 겹치지 않도록)
   const verticalPanelDepth = depth - mmToThreeUnits(85) - backPanelThickness - mmToThreeUnits(18) - mmToThreeUnits(17) - mmToThreeUnits(36);
-  const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2 - mmToThreeUnits(1);
+  const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2 - mmToThreeUnits(1) + mmToThreeUnits(18);
 
   // 2. 후면 수평 패널 (좌/우 각각) - 실제로는 전면에 위치
   // Y 위치: 전달받은 내경 중앙
