@@ -4984,11 +4984,14 @@ const Configurator: React.FC = () => {
                   {/* 하단갭 행 */}
                   <tr>
                     <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
-                    {doorFurnitureList.map((mod) => (
+                    {doorFurnitureList.map((mod) => {
+                      const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
+                      return (
                       <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                        storeValue={mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5}
+                        storeValue={sv}
                         onCommit={handleIndividualDoorGapChange} />
-                    ))}
+                      );
+                    })}
                   </tr>
                 </tbody>
               </table>

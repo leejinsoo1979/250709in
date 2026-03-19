@@ -1311,7 +1311,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
                                 onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.individualFloatHeight ?? 0; const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv }); } }}
                                 onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv }); } }}
-                                onBlur={(e) => { const nv = Math.max(0, Math.min(500, parseInt(e.target.value) || 0)); updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv }); }}
+                                onBlur={() => { /* 토글 전환 시 필드 제거로 blur 발생 — doorBottomGap 덮어쓰기 방지 */ }}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                               />
                             </div>
