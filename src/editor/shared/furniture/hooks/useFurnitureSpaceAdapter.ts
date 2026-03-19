@@ -6,7 +6,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { getModuleById } from '@/data/modules';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { clampToSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { clampToSpaceBoundsX, getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface UseFurnitureSpaceAdapterProps {
   setPlacedModules: React.Dispatch<React.SetStateAction<PlacedModule[]>>;
@@ -29,14 +29,36 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {
-        // 자유배치 모듈은 공간 경계 내로 클램핑
+        // 자유배치 모듈: 경계 변경 시 벽에 붙어있던 가구는 새 경계에 맞춰 재배치
         if (module.isFreePlacement) {
           const moduleWidth = module.freeWidth || module.moduleWidth || 450;
+          const halfModW = moduleWidth / 2;
           const centerXmm = module.position.x * 100;
-          const clampedX = clampToSpaceBoundsX(centerXmm, moduleWidth, newSpaceInfo);
+
+          const oldBounds = getInternalSpaceBoundsX(oldSpaceInfo);
+          const newBounds = getInternalSpaceBoundsX(newSpaceInfo);
+
+          // 가구의 좌측/우측 끝이 이전 경계에 가까웠는지 판단 (허용 오차 5mm)
+          const SNAP_THRESHOLD = 5;
+          const oldLeftEdge = centerXmm - halfModW;
+          const oldRightEdge = centerXmm + halfModW;
+          const wasAtLeftWall = Math.abs(oldLeftEdge - oldBounds.startX) < SNAP_THRESHOLD;
+          const wasAtRightWall = Math.abs(oldRightEdge - oldBounds.endX) < SNAP_THRESHOLD;
+
+          let newCenterX = centerXmm;
+          if (wasAtLeftWall) {
+            // 좌측 벽에 붙어있었으면 새 좌측 경계에 맞춤
+            newCenterX = newBounds.startX + halfModW;
+          } else if (wasAtRightWall) {
+            // 우측 벽에 붙어있었으면 새 우측 경계에 맞춤
+            newCenterX = newBounds.endX - halfModW;
+          }
+
+          // 최종 클램핑 (경계 초과 방지)
+          const finalX = clampToSpaceBoundsX(newCenterX, moduleWidth, newSpaceInfo);
           updatedModules.push({
             ...module,
-            position: { ...module.position, x: clampedX * 0.01 },
+            position: { ...module.position, x: finalX * 0.01 },
             isValidInCurrentSpace: true
           });
           return;
