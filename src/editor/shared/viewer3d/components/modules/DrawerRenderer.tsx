@@ -25,6 +25,7 @@ interface DrawerSidePanelBoringProps {
   mmToThreeUnits: (mm: number) => number;
   viewMode: '2D' | '3D';
   view2DDirection: 'front' | 'top' | 'left' | 'right';
+  backPanelBottomY?: number; // 뒷판 하단 Y 좌표 (바닥판 윗면)
 }
 
 const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
@@ -38,6 +39,7 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
   mmToThreeUnits,
   viewMode,
   view2DDirection,
+  backPanelBottomY,
 }) => {
   // 2D 뷰가 아니면 렌더링하지 않음
   if (viewMode !== '2D') {
@@ -56,31 +58,38 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
   const leftPanelX = centerX - drawerWidth / 2 + sideThickness / 2 + sidePanelOffset;
   const rightPanelX = centerX + drawerWidth / 2 - sideThickness / 2 - sidePanelOffset;
 
-  // 보링 Y 위치: 앞판/뒷판 체결용 - 위/중간/아래 3개
-  // 위아래 끝에서 20mm 떨어진 위치 + 중간
+  // 보링 Y 위치: 앞판 체결용 - 위/중간/아래 3개 (측판 전체 높이 기준)
   const edgeOffsetY = mmToThreeUnits(20); // 끝에서 20mm
-  const topBoringY = centerY + drawerHeight / 2 - edgeOffsetY; // 위쪽 (끝에서 20mm)
-  const middleBoringY = centerY; // 중간
-  const bottomBoringY = centerY - drawerHeight / 2 + edgeOffsetY; // 아래쪽 (끝에서 20mm)
-  const boringYPositions = [topBoringY, middleBoringY, bottomBoringY];
+  const topBoringY = centerY + drawerHeight / 2 - edgeOffsetY;
+  const middleBoringY = centerY;
+  const bottomBoringY = centerY - drawerHeight / 2 + edgeOffsetY;
+  const frontBoringYPositions = [topBoringY, middleBoringY, bottomBoringY];
+
+  // 뒷판 보링 Y 위치: 뒷판 하단이 바닥판 윗면에 올라탐 → 하단 보링은 바닥판 윗면 + 20mm
+  const backPanelBottom = backPanelBottomY ?? (centerY - drawerHeight / 2);
+  const backTopBoringY = topBoringY; // 상단은 동일
+  const backMiddleBoringY = (topBoringY + (backPanelBottom + edgeOffsetY)) / 2; // 뒷판 중간
+  const backBottomBoringY = backPanelBottom + edgeOffsetY; // 뒷판 하단에서 20mm 위
+  const backBoringYPositions = [backTopBoringY, backMiddleBoringY, backBottomBoringY];
 
   // 보링 Z 위치: 앞판, 뒷판 중간 지점 (2개)
-  // 앞판은 drawerDepth/2 - sideThickness/2 위치, 뒷판은 -drawerDepth/2 + sideThickness/2 위치
-  const frontPanelZ = centerZ + drawerDepth / 2 - sideThickness / 2; // 앞판 중간
-  const backPanelZ = centerZ - drawerDepth / 2 + sideThickness / 2; // 뒷판 중간
+  const frontPanelZ = centerZ + drawerDepth / 2 - sideThickness / 2;
+  const backPanelZ = centerZ - drawerDepth / 2 + sideThickness / 2;
   const boringZPositions = [frontPanelZ, backPanelZ];
 
   // 측면뷰 (left/right) - 해당 측판에만 보링 표시 (원형)
-  // 앞/뒤 패널 각각에 3개의 보링 (위/중간/아래) = 총 6개
+  // 앞판: frontBoringYPositions, 뒷판: backBoringYPositions
   if (view2DDirection === 'left' || view2DDirection === 'right') {
     const xPosition = view2DDirection === 'left' ? leftPanelX : rightPanelX;
     const holeOuterRadius = mmToThreeUnits(holeDiameter / 2);
     const holeInnerRadius = holeOuterRadius * 0.6;
+    // zIndex 0=앞판, 1=뒷판
+    const yPositionsByPanel = [frontBoringYPositions, backBoringYPositions];
 
     return (
       <group>
         {boringZPositions.map((zPos, zIndex) => (
-          boringYPositions.map((yPos, yIndex) => (
+          yPositionsByPanel[zIndex].map((yPos, yIndex) => (
             <mesh
               key={`drawer-${drawerIndex}-boring-z${zIndex}-y${yIndex}`}
               position={[xPosition, yPos, zPos]}
@@ -100,14 +109,14 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
     );
   }
 
-  // 정면뷰 (front) - 양쪽 측판에 3개의 보링 (위/중간/아래)
+  // 정면뷰 (front) - 양쪽 측판에 앞판 기준 3개의 보링 (위/중간/아래)
   // 각 보링은 상/하 수평선으로 표현 (3mm 간격)
   if (view2DDirection === 'front') {
     const lineLength = sideThickness;
 
     return (
       <group>
-        {boringYPositions.map((yPos, yIndex) => (
+        {frontBoringYPositions.map((yPos, yIndex) => (
           <group key={`drawer-${drawerIndex}-front-boring-y${yIndex}`}>
             {/* 좌측판 보링 - 상단/하단 수평선 */}
             <mesh
@@ -710,6 +719,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           mmToThreeUnits={mmToThreeUnits}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
+          backPanelBottomY={centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + mmToThreeUnits(5)}
         />
 
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
