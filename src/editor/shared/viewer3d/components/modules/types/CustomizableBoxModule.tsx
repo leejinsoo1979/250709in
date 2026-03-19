@@ -1124,6 +1124,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               sectionName={sectionLabel}
               panelGrainDirections={panelGrainDirections}
               drawerAlign={align}
+              backPanelThicknessOverride={backPanelThicknessProp}
             />
             {/* 서랍이 영역보다 작을 때: 덮개 선반 */}
             {!isFullFill && (() => {

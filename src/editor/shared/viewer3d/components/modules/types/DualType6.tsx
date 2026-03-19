@@ -216,11 +216,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
+                  backPanelThicknessOverride={backPanelThicknessProp}
                 />
               );
             }
             break;
-            
+
           case 'hanging':
             // 옷걸이 구역 - 안전선반은 통합으로 처리되므로 여기서는 렌더링하지 않음
             sectionContent = null;
