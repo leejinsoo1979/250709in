@@ -449,6 +449,13 @@ const FreePlacementDropZone: React.FC = () => {
       snapPoints.push(b.right + halfWidth); // 가구 오른쪽에 붙기
       snapPoints.push(b.left - halfWidth);  // 가구 왼쪽에 붙기
     }
+    // 구간 경계 스냅 (단내림/커튼박스 경계)
+    for (const zb of zonePlacementBounds) {
+      snapPoints.push(zb.placementStartXmm + halfWidth);  // 구간 시작에 가구 왼쪽 맞춤
+      snapPoints.push(zb.placementStartXmm - halfWidth);  // 구간 시작에 가구 오른쪽 맞춤
+      snapPoints.push(zb.placementEndXmm + halfWidth);    // 구간 끝에 가구 왼쪽 맞춤
+      snapPoints.push(zb.placementEndXmm - halfWidth);    // 구간 끝에 가구 오른쪽 맞춤
+    }
 
     // 가장 가까운 스냅 포인트 찾기
     let snapped = false;
@@ -1078,6 +1085,13 @@ const FreePlacementDropZone: React.FC = () => {
         snapPoints.push(b.right + halfWidth);
         snapPoints.push(b.left - halfWidth);
       }
+      // 구간 경계 스냅 (단내림/커튼박스 경계)
+      for (const zb of zonePlacementBounds) {
+        snapPoints.push(zb.placementStartXmm + halfWidth);
+        snapPoints.push(zb.placementStartXmm - halfWidth);
+        snapPoints.push(zb.placementEndXmm + halfWidth);
+        snapPoints.push(zb.placementEndXmm - halfWidth);
+      }
 
       let bestSnap = clampedX;
       let bestDist = SNAP_DISTANCE_MM + 1;
@@ -1100,7 +1114,7 @@ const FreePlacementDropZone: React.FC = () => {
     const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
 
     return { x: Math.round(clampedX), snapped, colliding };
-  }, [freeModules, placedModules, sortedBoundsWithId, spaceInfo, spaceBounds]);
+  }, [freeModules, placedModules, sortedBoundsWithId, spaceInfo, spaceBounds, zonePlacementBounds]);
 
   // 배치된 가구 마우스 드래그 시작
   const handlePlacedPointerDown = useCallback((e: any, moduleId: string) => {
