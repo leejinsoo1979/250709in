@@ -5696,8 +5696,8 @@ const Configurator: React.FC = () => {
               </button>
             )}
 
-            {/* 슬롯 분할 가이드 도움말 ? 아이콘 (자유배치 모드에서는 숨김) */}
-            {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (
+            {/* 슬롯 분할 가이드 도움말 ? 아이콘 (자유배치 모드, 2D 모드에서는 숨김) */}
+            {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && viewMode !== '2D' && (
               <button
                 ref={slotGuideBtnRef}
                 className={`${styles.slotGuideHelpButton} ${isSlotGuideOpen ? styles.active : ''}`}
