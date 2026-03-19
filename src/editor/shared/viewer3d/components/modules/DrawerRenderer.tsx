@@ -462,13 +462,13 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
         /> */}
         
-        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 측판 뒷선까지 확장 (뒷판이 바닥판 위에 올라탐) */}
+        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 앞판 홈에 끼워지고 뒤쪽은 측판 뒷선까지 확장 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`;
           const mat = getPanelMaterial(panelName);
-          // 바닥판 깊이: 앞판 뒤~측판 뒷선(=drawerBodyDepth 전체) 에서 앞판 두께만 빼기
+          // 깊이: 앞판 안쪽면 ~ 측판 뒷선 = drawerBodyDepth - 앞판두께(15mm)
           const bottomDepth = drawerBodyDepth - DRAWER_SIDE_THICKNESS;
-          // 바닥판 Z: 앞판 뒤쪽부터 뒷선까지의 중심
+          // Z 중심: 앞판 두께만큼 뒤로 이동
           const bottomZ = drawerBodyCenterZ - DRAWER_SIDE_THICKNESS / 2;
           return (
             <BoxWithEdges
@@ -506,12 +506,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 뒷면 - 바닥판 위에 올라탐 (하단 바닥판 두께 5mm만큼 축소, Y 위치 올림) */}
+        {/* 뒷면 - 하단이 바닥판 윗면에 올라탐 (높이 5mm 축소, 하단 기준 5mm 위로) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
           const mat = getPanelMaterial(panelName);
           const bottomPanelThk = mmToThreeUnits(5);
+          // 뒷판 높이: 기존 높이에서 바닥판 두께만큼 하단 축소
           const backHeight = drawerHeight - mmToThreeUnits(30) - bottomPanelThk;
+          // 뒷판 Y: 상단은 그대로, 하단만 올라감 → 중심이 바닥판 두께/2 만큼 위로
           const backY = centerY + bottomPanelThk / 2;
           return (
             <BoxWithEdges
