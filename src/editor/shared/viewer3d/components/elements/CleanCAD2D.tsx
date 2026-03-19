@@ -1068,6 +1068,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         hasStepDown,
         stepDownPosition,
         stepDownWidth,
+        zoneLimitLeft,
+        zoneLimitRight,
       };
     }).filter(Boolean);
   }, [placedModules, currentViewDirection, spaceInfo, spaceHeight]);
@@ -1511,6 +1513,147 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
+        // ── 자유배치 모드: furnitureDimensions 기반 좌측 이격 ──
+        if (isFreePlacement) {
+          if (furnitureDimensions.length === 0) return null;
+          // 가장 왼쪽 가구 찾기 (구간 경계에 인접한 가구 = !hasAdjacentLeft)
+          const leftWallX = -(spaceInfo.width * 0.01) / 2;
+          // 좌벽에 가장 가까운 가구 = moduleLeft가 가장 작은 가구
+          const sortedByLeft = [...furnitureDimensions].sort((a, b) => a.moduleLeft - b.moduleLeft);
+          const leftmostDim = sortedByLeft[0];
+          if (!leftmostDim) return null;
+
+          // 좌벽 ~ 가장왼쪽가구 거리
+          const wallToFurnitureMm = Math.round(Math.abs((leftmostDim.moduleLeft - leftWallX) * 100));
+          if (wallToFurnitureMm < 1) return null;
+
+          // 단내림 분절 여부: 단내림이 왼쪽이고, 가구가 메인 구간에 있으면 분절
+          const needsSplit = leftmostDim.hasStepDown && leftmostDim.stepDownPosition === 'left'
+            && leftmostDim.zoneLimitLeft !== leftWallX; // zoneLimitLeft가 벽이 아닌 경계인 경우
+
+          if (needsSplit) {
+            // 2구간: [좌벽 ~ 경계] + [경계 ~ 가구]
+            const boundaryX = leftmostDim.zoneLimitLeft; // 경계 (Three.js)
+            const wallToBoundaryMm = Math.round(Math.abs((boundaryX - leftWallX) * 100));
+            const boundaryToFurnitureMm = Math.round(Math.abs((leftmostDim.moduleLeft - boundaryX) * 100));
+
+            const seg1Left = leftWallX;
+            const seg1Right = boundaryX;
+            const seg2Left = boundaryX;
+            const seg2Right = leftmostDim.moduleLeft;
+
+            return (
+              <group>
+                {/* 구간 1: 좌벽 ~ 경계 */}
+                {wallToBoundaryMm >= 1 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[seg1Left, slotDimensionY, 0.002], [seg1Right, slotDimensionY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg1Left, slotDimensionY, 0.002], [seg1Left + 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg1Right, slotDimensionY, 0.002], [seg1Right - 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {showDimensionsText && (
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[(seg1Left + seg1Right) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >{wallToBoundaryMm}</Text>
+                  )}
+                  <NativeLine name="dimension_line"
+                    points={[[seg1Left, spaceHeight, 0.001], [seg1Left, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                  />
+                </>)}
+
+                {/* 구간 2: 경계 ~ 가구 */}
+                {boundaryToFurnitureMm >= 1 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[seg2Left, slotDimensionY, 0.002], [seg2Right, slotDimensionY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg2Left, slotDimensionY, 0.002], [seg2Left + 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg2Right, slotDimensionY, 0.002], [seg2Right - 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {showDimensionsText && (
+                    <Html position={[(seg2Left + seg2Right) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                      center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+                      <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor,
+                        cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                        background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                        borderRadius: '3px' }}
+                        onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('left', leftmostDim.module.id, boundaryToFurnitureMm); }}>
+                        {boundaryToFurnitureMm}
+                      </div>
+                    </Html>
+                  )}
+                </>)}
+
+                {/* 공통 연장선: 경계선 + 가구 좌측 */}
+                <NativeLine name="dimension_line"
+                  points={[[seg1Right, spaceHeight, 0.001], [seg1Right, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[seg2Right, spaceHeight, 0.001], [seg2Right, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+              </group>
+            );
+          }
+
+          // 분절 불필요: 좌벽 ~ 가구 1개 구간
+          const lineStart = leftWallX;
+          const lineEnd = leftmostDim.moduleLeft;
+          return (
+            <group>
+              <NativeLine name="dimension_line"
+                points={[[lineStart, slotDimensionY, 0.002], [lineEnd, slotDimensionY, 0.002]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={createArrowHead([lineStart, slotDimensionY, 0.002], [lineStart + 0.02, slotDimensionY, 0.002])}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={createArrowHead([lineEnd, slotDimensionY, 0.002], [lineEnd - 0.02, slotDimensionY, 0.002])}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {showDimensionsText && (
+                <Html position={[(lineStart + lineEnd) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                  center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+                  <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor,
+                    cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                    background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                    borderRadius: '3px' }}
+                    onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('left', leftmostDim.module.id, wallToFurnitureMm); }}>
+                    {wallToFurnitureMm}
+                  </div>
+                </Html>
+              )}
+              <NativeLine name="dimension_line"
+                points={[[lineStart, spaceHeight, 0.001], [lineStart, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+              />
+              <NativeLine name="dimension_line"
+                points={[[lineEnd, spaceHeight, 0.001], [lineEnd, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+              />
+            </group>
+          );
+        }
+
+        // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
         // 왼쪽 벽이 있는지 확인
@@ -1626,6 +1769,146 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
+        // ── 자유배치 모드: furnitureDimensions 기반 우측 이격 ──
+        if (isFreePlacement) {
+          if (furnitureDimensions.length === 0) return null;
+          const rightWallX = (spaceInfo.width * 0.01) / 2;
+          // 우벽에 가장 가까운 가구 = moduleRight가 가장 큰 가구
+          const sortedByRight = [...furnitureDimensions].sort((a, b) => b.moduleRight - a.moduleRight);
+          const rightmostDim = sortedByRight[0];
+          if (!rightmostDim) return null;
+
+          // 가장오른쪽가구 ~ 우벽 거리
+          const furnitureToWallMm = Math.round(Math.abs((rightWallX - rightmostDim.moduleRight) * 100));
+          if (furnitureToWallMm < 1) return null;
+
+          // 단내림 분절 여부: 단내림이 오른쪽이고, 가구가 메인 구간에 있으면 분절
+          const needsSplit = rightmostDim.hasStepDown && rightmostDim.stepDownPosition === 'right'
+            && rightmostDim.zoneLimitRight !== rightWallX; // zoneLimitRight가 벽이 아닌 경계인 경우
+
+          if (needsSplit) {
+            // 2구간: [가구 ~ 경계] + [경계 ~ 우벽]
+            const boundaryX = rightmostDim.zoneLimitRight; // 경계 (Three.js)
+            const furnitureToBoundaryMm = Math.round(Math.abs((boundaryX - rightmostDim.moduleRight) * 100));
+            const boundaryToWallMm = Math.round(Math.abs((rightWallX - boundaryX) * 100));
+
+            const seg1Left = rightmostDim.moduleRight;
+            const seg1Right = boundaryX;
+            const seg2Left = boundaryX;
+            const seg2Right = rightWallX;
+
+            return (
+              <group>
+                {/* 구간 1: 가구 ~ 경계 */}
+                {furnitureToBoundaryMm >= 1 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[seg1Left, slotDimensionY, 0.002], [seg1Right, slotDimensionY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg1Left, slotDimensionY, 0.002], [seg1Left + 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg1Right, slotDimensionY, 0.002], [seg1Right - 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {showDimensionsText && (
+                    <Html position={[(seg1Left + seg1Right) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                      center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+                      <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor,
+                        cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                        background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                        borderRadius: '3px' }}
+                        onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('right', rightmostDim.module.id, furnitureToBoundaryMm); }}>
+                        {furnitureToBoundaryMm}
+                      </div>
+                    </Html>
+                  )}
+                </>)}
+
+                {/* 구간 2: 경계 ~ 우벽 */}
+                {boundaryToWallMm >= 1 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[seg2Left, slotDimensionY, 0.002], [seg2Right, slotDimensionY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg2Left, slotDimensionY, 0.002], [seg2Left + 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([seg2Right, slotDimensionY, 0.002], [seg2Right - 0.02, slotDimensionY, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {showDimensionsText && (
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[(seg2Left + seg2Right) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >{boundaryToWallMm}</Text>
+                  )}
+                </>)}
+
+                {/* 연장선: 가구 우측 + 경계 + 우벽 */}
+                <NativeLine name="dimension_line"
+                  points={[[seg1Left, spaceHeight, 0.001], [seg1Left, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[seg1Right, spaceHeight, 0.001], [seg1Right, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[seg2Right, spaceHeight, 0.001], [seg2Right, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+              </group>
+            );
+          }
+
+          // 분절 불필요: 가구 ~ 우벽 1개 구간
+          const lineStart = rightmostDim.moduleRight;
+          const lineEnd = rightWallX;
+          return (
+            <group>
+              <NativeLine name="dimension_line"
+                points={[[lineStart, slotDimensionY, 0.002], [lineEnd, slotDimensionY, 0.002]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={createArrowHead([lineStart, slotDimensionY, 0.002], [lineStart + 0.02, slotDimensionY, 0.002])}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={createArrowHead([lineEnd, slotDimensionY, 0.002], [lineEnd - 0.02, slotDimensionY, 0.002])}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {showDimensionsText && (
+                <Html position={[(lineStart + lineEnd) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                  center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+                  <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor,
+                    cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                    background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                    borderRadius: '3px' }}
+                    onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('right', rightmostDim.module.id, furnitureToWallMm); }}>
+                    {furnitureToWallMm}
+                  </div>
+                </Html>
+              )}
+              <NativeLine name="dimension_line"
+                points={[[lineStart, spaceHeight, 0.001], [lineStart, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+              />
+              <NativeLine name="dimension_line"
+                points={[[lineEnd, spaceHeight, 0.001], [lineEnd, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+              />
+            </group>
+          );
+        }
+
+        // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
         // 오른쪽 벽이 있는지 확인
