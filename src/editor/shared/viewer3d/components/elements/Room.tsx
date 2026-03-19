@@ -3537,9 +3537,9 @@ const Room: React.FC<RoomProps> = ({
 
                 return (
                   <group key="curtain-box-finish">
-                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-front"
+                    <BoxWithEdges hideEdges={hideEdges || renderMode === 'solid'} isOuterFrame name="curtain-box-front"
                       args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-side"
+                    <BoxWithEdges hideEdges={hideEdges || renderMode === 'solid'} isOuterFrame name="curtain-box-side"
                       args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isCBHighlighted && (
                       <>
