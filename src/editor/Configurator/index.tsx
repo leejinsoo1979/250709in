@@ -5343,6 +5343,7 @@ const Configurator: React.FC = () => {
             currentProjectId={fileTreeSelectedProjectId || searchParams.get('projectId')}
             currentFolderId={fileTreeSelectedFolderId}
             activeMenu={fileTreeActiveMenu}
+            showProjectTree
             autoExpandProjectId={searchParams.get('projectId')}
             onNavigate={async (projectId, folderId, _label) => {
               if (projectId) {

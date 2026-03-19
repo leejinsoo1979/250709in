@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
-import { LuFileBox } from 'react-icons/lu';
 import { useAuth } from '@/auth/AuthProvider';
 import { loadFolderData, getDesignFiles } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
@@ -22,6 +21,7 @@ interface NavigationPaneProps {
   menuCounts?: Partial<Record<QuickAccessMenu, number>>;
   onItemContextMenu?: (e: React.MouseEvent, item: ExplorerItem) => void;
   onItemDoubleClick?: (item: ExplorerItem) => void;
+  showProjectTree?: boolean;
   autoExpandProjectId?: string | null;
   onGoHome?: () => void;
 }
@@ -38,6 +38,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   menuCounts,
   onItemContextMenu,
   onItemDoubleClick,
+  showProjectTree = false,
   autoExpandProjectId,
   onGoHome,
 }) => {
@@ -56,16 +57,12 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   const [designFileCounts, setDesignFileCounts] = useState<{ [projectId: string]: number }>({});
   // 폴더별 디자인 파일 수
   const [folderFileCounts, setFolderFileCounts] = useState<{ [folderId: string]: number }>({});
-  // 프로젝트별 디자인 파일 목록
-  const [projectDesignFiles, setProjectDesignFiles] = useState<{ [projectId: string]: any[] }>({});
-
   // 프로젝트별 디자인 파일 로드
   const loadDesignFileCount = useCallback(async (projectId: string) => {
     try {
       const { designFiles } = await getDesignFiles(projectId);
       const activeFiles = designFiles.filter((f: any) => !f.isDeleted);
       setDesignFileCounts(prev => ({ ...prev, [projectId]: activeFiles.length }));
-      setProjectDesignFiles(prev => ({ ...prev, [projectId]: activeFiles }));
       // 폴더별 파일 수 계산
       const folderCounts: { [folderId: string]: number } = {};
       activeFiles.forEach((f: any) => {
@@ -204,8 +201,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           ))}
         </div>
 
-        {/* 프로젝트 트리 */}
-        {filteredProjects.length > 0 && (
+        {/* 프로젝트 트리 (showProjectTree=true일 때만 표시) */}
+        {showProjectTree && filteredProjects.length > 0 && (
           <>
             <hr className={styles.divider} />
             <div className={styles.section}>
@@ -253,8 +250,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                       )}
                     </button>
 
-                    {/* 확장 시: 폴더 + 디자인 파일 표시 */}
-                    {isExpanded && (projectFolders.length > 0 || (projectDesignFiles[project.id] || []).length > 0) && (
+                    {/* 확장 시: 폴더까지만 표시 */}
+                    {isExpanded && projectFolders.length > 0 && (
                       <div className={styles.treeChildren}>
                         {projectFolders.map(folder => {
                           const isFolderSelected = currentProjectId === project.id && currentFolderId === folder.id;
@@ -288,44 +285,6 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                             </button>
                           );
                         })}
-                        {/* 루트 디자인 파일 (폴더에 속하지 않은 파일) */}
-                        {(projectDesignFiles[project.id] || [])
-                          .filter((df: any) => !df.folderId)
-                          .map((df: any) => (
-                            <button
-                              key={df.id}
-                              className={`${styles.treeItem} ${styles.treeItemNested}`}
-                              onClick={() => {
-                                if (onItemDoubleClick) {
-                                  onItemDoubleClick({
-                                    id: df.id,
-                                    name: df.name,
-                                    type: 'design',
-                                    projectId: project.id,
-                                    updatedAt: df.updatedAt,
-                                  });
-                                }
-                              }}
-                              onContextMenu={(e) => {
-                                if (onItemContextMenu) {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  onItemContextMenu(e, {
-                                    id: df.id,
-                                    name: df.name,
-                                    type: 'design',
-                                    projectId: project.id,
-                                    updatedAt: df.updatedAt,
-                                  });
-                                }
-                              }}
-                            >
-                              <LuFileBox size={14} />
-                              <span className={styles.treeLabel} title={df.name}>
-                                {df.name}
-                              </span>
-                            </button>
-                          ))}
                       </div>
                     )}
                   </div>

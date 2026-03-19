@@ -469,41 +469,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                                   </div>
                                 ))}
 
-                                {/* 루트 디자인 파일 (폴더에 속하지 않은 파일) */}
-                                {designFiles
-                                  .filter((df: any) => !df.isDeleted && !df.folderId)
-                                  .map((df: any) => (
-                                    <div
-                                      key={df.id}
-                                      className={styles.treeItem}
-                                      onClick={() => {
-                                        const item: ExplorerItem = {
-                                          id: df.id,
-                                          name: df.name,
-                                          type: 'design',
-                                          projectId: project.id,
-                                          updatedAt: df.updatedAt,
-                                        };
-                                        onItemDoubleClick(item);
-                                      }}
-                                      onContextMenu={(e) => {
-                                        e.stopPropagation();
-                                        const item: ExplorerItem = {
-                                          id: df.id,
-                                          name: df.name,
-                                          type: 'design',
-                                          projectId: project.id,
-                                          updatedAt: df.updatedAt,
-                                        };
-                                        onItemContextMenu(e, item);
-                                      }}
-                                    >
-                                      <div className={styles.treeItemIcon}>
-                                        <LuFileBox size={16} />
-                                      </div>
-                                      <span>{df.name}</span>
-                                    </div>
-                                  ))}
+                                {/* 디자인 파일은 트리에 표시하지 않음 (폴더까지만) */}
                               </div>
                             )}
                           </div>
