@@ -1029,7 +1029,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       // 천장바닥 기준: 섹션 분할 도어도 Y 위치 보정 필요
       if (effectiveInternalHeight) {
-        const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
+        // hasBase=false 시 FurnitureItem이 가구 높이에 받침대를 흡수하므로
+        // effectiveInternalHeight가 커짐 → heightDiff가 음수 → 도어가 잘못 이동
+        // 원래의 hasBase-independent 높이로 정규화
+        let stableHeight = effectiveInternalHeight;
+        if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
+          const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
+          const indivFloat = individualFloatHeightProp ?? 0;
+          stableHeight -= (hiddenBaseH - indivFloat);
+        }
+        const heightDiff = tallCabinetFurnitureHeight - stableHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
       }
     } else {
@@ -1047,7 +1056,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 천장바닥 기준: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
       // → 가구 중심과 공간 중심의 차이만큼 도어 Y 위치 보정
       if (effectiveInternalHeight) {
-        const heightDiff = tallCabinetFurnitureHeight - effectiveInternalHeight;
+        // hasBase=false 시 FurnitureItem이 가구 높이에 받침대를 흡수하므로
+        // effectiveInternalHeight가 커짐 → 정규화하여 보정
+        let stableHeight = effectiveInternalHeight;
+        if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
+          const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
+          const indivFloat = individualFloatHeightProp ?? 0;
+          stableHeight -= (hiddenBaseH - indivFloat);
+        }
+        const heightDiff = tallCabinetFurnitureHeight - stableHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
       }
 
