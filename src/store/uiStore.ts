@@ -297,7 +297,7 @@ const initialUIState = {
   individualDoorsOpen: {} as Record<string, boolean>,  // 개별 도어 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
-  showGuides: true, // 기본값: 그리드(가이드) 표시
+  showGuides: false, // 기본값: 그리드(가이드) 숨김
   showAxis: true, // 기본값: 축 표시
   showAll: true, // 기본값: 모든 가이드 표시
   dimensionOptionsBackup: null,
