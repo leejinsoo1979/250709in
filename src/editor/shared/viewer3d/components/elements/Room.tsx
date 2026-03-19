@@ -2682,6 +2682,8 @@ const Room: React.FC<RoomProps> = ({
           const upperH = stepDropH; // 단내림 천장 ~ 메인 천장
           const upperCY = sideFrameStartY + droppedH + upperH / 2;
 
+          // 커튼박스가 같은 쪽에 있어도 프레임 위치는 변하지 않음 (커튼박스는 별도 프레임)
+
           return (
             <>
               {/* 단내림 구간 프레임 (바닥 ~ 단내림 천장) */}
@@ -3026,6 +3028,8 @@ const Room: React.FC<RoomProps> = ({
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropHR; // 단내림 천장 ~ 메인 천장
           const upperCY = sideFrameStartY + droppedH + upperH / 2;
+
+          // 커튼박스가 같은 쪽에 있어도 프레임 위치는 변하지 않음 (커튼박스는 별도 프레임)
 
           return (
             <>
@@ -4303,8 +4307,15 @@ const Room: React.FC<RoomProps> = ({
             const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
             const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
 
-            // 왼쫝이 단내림 영역인 경우
+            // 왼쪽이 단내림(커튼박스) 영역인 경우
             if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
+              // 자유배치에서 커튼박스+stepCeiling 동시 활성 시, 서브프레임 생성 안 함
+              const hasLeftStepCeilingToo = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+              if (hasLeftStepCeilingToo) {
+                return null;
+              }
+
+              // 커튼박스만 (슬롯모드): 기존 로직
               const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               const droppedFrameHeight = droppedHeight - floatHeight;
               const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight / 2;
@@ -4469,23 +4480,17 @@ const Room: React.FC<RoomProps> = ({
             const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
 
             // 오른쪽이 단내림(커튼박스) 영역인 경우
-            // 자유배치에서 커튼박스+stepCeiling 동시 활성 시, stepCeiling 높이 기준 사용
             if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
+              // 자유배치에서 커튼박스+stepCeiling 동시 활성 시, 서브프레임 생성 안 함
               const hasRightStepCeilingToo = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
-              let subFrameH: number;
-              let subFrameCY: number;
-
               if (hasRightStepCeilingToo) {
-                // 커튼박스 + stepCeiling 동시: stepCeiling 높이 기준
-                const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
-                subFrameH = adjustedPanelHeight - stepDropH;
-                subFrameCY = sideFrameStartY + subFrameH / 2;
-              } else {
-                // 커튼박스만: 슬롯모드 기존 로직
-                const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-                subFrameH = droppedHeight - floatHeight;
-                subFrameCY = panelStartY + floatHeight + subFrameH / 2;
+                return null;
               }
+
+              // 커튼박스만 (슬롯모드): 기존 로직
+              const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
+              const subFrameH = droppedHeight - floatHeight;
+              const subFrameCY = panelStartY + floatHeight + subFrameH / 2;
 
               return (
                 <>
