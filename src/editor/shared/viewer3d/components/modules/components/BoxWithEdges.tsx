@@ -1,6 +1,5 @@
 import React from 'react';
 import * as THREE from 'three';
-import { useThree, useFrame } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
@@ -67,7 +66,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
-  const { gl } = useThree();
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -398,94 +396,68 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
   }, [position, args]);
 
-  // group ref로 실제 월드 좌표 추출
-  const groupRef = React.useRef<THREE.Group>(null);
-  const worldPosRef = React.useRef<THREE.Vector3>(new THREE.Vector3());
-  const [worldPos, setWorldPos] = React.useState<THREE.Vector3>(new THREE.Vector3());
-  const worldPosInitialized = React.useRef(false);
-
-  // useFrame: 첫 프레임에서 월드 좌표 확정 (부모 group 매트릭스 반영 후)
-  useFrame(() => {
-    if (groupRef.current && !worldPosInitialized.current) {
-      const wp = new THREE.Vector3();
-      groupRef.current.getWorldPosition(wp);
-      if (!wp.equals(worldPosRef.current)) {
-        worldPosRef.current.copy(wp);
-        setWorldPos(wp.clone());
-      }
-      worldPosInitialized.current = true;
-    }
-  });
-
-  // position 변경 시 재계산 트리거
-  React.useEffect(() => {
-    worldPosInitialized.current = false;
-  }, [position[0], position[1], position[2]]);
-
-  // 2D 모드 깊이 기반 edge opacity 계산
-  // 실제 월드 좌표 기준으로 깊이 산출 → 패널 간 원근 차이 반영
-  const getDepthOpacity = React.useCallback((p1: [number, number, number], p2: [number, number, number]): number => {
-    if (viewMode !== '2D' || isHighlighted || isClothingRod) return 1;
+  // 2D 모드: panelName 기반 깊이 등급 → opacity 매핑
+  // 가장 앞(마이다, 측판 등) = 1.0, 서랍 내부 = 0.4, 백패널 = 0.1
+  const panelDepthOpacity = React.useMemo((): number => {
+    if (viewMode !== '2D') return 1;
+    if (isHighlighted || isClothingRod) return 1;
     if (edgeOpacity !== undefined) return edgeOpacity;
     if (isBackPanel && view2DDirection === 'front') return 0.1;
+    if (!panelName) return 1;
 
-    // 로컬 좌표의 중간점 + 월드 위치 = 실제 월드 깊이
-    let depthVal: number;
+    // 정면 뷰 기준 깊이 등급
     if (view2DDirection === 'front') {
-      depthVal = (p1[2] + p2[2]) / 2 + worldPos.z;
-      // DEBUG: 패널별 월드 Z 확인
-      if (panelName && (panelName.includes('마이다') || panelName.includes('앞판') || panelName.includes('뒷판') || panelName.includes('좌측판'))) {
-        console.log(`🔍 depth opacity [${panelName}] worldZ=${worldPos.z.toFixed(3)} localEdgeZ=${((p1[2]+p2[2])/2).toFixed(3)} depthVal=${depthVal.toFixed(3)}`);
-      }
-    } else if (view2DDirection === 'left') {
-      depthVal = -((p1[0] + p2[0]) / 2 + worldPos.x);
-    } else if (view2DDirection === 'right') {
-      depthVal = (p1[0] + p2[0]) / 2 + worldPos.x;
-    } else if (view2DDirection === 'top') {
-      depthVal = (p1[1] + p2[1]) / 2 + worldPos.y;
-    } else {
-      return 1;
+      // 가장 앞 (opacity 1.0): 마이다, 가구 측판, 상판, 바닥판, 선반
+      if (panelName.includes('마이다')) return 1.0;
+      if (panelName.includes('측판') || panelName.includes('좌측판') || panelName.includes('우측판')) return 1.0;
+      if (panelName.includes('상판') || panelName.includes('바닥') || panelName.includes('선반')) return 1.0;
+      // 서랍속장 프레임 (opacity 0.5)
+      if (panelName.includes('서랍속장')) return 0.5;
+      // 서랍 내부 패널 (opacity 0.35): 앞판, 측판, 뒷판, 바닥
+      if (panelName.includes('서랍')) return 0.35;
+      return 1.0;
     }
 
-    // 월드 좌표 기반: depthVal = 로컬 edge 중간점 + 월드 위치
-    // 가구 깊이 약 580mm = 5.8 Three units → 범위 ±3.5 정도
-    const approxRange = 5.0;
-    const normalized = (depthVal + approxRange) / (2 * approxRange);
-    const clamped = Math.max(0, Math.min(1, normalized));
-    // 앞(1.0) → opacity 1.0, 뒤(0.0) → opacity 0.25
-    return 0.25 + clamped * 0.75;
-  }, [viewMode, view2DDirection, worldPos, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+    // 측면 뷰 기준 깊이 등급
+    if (view2DDirection === 'left' || view2DDirection === 'right') {
+      if (panelName.includes('마이다')) return 1.0;
+      if (panelName.includes('서랍속장')) return 0.5;
+      if (panelName.includes('서랍')) return 0.35;
+      return 1.0;
+    }
 
-  // 2D 모드에서 개별 라인 렌더링 (깊이별 opacity 적용)
+    return 1;
+  }, [viewMode, view2DDirection, panelName, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+
+  // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
     const [width, height, depth] = args;
     const halfW = width / 2;
     const halfH = height / 2;
     const halfD = depth / 2;
 
-    type EdgeLine = { points: [number, number, number][]; };
-    const lines: EdgeLine[] = [];
+    const lines: [number, number, number][][] = [];
 
     // 앞면 사각형
-    if (!hideTopEdge) lines.push({ points: [[-halfW, halfH, halfD], [halfW, halfH, halfD]] });
-    if (!hideBottomEdge) lines.push({ points: [[-halfW, -halfH, halfD], [halfW, -halfH, halfD]] });
-    lines.push({ points: [[-halfW, -halfH, halfD], [-halfW, halfH, halfD]] });
-    lines.push({ points: [[halfW, -halfH, halfD], [halfW, halfH, halfD]] });
+    if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]);
+    if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]);
+    lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]);
+    lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]);
 
     // 뒷면 사각형
-    if (!hideTopEdge) lines.push({ points: [[-halfW, halfH, -halfD], [halfW, halfH, -halfD]] });
-    if (!hideBottomEdge) lines.push({ points: [[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]] });
-    lines.push({ points: [[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]] });
-    lines.push({ points: [[halfW, -halfH, -halfD], [halfW, halfH, -halfD]] });
+    if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]);
+    if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]);
+    lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]);
+    lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]);
 
     // 연결 엣지
     if (!hideTopEdge) {
-      lines.push({ points: [[-halfW, halfH, halfD], [-halfW, halfH, -halfD]] });
-      lines.push({ points: [[halfW, halfH, halfD], [halfW, halfH, -halfD]] });
+      lines.push([[-halfW, halfH, halfD], [-halfW, halfH, -halfD]]);
+      lines.push([[halfW, halfH, halfD], [halfW, halfH, -halfD]]);
     }
     if (!hideBottomEdge) {
-      lines.push({ points: [[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]] });
-      lines.push({ points: [[halfW, -halfH, halfD], [halfW, -halfH, -halfD]] });
+      lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]);
+      lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]);
     }
 
     const edgeName = isClothingRod
@@ -498,35 +470,32 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     return (
       <>
-        {lines.map((line, i) => {
-          const opacity = getDepthOpacity(line.points[0] as [number, number, number], line.points[1] as [number, number, number]);
-          return (
-            <line key={i} name={`${edgeName}-${i}`}>
-              <bufferGeometry>
-                <bufferAttribute
-                  attach="attributes-position"
-                  count={2}
-                  array={new Float32Array([...line.points[0], ...line.points[1]])}
-                  itemSize={3}
-                />
-              </bufferGeometry>
-              <lineBasicMaterial
-                color={edgeColor}
-                transparent={true}
-                opacity={opacity}
-                depthTest={false}
-                depthWrite={false}
-                linewidth={baseLineWidth}
+        {lines.map((line, i) => (
+          <line key={i} name={`${edgeName}-${i}`}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([...line[0], ...line[1]])}
+                itemSize={3}
               />
-            </line>
-          );
-        })}
+            </bufferGeometry>
+            <lineBasicMaterial
+              color={edgeColor}
+              transparent={true}
+              opacity={panelDepthOpacity}
+              depthTest={false}
+              depthWrite={false}
+              linewidth={baseLineWidth}
+            />
+          </line>
+        ))}
       </>
     );
-  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, getDepthOpacity]);
+  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity]);
 
   return (
-    <group ref={groupRef} position={position}>
+    <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
