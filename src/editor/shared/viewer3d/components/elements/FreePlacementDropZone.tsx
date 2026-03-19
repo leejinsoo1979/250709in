@@ -1266,15 +1266,24 @@ const FreePlacementDropZone: React.FC = () => {
       const mod = placedModules.find(m => m.id === movingModuleId);
       if (mod && zonePlacementBounds.length > 1) {
         const currentXmm = mod.position.x * 100;
-        const currentZone = detectHoverZoneType(currentXmm, spaceInfo);
-        // 단내림/커튼박스 구간으로 이동한 경우 → 구간 잔여 크기에 꽉 차게 자동 리사이즈
-        if (currentZone !== 'main') {
-          const zoneInfo = zonePlacementBounds.find(z => z.zone === currentZone);
+        const widthMm = mod.freeWidth || mod.moduleWidth || 450;
+        const halfW = widthMm / 2;
+        // 가구의 양 끝이 모두 해당 구간 안에 있을 때만 자동 리사이즈
+        // (가구 중심만으로 판별하면 경계 근처에서 오판)
+        const leftEdge = currentXmm - halfW;
+        const rightEdge = currentXmm + halfW;
+        const leftZone = detectHoverZoneType(leftEdge, spaceInfo);
+        const rightZone = detectHoverZoneType(rightEdge, spaceInfo);
+        const centerZone = detectHoverZoneType(currentXmm, spaceInfo);
+        // 가구 전체(양 끝 + 중심)가 동일 비-메인 구간에 있어야 리사이즈
+        const targetZone = (leftZone === rightZone && rightZone === centerZone && centerZone !== 'main')
+          ? centerZone : null;
+
+        if (targetZone) {
+          const zoneInfo = zonePlacementBounds.find(z => z.zone === targetZone);
           if (zoneInfo) {
-            // 자기 자신을 제외한 해당 구간 잔여 너비
             const remaining = getZoneRemainingWidth(zoneInfo, freeModules, mod.id);
             if (remaining >= 200) {
-              // 잔여 너비에 꽉 차게 (이격 없이)
               const optimalWidth = Math.round(remaining);
 
               // 구간 내 빈 공간 찾기 → 거기에 정렬
@@ -1288,7 +1297,6 @@ const FreePlacementDropZone: React.FC = () => {
               }
               occupiedRanges.sort((a, b) => a.left - b.left);
 
-              // 빈 공간의 시작점 찾기
               let freeStart = zoneInfo.placementStartXmm;
               for (const range of occupiedRanges) {
                 if (range.left > freeStart + 1) break;
