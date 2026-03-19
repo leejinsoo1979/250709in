@@ -16,6 +16,7 @@ import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { calculateFrameThickness, calculateInternalSpace, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
+import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -599,7 +600,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const clamped = Math.max(100, Math.min(3000, Math.round(value)));
     const module = placedModules.find(m => m.id === editingFurnitureWidthId);
     if (module) {
-      updatePlacedModule(editingFurnitureWidthId, { freeWidth: clamped });
+      const freshSI = useSpaceConfigStore.getState().spaceInfo;
+      const newX = module.isFreePlacement
+        ? calcResizedPositionX(module, clamped, placedModules, freshSI)
+        : module.position.x;
+      updatePlacedModule(editingFurnitureWidthId, {
+        freeWidth: clamped,
+        moduleWidth: clamped,
+        position: { ...module.position, x: newX },
+      });
       // 마지막 치수 기억 → 다음 추가 배치 시 이 너비로 배치
       const height = module.freeHeight ?? module.customConfig?.totalHeight ?? 2400;
       const depth = module.freeDepth ?? 600;
