@@ -1050,6 +1050,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const heightDiff = tallCabinetFurnitureHeight - stableHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
       }
+
+      // hasBase=false 시 가구 그룹 Y가 받침대/2만큼 내려가므로 도어를 그만큼 올려서 보정
+      if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
+        const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
+        const indivFloat = individualFloatHeightProp ?? 0;
+        doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
+      }
     } else {
       // 병합 모드: 천장/바닥 기준
       // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
@@ -1075,6 +1082,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         }
         const heightDiff = tallCabinetFurnitureHeight - stableHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
+      }
+
+      // hasBase=false 시 가구 그룹 Y가 받침대/2만큼 내려가므로 도어를 그만큼 올려서 보정
+      if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
+        const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
+        const indivFloat = individualFloatHeightProp ?? 0;
+        doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
       }
 
 // console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
