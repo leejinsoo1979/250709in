@@ -3868,8 +3868,7 @@ const Configurator: React.FC = () => {
           />
         )}
 
-        {/* 프레임 설정 (슬롯배치 모드만) */}
-        {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (
+        {/* 프레임 설정 (슬롯/자유배치 공통) */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -3877,8 +3876,8 @@ const Configurator: React.FC = () => {
             <HelpBtn title="프레임 설정" text="가구 외곽을 감싸는 프레임 방식을 선택합니다. 전체서라운드: 상하좌우 모두 프레임으로 마감. 양쪽서라운드: 좌우와 상단만 프레임 적용. 노서라운드: 프레임 없이 가구만 배치하며, 빌트인 시 벽면에 직접 밀착됩니다. 프레임 타입에 따라 가구의 실제 사용 가능 공간이 달라집니다." />
           </div>
 
-          {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 (슬롯배치 모드만) */}
-          {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && (() => {
+          {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 */}
+          {(() => {
             const currentFrameConfig = inferFrameConfig(spaceInfo);
             const st = spaceInfo.surroundType || 'surround';
             const mode = st === 'no-surround' ? 'no-surround'
@@ -3936,8 +3935,8 @@ const Configurator: React.FC = () => {
             );
           })()}
 
-          {/* 프레임 속성 설정 (슬롯배치 모드만) */}
-          {(spaceInfo.layoutMode || 'equal-division') !== 'free-placement' && ((spaceInfo.surroundType || 'surround') === 'surround' ? (
+          {/* 프레임 속성 설정 */}
+          {(spaceInfo.surroundType || 'surround') === 'surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
                 {/* 좌측: 좌단내림 시 이격거리, 그 외 프레임 */}
@@ -4331,7 +4330,7 @@ const Configurator: React.FC = () => {
               </div>
 
             </div>
-          ) : null)}
+          ) : null}
 
           {/* 단내림 프레임 설정 (단내림 활성화 시) */}
           {spaceInfo.droppedCeiling?.enabled && (
@@ -4545,7 +4544,6 @@ const Configurator: React.FC = () => {
           )}
 
         </div>
-        )}
 
         {/* 서라운드 섹션 — freeSurround 존재 시 항상 표시 */}
         {isFreeMode && (() => {
@@ -4653,31 +4651,6 @@ const Configurator: React.FC = () => {
                 <h3 className={styles.sectionTitle}>좌,우 서라운드</h3>
                 <HelpBtn title="서라운드" text="서라운드 프레임의 상·하·좌·우 각 면의 두께를 개별 설정합니다. 벽면과 가구 사이의 마감재 역할을 하며, 값이 클수록 가구 배치 가능 공간이 줄어듭니다. 옵셋 기준을 '외경'으로 하면 전체 공간 기준, '내경'으로 하면 가구 기준으로 계산됩니다." />
               </div>
-              {/* 서라운드 옵셋 기준 선택 */}
-              <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
-                <button
-                  style={{
-                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                    background: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
-                    color: (spaceInfo.surroundOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
-                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'furniture' })}
-                >
-                  상하프레임 가림
-                </button>
-                <button
-                  style={{
-                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                    background: spaceInfo.surroundOffsetBase === 'door' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
-                    color: spaceInfo.surroundOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
-                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                  onClick={() => setSpaceInfo({ surroundOffsetBase: 'door' })}
-                >
-                  상하프레임 노출
-                </button>
-              </div>
               <div className={styles.subSetting}>
                 {surroundItems.map((si) => {
                   if (si.kind === 'left') {
@@ -4743,71 +4716,7 @@ const Configurator: React.FC = () => {
                 <HelpBtn title="상,하부프레임" text="상부프레임: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 하부프레임(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
                 <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
-              {!isFrameSectionCollapsed && <><div style={{ display: 'flex', gap: '4px', marginBottom: '8px', padding: '0 4px' }}>
-                <button
-                  style={{
-                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                    background: (spaceInfo.frameOffsetBase || 'furniture') === 'furniture' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
-                    color: (spaceInfo.frameOffsetBase || 'furniture') === 'furniture' ? '#fff' : 'var(--theme-text-secondary)',
-                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                  onClick={() => {
-                    // 상하프레임 가림: 천장/바닥 이격만 → 상단갭 1.5, 하단갭 = 받침대높이 or 띄움높이
-                    const isFloat = spaceInfo.baseConfig?.placementType === 'float';
-                    const floatH = spaceInfo.baseConfig?.floatHeight || 200;
-                    const spaceFitBottom = isFloat ? floatH : 25;
-
-                    setSpaceInfo({ frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
-                    // non-callback set으로 R3F 리렌더 보장
-                    const newMods = useFurnitureStore.getState().placedModules.map(m =>
-                      m.hasDoor ? { ...m, doorTopGap: 1.5, doorBottomGap: spaceFitBottom } : m
-                    );
-                    useFurnitureStore.setState({ placedModules: newMods });
-                    setTimeout(() => {
-                      useFurnitureStore.setState({ placedModules: [...newMods] });
-                    }, 50);
-                  }}
-                >
-                  상하프레임 가림
-                </button>
-                <button
-                  style={{
-                    flex: 1, padding: '5px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                    background: spaceInfo.frameOffsetBase === 'door' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-background)',
-                    color: spaceInfo.frameOffsetBase === 'door' ? '#fff' : 'var(--theme-text-secondary)',
-                    fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                  onClick={() => {
-                    // 상하프레임 노출: 프레임 포함 → 상단갭 = 상부프레임 + 1.5, 하단갭 = 하부프레임 + 1.5
-                    const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-                    const isStandFloatL = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-                    const floatHL = isStandFloatL ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-                    const internalHL = calculateInternalSpace(spaceInfo).height;
-                    const baseFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-
-                    setSpaceInfo({ frameOffsetBase: 'door' });
-                    // non-callback set으로 R3F 리렌더 보장
-                    const doorMods = useFurnitureStore.getState().placedModules.map(m => {
-                      if (!m.hasDoor) return m;
-                      const rawFreeH = m.freeHeight || internalHL;
-                      const maxFreeH = internalHL - floatHL;
-                      const modHeight = Math.min(rawFreeH, maxFreeH);
-                      const topFrameSize = Math.max(0, spaceInfo.height - baseH - floatHL - modHeight);
-                      return {
-                        ...m,
-                        doorTopGap: topFrameSize + 1.5,
-                        doorBottomGap: baseFrameH + 1.5,
-                      };
-                    });
-                    useFurnitureStore.setState({ placedModules: doorMods });
-                    setTimeout(() => {
-                      useFurnitureStore.setState({ placedModules: [...doorMods] });
-                    }, 50);
-                  }}
-                >
-                  상하프레임 노출
-                </button>
-              </div>
+              {!isFrameSectionCollapsed && <>
               <div className={styles.subSetting}>
                 {/* 상부프레임 먼저 */}
                 {sorted.map((mod) => {
