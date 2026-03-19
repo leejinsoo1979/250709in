@@ -25,11 +25,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       
       const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
       const newIndexing = calculateSpaceIndexing(newSpaceInfo);
-      
-      // 컬럼 변경이 있을 때만 로그 출력
-      if (oldIndexing.columnCount !== newIndexing.columnCount || oldIndexing.columnWidth !== newIndexing.columnWidth) {
-      }
-      
+
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {

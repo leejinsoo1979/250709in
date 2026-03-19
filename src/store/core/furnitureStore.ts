@@ -88,8 +88,12 @@ interface FurnitureDataState {
 // R3F ConcurrentRoot + Zustand v5 호환성 workaround 헬퍼
 // (아래 store 생성 후 storeRef에 할당됨)
 let storeRef: typeof useFurnitureStore | null = null;
+let notifyR3FTimer: ReturnType<typeof setTimeout> | null = null;
 const notifyR3F = (modules: PlacedModule[]) => {
-  setTimeout(() => {
+  // 이전 타이머를 취소하여 최신 상태만 R3F에 전달 (race condition 방지)
+  if (notifyR3FTimer) clearTimeout(notifyR3FTimer);
+  notifyR3FTimer = setTimeout(() => {
+    notifyR3FTimer = null;
     storeRef?.setState({ placedModules: [...modules] });
   }, 50);
 };
@@ -445,9 +449,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 가구 목록 직접 설정 함수 (함수형 업데이트 지원)
   setPlacedModules: (modules: PlacedModule[] | ((prev: PlacedModule[]) => PlacedModule[])) => {
-    set((state) => ({
-      placedModules: typeof modules === 'function' ? modules(state.placedModules) : modules
-    }));
+    const state = get();
+    const newModules = typeof modules === 'function' ? modules(state.placedModules) : modules;
+    set({ placedModules: newModules });
+    notifyR3F(newModules);
   },
 
   // 선택 상태 액션들 (FurnitureSelectionProvider와 완전히 동일한 로직)
