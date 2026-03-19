@@ -40,7 +40,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   panelGrainDirections,
   backPanelThickness,
   renderMode: renderModeProp,
-  zone // 단내림 영역 정보
+  zone, // 단내림 영역 정보
+  hasBase
 }) => {
   console.log('🏠 [LowerCabinet] Props 확인:', {
     moduleId: moduleData.id,
@@ -225,6 +226,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
           zone={zone}
+          hasBase={hasBase}
         />
       )}
 
