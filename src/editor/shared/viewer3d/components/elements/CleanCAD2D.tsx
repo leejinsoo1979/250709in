@@ -4403,7 +4403,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })}
 
       {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) */}
-      {isFreePlacement && showDimensions && hasStepDown && (() => {
+      {isFreePlacement && showDimensions && (spaceInfo.stepCeiling?.enabled) && (() => {
         // 각 구간(메인/단내림)에 가구가 있는지 확인
         const stepDownWidthMm = isFreePlacement
           ? (spaceInfo.stepCeiling?.width || 0)
