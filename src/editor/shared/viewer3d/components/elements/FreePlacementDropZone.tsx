@@ -395,6 +395,8 @@ const FreePlacementDropZone: React.FC = () => {
 
   // 스냅 거리 (mm) - 이 거리 이내이면 가구/벽에 붙음
   const SNAP_DISTANCE_MM = 30;
+  // 구간 경계(단내림/커튼박스) 스냅 거리 — 더 강한 자석 효과
+  const ZONE_SNAP_DISTANCE_MM = 60;
 
   // 충돌 체크 + hover 상태 업데이트 (스냅 포함)
   const updateHoverState = useCallback((xMm: number, widthMm: number, category: string) => {
@@ -449,18 +451,32 @@ const FreePlacementDropZone: React.FC = () => {
       snapPoints.push(b.right + halfWidth); // 가구 오른쪽에 붙기
       snapPoints.push(b.left - halfWidth);  // 가구 왼쪽에 붙기
     }
-    // 구간 경계 스냅 (단내림/커튼박스 경계)
+    // 구간 경계 스냅 (단내림/커튼박스 경계) — 더 강한 자석 효과 별도 처리
+    const zoneSnapPoints: number[] = [];
     for (const zb of zonePlacementBounds) {
-      snapPoints.push(zb.placementStartXmm + halfWidth);  // 구간 시작에 가구 왼쪽 맞춤
-      snapPoints.push(zb.placementStartXmm - halfWidth);  // 구간 시작에 가구 오른쪽 맞춤
-      snapPoints.push(zb.placementEndXmm + halfWidth);    // 구간 끝에 가구 왼쪽 맞춤
-      snapPoints.push(zb.placementEndXmm - halfWidth);    // 구간 끝에 가구 오른쪽 맞춤
+      zoneSnapPoints.push(zb.placementStartXmm + halfWidth);  // 구간 시작에 가구 왼쪽 맞춤
+      zoneSnapPoints.push(zb.placementStartXmm - halfWidth);  // 구간 시작에 가구 오른쪽 맞춤
+      zoneSnapPoints.push(zb.placementEndXmm + halfWidth);    // 구간 끝에 가구 왼쪽 맞춤
+      zoneSnapPoints.push(zb.placementEndXmm - halfWidth);    // 구간 끝에 가구 오른쪽 맞춤
     }
 
-    // 가장 가까운 스냅 포인트 찾기
+    // 가장 가까운 스냅 포인트 찾기 (구간 경계는 더 넓은 범위로 스냅)
     let snapped = false;
     let bestSnap = clampedX;
-    let bestDist = SNAP_DISTANCE_MM + 1;
+    let bestDist = ZONE_SNAP_DISTANCE_MM + 1;
+    // 구간 경계 스냅 (강한 자석) 먼저 체크
+    for (const sp of zoneSnapPoints) {
+      const dist = Math.abs(clampedX - sp);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestSnap = sp;
+      }
+    }
+    if (bestDist <= ZONE_SNAP_DISTANCE_MM) {
+      clampedX = bestSnap;
+      snapped = true;
+    }
+    // 일반 스냅 (벽/가구) — 구간 경계보다 더 가까우면 우선
     for (const sp of snapPoints) {
       const dist = Math.abs(clampedX - sp);
       if (dist < bestDist) {
@@ -471,6 +487,33 @@ const FreePlacementDropZone: React.FC = () => {
     if (bestDist <= SNAP_DISTANCE_MM) {
       clampedX = bestSnap;
       snapped = true;
+    }
+
+    // DEBUG: 구간 경계 스냅 디버깅
+    if (zonePlacementBounds.length > 1) {
+      const zoneSnaps = zonePlacementBounds.map(zb => ({
+        zone: zb.zone,
+        start: zb.placementStartXmm,
+        end: zb.placementEndXmm,
+        snapStart_L: Math.round(zb.placementStartXmm + halfWidth),
+        snapStart_R: Math.round(zb.placementStartXmm - halfWidth),
+        snapEnd_L: Math.round(zb.placementEndXmm + halfWidth),
+        snapEnd_R: Math.round(zb.placementEndXmm - halfWidth),
+      }));
+      console.log('[SNAP DEBUG updateHover]', {
+        clampedX: Math.round(clampedX),
+        bestDist: Math.round(bestDist),
+        snapped,
+        halfWidth,
+        effectiveStartX: Math.round(effectiveStartX),
+        effectiveEndX: Math.round(effectiveEndX),
+        spaceBoundsStartX: Math.round(startX),
+        spaceBoundsEndX: Math.round(endX),
+        zoneSnaps,
+        allSnapPoints: snapPoints.map(s => Math.round(s)),
+        zoneSnapPoints: zoneSnapPoints.map(s => Math.round(s)),
+        ZONE_SNAP_DISTANCE_MM,
+      });
     }
 
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
@@ -1085,24 +1128,50 @@ const FreePlacementDropZone: React.FC = () => {
         snapPoints.push(b.right + halfWidth);
         snapPoints.push(b.left - halfWidth);
       }
-      // 구간 경계 스냅 (단내림/커튼박스 경계)
+      // 구간 경계 스냅 (단내림/커튼박스 경계) — 더 강한 자석 효과 별도 처리
+      const zoneSnapPoints: number[] = [];
       for (const zb of zonePlacementBounds) {
-        snapPoints.push(zb.placementStartXmm + halfWidth);
-        snapPoints.push(zb.placementStartXmm - halfWidth);
-        snapPoints.push(zb.placementEndXmm + halfWidth);
-        snapPoints.push(zb.placementEndXmm - halfWidth);
+        zoneSnapPoints.push(zb.placementStartXmm + halfWidth);
+        zoneSnapPoints.push(zb.placementStartXmm - halfWidth);
+        zoneSnapPoints.push(zb.placementEndXmm + halfWidth);
+        zoneSnapPoints.push(zb.placementEndXmm - halfWidth);
       }
 
       let bestSnap = clampedX;
-      let bestDist = SNAP_DISTANCE_MM + 1;
+      let bestDist = ZONE_SNAP_DISTANCE_MM + 1;
+      // 구간 경계 스냅 (강한 자석) 먼저 체크
+      for (const sp of zoneSnapPoints) {
+        const dist = Math.abs(clampedX - sp);
+        if (dist < bestDist) { bestDist = dist; bestSnap = sp; }
+      }
+      if (bestDist <= ZONE_SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
+      // 일반 스냅 (벽/가구) — 구간 경계보다 더 가까우면 우선
       for (const sp of snapPoints) {
         const dist = Math.abs(clampedX - sp);
         if (dist < bestDist) { bestDist = dist; bestSnap = sp; }
       }
       if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
+
+      // DEBUG: 구간 경계 스냅 디버깅 (calcMovedPosition)
+      if (zonePlacementBounds.length > 1) {
+        console.log('[SNAP DEBUG calcMoved]', {
+          clampedX: Math.round(clampedX),
+          bestDist: Math.round(bestDist),
+          snapped,
+          halfWidth,
+          zoneSnaps: zonePlacementBounds.map(zb => ({
+            zone: zb.zone, start: Math.round(zb.placementStartXmm), end: Math.round(zb.placementEndXmm),
+          })),
+          allSnapPoints: snapPoints.map(s => Math.round(s)),
+        });
+      }
     }
 
+    const preClamp = clampedX;
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
+    if (snapped && Math.abs(preClamp - clampedX) > 0.5) {
+      console.warn('[SNAP WARN] clampToSpaceBoundsX overrode snap!', { preClamp: Math.round(preClamp), postClamp: Math.round(clampedX) });
+    }
 
     // 충돌 체크 (자기 자신 제외)
     // 스냅 성공 시 충돌 무시 (스냅 = 기존 가구/벽 가장자리에 밀착 → 의도된 배치)
