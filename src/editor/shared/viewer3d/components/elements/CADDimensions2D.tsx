@@ -255,37 +255,69 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const leftDimOffset = mmToThreeUnits(400);
   const rightDimOffset = mmToThreeUnits(400);
 
-  // 측면뷰에서 표시할 가구 필터링
+  // 측면뷰에서 표시할 가구 필터링 (PlacedFurnitureContainer.tsx와 동일한 로직)
   const getVisibleFurnitureForSideView = () => {
     if (placedModules.length === 0) return [];
 
     const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
     if (nonSurroundModules.length === 0) return [];
 
-    // 선택된 슬롯의 가구 필터링 (자유배치/슬롯 공통 로직)
     let filteredBySlot = nonSurroundModules;
 
     if (selectedSlotIndex !== null) {
-      // X좌표 순 정렬 후 가상 슬롯 그룹핑 (자유배치/슬롯 공통)
-      const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+      if (isFreePlacementMode) {
+        // 자유배치 모드: X좌표 기반 가상 슬롯 그룹핑
+        const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+        const xGroups: number[][] = [];
+        let lastX: number | null = null;
+        sortedByX.forEach((m, idx) => {
+          const mx = m.position?.x ?? 0;
+          if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+            xGroups.push([idx]);
+            lastX = mx;
+          } else {
+            xGroups[xGroups.length - 1].push(idx);
+          }
+        });
 
-      const xGroups: number[][] = [];
-      let lastX: number | null = null;
-      sortedByX.forEach((m, idx) => {
-        const mx = m.position?.x ?? 0;
-        if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-          xGroups.push([idx]);
-          lastX = mx;
-        } else {
-          xGroups[xGroups.length - 1].push(idx);
+        if (selectedSlotIndex < xGroups.length) {
+          const selectedIds = new Set(
+            xGroups[selectedSlotIndex].map(idx => sortedByX[idx].id)
+          );
+          filteredBySlot = nonSurroundModules.filter(m => selectedIds.has(m.id));
         }
-      });
+      } else {
+        // 슬롯 기반 배치: slotIndex로 직접 필터링 (PlacedFurnitureContainer와 동일)
+        const hasDropCeiling = spaceInfo.droppedCeiling?.enabled || false;
+        const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
 
-      if (selectedSlotIndex < xGroups.length) {
-        const selectedIds = new Set(
-          xGroups[selectedSlotIndex].map(idx => sortedByX[idx].id)
-        );
-        filteredBySlot = nonSurroundModules.filter(m => selectedIds.has(m.id));
+        filteredBySlot = nonSurroundModules.filter(module => {
+          if (module.slotIndex === undefined) return false;
+
+          let moduleGlobalSlotIndex = module.slotIndex;
+          let isInDroppedZone = module.zone === 'dropped';
+
+          if (hasDropCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
+            const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+            const moduleXMm = module.position.x * 100;
+            const normalWidth = zones.normal.width;
+            const droppedWidth = zones.dropped.width;
+
+            if (droppedPosition === 'left') {
+              isInDroppedZone = moduleXMm < droppedWidth;
+            } else {
+              isInDroppedZone = moduleXMm >= normalWidth;
+            }
+          }
+
+          if (hasDropCeiling && isInDroppedZone) {
+            moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
+          }
+
+          return module.isDualSlot
+            ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
+            : (moduleGlobalSlotIndex === selectedSlotIndex);
+        });
       }
     }
 
