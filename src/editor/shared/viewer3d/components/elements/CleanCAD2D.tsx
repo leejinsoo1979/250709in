@@ -827,8 +827,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             hasCustomDepth: false,
             moduleX: mX,
             moduleY: spaceHeight / 2,
-            moduleLeft: mX - fbW / 2,
-            moduleRight: mX + fbW / 2,
+            moduleLeft: mX - (fbW * 0.01) / 2,
+            moduleRight: mX + (fbW * 0.01) / 2,
             nearestLeftDistance: 0,
             nearestRightDistance: 0,
             leftBoundaryDistance: 0,
@@ -881,9 +881,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const moduleX = actualPositionX;
       const moduleY = spaceHeight / 2;
       
-      // 모듈 왼쪽 및 오른쪽 끝 계산
-      const moduleLeft = moduleX - actualWidth / 2;
-      const moduleRight = moduleX + actualWidth / 2;
+      // 모듈 왼쪽 및 오른쪽 끝 계산 (Three.js 단위)
+      const actualWidthThree = actualWidth * 0.01; // mm → Three.js
+      const moduleLeft = moduleX - actualWidthThree / 2;
+      const moduleRight = moduleX + actualWidthThree / 2;
       
       // 단내림 구간 영역 계산
       const stepDownStartX = stepDownPosition === 'left' 
@@ -964,11 +965,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         for (const otherModule of placedModules) {
           if (otherModule.id === module.id) continue;
-          const otherW = (otherModule.isFreePlacement && otherModule.freeWidth)
+          // otherW: mm 단위 → Three.js 단위로 변환 (position.xはThree.js単位)
+          const otherWmm = (otherModule.isFreePlacement && otherModule.freeWidth)
             ? otherModule.freeWidth
             : (otherModule.customWidth || otherModule.adjustedWidth || otherModule.moduleWidth || 0);
-          const otherLeft = otherModule.position.x - otherW / 2;
-          const otherRight = otherModule.position.x + otherW / 2;
+          const otherWThree = otherWmm * 0.01; // mm → Three.js
+          const otherLeft = otherModule.position.x - otherWThree / 2;
+          const otherRight = otherModule.position.x + otherWThree / 2;
 
           // 왼쪽에 있는 가구 중 가장 가까운 것
           if (otherRight <= moduleLeft + 0.001 && otherRight > leftEdge) {
