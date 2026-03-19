@@ -1310,7 +1310,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   // 2D 정면뷰: 도어 반투명 면 overlay 정보 (기존 도어 렌더링에 추가)
-  const showDoorOverlay = viewMode === '2D' && view2DDirection === 'front';
+  const showDoorOverlay = viewMode === '2D' && view2DDirection === 'front' && !isDoorOpen;
   const doorOverlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
 
   if (isDualFurniture) {
