@@ -3288,7 +3288,10 @@ const Room: React.FC<RoomProps> = ({
                 // 서라운드 높이 = 가구 배치공간 높이
                 // 바닥배치: 전체높이 - 바닥마감재
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
-                const surrH = adjustedPanelHeight;
+                // 단내림이 왼쪽에 있으면 서라운드 높이를 단내림 천장에 맞춤
+                const hasLeftStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+                const leftStepDropH = hasLeftStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+                const surrH = hasLeftStepCeiling ? adjustedPanelHeight - leftStepDropH : adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
                 const leftSurrMat = leftFrameMaterial ?? createFrameMaterial('left');
                 const isLeftHighlighted = highlightedFrame === 'surround-left';
@@ -3342,7 +3345,10 @@ const Room: React.FC<RoomProps> = ({
                 const rightZOffset = rightCfg.offset ? mmToThreeUnits(rightCfg.offset) : 0;
                 const frontZ = surroundZPosition + rightZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
-                const surrH = adjustedPanelHeight;
+                // 단내림이 오른쪽에 있으면 서라운드 높이를 단내림 천장에 맞춤
+                const hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+                const rightStepDropH = hasRightStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+                const surrH = hasRightStepCeiling ? adjustedPanelHeight - rightStepDropH : adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
                 const rightSurrMat = rightFrameMaterial ?? createFrameMaterial('right');
                 const isRightHighlighted = highlightedFrame === 'surround-right';
