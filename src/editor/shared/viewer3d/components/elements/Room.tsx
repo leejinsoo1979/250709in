@@ -1743,13 +1743,29 @@ const Room: React.FC<RoomProps> = ({
 
               // 경계벽 Z축 라인 (뒷벽→앞쪽 그라데이션)
               lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단
-              lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단
+              // 경계벽 하단: 자유배치 커튼박스에서 bwBot이 메인 천장과 같은 높이이면
+              // 천장 mesh(단면)를 뚫고 안쪽에서 보이므로, 뒷벽 근처로만 제한
+              if (isFreePlacement && !stepSameSideAsDC && bwBot === cY) {
+                // 메인 천장과 동일 높이 → 뒷벽 실선만 (Z축 앞으로 연장 안 함)
+                lines.push([bx, bwBot, z1, bx, bwBot, z1 + 0.01]);
+              } else {
+                lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단
+              }
 
               // 커튼박스쪽 외벽의 천장 높이 Z축 라인
               if (dcIsL && hasLW) {
-                lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+                // 자유배치: 커튼박스 천장이 메인보다 높으므로 외벽 라인도 뒷벽 근처로 제한
+                if (isFreePlacement) {
+                  lines.push([x1, droppedCY, z1, x1, droppedCY, z1 + 0.01]);
+                } else {
+                  lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+                }
               } else if (!dcIsL && hasRW) {
-                lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
+                if (isFreePlacement) {
+                  lines.push([x2, droppedCY, z1, x2, droppedCY, z1 + 0.01]);
+                } else {
+                  lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
+                }
               }
             }
 
@@ -3537,9 +3553,9 @@ const Room: React.FC<RoomProps> = ({
 
                 return (
                   <group key="curtain-box-finish">
-                    <BoxWithEdges hideEdges={hideEdges || renderMode === 'solid'} isOuterFrame name="curtain-box-front"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-front"
                       args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                    <BoxWithEdges hideEdges={hideEdges || renderMode === 'solid'} isOuterFrame name="curtain-box-side"
+                    <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="curtain-box-side"
                       args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                     {isCBHighlighted && (
                       <>
