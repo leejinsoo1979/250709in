@@ -2675,21 +2675,8 @@ const Room: React.FC<RoomProps> = ({
         const stepDropHeight = hasLeftStepCeiling ? (spaceInfo.stepCeiling!.dropHeight || 200) : 0;
         const stepDropH = mmToThreeUnits(stepDropHeight);
 
-        console.log('🔍 [좌측 프레임] stepCeiling 체크:', {
-          isFreePlacement,
-          hasLeftStepCeiling,
-          stepCeilingEnabled: spaceInfo.stepCeiling?.enabled,
-          stepCeilingPosition: spaceInfo.stepCeiling?.position,
-          stepDropHeight,
-          hasDroppedCeiling,
-          isLeftDropped,
-          adjustedPanelHeight,
-          stepDropH,
-        });
-
         // stepCeiling: 왼쪽이 단내림 영역인 경우 높이를 단내림 천장에 맞춤
         if (hasLeftStepCeiling) {
-          console.log('✅ [좌측 프레임] stepCeiling 분할 렌더링 진입!');
           const droppedH = adjustedPanelHeight - stepDropH; // 단내림 천장까지의 높이
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropH; // 단내림 천장 ~ 메인 천장
@@ -2732,40 +2719,42 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) */}
-              <BoxWithEdges
-                hideEdges={hideEdges}
-                isOuterFrame
-                isEndPanel={!wallConfig?.left}
-                args={[
-                  frameThickness.left,
-                  upperH,
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.left ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                      (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                      ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS))
-                ]}
-                position={[
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (indexingForCheck.threeUnitBoundaries.length > 0
-                      ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
-                      : xOffset + frameThickness.left / 2)
-                    : xOffset + frameThickness.left / 2,
-                  upperCY,
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.left
-                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
-                      : noSurroundEndPanelZ)
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                      (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                      ? surroundEndPanelZ
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
-                ]}
-                material={leftFrameMaterial ?? createFrameMaterial('left')}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
+              {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
+              {spaceInfo.surroundType !== 'surround' && (
+                <BoxWithEdges
+                  hideEdges={hideEdges}
+                  isOuterFrame
+                  isEndPanel={!wallConfig?.left}
+                  args={[
+                    frameThickness.left,
+                    upperH,
+                    spaceInfo.surroundType === 'no-surround'
+                      ? (wallConfig?.left ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
+                      : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS))
+                  ]}
+                  position={[
+                    spaceInfo.surroundType === 'no-surround'
+                      ? (indexingForCheck.threeUnitBoundaries.length > 0
+                        ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
+                        : xOffset + frameThickness.left / 2)
+                      : xOffset + frameThickness.left / 2,
+                    upperCY,
+                    spaceInfo.surroundType === 'no-surround'
+                      ? (wallConfig?.left
+                        ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                        : noSurroundEndPanelZ)
+                      : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? surroundEndPanelZ
+                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+                  ]}
+                  material={leftFrameMaterial ?? createFrameMaterial('left')}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              )}
             </>
           );
         }
@@ -3031,21 +3020,8 @@ const Room: React.FC<RoomProps> = ({
         const stepDropHeightR = hasRightStepCeiling ? (spaceInfo.stepCeiling!.dropHeight || 200) : 0;
         const stepDropHR = mmToThreeUnits(stepDropHeightR);
 
-        console.log('🔍 [우측 프레임] stepCeiling 체크:', {
-          isFreePlacement,
-          hasRightStepCeiling,
-          stepCeilingEnabled: spaceInfo.stepCeiling?.enabled,
-          stepCeilingPosition: spaceInfo.stepCeiling?.position,
-          stepDropHeightR,
-          hasDroppedCeiling,
-          isRightDropped,
-          adjustedPanelHeight,
-          layoutMode: spaceInfo.layoutMode,
-        });
-
         // stepCeiling: 오른쪽이 단내림 영역인 경우 높이를 단내림 천장에 맞춤
         if (hasRightStepCeiling) {
-          console.log('✅ [우측 프레임] stepCeiling 분할 렌더링 진입!');
           const droppedH = adjustedPanelHeight - stepDropHR; // 단내림 천장까지의 높이
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropHR; // 단내림 천장 ~ 메인 천장
@@ -3090,42 +3066,44 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) */}
-              <BoxWithEdges
-                hideEdges={hideEdges}
-                isOuterFrame
-                isEndPanel={!wallConfig?.right}
-                args={[
-                  frameThickness.right,
-                  upperH,
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.right ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
-                      (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                      ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS))
-                ]}
-                position={[
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                      ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
-                      : xOffset + width - frameThickness.right / 2)
-                    : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                      ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
-                      : xOffset + width - frameThickness.right / 2),
-                  upperCY,
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.right
-                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
-                      : noSurroundEndPanelZ)
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
-                      (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                      ? surroundEndPanelZ
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
-                ]}
-                material={rightFrameMaterial ?? createFrameMaterial('right')}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
+              {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
+              {spaceInfo.surroundType !== 'surround' && (
+                <BoxWithEdges
+                  hideEdges={hideEdges}
+                  isOuterFrame
+                  isEndPanel={!wallConfig?.right}
+                  args={[
+                    frameThickness.right,
+                    upperH,
+                    spaceInfo.surroundType === 'no-surround'
+                      ? (wallConfig?.right ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
+                      : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
+                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS))
+                  ]}
+                  position={[
+                    spaceInfo.surroundType === 'no-surround'
+                      ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                        ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
+                        : xOffset + width - frameThickness.right / 2)
+                      : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                        ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
+                        : xOffset + width - frameThickness.right / 2),
+                    upperCY,
+                    spaceInfo.surroundType === 'no-surround'
+                      ? (wallConfig?.right
+                        ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                        : noSurroundEndPanelZ)
+                      : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
+                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? surroundEndPanelZ
+                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+                  ]}
+                  material={rightFrameMaterial ?? createFrameMaterial('right')}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              )}
             </>
           );
         }
