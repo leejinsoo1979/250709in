@@ -55,16 +55,30 @@ const BoxWithEdges: React.FC<{
 
   // Shadow auto-update enabled - manual shadow updates removed
 
+  // 2D 정면뷰에서 도어 반투명 면 표시용
+  const isDoor2DFront = viewMode === '2D';
+  const door2DMaterial = useMemo(() => {
+    if (!isDoor2DFront) return null;
+    return new THREE.MeshBasicMaterial({
+      color: '#ff0000',
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide,
+      depthTest: false,
+      depthWrite: false,
+    });
+  }, [isDoor2DFront]);
+
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
           geometry={geometry}
-          material={material}
+          material={isDoor2DFront ? door2DMaterial! : material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
-          renderOrder={isEditMode ? 999 : (viewMode === '2D' ? 900 : 0)}
+          renderOrder={isDoor2DFront ? 9999 : (isEditMode ? 999 : 0)}
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
