@@ -399,40 +399,40 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [position, args]);
 
   // 2D 모드 깊이 기반 edge opacity 계산
-  // 카메라 방향 축의 깊이에 따라 가까운 라인은 진하게, 먼 라인은 흐리게
+  // 부모 position 포함 월드 좌표 기준으로 깊이 산출 → 패널 간 원근 차이 반영
   const getDepthOpacity = React.useCallback((p1: [number, number, number], p2: [number, number, number]): number => {
     if (viewMode !== '2D' || isHighlighted || isClothingRod) return 1;
     if (edgeOpacity !== undefined) return edgeOpacity;
     if (isBackPanel && view2DDirection === 'front') return 0.1;
 
-    const [width, height, depth] = args;
-    // 카메라 방향 축에 따라 깊이 값 결정
+    // 로컬 좌표 + 부모 position = 월드 좌표 기준 깊이
     let depthVal: number;
-    let maxRange: number;
     if (view2DDirection === 'front') {
       // 정면: Z축 — +Z가 카메라에 가까움
-      depthVal = (p1[2] + p2[2]) / 2;
-      maxRange = depth / 2;
-    } else if (view2DDirection === 'left' || view2DDirection === 'right') {
-      // 측면: X축
-      depthVal = view2DDirection === 'left'
-        ? -(p1[0] + p2[0]) / 2  // left: -X가 카메라에 가까움
-        : (p1[0] + p2[0]) / 2;  // right: +X가 카메라에 가까움
-      maxRange = width / 2;
+      depthVal = (p1[2] + p2[2]) / 2 + position[2];
+    } else if (view2DDirection === 'left') {
+      // 좌측면: -X가 카메라에 가까움
+      depthVal = -((p1[0] + p2[0]) / 2 + position[0]);
+    } else if (view2DDirection === 'right') {
+      // 우측면: +X가 카메라에 가까움
+      depthVal = (p1[0] + p2[0]) / 2 + position[0];
     } else if (view2DDirection === 'top') {
-      // 평면: Y축 — +Y가 카메라에 가까움
-      depthVal = (p1[1] + p2[1]) / 2;
-      maxRange = height / 2;
+      // 평면: +Y가 카메라에 가까움
+      depthVal = (p1[1] + p2[1]) / 2 + position[1];
     } else {
       return 1;
     }
 
-    if (maxRange === 0) return 1;
-    // -maxRange(가장 먼 곳) ~ +maxRange(가장 가까운 곳) → 0~1 정규화
-    const normalized = (depthVal + maxRange) / (2 * maxRange);
+    // 가구 전체 깊이(depth prop의 Three units) 기준으로 정규화
+    // depth 범위 추정: position 기준 ±가구깊이/2 정도
+    // 절대값 기반: depthVal이 클수록 가까움 → 진하게
+    // 가구 깊이 기준으로 0~1 매핑 (대략 ±3 Three units = ±300mm)
+    const approxRange = 3.0; // Three units (≈300mm 가구 깊이)
+    const normalized = (depthVal + approxRange) / (2 * approxRange);
+    const clamped = Math.max(0, Math.min(1, normalized));
     // 가까울수록(1) 진하게, 멀수록(0) 흐리게 — 범위: 0.15 ~ 1.0
-    return 0.15 + Math.max(0, Math.min(1, normalized)) * 0.85;
-  }, [viewMode, view2DDirection, args, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+    return 0.15 + clamped * 0.85;
+  }, [viewMode, view2DDirection, position, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
 
   // 2D 모드에서 개별 라인 렌더링 (깊이별 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
