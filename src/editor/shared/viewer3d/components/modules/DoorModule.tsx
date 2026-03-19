@@ -55,30 +55,16 @@ const BoxWithEdges: React.FC<{
 
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 2D 정면뷰에서 도어 반투명 면 표시용
-  const isDoor2DFront = viewMode === '2D';
-  const door2DMaterial = useMemo(() => {
-    if (!isDoor2DFront) return null;
-    return new THREE.MeshBasicMaterial({
-      color: '#ff0000',
-      transparent: true,
-      opacity: 0.5,
-      side: THREE.DoubleSide,
-      depthTest: false,
-      depthWrite: false,
-    });
-  }, [isDoor2DFront]);
-
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
           geometry={geometry}
-          material={isDoor2DFront ? door2DMaterial! : material}
+          material={material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
-          renderOrder={isDoor2DFront ? 9999 : (isEditMode ? 999 : 0)}
+          renderOrder={isEditMode ? 999 : 0}
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
@@ -306,15 +292,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.side = THREE.DoubleSide;
         } else if (viewMode === '2D') {
           if (view2DDirection === 'front') {
-            // 정면뷰: 도어 면을 반투명 색상으로 표현
-            const doorColor2D = '#ff0000'; // DEBUG: 빨간색으로 테스트
-            mat.color.set(doorColor2D);
+            // 정면뷰: early return으로 처리되므로 여기는 도달하지 않음
+            // (2D 정면뷰에서는 분기 전 planeGeometry overlay로 대체됨)
             mat.transparent = true;
-            mat.opacity = 0.8;
+            mat.opacity = 0;
             mat.depthWrite = false;
-            mat.depthTest = false;
-            mat.side = THREE.DoubleSide;
-            console.log('🚪 도어 material 2D 정면뷰 적용:', { color: doorColor2D, opacity: 0.8, side: 'DoubleSide' });
           } else {
             mat.color.set('#18CF23');
             mat.transparent = false;
@@ -1327,12 +1309,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // });
   }
 
-  // DEBUG: 도어 위치에 빨간 큐브 — 모든 분기 전에 위치해서 반드시 실행됨
+  // 2D 정면뷰: 도어 반투명 면 overlay (기존 도어 렌더링 대신)
   if (viewMode === '2D' && view2DDirection === 'front') {
+    const overlayWidth = mmToThreeUnits(actualDoorWidth);
+    const overlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
     return (
-      <mesh position={[0, 0, 0]} renderOrder={9999}>
-        <boxGeometry args={[1, 1, 0.01]} />
-        <meshBasicMaterial color="#ff0000" transparent opacity={0.8} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+      <mesh position={[doorGroupX, doorYPosition, doorDepth / 2 + 0.001]} renderOrder={9999}>
+        <planeGeometry args={[overlayWidth, doorHeight]} />
+        <meshBasicMaterial color={overlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
       </mesh>
     );
   }
@@ -2289,13 +2273,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
-        {/* DEBUG: 2D 정면뷰 도어 반투명 면 - animated.group 밖에서 직접 렌더링 */}
-        {viewMode === '2D' && view2DDirection === 'front' && (
-          <mesh position={[doorPositionX, 0, 0]} renderOrder={9999}>
-            <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
-            <meshBasicMaterial color="#ff0000" transparent opacity={0.5} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
-          </mesh>
-        )}
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
