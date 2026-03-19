@@ -835,6 +835,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rightBoundaryDistance: 0,
             farSideDistance: 0,
             farSideSide: null,
+            hasAdjacentLeft: false,
+            hasAdjacentRight: false,
             isSpacerHandled: false,
             hasStepDown: hasStepDownFb,
             stepDownPosition: stepDownPositionFb,
@@ -898,95 +900,146 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       // 36mm 스페이서일 때만 처리
       const isSpacerHandled = isSpacerModule && actualWidth === SPACER_WIDTH;
       
-      // 양쪽에서 가장 가까운 컬럼/벽까지의 거리 계산
-      // 단내림이 있으면 해당 구간의 경계벽까지만 표시
+      // ────────────────────────────────────────────────
+      // 양쪽 이격거리 계산 (인접 가구/벽/단내림 경계 고려)
+      // ────────────────────────────────────────────────
       let nearestLeftDistance = 0;
       let nearestRightDistance = 0;
+      let hasAdjacentLeft = false;  // 왼쪽에 인접 가구 있음 (벽이 아닌 가구)
+      let hasAdjacentRight = false; // 오른쪽에 인접 가구 있음
 
-      if (slotInfo && slotInfo.wallPositions) {
-        // 슬롯 정보가 있을 때는 슬롯의 벽 위치 사용
-        nearestLeftDistance = Math.abs(moduleLeft * 100 - slotInfo.wallPositions.left);
-        nearestRightDistance = Math.abs(slotInfo.wallPositions.right - moduleRight * 100);
-      } else {
-        // 슬롯 정보가 없을 때는 직접 계산
-        const moduleLeftMm = moduleLeft * 100;
-        const moduleRightMm = moduleRight * 100;
+      // 단내림 경계 mm/Three.js 좌표
+      const stepDownBoundaryMm = hasStepDown
+        ? (stepDownPosition === 'left'
+          ? (-spaceInfo.width / 2 + stepDownWidth)
+          : (spaceInfo.width / 2 - stepDownWidth))
+        : undefined;
+      const stepDownBoundaryThree = stepDownBoundaryMm !== undefined
+        ? stepDownBoundaryMm * 0.01 : undefined;
 
-        // 단내림 경계 X 좌표 (mm)
-        const stepDownBoundaryMm = hasStepDown
-          ? (stepDownPosition === 'left'
-            ? (-spaceInfo.width / 2 + stepDownWidth)   // 왼쪽 단내림 우측 경계
-            : (spaceInfo.width / 2 - stepDownWidth))    // 오른쪽 단내림 좌측 경계
-          : undefined;
+      // 가구가 어느 구간에 있는지 (Three.js 좌표)
+      const isModuleInStepDown = hasStepDown && (
+        stepDownPosition === 'left'
+          ? moduleRight <= stepDownEndX
+          : moduleLeft >= stepDownStartX
+      );
 
-        // 가구가 어느 구간에 있는지 판별 (Three.js 좌표 기준)
-        const isModuleInStepDown = hasStepDown && (
-          stepDownPosition === 'left'
-            ? moduleRight <= stepDownEndX   // 가구가 단내림 구간 안
-            : moduleLeft >= stepDownStartX  // 가구가 단내림 구간 안
-        );
+      // 현재 구간의 벽/경계 범위 (Three.js 좌표)
+      let zoneLimitLeft: number; // 이 가구가 속한 구간의 왼쪽 경계
+      let zoneLimitRight: number; // 이 가구가 속한 구간의 오른쪽 경계
 
-        if (hasStepDown && stepDownBoundaryMm !== undefined) {
-          if (isModuleInStepDown) {
-            // 가구가 단내림 구간에 있음 → 단내림 구간 내 벽~경계까지
-            if (stepDownPosition === 'left') {
-              nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
-              nearestRightDistance = Math.abs(stepDownBoundaryMm - moduleRightMm);
-            } else {
-              nearestLeftDistance = Math.abs(moduleLeftMm - stepDownBoundaryMm);
-              nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
-            }
-          } else {
-            // 가구가 메인 구간에 있음 → 경계~벽까지
-            if (stepDownPosition === 'left') {
-              nearestLeftDistance = Math.abs(moduleLeftMm - stepDownBoundaryMm);
-              nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
-            } else {
-              nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
-              nearestRightDistance = Math.abs(stepDownBoundaryMm - moduleRightMm);
-            }
-          }
+      if (!hasStepDown) {
+        // 단내림 없음 → 전체 공간
+        zoneLimitLeft = -(spaceInfo.width * 0.01) / 2;
+        zoneLimitRight = (spaceInfo.width * 0.01) / 2;
+      } else if (isModuleInStepDown) {
+        // 단내림 구간 안
+        if (stepDownPosition === 'left') {
+          zoneLimitLeft = -(spaceInfo.width * 0.01) / 2;
+          zoneLimitRight = stepDownBoundaryThree!;
         } else {
-          // 단내림 없음 → 양쪽 벽까지
-          nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
-          nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
+          zoneLimitLeft = stepDownBoundaryThree!;
+          zoneLimitRight = (spaceInfo.width * 0.01) / 2;
+        }
+      } else {
+        // 메인 구간
+        if (stepDownPosition === 'left') {
+          zoneLimitLeft = stepDownBoundaryThree!;
+          zoneLimitRight = (spaceInfo.width * 0.01) / 2;
+        } else {
+          zoneLimitLeft = -(spaceInfo.width * 0.01) / 2;
+          zoneLimitRight = stepDownBoundaryThree!;
         }
       }
 
-      // 단내림 구간과의 경계 치수
+      if (slotInfo && slotInfo.wallPositions) {
+        nearestLeftDistance = Math.abs(moduleLeft * 100 - slotInfo.wallPositions.left);
+        nearestRightDistance = Math.abs(slotInfo.wallPositions.right - moduleRight * 100);
+      } else {
+        // 같은 구간 내 다른 가구들의 위치를 고려
+        // 왼쪽: 현재 가구 좌측 ~ (왼쪽에 인접한 가구의 우측 또는 구간 왼쪽 경계)
+        let leftEdge = zoneLimitLeft;
+        // 오른쪽: 현재 가구 우측 ~ (오른쪽에 인접한 가구의 좌측 또는 구간 오른쪽 경계)
+        let rightEdge = zoneLimitRight;
+
+        for (const otherModule of placedModules) {
+          if (otherModule.id === module.id) continue;
+          const otherW = (otherModule.isFreePlacement && otherModule.freeWidth)
+            ? otherModule.freeWidth
+            : (otherModule.customWidth || otherModule.adjustedWidth || otherModule.moduleWidth || 0);
+          const otherLeft = otherModule.position.x - otherW / 2;
+          const otherRight = otherModule.position.x + otherW / 2;
+
+          // 왼쪽에 있는 가구 중 가장 가까운 것
+          if (otherRight <= moduleLeft + 0.001 && otherRight > leftEdge) {
+            leftEdge = otherRight;
+          }
+          // 오른쪽에 있는 가구 중 가장 가까운 것
+          if (otherLeft >= moduleRight - 0.001 && otherLeft < rightEdge) {
+            rightEdge = otherLeft;
+          }
+        }
+
+        // 인접 가구 여부 (벽/경계가 아닌 다른 가구와 맞닿는지)
+        hasAdjacentLeft = Math.abs(leftEdge - zoneLimitLeft) > 0.001;
+        hasAdjacentRight = Math.abs(rightEdge - zoneLimitRight) > 0.001;
+
+        nearestLeftDistance = Math.abs((moduleLeft - leftEdge) * 100);
+        nearestRightDistance = Math.abs((rightEdge - moduleRight) * 100);
+      }
+
+      // ────────────────────────────────────────────────
+      // 단내림 분절: farSideDistance 계산
+      // 단내림 경계 쪽 맨 끝 가구만 farSide 표시
+      // ────────────────────────────────────────────────
       let leftBoundaryDistance = 0;
       let rightBoundaryDistance = 0;
-      // 단내림 기둥 반대편 벽까지 거리 (분절된 두 번째 치수선)
       let farSideDistance = 0;
-      // farSide가 어느 쪽인지 ('left' = 왼쪽에 표시, 'right' = 오른쪽에 표시)
       let farSideSide: 'left' | 'right' | null = null;
 
-      if (hasStepDown) {
-        // 단내림 구간 경계 계산
+      if (hasStepDown && stepDownBoundaryThree !== undefined) {
         const stepDownBoundaryX = stepDownPosition === 'left' ? stepDownEndX : stepDownStartX;
 
-        // 가구와 단내림 경계 사이의 거리 계산
         if (stepDownPosition === 'left') {
-          // 왼쪽 단내림일 때 - 가구 왼쪽과 단내림 우측 경계 사이 거리
           leftBoundaryDistance = Math.abs((moduleLeft - stepDownBoundaryX) * 100);
         } else {
-          // 오른쪽 단내림일 때 - 가구 오른쪽과 단내림 좌측 경계 사이 거리
           rightBoundaryDistance = Math.abs((stepDownBoundaryX - moduleRight) * 100);
         }
 
-        // 가구가 메인 구간에 있을 때: 단내림 구간 폭을 farSide로 표시
-        const isModuleInStepDownCheck = stepDownPosition === 'left'
-          ? moduleRight <= stepDownEndX
-          : moduleLeft >= stepDownStartX;
-
-        if (!isModuleInStepDownCheck) {
-          // 메인 구간 가구 → 단내림 쪽에 farSideDistance (= 단내림 폭) 추가
-          farSideDistance = stepDownWidth;
-          farSideSide = stepDownPosition; // 단내림이 있는 쪽
+        // farSide: 가구가 메인 구간에 있고, 단내림 경계 쪽에 인접 가구가 없을 때만 표시
+        if (!isModuleInStepDown) {
+          // 메인 구간 가구 → 단내림 쪽이 벽/경계인지 확인
+          // nearestDistance가 구간 경계까지의 거리인지 확인 (= 중간에 다른 가구가 없음)
+          if (stepDownPosition === 'left') {
+            // 단내림이 왼쪽 → 왼쪽 경계가 stepDownBoundary → leftEdge == zoneLimitLeft이면 맨 끝
+            const distToZoneBoundary = Math.abs((moduleLeft - zoneLimitLeft) * 100);
+            if (Math.abs(nearestLeftDistance - distToZoneBoundary) < 1) {
+              farSideDistance = stepDownWidth;
+              farSideSide = 'left';
+            }
+          } else {
+            // 단내림이 오른쪽 → 오른쪽 경계가 stepDownBoundary → rightEdge == zoneLimitRight이면 맨 끝
+            const distToZoneBoundary = Math.abs((zoneLimitRight - moduleRight) * 100);
+            if (Math.abs(nearestRightDistance - distToZoneBoundary) < 1) {
+              farSideDistance = stepDownWidth;
+              farSideSide = 'right';
+            }
+          }
         } else {
-          // 단내림 구간 가구 → 메인 쪽에 farSideDistance (= 메인 구간 폭) 추가
-          farSideDistance = spaceInfo.width - stepDownWidth;
-          farSideSide = stepDownPosition === 'left' ? 'right' : 'left';
+          // 단내림 구간 가구 → 메인 쪽 경계에 인접 가구가 없을 때만 farSide
+          if (stepDownPosition === 'left') {
+            const distToZoneBoundary = Math.abs((zoneLimitRight - moduleRight) * 100);
+            if (Math.abs(nearestRightDistance - distToZoneBoundary) < 1) {
+              farSideDistance = spaceInfo.width - stepDownWidth;
+              farSideSide = 'right';
+            }
+          } else {
+            const distToZoneBoundary = Math.abs((moduleLeft - zoneLimitLeft) * 100);
+            if (Math.abs(nearestLeftDistance - distToZoneBoundary) < 1) {
+              farSideDistance = spaceInfo.width - stepDownWidth;
+              farSideSide = 'left';
+            }
+          }
         }
       }
 
@@ -1006,6 +1059,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         rightBoundaryDistance,
         farSideDistance,
         farSideSide,
+        hasAdjacentLeft,
+        hasAdjacentRight,
         isSpacerHandled,
         hasStepDown,
         stepDownPosition,
@@ -3959,6 +4014,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           rightBoundaryDistance,
           farSideDistance,
           farSideSide,
+          hasAdjacentLeft,
+          hasAdjacentRight,
           isSpacerHandled,
           hasStepDown,
           stepDownPosition,
@@ -4153,9 +4210,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const farLeftStartX = farSideSide === 'left' ? leftGapStartX - mmToThreeUnits(farSideMm) : 0;
               const farRightEndX = farSideSide === 'right' ? rightGapEndX + mmToThreeUnits(farSideMm) : 0;
 
+              // 가구 간 간격 중복 방지: 인접 가구가 있는 쪽은 생략
+              // 간격은 오른쪽에 있는 가구의 좌측갭으로만 표시
+              const showLeftGap = leftGapMm > 0;
+              const showRightGap = rightGapMm > 0 && !hasAdjacentRight;
+
               return (<>
-                {/* 좌측 갭 치수선 (가구~벽 또는 가구~단내림경계) */}
-                {leftGapMm > 0 && (<>
+                {/* 좌측 갭 치수선 (가구~벽/경계 또는 가구~인접가구) */}
+                {showLeftGap && (<>
                   <NativeLine name="dimension_line"
                     points={[[leftGapStartX, dimY, 0.002], [leftX, dimY, 0.002]]}
                     color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
@@ -4228,8 +4290,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                 </>)}
 
-                {/* 우측 갭 치수선 (가구~벽 또는 가구~단내림경계) */}
-                {rightGapMm > 0 && (<>
+                {/* 우측 갭 치수선 (가구~벽/경계, 인접 가구가 있으면 생략) */}
+                {showRightGap && (<>
                   <NativeLine name="dimension_line"
                     points={[[rightX, dimY, 0.002], [rightGapEndX, dimY, 0.002]]}
                     color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
