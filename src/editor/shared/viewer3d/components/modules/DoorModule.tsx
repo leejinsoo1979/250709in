@@ -1327,6 +1327,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // });
   }
 
+  // DEBUG: 도어 위치에 빨간 큐브 — 모든 분기 전에 위치해서 반드시 실행됨
+  if (viewMode === '2D' && view2DDirection === 'front') {
+    return (
+      <mesh position={[0, 0, 0]} renderOrder={9999}>
+        <boxGeometry args={[1, 1, 0.01]} />
+        <meshBasicMaterial color="#ff0000" transparent opacity={0.8} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+      </mesh>
+    );
+  }
+
   if (isDualFurniture) {
     // 듀얼 가구: 두 슬롯의 전체 너비 계산
     let totalWidth: number;
