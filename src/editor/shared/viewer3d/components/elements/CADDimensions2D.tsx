@@ -118,8 +118,9 @@ const computeSectionHeightsInfo = (
     };
   }
 
-  // useBaseFurniture.ts와 동일한 방식: 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
-  // 모든 섹션이 absolute인 경우에도 internalHeightMm 변경이 반영됨
+  // useBaseFurniture.ts(line 112-157)와 동일한 방식:
+  // shelving.ts에서 sections 합 = dimensions.height (판재 두께 포함)
+  // 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
   let heightsMm: number[];
 
   const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
@@ -131,17 +132,16 @@ const computeSectionHeightsInfo = (
       return Math.max(calc ?? 0, 0);
     });
     const calcTotal = calcHeights.reduce((sum, h) => sum + h, 0);
-    const renderTotal = internalHeightMm - basicThicknessMm * 2;
-    if (Math.abs(calcTotal - renderTotal) > 1 && rawSections.length > 1) {
+    if (Math.abs(calcTotal - internalHeightMm) > 1 && rawSections.length > 1) {
       // 하부 고정, 마지막(상부) 섹션이 차이 흡수
       const fixedSum = calcHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
-      calcHeights[calcHeights.length - 1] = Math.max(0, renderTotal - fixedSum);
+      calcHeights[calcHeights.length - 1] = Math.max(0, internalHeightMm - fixedSum);
     }
     heightsMm = calcHeights;
   } else {
     // 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수 (useBaseFurniture 방식)
     const fixedSum = rawSections.slice(0, -1).reduce((sum, section) => sum + (section.height ?? 0), 0);
-    const lastSectionNewHeight = Math.max(0, internalHeightMm - basicThicknessMm * 2 - fixedSum);
+    const lastSectionNewHeight = Math.max(0, internalHeightMm - fixedSum);
 
     heightsMm = rawSections.map((section, idx) => {
       if (idx < rawSections.length - 1) {
