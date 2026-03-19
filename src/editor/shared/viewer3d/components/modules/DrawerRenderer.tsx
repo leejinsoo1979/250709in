@@ -462,14 +462,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
         /> */}
         
-        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 앞판 홈에 끼워지고 뒤쪽은 측판 뒷선까지 확장 */}
+        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 앞쪽은 앞판 홈 끼움 유지, 뒤쪽만 측판 뒷선까지 확장 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`;
           const mat = getPanelMaterial(panelName);
-          // 깊이: 앞판 안쪽면 ~ 측판 뒷선 = drawerBodyDepth - 앞판두께(15mm)
-          const bottomDepth = drawerBodyDepth - DRAWER_SIDE_THICKNESS;
-          // Z 중심: 앞판 두께만큼 뒤로 이동
-          const bottomZ = drawerBodyCenterZ - DRAWER_SIDE_THICKNESS / 2;
+          // 원래: drawerBodyDepth - 20mm (앞뒤 각 10mm 여유)
+          // 변경: 앞쪽 10mm 여유는 유지(홈 끼움), 뒤쪽은 본체 끝까지 확장
+          const bottomDepth = drawerBodyDepth - mmToThreeUnits(10);
+          // Z: 앞쪽 고정, 뒤로만 늘어남 → 중심이 뒤쪽으로 5mm 이동
+          const bottomZ = drawerBodyCenterZ - mmToThreeUnits(5);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
