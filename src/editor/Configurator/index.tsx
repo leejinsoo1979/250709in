@@ -3739,7 +3739,9 @@ const Configurator: React.FC = () => {
                       enabled: true,
                       width: droppedWidth,
                       dropHeight: isFreeMode ? Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)) : 200,
-                      position: 'left'
+                      position: 'left',
+                      topFrame: 0,
+                      bottomFrame: 0
                     },
                     droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
@@ -3782,7 +3784,9 @@ const Configurator: React.FC = () => {
                       enabled: true,
                       width: droppedWidth,
                       dropHeight: isFreeMode ? Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)) : 200,
-                      position: 'right'
+                      position: 'right',
+                      topFrame: 0,
+                      bottomFrame: 0
                     },
                     droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
@@ -4451,11 +4455,11 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30);
+                        const current = spaceInfo.droppedCeiling?.topFrame ?? 0;
                         const newVal = Math.max(0, current - 1);
                         handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: newVal } });
                       }}
-                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)) <= 0}
+                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? 0) <= 0}
                     >
                       −
                     </button>
@@ -4463,7 +4467,7 @@ const Configurator: React.FC = () => {
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      value={spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)}
+                      value={spaceInfo.droppedCeiling?.topFrame ?? 0}
                       onChange={(e) => {
                         const val = parseInt(e.target.value);
                         if (!isNaN(val)) {
@@ -4480,11 +4484,11 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30);
+                        const current = spaceInfo.droppedCeiling?.topFrame ?? 0;
                         const newVal = Math.min(200, current + 1);
                         handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: newVal } });
                       }}
-                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)) >= 200}
+                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? 0) >= 200}
                     >
                       +
                     </button>
