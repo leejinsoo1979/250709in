@@ -1,6 +1,7 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { SpaceCalculator } from './indexing';
+import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
 
 /**
  * 자유배치 모드 유틸리티
@@ -18,7 +19,9 @@ export interface FurnitureBoundsX {
 
 /**
  * 내부 공간의 X 범위 반환 (mm 단위)
- * 자유배치에서는 프레임 두께 대신 이격거리(gapConfig)만 적용
+ * surroundType에 따라:
+ *   - surround/both-sides: 프레임 두께(frameSize)를 경계에 반영
+ *   - no-surround: 이격거리(gapConfig)만 적용
  */
 export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number; endX: number } {
   const totalWidth = spaceInfo.width || 2400;
@@ -27,6 +30,15 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
   let endX = halfW;
 
   if (spaceInfo.layoutMode === 'free-placement') {
+    // surroundType가 surround/both-sides이면 프레임 두께를 경계에 반영
+    if (spaceInfo.surroundType !== 'no-surround') {
+      const frameThickness = calculateFrameThickness(spaceInfo);
+      startX += frameThickness.leftMm;
+      endX -= frameThickness.rightMm;
+      return { startX, endX };
+    }
+
+    // 노서라운드: 기존 이격거리(gapConfig) 기반 로직
     const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
     const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
     const hasDropped = spaceInfo.droppedCeiling?.enabled;
