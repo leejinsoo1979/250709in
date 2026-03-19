@@ -97,6 +97,10 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       onUpdate(updates);
       // 자유배치 가구 freeHeight 재계산 (float 전환으로 높이 축소)
       recalcFreePlacementHeights(updates);
+      // 띄움 시 도어 하단갭을 띄움높이로 자동 설정
+      placedModules.filter(m => m.hasDoor).forEach(m => {
+        updatePlacedModule(m.id, { doorBottomGap: 200 });
+      });
     } else {
       // 바닥에 배치 선택 (받침대 있음)
       const updates: Partial<SpaceInfo> = {
@@ -110,6 +114,10 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       onUpdate(updates);
       // 자유배치 가구 freeHeight 재계산 (ground 복귀로 높이 복원)
       recalcFreePlacementHeights(updates);
+      // 바닥배치 복귀 시 도어 하단갭 초기화
+      placedModules.filter(m => m.hasDoor).forEach(m => {
+        updatePlacedModule(m.id, { doorBottomGap: 0 });
+      });
     }
   };
 
@@ -119,12 +127,13 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     const currentBaseConfig = spaceInfo.baseConfig || { type: 'stand', height: 65 };
 
     // 띄워서 배치 선택 시 바닥 마감재도 자동으로 없음으로 설정
+    const floatH = currentBaseConfig.floatHeight || 60;
     const updates: Partial<SpaceInfo> = placementType === 'float'
       ? {
           baseConfig: {
             ...currentBaseConfig,
             placementType,
-            floatHeight: currentBaseConfig.floatHeight || 60,
+            floatHeight: floatH,
           },
           hasFloorFinish: false,
           floorFinish: undefined,
@@ -140,6 +149,12 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     // 자유배치 가구 freeHeight 재계산 (float↔ground 전환)
     recalcFreePlacementHeights(updates);
+
+    // 띄움↔바닥 전환 시 도어 하단갭 자동 설정
+    const newBottomGap = placementType === 'float' ? floatH : 0;
+    placedModules.filter(m => m.hasDoor).forEach(m => {
+      updatePlacedModule(m.id, { doorBottomGap: newBottomGap });
+    });
   };
 
   // 높이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
@@ -285,6 +300,10 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       onUpdate(updates);
       // 자유배치 가구 freeHeight 재계산
       recalcFreePlacementHeights(updates);
+      // 띄움높이 변경 시 도어 하단갭도 동기화
+      placedModules.filter(m => m.hasDoor).forEach(m => {
+        updatePlacedModule(m.id, { doorBottomGap: value });
+      });
     }
   };
 
