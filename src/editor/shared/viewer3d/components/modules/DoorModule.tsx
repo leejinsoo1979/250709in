@@ -168,7 +168,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -291,10 +291,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
         } else if (viewMode === '2D') {
-          mat.color.set('#18CF23');
-          mat.transparent = false;
-          mat.opacity = 1.0;
-          mat.depthWrite = true;
+          if (view2DDirection === 'front') {
+            // 정면뷰: 도어 면을 반투명 색상으로 표현
+            mat.color.set(view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0');
+            mat.transparent = true;
+            mat.opacity = 0.25;
+            mat.depthWrite = false;
+          } else {
+            mat.color.set('#18CF23');
+            mat.transparent = false;
+            mat.opacity = 1.0;
+            mat.depthWrite = true;
+          }
         } else if (renderMode === 'wireframe') {
           mat.transparent = true;
           mat.opacity = 0.3;
@@ -321,7 +329,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode]);
+  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme]);
 
   // 편집/드래그/2D 모드일 때 텍스처 제거
   useEffect(() => {
