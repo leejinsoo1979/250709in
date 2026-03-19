@@ -3793,6 +3793,7 @@ const Room: React.FC<RoomProps> = ({
                       const modTopHeight = mmToThreeUnits(modTopThickness);
                       // 단내림 구간 가구는 단내림 천장 높이 기준으로 Y 계산
                       const isInDroppedZone = hasDroppedCeiling && mod.slotIndex !== undefined && mod.slotIndex >= normalSlotCountForFrame;
+                      console.log('🔥 상부프레임 zone:', { id: mod.id, slotIndex: mod.slotIndex, normalSlotCountForFrame, isInDroppedZone, hasDroppedCeiling });
                       const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
                       const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
                       const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
