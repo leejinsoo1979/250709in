@@ -1096,18 +1096,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
       }
 
-// console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
-        // fullSpaceHeight,
-        // cabinetHeight: tallCabinetFurnitureHeight,
-        // doorTopGap,
-        // doorBottomGap,
-        // floatHeight,
-        // 도어하단_mm: doorBottom.toFixed(1),
-        // 도어상단_mm: doorTop.toFixed(1),
-        // 도어높이_mm: actualDoorHeight.toFixed(1),
-        // 도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
-        // 설명: `도어 하단 ${doorBottom.toFixed(1)}mm에서 도어 높이 절반(${(actualDoorHeight / 2).toFixed(1)}mm) 만큼 위`
-      // });
+console.log('🚪📍 키큰장 도어 Y (hasBase 디버그):', {
+        hasBaseProp,
+        effectiveInternalHeight,
+        tallCabinetFurnitureHeight,
+        baseConfigHeight: originalSpaceInfo.baseConfig?.height,
+        baseConfigType: originalSpaceInfo.baseConfig?.type,
+        individualFloatHeightProp,
+        doorYPosition_mm: (doorYPosition / 0.01).toFixed(1),
+        fullSpaceHeight,
+        doorBottomLocal: doorBottomLocal.toFixed(1),
+        doorTopLocal: doorTopLocal.toFixed(1),
+        actualDoorHeight: actualDoorHeight.toFixed(1),
+      });
     }
   }
 
