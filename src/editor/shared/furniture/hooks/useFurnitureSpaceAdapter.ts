@@ -29,35 +29,69 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {
-        // 자유배치 모듈: 경계 변경 시 벽에 붙어있던 가구는 새 경계에 맞춰 재배치
+        // 자유배치 모듈: 공간 경계 변경 시 비례 리사이징 + 재배치
         if (module.isFreePlacement) {
-          const moduleWidth = module.freeWidth || module.moduleWidth || 450;
-          const halfModW = moduleWidth / 2;
-          const centerXmm = module.position.x * 100;
-
           const oldBounds = getInternalSpaceBoundsX(oldSpaceInfo);
           const newBounds = getInternalSpaceBoundsX(newSpaceInfo);
+          const oldSpaceWidth = oldBounds.endX - oldBounds.startX;
+          const newSpaceWidth = newBounds.endX - newBounds.startX;
 
-          // 가구의 좌측/우측 끝이 이전 경계에 가까웠는지 판단 (허용 오차 5mm)
-          const SNAP_THRESHOLD = 5;
-          const oldLeftEdge = centerXmm - halfModW;
-          const oldRightEdge = centerXmm + halfModW;
-          const wasAtLeftWall = Math.abs(oldLeftEdge - oldBounds.startX) < SNAP_THRESHOLD;
-          const wasAtRightWall = Math.abs(oldRightEdge - oldBounds.endX) < SNAP_THRESHOLD;
+          const moduleWidth = module.freeWidth || module.moduleWidth || 450;
+          const centerXmm = module.position.x * 100;
 
-          let newCenterX = centerXmm;
-          if (wasAtLeftWall) {
-            // 좌측 벽에 붙어있었으면 새 좌측 경계에 맞춤
-            newCenterX = newBounds.startX + halfModW;
-          } else if (wasAtRightWall) {
-            // 우측 벽에 붙어있었으면 새 우측 경계에 맞춤
-            newCenterX = newBounds.endX - halfModW;
+          // 서라운드 패널은 크기 변경 없이 위치만 클램핑
+          if (module.isSurroundPanel) {
+            const finalX = clampToSpaceBoundsX(centerXmm, moduleWidth, newSpaceInfo);
+            updatedModules.push({
+              ...module,
+              position: { ...module.position, x: finalX * 0.01 },
+              isValidInCurrentSpace: true
+            });
+            return;
           }
 
-          // 최종 클램핑 (경계 초과 방지)
-          const finalX = clampToSpaceBoundsX(newCenterX, moduleWidth, newSpaceInfo);
+          // 공간 폭이 변경된 경우: 비례 리사이징 + 재배치
+          const ratio = oldSpaceWidth > 0 ? newSpaceWidth / oldSpaceWidth : 1;
+          const needsResize = Math.abs(ratio - 1) > 0.01; // 1% 이상 변경 시
+
+          let newWidth = moduleWidth;
+          let newCenterX = centerXmm;
+
+          if (needsResize) {
+            // 가구 너비 비례 조정 (최소 200mm)
+            newWidth = Math.max(200, Math.round(moduleWidth * ratio));
+
+            // 위치도 비례 매핑: 이전 공간 내 상대위치 → 새 공간 내 동일 비율 위치
+            const relativePos = oldSpaceWidth > 0
+              ? (centerXmm - oldBounds.startX) / oldSpaceWidth
+              : 0.5;
+            newCenterX = newBounds.startX + relativePos * newSpaceWidth;
+          } else {
+            // 크기 변경 없을 때: 벽 스냅 로직
+            const halfModW = moduleWidth / 2;
+            const SNAP_THRESHOLD = 5;
+            const wasAtLeftWall = Math.abs((centerXmm - halfModW) - oldBounds.startX) < SNAP_THRESHOLD;
+            const wasAtRightWall = Math.abs((centerXmm + halfModW) - oldBounds.endX) < SNAP_THRESHOLD;
+            if (wasAtLeftWall) {
+              newCenterX = newBounds.startX + halfModW;
+            } else if (wasAtRightWall) {
+              newCenterX = newBounds.endX - halfModW;
+            }
+          }
+
+          // moduleId 업데이트 (너비 포함된 경우)
+          let newModuleId = module.moduleId;
+          if (needsResize) {
+            const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, '');
+            newModuleId = `${baseType}-${Math.round(newWidth * 10) / 10}`;
+          }
+
+          const finalX = clampToSpaceBoundsX(newCenterX, newWidth, newSpaceInfo);
           updatedModules.push({
             ...module,
+            moduleId: newModuleId,
+            moduleWidth: newWidth,
+            freeWidth: newWidth,
             position: { ...module.position, x: finalX * 0.01 },
             isValidInCurrentSpace: true
           });
