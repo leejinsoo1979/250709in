@@ -469,7 +469,41 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                                   </div>
                                 ))}
 
-                                {/* 디자인 파일은 트리에 표시하지 않음 (폴더까지만) */}
+                                {/* 루트 디자인 파일 (폴더에 속하지 않은 파일) */}
+                                {designFiles
+                                  .filter((df: any) => !df.isDeleted && !df.folderId)
+                                  .map((df: any) => (
+                                    <div
+                                      key={df.id}
+                                      className={styles.treeItem}
+                                      onClick={() => {
+                                        const item: ExplorerItem = {
+                                          id: df.id,
+                                          name: df.name,
+                                          type: 'design',
+                                          projectId: project.id,
+                                          updatedAt: df.updatedAt,
+                                        };
+                                        onItemDoubleClick(item);
+                                      }}
+                                      onContextMenu={(e) => {
+                                        e.stopPropagation();
+                                        const item: ExplorerItem = {
+                                          id: df.id,
+                                          name: df.name,
+                                          type: 'design',
+                                          projectId: project.id,
+                                          updatedAt: df.updatedAt,
+                                        };
+                                        onItemContextMenu(e, item);
+                                      }}
+                                    >
+                                      <div className={styles.treeItemIcon}>
+                                        <LuFileBox size={16} />
+                                      </div>
+                                      <span>{df.name}</span>
+                                    </div>
+                                  ))}
                               </div>
                             )}
                           </div>
@@ -592,7 +626,11 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                   ))}
 
                   {/* 프로젝트/디자인 카드 */}
-                  {filteredItems.filter(item => item.type !== 'folder').map(item => (
+                  {filteredItems.filter(item => item.type !== 'folder').map(item => {
+                    if (item.type === 'design') {
+                      console.log('🟣 design card data:', { id: item.id, name: item.name, type: item.type, spaceSize: item.spaceSize, updatedAt: item.updatedAt });
+                    }
+                    return (
                     <div
                       key={item.id}
                       className={styles.designCard}
@@ -714,7 +752,8 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
                         ⋯
                       </button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
             </div>

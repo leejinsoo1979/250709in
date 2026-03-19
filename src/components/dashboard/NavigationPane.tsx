@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home } from 'lucide-react';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
+import { LuFileBox } from 'react-icons/lu';
 import { useAuth } from '@/auth/AuthProvider';
 import { loadFolderData, getDesignFiles } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
@@ -20,6 +21,7 @@ interface NavigationPaneProps {
   onCreateProject?: () => void;
   menuCounts?: Partial<Record<QuickAccessMenu, number>>;
   onItemContextMenu?: (e: React.MouseEvent, item: ExplorerItem) => void;
+  onItemDoubleClick?: (item: ExplorerItem) => void;
   autoExpandProjectId?: string | null;
   onGoHome?: () => void;
 }
@@ -35,6 +37,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   onCreateProject,
   menuCounts,
   onItemContextMenu,
+  onItemDoubleClick,
   autoExpandProjectId,
   onGoHome,
 }) => {
@@ -53,13 +56,16 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   const [designFileCounts, setDesignFileCounts] = useState<{ [projectId: string]: number }>({});
   // 폴더별 디자인 파일 수
   const [folderFileCounts, setFolderFileCounts] = useState<{ [folderId: string]: number }>({});
+  // 프로젝트별 디자인 파일 목록
+  const [projectDesignFiles, setProjectDesignFiles] = useState<{ [projectId: string]: any[] }>({});
 
-  // 프로젝트별 디자인 파일 수 로드
+  // 프로젝트별 디자인 파일 로드
   const loadDesignFileCount = useCallback(async (projectId: string) => {
     try {
       const { designFiles } = await getDesignFiles(projectId);
       const activeFiles = designFiles.filter((f: any) => !f.isDeleted);
       setDesignFileCounts(prev => ({ ...prev, [projectId]: activeFiles.length }));
+      setProjectDesignFiles(prev => ({ ...prev, [projectId]: activeFiles }));
       // 폴더별 파일 수 계산
       const folderCounts: { [folderId: string]: number } = {};
       activeFiles.forEach((f: any) => {
@@ -198,95 +204,136 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           ))}
         </div>
 
-        {/* 프로젝트 트리 — 숨김 처리 */}
-        {false && <><hr className={styles.divider} />
-
-        <div className={styles.section}>
-          <div className={styles.sectionTitle}>
-            {quickAccessItems.find(item => item.key === activeMenu)?.label || '프로젝트'}
-          </div>
-          {filteredProjects.map(project => {
-            const isExpanded = expandedProjects.has(project.id);
-            const isSelected = currentProjectId === project.id && !currentFolderId;
-            const projectFolders = localFolders[project.id] || [];
-            const fileCount = designFileCounts[project.id] || 0;
-            return (
-              <div key={project.id}>
-                <button
-                  className={`${styles.treeItem} ${isSelected ? styles.treeItemActive : ''}`}
-                  onClick={() => {
-                    onNavigate(project.id, null, project.title);
-                    if (!isExpanded) toggleProject(project.id);
-                  }}
-                  onContextMenu={(e) => {
-                    if (onItemContextMenu) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onItemContextMenu(e, {
-                        id: project.id,
-                        name: project.title,
-                        type: 'project',
-                        updatedAt: project.updatedAt,
-                      });
-                    }
-                  }}
-                >
-                  <span
-                    className={styles.expandIcon}
-                    onClick={ev => { ev.stopPropagation(); toggleProject(project.id); }}
-                  >
-                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                  </span>
-                  <RxDashboard size={16} className={styles.projectIcon} />
-                  <span className={styles.treeLabel} title={project.title}>
-                    {project.title}
-                  </span>
-                  {fileCount > 0 && (
-                    <span className={styles.treeBadge}>{fileCount}</span>
-                  )}
-                </button>
-
-                {/* 확장 시: 폴더만 표시 */}
-                {isExpanded && projectFolders.length > 0 && (
-                  <div className={styles.treeChildren}>
-                    {projectFolders.map(folder => {
-                      const isFolderSelected = currentProjectId === project.id && currentFolderId === folder.id;
-                      return (
-                        <button
-                          key={folder.id}
-                          className={`${styles.treeItem} ${styles.treeItemNested} ${
-                            isFolderSelected ? styles.treeItemActive : ''
-                          }`}
-                          onClick={() => onNavigate(project.id, folder.id, folder.name)}
-                          onContextMenu={(e) => {
-                            if (onItemContextMenu) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              onItemContextMenu(e, {
-                                id: folder.id,
-                                name: folder.name,
-                                type: 'folder',
-                                projectId: project.id,
-                              });
-                            }
-                          }}
-                        >
-                          <FcFolder size={14} className={styles.folderIcon} />
-                          <span className={styles.treeLabel} title={folder.name}>
-                            {folder.name}
-                          </span>
-                          {(folderFileCounts[folder.id] || 0) > 0 && (
-                            <span className={styles.treeBadge}>{folderFileCounts[folder.id]}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+        {/* 프로젝트 트리 */}
+        {filteredProjects.length > 0 && (
+          <>
+            <hr className={styles.divider} />
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                {quickAccessItems.find(item => item.key === activeMenu)?.label || '프로젝트'}
               </div>
-            );
-          })}
-        </div></>}
+              {filteredProjects.map(project => {
+                const isExpanded = expandedProjects.has(project.id);
+                const isSelected = currentProjectId === project.id && !currentFolderId;
+                const projectFolders = localFolders[project.id] || [];
+                const fileCount = designFileCounts[project.id] || 0;
+                return (
+                  <div key={project.id}>
+                    <button
+                      className={`${styles.treeItem} ${isSelected ? styles.treeItemActive : ''}`}
+                      onClick={() => {
+                        onNavigate(project.id, null, project.title);
+                        if (!isExpanded) toggleProject(project.id);
+                      }}
+                      onContextMenu={(e) => {
+                        if (onItemContextMenu) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onItemContextMenu(e, {
+                            id: project.id,
+                            name: project.title,
+                            type: 'project',
+                            updatedAt: project.updatedAt,
+                          });
+                        }
+                      }}
+                    >
+                      <span
+                        className={styles.expandIcon}
+                        onClick={ev => { ev.stopPropagation(); toggleProject(project.id); }}
+                      >
+                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      </span>
+                      <RxDashboard size={16} className={styles.projectIcon} />
+                      <span className={styles.treeLabel} title={project.title}>
+                        {project.title}
+                      </span>
+                      {fileCount > 0 && (
+                        <span className={styles.treeBadge}>{fileCount}</span>
+                      )}
+                    </button>
+
+                    {/* 확장 시: 폴더 + 디자인 파일 표시 */}
+                    {isExpanded && (projectFolders.length > 0 || (projectDesignFiles[project.id] || []).length > 0) && (
+                      <div className={styles.treeChildren}>
+                        {projectFolders.map(folder => {
+                          const isFolderSelected = currentProjectId === project.id && currentFolderId === folder.id;
+                          return (
+                            <button
+                              key={folder.id}
+                              className={`${styles.treeItem} ${styles.treeItemNested} ${
+                                isFolderSelected ? styles.treeItemActive : ''
+                              }`}
+                              onClick={() => onNavigate(project.id, folder.id, folder.name)}
+                              onContextMenu={(e) => {
+                                if (onItemContextMenu) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onItemContextMenu(e, {
+                                    id: folder.id,
+                                    name: folder.name,
+                                    type: 'folder',
+                                    projectId: project.id,
+                                  });
+                                }
+                              }}
+                            >
+                              <FcFolder size={14} className={styles.folderIcon} />
+                              <span className={styles.treeLabel} title={folder.name}>
+                                {folder.name}
+                              </span>
+                              {(folderFileCounts[folder.id] || 0) > 0 && (
+                                <span className={styles.treeBadge}>{folderFileCounts[folder.id]}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {/* 루트 디자인 파일 (폴더에 속하지 않은 파일) */}
+                        {(projectDesignFiles[project.id] || [])
+                          .filter((df: any) => !df.folderId)
+                          .map((df: any) => (
+                            <button
+                              key={df.id}
+                              className={`${styles.treeItem} ${styles.treeItemNested}`}
+                              onClick={() => {
+                                if (onItemDoubleClick) {
+                                  onItemDoubleClick({
+                                    id: df.id,
+                                    name: df.name,
+                                    type: 'design',
+                                    projectId: project.id,
+                                    updatedAt: df.updatedAt,
+                                  });
+                                }
+                              }}
+                              onContextMenu={(e) => {
+                                if (onItemContextMenu) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onItemContextMenu(e, {
+                                    id: df.id,
+                                    name: df.name,
+                                    type: 'design',
+                                    projectId: project.id,
+                                    updatedAt: df.updatedAt,
+                                  });
+                                }
+                              }}
+                            >
+                              <LuFileBox size={14} />
+                              <span className={styles.treeLabel} title={df.name}>
+                                {df.name}
+                              </span>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* 리사이즈 핸들 */}

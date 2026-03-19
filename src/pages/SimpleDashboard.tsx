@@ -693,6 +693,7 @@ const SimpleDashboard: React.FC = () => {
                   }}
                   onCreateProject={nav.activeMenu === 'trash' ? undefined : handleCreateProject}
                   onItemContextMenu={handleItemContextMenu}
+                  onItemDoubleClick={handleItemDoubleClick}
                   menuCounts={{
                     'in-progress': data.projects.filter(p => !p.isDeleted && (!p.status || p.status === 'in_progress')).length,
                     'completed': data.projects.filter(p => !p.isDeleted && p.status === 'completed').length,
