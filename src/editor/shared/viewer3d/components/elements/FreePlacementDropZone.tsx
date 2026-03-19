@@ -489,33 +489,6 @@ const FreePlacementDropZone: React.FC = () => {
       snapped = true;
     }
 
-    // DEBUG: 구간 경계 스냅 디버깅
-    if (zonePlacementBounds.length > 1) {
-      const zoneSnaps = zonePlacementBounds.map(zb => ({
-        zone: zb.zone,
-        start: zb.placementStartXmm,
-        end: zb.placementEndXmm,
-        snapStart_L: Math.round(zb.placementStartXmm + halfWidth),
-        snapStart_R: Math.round(zb.placementStartXmm - halfWidth),
-        snapEnd_L: Math.round(zb.placementEndXmm + halfWidth),
-        snapEnd_R: Math.round(zb.placementEndXmm - halfWidth),
-      }));
-      console.log('[SNAP DEBUG updateHover]', {
-        clampedX: Math.round(clampedX),
-        bestDist: Math.round(bestDist),
-        snapped,
-        halfWidth,
-        effectiveStartX: Math.round(effectiveStartX),
-        effectiveEndX: Math.round(effectiveEndX),
-        spaceBoundsStartX: Math.round(startX),
-        spaceBoundsEndX: Math.round(endX),
-        zoneSnaps,
-        allSnapPoints: snapPoints.map(s => Math.round(s)),
-        zoneSnapPoints: zoneSnapPoints.map(s => Math.round(s)),
-        ZONE_SNAP_DISTANCE_MM,
-      });
-    }
-
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
 
     // 충돌 시 가장 가까운 빈 공간으로 밀어내기
@@ -1152,26 +1125,9 @@ const FreePlacementDropZone: React.FC = () => {
       }
       if (bestDist <= SNAP_DISTANCE_MM) { clampedX = bestSnap; snapped = true; }
 
-      // DEBUG: 구간 경계 스냅 디버깅 (calcMovedPosition)
-      if (zonePlacementBounds.length > 1) {
-        console.log('[SNAP DEBUG calcMoved]', {
-          clampedX: Math.round(clampedX),
-          bestDist: Math.round(bestDist),
-          snapped,
-          halfWidth,
-          zoneSnaps: zonePlacementBounds.map(zb => ({
-            zone: zb.zone, start: Math.round(zb.placementStartXmm), end: Math.round(zb.placementEndXmm),
-          })),
-          allSnapPoints: snapPoints.map(s => Math.round(s)),
-        });
-      }
     }
 
-    const preClamp = clampedX;
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
-    if (snapped && Math.abs(preClamp - clampedX) > 0.5) {
-      console.warn('[SNAP WARN] clampToSpaceBoundsX overrode snap!', { preClamp: Math.round(preClamp), postClamp: Math.round(clampedX) });
-    }
 
     // 충돌 체크 (자기 자신 제외)
     // 스냅 성공 시 충돌 무시 (스냅 = 기존 가구/벽 가장자리에 밀착 → 의도된 배치)
@@ -1304,14 +1260,60 @@ const FreePlacementDropZone: React.FC = () => {
     }
   }, [isDraggingPlaced, movingModuleId, calcMovedPosition, placedModules, updatePlacedModule, recalcZoneUpdate]);
 
-  // 배치된 가구 드래그 종료
+  // 배치된 가구 드래그 종료 — 구간 변경 시 너비 자동 최적화
   const handleDragPointerUp = useCallback(() => {
-    if (isDraggingPlaced) {
+    if (isDraggingPlaced && movingModuleId) {
+      const mod = placedModules.find(m => m.id === movingModuleId);
+      if (mod && zonePlacementBounds.length > 1) {
+        const currentXmm = mod.position.x * 100;
+        const currentZone = detectHoverZoneType(currentXmm, spaceInfo);
+        // 단내림/커튼박스 구간으로 이동한 경우 → 구간 잔여 크기에 꽉 차게 자동 리사이즈
+        if (currentZone !== 'main') {
+          const zoneInfo = zonePlacementBounds.find(z => z.zone === currentZone);
+          if (zoneInfo) {
+            // 자기 자신을 제외한 해당 구간 잔여 너비
+            const remaining = getZoneRemainingWidth(zoneInfo, freeModules, mod.id);
+            if (remaining >= 200) {
+              // 잔여 너비에 꽉 차게 (이격 없이)
+              const optimalWidth = Math.round(remaining);
+
+              // 구간 내 빈 공간 찾기 → 거기에 정렬
+              const occupiedRanges: { left: number; right: number }[] = [];
+              for (const other of freeModules) {
+                if (other.id === mod.id || other.isSurroundPanel) continue;
+                const ob = getModuleBoundsX(other);
+                const oStart = Math.max(ob.left, zoneInfo.placementStartXmm);
+                const oEnd = Math.min(ob.right, zoneInfo.placementEndXmm);
+                if (oEnd > oStart) occupiedRanges.push({ left: oStart, right: oEnd });
+              }
+              occupiedRanges.sort((a, b) => a.left - b.left);
+
+              // 빈 공간의 시작점 찾기
+              let freeStart = zoneInfo.placementStartXmm;
+              for (const range of occupiedRanges) {
+                if (range.left > freeStart + 1) break;
+                freeStart = Math.max(freeStart, range.right);
+              }
+              let bestX = freeStart + optimalWidth / 2;
+              bestX = Math.min(bestX, zoneInfo.placementEndXmm - optimalWidth / 2);
+              bestX = Math.max(bestX, zoneInfo.placementStartXmm + optimalWidth / 2);
+
+              const zoneUpdate = recalcZoneUpdate(mod, Math.round(bestX));
+              updatePlacedModule(movingModuleId, {
+                position: { x: Math.round(bestX) * 0.01, y: zoneUpdate.y, z: mod.position.z },
+                freeWidth: optimalWidth,
+                freeHeight: zoneUpdate.freeHeight,
+                zone: zoneUpdate.zone as 'normal' | 'dropped',
+              });
+            }
+          }
+        }
+      }
       window.dispatchEvent(new CustomEvent('furniture-drag-end'));
     }
     setIsDraggingPlaced(false);
     setIsMoveMode(false);
-  }, [isDraggingPlaced]);
+  }, [isDraggingPlaced, movingModuleId, placedModules, zonePlacementBounds, spaceInfo, freeModules, recalcZoneUpdate, updatePlacedModule]);
 
   // 키보드 좌우 화살표로 미세 이동
   useEffect(() => {
