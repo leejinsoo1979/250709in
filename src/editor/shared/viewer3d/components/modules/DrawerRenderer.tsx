@@ -511,11 +511,11 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
           const mat = getPanelMaterial(panelName);
-          const bottomPanelThk = mmToThreeUnits(5);
-          // 뒷판 높이: 기존 높이에서 바닥판 두께만큼 하단 축소
-          const backHeight = drawerHeight - mmToThreeUnits(30) - bottomPanelThk;
-          // 뒷판 Y: 상단은 그대로, 하단만 올라감 → 중심이 바닥판 두께/2 만큼 위로
-          const backY = centerY + bottomPanelThk / 2;
+          const backCutBottom = mmToThreeUnits(13);
+          // 뒷판 높이: 기존 높이에서 하단 13mm 축소 (바닥판 위에 올라탐)
+          const backHeight = drawerHeight - mmToThreeUnits(30) - backCutBottom;
+          // 뒷판 Y: 상단 고정, 하단만 13mm 올라감 → 중심이 13/2=6.5mm 위로
+          const backY = centerY + backCutBottom / 2;
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-back-${mat.uuid}`}
