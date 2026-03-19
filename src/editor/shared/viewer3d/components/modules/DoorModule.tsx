@@ -769,20 +769,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
 
-    // ── 자유배치 / 슬롯 배치 공통: 천장바닥 기준 도어 이격 적용 ──
-    // 전체서라운드: 상부프레임이 도어 앞까지 나오므로 도어 상단이 프레임 아래에서 시작
-    // 상단갭은 항상 천장 기준 (서라운드 타입 무관)
-    // gap=0이면 도어 상단이 천장에 맞닿음 → 도어 높이 = 공간 높이
-    const topGap = doorTopGap;
-    // hasBase=false: 받침대 없음(actualBase=0), 개별 띄움 높이만큼 가구 Y가 올라갔으므로 보정
-    const indivFloat = (hasBaseProp === false) ? (individualFloatHeightProp ?? 0) : 0;
-    const actualBase = hasBaseProp === false ? indivFloat : (placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65));
-    // bottomGap: 항상 바닥 기준 (받침대/띄움 무관, 0이면 바닥에서 시작)
-    const bottomGap = doorBottomGap;
-    const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
-    doorTopLocal = cabinetTopLocal + distToTop - topGap;
-    doorBottomLocal = cabinetBottomLocal - actualBase + bottomGap;
-    actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+    if (isFree) {
+      // ── 자유배치: 가구 본체 기준 도어 위치 (슬롯처럼 공간 확장하지 않음) ──
+      // 도어는 가구 본체 내부에서만 렌더: 상단/하단 갭만 적용
+      doorTopLocal = cabinetTopLocal - doorTopGap;
+      doorBottomLocal = cabinetBottomLocal + doorBottomGap;
+      actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+    } else {
+      // ── 슬롯 배치: 천장/바닥 기준 도어 이격 적용 ──
+      // 전체서라운드: 상부프레임이 도어 앞까지 나오므로 도어 상단이 프레임 아래에서 시작
+      // 상단갭은 항상 천장 기준 (서라운드 타입 무관)
+      // gap=0이면 도어 상단이 천장에 맞닿음 → 도어 높이 = 공간 높이
+      const topGap = doorTopGap;
+      // hasBase=false: 받침대 없음(actualBase=0), 개별 띄움 높이만큼 가구 Y가 올라갔으므로 보정
+      const indivFloat = (hasBaseProp === false) ? (individualFloatHeightProp ?? 0) : 0;
+      const actualBase = hasBaseProp === false ? indivFloat : (placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65));
+      // bottomGap: 항상 바닥 기준 (받침대/띄움 무관, 0이면 바닥에서 시작)
+      const bottomGap = doorBottomGap;
+      const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
+      doorTopLocal = cabinetTopLocal + distToTop - topGap;
+      doorBottomLocal = cabinetBottomLocal - actualBase + bottomGap;
+      actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+    }
 
     const resolveSectionHeightsForDoor = () => {
       if (sectionHeightsMm?.length === totalSections) {
