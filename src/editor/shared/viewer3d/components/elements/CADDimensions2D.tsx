@@ -500,8 +500,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return displaySections.map((sectionDisplay, sectionIndex) => {
             const { startY: sectionStartY, endY: sectionEndY, heightMm: sectionHeightMm, isFirst } = sectionDisplay;
 
-            // 첫 번째 섹션(하부)은 하단 가이드선 표시 안 함 (받침대와 겹침)
-            const shouldRenderStartGuide = !isFirst;
+            // 첫 번째 섹션(하부)은 받침대 치수가 있을 때만 하단 가이드선 생략 (겹침 방지)
+            // 받침대가 없으면(hasBase=false + 띄움=0 등) 하단 가이드선 표시 필요
+            const shouldRenderStartGuide = !isFirst || baseFrameHeightMm <= 0;
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
@@ -1288,8 +1289,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return displaySections.map((sectionDisplay, sectionIndex) => {
             const { startY: sectionStartY, endY: sectionEndY, heightMm: sectionHeightMm, isFirst } = sectionDisplay;
 
-            // 첫 번째 섹션(하부)은 하단 가이드선 표시 안 함 (받침대와 겹침)
-            const shouldRenderStartGuide = !isFirst;
+            // 첫 번째 섹션(하부)은 받침대 치수가 있을 때만 하단 가이드선 생략 (겹침 방지)
+            // 받침대가 없으면(hasBase=false + 띄움=0 등) 하단 가이드선 표시 필요
+            const shouldRenderStartGuide = !isFirst || baseFrameHeightMm <= 0;
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
