@@ -1762,58 +1762,8 @@ const Room: React.FC<RoomProps> = ({
             // 단내림(stepCeiling) 경계벽: 내부 경계벽이므로 그라데이션 라인 불필요
             // (천장 면 위에 사선으로 보이므로 뒷벽 실선만 표시)
 
-            // === 커튼박스/단내림 경계벽 뒷벽 실선 (테마색상, 그라데이션 없음) ===
+            // solidThemeLines 제거: 뒷벽 위 X/Y축 실선 (경계벽 수직/수평선)은 3D에서 불필요한 윤곽선으로 보임
             const solidThemeLines: [number, number, number, number, number, number][] = [];
-            if (hasDC && spaceInfo.droppedCeiling) {
-              const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
-              const dcIsL = spaceInfo.droppedCeiling.position === 'left';
-              const bx = dcIsL ? x1 + dcW : x2 - dcW;
-              const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
-              const stepSameSideAsDC2 = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
-              const bwTop = isFreePlacement ? droppedCY : cY;
-              const bwBot = isFreePlacement
-                ? (stepSameSideAsDC2 ? cY - scDropHLine : cY)
-                : droppedCY;
-
-              // 경계벽 수직선 (뒷벽)
-              solidThemeLines.push([bx, bwBot, z1, bx, bwTop, z1]);
-              // 경계벽 수평선 (뒷벽) — 커튼박스 천장 높이
-              if (dcIsL) {
-                solidThemeLines.push([x1, droppedCY, z1, bx, droppedCY, z1]);
-              } else {
-                solidThemeLines.push([bx, droppedCY, z1, x2, droppedCY, z1]);
-              }
-            }
-
-            // === 단내림(stepCeiling) 경계벽 뒷벽 실선 (자유배치 전용) ===
-            if (hasSC && isFreePlacement) {
-              const scW = mmToThreeUnits(spaceInfo.stepCeiling!.width || 900);
-              const scBx = hasDC
-                ? (scIsLeft ? x1 + (hasDC && dcIsLeft ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0) + scW
-                            : x2 - (hasDC && dcIsRight ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0) - scW)
-                : (scIsLeft ? x1 + scW : x2 - scW);
-              const scCeilingY = cY - scDropHLine;
-
-              // 단내림 경계벽 수직선 (뒷벽): 메인 천장 → 단내림 천장
-              solidThemeLines.push([scBx, scCeilingY, z1, scBx, cY, z1]);
-              // 단내림 천장 수평선 (뒷벽): 단내림 경계벽 ~ 커튼박스 경계벽 (또는 외벽)
-              if (hasDC) {
-                const dcW = mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150);
-                const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW;
-                if (scIsLeft) {
-                  solidThemeLines.push([dcBx, scCeilingY, z1, scBx, scCeilingY, z1]);
-                } else {
-                  solidThemeLines.push([scBx, scCeilingY, z1, dcBx, scCeilingY, z1]);
-                }
-              } else {
-                // 커튼박스 없이 단내림만 있는 경우
-                if (scIsLeft) {
-                  solidThemeLines.push([x1, scCeilingY, z1, scBx, scCeilingY, z1]);
-                } else {
-                  solidThemeLines.push([scBx, scCeilingY, z1, x2, scCeilingY, z1]);
-                }
-              }
-            }
 
             if (lines.length === 0 && solidThemeLines.length === 0) return null;
 
