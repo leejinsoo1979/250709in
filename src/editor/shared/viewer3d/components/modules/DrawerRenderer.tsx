@@ -462,16 +462,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
         /> */}
         
-        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 사방 판재에 끼워짐 (폭은 70mm 더 줄이고, 깊이는 20mm 짧음) */}
-        {/* 프레임 두께 18mm→15mm 변경으로 바닥판 확장: 좌우 +6mm(76→70), 앞뒤 +6mm(26→20) */}
+        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 측판 뒷선까지 확장 (뒷판이 바닥판 위에 올라탐) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`;
           const mat = getPanelMaterial(panelName);
+          // 바닥판 깊이: 앞판 뒤~측판 뒷선(=drawerBodyDepth 전체) 에서 앞판 두께만 빼기
+          const bottomDepth = drawerBodyDepth - DRAWER_SIDE_THICKNESS;
+          // 바닥판 Z: 앞판 뒤쪽부터 뒷선까지의 중심
+          const bottomZ = drawerBodyCenterZ - DRAWER_SIDE_THICKNESS / 2;
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(70) - mmToThreeUnits(26), mmToThreeUnits(5), drawerBodyDepth - mmToThreeUnits(20)]}
-              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
+              args={[drawerWidth - mmToThreeUnits(70) - mmToThreeUnits(26), mmToThreeUnits(5), bottomDepth]}
+              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + mmToThreeUnits(5)/2, bottomZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -503,15 +506,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 뒷면 - 좌우 측판 안쪽에 끼워짐 (좌우 15mm씩 추가 축소) */}
+        {/* 뒷면 - 바닥판 위에 올라탐 (하단 바닥판 두께 5mm만큼 축소, Y 위치 올림) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
           const mat = getPanelMaterial(panelName);
+          const bottomPanelThk = mmToThreeUnits(5);
+          const backHeight = drawerHeight - mmToThreeUnits(30) - bottomPanelThk;
+          const backY = centerY + bottomPanelThk / 2;
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-back-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(107), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
-              position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + DRAWER_SIDE_THICKNESS/2]}
+              args={[drawerWidth - mmToThreeUnits(107), backHeight, DRAWER_SIDE_THICKNESS]}
+              position={[centerX, backY, drawerBodyCenterZ - drawerBodyDepth/2 + DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
