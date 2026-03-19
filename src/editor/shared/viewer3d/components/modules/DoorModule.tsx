@@ -1042,15 +1042,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
 
       // 천장바닥 기준: 섹션 분할 도어도 Y 위치 보정 필요
+      // effectiveInternalHeight는 storeFreeHeight로 덮어씌워질 수 있으므로
+      // hasBase 인플레이션을 제거한 안정적인 높이로 heightDiff 계산
       if (effectiveInternalHeight) {
-        // hasBase=false 시 FurnitureItem이 가구 높이에 받침대를 흡수하므로
-        // effectiveInternalHeight가 커짐 → heightDiff가 음수 → 도어가 잘못 이동
-        // 원래의 hasBase-independent 높이로 정규화
+        // hasBase=false 시 effectiveInternalHeight가 storeFreeHeight(인플레이션 전)로 올 수 있으므로
+        // 항상 hasBase 인플레이션을 제거한 높이로 비교
         let stableHeight = effectiveInternalHeight;
         if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
           const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
           const indivFloat = individualFloatHeightProp ?? 0;
-          stableHeight -= (hiddenBaseH - indivFloat);
+          // effectiveInternalHeight가 이미 인플레이션 전 값이면 차감하지 않음
+          if (stableHeight > tallCabinetFurnitureHeight) {
+            stableHeight -= (hiddenBaseH - indivFloat);
+          }
         }
         const heightDiff = tallCabinetFurnitureHeight - stableHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
@@ -1077,13 +1081,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 천장바닥 기준: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
       // → 가구 중심과 공간 중심의 차이만큼 도어 Y 위치 보정
       if (effectiveInternalHeight) {
-        // hasBase=false 시 FurnitureItem이 가구 높이에 받침대를 흡수하므로
-        // effectiveInternalHeight가 커짐 → 정규화하여 보정
         let stableHeight = effectiveInternalHeight;
         if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
           const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
           const indivFloat = individualFloatHeightProp ?? 0;
-          stableHeight -= (hiddenBaseH - indivFloat);
+          if (stableHeight > tallCabinetFurnitureHeight) {
+            stableHeight -= (hiddenBaseH - indivFloat);
+          }
         }
         const heightDiff = tallCabinetFurnitureHeight - stableHeight;
         doorYPosition += mmToThreeUnits(heightDiff / 2);
@@ -1096,19 +1100,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
       }
 
-console.log('🚪📍 키큰장 도어 Y (hasBase 디버그):', {
-        hasBaseProp,
-        effectiveInternalHeight,
-        tallCabinetFurnitureHeight,
-        baseConfigHeight: originalSpaceInfo.baseConfig?.height,
-        baseConfigType: originalSpaceInfo.baseConfig?.type,
-        individualFloatHeightProp,
-        doorYPosition_mm: (doorYPosition / 0.01).toFixed(1),
-        fullSpaceHeight,
-        doorBottomLocal: doorBottomLocal.toFixed(1),
-        doorTopLocal: doorTopLocal.toFixed(1),
-        actualDoorHeight: actualDoorHeight.toFixed(1),
-      });
     }
   }
 
