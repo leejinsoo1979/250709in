@@ -3142,6 +3142,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             furnitureH = _internalHeight;
           }
 
+          // 바닥마감재 적용: 가구 높이에서 차감 (FurnitureItem.tsx와 동일)
+          {
+            const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
+              ? spaceInfo.floorFinish.height : 0;
+            if (floorFinishForHeight > 0) {
+              furnitureH -= floorFinishForHeight;
+            }
+          }
+
           // 치수가이드 표시용 프레임 높이 (토글 반영)
           // 하부: OFF → 띄움 높이(individualFloatHeight) 표시, ON → 실제 size
           const bottomFrameH = leftmostMod?.hasBase === false
