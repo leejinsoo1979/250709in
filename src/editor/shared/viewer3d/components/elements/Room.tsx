@@ -3757,13 +3757,15 @@ const Room: React.FC<RoomProps> = ({
 
               const globalTopFrameMm = spaceInfo.frameSize?.top || 30;
               const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
-              // 단내림 구간 가구 판별을 위한 정보
-              const normalSlotCountForFrame = hasDroppedCeiling
-                ? (ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount)?.normal?.columnCount || (spaceInfo.customColumnCount || 4))
-                : Infinity;
+              // 단내림 구간 가구 판별을 위한 정보 — X 위치 기반 판별
               const droppedCeilingHeight = hasDroppedCeiling
                 ? height - mmToThreeUnits(spaceInfo.droppedCeiling?.dropHeight || 200)
                 : height;
+              const droppedWidthMm = hasDroppedCeiling ? (spaceInfo.droppedCeiling?.width || 900) : 0;
+              const totalWidthMm = spaceInfo.width || 3600;
+              const droppedBoundaryMm = isLeftDropped
+                ? -(totalWidthMm / 2) + droppedWidthMm
+                : (totalWidthMm / 2) - droppedWidthMm;
               return (
                 <>
                   {slotModsForFrame
@@ -3791,9 +3793,13 @@ const Room: React.FC<RoomProps> = ({
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       let modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                       const modTopHeight = mmToThreeUnits(modTopThickness);
-                      // 단내림 구간 가구는 단내림 천장 높이 기준으로 Y 계산
-                      const isInDroppedZone = hasDroppedCeiling && mod.slotIndex !== undefined && mod.slotIndex >= normalSlotCountForFrame;
-                      console.log('🔥 상부프레임 zone:', { id: mod.id, slotIndex: mod.slotIndex, normalSlotCountForFrame, isInDroppedZone, hasDroppedCeiling });
+                      // 단내림 구간 가구는 단내림 천장 높이 기준으로 Y 계산 — X 위치 기반
+                      const modCenterForZone = (bounds.left + bounds.right) / 2;
+                      const isInDroppedZone = hasDroppedCeiling && (
+                        isLeftDropped
+                          ? modCenterForZone < droppedBoundaryMm
+                          : modCenterForZone > droppedBoundaryMm
+                      );
                       const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
                       const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
                       const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
@@ -4462,14 +4468,24 @@ const Room: React.FC<RoomProps> = ({
             const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
             const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
 
-            // 오른쪽이 단내림 영역인 경우
+            // 오른쪽이 단내림(커튼박스) 영역인 경우
+            // 자유배치에서 커튼박스+stepCeiling 동시 활성 시, stepCeiling 높이 기준 사용
             if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
-              const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-              const droppedFrameHeight = droppedHeight - floatHeight;
-              const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight / 2;
-              const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || (isFreePlacement ? 150 : 900));
+              const hasRightStepCeilingToo = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+              let subFrameH: number;
+              let subFrameCY: number;
 
-// console.log('🔥🔥🔥 [오른쪽 서브프레임 - 단내림] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
+              if (hasRightStepCeilingToo) {
+                // 커튼박스 + stepCeiling 동시: stepCeiling 높이 기준
+                const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
+                subFrameH = adjustedPanelHeight - stepDropH;
+                subFrameCY = sideFrameStartY + subFrameH / 2;
+              } else {
+                // 커튼박스만: 슬롯모드 기존 로직
+                const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
+                subFrameH = droppedHeight - floatHeight;
+                subFrameCY = panelStartY + floatHeight + subFrameH / 2;
+              }
 
               return (
                 <>
@@ -4477,7 +4493,7 @@ const Room: React.FC<RoomProps> = ({
                   <group
                     position={[
                       xOffset + width - frameThickness.right / 2,
-                      droppedCenterY,
+                      subFrameCY,
                       furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                     ]}
                   >
@@ -4486,7 +4502,7 @@ const Room: React.FC<RoomProps> = ({
                       key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameThickness.right,
-                        droppedFrameHeight,
+                        subFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
@@ -4496,11 +4512,11 @@ const Room: React.FC<RoomProps> = ({
                     />
                   </group>
 
-                  {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
+                  {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬) */}
                   <group
                     position={[
                       xOffset + width - frameThickness.right + mmToThreeUnits(9),
-                      droppedCenterY,
+                      subFrameCY,
                       furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
                     ]}
                     rotation={[0, Math.PI / 2, 0]}
@@ -4510,7 +4526,7 @@ const Room: React.FC<RoomProps> = ({
                       key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
-                        droppedFrameHeight,
+                        subFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
@@ -4523,7 +4539,7 @@ const Room: React.FC<RoomProps> = ({
               );
             }
 
-            // stepCeiling: 오른쪽이 단내림 영역인 경우 (자유배치)
+            // stepCeiling: 오른쪽이 단내림 영역인 경우 (자유배치, 커튼박스 없음)
             const hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
             if (hasRightStepCeiling) {
               const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
