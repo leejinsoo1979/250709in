@@ -247,13 +247,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     ? selectedMod.topFrameThickness
     : globalTopFrameHeightMm;
   const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
-  const railOrBaseHeightMm = (selectedMod?.baseFrameHeight !== undefined && !isStandType)
-    ? selectedMod.baseFrameHeight
-    : globalRailOrBaseHeightMm;
+  // 개별 가구 hasBase/individualFloatHeight 반영 (FurnitureItem.tsx 1392-1395와 동기화)
+  const modHasBaseOff = selectedMod?.hasBase === false && !isStandType;
+  const railOrBaseHeightMm = modHasBaseOff
+    ? 0  // 하부프레임 OFF → 받침대 0
+    : (selectedMod?.baseFrameHeight !== undefined && !isStandType)
+      ? selectedMod.baseFrameHeight
+      : globalRailOrBaseHeightMm;
+  const indivFloatMm = modHasBaseOff ? (selectedMod?.individualFloatHeight ?? 0) : 0;
   const railOrBaseHeight = mmToThreeUnits(railOrBaseHeightMm);
 
   // per-furniture 받침대/치수 변수
-  const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
+  const baseFrameHeightMm = isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm);
   const baseFrameDisplayMm = Math.max(0, baseFrameHeightMm - (isFloating ? 0 : floorFinishHeightMm));
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floorFinishY = isFloating ? 0 : mmToThreeUnits(floorFinishHeightMm);
@@ -270,7 +275,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     if (selectedMod.topFrameThickness !== undefined) {
       adjustedInternalHeightMm -= (selectedMod.topFrameThickness - globalTopFrameHeightMm);
     }
-    if (selectedMod.baseFrameHeight !== undefined && !isStandType) {
+    if (modHasBaseOff) {
+      // 하부프레임 OFF: 받침대 높이만큼 가구 내경이 늘어나고, 개별 띄움만큼 줄어듦
+      const hiddenBaseH = selectedMod.baseFrameHeight ?? globalRailOrBaseHeightMm;
+      adjustedInternalHeightMm += hiddenBaseH - indivFloatMm;
+    } else if (selectedMod.baseFrameHeight !== undefined && !isStandType) {
       adjustedInternalHeightMm -= (selectedMod.baseFrameHeight - globalRailOrBaseHeightMm);
     }
   }
