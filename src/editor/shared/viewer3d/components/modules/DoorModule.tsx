@@ -1309,17 +1309,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // });
   }
 
-  // 2D 정면뷰: 도어 반투명 면 overlay (기존 도어 렌더링 대신)
-  if (viewMode === '2D' && view2DDirection === 'front') {
-    const overlayWidth = mmToThreeUnits(actualDoorWidth);
-    const overlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
-    return (
-      <mesh position={[doorGroupX, doorYPosition, doorDepth / 2 + 0.001]} renderOrder={9999}>
-        <planeGeometry args={[overlayWidth, doorHeight]} />
-        <meshBasicMaterial color={overlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
-      </mesh>
-    );
-  }
+  // 2D 정면뷰: 도어 반투명 면 overlay 정보 (기존 도어 렌더링에 추가)
+  const showDoorOverlay = viewMode === '2D' && view2DDirection === 'front';
+  const doorOverlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
 
   if (isDualFurniture) {
     // 듀얼 가구: 두 슬롯의 전체 너비 계산
@@ -1417,6 +1409,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
+        {/* 2D 정면뷰: 도어 반투명 면 overlay */}
+        {showDoorOverlay && (
+          <mesh position={[0, doorYPosition, doorDepth / 2 + 0.001]} renderOrder={9999}>
+            <planeGeometry args={[mmToThreeUnits(totalWidth), doorHeight]} />
+            <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+          </mesh>
+        )}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
         <group position={[leftHingeX + leftEpTrimShift, doorYPosition, doorDepth / 2]}>
@@ -2273,6 +2272,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
+        {/* 2D 정면뷰: 도어 반투명 면 overlay */}
+        {showDoorOverlay && (
+          <mesh position={[doorPositionX, 0, 0.001]} renderOrder={9999}>
+            <planeGeometry args={[doorWidthUnits, doorHeight]} />
+            <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+          </mesh>
+        )}
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
