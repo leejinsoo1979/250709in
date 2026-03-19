@@ -4364,6 +4364,64 @@ const Room: React.FC<RoomProps> = ({
               );
             }
 
+            // stepCeiling: 왼쪽이 단내림 영역인 경우 (자유배치)
+            const hasLeftStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+            if (hasLeftStepCeiling) {
+              const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
+              const droppedH = adjustedPanelHeight - stepDropH;
+              const droppedCY = sideFrameStartY + droppedH / 2;
+
+              return (
+                <>
+                  {/* 좌측 벽 안쪽 세로 서브프레임 (stepCeiling 단내림 높이) */}
+                  <group
+                    position={[
+                      xOffset + frameThickness.left - mmToThreeUnits(9),
+                      droppedCY,
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
+                    ]}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      key={`left-step-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                      args={[
+                        mmToThreeUnits(44),
+                        droppedH,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[0, 0, 0]}
+                      material={leftSubFrameMaterial ?? createFrameMaterial('left')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </group>
+                  {/* 좌측 벽 안쪽 정면 프레임 (stepCeiling 단내림 높이) */}
+                  <group
+                    position={[
+                      xOffset + frameThickness.left / 2,
+                      droppedCY,
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                    ]}
+                  >
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      key={`left-step-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                      args={[
+                        frameThickness.left,
+                        droppedH,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[0, 0, 0]}
+                      material={leftSubFrameMaterial ?? createFrameMaterial('left')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </group>
+                </>
+              );
+            }
+
             // 단내림이 없거나 오른쪽에 있는 경우 (일반구간)
             // 왼쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
             if (!droppedCeilingEnabled || droppedCeilingPosition !== 'left') {
@@ -4460,6 +4518,64 @@ const Room: React.FC<RoomProps> = ({
                       args={[
                         mmToThreeUnits(44),
                         droppedFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[0, 0, 0]}
+                      material={rightSubFrameMaterial ?? createFrameMaterial('right')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </group>
+                </>
+              );
+            }
+
+            // stepCeiling: 오른쪽이 단내림 영역인 경우 (자유배치)
+            const hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+            if (hasRightStepCeiling) {
+              const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
+              const droppedH = adjustedPanelHeight - stepDropH;
+              const droppedCY = sideFrameStartY + droppedH / 2;
+
+              return (
+                <>
+                  {/* 우측 벽 안쪽 정면 프레임 (stepCeiling 단내림 높이) */}
+                  <group
+                    position={[
+                      xOffset + width - frameThickness.right / 2,
+                      droppedCY,
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                    ]}
+                  >
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      key={`right-step-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                      args={[
+                        frameThickness.right,
+                        droppedH,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[0, 0, 0]}
+                      material={rightSubFrameMaterial ?? createFrameMaterial('right')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  </group>
+                  {/* 우측 벽 안쪽 세로 서브프레임 (stepCeiling 단내림 높이) */}
+                  <group
+                    position={[
+                      xOffset + width - frameThickness.right + mmToThreeUnits(9),
+                      droppedCY,
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
+                    ]}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      key={`right-step-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                      args={[
+                        mmToThreeUnits(44),
+                        droppedH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
