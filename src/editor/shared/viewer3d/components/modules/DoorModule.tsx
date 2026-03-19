@@ -64,7 +64,7 @@ const BoxWithEdges: React.FC<{
           material={material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
-          renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
+          renderOrder={isEditMode ? 999 : (viewMode === '2D' ? 900 : 0)}
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
@@ -293,15 +293,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         } else if (viewMode === '2D') {
           if (view2DDirection === 'front') {
             // 정면뷰: 도어 면을 반투명 색상으로 표현
-            mat.color.set(view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0');
+            const doorColor2D = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
+            mat.color.set(doorColor2D);
             mat.transparent = true;
             mat.opacity = 0.25;
             mat.depthWrite = false;
+            mat.depthTest = false;
+            mat.side = THREE.DoubleSide;
+            mat.renderOrder = 900;
+            console.log('🚪 도어 material 2D 정면뷰 적용:', { color: doorColor2D, opacity: 0.25, side: 'DoubleSide' });
           } else {
             mat.color.set('#18CF23');
             mat.transparent = false;
             mat.opacity = 1.0;
             mat.depthWrite = true;
+            mat.side = THREE.FrontSide;
           }
         } else if (renderMode === 'wireframe') {
           mat.transparent = true;
