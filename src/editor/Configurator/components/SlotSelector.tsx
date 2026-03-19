@@ -133,7 +133,8 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     // 슬롯 기반 배치: 기존 로직
     const normalSlotCount = zones?.normal?.columnCount || columnCount;
     const droppedSlotCount = zones?.dropped?.columnCount || 0;
-    const isDroppedOnLeft = spaceInfo?.droppedCeiling?.position === 'left';
+    const hasDroppedCeiling = spaceInfo?.droppedCeiling?.enabled === true;
+    const isDroppedOnLeft = hasDroppedCeiling && spaceInfo?.droppedCeiling?.position === 'left';
 
     if (isDroppedOnLeft) {
       for (let i = droppedSlotCount - 1; i >= 0; i--) {
