@@ -59,10 +59,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   panelGrainDirections,
   textureUrl
 }) => {
-  // Debug: 단내림 프레임 확인
-  if (args[1] > 19 && args[1] < 21) {
-    console.log('📍 BoxWithEdges 렌더 - position:', position, 'args:', args);
-  }
 
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
@@ -122,11 +118,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외, highlightMaterial 제외)
     if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial && !isClothingRod) {
-      // baseMaterial을 직접 수정하지 않고 clone
+      // 도어: DoorModule에서 이미 material 설정 완료 → 그대로 사용
+      const isDoor = panelName && (panelName.includes('도어') || panelName.includes('door'));
+      if (isDoor) {
+        return baseMaterial;
+      }
+
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
-      transparentMaterial.opacity = 0.1;  // 매우 투명하게 (10% 불투명도)
       transparentMaterial.depthWrite = false;
+      transparentMaterial.opacity = 0.1;
       transparentMaterial.needsUpdate = true;
       return transparentMaterial;
     }
@@ -181,7 +182,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return editGhostMaterial;
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode, isClothingRod]);
+  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -388,46 +389,67 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
 
   // Debug log for position
-  React.useEffect(() => {
-    const height = args[1];
-    const yPos = position[1];
-    if (height > 19 && height < 21) { // 높이가 약 20 (19~21 범위)
-      console.log('📍 BoxWithEdges 단내림 프레임 - position:', position, 'args:', args, 'Y:', yPos, 'H:', height);
-    }
-  }, [position, args]);
 
   // 2D 모드: panelName 기반 깊이 등급 → opacity 매핑
   // 가장 앞(마이다, 측판 등) = 1.0, 서랍 내부 = 0.4, 백패널 = 0.1
   const panelDepthOpacity = React.useMemo((): number => {
     if (viewMode !== '2D') return 1;
-    if (isHighlighted || isClothingRod) return 1;
+    if (isHighlighted) return 1;
+    if (isClothingRod) {
+      if (view2DDirection === 'left' || view2DDirection === 'right') return 0.35;
+      return 1;
+    }
     if (edgeOpacity !== undefined) return edgeOpacity;
     if (isBackPanel && view2DDirection === 'front') return 0.1;
     if (!panelName) return 1;
 
+    // 서랍 관련 패널 판별 (서랍속장 > 서랍 내부 > 마이다 순서로 체크)
+    const isDrawerFrame = panelName.includes('서랍속장');  // 서랍속장 프레임
+    const isDrawerPanel = !isDrawerFrame && panelName.includes('서랍'); // 서랍 내부 패널 (마이다 포함)
+    const isMaida = panelName.includes('마이다'); // 마이다 (서랍 앞면 손잡이판)
+
     // 정면 뷰 기준 깊이 등급
     if (view2DDirection === 'front') {
-      // 가장 앞 (opacity 1.0): 마이다, 가구 측판, 상판, 바닥판, 선반
-      if (panelName.includes('마이다')) return 1.0;
-      if (panelName.includes('측판') || panelName.includes('좌측판') || panelName.includes('우측판')) return 1.0;
-      if (panelName.includes('상판') || panelName.includes('바닥') || panelName.includes('선반')) return 1.0;
-      // 서랍속장 프레임 (opacity 0.5)
-      if (panelName.includes('서랍속장')) return 0.5;
-      // 서랍 내부 패널 (opacity 0.35): 앞판, 측판, 뒷판, 바닥
-      if (panelName.includes('서랍')) return 0.35;
+      if (isMaida) return 1.0;
+      if (isDrawerFrame) return 0.15;
+      if (isDrawerPanel) return 0.15;
+      // 하부섹션 상판: 옵셋으로 뒤에 있으므로 약간 흐리게
+      if (panelName.includes('(하)상판') || panelName === '하부섹션 상판') return 0.5;
       return 1.0;
     }
 
     // 측면 뷰 기준 깊이 등급
+    // 측판이 가장 앞 → 진하게, 나머지는 뒤에 있으므로 흐리게
     if (view2DDirection === 'left' || view2DDirection === 'right') {
-      if (panelName.includes('마이다')) return 1.0;
-      if (panelName.includes('서랍속장')) return 0.5;
-      if (panelName.includes('서랍')) return 0.35;
+      // 가구 측판 (가장 앞)
+      if (!isDrawerPanel && !isDrawerFrame && (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'))) return 1.0;
+      // 마이다, 상판, 바닥, 선반
+      if (isMaida) return 0.4;
+      if (panelName.includes('상판') || panelName.includes('바닥') || panelName.includes('선반')) return 0.4;
+      // 서랍 측판
+      if (isDrawerPanel && (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판'))) return 0.35;
+      // 보강대
+      if (panelName.includes('보강대')) return 0.3;
+      // 서랍속장 프레임
+      if (isDrawerFrame) return 0.25;
+      // 서랍 내부 (앞판, 뒷판, 바닥)
+      if (isDrawerPanel) return 0.2;
+      return 0.5;
+    }
+
+    // 탑뷰 기준 깊이 등급
+    // 상판이 가장 앞, 서랍 바닥판은 아래에 있으므로 흐리게
+    if (view2DDirection === 'top') {
+      if (isMaida) return 0.35;
+      if (isDrawerFrame) return 0.35;
+      if (isDrawerPanel && panelName.includes('바닥')) return 0.15;
+      if (isDrawerPanel) return 0.25;
       return 1.0;
     }
 
     return 1;
   }, [viewMode, view2DDirection, panelName, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+
 
   // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
@@ -468,6 +490,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     const baseLineWidth = isHighlighted ? 4 : (isBackPanel ? 1 : 2);
 
+    // lineBasicMaterial opacity가 WebGL에서 잘 안 보이는 경우 대비
+    // color 자체를 배경색과 블렌딩하여 깊이감 표현
+    const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
+      const base = new THREE.Color(edgeColor);
+      const bg = new THREE.Color(view2DTheme === 'dark' ? '#1a1a2e' : '#ffffff');
+      bg.lerp(base, panelDepthOpacity);
+      return '#' + bg.getHexString();
+    })();
+
     return (
       <>
         {lines.map((line, i) => (
@@ -481,7 +512,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
               />
             </bufferGeometry>
             <lineBasicMaterial
-              color={edgeColor}
+              color={blendedColor}
               transparent={true}
               opacity={panelDepthOpacity}
               depthTest={false}
@@ -492,7 +523,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ))}
       </>
     );
-  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity]);
+  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme]);
 
   return (
     <group position={position}>
