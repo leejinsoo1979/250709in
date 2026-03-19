@@ -4108,6 +4108,92 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
             )}
 
+            {/* 자유배치: 가구 좌/우 갭 거리 치수선 (벽 또는 단내림 경계까지) */}
+            {isFreePlacement && (() => {
+              const leftGapMm = Math.round(nearestLeftDistance);
+              const rightGapMm = Math.round(nearestRightDistance);
+              // 갭 치수선 좌/우 끝 X 좌표
+              const leftGapStartX = leftX - mmToThreeUnits(leftGapMm);
+              const rightGapEndX = rightX + mmToThreeUnits(rightGapMm);
+              const gapColor = view2DTheme === 'dark' ? '#9CA3AF' : '#888888';
+              return (<>
+                {/* 좌측 갭 치수선 */}
+                {leftGapMm > 0 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[leftGapStartX, dimY, 0.002], [leftX, dimY, 0.002]]}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftGapStartX, dimY, 0.002], [leftGapStartX + 0.02, dimY, 0.002], 0.01)}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftX, dimY, 0.002], [leftX - 0.02, dimY, 0.002], 0.01)}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <Html
+                    position={[(leftGapStartX + leftX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    center
+                    style={{ pointerEvents: 'auto' }}
+                    zIndexRange={[9998, 9999]}
+                  >
+                    <div style={{
+                      padding: '2px 6px', fontSize: '12px', fontWeight: 'bold',
+                      color: gapColor, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                      background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                      borderRadius: '3px',
+                    }}
+                      onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('left', module.id, leftGapMm); }}
+                    >
+                      {leftGapMm}
+                    </div>
+                  </Html>
+                  {/* 좌측 갭 연장선 (벽/경계에서 아래로) */}
+                  <NativeLine name="dimension_line"
+                    points={[[leftGapStartX, spaceHeight, 0.001], [leftGapStartX, dimY - mmToThreeUnits(10), 0.001]]}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                  />
+                </>)}
+                {/* 우측 갭 치수선 */}
+                {rightGapMm > 0 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[rightX, dimY, 0.002], [rightGapEndX, dimY, 0.002]]}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([rightX, dimY, 0.002], [rightX + 0.02, dimY, 0.002], 0.01)}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([rightGapEndX, dimY, 0.002], [rightGapEndX - 0.02, dimY, 0.002], 0.01)}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <Html
+                    position={[(rightX + rightGapEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    center
+                    style={{ pointerEvents: 'auto' }}
+                    zIndexRange={[9998, 9999]}
+                  >
+                    <div style={{
+                      padding: '2px 6px', fontSize: '12px', fontWeight: 'bold',
+                      color: gapColor, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+                      background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                      borderRadius: '3px',
+                    }}
+                      onClick={(e) => { e.stopPropagation(); handleFurnitureGapEdit('right', module.id, rightGapMm); }}
+                    >
+                      {rightGapMm}
+                    </div>
+                  </Html>
+                  {/* 우측 갭 연장선 (벽/경계에서 아래로) */}
+                  <NativeLine name="dimension_line"
+                    points={[[rightGapEndX, spaceHeight, 0.001], [rightGapEndX, dimY - mmToThreeUnits(10), 0.001]]}
+                    color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                  />
+                </>)}
+              </>);
+            })()}
+
             {/* 연장선 끝 세리프 (가로 틱 마크) */}
             {[leftX, rightX].map((x, ti) => (
               <React.Fragment key={`tick-${ti}`}>
@@ -4120,7 +4206,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 - 가구 상단에서 슬롯합계 치수선까지 (단내림시) 또는 구간사이즈 치수선까지 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, spaceHeight, 0.001], [leftX, hasDroppedCeiling ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+              points={[[leftX, spaceHeight, 0.001], [leftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
@@ -4129,7 +4215,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, spaceHeight, 0.001], [rightX, hasDroppedCeiling ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+              points={[[rightX, spaceHeight, 0.001], [rightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
