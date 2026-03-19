@@ -398,6 +398,111 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
   }, [position, args]);
 
+  // 2D 모드 깊이 기반 edge opacity 계산
+  // 카메라 방향 축의 깊이에 따라 가까운 라인은 진하게, 먼 라인은 흐리게
+  const getDepthOpacity = React.useCallback((p1: [number, number, number], p2: [number, number, number]): number => {
+    if (viewMode !== '2D' || isHighlighted || isClothingRod) return 1;
+    if (edgeOpacity !== undefined) return edgeOpacity;
+    if (isBackPanel && view2DDirection === 'front') return 0.1;
+
+    const [width, height, depth] = args;
+    // 카메라 방향 축에 따라 깊이 값 결정
+    let depthVal: number;
+    let maxRange: number;
+    if (view2DDirection === 'front') {
+      // 정면: Z축 — +Z가 카메라에 가까움
+      depthVal = (p1[2] + p2[2]) / 2;
+      maxRange = depth / 2;
+    } else if (view2DDirection === 'left' || view2DDirection === 'right') {
+      // 측면: X축
+      depthVal = view2DDirection === 'left'
+        ? -(p1[0] + p2[0]) / 2  // left: -X가 카메라에 가까움
+        : (p1[0] + p2[0]) / 2;  // right: +X가 카메라에 가까움
+      maxRange = width / 2;
+    } else if (view2DDirection === 'top') {
+      // 평면: Y축 — +Y가 카메라에 가까움
+      depthVal = (p1[1] + p2[1]) / 2;
+      maxRange = height / 2;
+    } else {
+      return 1;
+    }
+
+    if (maxRange === 0) return 1;
+    // -maxRange(가장 먼 곳) ~ +maxRange(가장 가까운 곳) → 0~1 정규화
+    const normalized = (depthVal + maxRange) / (2 * maxRange);
+    // 가까울수록(1) 진하게, 멀수록(0) 흐리게 — 범위: 0.15 ~ 1.0
+    return 0.15 + Math.max(0, Math.min(1, normalized)) * 0.85;
+  }, [viewMode, view2DDirection, args, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+
+  // 2D 모드에서 개별 라인 렌더링 (깊이별 opacity 적용)
+  const render2DEdgesWithDepth = React.useCallback(() => {
+    const [width, height, depth] = args;
+    const halfW = width / 2;
+    const halfH = height / 2;
+    const halfD = depth / 2;
+
+    type EdgeLine = { points: [number, number, number][]; };
+    const lines: EdgeLine[] = [];
+
+    // 앞면 사각형
+    if (!hideTopEdge) lines.push({ points: [[-halfW, halfH, halfD], [halfW, halfH, halfD]] });
+    if (!hideBottomEdge) lines.push({ points: [[-halfW, -halfH, halfD], [halfW, -halfH, halfD]] });
+    lines.push({ points: [[-halfW, -halfH, halfD], [-halfW, halfH, halfD]] });
+    lines.push({ points: [[halfW, -halfH, halfD], [halfW, halfH, halfD]] });
+
+    // 뒷면 사각형
+    if (!hideTopEdge) lines.push({ points: [[-halfW, halfH, -halfD], [halfW, halfH, -halfD]] });
+    if (!hideBottomEdge) lines.push({ points: [[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]] });
+    lines.push({ points: [[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]] });
+    lines.push({ points: [[halfW, -halfH, -halfD], [halfW, halfH, -halfD]] });
+
+    // 연결 엣지
+    if (!hideTopEdge) {
+      lines.push({ points: [[-halfW, halfH, halfD], [-halfW, halfH, -halfD]] });
+      lines.push({ points: [[halfW, halfH, halfD], [halfW, halfH, -halfD]] });
+    }
+    if (!hideBottomEdge) {
+      lines.push({ points: [[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]] });
+      lines.push({ points: [[halfW, -halfH, halfD], [halfW, -halfH, -halfD]] });
+    }
+
+    const edgeName = isClothingRod
+      ? 'clothing-rod-edge'
+      : isBackPanel
+        ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
+        : `furniture-edge${panelName ? `-${panelName}` : ''}`;
+
+    const baseLineWidth = isHighlighted ? 4 : (isBackPanel ? 1 : 2);
+
+    return (
+      <>
+        {lines.map((line, i) => {
+          const opacity = getDepthOpacity(line.points[0] as [number, number, number], line.points[1] as [number, number, number]);
+          return (
+            <line key={i} name={`${edgeName}-${i}`}>
+              <bufferGeometry>
+                <bufferAttribute
+                  attach="attributes-position"
+                  count={2}
+                  array={new Float32Array([...line.points[0], ...line.points[1]])}
+                  itemSize={3}
+                />
+              </bufferGeometry>
+              <lineBasicMaterial
+                color={edgeColor}
+                transparent={true}
+                opacity={opacity}
+                depthTest={false}
+                depthWrite={false}
+                linewidth={baseLineWidth}
+              />
+            </line>
+          );
+        })}
+      </>
+    );
+  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, getDepthOpacity]);
+
   return (
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
@@ -427,8 +532,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       </mesh>
       {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
       {!hideEdges && edgeOutlineEnabled && (() => {
+        // 2D 모드: 깊이 기반 개별 라인 opacity 적용
+        if (viewMode === '2D') {
+          return render2DEdgesWithDepth();
+        }
+
+        // 3D 모드: 기존 렌더링
         if (hideTopEdge || hideBottomEdge) {
-          // 특정 엣지만 숨기기: 수동으로 선 그리기
           const [width, height, depth] = args;
           const halfW = width / 2;
           const halfH = height / 2;
@@ -437,28 +547,27 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           const lines: [number, number, number][][] = [];
 
           // 앞면 사각형 (4개 엣지)
-          if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]); // 상단
-          if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]); // 하단
-          lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]); // 좌측
-          lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]); // 우측
+          if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]);
+          if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]);
+          lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]);
+          lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]);
 
-          // 뒷면 사각형 (4개 엣지)
-          if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]); // 상단
-          if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]); // 하단
-          lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]); // 좌측
-          lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]); // 우측
+          // 뒷면 사각형
+          if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]);
+          if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]);
+          lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]);
+          lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]);
 
-          // 연결 엣지 (4개)
+          // 연결 엣지
           if (!hideTopEdge) {
-            lines.push([[-halfW, halfH, halfD], [-halfW, halfH, -halfD]]); // 좌상
-            lines.push([[halfW, halfH, halfD], [halfW, halfH, -halfD]]); // 우상
+            lines.push([[-halfW, halfH, halfD], [-halfW, halfH, -halfD]]);
+            lines.push([[halfW, halfH, halfD], [halfW, halfH, -halfD]]);
           }
           if (!hideBottomEdge) {
-            lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]); // 좌하
-            lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]); // 우하
+            lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]);
+            lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]);
           }
 
-          // DXF 내보내기를 위해 name 속성 추가
           const partialEdgeName = isClothingRod
             ? 'clothing-rod-edge'
             : isBackPanel
@@ -478,21 +587,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={(viewMode === '3D' && renderMode !== 'wireframe') || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
-                    opacity={
-                      edgeOpacity !== undefined
-                        ? edgeOpacity
-                        : isHighlighted
-                          ? 1.0
-                          : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
-                            ? 0.1
-                            : viewMode === '3D'
-                              ? (renderMode === 'wireframe' ? 1.0 : 0.65)
-                              : 1
-                    }
-                    depthTest={viewMode === '3D' && renderMode !== 'wireframe'}
+                    transparent={renderMode !== 'wireframe'}
+                    opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
+                    depthTest={renderMode !== 'wireframe'}
                     depthWrite={false}
-                    linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
+                    linewidth={isHighlighted ? 3 : 1}
                   />
                 </line>
               ))}
@@ -500,7 +599,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           );
         } else {
           // 전체 엣지 표시
-          // DXF 내보내기를 위해 name 속성 추가
           const edgeName = isClothingRod
             ? 'clothing-rod-edge'
             : isBackPanel
@@ -512,24 +610,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                 <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
-                  transparent={(viewMode === '3D' && renderMode !== 'wireframe') || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
-                  opacity={
-                    edgeOpacity !== undefined
-                      ? edgeOpacity
-                      : isHighlighted
-                        ? 1.0
-                        : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
-                          ? 0.1
-                          : viewMode === '3D'
-                            ? (renderMode === 'wireframe' ? 1.0 : 0.65)
-                            : 1
-                  }
-                  depthTest={viewMode === '3D' && renderMode !== 'wireframe'}
+                  transparent={renderMode !== 'wireframe'}
+                  opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
+                  depthTest={renderMode !== 'wireframe'}
                   depthWrite={false}
-                  polygonOffset={viewMode === '3D'}
-                  polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
-                  polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
-                  linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
+                  polygonOffset={true}
+                  polygonOffsetFactor={-10}
+                  polygonOffsetUnits={-10}
+                  linewidth={isHighlighted ? 3 : 1}
                 />
               </lineSegments>
             </>
