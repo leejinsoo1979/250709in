@@ -58,19 +58,15 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
   const leftPanelX = centerX - drawerWidth / 2 + sideThickness / 2 + sidePanelOffset;
   const rightPanelX = centerX + drawerWidth / 2 - sideThickness / 2 - sidePanelOffset;
 
-  // 보링 Y 위치: 앞판 체결용 - 위/중간/아래 3개 (측판 전체 높이 기준)
+  // 보링 Y 위치: 앞판/뒷판 공통 — 뒷판 하단(바닥판 윗면) 기준으로 통일
   const edgeOffsetY = mmToThreeUnits(20); // 끝에서 20mm
   const topBoringY = centerY + drawerHeight / 2 - edgeOffsetY;
-  const middleBoringY = centerY;
-  const bottomBoringY = centerY - drawerHeight / 2 + edgeOffsetY;
-  const frontBoringYPositions = [topBoringY, middleBoringY, bottomBoringY];
-
-  // 뒷판 보링 Y 위치: 뒷판 하단이 바닥판 윗면에 올라탐 → 하단 보링은 바닥판 윗면 + 20mm
   const backPanelBottom = backPanelBottomY ?? (centerY - drawerHeight / 2);
-  const backTopBoringY = topBoringY; // 상단은 동일
-  const backMiddleBoringY = (topBoringY + (backPanelBottom + edgeOffsetY)) / 2; // 뒷판 중간
-  const backBottomBoringY = backPanelBottom + edgeOffsetY; // 뒷판 하단에서 20mm 위
-  const backBoringYPositions = [backTopBoringY, backMiddleBoringY, backBottomBoringY];
+  const bottomBoringY = backPanelBottom + edgeOffsetY;
+  const middleBoringY = (topBoringY + bottomBoringY) / 2;
+  const boringYPositions = [topBoringY, middleBoringY, bottomBoringY];
+  const frontBoringYPositions = boringYPositions;
+  const backBoringYPositions = boringYPositions;
 
   // 보링 Z 위치: 앞판, 뒷판 중간 지점 (2개)
   const frontPanelZ = centerZ + drawerDepth / 2 - sideThickness / 2;
