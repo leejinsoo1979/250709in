@@ -3885,23 +3885,27 @@ const Configurator: React.FC = () => {
 
             const handleModeChange = (newMode: string) => {
               if (newMode === 'full-surround') {
+                const topFrame = spaceInfo.frameSize?.top || 30;
                 handleSpaceInfoUpdate({
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: true, bottom: true },
                   frameSize: {
                     ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
                   },
+                  doorTopGap: topFrame + 3, // 전체서라운드: 상부프레임 + 3mm
                 });
               } else if (newMode === 'sides-only') {
                 // 양쪽서라운드 = 기존 서라운드와 100% 동일, frameConfig만 구분용
                 handleSpaceInfoUpdate({
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: false, bottom: false },
+                  doorTopGap: 0, // 전체서라운드 해제 시 상단갭 초기화
                 });
               } else {
                 handleSpaceInfoUpdate({
                   surroundType: 'no-surround',
                   frameConfig: { left: false, right: false, top: true, bottom: false },
+                  doorTopGap: 0, // 전체서라운드 해제 시 상단갭 초기화
                 });
               }
             };
