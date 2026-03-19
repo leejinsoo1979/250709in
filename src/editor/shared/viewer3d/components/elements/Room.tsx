@@ -277,8 +277,8 @@ const Room: React.FC<RoomProps> = ({
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
   const isFreePlacement = layoutMode === 'free-placement';
 
-  // 자유배치 모드에서는 프레임 숨김 (사용자가 직접 추가)
-  const effectiveShowFrame = isFreePlacement ? false : showFrame;
+  // 자유배치/슬롯배치 공통: surroundType에 따라 프레임 표시
+  const effectiveShowFrame = showFrame;
 
   // hideEdges: PDF 캡처용 외곽선 숨김 (prop으로 제어)
 
