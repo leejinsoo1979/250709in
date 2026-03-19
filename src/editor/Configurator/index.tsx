@@ -3743,6 +3743,7 @@ const Configurator: React.FC = () => {
                       topFrame: 0,
                       bottomFrame: 0
                     },
+                    frameSize: { ...spaceInfo.frameSize, top: 0 },
                     droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
                   });
@@ -3788,6 +3789,7 @@ const Configurator: React.FC = () => {
                       topFrame: 0,
                       bottomFrame: 0
                     },
+                    frameSize: { ...spaceInfo.frameSize, top: 0 },
                     droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
                   });
