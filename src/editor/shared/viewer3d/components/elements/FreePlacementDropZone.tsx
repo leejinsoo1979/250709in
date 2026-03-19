@@ -1678,10 +1678,10 @@ const FreePlacementDropZone: React.FC = () => {
         const leftIsStepWall = hasStepLocal && stepPosLocal === 'left' && leftAdj === 'wall';
         const rightIsStepWall = hasStepLocal && stepPosLocal === 'right' && rightAdj === 'wall';
 
-        // 좌측 gap
+        // 좌측 gap — startX의 왼쪽(벽/프레임 쪽)에 렌더링, 가구 영역 절대 침범 금지
         if (effectiveLeftGap > 0) {
           const w = effectiveLeftGap * 0.01;
-          const cx = startX * 0.01 + w / 2;
+          const cx = startX * 0.01 - w / 2;
           if (leftAdj === 'dropped' && dcWallH > 0) {
             // 커튼박스 인접: 메인천장 위~커튼박스천장 (내벽 부분만)
             const gapY = spaceH + dcWallH / 2;
@@ -1708,10 +1708,10 @@ const FreePlacementDropZone: React.FC = () => {
             );
           }
         }
-        // 우측 gap
+        // 우측 gap — endX의 오른쪽(벽/프레임 쪽)에 렌더링, 가구 영역 절대 침범 금지
         if (effectiveRightGap > 0) {
           const w = effectiveRightGap * 0.01;
-          const cx = endX * 0.01 - w / 2;
+          const cx = endX * 0.01 + w / 2;
           if (rightAdj === 'dropped' && dcWallH > 0) {
             // 커튼박스 인접: 메인천장 위~커튼박스천장 (내벽 부분만)
             const gapY = spaceH + dcWallH / 2;
