@@ -3859,8 +3859,8 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
-        {/* 자유배치 모드: 좌우 이격거리 설정 */}
-        {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
+        {/* 자유배치 모드: 좌우 이격거리 설정 (노서라운드일 때만 — surround/both-sides는 프레임이 담당) */}
+        {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && spaceInfo.surroundType === 'no-surround' && (
           <GapControls
             spaceInfo={spaceInfo}
             onUpdate={handleSpaceInfoUpdate}
