@@ -472,7 +472,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
           // 슬롯모드: 개별 프레임 보정이 반영된 adjustedInternalHeightMm 사용
           const mod = module as PlacedModule;
-          const moduleHeightMm = mod.freeHeight ?? mod.customHeight ?? (mod.isFreePlacement ? moduleData.dimensions.height : adjustedInternalHeightMm);
+          // FurnitureItem.tsx와 동일한 높이 보정 적용
+          let moduleHeightMm = mod.freeHeight ?? mod.customHeight ?? (mod.isFreePlacement ? moduleData.dimensions.height : adjustedInternalHeightMm);
+          // 바닥마감재 차감 (FurnitureItem line 1329-1333)
+          if (floorFinishHeightMm > 0) {
+            moduleHeightMm -= floorFinishHeightMm;
+          }
+          // hasBase=false 시 하부프레임 높이 추가 (FurnitureItem line 1337-1341)
+          if (mod.hasBase === false && !isStandType) {
+            const modHiddenBase = mod.baseFrameHeight ?? globalRailOrBaseHeightMm ?? 65;
+            const modIndivFloat = mod.individualFloatHeight ?? 0;
+            moduleHeightMm += modHiddenBase - modIndivFloat;
+          }
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) {
             return null;
@@ -485,9 +496,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
-          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 보정된 내경 높이
-          const moduleFreeH = mod.freeHeight;
-          const cabinetHeight = moduleFreeH ? mmToThreeUnits(moduleFreeH) : internalHeight;
+          // 자유배치 가구: 보정된 moduleHeightMm 기반 / 슬롯 가구: 보정된 내경 높이
+          const cabinetHeight = (mod.freeHeight || mod.customHeight) ? mmToThreeUnits(moduleHeightMm) : internalHeight;
           const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
 
@@ -1261,7 +1271,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
           // 슬롯모드: 개별 프레임 보정이 반영된 adjustedInternalHeightMm 사용
           const mod = module as PlacedModule;
-          const moduleHeightMm = mod.freeHeight ?? mod.customHeight ?? (mod.isFreePlacement ? moduleData.dimensions.height : adjustedInternalHeightMm);
+          // FurnitureItem.tsx와 동일한 높이 보정 적용
+          let moduleHeightMm = mod.freeHeight ?? mod.customHeight ?? (mod.isFreePlacement ? moduleData.dimensions.height : adjustedInternalHeightMm);
+          // 바닥마감재 차감 (FurnitureItem line 1329-1333)
+          if (floorFinishHeightMm > 0) {
+            moduleHeightMm -= floorFinishHeightMm;
+          }
+          // hasBase=false 시 하부프레임 높이 추가 (FurnitureItem line 1337-1341)
+          if (mod.hasBase === false && !isStandType) {
+            const modHiddenBase = mod.baseFrameHeight ?? globalRailOrBaseHeightMm ?? 65;
+            const modIndivFloat = mod.individualFloatHeight ?? 0;
+            moduleHeightMm += modHiddenBase - modIndivFloat;
+          }
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
           if (sectionConfigs.length === 0) {
             return null;
@@ -1274,9 +1295,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
-          // 자유배치 가구: freeHeight 기반 / 슬롯 가구: 보정된 내경 높이
-          const moduleFreeH = mod.freeHeight;
-          const cabinetHeight = moduleFreeH ? mmToThreeUnits(moduleFreeH) : internalHeight;
+          // 자유배치 가구: 보정된 moduleHeightMm 기반 / 슬롯 가구: 보정된 내경 높이
+          const cabinetHeight = (mod.freeHeight || mod.customHeight) ? mmToThreeUnits(moduleHeightMm) : internalHeight;
           const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
 
