@@ -1982,8 +1982,8 @@ const Room: React.FC<RoomProps> = ({
             </mesh>
           )}
 
-          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (wireframe에서는 숨김) */}
-          {renderMode === 'solid' && (() => {
+          {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 (3D/wireframe에서는 숨김) */}
+          {renderMode === 'solid' && viewMode === '2D' && (() => {
             const _hasDC = spaceInfo.droppedCeiling?.enabled;
             const _dcIsLeft = _hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const _dcIsRight = _hasDC && spaceInfo.droppedCeiling?.position === 'right';
