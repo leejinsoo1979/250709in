@@ -122,17 +122,14 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
   internalHeight -= topFrameHeight;
   
   // 단내림 구간의 경우 높이 조정
-  if (spaceInfo.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-    // 단내림 구간: 내경 높이에서 단내림 높이 차이를 추가로 빼기
-    const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-    const beforeHeight = internalHeight;
-    internalHeight -= dropHeight;
-    console.log('🔴 calculateInternalSpace 단내림 높이 조정');
-    console.log('  zone:', spaceInfo.zone);
-    console.log('  dropHeight:', dropHeight);
-    console.log('  beforeHeight:', beforeHeight);
-    console.log('  afterHeight:', internalHeight);
-    console.log('  reduction:', beforeHeight - internalHeight);
+  if (spaceInfo.zone === 'dropped') {
+    const isFree = spaceInfo.layoutMode === 'free-placement';
+    // 자유배치: stepCeiling이 단내림, 슬롯배치: droppedCeiling이 단내림
+    const ceilingConfig = isFree ? spaceInfo.stepCeiling : spaceInfo.droppedCeiling;
+    if (ceilingConfig?.enabled) {
+      const dropHeight = ceilingConfig.dropHeight || 200;
+      internalHeight -= dropHeight;
+    }
   }
   
   // 내경 깊이 = 설정된 공간 깊이 그대로 (백패널은 별도 구조물)
