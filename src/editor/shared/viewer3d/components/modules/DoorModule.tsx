@@ -293,15 +293,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         } else if (viewMode === '2D') {
           if (view2DDirection === 'front') {
             // 정면뷰: 도어 면을 반투명 색상으로 표현
-            const doorColor2D = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
+            const doorColor2D = '#ff0000'; // DEBUG: 빨간색으로 테스트
             mat.color.set(doorColor2D);
             mat.transparent = true;
-            mat.opacity = 0.25;
+            mat.opacity = 0.8;
             mat.depthWrite = false;
             mat.depthTest = false;
             mat.side = THREE.DoubleSide;
-            mat.renderOrder = 900;
-            console.log('🚪 도어 material 2D 정면뷰 적용:', { color: doorColor2D, opacity: 0.25, side: 'DoubleSide' });
+            console.log('🚪 도어 material 2D 정면뷰 적용:', { color: doorColor2D, opacity: 0.8, side: 'DoubleSide' });
           } else {
             mat.color.set('#18CF23');
             mat.transparent = false;
