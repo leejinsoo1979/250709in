@@ -3906,7 +3906,7 @@ const Configurator: React.FC = () => {
                 handleSpaceInfoUpdate({
                   surroundType: 'no-surround',
                   frameConfig: { left: false, right: false, top: true, bottom: false },
-                  doorTopGap: 0, // 전체서라운드 해제 시 상단갭 초기화
+                  doorTopGap: 5, // 노서라운드: 기본 상단갭 5mm
                 });
               }
             };
@@ -4904,7 +4904,7 @@ const Configurator: React.FC = () => {
                     <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
                     {doorFurnitureList.map((mod) => (
                       <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
-                        storeValue={mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5}
+                        storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
                         onCommit={handleIndividualDoorGapChange} />
                     ))}
                   </tr>

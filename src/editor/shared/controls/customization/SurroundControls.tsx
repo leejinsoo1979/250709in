@@ -132,7 +132,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       }
 
       updates.frameConfig = { left: false, right: false, top: true, bottom: false };
-      updates.doorTopGap = 0; // 전체서라운드 해제 시 상단갭 초기화
+      updates.doorTopGap = 5; // 노서라운드: 기본 상단갭 5mm
       onUpdate(updates);
     }
   };

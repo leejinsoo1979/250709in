@@ -305,7 +305,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const { getCustomFurnitureById } = useCustomFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const [showDoorOptions, setShowDoorOptions] = useState(false);
-  const [doorTopGapInput, setDoorTopGapInput] = useState<string>((storeDoorTopGap ?? placedModule.doorTopGap ?? 1.5).toString());
+  const [doorTopGapInput, setDoorTopGapInput] = useState<string>((storeDoorTopGap ?? placedModule.doorTopGap ?? 5).toString());
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((storeDoorBottomGap ?? placedModule.doorBottomGap ?? 1.5).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
