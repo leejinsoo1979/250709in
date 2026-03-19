@@ -197,8 +197,8 @@ export const useBaseFurniture = (
   const shelfBackReductionMm = Math.max(0, backPanelThicknessMm - 1);
   const adjustedDepthForShelves = depth - mmToThreeUnits(shelfBackReductionMm);
   
-  // 선반 Z축 위치 조정 계산
-  const shelfZOffset = mmToThreeUnits(4);
+  // 선반 Z축 위치 조정 계산 (백패널 두께에 따라 동적 조정)
+  const shelfZOffset = mmToThreeUnits(shelfBackReductionMm / 2);
   
   // 재질 설정 (도어와 완전히 동일한 재질로 통일)
   const { renderMode, viewMode } = useSpace3DView();

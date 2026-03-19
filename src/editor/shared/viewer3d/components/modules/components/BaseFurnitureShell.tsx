@@ -236,6 +236,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
   // 백패널 두께 기반 상/하판/선반 깊이 줄임량 (백패널 + 17mm 오프셋)
   const backReductionForPanels = backPanelThickness + mmToThreeUnits(17);
+  // 상/하판/칸막이 Z축 오프셋 (backReduction의 절반 = 앞쪽 고정, 뒤에서 줄임)
+  const panelZOffset = backReductionForPanels / 2;
 
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
@@ -496,7 +498,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`upper-floor-${getPanelMaterial('(상)바닥').uuid}`}
                         args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - backReductionForPanels]}
-                        position={[0, middlePanelY, upperZOffset + mmToThreeUnits(13)]}
+                        position={[0, middlePanelY, upperZOffset + panelZOffset]}
                         material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -511,7 +513,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -592,7 +594,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`lower-top-dual-2drawer-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
+                        position={[0, lowerTopPanelY, lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -607,7 +609,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`upper-floor-dual-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
                         args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - backReductionForPanels]}
-                        position={[0, upperFloorY, upperZOffset + mmToThreeUnits(13)]}
+                        position={[0, upperFloorY, upperZOffset + panelZOffset]}
                         material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -674,7 +676,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`lower-top-2drawer-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth - mmToThreeUnits(1), basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
+                        position={[0, lowerTopPanelY, lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -689,7 +691,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`upper-floor-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
                         args={[innerWidth - mmToThreeUnits(1), basicThickness, upperSectionDepth - backReductionForPanels]}
-                        position={[0, upperFloorY, upperZOffset + mmToThreeUnits(13)]}
+                        position={[0, upperFloorY, upperZOffset + panelZOffset]}
                         material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -735,7 +737,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     key={`divider-${index}-${panelMat.uuid}`}
                     args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - backReductionForPanels]}
-                    position={[0, dividerY, mmToThreeUnits(13)]}
+                    position={[0, dividerY, panelZOffset]}
                     material={panelMat}
                     renderMode={renderMode}
                     isDragging={isDragging}
