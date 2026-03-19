@@ -779,13 +779,13 @@
 }
 
 .viewerDoorButton {
-  background: #ffffff;
-  border: 1px solid #e1e5e9;
+  background: var(--theme-background-secondary, #ffffff);
+  border: 1px solid var(--theme-border, #e1e5e9);
   border-radius: 20px;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text, #374151);
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(8px);
@@ -793,7 +793,7 @@
 }
 
 .viewerDoorButton:hover {
-  background: #ffffff;
+  background: var(--theme-background-secondary, #ffffff);
   border-color: var(--theme-primary);
   color: var(--theme-primary);
 }
