@@ -3770,6 +3770,14 @@ const Room: React.FC<RoomProps> = ({
             if (columns.length === 0 || !hasDeepColumns) {
               // 슬롯배치: 항상 가구별 개별 상부프레임 렌더링 (가구 없으면 프레임 없음)
               const slotModsForFrame = placedModulesFromStore.filter(m => !m.isSurroundPanel);
+              console.log('🔥 상부프레임 디버그:', {
+                slotModsCount: slotModsForFrame.length,
+                hasDroppedCeiling,
+                columnsLength: columns.length,
+                hasDeepColumns,
+                globalTop: spaceInfo.frameSize?.top,
+                mods: slotModsForFrame.map(m => ({ id: m.id, hasTopFrame: m.hasTopFrame, topFrameThickness: m.topFrameThickness, slotIndex: m.slotIndex }))
+              });
               if (slotModsForFrame.length === 0) return null; // 가구 없으면 상부프레임 없음
 
               const topZPos = isFullSurround
