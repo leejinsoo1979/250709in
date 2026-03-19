@@ -1729,38 +1729,7 @@ const Room: React.FC<RoomProps> = ({
               lines.push([x2, fY, z1, x2, fY, z2]);
             }
 
-            // === 커튼박스/단내림 경계벽 라인 (테마색상) ===
-            if (hasDC && spaceInfo.droppedCeiling) {
-              const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
-              const dcIsL = spaceInfo.droppedCeiling.position === 'left';
-              const bx = dcIsL ? x1 + dcW : x2 - dcW;
-              // 자유배치: 커튼박스 천장 = cY + dcDropH (위로 확장)
-              // 슬롯배치: 단내림 천장 = cY - dcDropH (아래로 축소)
-              const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
-              // 커튼박스 경계벽 하단: 인접 구간 천장 높이
-              // 자유배치에서 단내림이 같은 쪽이면 → 단내림 천장(cY - scDropH), 아니면 → 메인 천장(cY)
-              const stepSameSideAsDC = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
-              const bwTop = isFreePlacement ? droppedCY : cY;
-              const bwBot = isFreePlacement
-                ? (stepSameSideAsDC ? cY - scDropHLine : cY)  // 단내림 천장 or 메인 천장
-                : droppedCY;                                    // 슬롯: 단내림 천장
-
-              // 경계벽 수평 라인 (뒷벽→앞쪽 그라데이션)
-              // 자유배치: 경계벽 상단(커튼박스 천장) + 하단(메인 천장) 표시
-              // 슬롯배치: 메인 천장 상단 + 단내림 천장 하단 표시
-              lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단
-              lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단
-
-              // 커튼박스쪽 외벽의 천장 높이 수평 라인
-              if (dcIsL && hasLW) {
-                lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
-              } else if (!dcIsL && hasRW) {
-                lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
-              }
-            }
-
-            // 단내림(stepCeiling) 경계벽: 내부 경계벽이므로 그라데이션 라인 불필요
-            // (천장 면 위에 사선으로 보이므로 뒷벽 실선만 표시)
+            // 커튼박스/단내림 경계벽 Z축 라인 제거: 경계벽 수직선처럼 보이는 이상한 윤곽선 원인
 
             // solidThemeLines 제거: 뒷벽 위 X/Y축 실선 (경계벽 수직/수평선)은 3D에서 불필요한 윤곽선으로 보임
             const solidThemeLines: [number, number, number, number, number, number][] = [];
