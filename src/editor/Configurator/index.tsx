@@ -119,10 +119,10 @@ const DoorGapInput: React.FC<{
           padding: '4px 2px',
           fontSize: '12px',
           textAlign: 'center',
-          border: '1px solid var(--theme-border-color, #ddd)',
+          border: '1px solid var(--theme-border, #ddd)',
           borderRadius: '3px',
-          backgroundColor: 'var(--theme-input-bg, #fff)',
-          color: 'var(--theme-text-primary, #333)',
+          backgroundColor: 'var(--theme-background-secondary, #f9fafb)',
+          color: 'var(--theme-text, #333)',
           outline: 'none',
           boxSizing: 'border-box',
         }}
