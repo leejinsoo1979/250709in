@@ -350,11 +350,17 @@ export function calcResizedPositionX(
   let newCenterMm: number;
 
   if (leftAttached && !rightAttached) {
+    // 좌측에만 붙어있으면 좌측 고정
     newCenterMm = oldBounds.left + halfNew;
   } else if (rightAttached && !leftAttached) {
+    // 우측에만 붙어있으면 우측 고정
     newCenterMm = oldBounds.right - halfNew;
+  } else if (leftAttached && rightAttached) {
+    // 양쪽 다 붙어있으면 좌측 고정 (너비 줄일 때 우측에서 줄어듬)
+    newCenterMm = oldBounds.left + halfNew;
   } else {
-    newCenterMm = currentCenterMm;
+    // 양쪽 다 안 붙어있으면 좌측 고정
+    newCenterMm = oldBounds.left + halfNew;
   }
 
   let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
