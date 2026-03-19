@@ -1989,6 +1989,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 단내림이 흡수하는 이격 계산
                     let scInnerGap = middleGapMm; // 메인↔단내림 경계이격 (단내림이 흡수)
                     let scOuterGap = 0; // 단내림 외측 경계이격 (단내림이 흡수)
+                    // 단내림 구간 프레임 두께 (서라운드 모드에서 벽쪽 프레임)
+                    var scSideFrame = (spaceInfo.surroundType !== 'no-surround' && hasSC)
+                      ? (spaceInfo.stepCeiling!.sideFrame ?? (scOnLeft ? (frameSize?.left ?? 0) : (frameSize?.right ?? 0)))
+                      : 0;
                     if (hasSC) {
                       const sameSide = hasDC && dcPosition === scPosition;
                       if (sameSide) {
@@ -1998,14 +2002,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
                         scOuterGap = 0; // 벽쪽은 흡수 아닌 차감이므로 별도 처리
                       }
-                      // 단내림 배치폭 = 기둥폭 + 메인쪽 경계이격 + 외측 경계이격 - 벽이격
+                      // 단내림 배치폭 = 기둥폭 + 메인쪽 경계이격 + 외측 경계이격 - 벽이격 - 프레임
                       if (hasDC && dcPosition === scPosition) {
                         // 커튼박스 같은 쪽: 양쪽 경계이격 모두 흡수
-                        scPlacementWidth = Math.round((scWidth + scInnerGap + scOuterGap) * 10) / 10;
+                        scPlacementWidth = Math.round((scWidth + scInnerGap + scOuterGap - scSideFrame) * 10) / 10;
                       } else {
-                        // 벽 인접: 벽쪽은 벽이격 차감, 메인쪽은 경계이격 흡수
+                        // 벽 인접: 벽쪽은 벽이격 차감, 메인쪽은 경계이격 흡수, 프레임 차감
                         const scWallGap = (scOnLeft ? (hasLeftWall ? leftGapMm : 0) : (hasRightWall ? rightGapMm : 0));
-                        scPlacementWidth = Math.round((scWidth + scInnerGap - scWallGap) * 10) / 10;
+                        scPlacementWidth = Math.round((scWidth + scInnerGap - scWallGap - scSideFrame) * 10) / 10;
                       }
                     }
 
@@ -2069,6 +2073,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           const scWallGap = hasLeftWall ? leftGapMm : 0;
                           scPlacStartX = scStartX + mmToThreeUnits(scWallGap); // 벽쪽 차감
                         }
+                        // 좌단내림 프레임: 좌측(벽쪽)에 프레임 → startX 안쪽으로 밀기
+                        scPlacStartX += mmToThreeUnits(scSideFrame);
                       } else {
                         // 우단내림: 왼쪽=메인 경계이격 흡수(확장), 오른쪽=외측
                         scPlacStartX = scStartX - mmToThreeUnits(scInnerGap); // 메인쪽 확장
@@ -2078,6 +2084,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           const scWallGap = hasRightWall ? rightGapMm : 0;
                           scPlacEndX = scEndX - mmToThreeUnits(scWallGap); // 벽쪽 차감
                         }
+                        // 우단내림 프레임: 우측(벽쪽)에 프레임 → endX 안쪽으로 밀기
+                        scPlacEndX -= mmToThreeUnits(scSideFrame);
                       }
                     }
                     // mainLeftDelta가 음수면 좌측에서 안으로 줄어듦 → startX + |delta|
@@ -2092,6 +2100,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     mainPlacementWidth = mainSlotTotalWidth;
                     dcPlacementWidth = droppedSlotTotalWidth;
+                    var scSideFrame = 0;
                   }
 
                   return (<>
@@ -2188,6 +2197,64 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={1}
                 />
                 </>)}
+
+                {/* 단내림 구간 프레임 치수선 — 서라운드 모드에서 프레임 두께 표시 */}
+                {hasSC && scSideFrame > 0 && (() => {
+                  // 프레임 위치: 벽쪽에 프레임이 있음
+                  let frameLX: number, frameRX: number;
+                  if (scOnLeft) {
+                    // 좌단내림: 프레임은 좌측 (scPlacStartX - frame ~ scPlacStartX)
+                    frameRX = scPlacStartX;
+                    frameLX = scPlacStartX - mmToThreeUnits(scSideFrame);
+                  } else {
+                    // 우단내림: 프레임은 우측 (scPlacEndX ~ scPlacEndX + frame)
+                    frameLX = scPlacEndX;
+                    frameRX = scPlacEndX + mmToThreeUnits(scSideFrame);
+                  }
+                  return (<>
+                <Line
+                  points={[[frameLX, slotTotalDimensionY, 0.002], [frameRX, slotTotalDimensionY, 0.002]]}
+                  color={frameDimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([frameLX, slotTotalDimensionY, 0.002], [frameLX + 0.02, slotTotalDimensionY, 0.002])}
+                  color={frameDimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([frameRX, slotTotalDimensionY, 0.002], [frameRX - 0.02, slotTotalDimensionY, 0.002])}
+                  color={frameDimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[(frameLX + frameRX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {scSideFrame}
+                  </Text>
+                )}
+                {/* 프레임 연장선 */}
+                <Line
+                  points={[[frameLX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [frameLX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[[frameRX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [frameRX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                  </>);
+                })()}
 
                 {/* 커튼박스 구간 실배치 치수선 — 커튼박스 활성일 때만 */}
                 {hasDC && (() => {
