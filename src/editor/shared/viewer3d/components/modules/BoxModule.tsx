@@ -77,6 +77,7 @@ interface BoxModuleProps {
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
   topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm)
+  hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
   isCustomizable?: boolean; // 커스터마이징 가구 여부
   customConfig?: CustomFurnitureConfig; // 커스터마이징 설정
   // 이벤트 핸들러 추가
@@ -150,6 +151,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
   topFrameThickness, // 개별 가구 상부프레임 두께
+  hasBase, // 하부프레임 존재 여부
   isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
   customConfig, // 커스터마이징 설정
   // 이벤트 핸들러들
@@ -252,6 +254,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             internalHeight={internalHeight}
             isFreePlacement={isFreePlacement}
             topFrameThickness={topFrameThickness}
+            hasBase={hasBase}
           />
         )}
       </>
@@ -328,11 +331,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
         doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
         zone={zone}
+        hasBase={hasBase}
         />
       </>
     );
   }
-  
+
   if (moduleData.id.includes('dual-2drawer-hanging')) {
     return (
       <>
@@ -385,6 +389,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
         doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
         zone={zone} // 단내림 영역 정보
+        hasBase={hasBase}
       />
       </>
     );
@@ -441,6 +446,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
         zone={zone} // 단내림 영역 정보
+        hasBase={hasBase}
       />
       </>
     );
@@ -488,6 +494,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         zone={zone}
+        hasBase={hasBase}
       />
       </>
     );
@@ -536,6 +543,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         zone={zone}
+        hasBase={hasBase}
       />
       </>
     );
@@ -580,6 +588,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         zone={zone}
+        hasBase={hasBase}
       />
       </>
     );
@@ -622,6 +631,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
         zone={zone} // 단내림 영역 정보
+        hasBase={hasBase}
       />
       </>
     );
@@ -674,6 +684,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
         zone={zone} // 단내림 영역 정보
+        hasBase={hasBase}
       />
       </>
     );
@@ -710,6 +721,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         renderMode={renderMode} // 렌더 모드 전달
         zone={zone} // 단내림 영역 정보
+        hasBase={hasBase}
       />
       </>
     );
@@ -746,6 +758,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         renderMode={renderMode} // 렌더 모드 전달
         zone={zone} // 단내림 영역 정보
+        hasBase={hasBase}
       />
       </>
     );
@@ -820,6 +833,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               internalHeight={internalHeight} // 자유배치 시 실제 가구 높이 전달
               isFreePlacement={isFreePlacement} // 자유배치 모드 전달
               topFrameThickness={topFrameThickness} // 개별 가구 상부프레임 두께
+              hasBase={hasBase} // 하부프레임 존재 여부
             />
           );
         }

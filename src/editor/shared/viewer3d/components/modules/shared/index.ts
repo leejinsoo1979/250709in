@@ -55,6 +55,7 @@ export interface FurnitureTypeProps {
   backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
   textureUrl?: string; // 텍스처 URL
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
+  hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;

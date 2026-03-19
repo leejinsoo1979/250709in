@@ -48,7 +48,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
   lowerSectionTopOffset,
-  zone
+  zone,
+  hasBase
 }) => {
   // 공통 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -279,6 +280,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
               zone={zone}
+              hasBase={hasBase}
             />
           ) : (
             // 분할 모드: 상하부 도어 각각
@@ -305,6 +307,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               doorTopGap={upperDoorTopGap ?? doorTopGap}
               doorBottomGap={upperDoorBottomGap ?? 0}
                 zone={zone}
+                hasBase={hasBase}
               />
 
               {/* 하부 섹션 도어 (4단 서랍) */}
@@ -329,6 +332,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               doorTopGap={lowerDoorTopGap ?? 0}
               doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
                 zone={zone}
+                hasBase={hasBase}
               />
             </>
           )}

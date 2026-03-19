@@ -54,7 +54,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   panelGrainDirections,
   backPanelThickness: backPanelThicknessProp,
   lowerSectionTopOffset,
-  zone
+  zone,
+  hasBase
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -829,6 +830,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
               zone={zone}
+              hasBase={hasBase}
             />
           ) : (
             // 분할 모드: 상부/하부 섹션별 도어
@@ -856,6 +858,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 sectionIndex={1}
                 totalSections={2}
                 zone={zone}
+                hasBase={hasBase}
               />
 
               {/* 하부 섹션 도어 */}
@@ -881,6 +884,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 sectionIndex={0}
                 totalSections={2}
                 zone={zone}
+                hasBase={hasBase}
               />
 
             </>

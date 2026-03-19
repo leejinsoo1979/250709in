@@ -42,7 +42,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   lowerDoorTopGap,
   lowerDoorBottomGap,
   lowerSectionTopOffset,
-  zone
+  zone,
+  hasBase
 }) => {
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -287,6 +288,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
               doorBottomGap={doorBottomGap}
               floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
               zone={zone}
+              hasBase={hasBase}
             />
           ) : (
             <>
@@ -312,6 +314,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
                 floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
                 zone={zone}
+                hasBase={hasBase}
               />
 
               <DoorModule
@@ -336,6 +339,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
                 floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
                 zone={zone}
+                hasBase={hasBase}
               />
             </>
           )}

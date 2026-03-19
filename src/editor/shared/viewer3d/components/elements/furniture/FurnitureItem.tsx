@@ -3311,6 +3311,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
                   topFrameThickness={placedModule.topFrameThickness}
+                  hasBase={placedModule.hasBase}
                   isCustomizable={placedModule.isCustomizable}
                   customConfig={placedModule.customConfig}
                 />
