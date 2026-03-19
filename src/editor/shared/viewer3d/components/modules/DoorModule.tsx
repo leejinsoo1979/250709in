@@ -702,8 +702,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 단내림 높이 조정 (싱글/듀얼 모두 동일하게 처리)
   // 키큰장(싱글/듀얼)이면서 단내림 구간에 배치된 경우
-  if (originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped') {
-    // 단내림 구간 높이 = 전체 높이 - 내려온 높이
+  const isFreePlacementMode = originalSpaceInfo.layoutMode === 'free-placement';
+  if (isFreePlacementMode && originalSpaceInfo.stepCeiling?.enabled && effectiveZone === 'dropped') {
+    // 자유배치: stepCeiling이 단내림 (droppedCeiling은 커튼박스)
+    const dropHeight = originalSpaceInfo.stepCeiling.dropHeight || 0;
+    fullSpaceHeight = originalSpaceInfo.height - dropHeight;
+  } else if (!isFreePlacementMode && originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped') {
+    // 슬롯배치: droppedCeiling이 단내림
     const dropHeight = originalSpaceInfo.droppedCeiling.dropHeight || 0;
     fullSpaceHeight = originalSpaceInfo.height - dropHeight;
   }
