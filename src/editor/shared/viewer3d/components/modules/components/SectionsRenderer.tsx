@@ -122,6 +122,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // 가구 스토어 메서드
   const { placedModules, updatePlacedModule } = useFurnitureStore();
 
+  // 현재 배치된 가구 모듈 (backPanelThickness 등 참조용)
+  const currentPlacedModule = placedFurnitureId
+    ? placedModules.find(m => m.id === placedFurnitureId)
+    : undefined;
+
   // Hover 상태 관리 (섹션별)
   const [hoveredSectionIndex, setHoveredSectionIndex] = useState<number | null>(null);
 
@@ -414,6 +419,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 panelGrainDirections={panelGrainDirections}
                 furnitureId={placedFurnitureId || furnitureId}
                 sectionName={sectionName}
+                backPanelThicknessOverride={currentPlacedModule?.backPanelThickness}
               />
             );
           }
