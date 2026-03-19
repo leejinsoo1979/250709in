@@ -4118,6 +4118,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           hasStepDown,
           stepDownPosition,
           stepDownWidth: stepDownWidthItem,
+          zoneLimitLeft,
+          zoneLimitRight,
         } = item;
         
         // actualPositionX를 moduleX로부터 가져옴
@@ -4321,11 +4323,155 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
 
+            {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
+            {isFreePlacement && (() => {
+              const leftGapMm = Math.round(nearestLeftDistance);
+              const rightGapMm = Math.round(nearestRightDistance);
+              // 좌측 갭: 가구 왼쪽 ~ (왼쪽 인접 가구 또는 구간 경계)
+              const gapLeftX = leftX - mmToThreeUnits(nearestLeftDistance);
+              // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
+              const gapRightX = rightX + mmToThreeUnits(nearestRightDistance);
+              return (<>
+                {/* 좌측 이격 */}
+                {leftGapMm > 0 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[gapLeftX, dimY, 0.002], [leftX, dimY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([gapLeftX, dimY, 0.002], [gapLeftX + 0.02, dimY, 0.002], 0.01)}
+                    color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftX, dimY, 0.002], [leftX - 0.02, dimY, 0.002], 0.01)}
+                    color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <Text renderOrder={1000000} depthTest={false}
+                    position={[(gapLeftX + leftX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize} color={textColor}
+                    anchorX="center" anchorY="middle"
+                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                  >
+                    {leftGapMm}
+                  </Text>
+                  {/* 좌측 이격 연장선 */}
+                  {!hasAdjacentLeft && (
+                    <NativeLine name="dimension_line"
+                      points={[[gapLeftX, spaceHeight, 0.001], [gapLeftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000}
+                      depthTest={false} depthWrite={false} transparent={true}
+                    />
+                  )}
+                </>)}
+                {/* 우측 이격 */}
+                {rightGapMm > 0 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[rightX, dimY, 0.002], [gapRightX, dimY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([rightX, dimY, 0.002], [rightX + 0.02, dimY, 0.002], 0.01)}
+                    color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([gapRightX, dimY, 0.002], [gapRightX - 0.02, dimY, 0.002], 0.01)}
+                    color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <Text renderOrder={1000000} depthTest={false}
+                    position={[(rightX + gapRightX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize} color={textColor}
+                    anchorX="center" anchorY="middle"
+                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                  >
+                    {rightGapMm}
+                  </Text>
+                  {/* 우측 이격 연장선 */}
+                  {!hasAdjacentRight && (
+                    <NativeLine name="dimension_line"
+                      points={[[gapRightX, spaceHeight, 0.001], [gapRightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={1000000}
+                      depthTest={false} depthWrite={false} transparent={true}
+                    />
+                  )}
+                </>)}
+              </>);
+            })()}
+
           </group>
         );
       })}
 
-      {/* 자유배치 가구 간 갭 치수 — 제거됨 (기존 보라색 이격 치수로 충분) */}
+      {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) */}
+      {isFreePlacement && showDimensions && hasStepDown && (() => {
+        // 각 구간(메인/단내림)에 가구가 있는지 확인
+        const stepDownWidthMm = isFreePlacement
+          ? (spaceInfo.stepCeiling?.width || 0)
+          : (spaceInfo.droppedCeiling?.width || 0);
+        const stepDownPos = isFreePlacement
+          ? (spaceInfo.stepCeiling?.position || 'right')
+          : (spaceInfo.droppedCeiling?.position || 'right');
+
+        // 구간 경계 (leftOffset 기반, Three.js 좌표)
+        const mainZoneStartX = stepDownPos === 'left'
+          ? leftOffset + mmToThreeUnits(stepDownWidthMm)
+          : leftOffset;
+        const mainZoneEndX = stepDownPos === 'right'
+          ? leftOffset + mmToThreeUnits(spaceInfo.width - stepDownWidthMm)
+          : leftOffset + mmToThreeUnits(spaceInfo.width);
+        const scZoneStartX = stepDownPos === 'left'
+          ? leftOffset
+          : leftOffset + mmToThreeUnits(spaceInfo.width - stepDownWidthMm);
+        const scZoneEndX = stepDownPos === 'left'
+          ? leftOffset + mmToThreeUnits(stepDownWidthMm)
+          : leftOffset + mmToThreeUnits(spaceInfo.width);
+
+        // 가구가 해당 구간에 있는지
+        const validDims = furnitureDimensions ? furnitureDimensions.filter(Boolean) : [];
+        const hasFurnitureInMain = validDims.some((d: any) => {
+          const mL = d.moduleX - mmToThreeUnits(d.actualWidth / 2);
+          const mR = d.moduleX + mmToThreeUnits(d.actualWidth / 2);
+          return mL >= mainZoneStartX - 0.001 && mR <= mainZoneEndX + 0.001;
+        });
+        const hasFurnitureInSC = validDims.some((d: any) => {
+          const mL = d.moduleX - mmToThreeUnits(d.actualWidth / 2);
+          const mR = d.moduleX + mmToThreeUnits(d.actualWidth / 2);
+          return mL >= scZoneStartX - 0.001 && mR <= scZoneEndX + 0.001;
+        });
+
+        const dimY = slotDimensionY;
+        const zones: { startX: number; endX: number; widthMm: number }[] = [];
+        if (!hasFurnitureInMain) {
+          zones.push({ startX: mainZoneStartX, endX: mainZoneEndX, widthMm: spaceInfo.width - stepDownWidthMm });
+        }
+        if (!hasFurnitureInSC) {
+          zones.push({ startX: scZoneStartX, endX: scZoneEndX, widthMm: stepDownWidthMm });
+        }
+
+        return zones.map((zone, zi) => (
+          <group key={`empty-zone-dim-${zi}`}>
+            <NativeLine name="dimension_line"
+              points={[[zone.startX, dimY, 0.002], [zone.endX, dimY, 0.002]]}
+              color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+            />
+            <NativeLine name="dimension_line"
+              points={createArrowHead([zone.startX, dimY, 0.002], [zone.startX + 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+            />
+            <NativeLine name="dimension_line"
+              points={createArrowHead([zone.endX, dimY, 0.002], [zone.endX - 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+            />
+            <Text renderOrder={1000000} depthTest={false}
+              position={[(zone.startX + zone.endX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize} color={textColor}
+              anchorX="center" anchorY="middle"
+              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+            >
+              {Math.round(zone.widthMm)}
+            </Text>
+          </group>
+        ));
+      })()}
 
       {/* 기둥별 치수선 (개별 기둥 너비) - 불필요하므로 비활성화 */}
       {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
