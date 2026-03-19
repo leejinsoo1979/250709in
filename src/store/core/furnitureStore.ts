@@ -512,12 +512,17 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
     const defaultBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
 
+    // 전체서라운드: 상부프레임 + 3mm, 그 외: spaceInfo.doorTopGap 또는 1.5mm
+    const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+    const topFrameMm = spaceInfo.frameSize?.top || 30;
+    const defaultTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap ?? 1.5);
+
     set((state) => {
       const updatedModules = state.placedModules.map(module => ({
         ...module,
         hasDoor,
         ...(hasDoor && {
-          doorTopGap: module.doorTopGap ?? (spaceInfo.doorTopGap ?? 1.5),
+          doorTopGap: module.doorTopGap ?? defaultTopGap,
           doorBottomGap: module.doorBottomGap ?? defaultBottomGap
         })
       }));
