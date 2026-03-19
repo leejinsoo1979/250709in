@@ -759,11 +759,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 가구 높이 계산 — 항상 천장바닥 기준 (공간 전체 높이)
     const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
 
-    if (isFree) {
-      tallCabinetFurnitureHeight = effectiveInternalHeight || spaceBasedHeight;
-    } else {
-      tallCabinetFurnitureHeight = spaceBasedHeight;
-    }
+    // 자유배치/슬롯 공통: 천장바닥 기준 높이 사용 (도어는 공간 기준으로 위치 계산)
+    tallCabinetFurnitureHeight = spaceBasedHeight;
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
