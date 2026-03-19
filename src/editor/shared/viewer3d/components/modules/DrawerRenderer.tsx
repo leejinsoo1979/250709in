@@ -471,20 +471,20 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
         /> */}
         
-        {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 앞쪽은 앞판 홈 끼움 유지, 뒤쪽만 측판 뒷선까지 확장 */}
+        {/* 서랍밑판 (Drawer Bottom) - 백패널과 동일 두께, 앞쪽은 앞판 홈 끼움 유지, 뒤쪽만 측판 뒷선까지 확장 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`;
           const mat = getPanelMaterial(panelName);
-          // 원래: drawerBodyDepth - 20mm (앞뒤 각 10mm 여유)
-          // 변경: 앞쪽 10mm 여유는 유지(홈 끼움), 뒤쪽은 본체 끝까지 확장
+          const bottomThk = backPanelThickness; // 바닥판 두께 = 백패널 두께
+          // 앞쪽 10mm 여유는 유지(홈 끼움), 뒤쪽은 본체 끝까지 확장
           const bottomDepth = drawerBodyDepth - mmToThreeUnits(10);
           // Z: 앞쪽 고정, 뒤로만 늘어남 → 중심이 뒤쪽으로 5mm 이동
           const bottomZ = drawerBodyCenterZ - mmToThreeUnits(5);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(70) - mmToThreeUnits(26), mmToThreeUnits(5), bottomDepth]}
-              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + mmToThreeUnits(5)/2, bottomZ]}
+              args={[drawerWidth - mmToThreeUnits(70) - mmToThreeUnits(26), bottomThk, bottomDepth]}
+              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + bottomThk/2, bottomZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -520,9 +520,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
           const mat = getPanelMaterial(panelName);
-          // 바닥판 윗면 Y 좌표
-          const BOTTOM_PANEL_THICKNESS = mmToThreeUnits(5);
-          const bottomTopY = centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + BOTTOM_PANEL_THICKNESS;
+          // 바닥판 윗면 Y 좌표 (바닥판 두께 = 백패널 두께)
+          const bottomTopY = centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + backPanelThickness;
           // 뒷판 기존 상단 Y (변경 없음)
           const origBackTop = centerY + (drawerHeight - mmToThreeUnits(30)) / 2;
           // 뒷판 높이: 상단 ~ 바닥판 윗면
@@ -719,7 +718,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           mmToThreeUnits={mmToThreeUnits}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
-          backPanelBottomY={centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + mmToThreeUnits(5)}
+          backPanelBottomY={centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + backPanelThickness}
         />
 
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
