@@ -56,6 +56,7 @@ export interface FurnitureTypeProps {
   textureUrl?: string; // 텍스처 URL
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
+  individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
