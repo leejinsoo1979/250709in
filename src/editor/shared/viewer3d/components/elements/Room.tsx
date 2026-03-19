@@ -1729,9 +1729,31 @@ const Room: React.FC<RoomProps> = ({
               lines.push([x2, fY, z1, x2, fY, z2]);
             }
 
-            // 커튼박스/단내림 경계벽 Z축 라인 제거: 경계벽 수직선처럼 보이는 이상한 윤곽선 원인
+            // === 커튼박스/단내림 경계벽 Z축 라인 (그라데이션) ===
+            if (hasDC && spaceInfo.droppedCeiling) {
+              const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
+              const dcIsL = spaceInfo.droppedCeiling.position === 'left';
+              const bx = dcIsL ? x1 + dcW : x2 - dcW;
+              const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
+              const stepSameSideAsDC = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
+              const bwTop = isFreePlacement ? droppedCY : cY;
+              const bwBot = isFreePlacement
+                ? (stepSameSideAsDC ? cY - scDropHLine : cY)
+                : droppedCY;
 
-            // solidThemeLines 제거: 뒷벽 위 X/Y축 실선 (경계벽 수직/수평선)은 3D에서 불필요한 윤곽선으로 보임
+              // 경계벽 Z축 라인 (뒷벽→앞쪽 그라데이션)
+              lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단
+              lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단
+
+              // 커튼박스쪽 외벽의 천장 높이 Z축 라인
+              if (dcIsL && hasLW) {
+                lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+              } else if (!dcIsL && hasRW) {
+                lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
+              }
+            }
+
+            // solidThemeLines(X/Y축 뒷벽 실선)는 제거 — 이상한 윤곽선 원인
             const solidThemeLines: [number, number, number, number, number, number][] = [];
 
             if (lines.length === 0 && solidThemeLines.length === 0) return null;
