@@ -841,10 +841,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return null;
       }
 
-      // 단내림 여부 확인
-      const hasStepDown = spaceInfo.droppedCeiling?.enabled || false;
-      const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
-      const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
+      // 단내림 여부 확인 (자유배치: stepCeiling, 슬롯: droppedCeiling)
+      const hasStepDown = isFreePlacement
+        ? (spaceInfo.stepCeiling?.enabled || false)
+        : (spaceInfo.droppedCeiling?.enabled || false);
+      const stepDownWidth = isFreePlacement
+        ? (spaceInfo.stepCeiling?.width || 0)
+        : (spaceInfo.droppedCeiling?.width || 0);
+      const stepDownPosition = isFreePlacement
+        ? (spaceInfo.stepCeiling?.position || 'right')
+        : (spaceInfo.droppedCeiling?.position || 'right');
       
       // 기둥 슬롯 분석
       const columnSlots = analyzeColumnSlots(spaceInfo);
@@ -890,9 +896,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const isSpacerHandled = isSpacerModule && actualWidth === SPACER_WIDTH;
       
       // 양쪽에서 가장 가까운 컬럼/벽까지의 거리 계산
+      // 단내림이 있으면 해당 구간의 경계벽까지만 표시
       let nearestLeftDistance = 0;
       let nearestRightDistance = 0;
-      
+
       if (slotInfo && slotInfo.wallPositions) {
         // 슬롯 정보가 있을 때는 슬롯의 벽 위치 사용
         nearestLeftDistance = Math.abs(moduleLeft * 100 - slotInfo.wallPositions.left);
@@ -901,22 +908,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 슬롯 정보가 없을 때는 직접 계산
         const moduleLeftMm = moduleLeft * 100;
         const moduleRightMm = moduleRight * 100;
-        
-        // 좌측 거리 계산
-        nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
-        
-        // 우측 거리 계산  
-        nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
+
+        // 단내림 경계 X 좌표 (mm)
+        const stepDownBoundaryMm = hasStepDown
+          ? (stepDownPosition === 'left'
+            ? (-spaceInfo.width / 2 + stepDownWidth)   // 왼쪽 단내림 우측 경계
+            : (spaceInfo.width / 2 - stepDownWidth))    // 오른쪽 단내림 좌측 경계
+          : undefined;
+
+        // 가구가 어느 구간에 있는지 판별 (Three.js 좌표 기준)
+        const isModuleInStepDown = hasStepDown && (
+          stepDownPosition === 'left'
+            ? moduleRight <= stepDownEndX   // 가구가 단내림 구간 안
+            : moduleLeft >= stepDownStartX  // 가구가 단내림 구간 안
+        );
+
+        if (hasStepDown && stepDownBoundaryMm !== undefined) {
+          if (isModuleInStepDown) {
+            // 가구가 단내림 구간에 있음 → 단내림 구간 내 벽~경계까지
+            if (stepDownPosition === 'left') {
+              nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
+              nearestRightDistance = Math.abs(stepDownBoundaryMm - moduleRightMm);
+            } else {
+              nearestLeftDistance = Math.abs(moduleLeftMm - stepDownBoundaryMm);
+              nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
+            }
+          } else {
+            // 가구가 메인 구간에 있음 → 경계~벽까지
+            if (stepDownPosition === 'left') {
+              nearestLeftDistance = Math.abs(moduleLeftMm - stepDownBoundaryMm);
+              nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
+            } else {
+              nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
+              nearestRightDistance = Math.abs(stepDownBoundaryMm - moduleRightMm);
+            }
+          }
+        } else {
+          // 단내림 없음 → 양쪽 벽까지
+          nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
+          nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
+        }
       }
-      
+
       // 단내림 구간과의 경계 치수
       let leftBoundaryDistance = 0;
       let rightBoundaryDistance = 0;
-      
+
       if (hasStepDown) {
         // 단내림 구간 경계 계산
         const stepDownBoundaryX = stepDownPosition === 'left' ? stepDownEndX : stepDownStartX;
-        
+
         // 가구와 단내림 경계 사이의 거리 계산
         if (stepDownPosition === 'left') {
           // 왼쪽 단내림일 때 - 가구 왼쪽과 단내림 우측 경계 사이 거리
@@ -3900,7 +3941,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         let actualPositionX = moduleX;
         
         // 실제 너비 계산은 이미 완료되어 있음
-        const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
+        // 단내림 폭 (자유배치: stepCeiling, 슬롯: droppedCeiling)
+        const stepDownWidthLocal = isFreePlacement
+          ? (spaceInfo.stepCeiling?.width || 0)
+          : (spaceInfo.droppedCeiling?.width || 0);
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
@@ -3939,11 +3983,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const rightThreeWidth = mmToThreeUnits(rightWidth);
         
         // 메인구간 경계 계산
-        const mainAreaLeft = hasStepDown && stepDownPosition === 'left' 
-          ? mmToThreeUnits(stepDownWidth) 
+        const mainAreaLeft = hasStepDown && stepDownPosition === 'left'
+          ? mmToThreeUnits(stepDownWidthLocal)
           : 0;
         const mainAreaRight = hasStepDown && stepDownPosition === 'right'
-          ? mmToThreeUnits(spaceInfo.width - stepDownWidth)
+          ? mmToThreeUnits(spaceInfo.width - stepDownWidthLocal)
           : mmToThreeUnits(spaceInfo.width);
         
         // 모듈이 속한 구간 확인 (메인구간 또는 단내림 구간)
