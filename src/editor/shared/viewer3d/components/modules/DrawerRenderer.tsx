@@ -422,22 +422,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const horizontalPanelDepthFront = drawerFrameThickness; // 전면 수평 패널 Z축 깊이: 18mm
   const verticalPanelXOffset = mmToThreeUnits(27); // 수직 패널 X축 오프셋: 기존 27mm 고정 (수평 패널 확장과 무관)
 
-  // 1. 수직 패널 (세로로 긴 패널, 전체 높이) — 레일 부착 패널
-  // 깊이: 뒤쪽만 18mm 축소, 앞쪽은 앞쪽 수평패널 뒷면까지 확장
-  const verticalPanelDepth = depth - mmToThreeUnits(85) - backPanelThickness - mmToThreeUnits(18) - mmToThreeUnits(17) - mmToThreeUnits(18);
-  const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2 - mmToThreeUnits(1);
-
   // 2. 앞쪽 수평 패널 (좌/우 각각) — 전면 위치
-  // Z 위치: 기존에서 18mm 앞으로 이동
   const backHorizontalPanelY = 0;
   const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1) - mmToThreeUnits(17) + mmToThreeUnits(18);
 
-  // 3. 전면 수평 패널 (좌/우 각각) - 실제로는 후면에 위치
-  // Y 위치: 전달받은 내경 중앙
-  // Z 위치: 백패널 앞면과 맞닿음 (뒤쪽)
-  // Z 깊이: 18mm (후면이므로)
-  const frontHorizontalPanelY = 0; // 전달받은 내경 중앙
+  // 3. 뒤쪽 수평 패널 (좌/우 각각) — 후면 위치 (백패널 앞면에 맞닿음)
+  const frontHorizontalPanelY = 0;
   const frontHorizontalPanelZ = -depth/2 + basicThickness + backPanelThickness + horizontalPanelDepthBack/2 - mmToThreeUnits(1);
+
+  // 1. 수직 패널 (레일 부착, 전체 높이) — 앞쪽 수평패널 뒷면 ~ 뒤쪽 수평패널 앞면
+  const verticalPanelFrontEdge = backHorizontalPanelZ - horizontalPanelDepthFront / 2;
+  const verticalPanelBackEdge = frontHorizontalPanelZ + horizontalPanelDepthBack / 2;
+  const verticalPanelDepth = verticalPanelFrontEdge - verticalPanelBackEdge;
+  const verticalPanelZ = (verticalPanelFrontEdge + verticalPanelBackEdge) / 2;
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
   const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
