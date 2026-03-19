@@ -3319,7 +3319,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
       {/* 상부 프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {(effectiveShowFrame || isFreePlacement) && topBottomFrameHeightMm > 0 && (() => {
+      {(effectiveShowFrame || isFreePlacement) && (() => {
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
@@ -3748,14 +3748,6 @@ const Room: React.FC<RoomProps> = ({
             if (columns.length === 0 || !hasDeepColumns) {
               // 슬롯배치: 항상 가구별 개별 상부프레임 렌더링 (가구 없으면 프레임 없음)
               const slotModsForFrame = placedModulesFromStore.filter(m => !m.isSurroundPanel);
-              console.log('🔥 상부프레임 디버그:', {
-                slotModsCount: slotModsForFrame.length,
-                hasDroppedCeiling,
-                columnsLength: columns.length,
-                hasDeepColumns,
-                globalTop: spaceInfo.frameSize?.top,
-                mods: slotModsForFrame.map(m => ({ id: m.id, hasTopFrame: m.hasTopFrame, topFrameThickness: m.topFrameThickness, slotIndex: m.slotIndex }))
-              });
               if (slotModsForFrame.length === 0) return null; // 가구 없으면 상부프레임 없음
 
               const topZPos = isFullSurround
@@ -3763,7 +3755,7 @@ const Room: React.FC<RoomProps> = ({
                 : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                   mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
 
-              const globalTopFrameMm = spaceInfo.frameSize?.top ?? 30;
+              const globalTopFrameMm = spaceInfo.frameSize?.top || 30;
               const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
               // 단내림 구간 가구 판별을 위한 정보
               const normalSlotCountForFrame = hasDroppedCeiling
