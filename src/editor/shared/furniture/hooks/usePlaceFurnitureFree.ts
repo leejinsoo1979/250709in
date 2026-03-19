@@ -142,6 +142,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     hasBase: moduleData.category !== 'upper',
     hasTopFrame: moduleData.category !== 'lower',
     hasBottomFrame: moduleData.category !== 'upper',
+    topFrameThickness: spaceInfo.frameSize?.top || 30,
     hasDoor: false, // 자유배치 시 도어 없이 배치 (사용자가 수동 설정)
     lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {
