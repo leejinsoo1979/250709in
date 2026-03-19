@@ -103,6 +103,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       updates.gapConfig = { left: 2, right: 2, middle: spaceInfo.gapConfig?.middle ?? 1.5 };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
+      // 전체서라운드 시 도어 상단갭 = 상부프레임 두께 + 3mm
+      updates.doorTopGap = currentTop + 3;
 
       onUpdate(updates);
     } else if (mode === 'sides-only') {
@@ -110,6 +112,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       onUpdate({
         surroundType: 'surround',
         frameConfig: { ...frameConfig, top: false, bottom: false },
+        doorTopGap: 0, // 전체서라운드 해제 시 상단갭 초기화
       });
     } else {
       // 노서라운드
@@ -129,6 +132,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       }
 
       updates.frameConfig = { left: false, right: false, top: true, bottom: false };
+      updates.doorTopGap = 0; // 전체서라운드 해제 시 상단갭 초기화
       onUpdate(updates);
     }
   };

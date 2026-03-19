@@ -3001,8 +3001,25 @@ const Configurator: React.FC = () => {
       // finalUpdates_baseConfig: finalUpdates.baseConfig,
       // depth: finalUpdates.baseConfig?.depth
     // });
+    // 전체서라운드 상태에서 상부프레임 두께 변경 시 doorTopGap 자동 연동
+    if (finalUpdates.frameSize?.top !== undefined && finalUpdates.doorTopGap === undefined) {
+      const currentFrameConfig = finalUpdates.frameConfig ?? inferFrameConfig(spaceInfo);
+      if (currentFrameConfig.top && currentFrameConfig.bottom) {
+        // 전체서라운드: doorTopGap = 상부프레임 + 3mm
+        finalUpdates.doorTopGap = finalUpdates.frameSize.top + 3;
+      }
+    }
+
     setSpaceInfo(finalUpdates);
-// console.log('🚨🚨🚨 setSpaceInfo 호출 완료');
+
+    // 전체서라운드 전환 시 도어 상단갭을 모든 배치 가구에 전파
+    if (finalUpdates.doorTopGap !== undefined) {
+      const currentModules = useFurnitureStore.getState().placedModules;
+      const modulesWithDoor = currentModules.filter(m => m.hasDoor);
+      modulesWithDoor.forEach(m => {
+        updatePlacedModule(m.id, { doorTopGap: finalUpdates.doorTopGap });
+      });
+    }
 
     // Store 업데이트 직후 확인
     setTimeout(() => {
