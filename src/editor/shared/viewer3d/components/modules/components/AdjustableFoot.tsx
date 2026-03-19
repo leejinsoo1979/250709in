@@ -27,7 +27,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   baseHeight = 65, // 기본값 65mm
 }) => {
   const { viewMode } = useSpace3DView();
-  const { view2DTheme } = useUIStore();
+  const { view2DTheme, view2DDirection } = useUIStore();
   
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -68,14 +68,20 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   // 2D 모드에서는 투명 재질 사용, 3D 모드에서는 기본 재질 사용
   const meshMaterial = viewMode === '2D' ? transparentMaterial : finalMaterial;
 
-  // 엣지 라인 색상
+  // 엣지 라인 색상 (정면뷰: 하부프레임 뒤이므로 흐리게)
+  const footDepthOpacity = viewMode === '2D' && view2DDirection === 'front' ? 0.05 : 1.0;
   const edgeColor = useMemo(() => {
     if (viewMode === '3D') {
       return '#505050';
     }
-    // 2D 모드
-    return view2DTheme === 'dark' ? '#FFFFFF' : '#808080';
-  }, [viewMode, view2DTheme]);
+    const baseColor = view2DTheme === 'dark' ? '#FFFFFF' : '#808080';
+    if (footDepthOpacity >= 1.0) return baseColor;
+    // 정면뷰에서 배경색과 블렌딩
+    const base = new THREE.Color(baseColor);
+    const bg = new THREE.Color(view2DTheme === 'dark' ? '#1a1a2e' : '#ffffff');
+    bg.lerp(base, footDepthOpacity);
+    return '#' + bg.getHexString();
+  }, [viewMode, view2DTheme, footDepthOpacity]);
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
