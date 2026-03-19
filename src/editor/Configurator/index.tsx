@@ -4856,6 +4856,24 @@ const Configurator: React.FC = () => {
               <HelpBtn title="도어 셋팅" text="상하부프레임 섹션에서 '상하프레임 가림' 또는 '상하프레임 노출'을 선택하면 도어 갭이 자동 계산됩니다." />
             </div>
 
+            {/* Close/Open 토글 버튼 */}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '6px', marginBottom: '4px' }}>
+              <button
+                className={`${styles.viewerDoorButton} ${doorsOpen !== true ? styles.active : ''}`}
+                onClick={() => setDoorsOpen(false)}
+                style={{ flex: 1, padding: '5px 10px', fontSize: '12px', minWidth: 0 }}
+              >
+                Close
+              </button>
+              <button
+                className={`${styles.viewerDoorButton} ${doorsOpen === true ? styles.active : ''}`}
+                onClick={() => setDoorsOpen(true)}
+                style={{ flex: 1, padding: '5px 10px', fontSize: '12px', minWidth: 0 }}
+              >
+                Open
+              </button>
+            </div>
+
             {/* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */}
             <div style={{ marginTop: '8px', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -5619,27 +5637,6 @@ const Configurator: React.FC = () => {
 
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
-            {/* 도어가 설치된 경우에만 뷰어 상단에 Close/Open 토글 버튼 표시 */}
-            {hasDoorsInstalled && (
-              <div className={styles.viewerDoorToggle}>
-                <button
-                  className={`${styles.viewerDoorButton} ${doorsOpen !== true ? styles.active : ''}`}
-                  onClick={() => {
-                    setDoorsOpen(false);
-                  }}
-                >
-                  Close
-                </button>
-                <button
-                  className={`${styles.viewerDoorButton} ${doorsOpen === true ? styles.active : ''}`}
-                  onClick={() => {
-                    setDoorsOpen(true);
-                  }}
-                >
-                  Open
-                </button>
-              </div>
-            )}
             <Space3DView
               key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}`}
               spaceInfo={spaceInfo}
