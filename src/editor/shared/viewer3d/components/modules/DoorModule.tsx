@@ -746,10 +746,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     const floorHeightValue = originalSpaceInfo.hasFloorFinish ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
     const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 30;
-    // hasBase=false면 받침대 없음 → 가구가 받침대 영역 흡수, 개별 띄움만큼 Y오프셋
+    // 도어 높이 계산용 받침대: hasBase 토글에 관계없이 항상 기본 받침대 높이 사용
+    // (hasBase=false 시 가구 본체가 받침대를 흡수하지만, 도어는 공간 기준이므로 불변)
     const rawBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
-    const indivFloatForHeight = (hasBaseProp === false) ? (individualFloatHeightProp ?? 0) : 0;
-    const baseHeightValue = hasBaseProp === false ? indivFloatForHeight : rawBaseHeight;
+    const baseHeightValue = rawBaseHeight;
 
     // baseConfig.type === 'floor'일 때 baseConfig.height에는 이미 바닥마감재 높이가 포함됨
     // 따라서 가구 높이 계산 시 floorHeightValue를 별도로 빼면 이중 차감됨
@@ -770,9 +770,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 전체서라운드: 상부프레임이 도어 앞까지 나오므로 도어 상단이 프레임 아래에서 시작
     // gap=0이면 도어 상단이 천장에 맞닿음 → 도어 높이 = 공간 높이
     const topGap = doorTopGap;
-    // hasBase=false: 받침대 없음(actualBase=0), 개별 띄움 높이만큼 가구 Y가 올라갔으므로 보정
-    const indivFloat = (hasBaseProp === false) ? (individualFloatHeightProp ?? 0) : 0;
-    const actualBase = hasBaseProp === false ? indivFloat : (placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65));
+    // 도어 위치 계산용 받침대: hasBase 토글에 관계없이 항상 기본값 사용
+    // (가구 본체 Y는 FurnitureItem에서 hasBase에 따라 조정하지만, 도어 로컬 좌표는 불변)
+    const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     // bottomGap: 항상 바닥 기준 (받침대/띄움 무관, 0이면 바닥에서 시작)
     const bottomGap = doorBottomGap;
     const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
