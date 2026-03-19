@@ -3779,6 +3779,13 @@ const Room: React.FC<RoomProps> = ({
 
               const globalTopFrameMm = spaceInfo.frameSize?.top ?? 30;
               const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
+              // 단내림 구간 가구 판별을 위한 정보
+              const normalSlotCountForFrame = hasDroppedCeiling
+                ? (ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount)?.normal?.columnCount || (spaceInfo.customColumnCount || 4))
+                : Infinity;
+              const droppedHeightMm = hasDroppedCeiling
+                ? (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)
+                : 0;
               return (
                 <>
                   {slotModsForFrame
@@ -3806,7 +3813,10 @@ const Room: React.FC<RoomProps> = ({
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       let modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                       const modTopHeight = mmToThreeUnits(modTopThickness);
-                      const modTopY = panelStartY + height - modTopHeight / 2;
+                      // 단내림 구간 가구는 단내림 천장 높이 기준으로 Y 계산
+                      const isInDroppedZone = hasDroppedCeiling && mod.slotIndex !== undefined && mod.slotIndex >= normalSlotCountForFrame;
+                      const ceilingHeight = isInDroppedZone ? mmToThreeUnits(droppedHeightMm) : height;
+                      const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
                       const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
                       const isHighlighted = highlightedFrame === `top-${mod.id}`;
                       const args: [number, number, number] = [
