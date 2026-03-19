@@ -1969,6 +1969,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   let mainPlacementWidth: number;
                   let scPlacementWidth: number | null = null;
                   let dcPlacementWidth: number;
+                  let scSideFrame = 0;
 
                   if (isFreePlacement) {
                     // getInternalSpaceBoundsX 로직과 일치시킴:
@@ -1990,7 +1991,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     let scInnerGap = middleGapMm; // 메인↔단내림 경계이격 (단내림이 흡수)
                     let scOuterGap = 0; // 단내림 외측 경계이격 (단내림이 흡수)
                     // 단내림 구간 프레임 두께 (서라운드 모드에서 벽쪽 프레임)
-                    var scSideFrame = (spaceInfo.surroundType !== 'no-surround' && hasSC)
+                    scSideFrame = (spaceInfo.surroundType !== 'no-surround' && hasSC)
                       ? (spaceInfo.stepCeiling!.sideFrame ?? (scOnLeft ? (frameSize?.left ?? 0) : (frameSize?.right ?? 0)))
                       : 0;
                     if (hasSC) {
@@ -2100,7 +2101,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     mainPlacementWidth = mainSlotTotalWidth;
                     dcPlacementWidth = droppedSlotTotalWidth;
-                    var scSideFrame = 0;
+                    // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
 
                   return (<>
