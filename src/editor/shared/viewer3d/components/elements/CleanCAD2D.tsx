@@ -833,9 +833,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             nearestRightDistance: 0,
             leftBoundaryDistance: 0,
             rightBoundaryDistance: 0,
+            farSideDistance: 0,
+            farSideSide: null,
             isSpacerHandled: false,
             hasStepDown: hasStepDownFb,
             stepDownPosition: stepDownPositionFb,
+            stepDownWidth: 0,
           };
         }
         return null;
@@ -953,6 +956,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       // 단내림 구간과의 경계 치수
       let leftBoundaryDistance = 0;
       let rightBoundaryDistance = 0;
+      // 단내림 기둥 반대편 벽까지 거리 (분절된 두 번째 치수선)
+      let farSideDistance = 0;
+      // farSide가 어느 쪽인지 ('left' = 왼쪽에 표시, 'right' = 오른쪽에 표시)
+      let farSideSide: 'left' | 'right' | null = null;
 
       if (hasStepDown) {
         // 단내림 구간 경계 계산
@@ -966,8 +973,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 오른쪽 단내림일 때 - 가구 오른쪽과 단내림 좌측 경계 사이 거리
           rightBoundaryDistance = Math.abs((stepDownBoundaryX - moduleRight) * 100);
         }
+
+        // 가구가 메인 구간에 있을 때: 단내림 구간 폭을 farSide로 표시
+        const isModuleInStepDownCheck = stepDownPosition === 'left'
+          ? moduleRight <= stepDownEndX
+          : moduleLeft >= stepDownStartX;
+
+        if (!isModuleInStepDownCheck) {
+          // 메인 구간 가구 → 단내림 쪽에 farSideDistance (= 단내림 폭) 추가
+          farSideDistance = stepDownWidth;
+          farSideSide = stepDownPosition; // 단내림이 있는 쪽
+        } else {
+          // 단내림 구간 가구 → 메인 쪽에 farSideDistance (= 메인 구간 폭) 추가
+          farSideDistance = spaceInfo.width - stepDownWidth;
+          farSideSide = stepDownPosition === 'left' ? 'right' : 'left';
+        }
       }
-      
+
       return {
         module,
         moduleData,
@@ -982,9 +1004,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         nearestRightDistance,
         leftBoundaryDistance,
         rightBoundaryDistance,
+        farSideDistance,
+        farSideSide,
         isSpacerHandled,
         hasStepDown,
-        stepDownPosition
+        stepDownPosition,
+        stepDownWidth,
       };
     }).filter(Boolean);
   }, [placedModules, currentViewDirection, spaceInfo, spaceHeight]);
@@ -3932,9 +3957,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           nearestRightDistance,
           leftBoundaryDistance,
           rightBoundaryDistance,
+          farSideDistance,
+          farSideSide,
           isSpacerHandled,
           hasStepDown,
-          stepDownPosition
+          stepDownPosition,
+          stepDownWidth: stepDownWidthItem,
         } = item;
         
         // actualPositionX를 moduleX로부터 가져옴
@@ -4108,16 +4136,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
             )}
 
-            {/* 자유배치: 가구 좌/우 갭 거리 치수선 (벽 또는 단내림 경계까지) */}
+            {/* 자유배치: 가구 좌/우 갭 거리 치수선 (벽 또는 단내림 경계까지) + 분절 치수선 */}
             {isFreePlacement && (() => {
               const leftGapMm = Math.round(nearestLeftDistance);
               const rightGapMm = Math.round(nearestRightDistance);
+              const farSideMm = Math.round(farSideDistance);
               // 갭 치수선 좌/우 끝 X 좌표
               const leftGapStartX = leftX - mmToThreeUnits(leftGapMm);
               const rightGapEndX = rightX + mmToThreeUnits(rightGapMm);
               const gapColor = view2DTheme === 'dark' ? '#9CA3AF' : '#888888';
+              const farColor = view2DTheme === 'dark' ? '#6B7280' : '#AAAAAA'; // 분절 치수선은 좀 더 연하게
+
+              // 분절 치수선 X좌표 (단내림 기둥 반대편 벽까지)
+              // farSideSide === 'left': 좌측 벽~단내림경계 = leftGapStartX에서 더 왼쪽으로 farSideMm
+              // farSideSide === 'right': 단내림경계~우측벽 = rightGapEndX에서 더 오른쪽으로 farSideMm
+              const farLeftStartX = farSideSide === 'left' ? leftGapStartX - mmToThreeUnits(farSideMm) : 0;
+              const farRightEndX = farSideSide === 'right' ? rightGapEndX + mmToThreeUnits(farSideMm) : 0;
+
               return (<>
-                {/* 좌측 갭 치수선 */}
+                {/* 좌측 갭 치수선 (가구~벽 또는 가구~단내림경계) */}
                 {leftGapMm > 0 && (<>
                   <NativeLine name="dimension_line"
                     points={[[leftGapStartX, dimY, 0.002], [leftX, dimY, 0.002]]}
@@ -4154,7 +4191,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
                   />
                 </>)}
-                {/* 우측 갭 치수선 */}
+
+                {/* 좌측 분절: 단내림이 왼쪽에 있고, 가구가 메인 구간 → 왼쪽벽~단내림경계 구간 */}
+                {farSideSide === 'left' && farSideMm > 0 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[farLeftStartX, dimY, 0.002], [leftGapStartX, dimY, 0.002]]}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([farLeftStartX, dimY, 0.002], [farLeftStartX + 0.02, dimY, 0.002], 0.01)}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftGapStartX, dimY, 0.002], [leftGapStartX - 0.02, dimY, 0.002], 0.01)}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <Html
+                    position={[(farLeftStartX + leftGapStartX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    center
+                    style={{ pointerEvents: 'none' }}
+                    zIndexRange={[9998, 9999]}
+                  >
+                    <div style={{
+                      padding: '2px 6px', fontSize: '12px', fontWeight: 'bold',
+                      color: farColor, userSelect: 'none', whiteSpace: 'nowrap',
+                      background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                      borderRadius: '3px',
+                    }}>
+                      {farSideMm}
+                    </div>
+                  </Html>
+                  {/* 좌측 벽 연장선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[farLeftStartX, spaceHeight, 0.001], [farLeftStartX, dimY - mmToThreeUnits(10), 0.001]]}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                  />
+                </>)}
+
+                {/* 우측 갭 치수선 (가구~벽 또는 가구~단내림경계) */}
                 {rightGapMm > 0 && (<>
                   <NativeLine name="dimension_line"
                     points={[[rightX, dimY, 0.002], [rightGapEndX, dimY, 0.002]]}
@@ -4189,6 +4263,42 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <NativeLine name="dimension_line"
                     points={[[rightGapEndX, spaceHeight, 0.001], [rightGapEndX, dimY - mmToThreeUnits(10), 0.001]]}
                     color={gapColor} lineWidth={1} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                  />
+                </>)}
+
+                {/* 우측 분절: 단내림이 오른쪽에 있고, 가구가 메인 구간 → 단내림경계~오른쪽벽 구간 */}
+                {farSideSide === 'right' && farSideMm > 0 && (<>
+                  <NativeLine name="dimension_line"
+                    points={[[rightGapEndX, dimY, 0.002], [farRightEndX, dimY, 0.002]]}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([rightGapEndX, dimY, 0.002], [rightGapEndX + 0.02, dimY, 0.002], 0.01)}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([farRightEndX, dimY, 0.002], [farRightEndX - 0.02, dimY, 0.002], 0.01)}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+                  />
+                  <Html
+                    position={[(rightGapEndX + farRightEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    center
+                    style={{ pointerEvents: 'none' }}
+                    zIndexRange={[9998, 9999]}
+                  >
+                    <div style={{
+                      padding: '2px 6px', fontSize: '12px', fontWeight: 'bold',
+                      color: farColor, userSelect: 'none', whiteSpace: 'nowrap',
+                      background: view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                      borderRadius: '3px',
+                    }}>
+                      {farSideMm}
+                    </div>
+                  </Html>
+                  {/* 우측 벽 연장선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[farRightEndX, spaceHeight, 0.001], [farRightEndX, dimY - mmToThreeUnits(10), 0.001]]}
+                    color={farColor} lineWidth={1} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
                   />
                 </>)}
               </>);
