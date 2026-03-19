@@ -66,6 +66,7 @@ const FreePlacementDropZone: React.FC = () => {
   const activePopup = useUIStore(state => state.activePopup);
   const equalDistribution = useUIStore(state => state.equalDistribution);
   const viewMode = useUIStore(state => state.viewMode);
+  const view2DDirection = useUIStore(state => state.view2DDirection);
   const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
@@ -1596,8 +1597,10 @@ const FreePlacementDropZone: React.FC = () => {
         </mesh>
       ) : null}
 
-      {/* 이격 구간 — 붉은색 투명 박스 (2D/3D/orthographic 모두 표시) */}
+      {/* 이격 구간 — 붉은색 투명 박스 (2D 측면뷰에서는 숨김) */}
       {(() => {
+        // 2D 측면뷰(left, right)에서는 이격거리 박스 숨김
+        if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) return null;
         const gapOpacity = viewMode === '2D' ? 0.35 : 0.08;
         const gapLeft = spaceInfo.gapConfig?.left ?? 0;
         const gapRight = spaceInfo.gapConfig?.right ?? 0;
