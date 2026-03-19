@@ -2279,6 +2279,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
+        {/* DEBUG: 2D 정면뷰 도어 반투명 면 - animated.group 밖에서 직접 렌더링 */}
+        {viewMode === '2D' && view2DDirection === 'front' && (
+          <mesh position={[doorPositionX, 0, 0]} renderOrder={9999}>
+            <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
+            <meshBasicMaterial color="#ff0000" transparent opacity={0.5} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+          </mesh>
+        )}
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
