@@ -4545,8 +4545,8 @@ const Configurator: React.FC = () => {
 
         </div>
 
-        {/* 서라운드 섹션 — freeSurround 존재 시 항상 표시 */}
-        {isFreeMode && (() => {
+        {/* 서라운드 섹션 — freeSurround 존재 시 표시 (surroundType가 surround/both-sides이면 슬롯 프레임이 좌우를 담당하므로 숨김) */}
+        {isFreeMode && spaceInfo.surroundType === 'no-surround' && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
           const middleGaps = fs.middle || [];

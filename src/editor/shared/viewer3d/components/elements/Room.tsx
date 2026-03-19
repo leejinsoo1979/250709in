@@ -3275,7 +3275,8 @@ const Room: React.FC<RoomProps> = ({
               })}
 
               {/* 자유배치 좌측 서라운드 — L자 (전면에서 이격 가림) */}
-              {spaceInfo.freeSurround?.left?.enabled && spaceInfo.freeSurround.left.method !== 'curtain-box' && hasFreeMods && (() => {
+              {/* surroundType가 surround/both-sides이면 슬롯 프레임이 좌우를 담당하므로 freeSurround 비활성 */}
+              {spaceInfo.freeSurround?.left?.enabled && spaceInfo.freeSurround.left.method !== 'curtain-box' && hasFreeMods && spaceInfo.surroundType === 'no-surround' && (() => {
                 const leftCfg = spaceInfo.freeSurround!.left;
                 // method 미설정 시 gap 기반 자동 결정 (gap > 2 → lshape)
                 const method = leftCfg.method || ((leftCfg.gap && leftCfg.gap > 2) ? 'lshape' : 'none');
@@ -3330,7 +3331,8 @@ const Room: React.FC<RoomProps> = ({
               })()}
 
               {/* 자유배치 우측 서라운드 — L자 (전면에서 이격 가림) */}
-              {spaceInfo.freeSurround?.right?.enabled && spaceInfo.freeSurround.right.method !== 'curtain-box' && hasFreeMods && (() => {
+              {/* surroundType가 surround/both-sides이면 슬롯 프레임이 우측을 담당하므로 freeSurround 비활성 */}
+              {spaceInfo.freeSurround?.right?.enabled && spaceInfo.freeSurround.right.method !== 'curtain-box' && hasFreeMods && spaceInfo.surroundType === 'no-surround' && (() => {
                 const rightCfg = spaceInfo.freeSurround!.right;
                 // method 미설정 시 gap 기반 자동 결정
                 const method = rightCfg.method || ((rightCfg.gap && rightCfg.gap > 2) ? 'lshape' : 'none');
