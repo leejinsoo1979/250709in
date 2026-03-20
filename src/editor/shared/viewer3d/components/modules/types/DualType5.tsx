@@ -1061,21 +1061,13 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             const isFirstSection = index === 0;
             const isLastSection = index === totalSections - 1;
 
-            // 좌측 측판과 동일: 첫 섹션은 하판까지, 마지막 섹션은 상판까지 확장
-            let adjustedHeight = sectionHeight;
-            let adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-
-            if (isFirstSection) {
-              adjustedHeight = sectionHeight + basicThickness;
-              adjustedCenterY = -height/2 + adjustedHeight / 2;
-            }
-            if (isLastSection) {
-              const currentTop = adjustedCenterY + adjustedHeight / 2;
-              const targetTop = height / 2;
-              const extension = targetTop - currentTop;
-              adjustedHeight += extension;
-              adjustedCenterY += extension / 2;
-            }
+            // 첫 섹션은 하판까지 아래로만, 마지막 섹션은 상판까지 위로만 확장
+            const originalTop = currentYPosition + sectionHeight - basicThickness;
+            const originalBottom = currentYPosition - basicThickness;
+            const finalBottom = isFirstSection ? -height/2 : originalBottom;
+            const finalTop = isLastSection ? height/2 : originalTop;
+            const adjustedHeight = finalTop - finalBottom;
+            const adjustedCenterY = (finalBottom + finalTop) / 2;
 
             const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
 
@@ -1128,23 +1120,13 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               const isFirstSection = index === 0;
               const isLastSection = index === totalSections - 1;
 
-              // BaseFurnitureShell 방식: 첫 섹션은 하판까지, 마지막 섹션은 상판까지 확장
-              let adjustedHeight = sectionHeight;
-              let adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-
-              if (isFirstSection) {
-                // 첫 번째 섹션: 하판 영역까지 아래로 확장 (bottom = -height/2)
-                adjustedHeight = sectionHeight + basicThickness;
-                adjustedCenterY = -height/2 + adjustedHeight / 2;
-              }
-              if (isLastSection) {
-                // 마지막 섹션: 상판 영역까지 위로 확장 (top = height/2)
-                const currentTop = adjustedCenterY + adjustedHeight / 2;
-                const targetTop = height / 2;
-                const extension = targetTop - currentTop;
-                adjustedHeight += extension;
-                adjustedCenterY += extension / 2;
-              }
+              // 첫 섹션은 하판까지 아래로만, 마지막 섹션은 상판까지 위로만 확장
+              const originalTop = currentYPosition + sectionHeight - basicThickness; // 섹션 상단
+              const originalBottom = currentYPosition - basicThickness; // 섹션 하단
+              const finalBottom = isFirstSection ? -height/2 : originalBottom;
+              const finalTop = isLastSection ? height/2 : originalTop;
+              const adjustedHeight = finalTop - finalBottom;
+              const adjustedCenterY = (finalBottom + finalTop) / 2;
 
               return (
                 <BoxWithEdges
