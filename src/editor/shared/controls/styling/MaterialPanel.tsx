@@ -4,7 +4,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './MaterialPanel.module.css';
 
-type MaterialTab = 'interior' | 'door' | 'frame';
+type MaterialTab = 'interior' | 'door';
 
 // cn utility 함수
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -75,10 +75,8 @@ const MaterialPanel: React.FC = () => {
   useEffect(() => {
     if (materialTab === 'interior') {
       setDoorsOpen(true);
-    } else if (materialTab === 'door') {
-      setDoorsOpen(false);
     } else {
-      setDoorsOpen(null);
+      setDoorsOpen(false);
     }
     // 언마운트 시 개별 상태로 복원
     return () => {
@@ -90,51 +88,26 @@ const MaterialPanel: React.FC = () => {
   const handleSelectMaterial = (name: string, color: string, material?: any) => {
     setSelectedMaterial(name);
 
-    // 이미지 텍스처인 경우 텍스처 경로도 함께 저장
-    if (material?.texture === 'image' && material?.image) {
-      // 모든 이미지 텍스처는 현재 선택된 탭에만 적용
-      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
-      const colorProperty = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
+    const isTexture = material?.texture === 'image' && material?.image;
+
+    if (materialTab === 'interior') {
+      // 속장: interiorColor/interiorTexture만 변경
       const newMaterialConfig = {
         ...materialConfig,
-        [colorProperty]: color,
-        [textureProperty]: material.image
+        interiorColor: color,
+        interiorTexture: isTexture ? material.image : undefined
       };
-
-      console.log('🎨 MaterialPanel 재질 선택 (텍스처):', {
-        materialTab,
-        name,
-        textureProperty,
-        textureValue: material.image,
-        prevTexture: materialConfig[textureProperty],
-        newMaterialConfig
-      });
-
-      setSpaceInfo({
-        materialConfig: newMaterialConfig
-      });
+      setSpaceInfo({ materialConfig: newMaterialConfig });
     } else {
-      // 일반 색상 재질인 경우 텍스처 제거
-      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
-      const colorProperty = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
+      // 도어: doorColor/doorTexture + frameColor/frameTexture 동시 변경
       const newMaterialConfig = {
         ...materialConfig,
-        [colorProperty]: color,
-        [textureProperty]: undefined
+        doorColor: color,
+        doorTexture: isTexture ? material.image : undefined,
+        frameColor: color,
+        frameTexture: isTexture ? material.image : undefined
       };
-
-      console.log('🎨 MaterialPanel 재질 선택 (색상):', {
-        materialTab,
-        name,
-        colorProperty,
-        colorValue: color,
-        textureProperty,
-        newMaterialConfig
-      });
-
-      setSpaceInfo({
-        materialConfig: newMaterialConfig
-      });
+      setSpaceInfo({ materialConfig: newMaterialConfig });
     }
   };
 
@@ -165,14 +138,6 @@ const MaterialPanel: React.FC = () => {
           }}
         >
           <span className={styles.tabLabel}>{t('material.door')}</span>
-        </button>
-        <button
-          className={cn(styles.tab, materialTab === 'frame' && styles.activeTab)}
-          onClick={() => {
-            setMaterialTab('frame');
-          }}
-        >
-          <span className={styles.tabLabel}>마감판</span>
         </button>
       </div>
 
