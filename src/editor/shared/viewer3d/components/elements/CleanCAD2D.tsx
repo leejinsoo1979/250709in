@@ -3277,9 +3277,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           const hasSectionSplit = sectionHeights.length >= 2;
 
-          // Y 좌표 (1단용)
-          const bottomFrameTopY = mmToThreeUnits(bottomFrameH);
-          const furnitureTopY = mmToThreeUnits(bottomFrameH + furnitureH);
+          // Y 좌표 (1단용) — 바닥마감재가 있으면 마감재 위에서 시작
+          const floorFinishBaseY = mmToThreeUnits(floorFinishForHeight);
+          const bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
+          const furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + furnitureH);
           const effectiveCeilingY = mmToThreeUnits(effectiveH);
 
           return (
@@ -3325,13 +3326,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
-              {/* 세로 메인 라인: 0 ~ effectiveCeiling */}
+              {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
-                points={[[innerX, 0, 0.002], [innerX, effectiveCeilingY, 0.002]]}
+                points={[[innerX, floorFinishBaseY, 0.002], [innerX, effectiveCeilingY, 0.002]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
-                points={createArrowHead([innerX, 0, 0.002], [innerX, 0.05, 0.002])}
+                points={createArrowHead([innerX, floorFinishBaseY, 0.002], [innerX, floorFinishBaseY + 0.05, 0.002])}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
@@ -3347,7 +3348,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <Text renderOrder={1000} depthTest={false}
-                    position={[innerX - mmToThreeUnits(25), bottomFrameTopY / 2, 0.01]}
+                    position={[innerX - mmToThreeUnits(25), (floorFinishBaseY + bottomFrameTopY) / 2, 0.01]}
                     fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
@@ -3361,7 +3362,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <>
                   {/* 섹션별 구분 틱 & 치수 (하부→상부 순서) */}
                   {sectionHeights.map((secH, idx) => {
-                    const secBottomMm = bottomFrameH + sectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
+                    const secBottomMm = floorFinishForHeight + bottomFrameH + sectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
                     const secTopMm = secBottomMm + secH;
                     const secBottomY = mmToThreeUnits(secBottomMm);
                     const secTopY = mmToThreeUnits(secTopMm);
@@ -3554,9 +3555,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           const rHasSectionSplit = rSectionHeights.length >= 2;
 
-          // Y 좌표 (1단용)
-          const rBottomFrameTopY = mmToThreeUnits(rBottomFrameH);
-          const rFurnitureTopY = mmToThreeUnits(rBottomFrameH + rFurnitureH);
+          // Y 좌표 (1단용) — 바닥마감재가 있으면 마감재 위에서 시작
+          const rFloorFinishBaseY = mmToThreeUnits(rFloorFinishForHeight);
+          const rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
+          const rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rFurnitureH);
           const rEffectiveCeilingY = mmToThreeUnits(rEffectiveH);
 
           return (
@@ -3602,13 +3604,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
-              {/* 세로 메인 라인: 0 ~ effectiveCeiling */}
+              {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
-                points={[[rightInnerX, 0, 0.002], [rightInnerX, rEffectiveCeilingY, 0.002]]}
+                points={[[rightInnerX, rFloorFinishBaseY, 0.002], [rightInnerX, rEffectiveCeilingY, 0.002]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
-                points={createArrowHead([rightInnerX, 0, 0.002], [rightInnerX, 0.05, 0.002])}
+                points={createArrowHead([rightInnerX, rFloorFinishBaseY, 0.002], [rightInnerX, rFloorFinishBaseY + 0.05, 0.002])}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <NativeLine name="dimension_line"
@@ -3624,7 +3626,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <Text renderOrder={1000} depthTest={false}
-                    position={[rightInnerX + mmToThreeUnits(10), rBottomFrameTopY / 2, 0.01]}
+                    position={[rightInnerX + mmToThreeUnits(10), (rFloorFinishBaseY + rBottomFrameTopY) / 2, 0.01]}
                     fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
@@ -3638,7 +3640,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <>
                   {/* 섹션별 구분 틱 & 치수 (하부→상부 순서) */}
                   {rSectionHeights.map((secH, idx) => {
-                    const secBottomMm = rBottomFrameH + rSectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
+                    const secBottomMm = rFloorFinishForHeight + rBottomFrameH + rSectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
                     const secTopMm = secBottomMm + secH;
                     const secBottomY = mmToThreeUnits(secBottomMm);
                     const secTopY = mmToThreeUnits(secTopMm);
