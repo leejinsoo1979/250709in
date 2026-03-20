@@ -4873,11 +4873,11 @@ const Configurator: React.FC = () => {
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>백패널 두께</h3>
               </div>
-              <div className={doorSettingStyles.doorTabSelector}>
+              <div className={styles.toggleButtonGroup}>
                 {[3, 5, 9].map((thickness) => (
                   <button
                     key={thickness}
-                    className={`${doorSettingStyles.doorTab} ${currentBpThickness === thickness ? doorSettingStyles.activeDoorTab : ''}`}
+                    className={`${styles.toggleButton} ${currentBpThickness === thickness ? styles.toggleButtonActive : ''}`}
                     onClick={() => {
                       bpMods.forEach(m => updatePlacedModule(m.id, { backPanelThickness: thickness }));
                     }}
@@ -5125,6 +5125,83 @@ const Configurator: React.FC = () => {
 
           const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
 
+          // 병합 모드 전용 렌더 함수 (너비 + 높이 + 옵셋)
+          const renderMergedFrameRow = (
+            label: string, enabled: boolean, widthMM: number, heightMM: number, offset: number,
+            onToggle: () => void, onHeightChange: (v: number) => void, onOffsetChange: (v: number) => void, hlKey: string,
+          ) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+              <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}</span>
+              <button
+                onClick={onToggle}
+                className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
+              />
+              {enabled ? (
+                <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>너비</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={widthMM || ''} readOnly
+                      onFocus={() => setHighlightedFrame(hlKey)}
+                      onBlur={() => setHighlightedFrame(null)}
+                      className={styles.frameNumberInput}
+                      style={{ color: 'var(--theme-text-secondary)', cursor: 'default' }}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>높이</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={heightMM || ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(hlKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onHeightChange(Math.max(0, Math.min(9999, (heightMM || 0) + delta)));
+                        }
+                      }}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v)) onHeightChange(v === '' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onHeightChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
+                    <input
+                      type="text" inputMode="numeric"
+                      value={offset !== 0 ? offset : ''} placeholder="0"
+                      onFocus={() => setHighlightedFrame(hlKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const delta = e.key === 'ArrowUp' ? 1 : -1;
+                          onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + delta)));
+                        }
+                      }}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
+                      }}
+                      onBlur={(e) => {
+                        setHighlightedFrame(null);
+                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)));
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          );
+
           // 병합 모드: computeFrameMergeGroups 사용
           if (isMergeMode) {
             const topGroups = computeFrameMergeGroups(slotMods, 'top');
@@ -5135,7 +5212,7 @@ const Configurator: React.FC = () => {
                 <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>상,하부프레임</h3>
-                  <HelpBtn title="상,하부프레임" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 토글로 그룹 전체 on/off, size/옵셋 변경 시 그룹 내 모든 가구에 적용됩니다." />
+                  <HelpBtn title="상,하부프레임" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다." />
                   <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
                 {!isFrameSectionCollapsed && (
@@ -5145,9 +5222,10 @@ const Configurator: React.FC = () => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
-                      return <React.Fragment key={`merged-top-${gIdx}`}>{renderSlotFrameRow(
+                      return <React.Fragment key={`merged-top-${gIdx}`}>{renderMergedFrameRow(
                         group.label,
                         allEnabled,
+                        group.totalWidthMm,
                         firstMod?.topFrameThickness ?? globalTop,
                         firstMod?.topFrameOffset ?? 0,
                         () => { const newVal = !allEnabled; group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal })); },
@@ -5165,9 +5243,10 @@ const Configurator: React.FC = () => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasBase !== false);
-                      return <React.Fragment key={`merged-base-${gIdx}`}>{renderSlotFrameRow(
+                      return <React.Fragment key={`merged-base-${gIdx}`}>{renderMergedFrameRow(
                         group.label,
                         allEnabled,
+                        group.totalWidthMm,
                         firstMod?.baseFrameHeight ?? globalBase,
                         firstMod?.baseFrameOffset ?? 0,
                         () => {
