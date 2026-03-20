@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSurroundCalculations } from './hooks/useSurroundCalculations';
 import SurroundTypeSelector from './components/SurroundTypeSelector';
 import GapControls from './components/GapControls';
@@ -107,12 +108,30 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       updates.doorTopGap = currentTop + 3;
 
       onUpdate(updates);
+
+      // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정
+      const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
+      placedModules.forEach(m => {
+        const epUpdate: Record<string, number> = {};
+        if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
+        if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
+        if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
+      });
     } else if (mode === 'sides-only') {
       // 양쪽서라운드 = 기존 서라운드 그대로, frameConfig만 구분용으로 변경
       onUpdate({
         surroundType: 'surround',
         frameConfig: { ...frameConfig, top: false, bottom: false },
         doorTopGap: 3, // 양쪽서라운드: 상단갭 3mm
+      });
+
+      // 양쪽서라운드: EP 옵셋을 0으로 리셋
+      const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
+      placedModules.forEach(m => {
+        const epUpdate: Record<string, number> = {};
+        if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
+        if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
+        if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
       });
     } else {
       // 노서라운드
@@ -134,6 +153,15 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       updates.frameConfig = { left: false, right: false, top: true, bottom: false };
       updates.doorTopGap = 5; // 노서라운드: 기본 상단갭 5mm
       onUpdate(updates);
+
+      // 노서라운드: EP 옵셋을 0으로 리셋
+      const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
+      placedModules.forEach(m => {
+        const epUpdate: Record<string, number> = {};
+        if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
+        if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
+        if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
+      });
     }
   };
 
