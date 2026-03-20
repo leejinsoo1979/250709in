@@ -3410,18 +3410,21 @@ const Room: React.FC<RoomProps> = ({
                     seg.yPosition,
                     seg.zPosition
                   ];
+                  const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-top-${idx}`;
                   return (
-                    <BoxWithEdges
-                      key={`free-top-merged-${idx}`}
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      name="top-frame"
-                      args={args}
-                      position={pos}
-                      material={seg.material ?? topSurrMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
+                    <React.Fragment key={`free-top-merged-${idx}`}>
+                      <BoxWithEdges
+                        hideEdges={hideEdges}
+                        isOuterFrame
+                        name="top-frame"
+                        args={args}
+                        position={pos}
+                        material={seg.material ?? topSurrMat}
+                        renderMode={renderMode}
+                        shadowEnabled={shadowEnabled}
+                      />
+                      {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                    </React.Fragment>
                   );
                 });
               })()}
@@ -3795,18 +3798,21 @@ const Room: React.FC<RoomProps> = ({
                       seg.yPosition,
                       seg.zPosition
                     ];
+                    const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-top-${idx}`;
                     return (
-                      <BoxWithEdges
-                        key={`slot-top-merged-${idx}`}
-                        hideEdges={hideEdges}
-                        isOuterFrame
-                        name="top-frame"
-                        args={args}
-                        position={pos}
-                        material={seg.material ?? topFrameMat}
-                        renderMode={renderMode}
-                        shadowEnabled={shadowEnabled}
-                      />
+                      <React.Fragment key={`slot-top-merged-${idx}`}>
+                        <BoxWithEdges
+                          hideEdges={hideEdges}
+                          isOuterFrame
+                          name="top-frame"
+                          args={args}
+                          position={pos}
+                          material={seg.material ?? topFrameMat}
+                          renderMode={renderMode}
+                          shadowEnabled={shadowEnabled}
+                        />
+                        {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                      </React.Fragment>
                     );
                   })}
                 </>
@@ -4680,18 +4686,21 @@ const Room: React.FC<RoomProps> = ({
                   seg.yPosition,
                   seg.zPosition
                 ];
+                const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-base-${idx}`;
                 return (
-                  <BoxWithEdges
-                    key={`free-base-merged-${idx}`}
-                    hideEdges={hideEdges}
-                    isOuterFrame
-                    name="base-frame"
-                    args={args}
-                    position={pos}
-                    material={seg.material ?? baseMat}
-                    renderMode={renderMode}
-                    shadowEnabled={shadowEnabled}
-                  />
+                  <React.Fragment key={`free-base-merged-${idx}`}>
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      name="base-frame"
+                      args={args}
+                      position={pos}
+                      material={seg.material ?? baseMat}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                    {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                  </React.Fragment>
                 );
               })}
             </>
@@ -4847,18 +4856,21 @@ const Room: React.FC<RoomProps> = ({
                           seg.yPosition,
                           seg.zPosition
                         ];
+                        const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-base-${idx}`;
                         return (
-                          <BoxWithEdges
-                            key={`slot-base-merged-${idx}`}
-                            hideEdges={hideEdges}
-                            isOuterFrame
-                            name="base-frame"
-                            args={args}
-                            position={pos}
-                            material={seg.material ?? baseMat}
-                            renderMode={renderMode}
-                            shadowEnabled={shadowEnabled}
-                          />
+                          <React.Fragment key={`slot-base-merged-${idx}`}>
+                            <BoxWithEdges
+                              hideEdges={hideEdges}
+                              isOuterFrame
+                              name="base-frame"
+                              args={args}
+                              position={pos}
+                              material={seg.material ?? baseMat}
+                              renderMode={renderMode}
+                              shadowEnabled={shadowEnabled}
+                            />
+                            {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                          </React.Fragment>
                         );
                       })}
                     </React.Fragment>
