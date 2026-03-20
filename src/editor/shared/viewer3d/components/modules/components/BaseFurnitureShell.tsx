@@ -305,16 +305,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
             {(() => {
-              const sectionHeights = getSectionHeights();
-              const lowerSectionHeight = sectionHeights[0];
-              const upperSectionHeight = sectionHeights[1];
-              console.log('📐 측판분할:', {
-                moduleId: moduleData?.id,
-                heightMm: Math.round(height * 100),
-                lowerMm: Math.round(lowerSectionHeight * 100),
-                upperMm: Math.round(upperSectionHeight * 100),
-                sumMm: Math.round((lowerSectionHeight + upperSectionHeight) * 100),
-              });
+              const lowerSectionHeight = getSectionHeights()[0];
+              const upperSectionHeight = getSectionHeights()[1];
 
               const isTwoDrawer = moduleData?.id?.includes('2drawer-hanging');
               const isTwoHanging = moduleData?.id?.includes('2hanging');
