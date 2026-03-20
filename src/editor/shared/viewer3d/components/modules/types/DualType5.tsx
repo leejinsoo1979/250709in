@@ -1308,14 +1308,16 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             );
           }
 
-          // 하부 백패널: 하판까지 확장 (bottom = -height/2)
-          const lowerBackPanelHeight = lowerHeight + basicThickness; // 하판 영역까지 확장
-          const lowerBackPanelY = -height/2 + lowerBackPanelHeight / 2; // 측판과 동일 기준
+          // 하부 백패널: bottom=-height/2 ~ top=lowerHeight 위치
+          const lowerBackPanelHeight = lowerHeight;
+          const lowerBackPanelY = -height/2 + lowerHeight / 2;
           const lowerBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
 
-          // 상부 백패널: 상판까지 확장 (top = height/2)
-          const upperBackPanelHeight = upperHeight + basicThickness; // 상판 영역까지 확장
-          const upperBackPanelY = height/2 - upperBackPanelHeight / 2; // 측판과 동일 기준
+          // 상부 백패널: bottom=구분판 위치(lowerHeight), top=상판(height/2)까지 확장
+          const upperBackPanelBottom = -height/2 + lowerHeight;
+          const upperBackPanelTop = height/2;
+          const upperBackPanelHeight = upperBackPanelTop - upperBackPanelBottom;
+          const upperBackPanelY = (upperBackPanelBottom + upperBackPanelTop) / 2;
           const upperBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
 
           // 상부 섹션 바닥판 위치 (하부 마지막 측판 조정과 동일하게 +9mm)
