@@ -853,7 +853,7 @@ const Room: React.FC<RoomProps> = ({
     let baseFrameTransparent = false;
 
     const isHighlighted = frameType && highlightedFrame && (
-      highlightedFrame === frameType || highlightedFrame.startsWith(`merged-${frameType}-`)
+      highlightedFrame === frameType
     );
 
     // 테마 색상 매핑
