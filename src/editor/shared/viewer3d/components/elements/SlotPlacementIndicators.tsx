@@ -56,7 +56,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         color: '#C8B69E',
         hasDoor: false,
         isDynamic: false,
-        modelConfig: { basicThickness: 18 },
+        modelConfig: { basicThickness: spaceInfo.panelThickness ?? 18 },
       } as ModuleData;
     }
     return null;

@@ -103,7 +103,7 @@ function PageInner(){
 
       // 가구 높이 계산 (mm)
       const height = placedModule.customHeight || moduleData.dimensions.height;
-      const basicThicknessMm = 18; // 기본 패널 두께
+      const basicThicknessMm = moduleData.modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
       // 실제 선반/패널 위치 계산
       const result = calculateShelfBoringPositions({

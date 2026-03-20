@@ -128,13 +128,13 @@ function getBoringTypeName(
  * - 상판보링/선반보링/지판보링/중판보링: 보링이 고정되는 구조물 타입
  * - 1-1: Y인덱스-X인덱스 (Y 위치 순서, X 위치 순서)
  */
-export const exportBoringToCSV = (panels: Panel[]): string => {
+export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18): string => {
   const lines: string[] = [BORING_CSV_HEADERS];
 
   const HOLE_DIAMETER = 3; // mm
-  const HOLE_DEPTH = 18; // mm (관통홀 = 패널 두께)
+  const HOLE_DEPTH = panelThickness; // mm (관통홀 = 패널 두께)
   const EDGE_OFFSET = 50; // mm (앞/뒤 끝에서 50mm)
-  const BACK_PANEL_THICKNESS = 18; // mm
+  const BACK_PANEL_THICKNESS = panelThickness; // mm
 
   let globalHoleNo = 1;
 
@@ -352,7 +352,7 @@ export const downloadCutListFiles = async (
   await new Promise(resolve => setTimeout(resolve, 100));
 
   // 보링 CSV 다운로드 (측판에 보링이 있는 경우만)
-  const boringCSV = exportBoringToCSV(panels);
+  const boringCSV = exportBoringToCSV(panels, 18); // TODO: pass panelThickness from caller
   const boringLines = boringCSV.split('\n');
   if (boringLines.length > 1) { // 헤더 외에 데이터가 있으면
     const boringBlob = new Blob(['\uFEFF' + boringCSV], { type: 'text/csv;charset=utf-8;' }); // BOM 추가

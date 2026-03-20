@@ -319,7 +319,7 @@ const FreePlacementDropZone: React.FC = () => {
         type: 'box' as const,
         defaultDepth: useDepth,
         modelConfig: {
-          basicThickness: 18,
+          basicThickness: spaceInfo.panelThickness ?? 18,
           hasOpenFront: true,
           hasShelf: false,
           sections: [],

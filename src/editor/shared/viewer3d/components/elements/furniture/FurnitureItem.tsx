@@ -35,7 +35,8 @@ const createModuleDataFromCustomFurniture = (
   getCustomFurnitureById: (id: string) => any,
   slotWidth?: number,
   slotHeight?: number,
-  slotDepth?: number
+  slotDepth?: number,
+  panelThickness: number = 18
 ): ModuleData | null => {
   // 'custom-' 접두사 제거
   const actualId = customFurnitureId.replace(/^custom-/, '');
@@ -68,7 +69,7 @@ const createModuleDataFromCustomFurniture = (
     defaultDepth: customFurniture.originalDimensions.depth,
     // 커스텀 가구용 modelConfig
     modelConfig: {
-      basicThickness: 18,
+      basicThickness: panelThickness,
       hasOpenFront: true,
       hasShelf: false,
       sections: [],
@@ -762,7 +763,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       getCustomFurnitureById,
       placedModule.customWidth || internalSpace?.width,
       custFurnHeight,
-      placedModule.customDepth || internalSpace?.depth || zoneSpaceInfo?.depth
+      placedModule.customDepth || internalSpace?.depth || zoneSpaceInfo?.depth,
+      spaceInfo.panelThickness ?? 18
     );
 
     if (moduleData) {
@@ -796,7 +798,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       type: 'box' as const,
       defaultDepth: custDepth,
       modelConfig: {
-        basicThickness: 18,
+        basicThickness: spaceInfo.panelThickness ?? 18,
         hasOpenFront: true,
         hasShelf: false,
         sections: [],

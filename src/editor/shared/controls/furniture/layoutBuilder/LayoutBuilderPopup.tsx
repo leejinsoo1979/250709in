@@ -12,6 +12,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useLayoutBuilder } from './useLayoutBuilder';
 import { convertToConfig } from './convertToConfig';
 import LayoutCanvas from './LayoutCanvas';
@@ -46,6 +47,7 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
   // 싱글/듀얼 타입 (full 카테고리에서만 사용)
   const [cabinetType, setCabinetType] = useState<'single' | 'dual'>('dual');
   const [typeConfirmed, setTypeConfirmed] = useState(false);
+  const spaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const [customWidth, setCustomWidth] = useState<number>(1000);
   const [customHeight, setCustomHeight] = useState<number>(dimensions.height);
   const [customDepth, setCustomDepth] = useState<number>(dimensions.depth);
@@ -129,9 +131,9 @@ const LayoutBuilderPopup: React.FC<LayoutBuilderPopupProps> = ({
 
   const handleConfirm = useCallback(() => {
     const dims = { width: currentWidth, height: currentHeight, depth: currentDepth };
-    const config = convertToConfig(layout, dims);
+    const config = convertToConfig(layout, dims, spaceInfo.panelThickness ?? 18);
     onConfirm(config, currentWidth, currentHeight, currentDepth);
-  }, [layout, currentWidth, currentHeight, currentDepth, onConfirm]);
+  }, [layout, currentWidth, currentHeight, currentDepth, onConfirm, spaceInfo.panelThickness]);
 
   if (!isOpen) return null;
 

@@ -71,7 +71,7 @@ export function useFurnitureBoring(
 ): UseFurnitureBoringResult {
   const {
     settings,
-    panelThickness = 18,
+    panelThickness: panelThicknessOption,
     material = '멜라민',
     onlyWithDoors = false,
     furnitureIds,
@@ -82,6 +82,7 @@ export function useFurnitureBoring(
   // Store에서 데이터 가져오기
   const placedModules = useFurnitureStore((state) => state.placedModules);
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
+  const panelThickness = panelThicknessOption ?? spaceInfo.panelThickness ?? 18;
 
   // 보링 데이터 계산
   const result = useMemo(() => {

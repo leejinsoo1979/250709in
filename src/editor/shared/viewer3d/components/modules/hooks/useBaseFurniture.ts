@@ -99,7 +99,7 @@ export const useBaseFurniture = (
   
   // 모듈 설정 데이터 가져오기
   const originalModelConfig = moduleData.modelConfig || {
-    basicThickness: 18,
+    basicThickness: storeSpaceInfo.panelThickness ?? 18,
     hasOpenFront: true,
     hasShelf: false,
     shelfCount: 0

@@ -23,7 +23,7 @@
 import { LayoutNode } from './types';
 import { CustomFurnitureConfig, CustomSection, CustomElement } from '@/editor/shared/furniture/types';
 
-const PANEL_THICKNESS = 18;
+const DEFAULT_PANEL_THICKNESS = 18;
 const DEFAULT_ELEMENT: CustomElement[] = [{ type: 'open' }];
 
 interface Dimensions {
@@ -35,8 +35,10 @@ interface Dimensions {
 export function convertToConfig(
   layout: LayoutNode,
   dimensions: Dimensions,
+  panelThickness: number = DEFAULT_PANEL_THICKNESS,
 ): CustomFurnitureConfig {
   const { width, height } = dimensions;
+  const PANEL_THICKNESS = panelThickness;
 
   // 가구 전체 내경 (단일 박스: 상/하판 2개 차감)
   const totalInnerHeight = height - 2 * PANEL_THICKNESS;
@@ -90,7 +92,7 @@ export function convertToConfig(
       // child가 horizontal → 해당 섹션에 horizontalSplit
       if (child.direction === 'horizontal' && child.children) {
         // 이 섹션 박스의 내경 너비 = 가구 전체 내경 너비 (측판은 가구 레벨)
-        section.horizontalSplit = buildHorizontalSplit(child, totalInnerWidth);
+        section.horizontalSplit = buildHorizontalSplit(child, totalInnerWidth, PANEL_THICKNESS);
 
         // H의 children 중 vertical이 있으면 → areaSubSplits (3단계 분할)
         const areas = buildAreaSubSplits(child, sectionInnerHeight);
@@ -111,7 +113,7 @@ export function convertToConfig(
   // Case 3: 루트가 horizontal(좌우 분할) → 1개 섹션 + horizontalSplit
   if (layout.direction === 'horizontal' && layout.children) {
     const section = createSection('section-0', totalInnerHeight);
-    section.horizontalSplit = buildHorizontalSplit(layout, totalInnerWidth);
+    section.horizontalSplit = buildHorizontalSplit(layout, totalInnerWidth, PANEL_THICKNESS);
 
     // children 중 vertical이 있으면 → areaSubSplits
     const areas = buildAreaSubSplits(layout, totalInnerHeight);
@@ -197,12 +199,13 @@ function createSection(id: string, innerHeight: number): CustomSection {
 function buildHorizontalSplit(
   hNode: LayoutNode,
   parentInnerWidth: number,
+  pt: number = DEFAULT_PANEL_THICKNESS,
 ) {
   // 중첩 horizontal 평탄화 (vertical과 동일한 이유)
   const children = flattenHorizontalChildren(hNode.children!);
   // 독립 박스 모델: 각 divider는 2개 패널(좌박스 우측판 + 우박스 좌측판)
   const numDividers = children.length - 1;
-  const usableWidth = parentInnerWidth - 2 * numDividers * PANEL_THICKNESS;
+  const usableWidth = parentInnerWidth - 2 * numDividers * pt;
 
   const leftInnerWidth = Math.round(children[0].ratio * usableWidth);
 

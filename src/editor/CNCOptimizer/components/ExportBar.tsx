@@ -134,7 +134,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       });
     });
 
-    const boringCSV = exportBoringToCSV(allPanels);
+    const boringCSV = exportBoringToCSV(allPanels, spaceInfo.panelThickness ?? 18);
     const timestamp = new Date().toISOString().slice(0, 10);
     const projectName = basicInfo?.title || 'project';
 

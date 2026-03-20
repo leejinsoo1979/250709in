@@ -193,7 +193,7 @@ export function useLivePanelData() {
         const modelConfig = moduleData.modelConfig;
         const sections = modelConfig?.sections || modelConfig?.leftSections || [];
         const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
-        const basicThicknessMm = 18; // 기본 패널 두께
+        const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
         console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: sections=`, sections);
@@ -673,7 +673,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const modelConfig = moduleData.modelConfig;
       const sections = modelConfig?.sections || modelConfig?.leftSections || [];
       const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
-      const basicThicknessMm = 18; // 기본 패널 두께
+      const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
       console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);
 

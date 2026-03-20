@@ -710,7 +710,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 하부장 도어는 하부장 상단과 일치, 아래로 확장
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 하부장 도어 아래쪽 확장 (mm) - 바닥배치 시만
-    const LOWER_CABINET_TOP_EXTENSION = 18; // 하부장 상부 마감재 두께 (도어 상단이 하부장 상단과 일치)
+    const LOWER_CABINET_TOP_EXTENSION = panelThickness; // 하부장 상부 마감재 두께 (도어 상단이 하부장 상단과 일치)
 
     // 띄움배치 시 하단 확장 제거 (키큰장 도어 하단과 맞추기 위해)
     const bottomExtension = floatHeight > 0 ? 0 : LOWER_CABINET_BOTTOM_EXTENSION;
@@ -828,7 +828,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치하고 아래로 확장
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 아래쪽 확장
-    const LOWER_CABINET_TOP_EXTENSION = 18; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
+    const LOWER_CABINET_TOP_EXTENSION = panelThickness; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
     const DOOR_POSITION_ADJUSTMENT = 0; // 위치 조정값 (10mm 위로 올림)
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
 
@@ -926,8 +926,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isNoSurroundNoWallRight = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.right;
   const endPanelThickness = 18; // 엔드패널 두께 18mm
 
-  // 패널 두께 (18mm) - 먼저 선언
-  const panelThickness = 18;
+  // 패널 두께 - spaceInfo에서 동적으로 가져오기
+  const panelThickness = originalSpaceInfo.panelThickness ?? 18;
 
   // 도어 Z 위치: doorDepth/2로 사용되므로 offset을 2배로 설정해야 함
   // 목표: 가구 앞면에서 5mm 떨어지고 + 도어 두께 절반(9mm) = 14mm

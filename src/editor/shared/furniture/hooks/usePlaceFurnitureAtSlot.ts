@@ -110,7 +110,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       color: '#C8B69E',
       hasDoor: false,
       isDynamic: false,
-      modelConfig: { basicThickness: 18 },
+      modelConfig: { basicThickness: spaceInfo.panelThickness ?? 18 },
     } as ModuleData;
   }
 
@@ -296,8 +296,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
       const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
       const availableHeight = spaceInfo.height - topFrameMm - bottomFrameMm - floorFinishMm - baseHeightMm;
-      const panelThickness = 18;
-      customConfig = createDefaultCustomConfig(availableHeight - panelThickness * 2);
+      const ptMm = spaceInfo.panelThickness ?? 18;
+      customConfig = createDefaultCustomConfig(availableHeight - ptMm * 2);
       isCustomizable = true;
     }
 

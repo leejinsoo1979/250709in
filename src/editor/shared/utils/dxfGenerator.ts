@@ -637,8 +637,8 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
   const internalWidth = derivedSpaceState.internalWidth || internalSpace.width;
   const internalStartX = (spaceInfo.width - internalWidth) / 2;
 
-  // 패널 두께 상수 (2D 뷰와 동일)
-  const PANEL_THICKNESS = 18; // mm (basicThickness)
+  // 패널 두께 (2D 뷰와 동일) - spaceInfo에서 동적으로 가져오기
+  const PANEL_THICKNESS = spaceInfo.panelThickness ?? 18; // mm (basicThickness)
   const BACK_PANEL_THICKNESS = 9; // mm
 
   placedModules.forEach((module, index) => {

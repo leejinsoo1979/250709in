@@ -107,7 +107,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         isDynamic: false,
         type: 'box' as const,
         defaultDepth: dims.depth,
-        modelConfig: { basicThickness: 18, hasOpenFront: true, hasShelf: false, sections: [] },
+        modelConfig: { basicThickness: spaceInfo.panelThickness ?? 18, hasOpenFront: true, hasShelf: false, sections: [] },
       };
     } else {
       moduleData = getModuleById(module.id, internalSpace, spaceInfo);
