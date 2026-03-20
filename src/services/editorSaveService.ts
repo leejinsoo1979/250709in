@@ -99,7 +99,7 @@ const convertEditorDataToProjectData = (editorData: EditorData, userId: string):
       },
     },
     motor: {
-      topHeight: customOptions?.motorSettings ? parseInt(customOptions.motorSettings) : (spaceInfo.frameSize?.top || 50),
+      topHeight: customOptions?.motorSettings ? parseInt(customOptions.motorSettings) : (spaceInfo.frameSize?.top || 30),
       completed: !!customOptions?.motorSettings,
     },
     ventilation: {
