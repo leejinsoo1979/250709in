@@ -558,16 +558,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 // console.log('🎨 도어 텍스처 적용 시작:', effectiveTextureUrl);
 
         if (doorMaterialRef.current) {
-// console.log('🎨 싱글 도어에 텍스처 적용');
-          // applyTextureToMaterial(doorMaterialRef.current, effectiveTextureUrl, '싱글', panelNames.single);
+          applyTextureToMaterial(doorMaterialRef.current, effectiveTextureUrl, '싱글', panelNames.single);
         }
         if (leftDoorMaterialRef.current) {
-// console.log('🎨 왼쪽 도어에 텍스처 적용');
-          // applyTextureToMaterial(leftDoorMaterialRef.current, effectiveTextureUrl, '왼쪽', panelNames.left);
+          applyTextureToMaterial(leftDoorMaterialRef.current, effectiveTextureUrl, '왼쪽', panelNames.left);
         }
         if (rightDoorMaterialRef.current) {
-// console.log('🎨 오른쪽 도어에 텍스처 적용');
-          // applyTextureToMaterial(rightDoorMaterialRef.current, effectiveTextureUrl, '오른쪽', panelNames.right);
+          applyTextureToMaterial(rightDoorMaterialRef.current, effectiveTextureUrl, '오른쪽', panelNames.right);
         }
       } else {
         // 텍스처가 없으면 제거 (색상 재질로 변경)
