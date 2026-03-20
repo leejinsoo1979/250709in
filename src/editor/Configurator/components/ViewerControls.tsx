@@ -82,6 +82,18 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
   const hasFurniture = placedModules.length > 0;
+  // 모든 슬롯이 가구로 채워졌는지 판단 (프레임병합 버튼 표시 조건)
+  const allSlotsFilled = (() => {
+    if (isFreePlacement) return hasFurniture; // 자유배치는 가구 있으면 OK
+    const totalSlots = derivedColumnCount || spaceInfo?.customColumnCount || 1;
+    const slotFurniture = placedModules.filter(m => !m.isFreePlacement);
+    let occupiedSlots = 0;
+    slotFurniture.forEach(m => {
+      const isDual = m.moduleId?.startsWith('dual-') || m.isDualSlot;
+      occupiedSlots += isDual ? 2 : 1;
+    });
+    return occupiedSlots >= totalSlots;
+  })();
   const { theme } = useTheme();
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -417,7 +429,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        {hasFurniture && !isFurniturePlacementMode && onFrameMergeToggle && (
+        {allSlotsFilled && !isFurniturePlacementMode && onFrameMergeToggle && (
           <div className={styles.segmentedControl}>
             <button
               className={`${styles.segmentButton} ${styles.segmentIconText} ${frameMergeEnabled ? styles.segmentAccentActive : ''}`}
