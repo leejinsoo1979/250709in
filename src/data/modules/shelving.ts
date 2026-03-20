@@ -135,13 +135,14 @@ const SAFETY_SHELF_MIN_HANGING_HEIGHT = 1000; // 안전선반 적용 최소 hang
 const applySafetyShelf = (
   sections: SectionConfig[],
   totalHeight: number,
-  safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION
+  safetyPosition: number = FURNITURE_SPECS.SAFETY_SHELF_POSITION,
+  basicThicknessParam?: number
 ): SectionConfig[] => {
   // 안전선반 위 최소 내경 확보:
   // 섹션 좌표계에서 상판 하단 = totalHeight - basicThickness
   // 안전선반 위 내경 = (totalHeight - basicThickness) - safetyPosition - basicThickness >= 200
   // → safetyPosition <= totalHeight - 2*basicThickness - 200
-  const basicThickness = 18;
+  const basicThickness = basicThicknessParam ?? FURNITURE_SPECS.BASIC_THICKNESS;
   const minTopCompartment = FURNITURE_SPECS.SAFETY_SHELF_MIN_TOP_COMPARTMENT;
   const maxSafetyPosition = totalHeight - (basicThickness * 2) - minTopCompartment;
   const clampedSafetyPosition = Math.min(safetyPosition, maxSafetyPosition);
@@ -1500,6 +1501,16 @@ export const generateShelvingModules = (
   //   lowerCount: modules.filter(m => m.category === 'lower').length,
   //   fullCount: modules.filter(m => m.category === 'full').length
   // });
-  
+
+  // 가구재 두께 동적 적용: spaceInfo.panelThickness가 설정되면 모든 모듈에 전파
+  const panelThickness = spaceInfo?.panelThickness ?? 18;
+  if (panelThickness !== 18) {
+    for (const mod of modules) {
+      if (mod.modelConfig) {
+        mod.modelConfig.basicThickness = panelThickness;
+      }
+    }
+  }
+
   return modules;
 };
