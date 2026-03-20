@@ -3906,6 +3906,13 @@ const Configurator: React.FC = () => {
                   },
                   doorTopGap: topFrame + 3, // 전체서라운드: 상부프레임 + 3mm
                 });
+                // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정
+                placedModules.forEach(m => {
+                  const epUpdate: Partial<typeof m> = {};
+                  if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
+                  if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
+                  if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
+                });
               } else if (newMode === 'sides-only') {
                 // 양쪽서라운드 = 기존 서라운드와 100% 동일, frameConfig만 구분용
                 handleSpaceInfoUpdate({
@@ -3913,11 +3920,25 @@ const Configurator: React.FC = () => {
                   frameConfig: { ...currentFrameConfig, top: false, bottom: false },
                   doorTopGap: 3, // 양쪽서라운드: 상단갭 3mm
                 });
+                // 양쪽서라운드: EP 옵셋을 0으로 리셋
+                placedModules.forEach(m => {
+                  const epUpdate: Partial<typeof m> = {};
+                  if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
+                  if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
+                  if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
+                });
               } else {
                 handleSpaceInfoUpdate({
                   surroundType: 'no-surround',
                   frameConfig: { left: false, right: false, top: true, bottom: false },
                   doorTopGap: 5, // 노서라운드: 기본 상단갭 5mm
+                });
+                // 노서라운드: EP 옵셋을 0으로 리셋
+                placedModules.forEach(m => {
+                  const epUpdate: Partial<typeof m> = {};
+                  if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
+                  if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
+                  if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
                 });
               }
             };
