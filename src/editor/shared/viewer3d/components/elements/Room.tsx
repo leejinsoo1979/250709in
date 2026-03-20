@@ -3763,14 +3763,12 @@ const Room: React.FC<RoomProps> = ({
                   let modWidthMM = bounds.right - bounds.left;
                   let modCenterXmm = (bounds.left + bounds.right) / 2;
                   const epThk = mod.endPanelThickness || 18;
-                  if (isFullSurround) {
-                    // 전체서라운드: 상부프레임이 EP 방향으로 EP 두께만큼 확장 (EP 위를 덮음)
-                    if (mod.hasLeftEndPanel) { modWidthMM += epThk; modCenterXmm -= epThk / 2; }
-                    if (mod.hasRightEndPanel) { modWidthMM += epThk; modCenterXmm += epThk / 2; }
-                  } else {
+                  if (!isFullSurround) {
+                    // 양쪽서라운드/노서라운드: EP 달면 상부프레임 너비 축소
                     if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                     if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   }
+                  // 전체서라운드: EP 달아도 상부프레임 너비 유지 (EP 위를 덮음)
                   const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                   const modTopHeight = mmToThreeUnits(modTopThickness);
                   const modCenterForZone = (bounds.left + bounds.right) / 2;
