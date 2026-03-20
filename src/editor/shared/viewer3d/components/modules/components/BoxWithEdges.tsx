@@ -182,6 +182,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       editGhostMaterial.needsUpdate = true;
       return editGhostMaterial;
     }
+
+    // 기본 상태: baseMaterial 투명도를 정상 복원 (useEffect 타이밍 이슈 방지)
+    // isEditMode/isDragging false인데 baseMaterial이 아직 투명 상태면 즉시 복원
+    if (baseMaterial instanceof THREE.MeshStandardMaterial) {
+      if (baseMaterial.transparent || baseMaterial.opacity < 1.0) {
+        baseMaterial.transparent = false;
+        baseMaterial.opacity = 1.0;
+        baseMaterial.depthWrite = true;
+        baseMaterial.needsUpdate = true;
+      }
+    }
     return baseMaterial;
   }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
 
@@ -205,6 +216,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       panelMaterialRef.current = null;
     }
   }, [processedMaterial]);
+
+  // 편집/드래그 모드 해제 시 panelMaterialRef 캐시된 clone의 투명도 즉시 복원
+  React.useEffect(() => {
+    if (!isEditMode && !isDragging && panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
+      if (panelMaterialRef.current.transparent || panelMaterialRef.current.opacity < 1.0) {
+        panelMaterialRef.current.transparent = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.transparent : false;
+        panelMaterialRef.current.opacity = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.opacity : 1.0;
+        panelMaterialRef.current.depthWrite = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.depthWrite : true;
+        panelMaterialRef.current.needsUpdate = true;
+      }
+    }
+  }, [isEditMode, isDragging, processedMaterial]);
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
