@@ -397,9 +397,17 @@ export const useBaseFurniture = (
       return [];
     }
 
-    // customSections가 있고 calculatedHeight가 있으면 그대로 사용
+    // customSections가 있고 calculatedHeight가 있으면 사용하되,
+    // fill 타입 섹션은 현재 height 기준으로 재계산 (바닥마감재 등으로 height가 변할 수 있음)
     if (customSections && customSections.every(s => s.calculatedHeight)) {
-      return customSections.map(s => mmToThreeUnits(s.calculatedHeight!));
+      const availH = height - basicThickness * 2;
+      const fixedTotal = customSections
+        .filter(s => s.heightType === 'absolute')
+        .reduce((sum, s) => sum + mmToThreeUnits(s.calculatedHeight!), 0);
+      const remaining = availH - fixedTotal;
+      return customSections.map(s =>
+        s.heightType === 'absolute' ? mmToThreeUnits(s.calculatedHeight!) : remaining
+      );
     }
 
     const availableHeight = height - basicThickness * 2;
