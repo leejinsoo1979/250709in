@@ -279,8 +279,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set((state) => ({
       placedModules: state.placedModules.filter(m => m.id !== id)
     }));
-    // 가구 삭제 시 서라운드도 함께 초기화
-    useSpaceConfigStore.getState().setSpaceInfo({ freeSurround: undefined });
+    // 가구 삭제 시 서라운드도 함께 초기화 + 프레임 병합 해제
+    const spaceStore = useSpaceConfigStore.getState();
+    spaceStore.setSpaceInfo({ freeSurround: undefined });
+    if (spaceStore.spaceInfo.frameMergeEnabled) {
+      spaceStore.setSpaceInfo({ frameMergeEnabled: false });
+    }
   },
 
   // 모듈 이동 함수 (기존 Context 로직과 동일)

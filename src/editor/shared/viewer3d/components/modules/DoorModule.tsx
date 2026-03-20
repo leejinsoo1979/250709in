@@ -304,6 +304,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.transparent = false;
           mat.opacity = 1.0;
           mat.depthWrite = true;
+          mat.depthTest = true;
+          mat.side = THREE.FrontSide;
+          mat.emissive = new THREE.Color(0x000000);
+          mat.emissiveIntensity = 0.0;
           if (!mat.map) {
             mat.color.set(doorColor);
           }
