@@ -4862,6 +4862,34 @@ const Configurator: React.FC = () => {
 
         {/* 하부프레임 높이/깊이 (글로벌) — 자유배치에서는 상하부프레임 섹션에서 개별 설정 가능하므로 숨김 */}
 
+        {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
+        {(() => {
+          const bpMods = placedModules.filter(m => !m.isSurroundPanel);
+          if (bpMods.length === 0) return null;
+          const currentBpThickness = bpMods[0]?.backPanelThickness ?? 9;
+          return (
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>백패널 두께</h3>
+              </div>
+              <div className={doorSettingStyles.doorTabSelector}>
+                {[3, 5, 9].map((thickness) => (
+                  <button
+                    key={thickness}
+                    className={`${doorSettingStyles.doorTab} ${currentBpThickness === thickness ? doorSettingStyles.activeDoorTab : ''}`}
+                    onClick={() => {
+                      bpMods.forEach(m => updatePlacedModule(m.id, { backPanelThickness: thickness }));
+                    }}
+                  >
+                    {thickness}mm
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* 도어 셋팅: 자유배치 + 도어 가구 존재 시 */}
         {showDoorSetup && (
           <div className={styles.configSection}>
