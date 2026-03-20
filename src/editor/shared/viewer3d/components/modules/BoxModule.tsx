@@ -638,7 +638,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         furnitureId={furnitureId}
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
-            individualFloatHeight={individualFloatHeight}
+        individualFloatHeight={individualFloatHeight}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
       />
       </>
     );
@@ -692,7 +694,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         furnitureId={furnitureId}
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
-            individualFloatHeight={individualFloatHeight}
+        individualFloatHeight={individualFloatHeight}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
       />
       </>
     );
