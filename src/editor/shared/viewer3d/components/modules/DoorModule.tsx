@@ -888,6 +888,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
   
+  // 바닥마감재 높이 (키큰장 도어 Y 보정용, 상부장/하부장에서는 0)
+  const isFloorTypeForDoor = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
+  const floorFinishForDoorY = (isFloorTypeForDoor && originalSpaceInfo.hasFloorFinish)
+    ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
+
   // 도어 높이에 추가 조정 없음 (사용자 입력 갭이 완전히 제어)
   const doorHeight = mmToThreeUnits(actualDoorHeight);
   
@@ -1072,8 +1077,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
       // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
-      if (floorFinishForDoor > 0) {
-        doorYPosition -= mmToThreeUnits(floorFinishForDoor / 2);
+      if (floorFinishForDoorY > 0) {
+        doorYPosition -= mmToThreeUnits(floorFinishForDoorY / 2);
       }
     } else {
       // 병합 모드: 천장/바닥 기준
@@ -1111,8 +1116,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
       // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
-      if (floorFinishForDoor > 0) {
-        doorYPosition -= mmToThreeUnits(floorFinishForDoor / 2);
+      if (floorFinishForDoorY > 0) {
+        doorYPosition -= mmToThreeUnits(floorFinishForDoorY / 2);
       }
 
     }
