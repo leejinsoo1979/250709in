@@ -20,6 +20,7 @@ import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/sh
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useHistoryStore } from '@/store/historyStore';
@@ -5094,6 +5095,72 @@ const Configurator: React.FC = () => {
             );
           };
 
+          const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
+
+          // 병합 모드: computeFrameMergeGroups 사용
+          if (isMergeMode) {
+            const topGroups = computeFrameMergeGroups(slotMods, 'top');
+            const baseGroups = computeFrameMergeGroups(slotMods, 'base');
+
+            return (
+              <div className={styles.configSection}>
+                <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <span className={styles.sectionDot}></span>
+                  <h3 className={styles.sectionTitle}>상,하부프레임</h3>
+                  <HelpBtn title="상,하부프레임" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 토글로 그룹 전체 on/off, size/옵셋 변경 시 그룹 내 모든 가구에 적용됩니다." />
+                  <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                </div>
+                {!isFrameSectionCollapsed && (
+                  <div className={styles.subSetting}>
+                    {/* 상부프레임 병합 그룹 */}
+                    {topGroups.map((group, gIdx) => {
+                      const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
+                      const firstMod = groupMods[0];
+                      const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
+                      return <React.Fragment key={`merged-top-${gIdx}`}>{renderSlotFrameRow(
+                        group.label,
+                        allEnabled,
+                        firstMod?.topFrameThickness ?? globalTop,
+                        firstMod?.topFrameOffset ?? 0,
+                        () => { const newVal = !allEnabled; group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal })); },
+                        (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v })); },
+                        (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v })); },
+                        `merged-top-${gIdx}`,
+                      )}</React.Fragment>;
+                    })}
+                    {/* 상하부 구분선 */}
+                    {spaceInfo.baseConfig?.type !== 'stand' && topGroups.length > 0 && (
+                      <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                    )}
+                    {/* 하부프레임 병합 그룹 — stand 타입이면 숨김 */}
+                    {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.map((group, gIdx) => {
+                      const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
+                      const firstMod = groupMods[0];
+                      const allEnabled = groupMods.every(m => m.hasBase !== false);
+                      return <React.Fragment key={`merged-base-${gIdx}`}>{renderSlotFrameRow(
+                        group.label,
+                        allEnabled,
+                        firstMod?.baseFrameHeight ?? globalBase,
+                        firstMod?.baseFrameOffset ?? 0,
+                        () => {
+                          const newVal = !allEnabled;
+                          group.moduleIds.forEach(id => updatePlacedModule(id, {
+                            hasBase: newVal,
+                            ...(newVal ? {} : { individualFloatHeight: 0 }),
+                          }));
+                        },
+                        (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v })); },
+                        (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v })); },
+                        `merged-base-${gIdx}`,
+                      )}</React.Fragment>;
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // 비병합 모드: 기존 개별 행
           let topNum = 0;
           let baseNum = 0;
           return (
