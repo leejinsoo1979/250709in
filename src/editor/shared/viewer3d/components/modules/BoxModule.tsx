@@ -628,6 +628,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -684,6 +685,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
