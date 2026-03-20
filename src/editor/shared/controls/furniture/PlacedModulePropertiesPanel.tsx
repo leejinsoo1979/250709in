@@ -3720,22 +3720,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
-          {/* 백패널 두께 설정 */}
-          <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}>백패널 두께</h5>
-            <div className={styles.doorTabSelector}>
-              {[3, 5, 9].map((thickness) => (
-                <button
-                  key={thickness}
-                  className={`${styles.doorTab} ${backPanelThicknessValue === thickness ? styles.activeDoorTab : ''}`}
-                  onClick={() => handleBackPanelThicknessChange(thickness)}
-                >
-                  {thickness}mm
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
           {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
             <div className={styles.propertySection}>
