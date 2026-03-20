@@ -59,10 +59,14 @@ const materialSwatches = [
   { id: "y1", name: "SM-21", category: "예림", color: "#FFFFFF", texture: "image", image: "/materials/solid/YERIM_SM-21.png" },
 ];
 
+// materialSwatches에서 고유 카테고리 목록 추출
+const categories = Array.from(new Set(materialSwatches.map(m => m.category)));
+
 const MaterialPanel: React.FC = () => {
   const { t } = useTranslation();
   const [materialTab, setMaterialTab] = useState<MaterialTab>('interior');
   const [selectedMaterial, setSelectedMaterial] = useState("Oak");
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
   // Store에서 재질 설정과 업데이트 함수 가져오기
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
@@ -142,6 +146,10 @@ const MaterialPanel: React.FC = () => {
     return selectedMaterial === materialName;
   };
 
+  const filteredMaterials = categoryFilter
+    ? materialSwatches.filter(m => m.category === categoryFilter)
+    : materialSwatches;
+
   return (
     <div className={styles.container}>
       {/* 탭 네비게이션 */}
@@ -172,12 +180,31 @@ const MaterialPanel: React.FC = () => {
         </button>
       </div>
 
+      {/* 카테고리 필터 */}
+      <div className={styles.filterBar}>
+        <button
+          className={cn(styles.filterChip, categoryFilter === null && styles.filterChipActive)}
+          onClick={() => setCategoryFilter(null)}
+        >
+          전체
+        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            className={cn(styles.filterChip, categoryFilter === cat && styles.filterChipActive)}
+            onClick={() => setCategoryFilter(cat)}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* 탭 컨텐츠 */}
       <div className={styles.content}>
         <div className={styles.tabContent}>
           {/* 재질 카드 그리드 */}
           <div className={styles.materialGrid}>
-            {materialSwatches.map((material) => (
+            {filteredMaterials.map((material) => (
               <div
                 key={material.id}
                 className={cn(

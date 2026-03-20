@@ -85,6 +85,54 @@
   font-weight: 500;
 }
 
+/* 카테고리 필터 */
+.filterBar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 0;
+  overflow-x: auto;
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.filterBar::-webkit-scrollbar {
+  display: none;
+}
+
+.filterChip {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border: 1px solid var(--theme-border, #e5e5e5);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--theme-text-secondary, #888);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+
+.filterChip:hover {
+  border-color: var(--theme-primary, #1abc9c);
+  color: var(--theme-primary, #1abc9c);
+}
+
+.filterChipActive {
+  background: var(--theme-primary, #1abc9c);
+  border-color: var(--theme-primary, #1abc9c);
+  color: #fff;
+  font-weight: 600;
+}
+
+.filterChipActive:hover {
+  background: var(--theme-primary, #1abc9c);
+  border-color: var(--theme-primary, #1abc9c);
+  color: #fff;
+}
+
 /* 탭 컨텐츠 */
 .content {
   flex: 1;
