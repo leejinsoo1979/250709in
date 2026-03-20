@@ -3657,68 +3657,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
           */}
 
-          {/* 도어 셋팅 (도어가 있을 때만) */}
-          {!showDetails && currentPlacedModule && moduleData.hasDoor && hasDoor && (() => {
-            const doorSetupMode = spaceInfo.doorSetupMode || 'furniture-fit';
-            return (
-            <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>도어 셋팅</h5>
-              <div className={styles.doorTabSelector}>
-                <button
-                  className={`${styles.doorTab} ${doorSetupMode === 'furniture-fit' || doorSetupMode === 'default' ? styles.activeDoorTab : ''}`}
-                  onClick={() => setSpaceInfo({ doorSetupMode: 'furniture-fit' })}
-                >
-                  가구에 맞춤
-                </button>
-                <button
-                  className={`${styles.doorTab} ${doorSetupMode === 'space-fit' || doorSetupMode === 'frame-cover' ? styles.activeDoorTab : ''}`}
-                  onClick={() => setSpaceInfo({ doorSetupMode: 'space-fit' })}
-                >
-                  공간에 맞춤
-                </button>
-              </div>
-
-              <div style={{ marginTop: '8px' }}>
-                <div className={styles.doorGapContainer}>
-                  <div className={styles.doorGapField}>
-                    <label className={styles.doorGapLabel}>상단 ↑</label>
-                    <div className={styles.inputWithUnit}>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={doorTopGapInput}
-                        onChange={(e) => handleDoorTopGapChange(e.target.value)}
-                        onBlur={handleDoorTopGapBlur}
-                        onKeyDown={handleDoorTopGapKeyDown}
-                        className={`${styles.depthInput} furniture-depth-input`}
-                        placeholder="5"
-                        style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                  </div>
-                  <div className={styles.doorGapField}>
-                    <label className={styles.doorGapLabel}>하단 ↓</label>
-                    <div className={styles.inputWithUnit}>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={doorBottomGapInput}
-                        onChange={(e) => handleDoorBottomGapChange(e.target.value)}
-                        onBlur={handleDoorBottomGapBlur}
-                        onKeyDown={handleDoorBottomGapKeyDown}
-                        className={`${styles.depthInput} furniture-depth-input`}
-                        placeholder="25"
-                        style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            );
-          })()}
+          {/* 도어 셋팅 — 우측바로 이동됨 */}
 
           {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
           {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
