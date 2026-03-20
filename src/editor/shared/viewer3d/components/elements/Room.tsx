@@ -801,13 +801,14 @@ const Room: React.FC<RoomProps> = ({
       olive: '#4C462C'
     };
 
+    const frameColorObj = new THREE.Color(frameColor);
     const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(frameColor),
-      metalness: 0.0,        // 완전 비금속 (도어와 동일)
-      roughness: 0.6,        // 도어와 동일한 거칠기
-      envMapIntensity: 0.0,  // 환경맵 완전 제거
-      emissive: new THREE.Color(0x000000),
-      emissiveIntensity: 0.0,
+      color: frameColorObj,
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+      emissive: frameColorObj.clone().multiplyScalar(0.35),  // 자체발광으로 조명 방향 차이 보정
+      emissiveIntensity: 1.0,
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || baseFrameTransparent,
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : 1.0,
     });
