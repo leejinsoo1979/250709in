@@ -100,6 +100,91 @@ const calculateMaxNoSurroundOffset = (spaceInfo: SpaceInfo): number => {
   return 20;
 };
 
+// 프레임 병합 세그먼트 인터페이스
+interface FrameRenderSegment {
+  widthMm: number;
+  centerXmm: number;
+  zPosition: number;   // Three.js Z
+  height: number;      // Three.js 높이
+  yPosition: number;   // Three.js Y
+  material?: THREE.Material;
+}
+
+// 같은 Z축 위치의 프레임들을 좌측부터 2410mm 이내로 병합하는 유틸 함수
+function mergeFrameSegments(
+  segments: FrameRenderSegment[],
+  maxWidthMm: number = 2410
+): FrameRenderSegment[] {
+  if (segments.length <= 1) return segments;
+
+  // 1. Z축 + Y + height 그룹핑 (±0.001 허용)
+  const groups = new Map<string, FrameRenderSegment[]>();
+  for (const seg of segments) {
+    const zKey = Math.round(seg.zPosition * 1000).toString();
+    const yKey = Math.round(seg.yPosition * 1000).toString();
+    const hKey = Math.round(seg.height * 1000).toString();
+    const key = `${zKey}_${yKey}_${hKey}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(seg);
+  }
+
+  const result: FrameRenderSegment[] = [];
+
+  for (const groupSegs of groups.values()) {
+    // 2. X좌측 기준 정렬 (centerX - width/2 = leftEdge)
+    const sorted = [...groupSegs].sort((a, b) =>
+      (a.centerXmm - a.widthMm / 2) - (b.centerXmm - b.widthMm / 2)
+    );
+
+    // 3. 좌측부터 합산, maxWidthMm 미만이면 병합
+    let currentGroup: FrameRenderSegment[] = [];
+    let currentSum = 0;
+
+    for (const seg of sorted) {
+      if (currentGroup.length === 0) {
+        currentGroup.push(seg);
+        currentSum = seg.widthMm;
+        continue;
+      }
+
+      if (currentSum + seg.widthMm < maxWidthMm) {
+        currentGroup.push(seg);
+        currentSum += seg.widthMm;
+      } else {
+        // 현재 그룹 확정
+        result.push(mergeSingleGroup(currentGroup));
+        // 새 그룹 시작
+        currentGroup = [seg];
+        currentSum = seg.widthMm;
+      }
+    }
+
+    // 마지막 그룹 확정
+    if (currentGroup.length > 0) {
+      result.push(mergeSingleGroup(currentGroup));
+    }
+  }
+
+  return result;
+}
+
+// 단일 그룹의 세그먼트들을 하나로 병합
+function mergeSingleGroup(segs: FrameRenderSegment[]): FrameRenderSegment {
+  if (segs.length === 1) return segs[0];
+  const leftEdge = Math.min(...segs.map(s => s.centerXmm - s.widthMm / 2));
+  const rightEdge = Math.max(...segs.map(s => s.centerXmm + s.widthMm / 2));
+  const totalWidth = rightEdge - leftEdge;
+  const centerX = (leftEdge + rightEdge) / 2;
+  return {
+    widthMm: totalWidth,
+    centerXmm: centerX,
+    zPosition: segs[0].zPosition,
+    height: segs[0].height,
+    yPosition: segs[0].yPosition,
+    material: segs[0].material,
+  };
+}
+
 // 점선 라인 컴포넌트
 const DashedLine: React.FC<{
   points: [number, number, number][];
@@ -801,14 +886,13 @@ const Room: React.FC<RoomProps> = ({
       olive: '#4C462C'
     };
 
-    const frameColorObj = new THREE.Color(frameColor);
     const material = new THREE.MeshStandardMaterial({
-      color: frameColorObj,
+      color: new THREE.Color(frameColor),
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
-      emissive: frameColorObj.clone().multiplyScalar(0.35),  // 자체발광으로 조명 방향 차이 보정
-      emissiveIntensity: 1.0,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || baseFrameTransparent,
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : 1.0,
     });
@@ -3225,118 +3309,115 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {/* 상부 프레임 스트립 — 개별 가구의 hasTopFrame에 따라 렌더링 */}
-              {topStripGroups.flatMap((group) => {
-                const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
-                // 띄워서 배치 시: 가구 시작점이 floatHeight만큼 올라감
-                const floatHeightForFrame = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
-                  ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-                // 천장 ~ 가구 시작점까지의 높이 (띄움 시 floatHeight 차감)
-                // freeHeight는 이미 floatHeight가 반영되어 있으므로 modFreeHeight에서는 추가 차감 불필요
-                const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm - floatHeightForFrame;
-                // 각 모듈별 개별 상부프레임 생성
-                const isDoorBase = spaceInfo.frameOffsetBase === 'door';
-                const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
-                return group.modules.filter((mod) => {
-                  if (mod.hasTopFrame === false) return false;
-                  // 측면뷰에서 선택된 슬롯의 가구만 표시
-                  const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
-                  if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
-                    const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
-                    if (isDual) {
-                      if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+              {(() => {
+                // 모든 세그먼트를 수집
+                const allTopSegments: (FrameRenderSegment & { key: string })[] = [];
+                const topSurrMat = topFrameMaterial ?? createFrameMaterial('top');
+
+                topStripGroups.forEach((group) => {
+                  const internalSpaceHeight = calculateInternalSpace(spaceInfo).height;
+                  const floatHeightForFrame = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+                    ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+                  const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm - floatHeightForFrame;
+                  const isDoorBase = spaceInfo.frameOffsetBase === 'door';
+                  const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
+
+                  group.modules.filter((mod) => {
+                    if (mod.hasTopFrame === false) return false;
+                    const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+                    if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
+                      const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+                      if (isDual) {
+                        if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+                      } else {
+                        if (mod.slotIndex !== selectedSlotIndex) return false;
+                      }
+                    }
+                    return true;
+                  }).forEach((mod) => {
+                    const bounds = getModuleBoundsX(mod);
+                    const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
+                    const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
+                    const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
+                    const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
+                    const modCategory = getModuleCategory(mod);
+                    let modFreeHeight: number;
+                    if (modCategory === 'full') {
+                      const baseFH = mod.freeHeight || internalSpaceHeight;
+                      const maxFH = internalSpaceHeight - floatHeightForFrame;
+                      modFreeHeight = Math.min(baseFH, maxFH);
+                      if (mod.topFrameThickness !== undefined) {
+                        const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                        const topFrameDelta = mod.topFrameThickness - globalTopFrame;
+                        modFreeHeight -= topFrameDelta;
+                      }
                     } else {
-                      if (mod.slotIndex !== selectedSlotIndex) return false;
+                      modFreeHeight = mod.freeHeight || internalSpaceHeight;
                     }
-                  }
-                  return true;
-                }).map((mod) => {
-                  // 개별 가구 하이라이트 or 서라운드-top 하이라이트
-                  const isThisTopHighlighted = highlightedFrame === `top-${mod.id}` || highlightedFrame === 'surround-top';
-                  const topSurrMat = topFrameMaterial ?? createFrameMaterial('top');
-                  const bounds = getModuleBoundsX(mod);
-                  // EP가 있으면 상부 프레임 너비를 EP 두께만큼 축소 (가구 본체와 동일)
-                  const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
-                  const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
-                  const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
-                  const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
-                  // 키큰장: freeHeight(사용자 지정) 우선 → 없으면 internalSpaceHeight(프레임 자동 연동)
-                  // 상/하부장: freeHeight 고정
-                  const modCategory = getModuleCategory(mod);
-                  let modFreeHeight: number;
-                  if (modCategory === 'full') {
-                    // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
-                    const baseFH = mod.freeHeight || internalSpaceHeight;
-                    const maxFH = internalSpaceHeight - floatHeightForFrame;
-                    modFreeHeight = Math.min(baseFH, maxFH);
-                    // 개별 가구 상부프레임 두께 보정
-                    if (mod.topFrameThickness !== undefined) {
-                      const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                      const topFrameDelta = mod.topFrameThickness - globalTopFrame;
-                      modFreeHeight -= topFrameDelta;
+
+                    let effectiveCeilingToBase = ceilingToBaseTopMM;
+                    let effectiveTopY = panelStartY + height;
+                    if (mod.zone === 'dropped' && spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+                      const stepDropH = spaceInfo.stepCeiling.dropHeight || 0;
+                      effectiveCeilingToBase = ceilingToBaseTopMM - stepDropH;
+                      effectiveTopY = panelStartY + height - mmToThreeUnits(stepDropH);
+                    } else if (mod.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+                      const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
+                      effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
+                      effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
                     }
-                  } else {
-                    modFreeHeight = mod.freeHeight || internalSpaceHeight;
-                  }
+                    const totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
+                    const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
+                    const modFrameCenterY = effectiveTopY - modFrameHeight / 2;
 
-                  // 프레임 높이 = 천장에서 가구 상단까지의 거리
-                  // 단내림 구간이면 단내림 천장 기준, 아니면 전체 천장 기준
-                  let effectiveCeilingToBase = ceilingToBaseTopMM;
-                  let effectiveTopY = panelStartY + height; // 전체 천장 Y
-                  if (mod.zone === 'dropped' && spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
-                    const stepDropH = spaceInfo.stepCeiling.dropHeight || 0;
-                    effectiveCeilingToBase = ceilingToBaseTopMM - stepDropH;
-                    effectiveTopY = panelStartY + height - mmToThreeUnits(stepDropH);
-                  } else if (mod.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-                    const dropH = spaceInfo.droppedCeiling.dropHeight || 0;
-                    effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
-                    effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
-                  }
-                  let totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
-                  const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-                  // 프레임 상단 = 해당 구간 천장에 맞추고 아래로 확장
-                  const modFrameCenterY = effectiveTopY - modFrameHeight / 2;
+                    const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                    const DOOR_THICKNESS_MM = 18;
+                    const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
+                    const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                  // 가구별 상부프레임 Z축 옵셋
-                  const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                    allTopSegments.push({
+                      widthMm: modWidthMM,
+                      centerXmm: modCenterXmm,
+                      zPosition: topZPosition + modTopZOffset + topFrameZRetract,
+                      height: modFrameHeight,
+                      yPosition: modFrameCenterY,
+                      material: topSurrMat,
+                      key: `free-top-strip-${group.id}-${mod.id}`,
+                    });
+                  });
+                });
 
-                  // 도어기준 + 공간맞춤 도어 + 도어가 있는 가구 → 상부프레임을 도어 두께만큼 뒤로
-                  const DOOR_THICKNESS_MM = 18;
-                  const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
-                  const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
+                // 병합 적용
+                const renderSegs = spaceInfo.frameMergeEnabled
+                  ? mergeFrameSegments(allTopSegments)
+                  : allTopSegments;
 
-                  const topArgs: [number, number, number] = [
-                    mmToThreeUnits(modWidthMM),
-                    modFrameHeight,
+                return renderSegs.map((seg, idx) => {
+                  const args: [number, number, number] = [
+                    mmToThreeUnits(seg.widthMm),
+                    seg.height,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ];
-                  const topPos: [number, number, number] = [
-                    mmToThreeUnits(modCenterXmm),
-                    modFrameCenterY,
-                    topZPosition + modTopZOffset + topFrameZRetract
+                  const pos: [number, number, number] = [
+                    mmToThreeUnits(seg.centerXmm),
+                    seg.yPosition,
+                    seg.zPosition
                   ];
-
                   return (
-                    <React.Fragment key={`free-top-strip-${group.id}-${mod.id}`}>
-                      <BoxWithEdges
-                        hideEdges={hideEdges}
-                        isOuterFrame
-                        name="top-frame"
-                        args={topArgs}
-                        position={topPos}
-                        material={topSurrMat}
-                        renderMode={renderMode}
-                        shadowEnabled={shadowEnabled}
-                      />
-                      {isThisTopHighlighted && (
-                        <mesh position={topPos}>
-                          <boxGeometry args={topArgs} />
-                          <primitive object={highlightOverlayMaterial} attach="material" />
-                        </mesh>
-                      )}
-                    </React.Fragment>
+                    <BoxWithEdges
+                      key={`free-top-merged-${idx}`}
+                      hideEdges={hideEdges}
+                      isOuterFrame
+                      name="top-frame"
+                      args={args}
+                      position={pos}
+                      material={seg.material ?? topSurrMat}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
                   );
                 });
-              })}
+              })()}
 
               {/* 자유배치 좌측 서라운드 — L자 (전면에서 이격 가림) */}
               {/* surroundType가 surround/both-sides이면 슬롯 프레임이 좌우를 담당하므로 freeSurround 비활성 */}
@@ -3643,75 +3724,84 @@ const Room: React.FC<RoomProps> = ({
               const droppedBoundaryMm = isLeftDropped
                 ? -(totalWidthMm / 2) + droppedWidthMm
                 : (totalWidthMm / 2) - droppedWidthMm;
+
+              // 세그먼트 수집
+              const slotTopSegments: (FrameRenderSegment & { key: string })[] = [];
+              slotModsForFrame
+                .filter(mod => {
+                  if (mod.hasTopFrame === false) return false;
+                  const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+                  if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
+                    const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+                    if (isDual) {
+                      if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+                    } else {
+                      if (mod.slotIndex !== selectedSlotIndex) return false;
+                    }
+                  }
+                  return true;
+                })
+                .forEach((mod) => {
+                  const bounds = getModuleBoundsX(mod);
+                  let modWidthMM = bounds.right - bounds.left;
+                  let modCenterXmm = (bounds.left + bounds.right) / 2;
+                  const epThk = mod.endPanelThickness || 18;
+                  if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                  if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                  const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                  const modTopHeight = mmToThreeUnits(modTopThickness);
+                  const modCenterForZone = (bounds.left + bounds.right) / 2;
+                  const isInDroppedZone = hasDroppedCeiling && (
+                    isLeftDropped
+                      ? modCenterForZone < droppedBoundaryMm
+                      : modCenterForZone > droppedBoundaryMm
+                  );
+                  const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
+                  const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
+                  const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+
+                  slotTopSegments.push({
+                    widthMm: modWidthMM,
+                    centerXmm: modCenterXmm,
+                    zPosition: topZPos + modTopZOffset,
+                    height: modTopHeight,
+                    yPosition: modTopY,
+                    material: topFrameMat,
+                    key: `slot-top-${mod.id}`,
+                  });
+                });
+
+              const renderSlotTopSegs = spaceInfo.frameMergeEnabled
+                ? mergeFrameSegments(slotTopSegments)
+                : slotTopSegments;
+
               return (
                 <>
-                  {slotModsForFrame
-                    .filter(mod => {
-                      if (mod.hasTopFrame === false) return false;
-                      // 측면뷰에서 선택된 슬롯의 가구만 표시
-                      const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
-                      if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
-                        const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
-                        if (isDual) {
-                          if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
-                        } else {
-                          if (mod.slotIndex !== selectedSlotIndex) return false;
-                        }
-                      }
-                      return true;
-                    })
-                    .map((mod) => {
-                      const bounds = getModuleBoundsX(mod);
-                      let modWidthMM = bounds.right - bounds.left;
-                      let modCenterXmm = (bounds.left + bounds.right) / 2;
-                      // EP 두께만큼 프레임 너비 축소 + 중심 보정
-                      const epThk = mod.endPanelThickness || 18;
-                      if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                      if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
-                      let modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
-                      const modTopHeight = mmToThreeUnits(modTopThickness);
-                      // 단내림 구간 가구는 단내림 천장 높이 기준으로 Y 계산 — X 위치 기반
-                      const modCenterForZone = (bounds.left + bounds.right) / 2;
-                      const isInDroppedZone = hasDroppedCeiling && (
-                        isLeftDropped
-                          ? modCenterForZone < droppedBoundaryMm
-                          : modCenterForZone > droppedBoundaryMm
-                      );
-                      const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
-                      const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
-                      const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
-                      const isHighlighted = highlightedFrame === `top-${mod.id}`;
-                      const args: [number, number, number] = [
-                        mmToThreeUnits(modWidthMM),
-                        modTopHeight,
-                        mmToThreeUnits(END_PANEL_THICKNESS)
-                      ];
-                      const pos: [number, number, number] = [
-                        mmToThreeUnits(modCenterXmm),
-                        modTopY,
-                        topZPos + modTopZOffset
-                      ];
-                      return (
-                        <React.Fragment key={`slot-top-${mod.id}`}>
-                          <BoxWithEdges
-                            hideEdges={hideEdges}
-                            isOuterFrame
-                            name="top-frame"
-                            args={args}
-                            position={pos}
-                            material={topFrameMat}
-                            renderMode={renderMode}
-                            shadowEnabled={shadowEnabled}
-                          />
-                          {isHighlighted && (
-                            <mesh position={pos}>
-                              <boxGeometry args={args} />
-                              <primitive object={highlightOverlayMaterial} attach="material" />
-                            </mesh>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
+                  {renderSlotTopSegs.map((seg, idx) => {
+                    const args: [number, number, number] = [
+                      mmToThreeUnits(seg.widthMm),
+                      seg.height,
+                      mmToThreeUnits(END_PANEL_THICKNESS)
+                    ];
+                    const pos: [number, number, number] = [
+                      mmToThreeUnits(seg.centerXmm),
+                      seg.yPosition,
+                      seg.zPosition
+                    ];
+                    return (
+                      <BoxWithEdges
+                        key={`slot-top-merged-${idx}`}
+                        hideEdges={hideEdges}
+                        isOuterFrame
+                        name="top-frame"
+                        args={args}
+                        position={pos}
+                        material={seg.material ?? topFrameMat}
+                        renderMode={renderMode}
+                        shadowEnabled={shadowEnabled}
+                      />
+                    );
+                  })}
                 </>
               );
             }
@@ -4540,55 +4630,62 @@ const Room: React.FC<RoomProps> = ({
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
             mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
 
+          const allBaseSegments: (FrameRenderSegment & { key: string })[] = [];
+          const baseMat = baseFrameMaterial ?? createFrameMaterial('base');
+
+          stripGroups.forEach((group) => {
+            group.modules.filter((mod) => mod.hasBase !== false).forEach((mod) => {
+              const bounds = getBaseFrameBoundsX(mod);
+              const modWidthMM = bounds.right - bounds.left;
+              const modCenterXmm = (bounds.left + bounds.right) / 2;
+              const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
+              const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+              const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
+              const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+              const modBaseH = mmToThreeUnits(modBaseHeightMm);
+
+              allBaseSegments.push({
+                widthMm: modWidthMM,
+                centerXmm: modCenterXmm,
+                zPosition: baseZPosition,
+                height: modBaseH,
+                yPosition: panelStartY + floatHeight + modBaseH / 2,
+                material: baseMat,
+                key: `free-base-strip-${group.id}-${mod.id}`,
+              });
+            });
+          });
+
+          const renderBaseSegs = spaceInfo.frameMergeEnabled
+            ? mergeFrameSegments(allBaseSegments)
+            : allBaseSegments;
+
           return (
             <>
-              {stripGroups.flatMap((group) => {
-                return group.modules.filter((mod) => mod.hasBase !== false).map((mod) => {
-                  const bounds = getBaseFrameBoundsX(mod);
-                  const modWidthMM = bounds.right - bounds.left;
-                  const modCenterXmm = (bounds.left + bounds.right) / 2;
-                  // 하부 섹션 깊이 축소 시 Z 오프셋 적용 (front 방향 축소 → 뒤로 이동)
-                  const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
-                  // 가구별 하부프레임 Z축 옵셋
-                  const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
-                  const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
-                  // 개별 가구 하이라이트 or 기본 base material
-                  const isThisBaseHighlighted = highlightedFrame === `base-${mod.id}`;
-                  const baseMat = baseFrameMaterial ?? createFrameMaterial('base');
-                  // 바닥마감재 적용: 프레임 원래 높이 유지, Y만 바닥마감재 위로
-                  const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
-                  const modBaseH = mmToThreeUnits(modBaseHeightMm);
-                  const baseArgs: [number, number, number] = [
-                    mmToThreeUnits(modWidthMM),
-                    modBaseH,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
-                  ];
-                  const basePos: [number, number, number] = [
-                    mmToThreeUnits(modCenterXmm),
-                    panelStartY + floatHeight + modBaseH / 2,
-                    baseZPosition
-                  ];
-                  return (
-                    <React.Fragment key={`free-base-strip-${group.id}-${mod.id}`}>
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      name="base-frame"
-                      args={baseArgs}
-                      position={basePos}
-                      material={baseMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
-                    {isThisBaseHighlighted && (
-                      <mesh position={basePos}>
-                        <boxGeometry args={baseArgs} />
-                        <primitive object={highlightOverlayMaterial} attach="material" />
-                      </mesh>
-                    )}
-                    </React.Fragment>
-                  );
-                });
+              {renderBaseSegs.map((seg, idx) => {
+                const args: [number, number, number] = [
+                  mmToThreeUnits(seg.widthMm),
+                  seg.height,
+                  mmToThreeUnits(END_PANEL_THICKNESS)
+                ];
+                const pos: [number, number, number] = [
+                  mmToThreeUnits(seg.centerXmm),
+                  seg.yPosition,
+                  seg.zPosition
+                ];
+                return (
+                  <BoxWithEdges
+                    key={`free-base-merged-${idx}`}
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    name="base-frame"
+                    args={args}
+                    position={pos}
+                    material={seg.material ?? baseMat}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                  />
+                );
               })}
             </>
           );
@@ -4687,67 +4784,76 @@ const Room: React.FC<RoomProps> = ({
 
                   const globalBaseHeightMm = spaceInfo.baseConfig?.height ?? 65;
                   const baseMat = zoneMaterial;
-                  // 측면뷰 슬롯 필터링 여부
                   const isSideViewBase = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
+                  // 세그먼트 수집
+                  const slotBaseSegments: (FrameRenderSegment & { key: string })[] = [];
+                  slotModsForBase
+                    .filter(mod => {
+                      if (mod.hasBase === false) return false;
+                      if (isSideViewBase && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
+                        const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+                        if (isDual) {
+                          if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
+                        } else {
+                          if (mod.slotIndex !== selectedSlotIndex) return false;
+                        }
+                      }
+                      return true;
+                    })
+                    .forEach((mod) => {
+                      const bounds = getModuleBoundsX(mod);
+                      let modWidthMM = bounds.right - bounds.left;
+                      let modCenterXmm = (bounds.left + bounds.right) / 2;
+                      const epThk = mod.endPanelThickness || 18;
+                      if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                      if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                      const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
+                      const modBaseH = mmToThreeUnits(modBaseHeight);
+                      const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+
+                      slotBaseSegments.push({
+                        widthMm: modWidthMM,
+                        centerXmm: modCenterXmm,
+                        zPosition: baseZPos + modBaseZOffset,
+                        height: modBaseH,
+                        yPosition: panelStartY + floatHeight + modBaseH / 2,
+                        material: baseMat,
+                        key: `slot-base-${mod.id}`,
+                      });
+                    });
+
+                  const renderSlotBaseSegs = spaceInfo.frameMergeEnabled
+                    ? mergeFrameSegments(slotBaseSegments)
+                    : slotBaseSegments;
+
                   return (
                     <React.Fragment key={`base-frame-zone-${zoneIndex}`}>
-                      {slotModsForBase
-                        .filter(mod => {
-                          if (mod.hasBase === false) return false;
-                          // 측면뷰에서 선택된 슬롯의 가구만 표시
-                          if (isSideViewBase && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
-                            const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
-                            if (isDual) {
-                              if (mod.slotIndex !== selectedSlotIndex && mod.slotIndex + 1 !== selectedSlotIndex) return false;
-                            } else {
-                              if (mod.slotIndex !== selectedSlotIndex) return false;
-                            }
-                          }
-                          return true;
-                        })
-                        .map((mod) => {
-                          const bounds = getModuleBoundsX(mod);
-                          let modWidthMM = bounds.right - bounds.left;
-                          let modCenterXmm = (bounds.left + bounds.right) / 2;
-                          // EP 두께만큼 프레임 너비 축소 + 중심 보정
-                          const epThk = mod.endPanelThickness || 18;
-                          if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                          if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
-                          const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
-                          const modBaseH = mmToThreeUnits(modBaseHeight);
-                          const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
-                          const isHighlighted = highlightedFrame === `base-${mod.id}`;
-                          const args: [number, number, number] = [
-                            mmToThreeUnits(modWidthMM),
-                            modBaseH,
-                            mmToThreeUnits(END_PANEL_THICKNESS)
-                          ];
-                          const pos: [number, number, number] = [
-                            mmToThreeUnits(modCenterXmm),
-                            panelStartY + floatHeight + modBaseH / 2,
-                            baseZPos + modBaseZOffset
-                          ];
-                          return (
-                            <React.Fragment key={`slot-base-${mod.id}`}>
-                              <BoxWithEdges
-                                hideEdges={hideEdges}
-                                isOuterFrame
-                                name="base-frame"
-                                args={args}
-                                position={pos}
-                                material={baseMat}
-                                renderMode={renderMode}
-                                shadowEnabled={shadowEnabled}
-                              />
-                              {isHighlighted && (
-                                <mesh position={pos}>
-                                  <boxGeometry args={args} />
-                                  <primitive object={highlightOverlayMaterial} attach="material" />
-                                </mesh>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
+                      {renderSlotBaseSegs.map((seg, idx) => {
+                        const args: [number, number, number] = [
+                          mmToThreeUnits(seg.widthMm),
+                          seg.height,
+                          mmToThreeUnits(END_PANEL_THICKNESS)
+                        ];
+                        const pos: [number, number, number] = [
+                          mmToThreeUnits(seg.centerXmm),
+                          seg.yPosition,
+                          seg.zPosition
+                        ];
+                        return (
+                          <BoxWithEdges
+                            key={`slot-base-merged-${idx}`}
+                            hideEdges={hideEdges}
+                            isOuterFrame
+                            name="base-frame"
+                            args={args}
+                            position={pos}
+                            material={seg.material ?? baseMat}
+                            renderMode={renderMode}
+                            shadowEnabled={shadowEnabled}
+                          />
+                        );
+                      })}
                     </React.Fragment>
                   );
                 }

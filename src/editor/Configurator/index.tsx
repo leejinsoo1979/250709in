@@ -5643,6 +5643,10 @@ const Configurator: React.FC = () => {
                 }
                 setSpaceInfo({ freeSurround: result.config });
               }}
+              frameMergeEnabled={spaceInfo.frameMergeEnabled ?? false}
+              onFrameMergeToggle={() => {
+                setSpaceInfo({ frameMergeEnabled: !(spaceInfo.frameMergeEnabled ?? false) });
+              }}
             />
           )}
 

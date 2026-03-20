@@ -162,6 +162,9 @@ export interface SpaceInfo {
 
   // 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간)
   stepCeiling?: StepCeilingConfig;
+
+  // 상하부 프레임 병합 활성화 (기본: false)
+  frameMergeEnabled?: boolean;
 }
 
 // 단내림 설정 인터페이스

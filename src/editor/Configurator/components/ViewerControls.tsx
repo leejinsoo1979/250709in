@@ -41,6 +41,8 @@ interface ViewerControlsProps {
   onDoorInstallationToggle?: () => void;
   surroundGenerated?: boolean;
   onSurroundGenerate?: () => void;
+  frameMergeEnabled?: boolean;
+  onFrameMergeToggle?: () => void;
 }
 
 /** Thin vertical separator */
@@ -70,7 +72,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   hasDoorsInstalled = false,
   onDoorInstallationToggle,
   surroundGenerated = false,
-  onSurroundGenerate
+  onSurroundGenerate,
+  frameMergeEnabled = false,
+  onFrameMergeToggle
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
@@ -409,6 +413,18 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >
               <TbBorderOuter size={13} />
               서라운드
+            </button>
+          </div>
+        )}
+
+        {hasFurniture && !isFurniturePlacementMode && onFrameMergeToggle && (
+          <div className={styles.segmentedControl}>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${frameMergeEnabled ? styles.segmentAccentActive : ''}`}
+              onClick={onFrameMergeToggle}
+            >
+              <Layers size={13} />
+              {frameMergeEnabled ? '프레임분절' : '프레임병합'}
             </button>
           </div>
         )}
