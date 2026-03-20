@@ -1105,11 +1105,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 프레임 높이 계산 (상부프레임, 하부프레임)
   const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
   const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
-  // 받침대 시각적 높이: 바닥마감재가 있으면 그만큼 차감
-  const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
-  const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
-    ? Math.max(0, baseFrameHeightMm - floorFinishH)
-    : baseFrameHeightMm;
+  // 받침대 높이는 바닥마감재와 무관하게 원래 값 사용
+  const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
+  const visualBaseFrameHeightMm = baseFrameHeightMm;
 
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
   const panelDetails = React.useMemo(() => {

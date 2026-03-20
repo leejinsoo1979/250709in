@@ -34,29 +34,20 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     });
   };
 
-  // 바닥마감재가 있을 때 받침대 높이 조정해서 표시
-  const getAdjustedBaseHeight = () => {
-    const originalHeight = spaceInfo.baseConfig?.height || 65;
-    if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
-      const floorFinishHeight = spaceInfo.floorFinish.height || 0;
-      return Math.max(0, originalHeight - floorFinishHeight);
-    }
-    return originalHeight;
-  };
-
   // 로컬 상태들 - 항상 string으로 관리
+  // 받침대 높이는 바닥마감재와 무관하게 원래 값 그대로 표시
   const [baseHeight, setBaseHeight] = useState<string>(
-    String(getAdjustedBaseHeight())
+    String(spaceInfo.baseConfig?.height || 65)
   );
   const [baseDepth, setBaseDepth] = useState<string>(
     String(spaceInfo.baseConfig?.depth ?? 0)
   );
 
-  // baseConfig 또는 바닥마감재 변경 시 로컬 상태 동기화
+  // baseConfig 변경 시 로컬 상태 동기화
   useEffect(() => {
-    setBaseHeight(String(getAdjustedBaseHeight()));
+    setBaseHeight(String(spaceInfo.baseConfig?.height || 65));
     setBaseDepth(String(spaceInfo.baseConfig?.depth ?? 0));
-  }, [spaceInfo.baseConfig, spaceInfo.hasFloorFinish, spaceInfo.floorFinish]);
+  }, [spaceInfo.baseConfig]);
 
   // 높이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
   const handleHeightChange = (value: string) => {
@@ -87,14 +78,8 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     setBaseHeight(value);
 
-    // 저장할 때는 바닥마감재 높이를 더해서 저장
-    let saveValue = value;
-    if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
-      const floorFinishHeight = spaceInfo.floorFinish.height || 0;
-      saveValue = value + floorFinishHeight;
-    }
-
-    if (saveValue !== currentBaseConfig.height) {
+    if (value !== currentBaseConfig.height) {
+      const saveValue = value;
       const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
