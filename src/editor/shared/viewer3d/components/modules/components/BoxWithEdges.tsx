@@ -502,7 +502,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return (
       <>
         {lines.map((line, i) => (
-          <line key={i} name={`${edgeName}-${i}`}>
+          <line key={`${i}-${args[0]}-${args[1]}-${args[2]}`} name={`${edgeName}-${i}`}>
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"
