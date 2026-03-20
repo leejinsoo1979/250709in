@@ -325,26 +325,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const upperOffset = applyOffset ? basicThickness : 0;
               const upperPanelY = -height/2 + lowerSectionHeight + upperOffset + adjustedUpperHeight/2;
 
-              console.log('🔍 BaseFurnitureShell 분할측판 디버그:', {
-                moduleId: moduleData?.id,
-                heightMm: height / 0.01,
-                lowerSectionHeightMm: lowerSectionHeight / 0.01,
-                upperSectionHeightMm: upperSectionHeight / 0.01,
-                sumSectionsMm: (lowerSectionHeight + upperSectionHeight) / 0.01,
-                basicThicknessMm: basicThickness / 0.01,
-                adjustedLowerHeightMm: adjustedLowerHeight / 0.01,
-                adjustedUpperHeightMm: adjustedUpperHeight / 0.01,
-                sumAdjustedMm: (adjustedLowerHeight + adjustedUpperHeight) / 0.01,
-                gapMm: (height - adjustedLowerHeight - adjustedUpperHeight) / 0.01,
-                applyOffset,
-                lowerPanelYMm: lowerPanelY / 0.01,
-                upperPanelYMm: upperPanelY / 0.01,
-                lowerBottom: (-height/2 + lowerPanelY - adjustedLowerHeight/2) / 0.01,
-                lowerTop: (-height/2 + lowerPanelY + adjustedLowerHeight/2) / 0.01,
-                upperBottom: (-height/2 + upperPanelY - adjustedUpperHeight/2) / 0.01,
-                upperTop: (-height/2 + upperPanelY + adjustedUpperHeight/2) / 0.01,
-              });
-
               // 섹션 강조 확인 (placedFurnitureId 사용)
               const isLowerSectionHighlighted = highlightedSection === `${placedFurnitureId}-0`;
               const isLowerTopPanelHighlighted = highlightedPanel === `${placedFurnitureId}-(하)상판`;
