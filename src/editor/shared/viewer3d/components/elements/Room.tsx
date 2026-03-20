@@ -851,7 +851,9 @@ const Room: React.FC<RoomProps> = ({
     let frameColor = materialConfig?.doorColor || materialConfig?.frameColor || defaultColor;
     let baseFrameTransparent = false;
 
-    const isHighlighted = frameType && highlightedFrame === frameType;
+    const isHighlighted = frameType && highlightedFrame && (
+      highlightedFrame === frameType || highlightedFrame.startsWith(`${frameType}-`) || highlightedFrame.startsWith(`merged-${frameType}-`)
+    );
 
     // 테마 색상 매핑
     const themeColorMap: Record<string, string> = {
