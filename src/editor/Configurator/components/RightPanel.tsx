@@ -9,6 +9,7 @@ import ColumnProperties from '@/editor/shared/controls/structure/ColumnPropertie
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 import PreviewViewer from './PreviewViewer';
+import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 
 // Window 인터페이스 확장
 declare global {
@@ -1144,6 +1145,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const toAlpha = (n: number) => String.fromCharCode(64 + n);
               const globalTop = spaceInfo.frameSize?.top ?? 30;
               const globalBase = spaceInfo.baseConfig?.height ?? 65;
+              const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
 
               const FrameRow = ({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey }: {
                 label: string; enabled: boolean; sizeMM: number; offset: number;
@@ -1164,7 +1166,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
                 return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                  <span style={{ minWidth: '34px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
+                  <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
                   <button
                     onClick={onToggle}
                     style={{
@@ -1227,6 +1229,82 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 );
               };
 
+              // 병합 모드: computeFrameMergeGroups 사용
+              if (isMergeMode) {
+                const topGroups = computeFrameMergeGroups(slotMods, 'top');
+                const baseGroups = computeFrameMergeGroups(slotMods, 'base');
+
+                return (
+                  <FormControl
+                    label="상,하부프레임"
+                    expanded={expandedSections.has('slotFrame')}
+                    onToggle={() => toggleSection('slotFrame')}
+                    helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 토글로 그룹 전체 on/off, size/옵셋 변경 시 그룹 내 모든 가구에 적용됩니다."
+                  >
+                    {/* 상부프레임 병합 그룹 */}
+                    {topGroups.map((group, gIdx) => {
+                      const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
+                      const firstMod = groupMods[0];
+                      const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
+                      const repSize = firstMod?.topFrameThickness ?? globalTop;
+                      const repOffset = firstMod?.topFrameOffset ?? 0;
+                      const hlKey = `merged-top-${gIdx}`;
+                      return (
+                        <FrameRow key={hlKey}
+                          label={group.label}
+                          enabled={allEnabled}
+                          sizeMM={repSize}
+                          offset={repOffset}
+                          onToggle={() => {
+                            const newVal = !allEnabled;
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
+                          }}
+                          onSizeChange={(v) => {
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
+                          }}
+                          onOffsetChange={(v) => {
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
+                          }}
+                          hlKey={hlKey}
+                        />
+                      );
+                    })}
+                    {/* 하부프레임 병합 그룹 — stand 타입이면 숨김 */}
+                    {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.map((group, gIdx) => {
+                      const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
+                      const firstMod = groupMods[0];
+                      const allEnabled = groupMods.every(m => m.hasBase !== false);
+                      const repSize = firstMod?.baseFrameHeight ?? globalBase;
+                      const repOffset = firstMod?.baseFrameOffset ?? 0;
+                      const hlKey = `merged-base-${gIdx}`;
+                      return (
+                        <FrameRow key={hlKey}
+                          label={group.label}
+                          enabled={allEnabled}
+                          sizeMM={repSize}
+                          offset={repOffset}
+                          onToggle={() => {
+                            const newVal = !allEnabled;
+                            group.moduleIds.forEach(id => updatePlacedModule(id, {
+                              hasBase: newVal,
+                              ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                            }));
+                          }}
+                          onSizeChange={(v) => {
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
+                          }}
+                          onOffsetChange={(v) => {
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
+                          }}
+                          hlKey={hlKey}
+                        />
+                      );
+                    })}
+                  </FormControl>
+                );
+              }
+
+              // 비병합 모드: 기존 개별 행 렌더링
               let topNum = 0;
               let baseNum = 0;
               return (
@@ -1258,7 +1336,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const baseEnabled = mod.hasBase !== false;
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                        <span style={{ minWidth: '34px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
+                        <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
                         <button
                           onClick={() => updatePlacedModule(mod.id, {
                             hasBase: !baseEnabled,
