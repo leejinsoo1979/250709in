@@ -176,6 +176,7 @@ export interface DroppedCeilingConfig {
   position: 'left' | 'right';   // 단내림 위치
   width: number;                 // 단내림 영역 폭 (mm)
   dropHeight: number;            // 천장에서 내려오는 높이 (mm)
+  mode?: 'dropped' | 'curtain-box';  // 슬롯배치 모드: 단내림(기본) vs 커튼박스
   depth?: number;                // 공간 깊이 (생략 시 spaceInfo.depth 사용)
   topFrame?: number;             // 단내림 상부프레임 높이 (mm, 기본: frameSize.top과 동일)
   bottomFrame?: number;          // 단내림 하부프레임 높이 (mm, 기본: 0)
