@@ -311,19 +311,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const isTwoDrawer = moduleData?.id?.includes('2drawer-hanging');
               const isTwoHanging = moduleData?.id?.includes('2hanging');
 
-              // 2단 행잉 타입만 기존 오프셋 유지, 2단 서랍은 섹션 높이를 그대로 사용
+              // getSectionHeights()는 내부 공간(판재 제외) 기준 값을 반환
+              // 측판은 판재 영역을 포함해야 하므로 하부에 bT(하판), 상부에 bT(상판) 추가
+              // 2단 행잉 타입은 기존 오프셋 유지
               const applyOffset = isTwoHanging && !isTwoDrawer;
 
               const adjustedLowerHeight = applyOffset
-                ? lowerSectionHeight + basicThickness
-                : lowerSectionHeight;
+                ? lowerSectionHeight + basicThickness * 2
+                : lowerSectionHeight + basicThickness;
               const lowerPanelY = -height/2 + adjustedLowerHeight/2;
 
               const adjustedUpperHeight = applyOffset
-                ? upperSectionHeight - basicThickness
-                : upperSectionHeight;
+                ? upperSectionHeight
+                : upperSectionHeight + basicThickness;
               const upperOffset = applyOffset ? basicThickness : 0;
-              const upperPanelY = -height/2 + lowerSectionHeight + upperOffset + adjustedUpperHeight/2;
+              const upperPanelY = -height/2 + (lowerSectionHeight + basicThickness) + upperOffset + adjustedUpperHeight/2;
 
               // 섹션 강조 확인 (placedFurnitureId 사용)
               const isLowerSectionHighlighted = highlightedSection === `${placedFurnitureId}-0`;

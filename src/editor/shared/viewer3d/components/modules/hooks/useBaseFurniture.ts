@@ -398,13 +398,14 @@ export const useBaseFurniture = (
     }
 
     // customSections가 있고 calculatedHeight가 있으면 사용하되,
-    // 마지막 섹션은 현재 height 기준으로 재계산 (바닥마감재 등으로 height가 변할 수 있음)
-    // calculatedHeight는 판재 두께 포함 값이므로 height 전체 기준으로 보정
+    // 마지막 섹션은 현재 availableHeight 기준으로 재계산 (바닥마감재 등으로 height가 변할 수 있음)
+    // calculatedHeight는 내부 공간(판재 제외) 기준 값
     if (customSections && customSections.every(s => s.calculatedHeight)) {
+      const availH = height - basicThickness * 2;
       const heights = customSections.map(s => mmToThreeUnits(s.calculatedHeight!));
       const lastIdx = heights.length - 1;
       const prevTotal = heights.slice(0, lastIdx).reduce((sum, h) => sum + h, 0);
-      heights[lastIdx] = height - prevTotal;
+      heights[lastIdx] = availH - prevTotal;
       return heights;
     }
 
