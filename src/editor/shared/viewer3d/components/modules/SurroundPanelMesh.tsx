@@ -10,7 +10,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import BoxWithEdges from './components/BoxWithEdges';
 import { SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
-import { MaterialFactory } from '../../utils/materials/MaterialFactory';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 const mmToThree = (mm: number) => mm * 0.01;
 
@@ -62,14 +62,35 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
     const color = materialConfig?.doorColor || materialConfig?.frameColor || '#D4C5A9';
     const textureUrl = materialConfig?.doorTexture || materialConfig?.frameTexture;
 
-    if (textureUrl) {
-      return MaterialFactory.createTexturedMaterial(textureUrl, color);
-    }
-    return new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshStandardMaterial({
       color,
       roughness: 0.6,
-      metalness: 0.1,
+      metalness: 0.0,
+      envMapIntensity: 0.0,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
     });
+
+    if (textureUrl) {
+      if (isCabinetTexture1(textureUrl)) {
+        applyCabinetTexture1Settings(material);
+      }
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(textureUrl, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        material.map = texture;
+        if (isOakTexture(textureUrl)) {
+          applyOakTextureSettings(material, false);
+        } else if (!isCabinetTexture1(textureUrl)) {
+          applyDefaultImageTextureSettings(material);
+        }
+        material.needsUpdate = true;
+      });
+    }
+
+    return material;
   }, [spaceInfo.materialConfig]);
 
   return (
