@@ -160,6 +160,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         module.doorBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
       }
 
+      // 도어 상단 이격거리 초기화 (전체서라운드: 상부프레임 + 3mm)
+      if (module.doorTopGap === undefined) {
+        const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+        const topFrameMm = spaceInfo.frameSize?.top || 30;
+        module.doorTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
+      }
+
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
       if (sections && sections.length === 2) {
