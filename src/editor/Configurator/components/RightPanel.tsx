@@ -1502,34 +1502,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
               );
             })()}
 
-            {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
-            {(() => {
-              const mods = placedModules.filter(m => !m.isSurroundPanel);
-              if (mods.length === 0) return null;
-              const currentThickness = mods[0]?.backPanelThickness ?? 9;
-              return (
-                <FormControl
-                  label="백패널 두께"
-                  expanded={expandedSections.has('backPanel')}
-                  onToggle={() => toggleSection('backPanel')}
-                >
-                  <div className={doorStyles.doorTabSelector}>
-                    {[3, 5, 9].map((thickness) => (
-                      <button
-                        key={thickness}
-                        className={`${doorStyles.doorTab} ${currentThickness === thickness ? doorStyles.activeDoorTab : ''}`}
-                        onClick={() => {
-                          mods.forEach(m => updatePlacedModule(m.id, { backPanelThickness: thickness }));
-                        }}
-                      >
-                        {thickness}mm
-                      </button>
-                    ))}
-                  </div>
-                </FormControl>
-              );
-            })()}
-
             {/* 자유배치 도어 셋업 방식 (도어가 달린 가구가 있을 때만) */}
             {spaceInfo.layoutMode === 'free-placement' && placedModules.some(m => m.isFreePlacement && m.hasDoor) && (
               <FormControl
@@ -1561,6 +1533,34 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 </p>
               </FormControl>
             )}
+
+            {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
+            {(() => {
+              const mods = placedModules.filter(m => !m.isSurroundPanel);
+              if (mods.length === 0) return null;
+              const currentThickness = mods[0]?.backPanelThickness ?? 9;
+              return (
+                <FormControl
+                  label="백패널 두께"
+                  expanded={expandedSections.has('backPanel')}
+                  onToggle={() => toggleSection('backPanel')}
+                >
+                  <div className={doorStyles.doorTabSelector}>
+                    {[3, 5, 9].map((thickness) => (
+                      <button
+                        key={thickness}
+                        className={`${doorStyles.doorTab} ${currentThickness === thickness ? doorStyles.activeDoorTab : ''}`}
+                        onClick={() => {
+                          mods.forEach(m => updatePlacedModule(m.id, { backPanelThickness: thickness }));
+                        }}
+                      >
+                        {thickness}mm
+                      </button>
+                    ))}
+                  </div>
+                </FormControl>
+              );
+            })()}
 
           </div>
         )}
