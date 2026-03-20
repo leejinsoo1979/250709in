@@ -3311,8 +3311,10 @@ const Room: React.FC<RoomProps> = ({
           const frameDoorOffset = spaceInfo.frameOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
-          const baseZWithoutDoor = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
+          const baseZWithoutDoor = isFullSurround
+            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+              mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
           const topZPosition = baseZWithoutDoor + frameDoorOffset;
           const surroundZPosition = baseZWithoutDoor + surroundDoorOffset;
 
