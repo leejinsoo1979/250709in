@@ -2348,10 +2348,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {currentPlacedModule && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>가구 치수</h5>
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
                 {/* 너비 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>W</label>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2432,7 +2432,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="너비"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
+                      style={{ fontSize: '12px' }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
@@ -2440,7 +2440,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                 {/* 높이 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>H</label>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2499,7 +2499,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="높이"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
+                      style={{ fontSize: '12px' }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
@@ -2507,7 +2507,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                 {/* 깊이 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', marginBottom: '1px' }}>D</label>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>D</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -2566,7 +2566,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="깊이"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1, fontSize: '12px', padding: '4px 6px' }}
+                      style={{ fontSize: '12px' }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
@@ -2632,17 +2632,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div key={sIdx} style={{
                     background: 'var(--theme-background)',
                     border: '1px solid var(--theme-border)',
-                    borderRadius: '6px',
-                    padding: '8px 10px',
-                    marginBottom: sIdx < sectionCount - 1 ? '8px' : 0,
+                    borderRadius: '5px',
+                    padding: '6px 8px',
+                    marginBottom: sIdx < sectionCount - 1 ? '6px' : 0,
                   }}>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text)', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)', marginBottom: '4px' }}>
                       {sectionLabel}
                     </div>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       {/* 섹션 너비 */}
                       <div style={{ flex: 1, minWidth: '70px' }}>
-                        <label style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>너비</label>
+                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>너비</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text" inputMode="numeric"
@@ -2702,7 +2702,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                       {/* 섹션 높이 (읽기 전용 — 표준 가구는 비율 고정, 커스텀은 편집 가능) */}
                       <div style={{ flex: 1, minWidth: '70px' }}>
-                        <label style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>높이</label>
+                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text" inputMode="numeric"
@@ -2738,7 +2738,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                       {/* 섹션 깊이 */}
                       <div style={{ flex: 1, minWidth: '70px' }}>
-                        <label style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', display: 'block', marginBottom: '2px' }}>깊이</label>
+                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>깊이</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text" inputMode="numeric"
