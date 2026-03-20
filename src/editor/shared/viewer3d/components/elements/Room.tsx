@@ -763,7 +763,7 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
 
-    let frameColor = materialConfig?.frameColor || defaultColor;
+    let frameColor = materialConfig?.doorColor || materialConfig?.frameColor || defaultColor;
     let baseFrameTransparent = false;
 
     // 테마 색상 매핑
@@ -812,8 +812,8 @@ const Room: React.FC<RoomProps> = ({
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : 1.0,
     });
 
-    // 프레임 텍스처 적용 (frameTexture만 사용)
-    const frameTextureUrl = materialConfig?.frameTexture;
+    // 프레임 텍스처 적용 (doorTexture 우선, frameTexture 폴백)
+    const frameTextureUrl = materialConfig?.doorTexture || materialConfig?.frameTexture;
     const shouldApplyTexture =
       frameTextureUrl &&
       !(viewMode === '2D' && (frameType === 'top' || frameType === 'base'));

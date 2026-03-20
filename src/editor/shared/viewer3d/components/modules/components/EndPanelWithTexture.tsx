@@ -31,9 +31,9 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
 
   // 재질을 useMemo로 캐싱
   const endPanelMaterial = useMemo(() => {
-    // 프레임 색상 사용 시 frameColor/frameTexture, 아니면 doorColor/doorTexture
+    // 프레임 색상 사용 시 doorColor 우선 (도어=프레임 통일), 아니면 doorColor/doorTexture
     const baseColor = useFrameColor
-      ? (spaceInfo.materialConfig?.frameColor || '#E0E0E0')
+      ? (spaceInfo.materialConfig?.doorColor || spaceInfo.materialConfig?.frameColor || '#E0E0E0')
       : (spaceInfo.materialConfig?.doorColor || '#E0E0E0');
     const material = new THREE.MeshStandardMaterial({
       color: baseColor,
@@ -42,7 +42,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     });
 
     const textureUrl = useFrameColor
-      ? (spaceInfo.materialConfig?.frameTexture || spaceInfo.materialConfig?.doorTexture)
+      ? (spaceInfo.materialConfig?.doorTexture || spaceInfo.materialConfig?.frameTexture)
       : (spaceInfo.materialConfig?.interiorTexture || spaceInfo.materialConfig?.doorTexture);
     
     if (textureUrl) {

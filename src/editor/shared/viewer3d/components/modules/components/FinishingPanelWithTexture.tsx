@@ -33,8 +33,9 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
 
   // 재질을 useMemo로 캐싱
   // frameColor가 설정되어 있으면 우선 사용, 아니면 doorColor fallback
+  const effectiveDoorColor = spaceInfo?.materialConfig?.doorColor;
   const frameColor = spaceInfo?.materialConfig?.frameColor;
-  const effectiveColor = frameColor || doorColor;
+  const effectiveColor = effectiveDoorColor || frameColor || doorColor;
 
   const panelMaterial = useMemo(() => {
     const material = new THREE.MeshStandardMaterial({
@@ -46,7 +47,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       wireframe: renderMode === 'wireframe'
     });
     
-    const textureUrl = spaceInfo?.materialConfig?.frameTexture;
+    const textureUrl = spaceInfo?.materialConfig?.doorTexture || spaceInfo?.materialConfig?.frameTexture;
     
     if (textureUrl) {
       // Cabinet Texture1인 경우 먼저 색상 설정
@@ -84,7 +85,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
     }
     
     return material;
-  }, [effectiveColor, renderMode, isDragging, spaceInfo?.materialConfig?.frameTexture]);
+  }, [effectiveColor, renderMode, isDragging, spaceInfo?.materialConfig?.doorTexture, spaceInfo?.materialConfig?.frameTexture]);
   
   // 컴포넌트 언마운트 시 재질 정리
   useEffect(() => {

@@ -59,8 +59,8 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
   // 재질: 프레임 재질 사용
   const material = useMemo(() => {
     const materialConfig = spaceInfo.materialConfig;
-    const color = materialConfig?.frameColor || '#D4C5A9';
-    const textureUrl = materialConfig?.frameTexture;
+    const color = materialConfig?.doorColor || materialConfig?.frameColor || '#D4C5A9';
+    const textureUrl = materialConfig?.doorTexture || materialConfig?.frameTexture;
 
     if (textureUrl) {
       return MaterialFactory.createTexturedMaterial(textureUrl, color);
