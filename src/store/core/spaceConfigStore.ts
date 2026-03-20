@@ -397,6 +397,11 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           ...processedInfo.materialConfig
         }
       };
+
+      // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
+      if (tempSpaceInfo.frameSize && tempSpaceInfo.frameSize.top < 30) {
+        tempSpaceInfo.frameSize = { ...tempSpaceInfo.frameSize, top: 30 };
+      }
       
       // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
       const shouldAdjust =
