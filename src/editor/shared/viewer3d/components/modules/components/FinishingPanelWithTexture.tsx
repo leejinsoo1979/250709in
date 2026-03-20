@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import BoxWithEdges from './BoxWithEdges';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 interface FinishingPanelWithTextureProps {
   width: number;
@@ -46,7 +46,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       wireframe: renderMode === 'wireframe'
     });
     
-    const textureUrl = spaceInfo?.materialConfig?.frameTexture || spaceInfo?.materialConfig?.interiorTexture || spaceInfo?.materialConfig?.doorTexture;
+    const textureUrl = spaceInfo?.materialConfig?.frameTexture;
     
     if (textureUrl) {
       // Cabinet Texture1인 경우 먼저 색상 설정
@@ -69,6 +69,8 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
           // Oak 텍스처인 경우: 마감재 패널은 세로 결이므로 회전 안함
           if (isOakTexture(textureUrl)) {
             applyOakTextureSettings(material, false); // rotateTexture = false
+          } else if (!isCabinetTexture1(textureUrl)) {
+            applyDefaultImageTextureSettings(material);
           }
 
           material.needsUpdate = true;
@@ -82,7 +84,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
     }
     
     return material;
-  }, [effectiveColor, renderMode, isDragging, spaceInfo?.materialConfig?.frameTexture, spaceInfo?.materialConfig?.interiorTexture, spaceInfo?.materialConfig?.doorTexture]);
+  }, [effectiveColor, renderMode, isDragging, spaceInfo?.materialConfig?.frameTexture]);
   
   // 컴포넌트 언마운트 시 재질 정리
   useEffect(() => {

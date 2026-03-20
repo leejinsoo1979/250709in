@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import BoxWithEdges from './BoxWithEdges';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 interface EndPanelWithTextureProps {
   width: number;
@@ -66,6 +66,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
           // Oak 텍스처인 경우: 측판은 세로 결이므로 회전 안함
           if (isOakTexture(textureUrl)) {
             applyOakTextureSettings(material, false); // rotateTexture = false
+          } else if (!isCabinetTexture1(textureUrl)) {
+            applyDefaultImageTextureSettings(material);
           }
 
           material.needsUpdate = true;

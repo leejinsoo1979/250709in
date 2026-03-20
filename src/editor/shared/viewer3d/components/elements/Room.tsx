@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import {
   calculateRoomDimensions,
   calculateFloorFinishHeight,
@@ -851,11 +851,9 @@ const Room: React.FC<RoomProps> = ({
           else if (isCabinetTexture1(frameTextureUrl)) {
             applyCabinetTexture1Settings(material);
           }
-          // 그 외 텍스처는 기본 설정
+          // 그 외 텍스처는 기본 이미지 텍스처 설정 적용
           else {
-            material.color.setHex(0xffffff); // 기본 흰색
-            material.toneMapped = true; // 기본 톤 매핑 활성화
-            material.roughness = 0.6; // 기본 거칠기
+            applyDefaultImageTextureSettings(material);
           }
 
           material.map = texture;
