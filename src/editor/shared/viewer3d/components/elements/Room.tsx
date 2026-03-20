@@ -3348,8 +3348,18 @@ const Room: React.FC<RoomProps> = ({
                     return true;
                   }).forEach((mod) => {
                     const bounds = getModuleBoundsX(mod);
-                    const leftEpAdj = mod.hasLeftEndPanel ? END_PANEL_THICKNESS : 0;
-                    const rightEpAdj = mod.hasRightEndPanel ? END_PANEL_THICKNESS : 0;
+                    const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
+                    const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
+                    let leftEpAdj = 0;
+                    let rightEpAdj = 0;
+                    if (isFullSurround) {
+                      // 전체서라운드: EP가 앞으로 돌출(offset > 0)하면 축소, 아니면 유지
+                      if (mod.hasLeftEndPanel && leftEpOffset > 0) leftEpAdj = END_PANEL_THICKNESS;
+                      if (mod.hasRightEndPanel && rightEpOffset > 0) rightEpAdj = END_PANEL_THICKNESS;
+                    } else {
+                      if (mod.hasLeftEndPanel) leftEpAdj = END_PANEL_THICKNESS;
+                      if (mod.hasRightEndPanel) rightEpAdj = END_PANEL_THICKNESS;
+                    }
                     const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
                     const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
                     const modCategory = getModuleCategory(mod);
