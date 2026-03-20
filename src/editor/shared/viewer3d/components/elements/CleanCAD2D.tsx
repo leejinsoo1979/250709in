@@ -3232,9 +3232,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             furnitureH = _internalHeight;
           }
 
-          // 바닥마감재 높이
+          // 바닥마감재 적용: 가구 높이에서 차감 (바닥마감재 위로 가구가 올라감)
           const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
+          if (floorFinishForHeight > 0) {
+            furnitureH -= floorFinishForHeight;
+          }
 
           // 치수가이드 표시용 프레임 높이 (토글 반영)
           // 하부: OFF → 띄움 높이(individualFloatHeight) 표시, ON → 실제 size
@@ -3242,7 +3245,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? (leftmostMod.individualFloatHeight ?? 0)
             : actualBottomSize;
           // 상부: 전체높이에서 바닥마감재 + 받침대 + 가구 높이를 빼서 계산
-          // 바닥마감재는 상부프레임이 아니라 바닥에서 별도 공간을 차지함
+          // 바닥마감재는 바닥에서 별도 공간을 차지하므로 effectiveH에서도 차감
           const topFrameH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
@@ -3508,9 +3511,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rFurnitureH = rInternalHeight;
           }
 
-          // 바닥마감재 높이
+          // 바닥마감재 적용: 가구 높이에서 차감 (바닥마감재 위로 가구가 올라감)
           const rFloorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
+          if (rFloorFinishForHeight > 0) {
+            rFurnitureH -= rFloorFinishForHeight;
+          }
 
           // 치수가이드 표시용 프레임 높이 (토글 반영)
           const rBottomFrameH = rightmostMod?.hasBase === false
