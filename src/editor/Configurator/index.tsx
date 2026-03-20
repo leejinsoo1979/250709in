@@ -5311,6 +5311,25 @@ const Configurator: React.FC = () => {
           />
         </div>
 
+        {/* 가구재 두께 설정 (15mm / 18mm) */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>가구재 두께</h3>
+          </div>
+          <div className={styles.toggleButtonGroup}>
+            {[15, 18].map((thickness) => (
+              <button
+                key={thickness}
+                className={`${styles.toggleButton} ${(spaceInfo.panelThickness ?? 18) === thickness ? styles.toggleButtonActive : ''}`}
+                onClick={() => handleSpaceInfoUpdate({ panelThickness: thickness })}
+              >
+                {thickness}mm
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
         {(() => {
           const bpMods = placedModules.filter(m => !m.isSurroundPanel);

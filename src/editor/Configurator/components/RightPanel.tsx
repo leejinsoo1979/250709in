@@ -1534,6 +1534,25 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
+            {/* 가구재 두께 설정 (15mm / 18mm) */}
+            <FormControl
+              label="가구재 두께"
+              expanded={expandedSections.has('panelThickness')}
+              onToggle={() => toggleSection('panelThickness')}
+            >
+              <div className={doorStyles.doorTabSelector}>
+                {[15, 18].map((thickness) => (
+                  <button
+                    key={thickness}
+                    className={`${doorStyles.doorTab} ${(spaceInfo.panelThickness ?? 18) === thickness ? doorStyles.activeDoorTab : ''}`}
+                    onClick={() => setSpaceInfo({ panelThickness: thickness })}
+                  >
+                    {thickness}mm
+                  </button>
+                ))}
+              </div>
+            </FormControl>
+
             {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
             {(() => {
               const mods = placedModules.filter(m => !m.isSurroundPanel);
