@@ -1233,6 +1233,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               if (isMergeMode) {
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
                 const baseGroups = computeFrameMergeGroups(slotMods, 'base');
+                console.log('[RightPanel] frameMergeEnabled=true, topGroups:', topGroups, 'baseGroups:', baseGroups, 'slotMods widths:', slotMods.map(m => ({ id: m.id, w: m.moduleWidth || m.customWidth || m.freeWidth })));
 
                 return (
                   <FormControl
@@ -1269,6 +1270,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         />
                       );
                     })}
+                    {/* 상하부 구분선 */}
+                    {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.length > 0 && (
+                      <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                    )}
                     {/* 하부프레임 병합 그룹 — stand 타입이면 숨김 */}
                     {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.map((group, gIdx) => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
@@ -1330,6 +1335,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       />
                     );
                   })}
+                  {/* 상하부 구분선 */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
+                    <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                  )}
                   {/* 하부프레임 — stand 타입이면 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
