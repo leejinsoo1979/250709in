@@ -152,8 +152,8 @@
 }
 
 .materialCard {
-  background: var(--theme-card-bg, #fff);
-  border: 1.5px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface);
+  border: 1.5px solid var(--theme-border);
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
