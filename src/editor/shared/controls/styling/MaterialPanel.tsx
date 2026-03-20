@@ -11,34 +11,36 @@ const cn = (...classes: (string | undefined | null | false)[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
-// 재질 데이터 정의 (참고 코드와 동일)
+// 재질 데이터 정의
 const materialSwatches = [
-  // Outer ring materials - clockwise from top
-  { id: "o1", name: "Cream", color: "#f5f5f0", position: 1, isInner: false },
-  { id: "o2", name: "Light Beige", color: "#d8d3c0", position: 2, isInner: false },
-  { id: "o3", name: "Beige", color: "#d5c6ad", position: 3, isInner: false },
-  { id: "o4", name: "Tan", color: "#c8b89b", position: 4, isInner: false },
-  { id: "o5", name: "Terracotta", color: "#b15f4c", position: 5, isInner: false },
-  { id: "o6", name: "Slate Blue", color: "#6a869c", position: 6, isInner: false },
-  { id: "o7", name: "Light Sage", color: "#b9bea7", position: 7, isInner: false },
-  { id: "o8", name: "Olive", color: "#697a50", position: 8, isInner: false },
-  { id: "o9", name: "Sage", color: "#a3a78c", position: 9, isInner: false },
-  { id: "o10", name: "Charcoal", color: "#4b4b4b", position: 10, isInner: false },
-  { id: "o11", name: "Black", color: "#212121", position: 11, isInner: false },
-  { id: "o12", name: "Dark Gray", color: "#706e6c", position: 12, isInner: false },
-  { id: "o13", name: "Gray", color: "#a4a4a4", position: 13, isInner: false },
-  { id: "o14", name: "MDF", color: "#e9e5dc", position: 14, isInner: false },
-  { id: "o15", name: "Light Gray", color: "#d3d3d3", position: 15, isInner: false },
-  
-  // Inner ring materials - wood tones clockwise
-  { id: "i1", name: "Dark Walnut", color: "#43302e", position: 1, isInner: true, texture: "wood" },
-  { id: "i2", name: "Black Oak", color: "#211f1c", position: 2, isInner: true, texture: "wood" },
-  { id: "i3", name: "Walnut", color: "#755541", position: 3, isInner: true, texture: "wood" },
-  { id: "i4", name: "Medium Oak", color: "#b28968", position: 4, isInner: true, texture: "wood" },
-  { id: "i5", name: "Natural Oak", color: "#c7ae7f", position: 5, isInner: true, texture: "wood" },
-  { id: "i6", name: "Oak", color: "#d4bd94", position: 6, isInner: true, texture: "image", image: "/materials/oak/Poliigon_WoodVeneerOak_7760_BaseColor.jpg" },
-  { id: "i7", name: "Cherry", color: "#6e4239", position: 7, isInner: true, texture: "wood" },
-  { id: "i8", name: "Cabinet Texture1", color: "#FFFFFF", position: 8, isInner: true, texture: "image", image: "/materials/solid/cabinet texture1.jpeg" },
+  // 솔리드 컬러 (카테고리: 색상)
+  { id: "o1", name: "Cream", category: "색상", color: "#f5f5f0" },
+  { id: "o2", name: "Light Beige", category: "색상", color: "#d8d3c0" },
+  { id: "o3", name: "Beige", category: "색상", color: "#d5c6ad" },
+  { id: "o4", name: "Tan", category: "색상", color: "#c8b89b" },
+  { id: "o5", name: "Terracotta", category: "색상", color: "#b15f4c" },
+  { id: "o6", name: "Slate Blue", category: "색상", color: "#6a869c" },
+  { id: "o7", name: "Light Sage", category: "색상", color: "#b9bea7" },
+  { id: "o8", name: "Olive", category: "색상", color: "#697a50" },
+  { id: "o9", name: "Sage", category: "색상", color: "#a3a78c" },
+  { id: "o10", name: "Charcoal", category: "색상", color: "#4b4b4b" },
+  { id: "o11", name: "Black", category: "색상", color: "#212121" },
+  { id: "o12", name: "Dark Gray", category: "색상", color: "#706e6c" },
+  { id: "o13", name: "Gray", category: "색상", color: "#a4a4a4" },
+  { id: "o14", name: "MDF", category: "색상", color: "#e9e5dc" },
+  { id: "o15", name: "Light Gray", category: "색상", color: "#d3d3d3" },
+
+  // 우드 텍스처 (카테고리: 필름)
+  { id: "i1", name: "Dark Walnut", category: "필름", color: "#43302e", texture: "wood" },
+  { id: "i2", name: "Black Oak", category: "필름", color: "#211f1c", texture: "wood" },
+  { id: "i3", name: "Walnut", category: "필름", color: "#755541", texture: "wood" },
+  { id: "i4", name: "Medium Oak", category: "필름", color: "#b28968", texture: "wood" },
+  { id: "i5", name: "Natural Oak", category: "필름", color: "#c7ae7f", texture: "wood" },
+  { id: "i7", name: "Cherry", category: "필름", color: "#6e4239", texture: "wood" },
+
+  // 이미지 텍스처 (카테고리: 마루/타일)
+  { id: "i6", name: "Oak", category: "마루", color: "#d4bd94", texture: "image", image: "/materials/oak/Poliigon_WoodVeneerOak_7760_BaseColor.jpg" },
+  { id: "i8", name: "Cabinet Texture1", category: "타일", color: "#FFFFFF", texture: "image", image: "/materials/solid/cabinet texture1.jpeg" },
 ];
 
 const MaterialPanel: React.FC = () => {
@@ -58,7 +60,6 @@ const MaterialPanel: React.FC = () => {
   const [hoverColor, setHoverColor] = useState<{color: string, x: number, y: number} | null>(null);
 
   const colorWheelRef = useRef<HTMLDivElement>(null);
-  const materialWheelRef = useRef<HTMLDivElement>(null);
   const colorUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Store에서 재질 설정과 업데이트 함수 가져오기
@@ -104,11 +105,6 @@ const MaterialPanel: React.FC = () => {
     setSpaceInfo({
       materialConfig: newMaterialConfig
     });
-  };
-
-  // Material wheel click handler
-  const handleMaterialWheelClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
   };
 
   // Color wheel functions
@@ -446,10 +442,6 @@ const MaterialPanel: React.FC = () => {
     };
   }, []);
 
-  // Filter materials by inner/outer rings
-  const outerMaterials = materialSwatches.filter(m => !m.isInner);
-  const innerMaterials = materialSwatches.filter(m => m.isInner);
-
   return (
     <div className={styles.container}>
       {/* 탭 네비게이션 */}
@@ -483,150 +475,33 @@ const MaterialPanel: React.FC = () => {
       {/* 탭 컨텐츠 */}
       <div className={styles.content}>
         <div className={styles.tabContent}>
-          {/* Material Wheel */}
-          <div className={styles.materialWheelContainer}>
-            <div 
-              ref={materialWheelRef}
-              className={styles.materialWheel} 
-              onClick={handleMaterialWheelClick}
-            >
-              <svg 
-                viewBox="0 0 100 100" 
-                className={styles.materialWheelSvg}
-                onClick={(e) => e.stopPropagation()}
+          {/* 재질 카드 그리드 */}
+          <div className={styles.materialGrid}>
+            {materialSwatches.map((material) => (
+              <div
+                key={material.id}
+                className={cn(
+                  styles.materialCard,
+                  isMaterialSelected(material.name) && styles.materialCardSelected
+                )}
+                onClick={() => handleSelectMaterial(material.name, material.color, material)}
               >
-                <defs>
-                  {outerMaterials.map((material) => (
-                    <pattern
-                      key={`pattern-${material.id}`}
-                      id={`pattern-${material.id}`}
-                      patternUnits="userSpaceOnUse"
-                      width="10" height="10"
-                      patternTransform="rotate(45)"
-                    >
-                      <rect width="10" height="10" fill={material.color} />
-                    </pattern>
-                  ))}
-                  {innerMaterials.map((material) => (
-                    <pattern
-                      key={`pattern-${material.id}`}
-                      id={`pattern-${material.id}`}
-                      patternUnits="userSpaceOnUse"
-                      width="10" height="10"
-                      patternTransform="rotate(45)"
-                    >
-                      {material.texture === 'image' && material.image ? (
-                        <image 
-                          href={material.image} 
-                          width="10" 
-                          height="10" 
-                          preserveAspectRatio="xMidYMid slice"
-                        />
-                      ) : (
-                        <rect width="10" height="10" fill={material.color} />
-                      )}
-                      {material.texture === 'wood' && (
-                        <>
-                          <line x1="0" y1="5" x2="10" y2="5" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
-                          <line x1="5" y1="0" x2="5" y2="10" stroke="rgba(0,0,0,0.05)" strokeWidth="0.5" />
-                        </>
-                      )}
-                    </pattern>
-                  ))}
-                </defs>
-                
-                {/* Outer ring segments */}
-                {outerMaterials.map((material, index) => {
-                  const segmentAngle = 360 / outerMaterials.length;
-                  const startAngle = index * segmentAngle - 90;
-                  const endAngle = startAngle + segmentAngle;
-                  
-                  const startRad = startAngle * Math.PI / 180;
-                  const endRad = endAngle * Math.PI / 180;
-                  
-                  const x1 = 50 + 45 * Math.cos(startRad);
-                  const y1 = 50 + 45 * Math.sin(startRad);
-                  const x2 = 50 + 45 * Math.cos(endRad);
-                  const y2 = 50 + 45 * Math.sin(endRad);
-                  
-                  const x3 = 50 + 30 * Math.cos(endRad);
-                  const y3 = 50 + 30 * Math.sin(endRad);
-                  const x4 = 50 + 30 * Math.cos(startRad);
-                  const y4 = 50 + 30 * Math.sin(startRad);
-                  
-                  const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-                  
-                  return (
-                    <path
-                      key={material.id}
-                      d={`M ${x1},${y1} A 45,45 0 ${largeArcFlag},1 ${x2},${y2} L ${x3},${y3} A 30,30 0 ${largeArcFlag},0 ${x4},${y4} Z`}
-                      fill={material.color}
-                      stroke={isMaterialSelected(material.name) ? "#1abc9c" : "white"}
-                      strokeWidth={isMaterialSelected(material.name) ? "2" : "0.5"}
-                      style={{ cursor: 'pointer' }}
-                      className={styles.materialSegment}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectMaterial(material.name, material.color, material);
-                      }}
+                <div className={styles.materialThumbnail}>
+                  {material.texture === 'image' && material.image ? (
+                    <img src={material.image} alt={material.name} className={styles.materialImage} />
+                  ) : (
+                    <div
+                      className={styles.materialColorSwatch}
+                      style={{ backgroundColor: material.color }}
                     />
-                  );
-                })}
-                
-                {/* Inner ring segments */}
-                {innerMaterials.map((material, index) => {
-                  const segmentAngle = 360 / innerMaterials.length;
-                  const startAngle = index * segmentAngle - 90;
-                  const endAngle = startAngle + segmentAngle;
-                  
-                  const startRad = startAngle * Math.PI / 180;
-                  const endRad = endAngle * Math.PI / 180;
-                  
-                  const x1 = 50 + 30 * Math.cos(startRad);
-                  const y1 = 50 + 30 * Math.sin(startRad);
-                  const x2 = 50 + 30 * Math.cos(endRad);
-                  const y2 = 50 + 30 * Math.sin(endRad);
-                  
-                  const x3 = 50;
-                  const y3 = 50;
-                  
-                  const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-                  
-                  return (
-                    <path
-                      key={material.id}
-                      d={`M ${x1},${y1} A 30,30 0 ${largeArcFlag},1 ${x2},${y2} L ${x3},${y3} Z`}
-                      fill={material.texture === 'image' ? `url(#pattern-${material.id})` : material.color}
-                      stroke={isMaterialSelected(material.name) ? "#1abc9c" : "white"}
-                      strokeWidth={isMaterialSelected(material.name) ? "2" : "0.5"}
-                      style={{ cursor: 'pointer' }}
-                      className={styles.materialSegment}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectMaterial(material.name, material.color, material);
-                      }}
-                    />
-                  );
-                })}
-                
-                {/* Center white circle with text */}
-                <circle cx="50" cy="50" r="15" fill="white" stroke="#e5e5e5" strokeWidth="1" />
-                <text 
-                  x="50" 
-                  y="50" 
-                  textAnchor="middle" 
-                  dominantBaseline="middle" 
-                  fill="#333"
-                  fontSize="5"
-                  fontWeight="500"
-                  style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                  lengthAdjust="spacingAndGlyphs"
-                  textLength="26"
-                >
-                  {selectedMaterial}
-                </text>
-              </svg>
-            </div>
+                  )}
+                </div>
+                <div className={styles.materialInfo}>
+                  <span className={styles.materialCategory}>{material.category}</span>
+                  <span className={styles.materialName}>{material.name}</span>
+                </div>
+              </div>
+            ))}
           </div>
           
           {/* 색상 지정하기 섹션 */}
