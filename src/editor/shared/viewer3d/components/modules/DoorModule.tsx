@@ -207,10 +207,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
   
-  // 선택된 도어인지 확인
-  const selectedPlacedModuleId = useFurnitureStore(state => state.selectedPlacedModuleId);
-  const isSelected = selectedPlacedModuleId === furnitureId;
-
   // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
   const { theme } = useViewerTheme();
   // BoxWithEdges와 동일한 강조색 함수
@@ -302,14 +298,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.opacity = 0.3;
           mat.depthWrite = true;
           if (!mat.map) {
-            mat.color.set(isSelected ? getThemeColor() : doorColor);
-          }
-        } else if (isSelected) {
-          mat.transparent = true;
-          mat.opacity = 0.5;
-          mat.depthWrite = true;
-          if (!mat.map) {
-            mat.color.set(getThemeColor());
+            mat.color.set(doorColor);
           }
         } else {
           mat.transparent = false;
@@ -323,7 +312,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme]);
+  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme]);
 
   // 편집/드래그/2D 모드일 때 텍스처 제거
   useEffect(() => {
