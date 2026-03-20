@@ -666,6 +666,8 @@ const Configurator: React.FC = () => {
     }
     return initialSpaceInfo;
   });
+  // 프로젝트 로드 중에는 가구 재배치 방지
+  const isLoadingProjectRef = useRef(false);
 
   // History Store
   const { saveState, undo: historyUndo, redo: historyRedo } = useHistoryStore();
@@ -1102,12 +1104,19 @@ const Configurator: React.FC = () => {
         }
 
         // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
+        // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지
+        isLoadingProjectRef.current = true;
         resetSpaceInfo();
         setSpaceInfo(spaceConfig);
-        // 탭 전환 시 이전 탭의 spaceInfo와 비교하여 가구가 잘못 재배치되는 것을 방지
         setPreviousSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
         setCurrentProjectId(projectId);
+        // 다음 렌더 사이클 이후 플래그 해제
+        requestAnimationFrame(() => {
+          // spaceInfo가 완전히 안정화된 후 previousSpaceInfo를 다시 동기화
+          setPreviousSpaceInfo(useSpaceConfigStore.getState().spaceInfo);
+          isLoadingProjectRef.current = false;
+        });
 
         // 프로젝트 소유자 정보 설정
         if (project.userId) {
@@ -2325,10 +2334,16 @@ const Configurator: React.FC = () => {
                 }
 
                 // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
+                // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지
+                isLoadingProjectRef.current = true;
                 resetSpaceInfo();
                 setSpaceInfo(spaceConfig);
-                // 탭 전환 시 이전 탭의 spaceInfo와 비교하여 가구가 잘못 재배치되는 것을 방지
                 setPreviousSpaceInfo(spaceConfig);
+                // 다음 렌더 사이클 이후 플래그 해제
+                requestAnimationFrame(() => {
+                  setPreviousSpaceInfo(useSpaceConfigStore.getState().spaceInfo);
+                  isLoadingProjectRef.current = false;
+                });
 // console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
 
@@ -2591,6 +2606,10 @@ const Configurator: React.FC = () => {
 
   // 공간 변경 시 가구 재배치 로직 복구
   useEffect(() => {
+    // 프로젝트 로드 중에는 가구 재배치 건너뛰기
+    if (isLoadingProjectRef.current) {
+      return;
+    }
     // spaceInfo가 변경되었을 때만 실행
     if (JSON.stringify(previousSpaceInfo) !== JSON.stringify(spaceInfo)) {
       // materialConfig만 변경된 경우는 가구 재배치를 하지 않음
@@ -2619,17 +2638,23 @@ const Configurator: React.FC = () => {
         JSON.stringify(prevWithoutMaterial.floorFinish) !== JSON.stringify(currentWithoutMaterial.floorFinish);
 
       if (hasStructuralChange) {
-// console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
-          // width: prevWithoutMaterial.width !== currentWithoutMaterial.width,
-          // height: prevWithoutMaterial.height !== currentWithoutMaterial.height,
-          // depth: prevWithoutMaterial.depth !== currentWithoutMaterial.depth,
-          // customColumnCount: prevWithoutMaterial.customColumnCount !== currentWithoutMaterial.customColumnCount,
-          // droppedCeiling: JSON.stringify(prevWithoutMaterial.droppedCeiling) !== JSON.stringify(currentWithoutMaterial.droppedCeiling),
-          // mainDoorCount: prevWithoutMaterial.mainDoorCount !== currentWithoutMaterial.mainDoorCount,
-          // droppedCeilingDoorCount: prevWithoutMaterial.droppedCeilingDoorCount !== currentWithoutMaterial.droppedCeilingDoorCount,
-          // prevDroppedCeiling: prevWithoutMaterial.droppedCeiling,
-          // currentDroppedCeiling: currentWithoutMaterial.droppedCeiling
-        // });
+        console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
+          width: prevWithoutMaterial.width !== currentWithoutMaterial.width ? `${prevWithoutMaterial.width} → ${currentWithoutMaterial.width}` : '같음',
+          height: prevWithoutMaterial.height !== currentWithoutMaterial.height ? `${prevWithoutMaterial.height} → ${currentWithoutMaterial.height}` : '같음',
+          depth: prevWithoutMaterial.depth !== currentWithoutMaterial.depth ? `${prevWithoutMaterial.depth} → ${currentWithoutMaterial.depth}` : '같음',
+          customColumnCount: prevWithoutMaterial.customColumnCount !== currentWithoutMaterial.customColumnCount ? `${prevWithoutMaterial.customColumnCount} → ${currentWithoutMaterial.customColumnCount}` : '같음',
+          droppedCeiling: JSON.stringify(prevWithoutMaterial.droppedCeiling) !== JSON.stringify(currentWithoutMaterial.droppedCeiling) ? 'CHANGED' : '같음',
+          mainDoorCount: prevWithoutMaterial.mainDoorCount !== currentWithoutMaterial.mainDoorCount ? `${prevWithoutMaterial.mainDoorCount} → ${currentWithoutMaterial.mainDoorCount}` : '같음',
+          droppedCeilingDoorCount: prevWithoutMaterial.droppedCeilingDoorCount !== currentWithoutMaterial.droppedCeilingDoorCount ? `${prevWithoutMaterial.droppedCeilingDoorCount} → ${currentWithoutMaterial.droppedCeilingDoorCount}` : '같음',
+          frameSize: JSON.stringify(prevWithoutMaterial.frameSize) !== JSON.stringify(currentWithoutMaterial.frameSize) ? `${JSON.stringify(prevWithoutMaterial.frameSize)} → ${JSON.stringify(currentWithoutMaterial.frameSize)}` : '같음',
+          gapConfig: JSON.stringify(prevWithoutMaterial.gapConfig) !== JSON.stringify(currentWithoutMaterial.gapConfig) ? 'CHANGED' : '같음',
+          baseConfig: JSON.stringify(prevWithoutMaterial.baseConfig) !== JSON.stringify(currentWithoutMaterial.baseConfig) ? `${JSON.stringify(prevWithoutMaterial.baseConfig)} → ${JSON.stringify(currentWithoutMaterial.baseConfig)}` : '같음',
+          surroundType: prevWithoutMaterial.surroundType !== currentWithoutMaterial.surroundType ? `${prevWithoutMaterial.surroundType} → ${currentWithoutMaterial.surroundType}` : '같음',
+          installType: prevWithoutMaterial.installType !== currentWithoutMaterial.installType ? `${prevWithoutMaterial.installType} → ${currentWithoutMaterial.installType}` : '같음',
+          wallConfig: JSON.stringify(prevWithoutMaterial.wallConfig) !== JSON.stringify(currentWithoutMaterial.wallConfig) ? 'CHANGED' : '같음',
+          hasFloorFinish: prevWithoutMaterial.hasFloorFinish !== currentWithoutMaterial.hasFloorFinish ? `${prevWithoutMaterial.hasFloorFinish} → ${currentWithoutMaterial.hasFloorFinish}` : '같음',
+          floorFinish: JSON.stringify(prevWithoutMaterial.floorFinish) !== JSON.stringify(currentWithoutMaterial.floorFinish) ? 'CHANGED' : '같음',
+        });
         updateFurnitureForNewSpace(previousSpaceInfo, spaceInfo);
       }
 

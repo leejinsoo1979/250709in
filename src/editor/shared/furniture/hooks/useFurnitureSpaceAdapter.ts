@@ -39,6 +39,14 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           const moduleWidth = module.freeWidth || module.moduleWidth || 450;
           const centerXmm = module.position.x * 100;
 
+          console.log('🔍 자유배치 가구 재배치:', {
+            moduleId: module.moduleId,
+            oldBounds, newBounds,
+            oldSpaceWidth, newSpaceWidth,
+            moduleWidth, centerXmm,
+            ratio: oldSpaceWidth > 0 ? newSpaceWidth / oldSpaceWidth : 1,
+          });
+
           // 서라운드 패널은 크기 변경 없이 위치만 클램핑
           if (module.isSurroundPanel) {
             const finalX = clampToSpaceBoundsX(centerXmm, moduleWidth, newSpaceInfo);
