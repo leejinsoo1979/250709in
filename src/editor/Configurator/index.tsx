@@ -4767,6 +4767,10 @@ const Configurator: React.FC = () => {
                     toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                   />;
                 })}
+                {/* 상하부 구분선 */}
+                {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
+                  <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                )}
                 {/* 하부프레임 — 띄워서 배치(stand)면 받침대 없으므로 숨김 */}
                 {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
@@ -5116,6 +5120,10 @@ const Configurator: React.FC = () => {
                       `top-${mod.id}`,
                     )}</React.Fragment>;
                   })}
+                  {/* 상하부 구분선 */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
+                    <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                  )}
                   {/* 하부프레임 — stand 타입이면 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
