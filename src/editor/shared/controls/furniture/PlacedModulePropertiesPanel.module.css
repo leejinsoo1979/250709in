@@ -17,7 +17,8 @@
 .panel {
   background: var(--theme-surface);
   border-radius: 12px;
-  box-shadow: var(--popup-shadow);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--popup-shadow), 0 0 0 1px rgba(255, 255, 255, 0.06);
   width: 350px;
   max-height: calc(100vh - 120px);
   overflow: hidden;
