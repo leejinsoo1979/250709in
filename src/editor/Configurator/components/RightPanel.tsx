@@ -1229,6 +1229,100 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 );
               };
 
+              // 병합 모드 전용 렌더 함수 (너비 + 높이 + 옵셋)
+              const MergedFrameRow = ({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey }: {
+                label: string; enabled: boolean; widthMM: number; heightMM: number; offset: number;
+                onToggle: () => void; onHeightChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
+              }) => {
+                const [heightText, setHeightText] = React.useState(String(heightMM || ''));
+                const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+                const heightEditingRef = React.useRef(false);
+                const offsetEditingRef = React.useRef(false);
+
+                React.useEffect(() => {
+                  if (!heightEditingRef.current) setHeightText(heightMM ? String(heightMM) : '');
+                }, [heightMM]);
+                React.useEffect(() => {
+                  if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
+                }, [offset]);
+
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                    <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
+                    <button
+                      onClick={onToggle}
+                      style={{
+                        width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                        backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+                        position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+                      }}
+                    >
+                      <span style={{
+                        position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+                        backgroundColor: '#fff', transition: 'left 0.2s',
+                        left: enabled ? '18px' : '2px',
+                      }} />
+                    </button>
+                    {enabled ? (
+                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                        {/* 너비 - 읽기전용 */}
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+                          <input type="text" inputMode="numeric"
+                            value={widthMM || ''} readOnly
+                            onFocus={() => setHighlightedFrame(hlKey)}
+                            onBlur={() => setHighlightedFrame(null)}
+                            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+                          />
+                        </div>
+                        {/* 높이 - 편집 가능 */}
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
+                          <input type="text" inputMode="numeric"
+                            value={heightText} placeholder="0"
+                            onFocus={() => { heightEditingRef.current = true; setHighlightedFrame(hlKey); }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const next = Math.max(0, Math.min(9999, (heightMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setHeightText(String(next));
+                                onHeightChange(next);
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setHeightText(v); }}
+                            onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setHeightText(String(clamped)); onHeightChange(clamped); }}
+                            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                          />
+                        </div>
+                        {/* 옵셋 - 편집 가능 */}
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+                          <input type="text" inputMode="numeric"
+                            value={offsetText} placeholder="0"
+                            onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setOffsetText(String(next));
+                                onOffsetChange(next);
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
+                            onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
+                            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              };
+
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
@@ -1239,27 +1333,26 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     label="상,하부프레임"
                     expanded={expandedSections.has('slotFrame')}
                     onToggle={() => toggleSection('slotFrame')}
-                    helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 토글로 그룹 전체 on/off, size/옵셋 변경 시 그룹 내 모든 가구에 적용됩니다."
+                    helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다."
                   >
                     {/* 상부프레임 병합 그룹 */}
                     {topGroups.map((group, gIdx) => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
-                      const repSize = firstMod?.topFrameThickness ?? globalTop;
-                      const repOffset = firstMod?.topFrameOffset ?? 0;
                       const hlKey = `merged-top-${gIdx}`;
                       return (
-                        <FrameRow key={hlKey}
+                        <MergedFrameRow key={hlKey}
                           label={group.label}
                           enabled={allEnabled}
-                          sizeMM={repSize}
-                          offset={repOffset}
+                          widthMM={group.totalWidthMm}
+                          heightMM={firstMod?.topFrameThickness ?? globalTop}
+                          offset={firstMod?.topFrameOffset ?? 0}
                           onToggle={() => {
                             const newVal = !allEnabled;
                             group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
                           }}
-                          onSizeChange={(v) => {
+                          onHeightChange={(v) => {
                             group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
                           }}
                           onOffsetChange={(v) => {
@@ -1278,15 +1371,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasBase !== false);
-                      const repSize = firstMod?.baseFrameHeight ?? globalBase;
-                      const repOffset = firstMod?.baseFrameOffset ?? 0;
                       const hlKey = `merged-base-${gIdx}`;
                       return (
-                        <FrameRow key={hlKey}
+                        <MergedFrameRow key={hlKey}
                           label={group.label}
                           enabled={allEnabled}
-                          sizeMM={repSize}
-                          offset={repOffset}
+                          widthMM={group.totalWidthMm}
+                          heightMM={firstMod?.baseFrameHeight ?? globalBase}
+                          offset={firstMod?.baseFrameOffset ?? 0}
                           onToggle={() => {
                             const newVal = !allEnabled;
                             group.moduleIds.forEach(id => updatePlacedModule(id, {
@@ -1294,7 +1386,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
                             }));
                           }}
-                          onSizeChange={(v) => {
+                          onHeightChange={(v) => {
                             group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
                           }}
                           onOffsetChange={(v) => {
