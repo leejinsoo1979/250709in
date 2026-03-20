@@ -1241,7 +1241,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           if (!shouldSplit) {
             // 분할하지 않고 전체 백패널 렌더링
             const fullBackPanelHeight = innerHeight + mmToThreeUnits(36);
-            const fullBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
+            const fullBackPanelZ = -leftDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
             const reinforcementHeight = mmToThreeUnits(60);
             const reinforcementDepth = mmToThreeUnits(15);
             const reinforcementZ = fullBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -1293,14 +1293,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           // 하부 백패널: bottom=-height/2 ~ top=lowerHeight 위치
           const lowerBackPanelHeight = lowerHeight;
           const lowerBackPanelY = -height/2 + lowerHeight / 2;
-          const lowerBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
+          const lowerBackPanelZ = -leftDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
 
           // 상부 백패널: bottom=구분판 위치(lowerHeight), top=상판(height/2)까지 확장
           const upperBackPanelBottom = -height/2 + lowerHeight;
           const upperBackPanelTop = height/2;
           const upperBackPanelHeight = upperBackPanelTop - upperBackPanelBottom;
           const upperBackPanelY = (upperBackPanelBottom + upperBackPanelTop) / 2;
-          const upperBackPanelZ = -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17);
+          const upperBackPanelZ = -leftDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
 
           // 상부 섹션 바닥판 위치 (하부 마지막 측판 조정과 동일하게 +9mm)
           const floorPanelY = -height/2 + lowerHeight + basicThickness/2;
@@ -1416,7 +1416,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         {/* 우측 백패널 (고정 깊이 660mm 기준) - 3D 모드에서는 항상 표시 */}
         {(viewMode === '3D' || visibleSectionIndex !== 0) && (() => {
           const rightBackPanelHeight = innerHeight + mmToThreeUnits(36);
-          const rightBackPanelZ = -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2;
+          const rightBackPanelZ = -rightDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + (leftDepth - rightDepth) / 2;
           const reinforcementHeight = mmToThreeUnits(60);
           const reinforcementDepth = mmToThreeUnits(15);
           const rightReinforcementZ = rightBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -1477,7 +1477,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               position={[
                 leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
                 height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                -leftDepth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
+                -leftDepth/2 + backPanelThickness + (basicThickness - mmToThreeUnits(1)) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
               ]}
               diameter={98}
               renderMode={renderMode}
@@ -1490,7 +1490,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               position={[
                 rightXOffset + rightWidth/2 - mmToThreeUnits(132),  // 우측 백패널 우측 끝에서 안쪽으로 132mm
                 height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                -rightDepth/2 + backPanelThickness + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
+                -rightDepth/2 + backPanelThickness + (basicThickness - mmToThreeUnits(1)) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
               ]}
               diameter={98}
               renderMode={renderMode}

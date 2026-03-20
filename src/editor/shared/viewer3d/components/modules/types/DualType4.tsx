@@ -434,7 +434,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 {/* 하부 섹션 백패널 */}
                 <BoxWithEdges
                   args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
-                  position={[0, lowerBackPanelY, -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset]}
+                  position={[0, lowerBackPanelY, -lowerSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + lowerZOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -445,7 +445,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 {/* 상부 섹션 백패널 */}
                 <BoxWithEdges
                   args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
-                  position={[0, upperBackPanelY, -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset]}
+                  position={[0, upperBackPanelY, -upperSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + upperZOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -460,8 +460,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   const reinforcementDepth = mmToThreeUnits(15);
                   // 양쪽 0.5mm씩 축소 (총 1mm)
                   const reinforcementWidth = innerWidth - mmToThreeUnits(1);
-                  const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset;
-                  const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset;
+                  const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + lowerZOffset;
+                  const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + upperZOffset;
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
                   const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
@@ -519,7 +519,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         <>
           <BoxWithEdges
             args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
-            position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+            position={[0, 0, -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1))]}
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
@@ -534,7 +534,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             const reinforcementDepth = mmToThreeUnits(15);
             // 양쪽 0.5mm씩 축소 (총 1mm)
             const reinforcementWidth = innerWidth - mmToThreeUnits(1);
-            const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
+            const backPanelZ = -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
             const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
             return (
@@ -569,7 +569,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           position={[
             innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
             height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-            -depth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 백패널 앞쪽에 살짝 앞으로
+            -depth/2 + backPanelThickness + (basicThickness - mmToThreeUnits(1)) + 0.01  // 백패널 앞쪽에 살짝 앞으로
           ]}
           diameter={98}
           renderMode={renderMode}

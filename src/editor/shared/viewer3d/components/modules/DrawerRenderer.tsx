@@ -393,7 +393,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const DRAWER_BOTTOM_THICKNESS = mmToThreeUnits(9); // mm 단위 변환 일관 적용
   
   // TopSupportPanel 기본 설정: 앞쪽 85mm 잘라내고, 뒤쪽은 백패널 공간 피하기
-  const topSupportPanelDepth = depth - mmToThreeUnits(85 + 17 + 9); // 가구depth - (85+17+9) = depth - 111mm
+  const topSupportPanelDepth = depth - mmToThreeUnits(85 + 9) - basicThickness + mmToThreeUnits(1); // 가구depth - (85+9+(basicThickness-1))
   const topSupportPanelY = innerHeight / 2 - basicThickness - mmToThreeUnits(9); // 내경 상단에서 18+9mm 아래
 
   // TopSupportPanel Z축 위치: 모듈 앞면에서 85mm 뒤로 시작
@@ -402,10 +402,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 서랍속장 (Drawer Interior Frame) 설정 - ㄷ자 프레임
   // 구조: 좌우 수직 패널 + 뒤쪽 수평 패널(좌우 연결) + 앞쪽 수평 패널(좌/우 각각)
 
-  // 백패널 두께: UI 오버라이드 → 기본값(basicThickness/2 = 9mm)
+  // 백패널 두께: UI 오버라이드 → 기본값 9mm
   const backPanelThickness = backPanelThicknessOverride != null
     ? mmToThreeUnits(backPanelThicknessOverride)
-    : basicThickness / 2;
+    : mmToThreeUnits(9);
 
   // 공통 설정
   const drawerFrameThickness = basicThickness; // 18mm
@@ -424,7 +424,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 2. 앞쪽 수평 패널 (좌/우 각각) — 전면 위치
   const backHorizontalPanelY = 0;
-  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1) - mmToThreeUnits(17) + basicThickness;
+  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2; // 앞에서 85mm + 수평패널 반두께
 
   // 3. 뒤쪽 수평 패널 (좌/우 각각) — 후면 위치 (백패널 앞면에 맞닿음)
   const frontHorizontalPanelY = 0;

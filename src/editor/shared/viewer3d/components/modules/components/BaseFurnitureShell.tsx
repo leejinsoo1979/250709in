@@ -234,8 +234,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }
   }, [panelGrainDirections, textureUrl, moduleData?.id]);
 
-  // 백패널 두께 기반 상/하판/선반 깊이 줄임량 (백패널 + 17mm 오프셋)
-  const backReductionForPanels = backPanelThickness + mmToThreeUnits(17);
+  // 백패널 두께 기반 상/하판/선반 깊이 줄임량 (백패널 + (가구재두께 - 1mm) 오프셋)
+  const backReductionForPanels = backPanelThickness + basicThickness - mmToThreeUnits(1);
   // 상/하판/칸막이 Z축 오프셋 (backReduction의 절반 = 앞쪽 고정, 뒤에서 줄임)
   const panelZOffset = backReductionForPanels / 2;
 
