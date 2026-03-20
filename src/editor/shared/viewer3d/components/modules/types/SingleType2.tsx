@@ -45,11 +45,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
-  doorSplit,
-  upperDoorTopGap,
-  upperDoorBottomGap,
-  lowerDoorTopGap,
-  lowerDoorBottomGap,
   grainDirection,
   panelGrainDirections,
   backPanelThickness: backPanelThicknessProp,
@@ -126,27 +121,11 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
     e.stopPropagation();
 
-    // 도어 분할 여부에 따라 체크
-    if (doorSplit) {
-      // 분할 모드: 하부(0) 또는 상부(1) 섹션 중 열린 것이 있으면 닫기
-      const isLowerOpen = isIndividualDoorOpen(placedFurnitureId, 0);
-      const isUpperOpen = isIndividualDoorOpen(placedFurnitureId, 1);
-
-      if (isLowerOpen) {
-        toggleIndividualDoor(placedFurnitureId, 0);
-        console.log('🚪 가구 본체 클릭 → 하부 도어 닫기');
-      }
-      if (isUpperOpen) {
-        toggleIndividualDoor(placedFurnitureId, 1);
-        console.log('🚪 가구 본체 클릭 → 상부 도어 닫기');
-      }
-    } else {
-      // 병합 모드: 섹션 0 체크
-      const isDoorOpen = isIndividualDoorOpen(placedFurnitureId, 0);
-      if (isDoorOpen) {
-        toggleIndividualDoor(placedFurnitureId, 0);
-        console.log('🚪 가구 본체 클릭 → 도어 닫기');
-      }
+    // 병합 모드: 섹션 0 체크
+    const isDoorOpen = isIndividualDoorOpen(placedFurnitureId, 0);
+    if (isDoorOpen) {
+      toggleIndividualDoor(placedFurnitureId, 0);
+      console.log('🚪 가구 본체 클릭 → 도어 닫기');
     }
   };
   const floatHeight = isFloating ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
@@ -165,13 +144,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
   const sectionHeightsUnits = getSectionHeights();
-  const unitsToMmFactor = (() => {
-    const unit = mmToThreeUnits(1);
-    return unit === 0 ? 100 : 1 / unit;
-  })();
-  const sectionHeightsMm = sectionHeightsUnits.length
-    ? sectionHeightsUnits.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
-    : undefined;
 
   return (
     <>
@@ -806,94 +778,31 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </group>
       )}
       
-      {/* 도어 렌더링 - 병합/분할 모드에 따라 다르게 렌더링 */}
+      {/* 도어 렌더링 */}
       {hasDoor && spaceInfo &&
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
-        <>
-          {!doorSplit ? (
-            // 병합 모드: 하나의 통합 도어
-            <DoorModule
-              moduleWidth={doorWidth || moduleData.dimensions.width}
-              moduleDepth={baseFurniture.actualDepthMm}
-              hingePosition={hingePosition}
-              spaceInfo={spaceInfo}
-              color={baseFurniture.doorColor}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              moduleData={moduleData}
-              originalSlotWidth={originalSlotWidth}
-              slotCenterX={slotCenterX || 0}
-              slotIndex={slotIndex}
-              textureUrl={spaceInfo.materialConfig?.doorTexture}
-              panelGrainDirections={panelGrainDirections}
-              furnitureId={placedFurnitureId}
-              floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
-              doorTopGap={doorTopGap}
-              doorBottomGap={doorBottomGap}
-              zone={zone}
-              hasBase={hasBase}
-              individualFloatHeight={individualFloatHeight}
-            />
-          ) : (
-            // 분할 모드: 상부/하부 섹션별 도어
-            <>
-              {/* 상부 섹션 도어 */}
-              <DoorModule
-                moduleWidth={doorWidth || moduleData.dimensions.width}
-                moduleDepth={baseFurniture.actualDepthMm}
-                hingePosition={hingePosition}
-                spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                textureUrl={spaceInfo.materialConfig?.doorTexture}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
-                sectionHeightsMm={sectionHeightsMm}
-                doorTopGap={upperDoorTopGap ?? doorTopGap}
-                doorBottomGap={upperDoorBottomGap ?? 0}
-                sectionIndex={1}
-                totalSections={2}
-                zone={zone}
-                hasBase={hasBase}
-                individualFloatHeight={individualFloatHeight}
-              />
-
-              {/* 하부 섹션 도어 */}
-              <DoorModule
-                moduleWidth={doorWidth || moduleData.dimensions.width}
-                moduleDepth={baseFurniture.actualDepthMm}
-                hingePosition={hingePosition}
-                spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                textureUrl={spaceInfo.materialConfig?.doorTexture}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
-                sectionHeightsMm={sectionHeightsMm}
-                doorTopGap={lowerDoorTopGap ?? 0}
-                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
-                sectionIndex={0}
-                totalSections={2}
-                zone={zone}
-                hasBase={hasBase}
-                individualFloatHeight={individualFloatHeight}
-              />
-
-            </>
-          )}
-        </>
+        <DoorModule
+          moduleWidth={doorWidth || moduleData.dimensions.width}
+          moduleDepth={baseFurniture.actualDepthMm}
+          hingePosition={hingePosition}
+          spaceInfo={spaceInfo}
+          color={baseFurniture.doorColor}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          moduleData={moduleData}
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={slotCenterX || 0}
+          slotIndex={slotIndex}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+          floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
+          zone={zone}
+          hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
+        />
       )}
 
       {/* 조절발통 (네 모서리) - showFurniture가 true이고 띄움배치가 아닐 때만 렌더링 */}

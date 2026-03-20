@@ -62,14 +62,13 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
     const color = materialConfig?.doorColor || materialConfig?.frameColor || '#D4C5A9';
     const textureUrl = materialConfig?.doorTexture || materialConfig?.frameTexture;
 
-    const colorObj = new THREE.Color(color);
     const material = new THREE.MeshStandardMaterial({
-      color: colorObj,
+      color: new THREE.Color(color),
       roughness: 0.6,
       metalness: 0.0,
       envMapIntensity: 0.0,
-      emissive: colorObj.clone().multiplyScalar(0.35),
-      emissiveIntensity: 1.0,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
     });
 
     if (textureUrl) {

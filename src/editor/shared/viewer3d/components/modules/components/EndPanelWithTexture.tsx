@@ -35,14 +35,13 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     const baseColor = useFrameColor
       ? (spaceInfo.materialConfig?.doorColor || spaceInfo.materialConfig?.frameColor || '#E0E0E0')
       : (spaceInfo.materialConfig?.doorColor || '#E0E0E0');
-    const baseColorObj = new THREE.Color(baseColor);
     const material = new THREE.MeshStandardMaterial({
-      color: baseColorObj,
+      color: new THREE.Color(baseColor),
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
-      emissive: baseColorObj.clone().multiplyScalar(0.35),
-      emissiveIntensity: 1.0
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0
     });
 
     const textureUrl = useFrameColor

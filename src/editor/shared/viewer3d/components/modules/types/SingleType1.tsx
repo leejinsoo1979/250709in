@@ -34,13 +34,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
-  doorSplit,
   doorTopGap = 5,
   doorBottomGap = 25,
-  upperDoorTopGap,
-  upperDoorBottomGap,
-  lowerDoorTopGap,
-  lowerDoorBottomGap,
   lowerSectionTopOffset,
   zone,
   hasBase,
@@ -112,11 +107,6 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     const oneMmUnit = mmToThreeUnits(1);
     return oneMmUnit === 0 ? 100 : 1 / oneMmUnit;
   }, [mmToThreeUnits]);
-  const sectionHeightsMm = React.useMemo(() => {
-    if (!sectionHeightsUnits || sectionHeightsUnits.length === 0) return undefined;
-    return sectionHeightsUnits.map(sectionHeight => Math.round(sectionHeight * unitToMmFactor));
-  }, [sectionHeightsUnits, unitToMmFactor]);
-
   const clothingRods = React.useMemo(() => {
     const sections = modelConfig.sections || [];
     if (sections.length === 0) return null;
@@ -268,86 +258,28 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
 
       {hasDoor && spaceInfo &&
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
-        <>
-          {!doorSplit ? (
-            <DoorModule
-              moduleWidth={doorWidth || moduleData.dimensions.width}
-              moduleDepth={baseFurniture.actualDepthMm}
-              hingePosition={hingePosition}
-              spaceInfo={spaceInfo}
-              color={baseFurniture.doorColor}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              moduleData={moduleData}
-              originalSlotWidth={originalSlotWidth || doorWidth}
-              slotCenterX={slotCenterX || 0}
-              slotIndex={slotIndex}
-              textureUrl={spaceInfo.materialConfig?.doorTexture}
-              panelGrainDirections={panelGrainDirections}
-              furnitureId={placedFurnitureId}
-              doorTopGap={doorTopGap}
-              doorBottomGap={doorBottomGap}
-              floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
-              zone={zone}
-              hasBase={hasBase}
-              individualFloatHeight={individualFloatHeight}
-            />
-          ) : (
-            <>
-              <DoorModule
-                moduleWidth={doorWidth || moduleData.dimensions.width}
-                moduleDepth={baseFurniture.actualDepthMm}
-                hingePosition={hingePosition}
-                spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth || doorWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                textureUrl={spaceInfo.materialConfig?.doorTexture}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                sectionHeightsMm={sectionHeightsMm}
-                doorTopGap={upperDoorTopGap ?? doorTopGap}
-                doorBottomGap={upperDoorBottomGap ?? 0}
-                sectionIndex={1}
-                totalSections={2}
-                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
-                zone={zone}
-                hasBase={hasBase}
-                individualFloatHeight={individualFloatHeight}
-              />
-
-              <DoorModule
-                moduleWidth={doorWidth || moduleData.dimensions.width}
-                moduleDepth={baseFurniture.actualDepthMm}
-                hingePosition={hingePosition}
-                spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth || doorWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                textureUrl={spaceInfo.materialConfig?.doorTexture}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                sectionHeightsMm={sectionHeightsMm}
-                doorTopGap={lowerDoorTopGap ?? 0}
-                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
-                sectionIndex={0}
-                totalSections={2}
-                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
-                zone={zone}
-                hasBase={hasBase}
-                individualFloatHeight={individualFloatHeight}
-              />
-            </>
-          )}
-        </>
+        <DoorModule
+          moduleWidth={doorWidth || moduleData.dimensions.width}
+          moduleDepth={baseFurniture.actualDepthMm}
+          hingePosition={hingePosition}
+          spaceInfo={spaceInfo}
+          color={baseFurniture.doorColor}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          moduleData={moduleData}
+          originalSlotWidth={originalSlotWidth || doorWidth}
+          slotCenterX={slotCenterX || 0}
+          slotIndex={slotIndex}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
+          floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+          zone={zone}
+          hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
+        />
       )}
     </>
   );

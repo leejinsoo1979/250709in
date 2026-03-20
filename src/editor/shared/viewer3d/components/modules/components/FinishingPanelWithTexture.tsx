@@ -38,14 +38,13 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
   const effectiveColor = effectiveDoorColor || frameColor || doorColor;
 
   const panelMaterial = useMemo(() => {
-    const effectiveColorObj = new THREE.Color(effectiveColor);
     const material = new THREE.MeshStandardMaterial({
-      color: effectiveColorObj,
+      color: new THREE.Color(effectiveColor),
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
-      emissive: effectiveColorObj.clone().multiplyScalar(0.35),
-      emissiveIntensity: 1.0,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
       transparent: renderMode === 'wireframe' || isDragging,
       opacity: renderMode === 'wireframe' ? 0.3 : isDragging ? 0.35 : 1.0,
       wireframe: renderMode === 'wireframe'
