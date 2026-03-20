@@ -18,7 +18,7 @@ export const CABINET_TEXTURE1_SETTINGS = {
 
 // 기본 이미지 텍스처 재질 설정 (메라톤, 한솔, 예림 등)
 export const DEFAULT_IMAGE_TEXTURE_SETTINGS = {
-  rgb: [0.45, 0.45, 0.45] as const, // 썸네일과 유사한 밝기로 조정
+  rgb: [0.38, 0.38, 0.38] as const, // 썸네일과 유사한 밝기로 조정
   toneMapped: true,
   envMapIntensity: 0.15,
   emissive: 0x000000,
