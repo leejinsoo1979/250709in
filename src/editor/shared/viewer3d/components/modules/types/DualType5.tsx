@@ -1420,7 +1420,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               {/* 상부 섹션 바닥판 (하부와 상부 사이) - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
               <BoxWithEdges
                 key="left-floor-panel"
-                args={[leftWidth, basicThickness, leftDepth - mmToThreeUnits(26)]}
+                args={[leftWidth - basicThickness * 2, basicThickness, leftDepth - mmToThreeUnits(26)]}
                 position={[leftXOffset, floorPanelY, mmToThreeUnits(13)]}
                 material={material}
                 renderMode={renderMode}
