@@ -876,13 +876,95 @@ export class ColumnIndexer {
     const totalWidth = spaceInfo.width;
     const droppedWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+    const isCurtainBoxMode = !isFreePlacement && spaceInfo.droppedCeiling.mode === 'curtain-box';
 
     console.log('🔍 단내림 구간 너비 설정:', {
       'spaceInfo.droppedCeiling.width': spaceInfo.droppedCeiling.width,
       'droppedWidth (최종)': droppedWidth,
       'droppedPosition': droppedPosition,
-      'totalWidth': totalWidth
+      'totalWidth': totalWidth,
+      'isCurtainBoxMode': isCurtainBoxMode
     });
+
+    // 슬롯배치 커튼박스 모드: 커튼박스 구간을 전체에서 제외하고 메인만 반환 (가구 배치 불가)
+    if (isCurtainBoxMode) {
+      const frameThickness2 = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
+      // 메인 구간 너비 = 전체 - 커튼박스 - 프레임 - 경계이격
+      const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
+      let mainInternalWidth: number;
+      let mainStartX: number;
+
+      if (spaceInfo.surroundType === 'surround') {
+        if (droppedPosition === 'left') {
+          // 커튼박스(좌): 메인은 우측 프레임 + 경계이격 제외
+          mainInternalWidth = (totalWidth - droppedWidth) - frameThickness2.right - BOUNDARY_GAP;
+          mainStartX = -(totalWidth / 2) + droppedWidth + BOUNDARY_GAP + frameThickness2.left;
+          // 좌측 프레임은 커튼박스 쪽이므로 메인에서 제외하지 않고 BOUNDARY_GAP 지점부터 시작
+          mainStartX = -(totalWidth / 2) + droppedWidth + BOUNDARY_GAP;
+        } else {
+          // 커튼박스(우): 메인은 좌측 프레임 + 경계이격 제외
+          mainInternalWidth = (totalWidth - droppedWidth) - frameThickness2.left - BOUNDARY_GAP;
+          mainStartX = -(totalWidth / 2) + frameThickness2.left;
+        }
+      } else {
+        // 노서라운드
+        let leftReduction = 0;
+        let rightReduction = 0;
+        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+          rightReduction = spaceInfo.gapConfig?.right || 2;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          if (spaceInfo.wallConfig?.left) leftReduction = spaceInfo.gapConfig?.left || 2;
+          if (spaceInfo.wallConfig?.right) rightReduction = spaceInfo.gapConfig?.right || 2;
+        }
+
+        if (droppedPosition === 'left') {
+          mainInternalWidth = (totalWidth - droppedWidth) - rightReduction - BOUNDARY_GAP;
+          mainStartX = -(totalWidth / 2) + droppedWidth + BOUNDARY_GAP;
+        } else {
+          mainInternalWidth = (totalWidth - droppedWidth) - leftReduction - BOUNDARY_GAP;
+          mainStartX = -(totalWidth / 2) + leftReduction;
+        }
+      }
+
+      // 메인 영역 컬럼 수 계산
+      let mainColumnCount: number;
+      if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+        mainColumnCount = spaceInfo.mainDoorCount;
+      } else if (customColumnCount) {
+        mainColumnCount = customColumnCount;
+      } else {
+        mainColumnCount = SpaceCalculator.getDefaultColumnCount(mainInternalWidth);
+      }
+      const minRequired = Math.ceil(mainInternalWidth / MAX_SLOT_WIDTH);
+      if (mainColumnCount < minRequired) mainColumnCount = minRequired;
+
+      const mainSlotWidth = Math.round((mainInternalWidth / mainColumnCount) * 100) / 100;
+      const mainSlotWidths: number[] = [];
+      for (let i = 0; i < mainColumnCount; i++) mainSlotWidths.push(mainSlotWidth);
+      // 차이 조정
+      const totalCalc = mainSlotWidth * mainColumnCount;
+      const diff = mainInternalWidth - totalCalc;
+      const adjCount = Math.abs(Math.round(diff * 2));
+      if (diff > 0) { for (let i = 0; i < Math.min(adjCount, mainColumnCount); i++) mainSlotWidths[i] += 0.5; }
+      else if (diff < 0) { for (let i = 0; i < Math.min(adjCount, mainColumnCount); i++) mainSlotWidths[i] -= 0.5; }
+
+      console.log('🎯 [커튼박스모드] 메인만 반환, dropped=null:', {
+        mainStartX, mainInternalWidth, mainColumnCount, mainSlotWidth
+      });
+
+      return {
+        normal: {
+          startX: mainStartX,
+          width: mainInternalWidth,
+          columnCount: mainColumnCount,
+          columnWidth: mainInternalWidth / mainColumnCount,
+          slotWidths: mainSlotWidths
+        },
+        dropped: null,
+        boundaryGap: BOUNDARY_GAP
+      };
+    }
     
     // 전체 내부 너비 (프레임 제외)
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
