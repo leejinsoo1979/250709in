@@ -177,7 +177,7 @@ const BoxWithEdges: React.FC<{
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined}>
-          <primitive object={material} />
+          <primitive key={material.uuid} object={material} attach="material" />
         </mesh>
       )}
       {/* 모서리 라인 렌더링 - hideEdges가 false일 때만 표시 */}
