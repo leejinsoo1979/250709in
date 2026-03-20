@@ -424,7 +424,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 2. 앞쪽 수평 패널 (좌/우 각각) — 전면 위치
   const backHorizontalPanelY = 0;
-  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1) - mmToThreeUnits(17) + mmToThreeUnits(18);
+  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1) - mmToThreeUnits(17) + basicThickness;
 
   // 3. 뒤쪽 수평 패널 (좌/우 각각) — 후면 위치 (백패널 앞면에 맞닿음)
   const frontHorizontalPanelY = 0;
