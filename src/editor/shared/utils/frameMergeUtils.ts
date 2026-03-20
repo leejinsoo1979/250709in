@@ -12,16 +12,28 @@ export interface FrameMergeGroup {
 }
 
 /**
+ * 모듈의 EP 보정된 너비를 계산 (Room.tsx의 세그먼트 생성 로직과 동일)
+ */
+function getEpCorrectedWidth(mod: PlacedModule): number {
+  const bounds = getModuleBoundsX(mod);
+  let widthMm = bounds.right - bounds.left;
+  const epThk = mod.endPanelThickness || 18;
+  if (mod.hasLeftEndPanel) widthMm -= epThk;
+  if (mod.hasRightEndPanel) widthMm -= epThk;
+  return widthMm;
+}
+
+/**
  * PlacedModule[] → 상부/하부 각각의 병합 그룹 반환
  * - 모듈을 X 위치 기준 정렬
  * - 좌측부터 합산, maxWidthMm 미만이면 같은 그룹
- * - getModuleBoundsX() 사용하여 각 모듈 너비 계산 (EP 보정 포함)
+ * - EP 보정 적용 (Room.tsx mergeFrameSegments와 동일한 너비 사용)
  * - 상부: hasTopFrame !== false 필터, 하부: hasBase !== false 필터
  */
 export function computeFrameMergeGroups(
   modules: PlacedModule[],
   type: 'top' | 'base',
-  maxWidthMm: number = 2410
+  maxWidthMm: number = 2420
 ): FrameMergeGroup[] {
   // 타입별 필터
   const filtered = modules.filter(mod =>
@@ -49,8 +61,7 @@ export function computeFrameMergeGroups(
   let currentSum = 0;
 
   for (const mod of sorted) {
-    const bounds = getModuleBoundsX(mod);
-    const widthMm = bounds.right - bounds.left;
+    const widthMm = getEpCorrectedWidth(mod);
 
     if (currentGroup.length === 0) {
       currentGroup.push(mod);

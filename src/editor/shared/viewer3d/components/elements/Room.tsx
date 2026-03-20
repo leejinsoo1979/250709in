@@ -113,7 +113,7 @@ interface FrameRenderSegment {
 // 같은 Z축 위치의 프레임들을 좌측부터 2410mm 이내로 병합하는 유틸 함수
 function mergeFrameSegments(
   segments: FrameRenderSegment[],
-  maxWidthMm: number = 2410
+  maxWidthMm: number = 2420
 ): FrameRenderSegment[] {
   if (segments.length <= 1) return segments;
 
