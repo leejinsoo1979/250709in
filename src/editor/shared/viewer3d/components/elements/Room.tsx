@@ -2552,7 +2552,7 @@ const Room: React.FC<RoomProps> = ({
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropH; // 단내림 천장 ~ 메인 천장
           const upperCY = sideFrameStartY + droppedH + upperH / 2;
-          const stepFrameXL = xOffset + frameThickness.left / 2;
+          const stepFrameXL = xOffset + frameRenderThickness.left / 2;
 
           return (
             <>
@@ -2574,7 +2574,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   spaceInfo.surroundType === 'no-surround'
                     ? (indexingForCheck.threeUnitBoundaries.length > 0
-                      ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
+                      ? indexingForCheck.threeUnitBoundaries[0] + frameRenderThickness.left / 2
                       : stepFrameXL)
                     : stepFrameXL,
                   droppedCY,
@@ -2609,7 +2609,7 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     spaceInfo.surroundType === 'no-surround'
                       ? (indexingForCheck.threeUnitBoundaries.length > 0
-                        ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
+                        ? indexingForCheck.threeUnitBoundaries[0] + frameRenderThickness.left / 2
                         : stepFrameXL)
                       : stepFrameXL,
                     upperCY,
@@ -2695,8 +2695,8 @@ const Room: React.FC<RoomProps> = ({
                   // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
                   // 노서라운드 모드에서만 가구가 있을 때 가구 옆에 붙여서 렌더링
                   (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
-                    ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
-                    : xOffset + frameThickness.left / 2,
+                    ? indexingForCheck.threeUnitBoundaries[0] - frameRenderThickness.left
+                    : xOffset + frameRenderThickness.left / 2,
                   // 단내림 구간 중심 (띄움높이와 단내림높이 반영)
                   droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
@@ -2736,8 +2736,8 @@ const Room: React.FC<RoomProps> = ({
                     // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
                     // 노서라운드 모드에서만 가구가 있을 때 가구 옆에 붙여서 렌더링
                     (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
-                      ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
-                      : xOffset + frameThickness.left / 2,
+                      ? indexingForCheck.threeUnitBoundaries[0] - frameRenderThickness.left
+                      : xOffset + frameRenderThickness.left / 2,
                     upperPartCenterY, // 상부 구간 중심
                     // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                     spaceInfo.surroundType === 'no-surround'
@@ -2789,9 +2789,9 @@ const Room: React.FC<RoomProps> = ({
           // X 위치
           spaceInfo.surroundType === 'no-surround'
             ? (indexingForCheck.threeUnitBoundaries.length > 0
-              ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left / 2
-              : xOffset + frameThickness.left / 2)
-            : xOffset + frameThickness.left / 2,
+              ? indexingForCheck.threeUnitBoundaries[0] + frameRenderThickness.left / 2
+              : xOffset + frameRenderThickness.left / 2)
+            : xOffset + frameRenderThickness.left / 2,
           // Y 위치
           sideFrameCenterY,
           // Z 위치
@@ -2903,7 +2903,7 @@ const Room: React.FC<RoomProps> = ({
           const droppedCY = sideFrameStartY + droppedH / 2;
           const upperH = stepDropHR; // 단내림 천장 ~ 메인 천장
           const upperCY = sideFrameStartY + droppedH + upperH / 2;
-          const stepFrameX = xOffset + width - frameThickness.right / 2;
+          const stepFrameX = xOffset + width - frameRenderThickness.right / 2;
 
           return (
             <>
@@ -2925,10 +2925,10 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   spaceInfo.surroundType === 'no-surround'
                     ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                      ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
+                      ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameRenderThickness.right / 2
                       : stepFrameX)
                     : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                      ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
+                      ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
                       : stepFrameX),
                   droppedCY,
                   spaceInfo.surroundType === 'no-surround'
@@ -2962,10 +2962,10 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     spaceInfo.surroundType === 'no-surround'
                       ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                        ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
+                        ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameRenderThickness.right / 2
                         : stepFrameX)
                       : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                        ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
+                        ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
                         : stepFrameX),
                     upperCY,
                     spaceInfo.surroundType === 'no-surround'
@@ -3028,7 +3028,7 @@ const Room: React.FC<RoomProps> = ({
           });
 
           // 엔드패널 X 위치: 가구가 있으면 가구 오른쪽 끝에 붙임
-          let endPanelX = xOffset + width - frameThickness.right / 2; // 기본값: 공간 끝
+          let endPanelX = xOffset + width - frameRenderThickness.right / 2; // 기본값: 공간 끝
 
           // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
           if (droppedRightFurniture && spaceInfo.surroundType !== 'surround') {
@@ -3169,11 +3169,11 @@ const Room: React.FC<RoomProps> = ({
               // 일반 모드: 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
               spaceInfo.surroundType === 'no-surround'
                 ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                  ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right / 2
-                  : xOffset + width - frameThickness.right / 2)
+                  ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameRenderThickness.right / 2
+                  : xOffset + width - frameRenderThickness.right / 2)
                 : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                  ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right
-                  : xOffset + width - frameThickness.right / 2),
+                  ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
+                  : xOffset + width - frameRenderThickness.right / 2),
               sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
@@ -4224,7 +4224,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
                   <group
                     position={[
-                      xOffset + frameThickness.left / 2,
+                      xOffset + frameRenderThickness.left / 2,
                       droppedCenterY,
                       furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                     ]}
@@ -4282,7 +4282,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 좌측 벽 안쪽 정면 프레임 (stepCeiling 단내림 높이) */}
                   <group
                     position={[
-                      xOffset + frameThickness.left / 2,
+                      xOffset + frameRenderThickness.left / 2,
                       droppedCY,
                       furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                     ]}
@@ -4369,7 +4369,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
                   <group
                     position={[
-                      xOffset + width - frameThickness.right / 2,
+                      xOffset + width - frameRenderThickness.right / 2,
                       subFrameCY,
                       furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                     ]}
@@ -4428,7 +4428,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 우측 벽 안쪽 정면 프레임 (stepCeiling 단내림 높이) */}
                   <group
                     position={[
-                      xOffset + width - frameThickness.right / 2,
+                      xOffset + width - frameRenderThickness.right / 2,
                       droppedCY,
                       furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                     ]}
