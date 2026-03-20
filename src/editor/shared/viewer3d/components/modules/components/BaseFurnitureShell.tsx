@@ -192,15 +192,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isFloating = false, // 기본값은 false (바닥 배치)
   spaceInfo,
   showFurniture = true, // 기본값은 true (가구 본체 표시)
-  backPanelConfig = {
-    widthExtension: 10,
-    heightExtension: 10,
-    lowerHeightBonus: 18,
-    depthOffset: 17,
-    yOffsetFor4Drawer: 9,
-    yOffsetFor2Drawer: 9,
-    lowerYAdjustment: 0.05
-  },
+  backPanelConfig: backPanelConfigProp,
   lowerSectionDepthMm,
   upperSectionDepthMm,
   lowerSectionDepthDirection = 'front',
@@ -213,6 +205,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   renderMode: renderModeProp,
   children
 }) => {
+  // backPanelConfig 기본값: depthOffset과 lowerHeightBonus를 basicThickness 기반으로 동적 설정
+  const basicThicknessMm = basicThickness / 0.01; // Three.js → mm 변환
+  const backPanelConfig = {
+    widthExtension: 10,
+    heightExtension: 10,
+    lowerHeightBonus: basicThicknessMm, // 가구재 두께 (18 또는 15)
+    depthOffset: basicThicknessMm - 1, // 가구재 두께 - 1mm (17 또는 14)
+    yOffsetFor4Drawer: 9,
+    yOffsetFor2Drawer: 9,
+    lowerYAdjustment: 0.05,
+    ...backPanelConfigProp // 외부에서 전달된 값이 있으면 오버라이드
+  };
+
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // prop 우선, 없으면 context 사용
   const { gl } = useThree(); // Three.js renderer 가져오기
