@@ -161,7 +161,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       if (numValue < 40) numValue = 40;
       if (numValue > 100) numValue = 100;
     } else {
-      if (numValue < 10) numValue = 10;
+      if (numValue < 30) numValue = 30;
       if (numValue > 200) numValue = 200;
     }
 
@@ -195,7 +195,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         if (value < 40) value = 40;
         if (value > 100) value = 100;
       } else {
-        if (value < 10) value = 10;
+        if (value < 30) value = 30;
         if (value > 200) value = 200;
       }
 
@@ -219,7 +219,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         minValue = 40;
         maxValue = 100;
       } else {
-        minValue = 10;
+        minValue = 30;
         maxValue = 200;
       }
 

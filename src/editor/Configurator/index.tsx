@@ -1095,6 +1095,11 @@ const Configurator: React.FC = () => {
         delete spaceConfig.lockedWallGaps; // 세션 전용
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
+        // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
+        if (spaceConfig.frameSize && spaceConfig.frameSize.top < 30) {
+          spaceConfig.frameSize.top = 30;
+        }
+
         // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
         resetSpaceInfo();
         setSpaceInfo(spaceConfig);
@@ -2311,6 +2316,11 @@ const Configurator: React.FC = () => {
                   droppedCeilingDoorCount: undefined,
                   customColumnCount: undefined
                 };
+                // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
+                if (spaceConfig.frameSize && spaceConfig.frameSize.top < 30) {
+                  spaceConfig.frameSize.top = 30;
+                }
+
                 // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
                 resetSpaceInfo();
                 setSpaceInfo(spaceConfig);
