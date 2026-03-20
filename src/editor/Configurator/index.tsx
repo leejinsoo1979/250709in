@@ -1104,6 +1104,8 @@ const Configurator: React.FC = () => {
         // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
         resetSpaceInfo();
         setSpaceInfo(spaceConfig);
+        // 탭 전환 시 이전 탭의 spaceInfo와 비교하여 가구가 잘못 재배치되는 것을 방지
+        setPreviousSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
         setCurrentProjectId(projectId);
 
@@ -2325,6 +2327,8 @@ const Configurator: React.FC = () => {
                 // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
                 resetSpaceInfo();
                 setSpaceInfo(spaceConfig);
+                // 탭 전환 시 이전 탭의 spaceInfo와 비교하여 가구가 잘못 재배치되는 것을 방지
+                setPreviousSpaceInfo(spaceConfig);
 // console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
 
