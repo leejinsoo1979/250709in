@@ -198,7 +198,7 @@ const ZoneSizeDroppedRow: React.FC<{
   spaceInfo: any; isFreeMode: boolean; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
 }> = ({ spaceInfo, isFreeMode, handleSpaceInfoUpdate, styles, marginBottom }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
-    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : '단내림'}</span>
+    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '커튼박스' : '단내림')}</span>
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
@@ -3695,14 +3695,16 @@ const Configurator: React.FC = () => {
 
         </div>)}
 
-        {/* 커튼박스/단내림 설정 (슬롯모드: 단내림, 자유배치: 커튼박스) */}
+        {/* 커튼박스/단내림 설정 (슬롯모드: 단내림/커튼박스, 자유배치: 커튼박스) */}
         {(<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : '단내림'}</h3>
-            <HelpBtn title={isFreeMode ? '커튼박스' : '단내림'} text={isFreeMode
+            <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '커튼박스' : '단내림')}</h3>
+            <HelpBtn title={isFreeMode ? '커튼박스' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '커튼박스' : '단내림')} text={isFreeMode
               ? "벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다. 위치(좌/우)와 너비를 설정하여 가구 배치 가능 영역을 정확히 구분합니다."
-              : "공간의 한쪽 천장이 낮아지는(단이 내려오는) 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 좌측/우측 위치, 구간 너비, 단 높이를 설정하면 해당 영역의 가구 높이가 자동으로 맞춰집니다."
+              : spaceInfo.droppedCeiling?.mode === 'curtain-box'
+                ? "벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다."
+                : "공간의 한쪽 천장이 낮아지는(단이 내려오는) 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 좌측/우측 위치, 구간 너비, 단 높이를 설정하면 해당 영역의 가구 높이가 자동으로 맞춰집니다."
             } />
           </div>
 
@@ -3767,7 +3769,7 @@ const Configurator: React.FC = () => {
                 setActiveRightPanelTab('placement');
               }}
             >
-              {isFreeMode ? '좌측' : '좌단내림'}
+              {isFreeMode ? '좌측' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '좌측' : '좌단내림')}
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
@@ -3810,9 +3812,59 @@ const Configurator: React.FC = () => {
                 setActiveRightPanelTab('placement');
               }}
             >
-              {isFreeMode ? '우측' : '우단내림'}
+              {isFreeMode ? '우측' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '우측' : '우단내림')}
             </button>
           </div>
+
+          {/* 슬롯배치: 단내림/커튼박스 모드 전환 토글 */}
+          {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
+            <div className={styles.toggleButtonGroup} style={{ marginTop: '4px' }}>
+              <button
+                className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' ? styles.toggleButtonActive : ''}`}
+                onClick={() => {
+                  if ((spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped') return;
+                  // 커튼박스 → 단내림 전환
+                  clearAllModules();
+                  const totalWidth = spaceInfo.width || 4800;
+                  const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                  const mainWidth = totalWidth - droppedWidth;
+                  const mainRange = calculateDoorRange(mainWidth);
+                  const currentCount = getCurrentColumnCount();
+                  const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+                  const frameThickness = 50;
+                  const droppedInternalWidth = droppedWidth - frameThickness;
+                  const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      ...spaceInfo.droppedCeiling!,
+                      mode: 'dropped'
+                    },
+                    droppedCeilingDoorCount: droppedDoorCount,
+                    mainDoorCount: adjustedMainDoorCount
+                  });
+                }}
+              >
+                단내림
+              </button>
+              <button
+                className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.mode === 'curtain-box' ? styles.toggleButtonActive : ''}`}
+                onClick={() => {
+                  if (spaceInfo.droppedCeiling?.mode === 'curtain-box') return;
+                  // 단내림 → 커튼박스 전환: 가구 삭제, droppedCeilingDoorCount 제거
+                  clearAllModules();
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      ...spaceInfo.droppedCeiling!,
+                      mode: 'curtain-box'
+                    },
+                    droppedCeilingDoorCount: undefined
+                  });
+                }}
+              >
+                커튼박스
+              </button>
+            </div>
+          )}
         </div>)}
 
         {/* 컬럼수 표시 - 단내림 아래 */}
@@ -3849,17 +3901,19 @@ const Configurator: React.FC = () => {
                   />
                 </div>
 
-                {/* 단내림구간 도어 개수 */}
-                <div className={styles.inputGroup}>
-                  <DoorSlider
-                    value={spaceInfo.droppedCeilingDoorCount || 1}
-                    onChange={(value) => {
-                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                    }}
-                    width={spaceInfo.droppedCeiling?.width || 900}
-                    label="단내림"
-                  />
-                </div>
+                {/* 단내림구간 도어 개수 — 커튼박스 모드에서는 숨김 (가구 배치 불가) */}
+                {spaceInfo.droppedCeiling?.mode !== 'curtain-box' && (
+                  <div className={styles.inputGroup}>
+                    <DoorSlider
+                      value={spaceInfo.droppedCeilingDoorCount || 1}
+                      onChange={(value) => {
+                        handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                      }}
+                      width={spaceInfo.droppedCeiling?.width || 900}
+                      label="단내림"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
