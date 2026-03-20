@@ -108,6 +108,7 @@ interface FrameRenderSegment {
   height: number;      // Three.js 높이
   yPosition: number;   // Three.js Y
   material?: THREE.Material;
+  placedModuleId?: string; // 개별 프레임 하이라이트용 (비병합 모드)
 }
 
 // 같은 Z축 위치의 프레임들을 좌측부터 2410mm 이내로 병합하는 유틸 함수
@@ -852,7 +853,7 @@ const Room: React.FC<RoomProps> = ({
     let baseFrameTransparent = false;
 
     const isHighlighted = frameType && highlightedFrame && (
-      highlightedFrame === frameType || highlightedFrame.startsWith(`${frameType}-`) || highlightedFrame.startsWith(`merged-${frameType}-`)
+      highlightedFrame === frameType || highlightedFrame.startsWith(`merged-${frameType}-`)
     );
 
     // 테마 색상 매핑
@@ -3392,6 +3393,7 @@ const Room: React.FC<RoomProps> = ({
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
                       key: `free-top-strip-${group.id}-${mod.id}`,
+                      placedModuleId: mod.id,
                     });
                   });
                 });
@@ -3413,6 +3415,7 @@ const Room: React.FC<RoomProps> = ({
                     seg.zPosition
                   ];
                   const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-top-${idx}`;
+                  const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
                   return (
                     <React.Fragment key={`free-top-merged-${idx}`}>
                       <BoxWithEdges
@@ -3425,7 +3428,7 @@ const Room: React.FC<RoomProps> = ({
                         renderMode={renderMode}
                         shadowEnabled={shadowEnabled}
                       />
-                      {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                      {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </React.Fragment>
                   );
                 });
@@ -3780,6 +3783,7 @@ const Room: React.FC<RoomProps> = ({
                     yPosition: modTopY,
                     material: topFrameMat,
                     key: `slot-top-${mod.id}`,
+                    placedModuleId: mod.id,
                   });
                 });
 
@@ -3801,6 +3805,7 @@ const Room: React.FC<RoomProps> = ({
                       seg.zPosition
                     ];
                     const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-top-${idx}`;
+                    const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
                     return (
                       <React.Fragment key={`slot-top-merged-${idx}`}>
                         <BoxWithEdges
@@ -3813,7 +3818,7 @@ const Room: React.FC<RoomProps> = ({
                           renderMode={renderMode}
                           shadowEnabled={shadowEnabled}
                         />
-                        {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                        {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                       </React.Fragment>
                     );
                   })}
@@ -4667,6 +4672,7 @@ const Room: React.FC<RoomProps> = ({
                 yPosition: panelStartY + floatHeight + modBaseH / 2,
                 material: baseMat,
                 key: `free-base-strip-${group.id}-${mod.id}`,
+                placedModuleId: mod.id,
               });
             });
           });
@@ -4689,6 +4695,7 @@ const Room: React.FC<RoomProps> = ({
                   seg.zPosition
                 ];
                 const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-base-${idx}`;
+                const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
                 return (
                   <React.Fragment key={`free-base-merged-${idx}`}>
                     <BoxWithEdges
@@ -4701,7 +4708,7 @@ const Room: React.FC<RoomProps> = ({
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                     />
-                    {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                    {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                   </React.Fragment>
                 );
               })}
@@ -4838,6 +4845,7 @@ const Room: React.FC<RoomProps> = ({
                         yPosition: panelStartY + floatHeight + modBaseH / 2,
                         material: baseMat,
                         key: `slot-base-${mod.id}`,
+                        placedModuleId: mod.id,
                       });
                     });
 
@@ -4859,6 +4867,7 @@ const Room: React.FC<RoomProps> = ({
                           seg.zPosition
                         ];
                         const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-base-${idx}`;
+                        const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
                         return (
                           <React.Fragment key={`slot-base-merged-${idx}`}>
                             <BoxWithEdges
@@ -4871,7 +4880,7 @@ const Room: React.FC<RoomProps> = ({
                               renderMode={renderMode}
                               shadowEnabled={shadowEnabled}
                             />
-                            {isMergedHighlighted && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
+                            {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                           </React.Fragment>
                         );
                       })}
