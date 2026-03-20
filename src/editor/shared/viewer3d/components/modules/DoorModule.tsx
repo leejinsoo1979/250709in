@@ -788,7 +788,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // (가구 본체 Y는 FurnitureItem에서 hasBase에 따라 조정하지만, 도어 로컬 좌표는 불변)
     const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     // bottomGap: 항상 바닥 기준 (받침대/띄움 무관, 0이면 바닥에서 시작)
-    const bottomGap = doorBottomGap;
+    // 바닥마감재가 있으면 하단갭에 바닥마감재 높이를 추가 (도어 Y 위치 자체는 불변)
+    const floorFinishForDoor = (isFloorType && originalSpaceInfo.hasFloorFinish)
+      ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
+    const bottomGap = doorBottomGap + floorFinishForDoor;
     const distToTop = fullSpaceHeight - actualBase - tallCabinetFurnitureHeight;
     doorTopLocal = cabinetTopLocal + distToTop - topGap;
     doorBottomLocal = cabinetBottomLocal - actualBase + bottomGap;
