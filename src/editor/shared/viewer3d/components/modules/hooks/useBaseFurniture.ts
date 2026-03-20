@@ -3,7 +3,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { ModuleData, SectionConfig } from '@/data/modules/shelving';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // 백패널 두께 기본값 상수
@@ -324,11 +324,9 @@ export const useBaseFurniture = (
           if (isOakTexture(textureUrl)) {
             applyOakTextureSettings(material, false);
           }
-          // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
+          // Cabinet Texture1이 아닌 경우 기본 이미지 텍스처 설정 적용 (메라톤, 한솔, 예림 등)
           else if (!isCabinetTexture1(textureUrl)) {
-            material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
-            material.toneMapped = true; // 기본 톤 매핑 활성화
-            material.roughness = 0.6; // 기본 거칠기
+            applyDefaultImageTextureSettings(material);
           }
 
           material.needsUpdate = true;

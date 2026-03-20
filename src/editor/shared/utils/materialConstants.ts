@@ -16,6 +16,16 @@ export const CABINET_TEXTURE1_SETTINGS = {
   roughness: 0.8
 } as const;
 
+// 기본 이미지 텍스처 재질 설정 (메라톤, 한솔, 예림 등)
+export const DEFAULT_IMAGE_TEXTURE_SETTINGS = {
+  rgb: [0.55, 0.55, 0.55] as const, // 썸네일과 유사한 밝기로 조정
+  toneMapped: true,
+  envMapIntensity: 0.15,
+  emissive: 0x000000,
+  roughness: 0.75,
+  metalness: 0.0
+} as const;
+
 // Oak 재질 설정
 export const OAK_TEXTURE_SETTINGS = {
   name: 'oak',
@@ -51,6 +61,20 @@ export const applyCabinetTexture1Settings = (material: THREE.MeshStandardMateria
   material.envMapIntensity = settings.envMapIntensity;
   material.emissive.setHex(settings.emissive);
   material.roughness = settings.roughness;
+  material.needsUpdate = true;
+};
+
+/**
+ * 기본 이미지 텍스처 재질 속성을 적용 (메라톤, 한솔, 예림 등)
+ */
+export const applyDefaultImageTextureSettings = (material: THREE.MeshStandardMaterial): void => {
+  const settings = DEFAULT_IMAGE_TEXTURE_SETTINGS;
+  material.color.setRGB(...settings.rgb);
+  material.toneMapped = settings.toneMapped;
+  material.envMapIntensity = settings.envMapIntensity;
+  material.emissive.setHex(settings.emissive);
+  material.roughness = settings.roughness;
+  material.metalness = settings.metalness;
   material.needsUpdate = true;
 };
 
