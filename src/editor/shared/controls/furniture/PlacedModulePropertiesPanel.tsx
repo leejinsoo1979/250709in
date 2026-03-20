@@ -2949,9 +2949,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     type="checkbox"
                     checked={currentPlacedModule.hasLeftEndPanel === true}
                     onChange={() => {
-                      updatePlacedModule(currentPlacedModule.id, {
-                        hasLeftEndPanel: !currentPlacedModule.hasLeftEndPanel,
-                      });
+                      const turning = !currentPlacedModule.hasLeftEndPanel;
+                      const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                      const update: Record<string, unknown> = { hasLeftEndPanel: turning };
+                      if (turning && isFullSurround) {
+                        update.leftEndPanelOffset = 23;
+                      }
+                      updatePlacedModule(currentPlacedModule.id, update);
                     }}
                     style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                   />
@@ -2962,9 +2966,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     type="checkbox"
                     checked={currentPlacedModule.hasRightEndPanel === true}
                     onChange={() => {
-                      updatePlacedModule(currentPlacedModule.id, {
-                        hasRightEndPanel: !currentPlacedModule.hasRightEndPanel,
-                      });
+                      const turning = !currentPlacedModule.hasRightEndPanel;
+                      const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                      const update: Record<string, unknown> = { hasRightEndPanel: turning };
+                      if (turning && isFullSurround) {
+                        update.rightEndPanelOffset = 23;
+                      }
+                      updatePlacedModule(currentPlacedModule.id, update);
                     }}
                     style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                   />

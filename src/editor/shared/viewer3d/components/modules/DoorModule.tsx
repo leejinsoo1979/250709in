@@ -1178,21 +1178,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       rightDoorWidth = effectiveColumnWidth - doorGap;
     }
 
-    // EP 앞으로 돌출 시 해당 쪽 도어 너비 축소
-    // 자유배치: offset > 0일 때, 전체서라운드 슬롯배치: EP가 도어앞단까지 확장되므로 항상 축소
+    // EP 앞으로 돌출(offset > 0) 시 해당 쪽 도어 너비를 EP 두께만큼 축소
     let leftEpTrimShift = 0;
     let rightEpTrimShift = 0;
     if (storePlacedModule) {
-      const isFullSurround = originalSpaceInfo.surroundType === 'surround' && originalSpaceInfo.frameConfig?.top !== false;
       const epThickMm = storePlacedModule.endPanelThickness || 18;
       const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
       const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
 
-      if (storePlacedModule.hasLeftEndPanel && (isFullSurround || (isFree && leftOffset > 0))) {
+      if (storePlacedModule.hasLeftEndPanel && leftOffset > 0) {
         leftDoorWidth -= epThickMm;
         leftEpTrimShift = mmToThreeUnits(epThickMm) / 2; // 좌도어를 오른쪽으로 밀기
       }
-      if (storePlacedModule.hasRightEndPanel && (isFullSurround || (isFree && rightOffset > 0))) {
+      if (storePlacedModule.hasRightEndPanel && rightOffset > 0) {
         rightDoorWidth -= epThickMm;
         rightEpTrimShift = -mmToThreeUnits(epThickMm) / 2; // 우도어를 왼쪽으로 밀기
       }
@@ -2015,21 +2013,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = 3;
     let doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
 
-    // EP 앞으로 돌출 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
-    // 자유배치: offset > 0일 때, 전체서라운드 슬롯배치: EP가 도어앞단까지 확장되므로 항상 축소
+    // EP 앞으로 돌출(offset > 0) 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
     let epTrimLeft = 0; // 좌측 EP 돌출로 줄어든 mm
     let epTrimRight = 0; // 우측 EP 돌출로 줄어든 mm
     if (storePlacedModule) {
-      const isFullSurround = originalSpaceInfo.surroundType === 'surround' && originalSpaceInfo.frameConfig?.top !== false;
       const epThickMm = storePlacedModule.endPanelThickness || 18;
       const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
       const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
 
-      if (storePlacedModule.hasLeftEndPanel && (isFullSurround || (isFree && leftOffset > 0))) {
+      if (storePlacedModule.hasLeftEndPanel && leftOffset > 0) {
         doorWidth -= epThickMm;
         epTrimLeft = epThickMm;
       }
-      if (storePlacedModule.hasRightEndPanel && (isFullSurround || (isFree && rightOffset > 0))) {
+      if (storePlacedModule.hasRightEndPanel && rightOffset > 0) {
         doorWidth -= epThickMm;
         epTrimRight = epThickMm;
       }

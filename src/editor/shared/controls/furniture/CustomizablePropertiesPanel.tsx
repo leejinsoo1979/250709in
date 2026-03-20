@@ -4132,7 +4132,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={placedModule.hasLeftEndPanel === true}
-                      onChange={() => updatePlacedModule(moduleId, { hasLeftEndPanel: !placedModule.hasLeftEndPanel })}
+                      onChange={() => {
+                        const turning = !placedModule.hasLeftEndPanel;
+                        const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                        const update: Record<string, unknown> = { hasLeftEndPanel: turning };
+                        if (turning && isFullSurround) {
+                          update.leftEndPanelOffset = 23;
+                        }
+                        updatePlacedModule(moduleId, update);
+                      }}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                     />
                     <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>좌측 EP</span>
@@ -4141,7 +4149,15 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={placedModule.hasRightEndPanel === true}
-                      onChange={() => updatePlacedModule(moduleId, { hasRightEndPanel: !placedModule.hasRightEndPanel })}
+                      onChange={() => {
+                        const turning = !placedModule.hasRightEndPanel;
+                        const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                        const update: Record<string, unknown> = { hasRightEndPanel: turning };
+                        if (turning && isFullSurround) {
+                          update.rightEndPanelOffset = 23;
+                        }
+                        updatePlacedModule(moduleId, update);
+                      }}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
                     />
                     <span style={{ fontSize: '13px', color: 'var(--theme-text)' }}>우측 EP</span>

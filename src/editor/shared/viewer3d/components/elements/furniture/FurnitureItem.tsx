@@ -3592,11 +3592,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
         const epDepthMmSlot = placedModule.endPanelDepth ?? (actualDepthMm || 580);
-        // 전체서라운드: EP를 도어 앞단까지 확장 (23mm)
-        const isFullSurroundEP = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-        const EP_SURROUND_EXTENSION = 23; // 전체서라운드 EP Z축 확장량 (mm)
-        const epDepthMmFinal = isFullSurroundEP ? epDepthMmSlot + EP_SURROUND_EXTENSION : epDepthMmSlot;
-        const endPanelDepth = mmToThreeUnits(epDepthMmFinal);
+        const endPanelDepth = mmToThreeUnits(epDepthMmSlot);
 
         // 엔드패널 X 위치 계산 (가구의 줄어든 너비 고려)
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
@@ -3669,7 +3665,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             {endPanelXPositions.map((panel, index) => (
               <group
                 key={`endpanel-group-${placedModule.id}-${panel.side}-${index}`}
-                position={[panel.x, endPanelYPosition, furnitureZ + getSlotEpOffsetZ(panel.side) + (isFullSurroundEP ? mmToThreeUnits(EP_SURROUND_EXTENSION) / 2 : 0)]}
+                position={[panel.x, endPanelYPosition, furnitureZ + getSlotEpOffsetZ(panel.side)]}
               >
                 <EndPanelWithTexture
                   width={endPanelWidth}
