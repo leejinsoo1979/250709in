@@ -111,11 +111,15 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정
       const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
+      console.log('🔧 전체서라운드 EP 옵셋 업데이트:', placedModules.length, '개 가구');
       placedModules.forEach(m => {
         const epUpdate: Record<string, number> = {};
         if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
         if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
-        if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
+        if (Object.keys(epUpdate).length > 0) {
+          console.log('🔧 EP 옵셋 설정:', m.id, epUpdate);
+          updatePlacedModule(m.id, epUpdate);
+        }
       });
     } else if (mode === 'sides-only') {
       // 양쪽서라운드 = 기존 서라운드 그대로, frameConfig만 구분용으로 변경
@@ -127,11 +131,15 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       // 양쪽서라운드: EP 옵셋을 0으로 리셋
       const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
+      console.log('🔧 양쪽서라운드 EP 옵셋 리셋:', placedModules.length, '개 가구');
       placedModules.forEach(m => {
         const epUpdate: Record<string, number> = {};
         if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
         if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
-        if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
+        if (Object.keys(epUpdate).length > 0) {
+          console.log('🔧 EP 옵셋 리셋:', m.id, epUpdate);
+          updatePlacedModule(m.id, epUpdate);
+        }
       });
     } else {
       // 노서라운드
