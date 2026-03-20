@@ -1044,43 +1044,37 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           </group>
         )}
         
-        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용, 바닥판 두께 고려) - 3D 모드에서는 항상 표시, 측면뷰에서는 전체 보기일 때만 */}
+        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용, 하판~상판 전체 커버) - 3D 모드에서는 항상 표시, 측면뷰에서는 전체 보기일 때만 */}
         {(viewMode === '3D' || visibleSectionIndex === null) && (() => {
           const leftSections = modelConfig.leftSections || [];
+          const sectionHeights = calculateLeftSectionHeights();
+          const totalSections = sectionHeights.length;
 
-          // 하부 섹션(drawer) 개수 확인
-          let drawerCount = 0;
-          leftSections.forEach(section => {
-            if (section.type === 'drawer') drawerCount++;
-          });
-
-          return calculateLeftSectionHeights().map((sectionHeight, index) => {
-            console.log('🔍 중앙 칸막이 렌더링 중:', { index, visibleSectionIndex, moduleId: moduleData.id });
-
+          return sectionHeights.map((sectionHeight, index) => {
             let currentYPosition = -height/2 + basicThickness;
 
             // 현재 섹션까지의 Y 위치 계산
             for (let i = 0; i < index; i++) {
-              currentYPosition += calculateLeftSectionHeights()[i];
+              currentYPosition += sectionHeights[i];
             }
 
-            // 하부/상부 섹션에 따른 높이 및 위치 조정
-            const isLastLowerSection = index === drawerCount - 1;
-            const isUpperSection = index >= drawerCount;
+            const isFirstSection = index === 0;
+            const isLastSection = index === totalSections - 1;
 
+            // 좌측 측판과 동일: 첫 섹션은 하판까지, 마지막 섹션은 상판까지 확장
             let adjustedHeight = sectionHeight;
             let adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
 
-            if (drawerCount > 0 && leftSections.length > drawerCount) {
-              // 하부와 상부가 모두 존재하는 경우
-              // BaseFurnitureShell(2drawer-hanging)과 동일: 높이 = sectionHeight 그대로
-              if (isLastLowerSection) {
-                adjustedHeight = sectionHeight;
-                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-              } else if (isUpperSection) {
-                adjustedHeight = sectionHeight;
-                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-              }
+            if (isFirstSection) {
+              adjustedHeight = sectionHeight + basicThickness;
+              adjustedCenterY = -height/2 + adjustedHeight / 2;
+            }
+            if (isLastSection) {
+              const currentTop = adjustedCenterY + adjustedHeight / 2;
+              const targetTop = height / 2;
+              const extension = targetTop - currentTop;
+              adjustedHeight += extension;
+              adjustedCenterY += extension / 2;
             }
 
             const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
@@ -1111,9 +1105,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          {/* 좌측 측면 판재 - 섹션별로 분할 (바닥판 두께 고려) */}
+          {/* 좌측 측면 판재 - 섹션별로 분할 (하판~상판 전체 커버) */}
           {(() => {
             const leftSections = modelConfig.leftSections || [];
+            const sectionHeights = calculateLeftSectionHeights();
+            const totalSections = sectionHeights.length;
 
             // 하부 섹션(drawer) 개수 확인
             let drawerCount = 0;
@@ -1121,34 +1117,33 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               if (section.type === 'drawer') drawerCount++;
             });
 
-            return calculateLeftSectionHeights().map((sectionHeight, index) => {
+            return sectionHeights.map((sectionHeight, index) => {
               let currentYPosition = -height/2 + basicThickness;
 
               // 현재 섹션까지의 Y 위치 계산
               for (let i = 0; i < index; i++) {
-                currentYPosition += calculateLeftSectionHeights()[i];
+                currentYPosition += sectionHeights[i];
               }
 
-              // 하부/상부 섹션에 따른 높이 및 위치 조정
-              const isLowerSection = index < drawerCount;
-              const isLastLowerSection = index === drawerCount - 1;
-              const isUpperSection = index >= drawerCount;
+              const isFirstSection = index === 0;
+              const isLastSection = index === totalSections - 1;
 
+              // BaseFurnitureShell 방식: 첫 섹션은 하판까지, 마지막 섹션은 상판까지 확장
               let adjustedHeight = sectionHeight;
               let adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
 
-              if (drawerCount > 0 && leftSections.length > drawerCount) {
-                // 하부와 상부가 모두 존재하는 경우
-                // BaseFurnitureShell(2drawer-hanging)과 동일: 측판 높이 = sectionHeight 그대로
-                if (isLastLowerSection) {
-                  // 하부 마지막 측판: sectionHeight 그대로 (2단서랍장과 동일)
-                  adjustedHeight = sectionHeight;
-                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-                } else if (isUpperSection) {
-                  // 상부 모든 측판: sectionHeight 그대로
-                  adjustedHeight = sectionHeight;
-                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-                }
+              if (isFirstSection) {
+                // 첫 번째 섹션: 하판 영역까지 아래로 확장 (bottom = -height/2)
+                adjustedHeight = sectionHeight + basicThickness;
+                adjustedCenterY = -height/2 + adjustedHeight / 2;
+              }
+              if (isLastSection) {
+                // 마지막 섹션: 상판 영역까지 위로 확장 (top = height/2)
+                const currentTop = adjustedCenterY + adjustedHeight / 2;
+                const targetTop = height / 2;
+                const extension = targetTop - currentTop;
+                adjustedHeight += extension;
+                adjustedCenterY += extension / 2;
               }
 
               return (
