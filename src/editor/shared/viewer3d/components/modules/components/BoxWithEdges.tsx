@@ -537,7 +537,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
       >
-        <boxGeometry args={args} />
+        <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         {renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 메시 숨기고 엣지만 표시
           <meshBasicMaterial
@@ -629,7 +629,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               <lineSegments name={edgeName}>
-                <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+                <edgesGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
                   transparent={renderMode !== 'wireframe'}
