@@ -1069,6 +1069,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const indivFloat = individualFloatHeightProp ?? 0;
         doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
       }
+
+      // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
+      // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
+      if (floorFinishForDoor > 0) {
+        doorYPosition -= mmToThreeUnits(floorFinishForDoor / 2);
+      }
     } else {
       // 병합 모드: 천장/바닥 기준
       // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
@@ -1101,6 +1107,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
         const indivFloat = individualFloatHeightProp ?? 0;
         doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
+      }
+
+      // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
+      // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
+      if (floorFinishForDoor > 0) {
+        doorYPosition -= mmToThreeUnits(floorFinishForDoor / 2);
       }
 
     }
