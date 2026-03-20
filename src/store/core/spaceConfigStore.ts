@@ -165,6 +165,9 @@ export interface SpaceInfo {
 
   // 상하부 프레임 병합 활성화 (기본: false)
   frameMergeEnabled?: boolean;
+
+  // 가구재 두께 (15mm 또는 18mm, 기본: 18)
+  panelThickness?: number;
 }
 
 // 단내림 설정 인터페이스
