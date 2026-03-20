@@ -776,6 +776,15 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
+          {/* 다크/라이트 모드 토글 */}
+          <button
+            className={styles.settingsButton}
+            onClick={toggleMode}
+            title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
+          >
+            {theme.mode === 'dark' ? <Moon size={18} strokeWidth={1.8} /> : <Sun size={18} strokeWidth={1.8} />}
+          </button>
+
           {/* 조작법 버튼 - 컨버팅 옆 */}
           {!isMobile && (
             <button className={styles.actionButton} onClick={handleHelpClick}>
@@ -928,15 +937,6 @@ const Header: React.FC<HeaderProps> = ({
             title="설정"
           >
             <Settings size={18} strokeWidth={1.8} />
-          </button>
-
-          {/* 다크/라이트 모드 토글 */}
-          <button
-            className={styles.settingsButton}
-            onClick={toggleMode}
-            title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
-          >
-            {theme.mode === 'dark' ? <Moon size={18} strokeWidth={1.8} /> : <Sun size={18} strokeWidth={1.8} />}
           </button>
         </div>
       </div>
