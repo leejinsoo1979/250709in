@@ -58,11 +58,6 @@ interface BoxModuleProps {
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
   lowerLeftSectionDepth?: number; // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
-  doorSplit?: boolean; // 도어 분할 여부
-  upperDoorTopGap?: number; // 상부 섹션 도어 상단 갭
-  upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭
-  lowerDoorTopGap?: number; // 하부 섹션 도어 상단 갭
-  lowerDoorBottomGap?: number; // 하부 섹션 도어 하단 갭
   lowerSectionTopOffset?: number; // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
@@ -76,6 +71,11 @@ interface BoxModuleProps {
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm)
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
+  doorSplit?: boolean; // 도어 분할 모드 (상/하 개별 도어)
+  upperDoorTopGap?: number; // 상부 도어 상단 이격거리 (mm)
+  upperDoorBottomGap?: number; // 상부 도어 하단 이격거리 (mm)
+  lowerDoorTopGap?: number; // 하부 도어 상단 이격거리 (mm)
+  lowerDoorBottomGap?: number; // 하부 도어 하단 이격거리 (mm)
   topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm)
   hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
@@ -133,11 +133,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   upperSectionDepthDirection, // 상부 깊이 줄이는 방향
   lowerLeftSectionDepth, // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth, // 하부 우측 영역 깊이 (mm)
-  doorSplit,
-  upperDoorTopGap,
-  upperDoorBottomGap,
-  lowerDoorTopGap,
-  lowerDoorBottomGap,
   lowerSectionTopOffset, // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection, // 텍스처 결 방향
   panelGrainDirections, // 패널별 개별 결 방향
@@ -151,6 +146,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   rightEndPanelOffset, // 우측 EP 개별 옵셋 (mm)
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
+  doorSplit, // 도어 분할 모드
+  upperDoorTopGap, // 상부 도어 상단 이격거리
+  upperDoorBottomGap, // 상부 도어 하단 이격거리
+  lowerDoorTopGap, // 하부 도어 상단 이격거리
+  lowerDoorBottomGap, // 하부 도어 하단 이격거리
   topFrameThickness, // 개별 가구 상부프레임 두께
   hasBase, // 하부프레임 존재 여부
   individualFloatHeight, // 개별 띄움 높이
@@ -320,7 +320,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
           lowerSectionDepthDirection={lowerSectionDepthDirection}
           upperSectionDepthDirection={upperSectionDepthDirection}
-          doorSplit={doorSplit} // 도어 분할 여부
+  
           lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
           backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
             // 이벤트 핸들러들 전달
@@ -375,11 +375,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
         lowerSectionDepthDirection={lowerSectionDepthDirection}
         upperSectionDepthDirection={upperSectionDepthDirection}
-        doorSplit={doorSplit} // 도어 분할 여부
-        upperDoorTopGap={upperDoorTopGap} // 상부 도어 상단 갭
-        upperDoorBottomGap={upperDoorBottomGap} // 상부 도어 하단 갭
-        lowerDoorTopGap={lowerDoorTopGap} // 하부 도어 상단 갭
-        lowerDoorBottomGap={lowerDoorBottomGap} // 하부 도어 하단 갭
+
+
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
         // 이벤트 핸들러들 전달
