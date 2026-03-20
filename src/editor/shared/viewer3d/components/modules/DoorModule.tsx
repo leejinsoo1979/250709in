@@ -10,7 +10,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings, getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line, Html } from '@react-three/drei';
 import { Hinge } from '../Hinge';
@@ -117,9 +117,6 @@ interface DoorModuleProps {
   floatHeight?: number; // 플로팅 높이 (mm) - 띄워서 배치 시 도어 높이 조정용
   doorTopGap?: number; // 천장에서 아래로의 갭 (mm, 기본값: 5)
   doorBottomGap?: number; // 바닥에서 위로의 갭 (mm, 기본값: 25)
-  sectionHeightsMm?: number[]; // 섹션별 실제 측판 높이 (mm)
-  sectionIndex?: number; // 섹션 인덱스 (분할 모드용, 0: 하부, 1: 상부)
-  totalSections?: number; // 전체 섹션 수 (분할 모드용, 기본값: 1)
   furnitureId?: string; // 가구 ID (개별 도어 제어용)
   textureUrl?: string; // 텍스처 URL
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
@@ -148,9 +145,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   floatHeight: floatHeightProp,
   doorTopGap: doorTopGapProp, // 개별 가구 doorTopGap (undefined면 글로벌 → 기본값 순서로 fallback)
   doorBottomGap: doorBottomGapProp, // 개별 가구 doorBottomGap
-  sectionHeightsMm,
-  sectionIndex, // 섹션 인덱스 (분할 모드용)
-  totalSections = 1, // 전체 섹션 수 (분할 모드용)
   furnitureId, // 가구 ID
   textureUrl, // 텍스처 URL
   panelGrainDirections, // 패널별 결 방향
@@ -177,10 +171,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // doorsOpen: true=전체열기, false=전체닫기, null=개별상태 사용
   const useIndividualState = furnitureId !== undefined;
-  const effectiveSectionIndex = sectionIndex !== undefined ? sectionIndex : 0; // 병합 모드는 섹션 0
   const isDoorOpen = doorsOpen !== null
     ? doorsOpen
-    : (useIndividualState ? isIndividualDoorOpen(furnitureId, effectiveSectionIndex) : false);
+    : (useIndividualState ? isIndividualDoorOpen(furnitureId, 0) : false);
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
@@ -405,13 +398,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 텍스처 적용 함수 (성능 최적화)
   const getDoorPanelName = useCallback((doorSide: 'single' | 'left' | 'right') => {
-    const sectionLabel = sectionIndex === 1 ? '(상)' : sectionIndex === 0 ? '(하)' : '';
     if (doorSide === 'single') {
-      return sectionLabel ? `${sectionLabel}도어` : '도어';
+      return '도어';
     }
     const sideLabel = doorSide === 'left' ? '(좌)' : '(우)';
-    return sectionLabel ? `${sectionLabel}도어${sideLabel}` : `도어${sideLabel}`;
-  }, [sectionIndex]);
+    return `도어${sideLabel}`;
+  }, []);
 
   const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string, panelNameHint?: string) => {
     if (textureUrl && material) {
@@ -450,10 +442,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           } else if (isCabinetTexture1(textureUrl)) {
             applyCabinetTexture1Settings(material);
           } else {
-            // 다른 텍스처는 기본 설정
-            material.color.setHex(0xffffff); // 기본 흰색
-            material.toneMapped = true; // 기본 톤 매핑 활성화
-            material.roughness = 0.6; // 기본 거칠기
+            applyDefaultImageTextureSettings(material);
           }
 
           material.needsUpdate = true;
@@ -689,7 +678,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   let actualDoorHeight: number;
   let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
-  let resolvedSectionHeightsMm: number[] | undefined;
 
   // 단내림 구간인 경우 해당 구간의 높이 사용
   let fullSpaceHeight = originalSpaceInfo.height;
@@ -794,82 +782,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorBottomLocal = cabinetBottomLocal - actualBase + bottomGap;
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
 
-    const resolveSectionHeightsForDoor = () => {
-      if (sectionHeightsMm?.length === totalSections) {
-        return sectionHeightsMm;
-      }
-
-      const rawSections = Array.isArray(moduleData?.modelConfig?.sections)
-        ? moduleData?.modelConfig?.sections
-        : undefined;
-
-      if (!rawSections || rawSections.length === 0) {
-        return undefined;
-      }
-
-      const basicThicknessMm = moduleData?.modelConfig?.basicThickness ?? 18;
-      const availableHeightMm = Math.max(tallCabinetFurnitureHeight - basicThicknessMm * 2, 0);
-
-      const totalAbsoluteHeightMm = rawSections.reduce((sum, section) => {
-        const heightType = (section?.heightType as string) ?? 'percentage';
-        if (heightType === 'absolute') {
-          const value = typeof section?.height === 'number' ? section.height : Number(section?.height) || 0;
-          return sum + value;
-        }
-        return sum;
-      }, 0);
-
-      const remainingHeightMm = Math.max(availableHeightMm - totalAbsoluteHeightMm, 0);
-
-      return rawSections.map(section => {
-        const heightType = (section?.heightType as string) ?? 'percentage';
-        if (heightType === 'absolute') {
-          return typeof section?.height === 'number' ? section.height : Number(section?.height) || 0;
-        }
-        if (heightType === 'fill') {
-          return remainingHeightMm;
-        }
-        const ratio = typeof section?.height === 'number' ? section.height : Number(section?.height) || 0;
-        return remainingHeightMm * (ratio / 100);
-      });
-    };
-
-    // 분할 모드인 경우 섹션 높이 계산
-    if (totalSections > 1 && sectionIndex !== undefined) {
-      resolvedSectionHeightsMm = resolveSectionHeightsForDoor();
-
-      if (!resolvedSectionHeightsMm || resolvedSectionHeightsMm.length < totalSections) {
-        const fallbackLower = 1000;
-        const fallbackUpper = Math.max(tallCabinetFurnitureHeight - fallbackLower, 0);
-        resolvedSectionHeightsMm = [fallbackLower, fallbackUpper];
-      }
-
-      // 도어 분할 시 섹션 사이 3mm 갭: 각 도어 높이를 1.5mm씩 줄임
-      const SECTION_GAP_HALF = 1.5; // mm
-
-      // 실제 계산된 도어 높이를 섹션 비율로 분배
-      const totalDoorHeight = actualDoorHeight;
-      const totalSectionHeight = resolvedSectionHeightsMm.reduce((sum, h) => sum + h, 0);
-      const sectionRatio = resolvedSectionHeightsMm[sectionIndex] / totalSectionHeight;
-
-      actualDoorHeight = totalDoorHeight * sectionRatio - SECTION_GAP_HALF;
-
-// console.log('🚪📏 분할 모드 도어 높이 (천장/바닥 기준):', {
-        // sectionIndex,
-        // totalSections,
-        // fullSpaceHeight,
-        // tallCabinetFurnitureHeight,
-        // sectionHeightsMm: resolvedSectionHeightsMm,
-        // totalSectionHeight,
-        // sectionRatio,
-        // doorTopGap,
-        // doorBottomGap,
-        // totalDoorHeight,
-        // sectionGapReduction: SECTION_GAP_HALF,
-        // actualDoorHeight,
-        // 설명: `계산된 도어 높이(${totalDoorHeight}) × 섹션 비율(${sectionRatio.toFixed(2)}) - 갭 감소(${SECTION_GAP_HALF}) = ${actualDoorHeight}mm`
-      // });
-    } else {
 // console.log('🚪📏 병합 모드 도어 높이 (천장/바닥 기준):', {
         // fullSpaceHeight,
         // topFrameHeight: topFrameHeightValue,
@@ -882,7 +794,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // actualDoorHeight,
         // 설명: `도어 상단/하단 로컬 좌표 차이 = ${actualDoorHeight}mm`
       // });
-    }
   }
   
   // 바닥마감재 높이 (키큰장 도어 Y 보정용, 상부장/하부장에서는 0)
@@ -973,112 +884,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // Three.js에서 가구는 Y=0 중심으로 렌더링됨
     // 도어도 가구 중심(Y=0) 기준 상대 좌표로 배치해야 함
 
-    // 분할 모드인 경우 섹션별 Y 위치 계산
-    if (totalSections > 1 && sectionIndex !== undefined) {
-      resolvedSectionHeightsMm = resolvedSectionHeightsMm || resolveSectionHeightsForDoor();
-
-      if (!resolvedSectionHeightsMm || resolvedSectionHeightsMm.length < totalSections) {
-        const fallbackLower = 1000;
-        const fallbackUpper = Math.max(tallCabinetFurnitureHeight - fallbackLower, 0);
-        resolvedSectionHeightsMm = [fallbackLower, fallbackUpper];
-      }
-
-      // 도어 분할 시 섹션 사이 3mm 갭: 각 도어 높이를 1.5mm씩 줄임
-      const SECTION_GAP_HALF = 1.5; // mm
-
-      // 천장/바닥 기준으로 섹션 도어 Y 위치 계산
-      const totalDoorHeight = Math.max(actualDoorHeight, 0);
-      const totalSectionHeight = resolvedSectionHeightsMm.reduce((sum, h) => sum + h, 0);
-
-      if (sectionIndex === 0) {
-        // 하부 섹션 도어: 바닥에서부터 계산
-        const sectionRatio = resolvedSectionHeightsMm[0] / totalSectionHeight;
-        const sectionDoorHeight = Math.max(totalDoorHeight * sectionRatio - SECTION_GAP_HALF, 0);
-
-        // 하부 섹션: 하단 고정 (플로팅 시 상단이 내려감)
-        const sectionDoorBottom = doorBottomLocal;
-        const sectionDoorTop = sectionDoorBottom + sectionDoorHeight;
-        const doorCenter = (sectionDoorBottom + sectionDoorTop) / 2;
-
-        // 도어 중심 = 하단에서 도어 높이의 절반만큼 위
-        doorYPosition = mmToThreeUnits(sectionDoorBottom + sectionDoorHeight / 2);
-
-// console.log('🚪📍 하부 섹션 도어 Y 위치 (가구 기준):', {
-          // fullSpaceHeight,
-          // totalDoorHeight,
-          // totalSectionHeight,
-          // sectionRatio,
-          // sectionDoorHeight,
-          // doorBottomLocal: sectionDoorBottom,
-          // doorTopLocal: sectionDoorTop,
-          // doorCenter,
-          // doorTopGap,
-          // doorBottomGap,
-          // doorYPosition,
-          // doorYPosition_mm: doorYPosition / 0.01,
-          // 설명: `가구 하단(${doorBottomLocal.toFixed(2)}mm) ~ ${sectionDoorTop.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
-        // });
-      } else {
-        // 상부 섹션 도어: 가구 상단 기준으로 계산
-        const sectionRatio = resolvedSectionHeightsMm[1] / totalSectionHeight;
-        const sectionDoorHeight = Math.max(totalDoorHeight * sectionRatio - SECTION_GAP_HALF, 0);
-
-        const sectionDoorTop = doorTopLocal;
-        const sectionDoorBottom = sectionDoorTop - sectionDoorHeight;
-        const doorCenter = (sectionDoorBottom + sectionDoorTop) / 2;
-
-        doorYPosition = mmToThreeUnits(doorCenter);
-
-// console.log('🚪📍 상부 섹션 도어 Y 위치 (가구 기준):', {
-          // fullSpaceHeight,
-          // totalDoorHeight,
-          // totalSectionHeight,
-          // sectionRatio,
-          // sectionDoorHeight,
-          // doorTopLocal: sectionDoorTop,
-          // doorBottomLocal: sectionDoorBottom,
-          // doorCenter,
-          // doorTopGap,
-          // doorBottomGap,
-          // doorYPosition,
-          // doorYPosition_mm: doorYPosition / 0.01,
-          // 설명: `가구 상단(${doorTopLocal.toFixed(2)}mm) ~ ${sectionDoorBottom.toFixed(2)}mm, 중심 = ${doorCenter.toFixed(2)}mm`
-        // });
-      }
-
-      // 천장바닥 기준: 섹션 분할 도어도 Y 위치 보정 필요
-      // effectiveInternalHeight는 storeFreeHeight로 덮어씌워질 수 있으므로
-      // hasBase 인플레이션을 제거한 안정적인 높이로 heightDiff 계산
-      if (effectiveInternalHeight) {
-        // hasBase=false 시 effectiveInternalHeight가 storeFreeHeight(인플레이션 전)로 올 수 있으므로
-        // 항상 hasBase 인플레이션을 제거한 높이로 비교
-        let stableHeight = effectiveInternalHeight;
-        if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
-          const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
-          const indivFloat = individualFloatHeightProp ?? 0;
-          // effectiveInternalHeight가 이미 인플레이션 전 값이면 차감하지 않음
-          if (stableHeight > tallCabinetFurnitureHeight) {
-            stableHeight -= (hiddenBaseH - indivFloat);
-          }
-        }
-        const heightDiff = tallCabinetFurnitureHeight - stableHeight;
-        doorYPosition += mmToThreeUnits(heightDiff / 2);
-      }
-
-      // hasBase=false 시 가구 그룹 Y가 받침대/2만큼 내려가므로 도어를 그만큼 올려서 보정
-      if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
-        const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
-        const indivFloat = individualFloatHeightProp ?? 0;
-        doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
-      }
-
-      // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
-      // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
-      if (floorFinishForDoorY > 0) {
-        doorYPosition -= mmToThreeUnits(floorFinishForDoorY / 2);
-      }
-    } else {
-      // 병합 모드: 천장/바닥 기준
+    {
+      // 천장/바닥 기준
       // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
       // 플로팅 시: 도어 상단 고정, 하단만 올라감 (doorBottomLocal이 이미 올라감)
       // 도어 중심 = 도어 하단 + (도어 높이 / 2)
@@ -1465,71 +1272,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
               
 
-              {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
+              {/* Hinges for left door - 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
-                  {sectionIndex !== undefined ? (
-                    // 분할 모드: 섹션별로 다른 경첩 배치
-                    <>
-                      {sectionIndex === 1 ? (
-                        // 상부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
-                        <>
-                          <Hinge
-                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                        </>
-                      ) : (
-                        // 하부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
-                        <>
-                          <Hinge
-                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                        </>
-                      )}
-                    </>
-                  ) : isUpperCabinet ? (
+                  {isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
                     <>
                       <Hinge
@@ -1910,71 +1656,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 panelGrainDirections={panelGrainDirections}
               />
               
-              {/* Hinges for right door - 분할 모드, 상부장, 하부장, 키큰장 */}
+              {/* Hinges for right door - 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
-                  {sectionIndex !== undefined ? (
-                    // 분할 모드: 섹션별로 다른 경첩 배치
-                    <>
-                      {sectionIndex === 1 ? (
-                        // 상부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
-                        <>
-                          <Hinge
-                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={-9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={-9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={-9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                        </>
-                      ) : (
-                        // 하부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
-                        <>
-                          <Hinge
-                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={-9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={-9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                          <Hinge
-                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
-                            mainDiameter={17.5}
-                            smallCircleDiameter={4}
-                            smallCircleXOffset={-9.5}
-                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                            view2DDirection={view2DDirection}
-                          />
-                        </>
-                      )}
-                    </>
-                  ) : isUpperCabinet ? (
+                  {isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
                     <>
                       <Hinge
@@ -2219,8 +1904,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 );
               })()}
 
-              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외, 분할 모드 상부 섹션 제외) */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && !(totalSections > 1 && sectionIndex === 1) && (() => {
+              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
                 const isTopView = view2DDirection === 'top';
                 const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (도어 쪽으로), 정면뷰: 70mm
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
@@ -2472,93 +2157,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       view2DDirection={view2DDirection}
                     />
                   </>
-                ) : totalSections > 1 && sectionIndex !== undefined ? (
-                  // 분할 모드: 섹션별로 다른 경첩 배치
-                  <>
-                    {sectionIndex === 1 ? (
-                      // 상부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
-                      <>
-                        <Hinge
-                          position={[
-                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            doorHeight / 2 - mmToThreeUnits(100),
-                            doorThicknessUnits / 2 + 0.001
-                          ]}
-                          mainDiameter={17.5}
-                          smallCircleDiameter={4}
-                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                          view2DDirection={view2DDirection}
-                        />
-                        <Hinge
-                          position={[
-                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            0,
-                            doorThicknessUnits / 2 + 0.001
-                          ]}
-                          mainDiameter={17.5}
-                          smallCircleDiameter={4}
-                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                          view2DDirection={view2DDirection}
-                        />
-                        <Hinge
-                          position={[
-                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            -doorHeight / 2 + mmToThreeUnits(149),
-                            doorThicknessUnits / 2 + 0.001
-                          ]}
-                          mainDiameter={17.5}
-                          smallCircleDiameter={4}
-                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                          view2DDirection={view2DDirection}
-                        />
-                      </>
-                    ) : (
-                      // 하부 섹션 도어: 위에서 두번째, 아래서 두번째 제거하고 중간에 추가 (3개 경첩)
-                      <>
-                        <Hinge
-                          position={[
-                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            doorHeight / 2 - mmToThreeUnits(100),
-                            doorThicknessUnits / 2 + 0.001
-                          ]}
-                          mainDiameter={17.5}
-                          smallCircleDiameter={4}
-                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                          view2DDirection={view2DDirection}
-                        />
-                        <Hinge
-                          position={[
-                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            0,
-                            doorThicknessUnits / 2 + 0.001
-                          ]}
-                          mainDiameter={17.5}
-                          smallCircleDiameter={4}
-                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                          view2DDirection={view2DDirection}
-                        />
-                        <Hinge
-                          position={[
-                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            -doorHeight / 2 + mmToThreeUnits(149),
-                            doorThicknessUnits / 2 + 0.001
-                          ]}
-                          mainDiameter={17.5}
-                          smallCircleDiameter={4}
-                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                          view2DDirection={view2DDirection}
-                        />
-                      </>
-                    )}
-                  </>
                 ) : (
-                  // 키큰장 병합 모드: 기존 4개 경첩
+                  // 키큰장: 4개 경첩
                   <>
                     <Hinge
                       position={[
