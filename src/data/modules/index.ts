@@ -289,7 +289,8 @@ export function buildModuleDataFromPlacedModule(
       panelThickness?: number;
     };
     isCustomizable?: boolean;
-  }
+  },
+  spacePanelThickness?: number
 ): ModuleData | null {
   if (!placedModule.moduleId.startsWith('customizable-')) return null;
 
@@ -300,7 +301,7 @@ export function buildModuleDataFromPlacedModule(
   const width = placedModule.freeWidth || placedModule.moduleWidth || 600;
   const height = placedModule.freeHeight || 2400;
   const depth = placedModule.freeDepth || 600;
-  const thickness = placedModule.customConfig?.panelThickness || 18;
+  const thickness = placedModule.customConfig?.panelThickness || spacePanelThickness || 18;
 
   // 섹션 내부 elements를 분석하여 SectionConfig type과 count 결정
   const analyzeSectionElements = (
