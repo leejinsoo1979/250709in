@@ -19,6 +19,183 @@ declare global {
   }
 }
 
+/* ── 프레임 행 컴포넌트 (모듈 레벨) ── */
+const FrameRow = React.memo(({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame }: {
+  label: string; enabled: boolean; sizeMM: number; offset: number;
+  onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
+  setHighlightedFrame: (v: string | null) => void;
+}) => {
+  const [sizeText, setSizeText] = React.useState(String(sizeMM || ''));
+  const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+  const sizeEditingRef = React.useRef(false);
+  const offsetEditingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!sizeEditingRef.current) setSizeText(sizeMM ? String(sizeMM) : '');
+  }, [sizeMM]);
+  React.useEffect(() => {
+    if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
+  }, [offset]);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+      <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
+      <button
+        onClick={onToggle}
+        style={{
+          width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+          backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+          position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+        }}
+      >
+        <span style={{
+          position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+          backgroundColor: '#fff', transition: 'left 0.2s',
+          left: enabled ? '18px' : '2px',
+        }} />
+      </button>
+      {enabled && (
+        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
+            <input type="text" inputMode="numeric"
+              value={sizeText} placeholder="0"
+              onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setSizeText(String(next));
+                  onSizeChange(next);
+                } else if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
+              onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            />
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+            <input type="text" inputMode="numeric"
+              value={offsetText} placeholder="0"
+              onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setOffsetText(String(next));
+                  onOffsetChange(next);
+                } else if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
+              onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame }: {
+  label: string; enabled: boolean; widthMM: number; heightMM: number; offset: number;
+  onToggle: () => void; onHeightChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
+  setHighlightedFrame: (v: string | null) => void;
+}) => {
+  const [heightText, setHeightText] = React.useState(String(heightMM || ''));
+  const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+  const heightEditingRef = React.useRef(false);
+  const offsetEditingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!heightEditingRef.current) setHeightText(heightMM ? String(heightMM) : '');
+  }, [heightMM]);
+  React.useEffect(() => {
+    if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
+  }, [offset]);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+      <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
+      <button
+        onClick={onToggle}
+        style={{
+          width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+          backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+          position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+        }}
+      >
+        <span style={{
+          position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+          backgroundColor: '#fff', transition: 'left 0.2s',
+          left: enabled ? '18px' : '2px',
+        }} />
+      </button>
+      {enabled ? (
+        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+          {/* 너비 - 읽기전용 */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+            <input type="text" inputMode="numeric"
+              value={widthMM || ''} readOnly
+              onFocus={() => setHighlightedFrame(hlKey)}
+              onBlur={() => setHighlightedFrame(null)}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+            />
+          </div>
+          {/* 높이 - 편집 가능 */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
+            <input type="text" inputMode="numeric"
+              value={heightText} placeholder="0"
+              onFocus={() => { heightEditingRef.current = true; setHighlightedFrame(hlKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(0, Math.min(9999, (heightMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setHeightText(String(next));
+                  onHeightChange(next);
+                } else if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setHeightText(v); }}
+              onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setHeightText(String(clamped)); onHeightChange(clamped); }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            />
+          </div>
+          {/* 옵셋 - 편집 가능 */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+            <input type="text" inputMode="numeric"
+              value={offsetText} placeholder="0"
+              onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setOffsetText(String(next));
+                  onOffsetChange(next);
+                } else if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
+              onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+});
+
 export type RightPanelTab = 'placement' | 'module';
 
 export const ModuleContent: React.FC = () => {
@@ -1149,182 +1326,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalBase = spaceInfo.baseConfig?.height ?? 65;
               const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
 
-              const FrameRow = ({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey }: {
-                label: string; enabled: boolean; sizeMM: number; offset: number;
-                onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
-              }) => {
-                const [sizeText, setSizeText] = React.useState(String(sizeMM || ''));
-                const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
-                const sizeEditingRef = React.useRef(false);
-                const offsetEditingRef = React.useRef(false);
-
-                // 외부 prop 변경 시 (편집 중이 아닐 때만) 동기화
-                React.useEffect(() => {
-                  if (!sizeEditingRef.current) setSizeText(sizeMM ? String(sizeMM) : '');
-                }, [sizeMM]);
-                React.useEffect(() => {
-                  if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
-                }, [offset]);
-
-                return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                  <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
-                  <button
-                    onClick={onToggle}
-                    style={{
-                      width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                      backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
-                      position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
-                    }}
-                  >
-                    <span style={{
-                      position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
-                      backgroundColor: '#fff', transition: 'left 0.2s',
-                      left: enabled ? '18px' : '2px',
-                    }} />
-                  </button>
-                  {enabled && (
-                    <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                        <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
-                        <input type="text" inputMode="numeric"
-                          value={sizeText} placeholder="0"
-                          onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              setSizeText(String(next));
-                              onSizeChange(next);
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
-                          onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
-                          style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                        />
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                        <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
-                        <input type="text" inputMode="numeric"
-                          value={offsetText} placeholder="0"
-                          onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              setOffsetText(String(next));
-                              onOffsetChange(next);
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
-                          onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
-                          style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                );
-              };
-
-              // 병합 모드 전용 렌더 함수 (너비 + 높이 + 옵셋)
-              const MergedFrameRow = ({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey }: {
-                label: string; enabled: boolean; widthMM: number; heightMM: number; offset: number;
-                onToggle: () => void; onHeightChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
-              }) => {
-                const [heightText, setHeightText] = React.useState(String(heightMM || ''));
-                const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
-                const heightEditingRef = React.useRef(false);
-                const offsetEditingRef = React.useRef(false);
-
-                React.useEffect(() => {
-                  if (!heightEditingRef.current) setHeightText(heightMM ? String(heightMM) : '');
-                }, [heightMM]);
-                React.useEffect(() => {
-                  if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
-                }, [offset]);
-
-                return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                    <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
-                    <button
-                      onClick={onToggle}
-                      style={{
-                        width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                        backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
-                        position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
-                      }}
-                    >
-                      <span style={{
-                        position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
-                        backgroundColor: '#fff', transition: 'left 0.2s',
-                        left: enabled ? '18px' : '2px',
-                      }} />
-                    </button>
-                    {enabled ? (
-                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        {/* 너비 - 읽기전용 */}
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
-                          <input type="text" inputMode="numeric"
-                            value={widthMM || ''} readOnly
-                            onFocus={() => setHighlightedFrame(hlKey)}
-                            onBlur={() => setHighlightedFrame(null)}
-                            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
-                          />
-                        </div>
-                        {/* 높이 - 편집 가능 */}
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
-                          <input type="text" inputMode="numeric"
-                            value={heightText} placeholder="0"
-                            onFocus={() => { heightEditingRef.current = true; setHighlightedFrame(hlKey); }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const next = Math.max(0, Math.min(9999, (heightMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                                setHeightText(String(next));
-                                onHeightChange(next);
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setHeightText(v); }}
-                            onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setHeightText(String(clamped)); onHeightChange(clamped); }}
-                            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                          />
-                        </div>
-                        {/* 옵셋 - 편집 가능 */}
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
-                          <input type="text" inputMode="numeric"
-                            value={offsetText} placeholder="0"
-                            onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                                setOffsetText(String(next));
-                                onOffsetChange(next);
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
-                            onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
-                            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              };
-
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
@@ -1361,6 +1362,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
                           }}
                           hlKey={hlKey}
+                          setHighlightedFrame={setHighlightedFrame}
                         />
                       );
                     })}
@@ -1395,6 +1397,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
                           }}
                           hlKey={hlKey}
+                          setHighlightedFrame={setHighlightedFrame}
                         />
                       );
                     })}
@@ -1425,6 +1428,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: v })}
                         onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                         hlKey={`top-${mod.id}`}
+                        setHighlightedFrame={setHighlightedFrame}
                       />
                     );
                   })}
