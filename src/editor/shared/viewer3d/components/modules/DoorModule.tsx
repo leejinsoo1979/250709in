@@ -209,7 +209,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 선택된 도어인지 확인
   const selectedPlacedModuleId = useFurnitureStore(state => state.selectedPlacedModuleId);
-  const isSelected = selectedPlacedModuleId === moduleData?.id;
+  const isSelected = selectedPlacedModuleId === furnitureId;
 
   // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
   const { theme } = useViewerTheme();
