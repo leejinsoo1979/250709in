@@ -416,7 +416,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 수평 패널들은 수직 패널의 안쪽(서랍 방향)으로 27mm 돌출
 
   // 수평 패널 공통 치수
-  const horizontalPanelWidth = mmToThreeUnits(45); // X축 폭: 45mm (27mm + 18mm 안쪽 확장)
+  const horizontalPanelWidth = verticalPanelXOffset + basicThickness; // X축 폭: 27mm + basicThickness 안쪽 확장
   const horizontalPanelHeight = drawerFrameHeight; // 수직 패널과 동일한 높이
   const horizontalPanelDepthBack = drawerFrameThickness; // 후면 수평 패널 Z축 깊이: 18mm
   const horizontalPanelDepthFront = drawerFrameThickness; // 전면 수평 패널 Z축 깊이: 18mm
@@ -579,7 +579,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           // 위배치 맨 아래 서랍: 마이다 하단 24mm + 상단 18mm 확장 (하부덮개 가림)
           const isBottomDrawer = drawerIndex === 0;
           const maidaBottomExt = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(24) : 0;
-          const maidaTopExt = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(18) : 0;
+          const maidaTopExt = (drawerAlign === 'top' && isBottomDrawer) ? basicThickness : 0;
           const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt;
           const maidaY = centerY + (maidaTopExt - maidaBottomExt) / 2; // 상하 확장 반영
           return (

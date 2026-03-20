@@ -298,8 +298,8 @@ export const calculatePanelDetails = (
       // 2hanging 상부: 추가로 -basicThickness(18) = 섹션높이 - 18
       // 2hanging 하부: 추가로 +lowerHeightBonus(18) = 섹션높이 + 18
       const heightExtension = 10; // backPanelConfig.heightExtension
-      const totalHeightExtension = 26; // 위아래 13mm씩
-      const lowerHeightBonus = 18; // backPanelConfig.lowerHeightBonus
+      const totalHeightExtension = basicThickness * 2 - heightExtension; // 위아래 각 (basicThickness-5)mm씩
+      const lowerHeightBonus = basicThickness; // backPanelConfig.lowerHeightBonus (= 가구재 두께)
       const is2Hanging = moduleData.id.includes('2hanging') && !moduleData.id.includes('2drawer');
       const baseBackPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
       let backPanelHeight: number;

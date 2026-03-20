@@ -953,10 +953,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const isTwoDrawer = moduleData?.id?.includes('2drawer-hanging');
                 const isTwoHanging = moduleData?.id?.includes('2hanging');
 
-                // 백패널 높이 확장값 (위아래 각각 13mm씩 = 총 26mm)
-                const backPanelTopExtension = 13; // mm
-                const backPanelBottomExtension = 13; // mm
-                const totalHeightExtension = mmToThreeUnits(backPanelTopExtension + backPanelBottomExtension);
+                // 백패널 높이 확장값: basicThickness에 따라 동적 계산
+                // 각 측 확장 = basicThickness - 5mm, 총 확장 = 2*basicThickness - 10mm
+                const totalHeightExtension = basicThickness * 2 - mmToThreeUnits(10);
 
                 // 측판과 동일한 높이 계산 로직 사용 (2단 행잉만 오프셋 적용)
                 const applyOffset = isTwoHanging && !isTwoDrawer;
@@ -965,17 +964,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const originalLowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
                 const originalUpperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
 
-                // 백패널 높이 = 원본 + 위아래 13mm씩 확장 (측판과 동일하게)
+                // 백패널 높이 = 원본 + 확장 (측판과 동일하게)
                 const lowerBackPanelHeight = applyOffset
-                  ? originalLowerBackPanelHeight + totalHeightExtension + mmToThreeUnits(backPanelConfig.lowerHeightBonus)
+                  ? originalLowerBackPanelHeight + totalHeightExtension + basicThickness
                   : originalLowerBackPanelHeight + totalHeightExtension;
 
                 const upperBackPanelHeight = applyOffset
                   ? originalUpperBackPanelHeight + totalHeightExtension - basicThickness
                   : originalUpperBackPanelHeight + totalHeightExtension;
 
-                // 백패널 Y 위치 조정 (하단 13mm 확장분만큼 아래로 이동)
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 - mmToThreeUnits(backPanelBottomExtension - backPanelTopExtension)/2;
+                // 백패널 Y 위치 조정 (상하 확장 동일하므로 오프셋 없음)
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2;
                 const upperOffset = applyOffset ? basicThickness : 0;
                 const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperSectionHeight/2;
 
@@ -1115,20 +1114,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             </>
           ) : (
             <>
-              {/* 단일 섹션 백패널 - 위아래 각각 13mm씩 확장하여 측판과 동일 높이 */}
+              {/* 단일 섹션 백패널 - basicThickness에 맞춰 동적 확장하여 측판과 동일 높이 */}
               {(() => {
-                // 백패널 높이 확장값 (위아래 각각 13mm씩 = 총 26mm)
-                const backPanelTopExtension = 13; // mm
-                const backPanelBottomExtension = 13; // mm
-                const totalHeightExtension = mmToThreeUnits(backPanelTopExtension + backPanelBottomExtension);
+                // 백패널 높이 확장값: basicThickness에 따라 동적 계산
+                const totalHeightExtension = basicThickness * 2 - mmToThreeUnits(10);
 
-                // 원본 백패널 높이 + 26mm 확장 = 측판 높이와 동일
+                // 원본 백패널 높이 + 동적 확장 = 측판 높이와 동일
                 const singleBackPanelHeight = innerHeight + mmToThreeUnits(backPanelConfig.heightExtension) + totalHeightExtension;
 
                 console.log('🔍 단일 섹션 백패널 높이:', {
                   innerHeightMm: innerHeight / 0.01,
                   originalExtensionMm: backPanelConfig.heightExtension,
-                  additionalExtensionMm: backPanelTopExtension + backPanelBottomExtension,
+                  totalHeightExtensionMm: totalHeightExtension / 0.01,
                   finalHeightMm: singleBackPanelHeight / 0.01,
                   sidePanel_heightMm: height / 0.01
                 });
