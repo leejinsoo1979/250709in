@@ -69,7 +69,7 @@ export function computeFrameMergeGroups(
       continue;
     }
 
-    if (currentSum + widthMm < maxWidthMm) {
+    if (currentSum + widthMm <= maxWidthMm) {
       currentGroup.push(mod);
       currentSum += widthMm;
     } else {

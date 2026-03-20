@@ -147,7 +147,7 @@ function mergeFrameSegments(
         continue;
       }
 
-      if (currentSum + seg.widthMm < maxWidthMm) {
+      if (currentSum + seg.widthMm <= maxWidthMm) {
         currentGroup.push(seg);
         currentSum += seg.widthMm;
       } else {

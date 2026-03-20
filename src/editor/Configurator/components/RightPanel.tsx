@@ -1233,7 +1233,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
               if (isMergeMode) {
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
                 const baseGroups = computeFrameMergeGroups(slotMods, 'base');
-                console.log('[RightPanel] frameMergeEnabled=true, topGroups:', topGroups, 'baseGroups:', baseGroups, 'slotMods widths:', slotMods.map(m => ({ id: m.id, w: m.moduleWidth || m.customWidth || m.freeWidth })));
 
                 return (
                   <FormControl
