@@ -35,17 +35,10 @@ export function computeFrameMergeGroups(
   type: 'top' | 'base',
   maxWidthMm: number = 2420
 ): FrameMergeGroup[] {
-  // 타입별 필터
-  const filtered = modules.filter(mod =>
-    type === 'top'
-      ? mod.hasTopFrame !== false
-      : mod.hasBase !== false
-  );
+  if (modules.length === 0) return [];
 
-  if (filtered.length === 0) return [];
-
-  // X 위치 기준 정렬
-  const sorted = [...filtered].sort((a, b) => a.position.x - b.position.x);
+  // X 위치 기준 정렬 (필터 없이 전체 모듈로 그룹핑 — 토글 off해도 그룹 유지)
+  const sorted = [...modules].sort((a, b) => a.position.x - b.position.x);
 
   // 전체 모듈의 정렬 순서 기반 알파벳 매핑 (필터 전 전체 기준)
   const allSorted = [...modules].sort((a, b) => a.position.x - b.position.x);
