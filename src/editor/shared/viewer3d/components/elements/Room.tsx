@@ -635,6 +635,14 @@ const Room: React.FC<RoomProps> = ({
     ? Math.max(0, baseFrameHeightMm - floorFinishHeightMm)
     : baseFrameHeightMm;
 
+  // 좌우 프레임 렌더링 크기: 가구와 1.5mm 이격을 위해 프레임 두께를 1.5mm 줄임
+  // (가구 배치 공간 계산에는 원본 frameThickness 사용, 렌더링에만 적용)
+  const FRAME_FURNITURE_GAP = mmToThreeUnits(1.5);
+  const frameRenderThickness = {
+    left: frameThickness.left > 0 ? Math.max(0, frameThickness.left - FRAME_FURNITURE_GAP) : 0,
+    right: frameThickness.right > 0 ? Math.max(0, frameThickness.right - FRAME_FURNITURE_GAP) : 0,
+  };
+
   // 디버깅을 위한 로그
 // console.log('🎯 Room - dimensions 디버깅:', {
     // frameThicknessMm,
@@ -2555,7 +2563,7 @@ const Room: React.FC<RoomProps> = ({
                 key={`left-step-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left}
                 args={[
-                  frameThickness.left,
+                  frameRenderThickness.left,
                   droppedH,
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
@@ -2590,7 +2598,7 @@ const Room: React.FC<RoomProps> = ({
                   isOuterFrame
                   isEndPanel={!wallConfig?.left}
                   args={[
-                    frameThickness.left,
+                    frameRenderThickness.left,
                     upperH,
                     spaceInfo.surroundType === 'no-surround'
                       ? (wallConfig?.left ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
@@ -2670,7 +2678,7 @@ const Room: React.FC<RoomProps> = ({
                 key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
-                  frameThickness.left,
+                  frameRenderThickness.left,
                   // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
                   droppedFrameHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
@@ -2712,7 +2720,7 @@ const Room: React.FC<RoomProps> = ({
                   isOuterFrame
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
-                    frameThickness.left,
+                    frameRenderThickness.left,
                     upperPartHeight, // 상부 구간 높이
                     // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                     spaceInfo.surroundType === 'no-surround'
@@ -2804,7 +2812,7 @@ const Room: React.FC<RoomProps> = ({
             key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
-              frameThickness.left,
+              frameRenderThickness.left,
               adjustedPanelHeight,
               // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
               spaceInfo.surroundType === 'no-surround'
@@ -2906,7 +2914,7 @@ const Room: React.FC<RoomProps> = ({
                 key={`right-step-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right}
                 args={[
-                  frameThickness.right,
+                  frameRenderThickness.right,
                   droppedH,
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
@@ -2943,7 +2951,7 @@ const Room: React.FC<RoomProps> = ({
                   isOuterFrame
                   isEndPanel={!wallConfig?.right}
                   args={[
-                    frameThickness.right,
+                    frameRenderThickness.right,
                     upperH,
                     spaceInfo.surroundType === 'no-surround'
                       ? (wallConfig?.right ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
@@ -3078,7 +3086,7 @@ const Room: React.FC<RoomProps> = ({
                 key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
-                  frameThickness.right,
+                  frameRenderThickness.right,
                   // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
                   droppedFrameHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
@@ -3144,7 +3152,7 @@ const Room: React.FC<RoomProps> = ({
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
-              frameThickness.right,
+              frameRenderThickness.right,
               adjustedPanelHeight,
               // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
               spaceInfo.surroundType === 'no-surround'
@@ -4225,7 +4233,7 @@ const Room: React.FC<RoomProps> = ({
                       hideEdges={hideEdges}
                       key={`left-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
-                        frameThickness.left,
+                        frameRenderThickness.left,
                         droppedFrameHeight,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
@@ -4283,7 +4291,7 @@ const Room: React.FC<RoomProps> = ({
                       hideEdges={hideEdges}
                       key={`left-step-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
-                        frameThickness.left,
+                        frameRenderThickness.left,
                         droppedH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
@@ -4370,7 +4378,7 @@ const Room: React.FC<RoomProps> = ({
                       hideEdges={hideEdges}
                       key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
-                        frameThickness.right,
+                        frameRenderThickness.right,
                         subFrameH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
@@ -4429,7 +4437,7 @@ const Room: React.FC<RoomProps> = ({
                       hideEdges={hideEdges}
                       key={`right-step-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
-                        frameThickness.right,
+                        frameRenderThickness.right,
                         droppedH,
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
