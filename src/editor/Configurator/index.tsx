@@ -5311,7 +5311,8 @@ const Configurator: React.FC = () => {
           />
         </div>
 
-        {/* 가구재 두께 설정 (15mm / 18mm) */}
+        {/* 가구재 두께 설정 (15mm / 18mm) — 15mm는 슈퍼어드민만 */}
+        {user?.email === 'sbbc212@gmail.com' && (
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -5329,6 +5330,7 @@ const Configurator: React.FC = () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
         {(() => {

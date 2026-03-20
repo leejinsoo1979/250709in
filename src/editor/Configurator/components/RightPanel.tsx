@@ -10,6 +10,7 @@ import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/i
 import { useTranslation } from '@/i18n/useTranslation';
 import PreviewViewer from './PreviewViewer';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
+import { useAuth } from '@/auth/AuthProvider';
 
 // Window 인터페이스 확장
 declare global {
@@ -625,6 +626,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   frameType,
   onFrameTypeChange
 }) => {
+  const { user } = useAuth();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, clearAllModules, updatePlacedModule } = useFurnitureStore();
   const { setActiveDroppedCeilingTab, selectedFurnitureId, setHighlightedFrame } = useUIStore();
@@ -1534,7 +1536,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 가구재 두께 설정 (15mm / 18mm) */}
+            {/* 가구재 두께 설정 (15mm / 18mm) — 15mm는 슈퍼어드민만 */}
+            {user?.email === 'sbbc212@gmail.com' && (
             <FormControl
               label="가구재 두께"
               expanded={expandedSections.has('panelThickness')}
@@ -1552,6 +1555,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 ))}
               </div>
             </FormControl>
+            )}
 
             {/* 백패널 두께 설정 — 모든 가구에 일괄 적용 */}
             {(() => {
