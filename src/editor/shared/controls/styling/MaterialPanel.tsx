@@ -13,11 +13,11 @@ const cn = (...classes: (string | undefined | null | false)[]) => {
 
 // 재질 데이터 정의
 const materialSwatches = [
-  // 멜라톤
-  { id: "m1", name: "4319", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_4319.png" },
-  { id: "m2", name: "8832", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_8832.png" },
-  { id: "m3", name: "Oyster", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_OYSTER.png" },
-  { id: "m4", name: "Taupe", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_TAUPE.png" },
+  // 메라톤
+  { id: "m1", name: "4319", category: "메라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_4319.png" },
+  { id: "m2", name: "8832", category: "메라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_8832.png" },
+  { id: "m3", name: "Oyster", category: "메라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_OYSTER.png" },
+  { id: "m4", name: "Taupe", category: "메라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_TAUPE.png" },
 
   // 한솔
   { id: "h1", name: "HSB117006", category: "한솔", color: "#FFFFFF", texture: "image", image: "/materials/solid/HANSOL_HSB117006.png" },
@@ -56,7 +56,7 @@ const materialSwatches = [
 ];
 
 // 필터 탭 고정 순서
-const categories = ['멜라톤', '한솔', '예림', '커스텀'] as const;
+const categories = ['메라톤', '한솔', '예림', '커스텀'] as const;
 
 const MaterialPanel: React.FC = () => {
   const { t } = useTranslation();
