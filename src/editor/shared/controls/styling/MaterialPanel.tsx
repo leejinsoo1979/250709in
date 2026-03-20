@@ -38,9 +38,25 @@ const materialSwatches = [
   { id: "i5", name: "Natural Oak", category: "필름", color: "#c7ae7f", texture: "wood" },
   { id: "i7", name: "Cherry", category: "필름", color: "#6e4239", texture: "wood" },
 
-  // 이미지 텍스처 (카테고리: 마루/타일)
+  // 이미지 텍스처 (카테고리: 마루)
   { id: "i6", name: "Oak", category: "마루", color: "#d4bd94", texture: "image", image: "/materials/oak/Poliigon_WoodVeneerOak_7760_BaseColor.jpg" },
   { id: "i8", name: "Cabinet Texture1", category: "타일", color: "#FFFFFF", texture: "image", image: "/materials/solid/cabinet texture1.jpeg" },
+
+  // 한솔 (카테고리: 한솔)
+  { id: "h1", name: "HSB117006", category: "한솔", color: "#FFFFFF", texture: "image", image: "/materials/solid/HANSOL_HSB117006.png" },
+  { id: "h2", name: "HSB120002", category: "한솔", color: "#FFFFFF", texture: "image", image: "/materials/solid/HANSOL_HSB120002.png" },
+  { id: "h3", name: "HSB120512", category: "한솔", color: "#FFFFFF", texture: "image", image: "/materials/solid/HANSOL_HSB120512.png" },
+  { id: "h4", name: "HSB120516", category: "한솔", color: "#FFFFFF", texture: "image", image: "/materials/solid/HANSOL_HSB120516.png" },
+  { id: "h5", name: "HSB121004", category: "한솔", color: "#FFFFFF", texture: "image", image: "/materials/solid/HANSOL_HSB121004.png" },
+
+  // 멜라톤 (카테고리: 멜라톤)
+  { id: "m1", name: "4319", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_4319.png" },
+  { id: "m2", name: "8832", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_8832.png" },
+  { id: "m3", name: "Oyster", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_OYSTER.png" },
+  { id: "m4", name: "Taupe", category: "멜라톤", color: "#FFFFFF", texture: "image", image: "/materials/solid/MELATONE_TAUPE.png" },
+
+  // 예림 (카테고리: 예림)
+  { id: "y1", name: "SM-21", category: "예림", color: "#FFFFFF", texture: "image", image: "/materials/solid/YERIM_SM-21.png" },
 ];
 
 const MaterialPanel: React.FC = () => {
