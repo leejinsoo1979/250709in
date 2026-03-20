@@ -156,16 +156,6 @@ const BoxWithEdges: React.FC<{
     const top = position[1] + args[1] / 2;
 // console.log('📍 Room BoxWithEdges 측면 프레임 - Y:', position[1], 'H:', args[1], '하단:', bottom, '상단:', top, 'position:', position, 'args:', args);
 
-    // Y=0인 프레임 추적
-    if (position[1] === 0) {
-      console.error('🚨🚨🚨 [Y=0 프레임 발견!] 바닥에서 시작하는 프레임!', {
-        position,
-        args,
-        isEndPanel,
-        material,
-        stackTrace: new Error().stack
-      });
-    }
   }
 
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
