@@ -851,6 +851,8 @@ const Room: React.FC<RoomProps> = ({
     let frameColor = materialConfig?.doorColor || materialConfig?.frameColor || defaultColor;
     let baseFrameTransparent = false;
 
+    const isHighlighted = frameType && highlightedFrame === frameType;
+
     // 테마 색상 매핑
     const themeColorMap: Record<string, string> = {
       green: '#10b981',
@@ -886,20 +888,25 @@ const Room: React.FC<RoomProps> = ({
       olive: '#4C462C'
     };
 
+    // 프레임 강조 색상 (붉은색)
+    const highlightColor = '#ff3333';
+    const highlightEmissive = 0xff3333 >> 1;
+
     const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(frameColor),
+      color: new THREE.Color(isHighlighted ? highlightColor : frameColor),
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
-      emissive: new THREE.Color(0x000000),
-      emissiveIntensity: 0.0,
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || baseFrameTransparent,
-      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : 1.0,
+      emissive: new THREE.Color(isHighlighted ? highlightEmissive : 0x000000),
+      emissiveIntensity: isHighlighted ? 1.0 : 0.0,
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || !!isHighlighted || baseFrameTransparent,
+      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? 0.6 : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,
     });
 
     // 프레임 텍스처 적용 (doorTexture 우선, frameTexture 폴백)
     const frameTextureUrl = materialConfig?.doorTexture || materialConfig?.frameTexture;
     const shouldApplyTexture =
+      !isHighlighted &&
       frameTextureUrl &&
       !(viewMode === '2D' && (frameType === 'top' || frameType === 'base'));
 
@@ -954,7 +961,7 @@ const Room: React.FC<RoomProps> = ({
     }
 
     return material;
-  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color, invalidate]);
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color, invalidate]);
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
@@ -974,7 +981,7 @@ const Room: React.FC<RoomProps> = ({
   const [, forceUpdate] = useState(0);
   const triggerRerender = useCallback(() => forceUpdate(v => v + 1), []);
 
-  const frameDeps = [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture] as const;
+  const frameDeps = [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame] as const;
 
   useEffect(() => {
     const mat = createFrameMaterial('base', triggerRerender);
