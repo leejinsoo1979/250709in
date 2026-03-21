@@ -814,6 +814,18 @@ const Header: React.FC<HeaderProps> = ({
                     onClick={() => {
                       console.log('CNC 옵티마이저 버튼 클릭됨');
 
+                      const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+                      const isFrameMerged = currentSpaceInfo.frameMergeEnabled ?? false;
+
+                      // 프레임 병합 안 된 상태면 팝업으로 병합 여부 확인
+                      if (!isFrameMerged) {
+                        const mergeAndExport = confirm('분절된 상하부 프레임을 병합하여 내보내시겠습니까?');
+                        if (mergeAndExport) {
+                          // 병합 상태로 변경 후 내보내기
+                          useSpaceConfigStore.getState().setSpaceInfo({ frameMergeEnabled: true });
+                        }
+                      }
+
                       // 현재 전체 상태를 sessionStorage에 저장
                       const currentState = {
                         projectId,
