@@ -3974,21 +3974,22 @@ const Room: React.FC<RoomProps> = ({
               : mmToThreeUnits(spaceHalfW - cbWidthMM + cbRenderThick / 2);  // 바깥 정렬: 1.5mm 안쪽으로
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
-            // CB 패널: depthTest=false로 renderOrder만으로 순서 제어 → 맨 뒤
+            // CB 패널: polygonOffset으로 뒤로 밀기 (천장은 factor=-1, CB는 factor=2)
             const cbMat = cbFrameMat.clone();
-            cbMat.depthTest = false;
-            cbMat.depthWrite = false;
+            cbMat.polygonOffset = true;
+            cbMat.polygonOffsetFactor = 2;
+            cbMat.polygonOffsetUnits = 2;
 
             return (
               <group key="slot-curtain-box-finish">
-                {/* 전면 가림판 — 맨 뒤 렌더링 */}
+                {/* 전면 가림판 — 천장/프레임보다 뒤 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
                   material={cbMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
                   renderOrder={-5} />
-                {/* 경계면 칸막이 — 맨 뒤 렌더링 */}
+                {/* 경계면 칸막이 — 천장/프레임보다 뒤 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
