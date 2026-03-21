@@ -500,6 +500,76 @@ export const calculatePanelDetails = (
             material: 'MDF'
           });
         }
+
+        // === 서랍속장 (날개벽) 패널 ===
+        // DrawerRenderer.tsx 3D 렌더링과 동일한 치수
+        // 구조: 좌/우 각각 수직패널(레일용) + 전면수평패널 + 후면수평패널 = 6개
+        const bpt = backPanelThickness; // 백패널 두께 (기본 9mm)
+
+        // 수직 패널 (레일 부착): 전면 수평패널 뒷면 ~ 후면 수평패널 앞면 사이
+        // 3D: verticalPanelDepth = frontEdge - backEdge
+        //   frontEdge = (depth/2 - 85 - 18/2) - 18/2 = depth/2 - 85 - 18 = depth/2 - 103
+        //   backEdge = (-depth/2 + 18 + bpt + 18/2 - 1) + 18/2 = -depth/2 + 18 + bpt + 18 - 1 = -depth/2 + 35 + bpt
+        //   depth = customDepth * 0.01 (Three.js) → mm: customDepth
+        //   verticalPanelDepthMm = customDepth - 103 - 35 - bpt = customDepth - 138 - bpt
+        const wingVerticalPanelDepthMm = customDepth - 138 - bpt;
+        const wingVerticalPanelHeightMm = sectionHeightMm; // 서랍 섹션 전체 내경 높이
+        const wingVerticalPanelThickness = basicThickness; // 18mm
+
+        // 좌측 수직 패널
+        targetPanel.push({
+          name: `${sectionPrefix}서랍속장(좌)`,
+          width: wingVerticalPanelDepthMm, // Z축 깊이
+          height: wingVerticalPanelHeightMm, // Y축 높이
+          thickness: wingVerticalPanelThickness, // 18mm
+          material: 'PB'
+        });
+        // 우측 수직 패널
+        targetPanel.push({
+          name: `${sectionPrefix}서랍속장(우)`,
+          width: wingVerticalPanelDepthMm,
+          height: wingVerticalPanelHeightMm,
+          thickness: wingVerticalPanelThickness,
+          material: 'PB'
+        });
+
+        // 수평 패널 (전면/후면): 폭 = 27 + basicThickness = 45mm, 깊이 = 18mm
+        const wingHorizontalPanelWidthMm = 27 + basicThickness; // 45mm
+        const wingHorizontalPanelHeightMm = sectionHeightMm;
+        const wingHorizontalPanelDepthMm = basicThickness; // 18mm
+
+        // 좌측 후면 수평 패널
+        targetPanel.push({
+          name: `${sectionPrefix}서랍속장(좌) 후면`,
+          width: wingHorizontalPanelWidthMm,
+          height: wingHorizontalPanelHeightMm,
+          thickness: wingHorizontalPanelDepthMm,
+          material: 'PB'
+        });
+        // 우측 후면 수평 패널
+        targetPanel.push({
+          name: `${sectionPrefix}서랍속장(우) 후면`,
+          width: wingHorizontalPanelWidthMm,
+          height: wingHorizontalPanelHeightMm,
+          thickness: wingHorizontalPanelDepthMm,
+          material: 'PB'
+        });
+        // 좌측 전면 수평 패널
+        targetPanel.push({
+          name: `${sectionPrefix}서랍속장(좌) 전면`,
+          width: wingHorizontalPanelWidthMm,
+          height: wingHorizontalPanelHeightMm,
+          thickness: wingHorizontalPanelDepthMm,
+          material: 'PB'
+        });
+        // 우측 전면 수평 패널
+        targetPanel.push({
+          name: `${sectionPrefix}서랍속장(우) 전면`,
+          width: wingHorizontalPanelWidthMm,
+          height: wingHorizontalPanelHeightMm,
+          thickness: wingHorizontalPanelDepthMm,
+          material: 'PB'
+        });
       } else if (section.type === 'hanging') {
         // 옷장 섹션 - 선반이 있으면 추가 (하나만)
         // 2단 옷장 하부장의 shelfPositions: [0]은 치수 표시용이므로 제외

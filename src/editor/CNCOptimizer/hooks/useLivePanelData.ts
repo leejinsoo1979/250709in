@@ -26,6 +26,9 @@ function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' 
   if (panelName.includes('서랍') && panelName.includes('뒷판')) return 'HORIZONTAL';
   if (panelName.includes('서랍') && (panelName.includes('좌측판') || panelName.includes('우측판'))) return 'VERTICAL';
 
+  // 서랍속장 (날개벽) - 세로 방향 (Y축 높이 = 재단방향)
+  if (panelName.includes('서랍속장')) return 'VERTICAL';
+
   // 가구 구조 패널 - 세로 방향
   if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) return 'VERTICAL';
   if (panelName.includes('칸막이')) return 'VERTICAL';
