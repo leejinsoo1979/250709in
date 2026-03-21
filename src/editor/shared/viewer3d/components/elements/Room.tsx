@@ -260,11 +260,36 @@ const BoxWithEdges: React.FC<{
     };
   }, [geometry, edgesGeometry]);
 
+  // renderOrder < 0 (CB 프레임): 렌더링 직전에 depthWrite=false, 직후 복원
+  const cbBeforeRender = useMemo(() => {
+    if (renderOrder !== undefined && renderOrder < 0) {
+      return () => {
+        if (material instanceof THREE.Material) {
+          (material as any)._savedDepthWrite = material.depthWrite;
+          material.depthWrite = false;
+        }
+        onBeforeRender?.();
+      };
+    }
+    return onBeforeRender;
+  }, [renderOrder, material, onBeforeRender]);
+
+  const cbAfterRender = useMemo(() => {
+    if (renderOrder !== undefined && renderOrder < 0) {
+      return () => {
+        if (material instanceof THREE.Material && (material as any)._savedDepthWrite !== undefined) {
+          material.depthWrite = (material as any)._savedDepthWrite;
+        }
+      };
+    }
+    return undefined;
+  }, [renderOrder, material]);
+
   return (
     <group position={position} name={name}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined} renderOrder={renderOrder}>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={cbBeforeRender} onAfterRender={cbAfterRender} name={name ? `${name}-mesh` : undefined} renderOrder={renderOrder}>
           <primitive key={material.uuid} object={material} attach="material" />
         </mesh>
       )}
@@ -1133,16 +1158,6 @@ const Room: React.FC<RoomProps> = ({
     mat.needsUpdate = true;
     return mat;
   }, []);
-
-  // CB 프레임 전용 material (depthWrite=false — 단내림 천장이 덮을 수 있도록)
-  const cbFrameMaterial = useMemo(() => {
-    const cbPos = spaceInfo.curtainBox?.position || 'right';
-    const baseMat = cbPos === 'left' ? leftFrameMaterial : rightFrameMaterial;
-    if (!baseMat) return null;
-    const mat = baseMat.clone();
-    mat.depthWrite = false;
-    return mat;
-  }, [leftFrameMaterial, rightFrameMaterial, spaceInfo.curtainBox?.position]);
 
   // CB 전용 경계벽 material (depthTest=false + depthWrite=false)
   const cbBoundaryWallMaterial = useMemo(() => {
@@ -3972,10 +3987,9 @@ const Room: React.FC<RoomProps> = ({
             const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
-            const cbFrameMat = cbFrameMaterial
-              ?? (cbPos === 'left'
-                ? (leftFrameMaterial ?? createFrameMaterial('left'))
-                : (rightFrameMaterial ?? createFrameMaterial('right')));
+            const cbFrameMat = cbPos === 'left'
+              ? (leftFrameMaterial ?? createFrameMaterial('left'))
+              : (rightFrameMaterial ?? createFrameMaterial('right'));
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
