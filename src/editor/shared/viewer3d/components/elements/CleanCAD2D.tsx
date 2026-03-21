@@ -1546,11 +1546,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left ?? 1.5;
-          leftText = `${leftValue}`;
+          const r = Math.round(leftValue * 10) / 10;
+          leftText = r % 1 === 0 ? String(r) : r.toFixed(1);
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-          leftText = `${leftValue}`;
+          const r = Math.round(leftValue * 10) / 10;
+          leftText = r % 1 === 0 ? String(r) : r.toFixed(1);
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -1668,11 +1670,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right ?? 1.5;
-          rightText = `${rightValue}`;
+          const rr = Math.round(rightValue * 10) / 10;
+          rightText = rr % 1 === 0 ? String(rr) : rr.toFixed(1);
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-          rightText = `${rightValue}`;
+          const rr = Math.round(rightValue * 10) / 10;
+          rightText = rr % 1 === 0 ? String(rr) : rr.toFixed(1);
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -2062,6 +2066,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 내림 함수: 듀얼이면 0.5 단위 내림, 싱글이면 정수 내림
                   const floorValue = (v: number, hasDual: boolean) =>
                     hasDual ? Math.floor(v * 2) / 2 : Math.floor(v);
+                  // 치수 포맷: 정수면 그대로, 소수면 한 자리까지
+                  const fmtDim = (v: number) => { const r = Math.round(v * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); };
 
                   // 자유배치: 각 구간별 이격거리를 빼서 실배치 폭 계산
                   // 슬롯배치: ColumnIndexer의 슬롯 합계 사용
@@ -2256,7 +2262,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {mainPlacementWidth}
+                    {fmtDim(mainPlacementWidth)}
                   </Text>
                 )}
                 {/* 메인 구간 실배치 연장선 */}
@@ -2302,7 +2308,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {scPlacementWidth}
+                    {fmtDim(scPlacementWidth!)}
                   </Text>
                 )}
                 {/* 단내림 구간 실배치 연장선 */}
@@ -2408,7 +2414,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {dcPlacementWidth}
+                    {fmtDim(dcPlacementWidth)}
                   </Text>
                 )}
                 {/* 단내림 구간 실배치 연장선 */}
@@ -2690,17 +2696,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100;
               leftValue = Math.round(Math.abs(distanceFromLeft));
               if (leftValue === 0) return null;
-              leftText = `${leftValue}`;
+              { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
             } else if (hasLeftWall) {
               // 노서라운드: 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left ?? 1.5;
               if (leftValue === 0) return null;
-              leftText = `${leftValue}`;
+              { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
             } else if (leftmostFurnitureX !== null) {
               // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
               leftValue = Math.round(Math.abs(distanceFromLeft));
-              leftText = `${leftValue}`;
+              { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
             }
 
             return (
@@ -2934,18 +2940,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100;
               rightValue = Math.round(Math.abs(distanceFromRight));
               if (rightValue === 0) return null;
-              rightText = `${rightValue}`;
+              { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
             } else if (hasRightWall) {
               // 노서라운드: 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right ?? 1.5;
               if (rightValue === 0) return null;
-              rightText = `${rightValue}`;
+              { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
             } else if (rightmostFurnitureX !== null) {
               // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
               const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100;
               rightValue = Math.round(Math.abs(distanceFromRight));
-              rightText = `${rightValue}`;
+              { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
             }
 
             return (
@@ -6460,6 +6466,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const baseFrameWidth = spaceWidth - (spaceInfo.surroundType === 'no-surround' ? 0 : (mmToThreeUnits(frameSize.left) + mmToThreeUnits(frameSize.right)));
     const baseFrameX = spaceXOffset + spaceWidth/2;
     
+    // 탑뷰 치수선 레이아웃 — 입면(front view)과 동일한 DIM_GAP 기반 균등 간격
+    // 입면: Y축 위로, 탑뷰: Z축 앞으로 (음의 방향)
+    const topViewDimLevels = dimLevels; // 입면과 동일한 단수
+    // 1단(최외곽): 전체 폭 — 가장 앞쪽
+    const topMainDimZ = spaceZOffset - mmToThreeUnits(DIM_GAP * topViewDimLevels);
+    // 2단: 구간 사이즈
+    const topZoneDimZ = spaceZOffset - mmToThreeUnits(DIM_GAP * (topViewDimLevels - 1));
+    // 3단: 내경
+    const topSubDimZ = spaceZOffset - mmToThreeUnits(DIM_GAP * (topViewDimLevels - 2));
+    // 4단(최내곽): 개별 가구 — 가장 공간에 가까움
+    const topSlotDimZ = spaceZOffset - mmToThreeUnits(DIM_GAP);
+
     return (
       <group>
         {/* 탑뷰 치수선들 - 좌측면도가 아닐 때만 표시 */}
@@ -6468,34 +6486,40 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 상단 전체 폭 치수선 (상부 프레임의 가로 길이) - 외부로 이동 */}
         <group>
           {(() => {
-            // 전체 가로 치수선을 캐비넷 외부(앞쪽)로 이동
-            const mainDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 200 : 150);
+            // 전체 가로 치수선 — DIM_GAP 기반 균등 간격 (입면과 동일)
+            const mainDimZ = topMainDimZ;
             
             return (
               <>
-                <Line
+                <NativeLine name="dimension_line"
                   points={[[spaceXOffset, spaceHeight, mainDimZ], [spaceXOffset + spaceWidth, spaceHeight, mainDimZ]]}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                
+
                 {/* 좌측 화살표 */}
-                <Line
+                <NativeLine name="dimension_line"
                   points={createArrowHead([spaceXOffset, spaceHeight, mainDimZ], [spaceXOffset + 0.05, spaceHeight, mainDimZ])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                
+
                 {/* 우측 화살표 */}
-                <Line
+                <NativeLine name="dimension_line"
                   points={createArrowHead([spaceXOffset + spaceWidth, spaceHeight, mainDimZ], [spaceXOffset + spaceWidth - 0.05, spaceHeight, mainDimZ])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                
+
                 {/* 전체 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                   position={[0, spaceHeight + 0.1, mainDimZ - mmToThreeUnits(40)]}
                   fontSize={largeFontSize}
@@ -6521,21 +6545,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   
                   return (
                     <>
-                      <Line
+                      <NativeLine name="dimension_line"
                         points={[
-                          [spaceXOffset, spaceHeight, frameZ], 
+                          [spaceXOffset, spaceHeight, frameZ],
                           [spaceXOffset, spaceHeight, mainDimZ - mmToThreeUnits(20)]
                         ]}
                         color={dimensionColor}
-                        lineWidth={0.5}
+                        renderOrder={100000}
+                        depthTest={false}
                       />
-                      <Line
+                      <NativeLine name="dimension_line"
                         points={[
-                          [spaceXOffset + spaceWidth, spaceHeight, frameZ], 
+                          [spaceXOffset + spaceWidth, spaceHeight, frameZ],
                           [spaceXOffset + spaceWidth, spaceHeight, mainDimZ - mmToThreeUnits(20)]
                         ]}
                         color={dimensionColor}
-                        lineWidth={0.5}
+                        renderOrder={100000}
+                        depthTest={false}
                       />
                     </>
                   );
@@ -6561,38 +6587,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 왼쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left ?? 1.5;
                 if (leftValue === 0) return null;
-                leftText = `${leftValue}`;
+                { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
               } else {
                 // 왼쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-                leftText = `${leftValue}`;
+                { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
               }
               
               return (
                 <>
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={[[spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  
+
                   {/* 좌측 프레임 화살표들 */}
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={createArrowHead([spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + 0.02, spaceHeight, frameDimZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={createArrowHead([spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue) - 0.02, spaceHeight, frameDimZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  
+
                   {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                   <Text
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                     position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                     fontSize={baseFontSize}
@@ -6608,33 +6640,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else {
               // 서라운드 모드일 때는 기존 로직 유지
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-              
+
               // 왼쪽 프레임 두께가 0이면 (벽이 있으면) 표시하지 않음
               if (frameThickness.left === 0) {
                 return null;
               }
-              
+
               // 프레임 두께 값을 직접 사용
               const leftValue = frameThickness.left;
-              
+
               return (
               <>
-                <Line
+                <NativeLine name="dimension_line"
                   points={[[spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ]]}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                
+
                 {/* 좌측 프레임 화살표들 */}
-                <Line
+                <NativeLine name="dimension_line"
                   points={createArrowHead([spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + 0.02, spaceHeight, frameDimZ])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine name="dimension_line"
                   points={createArrowHead([spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue) - 0.02, spaceHeight, frameDimZ])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 
                 {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
@@ -6647,10 +6685,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                 >
-                  {leftValue}
+                  {(() => { const _r = Math.round(leftValue * 10) / 10; return _r % 1 === 0 ? _r : _r.toFixed(1); })()}
                 </Text>
               </>
               );
@@ -6674,38 +6712,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 오른쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right ?? 1.5;
                 if (rightValue === 0) return null;
-                rightText = `${rightValue}`;
+                { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
               } else {
                 // 오른쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
                 rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-                rightText = `${rightValue}`;
+                { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
               }
               
               return (
                 <>
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={[[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth, spaceHeight, frameDimZ]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  
+
                   {/* 우측 프레임 화살표들 */}
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={createArrowHead([spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - mmToThreeUnits(rightValue) + 0.02, spaceHeight, frameDimZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={createArrowHead([spaceXOffset + spaceWidth, spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - 0.02, spaceHeight, frameDimZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  
+
                   {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                   <Text
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                     position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                     fontSize={baseFontSize}
@@ -6721,33 +6765,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else {
               // 서라운드 모드일 때는 기존 로직 유지
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-              
+
               // 오른쪽 프레임 두께가 0이면 (벽이 있으면) 표시하지 않음
               if (frameThickness.right === 0) {
                 return null;
               }
-              
+
               // 프레임 두께 값을 직접 사용
               const rightValue = frameThickness.right;
-            
+
             return (
               <>
-                <Line
+                <NativeLine name="dimension_line"
                   points={[[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth, spaceHeight, frameDimZ]]}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                
+
                 {/* 우측 프레임 화살표들 */}
-                <Line
+                <NativeLine name="dimension_line"
                   points={createArrowHead([spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - mmToThreeUnits(rightValue) + 0.02, spaceHeight, frameDimZ])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine name="dimension_line"
                   points={createArrowHead([spaceXOffset + spaceWidth, spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - 0.02, spaceHeight, frameDimZ])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 
                 {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
@@ -6760,10 +6810,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                 >
-                  {rightValue}
+                  {(() => { const _r = Math.round(rightValue * 10) / 10; return _r % 1 === 0 ? _r : _r.toFixed(1); })()}
                 </Text>
               </>
               );
@@ -6777,10 +6827,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {(() => {
               const normalBounds = getNormalZoneBounds(spaceInfo);
               const droppedBounds = getDroppedZoneBounds(spaceInfo);
-              // 2단: 원 구간 사이즈 (2000/900/150)
-              const zoneDimZ = spaceZOffset - mmToThreeUnits(250);
-              // 3단: 내경 (1997/901.5/147)
-              const subDimensionZ = spaceZOffset - mmToThreeUnits(310);
+              // 2단: 원 구간 사이즈 — DIM_GAP 기반 (입면과 동일 간격)
+              const zoneDimZ = topZoneDimZ;
+              // 3단: 내경 — DIM_GAP 기반
+              const subDimensionZ = topSubDimZ;
 
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
@@ -6853,14 +6903,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 내경 계산용
               const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
 
-              // 헬퍼: 탑뷰 치수선 한 구간 렌더링
+              // 헬퍼: 탑뷰 치수선 한 구간 렌더링 (NativeLine — 입면과 동일)
               const renderZoneDim = (startX: number, endX: number, label: string, z: number) => (
                 <>
-                  <Line points={[[startX, spaceHeight, z], [endX, spaceHeight, z]]} color={dimensionColor} lineWidth={0.5} />
-                  <Line points={createArrowHead([startX, spaceHeight, z], [startX + 0.05, spaceHeight, z])} color={dimensionColor} lineWidth={0.5} />
-                  <Line points={createArrowHead([endX, spaceHeight, z], [endX - 0.05, spaceHeight, z])} color={dimensionColor} lineWidth={0.5} />
+                  <NativeLine name="dimension_line" points={[[startX, spaceHeight, z], [endX, spaceHeight, z]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={createArrowHead([startX, spaceHeight, z], [startX + 0.05, spaceHeight, z])} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={createArrowHead([endX, spaceHeight, z], [endX - 0.05, spaceHeight, z])} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   {(showDimensionsText || isStep2) && (
-                    <Text renderOrder={1000} depthTest={false}
+                    <Text renderOrder={100000} depthTest={false}
                       position={[(startX + endX) / 2, spaceHeight + 0.1, z - mmToThreeUnits(30)]}
                       fontSize={smallFontSize} color={textColor} anchorX="center" anchorY="middle"
                       outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
@@ -6899,7 +6949,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   })()}
 
                   {/* 구간 분리 가이드라인 */}
-                  <Line
+                  <NativeLine name="dimension_line"
                     points={[
                       [hasDC
                         ? (dcPosition === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width))
@@ -6911,33 +6961,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       spaceHeight, subDimensionZ + mmToThreeUnits(20)]
                     ]}
                     color={subGuideColor}
-                    lineWidth={0.5}
+                    renderOrder={100000}
+                    depthTest={false}
                     dashed
                   />
 
                   {/* CB 구간 분리 가이드라인 */}
                   {hasCB && (
-                    <Line
+                    <NativeLine name="dimension_line"
                       points={[
                         [cbOnLeft ? cbEndX : cbStartX, spaceHeight, spaceZOffset],
                         [cbOnLeft ? cbEndX : cbStartX, spaceHeight, subDimensionZ + mmToThreeUnits(20)]
                       ]}
                       color={subGuideColor}
-                      lineWidth={0.5}
+                      renderOrder={100000}
+                      depthTest={false}
                       dashed
                     />
                   )}
 
                   {/* 연장선 */}
-                  <Line points={[[mainStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
-                  <Line points={[[mainEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                  <NativeLine name="dimension_line" points={[[mainStartX, spaceHeight, spaceZOffset], [mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[mainEndX, spaceHeight, spaceZOffset], [mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} renderOrder={100000} depthTest={false} />
                   {(hasDC || hasSC) && (<>
-                    <Line points={[[hasDC ? droppedStartX : scStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [hasDC ? droppedStartX : scStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
-                    <Line points={[[hasDC ? droppedEndX : scEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [hasDC ? droppedEndX : scEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                    <NativeLine name="dimension_line" points={[[hasDC ? droppedStartX : scStartX, spaceHeight, spaceZOffset], [hasDC ? droppedStartX : scStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[hasDC ? droppedEndX : scEndX, spaceHeight, spaceZOffset], [hasDC ? droppedEndX : scEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} renderOrder={100000} depthTest={false} />
                   </>)}
                   {hasCB && (<>
-                    <Line points={[[cbStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [cbStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
-                    <Line points={[[cbEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [cbEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                    <NativeLine name="dimension_line" points={[[cbStartX, spaceHeight, spaceZOffset], [cbStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[cbEndX, spaceHeight, spaceZOffset], [cbEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} renderOrder={100000} depthTest={false} />
                   </>)}
 
                   {/* 경계면 이격거리 치수선 - 탑뷰 */}
@@ -6957,20 +7009,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     return (
                       <>
-                        <Line
+                        <NativeLine name="dimension_line"
                           points={[[boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryRightX, spaceHeight, boundaryGapZ]]}
                           color={dimensionColor}
                           lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
                         />
-                        <Line
+                        <NativeLine name="dimension_line"
                           points={createArrowHead([boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryLeftX + 0.02, spaceHeight, boundaryGapZ])}
                           color={dimensionColor}
                           lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
                         />
-                        <Line
+                        <NativeLine name="dimension_line"
                           points={createArrowHead([boundaryRightX, spaceHeight, boundaryGapZ], [boundaryRightX - 0.02, spaceHeight, boundaryGapZ])}
                           color={dimensionColor}
                           lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
                         />
                         {/* 경계면 이격거리 텍스트 - 클릭 편집 (상단 뷰) */}
                         {editingGapSide === 'middle' ? (
@@ -7156,27 +7214,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key="cabinet-depth-dimension">
             {/* 치수선 */}
-            <Line
+            <NativeLine name="dimension_line"
               points={[[leftDimensionX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            
+
             {/* 화살표들 */}
-            <Line
+            <NativeLine name="dimension_line"
               points={createArrowHead([leftDimensionX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestBackZ + 0.02], 0.01)}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            <Line
+            <NativeLine name="dimension_line"
               points={createArrowHead([leftDimensionX, spaceHeight, deepestFrontZ], [leftDimensionX, spaceHeight, deepestFrontZ - 0.02], 0.01)}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            
+
             {/* 캐비넷 깊이 텍스트 */}
             <Text
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
               position={[leftDimensionX - mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
               fontSize={baseFontSize}
@@ -7189,15 +7244,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
 
             {/* 연장선들 - 캐비넷 뒷면과 앞면에서 치수선까지 */}
-            <Line
+            <NativeLine name="dimension_line"
               points={[[deepestFurnitureRightX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestBackZ]]}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} renderOrder={100000} depthTest={false}
             />
-            <Line
+            <NativeLine name="dimension_line"
               points={[[deepestFurnitureRightX, spaceHeight, deepestFrontZ], [leftDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} renderOrder={100000} depthTest={false}
             />
           </group>
         );
