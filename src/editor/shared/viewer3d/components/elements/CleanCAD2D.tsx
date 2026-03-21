@@ -1972,39 +1972,95 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
                 </>)}
-                {/* 슬롯배치 커튼박스 구간 치수선 */}
-                {hasCB && (<>
-                <Line
-                  points={[[cbStartX, subDimensionY, 0.002], [cbEndX, subDimensionY, 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([cbStartX, subDimensionY, 0.002], [cbStartX + 0.05, subDimensionY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([cbEndX, subDimensionY, 0.002], [cbEndX - 0.05, subDimensionY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[(cbStartX + cbEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                  >
-                    {Math.round(cbWidth - 3)}
-                  </Text>
-                )}
-                </>)}
+                {/* 슬롯배치 커튼박스 구간 치수선 (양쪽 1.5mm 이격 포함) */}
+                {hasCB && (() => {
+                  const cbGapMm = 1.5;
+                  const cbGap = mmToThreeUnits(cbGapMm);
+                  // 이격 반영 실배치 구간
+                  const innerLeft = cbOnLeft ? cbStartX + cbGap : cbStartX + cbGap;
+                  const innerRight = cbOnLeft ? cbEndX - cbGap : cbEndX - cbGap;
+                  // 벽쪽 이격 구간
+                  const wallGapLeft = cbOnLeft ? cbStartX : cbEndX - cbGap;
+                  const wallGapRight = cbOnLeft ? cbStartX + cbGap : cbEndX;
+                  // 안쪽 이격 구간
+                  const innerGapLeft = cbOnLeft ? cbEndX - cbGap : cbStartX;
+                  const innerGapRight = cbOnLeft ? cbEndX : cbStartX + cbGap;
+                  return (<>
+                  {/* 실배치 구간 147mm */}
+                  <Line
+                    points={[[innerLeft, subDimensionY, 0.002], [innerRight, subDimensionY, 0.002]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([innerLeft, subDimensionY, 0.002], [innerLeft + 0.05, subDimensionY, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([innerRight, subDimensionY, 0.002], [innerRight - 0.05, subDimensionY, 0.002])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  {(showDimensionsText || isStep2) && (
+                    <Text
+                      renderOrder={1000}
+                      depthTest={false}
+                      position={[(innerLeft + innerRight) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                      fontSize={baseFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                    >
+                      {Math.round(cbWidth - 3)}
+                    </Text>
+                  )}
+                  {/* 벽쪽 1.5mm 이격 */}
+                  <Line
+                    points={[[wallGapLeft, subDimensionY, 0.002], [wallGapRight, subDimensionY, 0.002]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  {(showDimensionsText || isStep2) && (
+                    <Text
+                      renderOrder={1000}
+                      depthTest={false}
+                      position={[(wallGapLeft + wallGapRight) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                      fontSize={baseFontSize * 0.85}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                    >
+                      {cbGapMm}
+                    </Text>
+                  )}
+                  {/* 안쪽 1.5mm 이격 */}
+                  <Line
+                    points={[[innerGapLeft, subDimensionY, 0.002], [innerGapRight, subDimensionY, 0.002]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  {(showDimensionsText || isStep2) && (
+                    <Text
+                      renderOrder={1000}
+                      depthTest={false}
+                      position={[(innerGapLeft + innerGapRight) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                      fontSize={baseFontSize * 0.85}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                    >
+                      {cbGapMm}
+                    </Text>
+                  )}
+                  </>);
+                })()}
 
                 {/* ===== 3단: 실배치 공간 치수선 ===== */}
                 {(() => {
@@ -2498,15 +2554,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // 슬롯배치 커튼박스 벽쪽 1.5mm 이격 (안쪽은 단내림↔CB 경계에서 이미 표시)
-                  if (hasCB && !isFreePlacement) {
-                    const cbGapMm = 1.5;
-                    if (cbOnLeft) {
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + mmToThreeUnits(cbGapMm) });
-                    } else {
-                      boundaries.push({ leftX: cbEndX - mmToThreeUnits(cbGapMm), rightX: cbEndX });
-                    }
-                  }
 
                   return (<>
                     {boundaries.map((b, idx) => (
