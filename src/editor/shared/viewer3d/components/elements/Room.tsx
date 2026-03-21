@@ -3951,69 +3951,50 @@ const Room: React.FC<RoomProps> = ({
         <>
           {/* 슬롯배치 커튼박스 L자 마감 (전면 가림판 + 경계면 칸막이) */}
           {/* 외측 엔드패널은 기존 좌/우 프레임 코드가 그대로 렌더링 */}
+          {/* 자유배치 커튼박스 마감(line 3886)과 동일한 L자 구조: 전면=가구 앞면, 경계면=전면 뒤로 연장 */}
           {isCurtainBoxSlot && spaceInfo.curtainBox?.enabled && (() => {
             const cbPos = spaceInfo.curtainBox!.position || 'right';
             const cbWidthMM = spaceInfo.curtainBox!.width || 150;
+            const panelThickMM = END_PANEL_THICKNESS; // 18mm
 
             // 좌/우 엔드패널과 동일한 높이/Y (받침대 반영)
             const cbPanelH = adjustedPanelHeight;
             const cbCenterY = sideFrameCenterY;
 
-            // 커튼박스 쪽 프레임 두께 (해당 쪽 엔드패널과 동일)
-            const cbFrameThick = cbPos === 'left' ? frameRenderThickness.left : frameRenderThickness.right;
-
             const cbFrameMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
               : (rightFrameMaterial ?? createFrameMaterial('right'));
 
-            // 해당 쪽 벽 유무
-            const cbWallExists = cbPos === 'left' ? wallConfig?.left : wallConfig?.right;
-
-            // 엔드패널과 동일한 깊이/Z 계산
-            const cbDepth = spaceInfo.surroundType === 'no-surround'
-              ? (cbWallExists ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
-              : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !cbWallExists) ||
-                (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS));
-
-            const cbZ = spaceInfo.surroundType === 'no-surround'
-              ? (cbWallExists
-                ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
-                : noSurroundEndPanelZ)
-              : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !cbWallExists) ||
-                (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                ? surroundEndPanelZ
-                : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3));
-
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
-            // 경계면 칸막이: CB와 메인 구간 경계 (18mm 두께)
-            const borderX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - END_PANEL_THICKNESS / 2)
-              : mmToThreeUnits(spaceHalfW - cbWidthMM + END_PANEL_THICKNESS / 2);
-
-            // 전면 가림판: 외측 엔드패널과 경계면 칸막이 사이 (앞면 막음)
-            const frontZ = cbZ + cbDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-            // 전면 폭 = CB 폭 - 외측 엔드패널 두께 - 경계면 패널 두께
-            const frontWidthMM = cbWidthMM - (cbPos === 'left' ? (spaceInfo.frameSize?.left || 42) : (spaceInfo.frameSize?.right || 42)) - END_PANEL_THICKNESS;
-            const frontWidth = mmToThreeUnits(Math.max(frontWidthMM, 0));
+            // ── 전면 가림판: 가구 앞면 위치 ──
+            const frontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+            // 전면 폭 = CB 전체 폭 (외측 엔드패널 ~ 경계면 칸막이까지 전부 덮음)
+            const frontWidth = mmToThreeUnits(cbWidthMM);
             const frontCenterX = cbPos === 'left'
-              ? xOffset + cbFrameThick + frontWidth / 2
-              : xOffset + width - cbFrameThick - frontWidth / 2;
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM / 2)
+              : mmToThreeUnits(spaceHalfW - cbWidthMM / 2);
+
+            // ── 경계면 칸막이: 전면패널 뒤쪽으로 연장되는 L자 세로 ──
+            const SIDE_BASE_DEPTH_MM = 40; // 자유배치와 동일한 측면 깊이
+            const borderX = cbPos === 'left'
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - panelThickMM / 2)
+              : mmToThreeUnits(spaceHalfW - cbWidthMM + panelThickMM / 2);
+            const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
             return (
               <group key="slot-curtain-box-finish">
-                {/* 전면 가림판 (앞면 L자 가로) */}
+                {/* 전면 가림판 — 가구 앞면에 CB 전체 폭으로 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-front-panel"
-                  args={[frontWidth, cbPanelH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                  args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
                   material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                {/* 경계면 칸막이 (L자 세로) */}
+                {/* 경계면 칸막이 — 전면 뒤로 40mm 깊이 L자 세로 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
-                  args={[mmToThreeUnits(END_PANEL_THICKNESS), cbPanelH, cbDepth]}
-                  position={[borderX, cbCenterY, cbZ]}
+                  args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
+                  position={[borderX, cbCenterY, sideZ]}
                   material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
               </group>
             );
