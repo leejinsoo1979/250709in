@@ -3714,7 +3714,12 @@ const Room: React.FC<RoomProps> = ({
 
             // L자 구조: 전면패널 + 경계면 측면패널
             const SIDE_BASE_DEPTH_MM = 40; // 측면패널 기본 깊이
-            const frontZ = surroundZPosition;
+            // 가구 앞면 Z 위치 계산 (surroundZPosition과 동일 로직)
+            const _cbBaseZ = isFullSurround
+              ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
+            const frontZ = _cbBaseZ + (spaceInfo.frameOffsetBase === 'door' ? mmToThreeUnits(spaceInfo.surroundDoorOffset ?? 0) : 0);
 
             // 전면패널: 커튼박스 전체 폭, 가구 앞면 위치
             const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
