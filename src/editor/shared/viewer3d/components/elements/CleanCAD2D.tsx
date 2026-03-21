@@ -2839,6 +2839,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
+      {/* 서라운드 모드 좌측 커튼박스 너비 치수선 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
+      <group>
+            {(() => {
+              const cbW = spaceInfo.curtainBox!.width || 150;
+              const cbStartX = leftOffset;
+              const cbEndX = leftOffset + mmToThreeUnits(cbW);
+              return (<>
+                <Line points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Text renderOrder={1000} depthTest={false}
+                  position={[cbStartX + mmToThreeUnits(cbW) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                  fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                >{cbW}</Text>
+                <NativeLine name="dimension_line"
+                  points={[[cbStartX, spaceHeight, 0.001], [cbStartX, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                  color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[cbEndX, spaceHeight, 0.001], [cbEndX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+                  color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+              </>);
+            })()}
+      </group>
+      )}
+
       {/* 서라운드 모드 좌측 프레임 치수선 - 자유배치/커튼박스 좌측/좌단내림 시 숨김 */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && !(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left') && (
       <group>
@@ -3085,6 +3114,36 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
+      {/* 서라운드 모드 우측 커튼박스 너비 치수선 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
+      <group>
+            {(() => {
+              const cbW = spaceInfo.curtainBox!.width || 150;
+              const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+              const cbStartX = rightEdge - mmToThreeUnits(cbW);
+              const cbEndX = rightEdge;
+              return (<>
+                <Line points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Text renderOrder={1000} depthTest={false}
+                  position={[cbStartX + mmToThreeUnits(cbW) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                  fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                >{cbW}</Text>
+                <NativeLine name="dimension_line"
+                  points={[[cbStartX, spaceHeight, 0.001], [cbStartX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+                  color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[cbEndX, spaceHeight, 0.001], [cbEndX, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                  color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
+                />
+              </>);
+            })()}
+      </group>
+      )}
+
       {/* 서라운드 모드 우측 프레임 치수선 - 자유배치/커튼박스 우측/우단내림 시 숨김 */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && !(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right') && (
       <group>
