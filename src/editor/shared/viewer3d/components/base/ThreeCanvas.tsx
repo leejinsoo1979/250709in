@@ -1039,7 +1039,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               // renderer 참조 저장
               canvasRef.current = gl.domElement;
               rendererRef.current = gl;
-              gl.localClippingEnabled = true;
 
               // GLB 내보내기를 위한 scene 참조 저장
               if (sceneRef) {
