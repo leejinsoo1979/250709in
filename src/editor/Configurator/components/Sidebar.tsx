@@ -57,11 +57,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <HiOutlineColorSwatch size={22} />,
       label: t('sidebar.material')
     },
-    {
-      id: 'structure' as SidebarTab,
-      icon: <TbBoxAlignRight size={22} />,
-      label: '기둥'
-    },
+    // {
+    //   id: 'structure' as SidebarTab,
+    //   icon: <TbBoxAlignRight size={22} />,
+    //   label: '기둥'
+    // },
     {
       id: 'myCabinet' as SidebarTab,
       icon: <MdOutlineDashboardCustomize size={22} />,
