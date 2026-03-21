@@ -20,7 +20,8 @@ function getEpCorrectedWidth(mod: PlacedModule): number {
   const epThk = mod.endPanelThickness || 18;
   if (mod.hasLeftEndPanel) widthMm -= epThk;
   if (mod.hasRightEndPanel) widthMm -= epThk;
-  return widthMm;
+  // 부동소수점 오차 제거 — 소수점 한 자리로 반올림
+  return Math.round(widthMm * 10) / 10;
 }
 
 /**
