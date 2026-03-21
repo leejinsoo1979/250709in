@@ -1914,6 +1914,20 @@ const Room: React.FC<RoomProps> = ({
                         <planeGeometry args={[extendedPanelDepth, cbBoundaryH]} />
                         <primitive object={ceilingBoundaryWallMaterial} />
                       </mesh>
+                      {/* CB 구간 정면 가림벽: 단내림천장~메인천장, CB 마감패널 앞에 배치 */}
+                      {(() => {
+                        const dcDropMm = spaceInfo.droppedCeiling?.dropHeight || 200;
+                        const maskH = mmToThreeUnits(dcDropMm);
+                        const maskY = panelStartY + height - maskH / 2;
+                        // CB 마감 패널 전면 Z보다 약간 앞
+                        const cbFrontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(4);
+                        return (
+                          <mesh position={[cbAreaX, maskY, cbFrontZ]} renderOrder={1}>
+                            <planeGeometry args={[cbOnlyWidth, maskH]} />
+                            <primitive object={opaqueTopWallMaterial} attach="material" />
+                          </mesh>
+                        );
+                      })()}
                     </>
                   );
                 })()}
@@ -3960,21 +3974,26 @@ const Room: React.FC<RoomProps> = ({
               : mmToThreeUnits(spaceHalfW - cbWidthMM + cbRenderThick / 2);  // 바깥 정렬: 1.5mm 안쪽으로
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
+            // CB 패널: depthTest=false로 renderOrder만으로 순서 제어 → 맨 뒤
+            const cbMat = cbFrameMat.clone();
+            cbMat.depthTest = false;
+            cbMat.depthWrite = false;
+
             return (
               <group key="slot-curtain-box-finish">
-                {/* 전면 가림판 — 단내림 천장보다 뒤에 렌더링 */}
+                {/* 전면 가림판 — 맨 뒤 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  material={cbMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
                   renderOrder={-5} />
-                {/* 경계면 칸막이 — 단내림 천장보다 뒤에 렌더링 */}
+                {/* 경계면 칸막이 — 맨 뒤 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  material={cbMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
                   renderOrder={-5} />
               </group>
             );
