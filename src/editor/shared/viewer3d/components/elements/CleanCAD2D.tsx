@@ -1530,6 +1530,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 자유배치 모드: 좌측 이격 치수 미표시 (슬롯 모드 전용)
         if (isFreePlacement) return null;
 
+        // 커튼박스가 좌측에 있으면 좌측 외벽이격 치수 미표시 (CB 구간이 담당)
+        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') return null;
+
         // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
@@ -1648,6 +1651,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         // 자유배치 모드: 우측 이격 치수 미표시 (슬롯 모드 전용)
         if (isFreePlacement) return null;
+
+        // 커튼박스가 우측에 있으면 우측 외벽이격 치수 미표시 (CB 구간이 담당)
+        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') return null;
 
         // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -2470,7 +2476,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   if (hasDC && hasSC) {
                     const sameSide = dcPosition === scPosition;
-                    if (!sameSide) {
+                    if (sameSide) {
+                      // 같은 쪽: 단내림↔커튼박스 경계
+                      if (dcOnLeft) {
+                        boundaries.push({ leftX: droppedEndX, rightX: scStartX });
+                      } else {
+                        boundaries.push({ leftX: scEndX, rightX: droppedStartX });
+                      }
+                    } else {
                       // 반대 쪽: 커튼박스↔메인 경계
                       if (dcOnLeft) {
                         boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
@@ -2478,10 +2491,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                       }
                     }
-                    // 같은 쪽(단내림↔CB 경계): CB 구간 이격은 별도 처리이므로 여기서 표시 안 함
                   } else if (hasDC) {
-                    // 커튼박스만(단내림 없음): 메인↔커튼박스 경계 — CB 이격은 별도 처리
-                    // boundaries에 추가하지 않음
+                    // 커튼박스만(단내림 없음): 메인↔커튼박스 경계
+                    if (dcOnLeft) {
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
+                    } else {
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
+                    }
                   } else if (hasSC) {
                     // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
