@@ -2370,21 +2370,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 커튼박스 3단: 실배치 147mm */}
-                {hasCB && !isFreePlacement && (<>
-                <Line points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={1} />
-                <Line points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
-                <Line points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
-                {(showDimensionsText || isStep2) && (
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[(cbStartX + cbEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {Math.round(cbWidth - 3)}
-                  </Text>
-                )}
-                </>)}
 
                   </>);
                 })()}
