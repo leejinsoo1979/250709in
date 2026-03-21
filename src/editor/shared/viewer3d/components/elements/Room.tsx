@@ -1338,7 +1338,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[-width / 2 - 0.01, cbCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
-                      renderOrder={1}
+                      renderOrder={-1}
                     >
                       <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
                       <primitive object={opaqueLeftWallMaterial} />
@@ -1365,7 +1365,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[-width / 2 - 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
-                      renderOrder={1}
+                      renderOrder={hasLeftCB ? -1 : 1}
                     >
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                       <primitive object={opaqueLeftWallMaterial} />
@@ -1439,7 +1439,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[width / 2 + 0.01, cbCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
-                      renderOrder={1}
+                      renderOrder={-1}
                     >
                       <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
                       <primitive object={opaqueRightWallMaterial} />
@@ -1465,7 +1465,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[width / 2 + 0.01, droppedCenterY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
-                      renderOrder={1}
+                      renderOrder={hasRightCB ? -1 : 1}
                     >
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                       <primitive object={opaqueRightWallMaterial} />
@@ -3967,13 +3967,15 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  renderOrder={-1} />
                 {/* 경계면 칸막이 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  renderOrder={-1} />
               </group>
             );
           })()}
