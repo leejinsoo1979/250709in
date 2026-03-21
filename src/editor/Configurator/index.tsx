@@ -4110,8 +4110,8 @@ const Configurator: React.FC = () => {
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>프레임 설정</h3>
-            <HelpBtn title="프레임 설정" text="가구 외곽을 감싸는 프레임 방식을 선택합니다. 전체서라운드: 상하좌우 모두 프레임으로 마감. 양쪽서라운드: 좌우와 상단만 프레임 적용. 노서라운드: 프레임 없이 가구만 배치하며, 빌트인 시 벽면에 직접 밀착됩니다. 프레임 타입에 따라 가구의 실제 사용 가능 공간이 달라집니다." />
+            <h3 className={styles.sectionTitle}>프레임 및 이격설정</h3>
+            <HelpBtn title="프레임 및 이격설정" text="가구 외곽을 감싸는 프레임 방식을 선택합니다. 전체서라운드: 상하좌우 모두 프레임으로 마감. 양쪽서라운드: 좌우와 상단만 프레임 적용. 노서라운드: 프레임 없이 가구만 배치하며, 빌트인 시 벽면에 직접 밀착됩니다. 프레임 타입에 따라 가구의 실제 사용 가능 공간이 달라집니다." />
           </div>
 
           {/* 프레임 타입: 전체서라운드 / 양쪽서라운드 / 노서라운드 */}
@@ -4563,43 +4563,6 @@ const Configurator: React.FC = () => {
                   );
                 })()}
 
-                {/* 상부 프레임 */}
-                <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>상부</label>
-                  <div className={styles.frameItemInput}>
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
-                        const newTop = Math.max(10, currentTop - 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={frameInputTop}
-                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
-                      onFocus={() => handleFrameInputFocus('top')}
-                      onBlur={() => handleFrameInputBlur('top', 10, 200, 30)}
-                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 30)}
-                      className={styles.frameNumberInput}
-                    />
-                    <button
-                      className={styles.frameButton}
-                      onClick={() => {
-                        const currentTop = spaceInfo.frameSize?.top || 30;
-                        const newTop = Math.min(200, currentTop + 1);
-                        updateFrameSize('top', newTop);
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
               </div>
 
             </div>
