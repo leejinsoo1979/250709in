@@ -1101,7 +1101,7 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 단내림 영역 천장 material (depthTest=true + polygonOffset으로 프레임보다 앞에 렌더링)
+  // 단내림 영역 천장 material (depthTest=false + 높은 renderOrder로 CB 프레임 위에 덮어씌움)
   const stepCeilingMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     // 셰이더 fragmentShader에서 opacity → 1.0 강제 (alpha 채널 완전 불투명)
@@ -1111,15 +1111,12 @@ const Room: React.FC<RoomProps> = ({
     );
     mat.transparent = false;
     mat.depthWrite = true;
-    mat.depthTest = true;
-    mat.polygonOffset = true;
-    mat.polygonOffsetFactor = -1;
-    mat.polygonOffsetUnits = -1;
+    mat.depthTest = false;
     mat.needsUpdate = true;
     return mat;
   }, []);
 
-  // 천장 구간 경계벽 material (depthTest=true + polygonOffset으로 프레임보다 앞에 렌더링)
+  // 천장 구간 경계벽 material (depthTest=false + 높은 renderOrder로 CB 프레임 위에 덮어씌움)
   const ceilingBoundaryWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
     if (mat.uniforms) {
@@ -1127,10 +1124,7 @@ const Room: React.FC<RoomProps> = ({
     }
     mat.transparent = false;
     mat.depthWrite = true;
-    mat.depthTest = true;
-    mat.polygonOffset = true;
-    mat.polygonOffsetFactor = -1;
-    mat.polygonOffsetUnits = -1;
+    mat.depthTest = false;
     return mat;
   }, []);
 
