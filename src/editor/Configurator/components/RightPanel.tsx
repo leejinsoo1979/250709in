@@ -20,8 +20,8 @@ declare global {
 }
 
 /* ── 프레임 행 컴포넌트 (모듈 레벨) ── */
-const FrameRow = React.memo(({ label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame }: {
-  label: string; enabled: boolean; sizeMM: number; offset: number;
+const FrameRow = React.memo(({ label, enabled, widthMM, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame }: {
+  label: string; enabled: boolean; widthMM?: number; sizeMM: number; offset: number;
   onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
   setHighlightedFrame: (v: string | null) => void;
 }) => {
@@ -56,8 +56,21 @@ const FrameRow = React.memo(({ label, enabled, sizeMM, offset, onToggle, onSizeC
       </button>
       {enabled && (
         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+          {/* 너비 - 읽기전용 */}
+          {widthMM != null && (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+              <input type="text" inputMode="numeric"
+                value={widthMM || ''} readOnly
+                onFocus={() => setHighlightedFrame(hlKey)}
+                onBlur={() => setHighlightedFrame(null)}
+                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+              />
+            </div>
+          )}
+          {/* 높이 */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
             <input type="text" inputMode="numeric"
               value={sizeText} placeholder="0"
               onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
@@ -1413,7 +1426,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   label="상,하부프레임"
                   expanded={expandedSections.has('slotFrame')}
                   onToggle={() => toggleSection('slotFrame')}
-                  helpText="각 가구별 상부/하부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다."
+                  helpText="각 가구별 상부/하부 프레임을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
                 >
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {
@@ -1422,6 +1435,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       <FrameRow key={`top-${mod.id}`}
                         label={`${toAlpha(topNum)}(상)`}
                         enabled={mod.hasTopFrame !== false}
+                        widthMM={mod.moduleWidth ?? mod.dimensions?.width ?? 0}
                         sizeMM={mod.topFrameThickness ?? globalTop}
                         offset={mod.topFrameOffset ?? 0}
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
@@ -1464,8 +1478,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         </button>
                         {baseEnabled ? (
                           <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                            {/* 너비 - 읽기전용 */}
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>size</span>
+                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+                              <input type="text" inputMode="numeric"
+                                value={mod.moduleWidth ?? mod.dimensions?.width ?? ''} readOnly
+                                onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                                onBlur={() => setHighlightedFrame(null)}
+                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+                              />
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
                               <input type="text" inputMode="numeric"
                                 value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
                                 onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
