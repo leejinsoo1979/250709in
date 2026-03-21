@@ -3325,8 +3325,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {(() => {
           // ── 가구 데이터 수집 (자유배치 + 슬롯배치 공통) ──
           const allMods = placedModules.filter(m => !m.isSurroundPanel);
-          const leftmostMod = allMods.length > 0
-            ? allMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
+          // 단내림이 좌측이면 단내림 구간 가구 기준, 아니면 가장 좌측 가구
+          const hasDrop_L = spaceInfo.droppedCeiling?.enabled === true;
+          const isLeftDrop_pre = hasDrop_L && spaceInfo.droppedCeiling!.position === 'left';
+          const leftmostMod = (() => {
+            if (isLeftDrop_pre) {
+              const droppedMods = allMods.filter(m => m.zone === 'dropped');
+              if (droppedMods.length > 0) return droppedMods.reduce((l, m) => m.position.x < l.position.x ? m : l);
+            }
+            return allMods.length > 0 ? allMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
+          })();
 
           // ── 공통 변수 ──
           const outerX = leftDimensionX + leftOffset;  // 2단(바깥) X
@@ -3346,9 +3354,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
           const globalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
-          const leftModInDrop = leftmostMod?.zone === 'dropped';
-          const effectiveH = (isLeftDrop && leftModInDrop) || (isLeftDrop && !leftmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
+          // effectiveH: 단내림이 좌측에 있으면 단내림 높이 (가구 유무 무관 — 구간 자체의 높이)
+          const effectiveH = isLeftDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
 
           // per-furniture 실제 프레임 size (토글 무관 — 가구 내경 계산용)
           const actualBottomSize = leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH;
@@ -3606,8 +3613,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {(() => {
           // ── 가구 데이터 수집 (자유배치 + 슬롯배치 공통) ──
           const allMods_R = placedModules.filter(m => !m.isSurroundPanel);
-          const rightmostMod = allMods_R.length > 0
-            ? allMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
+          // 단내림이 우측이면 단내림 구간 가구 기준, 아니면 가장 우측 가구
+          const hasDrop_R = spaceInfo.droppedCeiling?.enabled === true;
+          const isRightDrop_pre = hasDrop_R && spaceInfo.droppedCeiling!.position === 'right';
+          const rightmostMod = (() => {
+            if (isRightDrop_pre) {
+              const droppedMods = allMods_R.filter(m => m.zone === 'dropped');
+              if (droppedMods.length > 0) return droppedMods.reduce((r, m) => m.position.x > r.position.x ? m : r);
+            }
+            return allMods_R.length > 0 ? allMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
+          })();
 
           // ── 공통 변수 ──
           const rightWallX = mmToThreeUnits(spaceInfo.width) + leftOffset;
@@ -3626,9 +3641,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
           const rGlobalTopFrame = spaceInfo.frameSize?.top ?? 30;
-          // effectiveH: 가구가 단내림 구간에 있으면 단내림 높이, 아니면 전체 높이
-          const rightModInDrop = rightmostMod?.zone === 'dropped';
-          const rEffectiveH = (isRightDrop && rightModInDrop) || (isRightDrop && !rightmostMod) ? (spaceInfo.height - dropHeight) : spaceInfo.height;
+          // effectiveH: 단내림이 우측에 있으면 단내림 높이 (가구 유무 무관 — 구간 자체의 높이)
+          const rEffectiveH = isRightDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
 
           // per-furniture 실제 프레임 size (토글 무관 — 가구 내경 계산용)
           const rActualBottomSize = rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH;
