@@ -2053,6 +2053,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* ===== 3단: 실배치 공간 치수선 ===== */}
                 {(() => {
+                  // 메인 구간에 듀얼 가구가 있는지 판별
+                  const mainModules = placedModules.filter(m => m.zone !== 'dropped');
+                  const hasDualInMain = mainModules.some(m => m.isDualSlot || m.moduleId.includes('dual-'));
+                  // 단내림 구간에 듀얼 가구가 있는지 판별
+                  const droppedModules = placedModules.filter(m => m.zone === 'dropped');
+                  const hasDualInDropped = droppedModules.some(m => m.isDualSlot || m.moduleId.includes('dual-'));
+                  // 내림 함수: 듀얼이면 0.5 단위 내림, 싱글이면 정수 내림
+                  const floorValue = (v: number, hasDual: boolean) =>
+                    hasDual ? Math.floor(v * 2) / 2 : Math.floor(v);
+
                   // 자유배치: 각 구간별 이격거리를 빼서 실배치 폭 계산
                   // 슬롯배치: ColumnIndexer의 슬롯 합계 사용
                   const leftGapMm = spaceInfo.gapConfig?.left ?? 1.5;
@@ -2111,11 +2121,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       // 단내림 배치폭 = 기둥폭 + 메인쪽 경계이격 + 외측 경계이격 - 벽이격 - 프레임
                       if (hasDC && dcPosition === scPosition) {
                         // 커튼박스 같은 쪽: 양쪽 경계이격 모두 흡수
-                        scPlacementWidth = Math.round((scWidth + scInnerGap + scOuterGap - scSideFrame) * 10) / 10;
+                        scPlacementWidth = floorValue(scWidth + scInnerGap + scOuterGap - scSideFrame, hasDualInMain);
                       } else {
                         // 벽 인접: 벽쪽은 벽이격 차감, 메인쪽은 경계이격 흡수, 프레임 차감
                         const scWallGap = (scOnLeft ? (hasLeftWall ? leftGapMm : 0) : (hasRightWall ? rightGapMm : 0));
-                        scPlacementWidth = Math.round((scWidth + scInnerGap - scWallGap - scSideFrame) * 10) / 10;
+                        scPlacementWidth = floorValue(scWidth + scInnerGap - scWallGap - scSideFrame, hasDualInMain);
                       }
                     }
 
@@ -2147,7 +2157,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       mainRightDelta = -(hasRightWall ? rightGapMm : 0);
                     }
 
-                    mainPlacementWidth = Math.round((mainWidth + mainLeftDelta + mainRightDelta) * 10) / 10;
+                    mainPlacementWidth = floorValue(mainWidth + mainLeftDelta + mainRightDelta, hasDualInMain);
 
                     // 커튼박스 구간: 양쪽 gap 차감 (커튼박스 활성일 때만)
                     let dcLeftGap = 0;
@@ -2160,7 +2170,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       dcRightGap = dcOnRight
                         ? (hasRightWall ? rightGapMm : 0)
                         : dcInnerGap;
-                      dcPlacementWidth = Math.round((dcWidth - dcLeftGap - dcRightGap) * 10) / 10;
+                      dcPlacementWidth = floorValue(dcWidth - dcLeftGap - dcRightGap, hasDualInDropped);
                     } else {
                       dcPlacementWidth = 0;
                     }
@@ -2205,8 +2215,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   } else {
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     // 프레임은 3단 치수선에 별도 표시 → 실배치에서 제외
-                    mainPlacementWidth = Math.round(mainSlotTotalWidth * 10) / 10;
-                    dcPlacementWidth = droppedSlotTotalWidth;
+                    mainPlacementWidth = floorValue(mainSlotTotalWidth, hasDualInMain);
+                    dcPlacementWidth = floorValue(droppedSlotTotalWidth, hasDualInDropped);
                     // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
 
