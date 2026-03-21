@@ -414,7 +414,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 이격거리 편집 상태
-  const [editingGapSide, setEditingGapSide] = useState<'left' | 'right' | 'middle' | null>(null);
+  const [editingGapSide, setEditingGapSide] = useState<'left' | 'right' | 'middle' | 'middle2' | null>(null);
   const [editingGapValue, setEditingGapValue] = useState<string>('');
   const gapInputRef = useRef<HTMLInputElement>(null);
 
@@ -532,7 +532,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   };
 
   // 이격거리 편집 핸들러
-  const handleGapEdit = (side: 'left' | 'right' | 'middle', currentValue: number) => {
+  const handleGapEdit = (side: 'left' | 'right' | 'middle' | 'middle2', currentValue: number) => {
     setEditingGapSide(side);
     setEditingGapValue(currentValue.toString());
     setTimeout(() => {
@@ -549,8 +549,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       setEditingGapValue('');
       return;
     }
-    // middle(경계면 이격)은 0~5mm, left/right는 0~50mm
-    const maxValue = editingGapSide === 'middle' ? 5 : 50;
+    // middle/middle2(경계면 이격)은 0~5mm, left/right는 0~50mm
+    const maxValue = (editingGapSide === 'middle' || editingGapSide === 'middle2') ? 5 : 50;
     const clamped = Math.max(0, Math.min(maxValue, value));
     setSpaceInfo({
       gapConfig: {
@@ -2542,61 +2542,65 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
                   // - 커튼박스/단내림 인접 → middleGap
                   // - 벽 인접 → wallGap (좌/우이격 치수선에서 별도 표시)
-                  const boundaries: { leftX: number; rightX: number; editable: boolean }[] = [];
+                  // gapSide: 클릭 편집 시 어떤 gapConfig 키를 변경하는지
+                  // gapValue: 표시할 이격 값
+                  const boundaries: { leftX: number; rightX: number; editable: boolean; gapSide: string; gapValue: number }[] = [];
 
                   // 단내림↔메인 경계이격 (단내림이 흡수하지만 이격 치수는 표시)
                   if (hasSC) {
                     if (scOnLeft) {
-                      boundaries.push({ leftX: scEndX, rightX: mainStartX, editable: true });
+                      boundaries.push({ leftX: scEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: scStartX, editable: true });
+                      boundaries.push({ leftX: mainEndX, rightX: scStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     }
                   }
 
                   if (hasDC && hasSC) {
                     const sameSide = dcPosition === scPosition;
                     if (sameSide) {
-                      // 같은 쪽: 단내림↔커튼박스 경계
+                      // 같은 쪽: 단내림↔커튼박스 경계 → middle2
+                      const m2Gap = spaceInfo.gapConfig?.middle2 ?? middleGapMm;
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: scStartX, editable: true });
+                        boundaries.push({ leftX: droppedEndX, rightX: scStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
                       } else {
-                        boundaries.push({ leftX: scEndX, rightX: droppedStartX, editable: true });
+                        boundaries.push({ leftX: scEndX, rightX: droppedStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
                       }
                     } else {
                       // 반대 쪽: 커튼박스↔메인 경계
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
+                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                       } else {
-                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
+                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                       }
                     }
                   } else if (hasDC && hasCB) {
                     // 슬롯배치: 단내림 + 커튼박스 동시 활성
-                    // 1) 메인↔단내림 경계
+                    // 1) 메인↔단내림 경계 → middle (이격2)
                     if (dcOnLeft) {
-                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     }
-                    // 2) 단내림↔커튼박스 경계
+                    // 2) 단내림↔커튼박스 경계 → middle2 (이격2와 독립)
+                    const m2Gap = spaceInfo.gapConfig?.middle2 ?? middleGapMm;
                     if (dcOnLeft && cbOnLeft) {
-                      boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: true });
+                      boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
                     } else if (dcOnRight && cbOnRight) {
-                      boundaries.push({ leftX: droppedEndX, rightX: cbStartX, editable: true });
+                      boundaries.push({ leftX: droppedEndX, rightX: cbStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
                     }
                   } else if (hasDC) {
                     // 단내림만(커튼박스 없음): 메인↔단내림 경계
                     if (dcOnLeft) {
-                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     }
                   } else if (hasCB) {
                     // 슬롯배치 커튼박스만(단내림 없음): 메인↔커튼박스 경계
                     if (cbOnLeft) {
-                      boundaries.push({ leftX: cbEndX, rightX: mainStartX, editable: true });
+                      boundaries.push({ leftX: cbEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: cbStartX, editable: true });
+                      boundaries.push({ leftX: mainEndX, rightX: cbStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     }
                   } else if (hasSC) {
                     // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
@@ -2625,7 +2629,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {b.editable && editingGapSide === 'middle' && idx === 0 ? (
+                        {b.editable && editingGapSide === b.gapSide ? (
                           <Html
                             position={[(b.leftX + b.rightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
                             center
@@ -2669,9 +2673,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                                 background: b.editable ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                                 borderRadius: '3px',
                               }}
-                              onClick={(e) => { if (b.editable) { e.stopPropagation(); handleGapEdit('middle', middleGapMm); } }}
+                              onClick={(e) => { if (b.editable) { e.stopPropagation(); handleGapEdit(b.gapSide as 'left' | 'right' | 'middle' | 'middle2', b.gapValue); } }}
                             >
-                              {b.editable ? `${middleGapMm}` : `${1.5}`}
+                              {`${b.gapValue}`}
                             </div>
                           </Html>
                         )}
