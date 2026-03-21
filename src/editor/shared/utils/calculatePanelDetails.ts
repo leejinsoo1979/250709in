@@ -513,7 +513,7 @@ export const calculatePanelDetails = (
         //   depth = customDepth * 0.01 (Three.js) → mm: customDepth
         //   verticalPanelDepthMm = customDepth - 103 - 35 - bpt = customDepth - 138 - bpt
         const wingVerticalPanelDepthMm = customDepth - 138 - bpt;
-        const wingVerticalPanelHeightMm = sectionHeightMm; // 서랍 섹션 전체 내경 높이
+        const wingVerticalPanelHeightMm = sectionHeightMm - basicThickness * 2; // 서랍 섹션 내경 높이 (상판/하판 제외)
         const wingVerticalPanelThickness = basicThickness; // 18mm
 
         // 좌측 수직 패널
@@ -535,7 +535,7 @@ export const calculatePanelDetails = (
 
         // 수평 패널 (전면/후면): 폭 = 27 + basicThickness = 45mm, 깊이 = 18mm
         const wingHorizontalPanelWidthMm = 27 + basicThickness; // 45mm
-        const wingHorizontalPanelHeightMm = sectionHeightMm;
+        const wingHorizontalPanelHeightMm = sectionHeightMm - basicThickness * 2; // 내경 높이
         const wingHorizontalPanelDepthMm = basicThickness; // 18mm
 
         // 좌측 후면 수평 패널
