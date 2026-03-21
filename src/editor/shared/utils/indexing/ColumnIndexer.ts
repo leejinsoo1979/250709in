@@ -655,7 +655,15 @@ export class ColumnIndexer {
     
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
-      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
+      let internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
+
+      // 슬롯배치 커튼박스: CB 너비를 내경에서 제외 (CB 구간에는 가구 배치 안 함)
+      const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+      const curtainBoxWidth = hasCurtainBox ? (spaceInfo.curtainBox!.width || 150) : 0;
+      if (curtainBoxWidth > 0) {
+        internalWidth -= curtainBoxWidth;
+      }
+
       let columnCount: number;
       
       // mainDoorCount가 설정되어 있으면 최우선 사용
@@ -783,6 +791,11 @@ export class ColumnIndexer {
           actualInternalWidth = spaceInfo.width - leftGap - rightGap;
         }
         
+        // 슬롯배치 커튼박스: 노서라운드에서도 CB 너비 제외
+        if (curtainBoxWidth > 0) {
+          actualInternalWidth -= curtainBoxWidth;
+        }
+
         console.log('🔍 노서라운드 너비 계산:', {
           installType: spaceInfo.installType,
           totalWidth: spaceInfo.width,
@@ -790,8 +803,9 @@ export class ColumnIndexer {
           '원래rightGap': spaceInfo.gapConfig?.right,
           '조정leftGap': leftGap,
           '조정rightGap': rightGap,
+          curtainBoxWidth,
           actualInternalWidth,
-          '계산식': `${spaceInfo.width} - ${leftGap} - ${rightGap} = ${actualInternalWidth}`,
+          '계산식': `${spaceInfo.width} - ${leftGap} - ${rightGap} - ${curtainBoxWidth}(CB) = ${actualInternalWidth}`,
           '슬롯너비': actualInternalWidth / columnCount
         });
       }
@@ -810,7 +824,12 @@ export class ColumnIndexer {
       } else {
         internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
       }
-      
+
+      // 슬롯배치 커튼박스가 좌측이면 시작점을 CB 너비만큼 오른쪽으로 이동
+      if (hasCurtainBox && spaceInfo.curtainBox?.position === 'left') {
+        internalStartX += curtainBoxWidth;
+      }
+
       console.log('🔍 calculateZoneSlotInfo 시작점 계산:', {
         surroundType: spaceInfo.surroundType,
         installType: spaceInfo.installType,
