@@ -4927,237 +4927,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
       
-      {/* 단내림 구간 치수선 - 탑뷰 */}
-      {showDimensions && spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'top' && (
-        <group>
-          {(() => {
-            // 탑뷰에서 필요한 변수들 재정의
-            const spaceWidth = mmToThreeUnits(spaceInfo.width);
-            const spaceDepth = mmToThreeUnits(spaceInfo.depth);
-            const spaceXOffset = -spaceWidth / 2;
-            const spaceZOffset = -spaceDepth / 2;
-            
-            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 300 : 250); // 전체 폭 치수선 아래
-            
-            // 프레임 두께 계산
-            const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-            
-            // 프레임을 포함한 전체 좌표 계산
-            // 슬롯배치 커튼박스: 메인에서 커튼박스 폭 추가 차감
-            const cbWidthMm = (!isFreePlacement && spaceInfo.curtainBox?.enabled) ? (spaceInfo.curtainBox.width || 150) : 0;
-            const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width - cbWidthMm;
-            const droppedWidth = spaceInfo.droppedCeiling.width;
-
-            // 메인 구간 치수선 — 커튼박스는 단내림 바깥쪽(벽쪽)
-            // 좌단내림: [CB][단내림][메인], 우단내림: [메인][단내림][CB]
-            const mainStartX = spaceInfo.droppedCeiling.position === 'left'
-              ? spaceXOffset + mmToThreeUnits(cbWidthMm + droppedWidth)
-              : spaceXOffset;
-            const mainEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? spaceXOffset + spaceWidth
-              : spaceXOffset + mmToThreeUnits(mainWidth);
-
-            // 단내림 구간 치수선
-            const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-              ? spaceXOffset + mmToThreeUnits(cbWidthMm)
-              : spaceXOffset + mmToThreeUnits(mainWidth);
-            const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? spaceXOffset + mmToThreeUnits(cbWidthMm + droppedWidth)
-              : spaceXOffset + mmToThreeUnits(mainWidth + droppedWidth);
-            
-            return (
-              <>
-                {/* 메인 구간 치수선 */}
-                <Line
-                  points={[[mainStartX, spaceHeight, subDimensionZ], [mainEndX, spaceHeight, subDimensionZ]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <Line
-                  points={createArrowHead([mainStartX, spaceHeight, subDimensionZ], [mainStartX + 0.05, spaceHeight, subDimensionZ])}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <Line
-                  points={createArrowHead([mainEndX, spaceHeight, subDimensionZ], [mainEndX - 0.05, spaceHeight, subDimensionZ])}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[(mainStartX + mainEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(30)]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[-Math.PI / 2, 0, 0]}
-                  >
-                    {Math.round(mainWidth)}
-                  </Text>
-                )}
-
-                {/* 단내림 구간 치수선 */}
-                <Line
-                  points={[[droppedStartX, spaceHeight, subDimensionZ], [droppedEndX, spaceHeight, subDimensionZ]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <Line
-                  points={createArrowHead([droppedStartX, spaceHeight, subDimensionZ], [droppedStartX + 0.05, spaceHeight, subDimensionZ])}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <Line
-                  points={createArrowHead([droppedEndX, spaceHeight, subDimensionZ], [droppedEndX - 0.05, spaceHeight, subDimensionZ])}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[(droppedStartX + droppedEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(30)]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[-Math.PI / 2, 0, 0]}
-                  >
-                    {Math.round(droppedWidth)}
-                  </Text>
-                )}
-                
-                {/* 구간 분리 가이드라인 */}
-                <Line
-                  points={[
-                    [spaceInfo.droppedCeiling.position === 'left' ? droppedEndX : mainEndX, spaceHeight, spaceZOffset], 
-                    [spaceInfo.droppedCeiling.position === 'left' ? droppedEndX : mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
-                  ]}
-                  color={subGuideColor}
-                  lineWidth={0.5}
-                  dashed
-                />
-                
-                {/* 연장선 - 메인 영역 */}
-                <Line
-                  points={[
-                    [spaceInfo.droppedCeiling.position === 'left' ? mainEndX : mainStartX, spaceHeight, spaceZOffset],
-                    [spaceInfo.droppedCeiling.position === 'left' ? mainEndX : mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
-                  ]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                
-                {/* 경계면 이격거리 치수선 */}
-                {(() => {
-                  // ColumnIndexer에서 계산된 boundaryGap 사용
-                  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                  const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
-
-                  const boundaryGapZ = subDimensionZ - mmToThreeUnits(60);
-                  let boundaryLeftX: number;
-                  let boundaryRightX: number;
-
-                  if (spaceInfo.droppedCeiling.position === 'left') {
-                    boundaryLeftX = droppedEndX;
-                    boundaryRightX = mainStartX;
-                  } else {
-                    boundaryLeftX = mainEndX;
-                    boundaryRightX = droppedStartX;
-                  }
-
-                  return (
-                    <>
-                      <Line
-                        points={[[boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryRightX, spaceHeight, boundaryGapZ]]}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryLeftX + 0.02, spaceHeight, boundaryGapZ])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      <Line
-                        points={createArrowHead([boundaryRightX, spaceHeight, boundaryGapZ], [boundaryRightX - 0.02, spaceHeight, boundaryGapZ])}
-                        color={dimensionColor}
-                        lineWidth={1}
-                      />
-                      {/* 경계면 이격거리 텍스트 - 클릭 편집 (상단 뷰) */}
-                      {editingGapSide === 'middle' ? (
-                        <Html
-                          position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
-                          center
-                          style={{ pointerEvents: 'auto' }}
-                          zIndexRange={[10000, 10001]}
-                        >
-                          <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
-                            <input
-                              ref={gapInputRef}
-                              type="number"
-                              step="0.5"
-                              min="0"
-                              max="5"
-                              value={editingGapValue}
-                              onChange={(e) => setEditingGapValue(e.target.value)}
-                              onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
-                              onBlur={handleGapEditSubmit}
-                              style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
-                              autoFocus
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
-                          </div>
-                        </Html>
-                      ) : (
-                        <Html
-                          position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
-                          center
-                          style={{ pointerEvents: 'auto' }}
-                          zIndexRange={[9999, 10000]}
-                        >
-                          <div
-                            style={{
-                              padding: '2px 6px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              color: dimensionColor,
-                              cursor: 'pointer',
-                              userSelect: 'none',
-                              whiteSpace: 'nowrap',
-                              background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
-                              borderRadius: '3px',
-                            }}
-                            onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
-                          >
-                            {`${boundaryGapMm}`}
-                          </div>
-                        </Html>
-                      )}
-                    </>
-                  );
-                })()}
-
-                {/* 연장선 - 단내림 영역 */}
-                <Line
-                  points={[
-                    [spaceInfo.droppedCeiling.position === 'left' ? droppedStartX : droppedEndX, spaceHeight, spaceZOffset],
-                    [spaceInfo.droppedCeiling.position === 'left' ? droppedStartX : droppedEndX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
-                  ]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-              </>
-            );
-          })()}
-        </group>
-      )}
+      {/* 단내림 구간 치수선 - 탑뷰: 새 코드(line ~7005)로 통합됨 */}
         </>
       )}
       
@@ -7170,6 +6940,93 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     <Line points={[[cbStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [cbStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
                     <Line points={[[cbEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [cbEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
                   </>)}
+
+                  {/* 경계면 이격거리 치수선 - 탑뷰 */}
+                  {hasDC && (() => {
+                    const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
+                    const boundaryGapZ = subDimensionZ - mmToThreeUnits(60);
+                    let boundaryLeftX: number;
+                    let boundaryRightX: number;
+
+                    if (dcPosition === 'left') {
+                      boundaryLeftX = droppedEndX;
+                      boundaryRightX = mainStartX;
+                    } else {
+                      boundaryLeftX = mainEndX;
+                      boundaryRightX = droppedStartX;
+                    }
+
+                    return (
+                      <>
+                        <Line
+                          points={[[boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryRightX, spaceHeight, boundaryGapZ]]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        <Line
+                          points={createArrowHead([boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryLeftX + 0.02, spaceHeight, boundaryGapZ])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        <Line
+                          points={createArrowHead([boundaryRightX, spaceHeight, boundaryGapZ], [boundaryRightX - 0.02, spaceHeight, boundaryGapZ])}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {/* 경계면 이격거리 텍스트 - 클릭 편집 (상단 뷰) */}
+                        {editingGapSide === 'middle' ? (
+                          <Html
+                            position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
+                            center
+                            style={{ pointerEvents: 'auto' }}
+                            zIndexRange={[10000, 10001]}
+                          >
+                            <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                              <input
+                                ref={gapInputRef}
+                                type="number"
+                                step="0.5"
+                                min="0"
+                                max="5"
+                                value={editingGapValue}
+                                onChange={(e) => setEditingGapValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
+                                onBlur={handleGapEditSubmit}
+                                style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                            </div>
+                          </Html>
+                        ) : (
+                          <Html
+                            position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
+                            center
+                            style={{ pointerEvents: 'auto' }}
+                            zIndexRange={[9999, 10000]}
+                          >
+                            <div
+                              style={{
+                                padding: '2px 6px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                color: dimensionColor,
+                                cursor: 'pointer',
+                                userSelect: 'none',
+                                whiteSpace: 'nowrap',
+                                background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                                borderRadius: '3px',
+                              }}
+                              onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
+                            >
+                              {`${boundaryGapMm}`}
+                            </div>
+                          </Html>
+                        )}
+                      </>
+                    );
+                  })()}
                 </>
               );
             })()}
