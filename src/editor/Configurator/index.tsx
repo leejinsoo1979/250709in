@@ -6106,7 +6106,7 @@ const Configurator: React.FC = () => {
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             <Space3DView
-              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}`}
+              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
               spaceInfo={spaceInfo}
               viewMode={viewMode}
               setViewMode={setViewMode}
