@@ -1086,13 +1086,15 @@ const Room: React.FC<RoomProps> = ({
   }, []);
 
   // 단내림 천장을 위한 불투명 material (그라데이션 유지, 투명도 제거)
+  // depthTest=false: 커튼박스 프레임보다 앞에 렌더링되도록
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = true;
+    mat.depthWrite = false;
+    mat.depthTest = false;
     return mat;
   }, []);
 
@@ -1542,7 +1544,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[cbAreaX, cbCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[cbAreaWidth, extendedPanelDepth]} />
                     <primitive object={opaqueTopWallMaterial} />
@@ -1593,7 +1595,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[stepAreaX, stepCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[stepAreaWidth, extendedPanelDepth]} />
                     <primitive object={opaqueTopWallMaterial} />
@@ -1788,7 +1790,7 @@ const Room: React.FC<RoomProps> = ({
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
-                  renderOrder={-1}
+                  renderOrder={2}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
@@ -1801,7 +1803,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[stepAreaX2, stepCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[Math.PI / 2, 0, 0]}
-                      renderOrder={-1}
+                      renderOrder={2}
                     >
                       <planeGeometry args={[scWidth, extendedPanelDepth]} />
                       <primitive object={opaqueTopWallMaterial} />
@@ -1869,7 +1871,7 @@ const Room: React.FC<RoomProps> = ({
                       <mesh
                         position={[cbAreaX, cbCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[Math.PI / 2, 0, 0]}
-                        renderOrder={-1}
+                        renderOrder={2}
                       >
                         <planeGeometry args={[cbOnlyWidth, extendedPanelDepth]} />
                         <primitive object={opaqueTopWallMaterial} />
@@ -3320,7 +3322,10 @@ const Room: React.FC<RoomProps> = ({
 
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          // 단내림+커튼박스 동시 활성시 단내림은 정상 렌더링
+          // 단내림+커튼박스 동시 활성 & 같은 쪽(우측): CB 마감패널이 우측 프레임 역할 → 우측 프레임 생략
+          if (isCurtainBoxSlot && spaceInfo.curtainBox?.position === 'right') {
+            return null;
+          }
 
           // 서라운드 모드에서도 단내림 프레임 렌더링 (띄움높이 반영)
 
