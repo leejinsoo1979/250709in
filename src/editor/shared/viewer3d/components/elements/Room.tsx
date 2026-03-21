@@ -1085,39 +1085,42 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthTest=false → 프레임보다 앞에 렌더링, renderOrder=10)
+  // 커튼박스 영역 천장 material (polygonOffset으로 프레임보다 앞에 렌더링)
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
+    mat.polygonOffset = true;
+    mat.polygonOffsetFactor = -2;
+    mat.polygonOffsetUnits = -2;
     return mat;
   }, []);
 
-  // 단내림 영역 천장 material (커튼박스 천장보다 앞 — renderOrder=11)
+  // 단내림 영역 천장 material (커튼박스 천장보다 앞)
   const stepCeilingMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
+    mat.polygonOffset = true;
+    mat.polygonOffsetFactor = -3;
+    mat.polygonOffsetUnits = -3;
     return mat;
   }, []);
 
-  // 천장 구간 경계벽 material (depthTest=false → 프레임/천장보다 앞에, renderOrder=12)
+  // 천장 구간 경계벽 material (천장보다 앞)
   const ceilingBoundaryWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
+    mat.polygonOffset = true;
+    mat.polygonOffsetFactor = -4;
+    mat.polygonOffsetUnits = -4;
     return mat;
   }, []);
 
