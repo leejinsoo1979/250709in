@@ -4200,12 +4200,7 @@ const Configurator: React.FC = () => {
               <div className={styles.frameGrid}>
                 {/* 좌측: 좌커튼박스 시 숨김, 좌단내림 시 이격거리, 그 외 프레임 */}
                 {(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') ? (
-                  <div className={styles.frameItem}>
-                    <label className={styles.frameItemLabel}>좌측</label>
-                    <div className={styles.frameItemInput}>
-                      <span style={{ fontSize: '12px', color: '#888' }}>커튼박스</span>
-                    </div>
-                  </div>
+                  null
                 ) : spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left' ? (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>좌이격</label>
@@ -4309,12 +4304,7 @@ const Configurator: React.FC = () => {
 
                 {/* 우측: 우커튼박스 시 숨김, 우단내림 시 이격거리, 그 외 프레임 */}
                 {(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') ? (
-                  <div className={styles.frameItem}>
-                    <label className={styles.frameItemLabel}>우측</label>
-                    <div className={styles.frameItemInput}>
-                      <span style={{ fontSize: '12px', color: '#888' }}>커튼박스</span>
-                    </div>
-                  </div>
+                  null
                 ) : spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right' ? (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>우이격</label>
