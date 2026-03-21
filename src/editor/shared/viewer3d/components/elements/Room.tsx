@@ -1566,11 +1566,11 @@ const Room: React.FC<RoomProps> = ({
 
               return renderMode === 'solid' ? (
                 <>
-                  {/* 커튼박스 영역 천장 (높은 위치) */}
+                  {/* 커튼박스 영역 천장 (높은 위치) — 프레임(0)보다 뒤에 */}
                   <mesh
                     position={[cbAreaX, cbCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    renderOrder={10}
+                    renderOrder={-1}
                   >
                     <planeGeometry args={[cbAreaWidth, extendedPanelDepth]} />
                     <primitive object={opaqueTopWallMaterial} />
@@ -1812,11 +1812,11 @@ const Room: React.FC<RoomProps> = ({
 
             return renderMode === 'solid' ? (
               <>
-                {/* dropped 영역 천장: 슬롯=단내림(가장앞), 자유=커튼박스(경계벽 뒤) */}
+                {/* dropped 영역 천장: 슬롯=단내림(가장앞, 12), 자유=커튼박스(프레임 뒤, -1) */}
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
-                  renderOrder={isFreePlacement ? 10 : 12}
+                  renderOrder={isFreePlacement ? -1 : 12}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
@@ -1893,11 +1893,11 @@ const Room: React.FC<RoomProps> = ({
 
                   return (
                     <>
-                      {/* 커튼박스 천장 (위로 확장) */}
+                      {/* 커튼박스 천장 (위로 확장) — 프레임(0)보다 뒤에 */}
                       <mesh
                         position={[cbAreaX, cbCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[Math.PI / 2, 0, 0]}
-                        renderOrder={10}
+                        renderOrder={-1}
                       >
                         <planeGeometry args={[cbOnlyWidth, extendedPanelDepth]} />
                         <primitive object={opaqueTopWallMaterial} />
