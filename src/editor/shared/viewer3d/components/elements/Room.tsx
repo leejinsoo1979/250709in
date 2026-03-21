@@ -3974,28 +3974,20 @@ const Room: React.FC<RoomProps> = ({
               : mmToThreeUnits(spaceHalfW - cbWidthMM + cbRenderThick / 2);  // 바깥 정렬: 1.5mm 안쪽으로
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
-            // CB 패널: depthTest=false로 먼저 그리되, depthWrite=true로 depth에 기록
-            // → 나중에 그려지는 천장/프레임이 CB를 정상적으로 가림
-            const cbMat = cbFrameMat.clone();
-            cbMat.depthTest = false;
-            cbMat.depthWrite = true;
-
             return (
               <group key="slot-curtain-box-finish">
-                {/* 전면 가림판 — 천장/프레임보다 뒤 */}
+                {/* 전면 가림판 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                  renderOrder={-5} />
-                {/* 경계면 칸막이 — 천장/프레임보다 뒤 */}
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                {/* 경계면 칸막이 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                  renderOrder={-5} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
               </group>
             );
           })()}
