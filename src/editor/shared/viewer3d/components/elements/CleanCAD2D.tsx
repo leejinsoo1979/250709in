@@ -2095,13 +2095,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   // 자유배치: 각 구간별 이격거리를 빼서 실배치 폭 계산
                   // 슬롯배치: ColumnIndexer의 슬롯 합계 사용
-                  const leftGapMm = spaceInfo.gapConfig?.left ?? 1.5;
-                  const rightGapMm = spaceInfo.gapConfig?.right ?? 1.5;
-                  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5; // 메인↔단내림(or 메인↔커튼박스) 경계
+                  // 전체서라운드/양쪽서라운드: 이격 1.5 고정, 노서라운드만 gapConfig 사용
+                  const isNoSurroundForGap = spaceInfo.surroundType === 'no-surround';
+                  const leftGapMm = isNoSurroundForGap ? (spaceInfo.gapConfig?.left ?? 1.5) : 1.5;
+                  const rightGapMm = isNoSurroundForGap ? (spaceInfo.gapConfig?.right ?? 1.5) : 1.5;
+                  const middleGapMm = isNoSurroundForGap ? (spaceInfo.gapConfig?.middle ?? 1.5) : 1.5;
                   // 단내림+커튼박스 동시 활성 시 단내림↔커튼박스 경계는 middle2 (middle 폴백 없음)
-                  const middle2GapMm = (hasSC && hasDC)
-                    ? (spaceInfo.gapConfig?.middle2 ?? 1.5)
-                    : middleGapMm;
+                  const middle2GapMm = isNoSurroundForGap
+                    ? ((hasSC && hasDC) ? (spaceInfo.gapConfig?.middle2 ?? 1.5) : middleGapMm)
+                    : 1.5;
 
                   const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
                   const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
@@ -2535,23 +2537,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 단내림 있으면 2개 경계면: 메인↔단내림, 단내림↔커튼박스 */}
                 {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
                 {(() => {
-                  const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
+                  // 전체서라운드/양쪽서라운드: 이격 1.5 고정, 노서라운드만 gapConfig
+                  const isNoSurroundBoundary = spaceInfo.surroundType === 'no-surround';
+                  const middleGapMm = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : 1.5;
                   const boundaryGapY = slotDimensionY - mmToThreeUnits(80);
+                  const boundaryEditable = isNoSurroundBoundary; // 서라운드에서는 편집 불가
 
-                  // 경계면 이격 목록 생성
-                  // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
-                  // - 커튼박스/단내림 인접 → middleGap
-                  // - 벽 인접 → wallGap (좌/우이격 치수선에서 별도 표시)
-                  // gapSide: 클릭 편집 시 어떤 gapConfig 키를 변경하는지
-                  // gapValue: 표시할 이격 값
                   const boundaries: { leftX: number; rightX: number; editable: boolean; gapSide: string; gapValue: number }[] = [];
 
                   // 단내림↔메인 경계이격 (단내림이 흡수하지만 이격 치수는 표시)
                   if (hasSC) {
                     if (scOnLeft) {
-                      boundaries.push({ leftX: scEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: scEndX, rightX: mainStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: scStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: mainEndX, rightX: scStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     }
                   }
 
@@ -2559,48 +2558,48 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const sameSide = dcPosition === scPosition;
                     if (sameSide) {
                       // 같은 쪽: 단내림↔커튼박스 경계 → middle2
-                      const m2Gap = spaceInfo.gapConfig?.middle2 ?? 1.5;
+                      const m2Gap = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle2 ?? 1.5) : 1.5;
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: scStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
+                        boundaries.push({ leftX: droppedEndX, rightX: scStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
                       } else {
-                        boundaries.push({ leftX: scEndX, rightX: droppedStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
+                        boundaries.push({ leftX: scEndX, rightX: droppedStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
                       }
                     } else {
                       // 반대 쪽: 커튼박스↔메인 경계
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                       } else {
-                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                       }
                     }
                   } else if (hasDC && hasCB) {
                     // 슬롯배치: 단내림 + 커튼박스 동시 활성
                     // 1) 메인↔단내림 경계 → middle (이격2)
                     if (dcOnLeft) {
-                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     }
                     // 2) 단내림↔커튼박스 경계 → middle2 (이격2와 독립)
-                    const m2Gap = spaceInfo.gapConfig?.middle2 ?? 1.5;
+                    const m2Gap = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle2 ?? 1.5) : 1.5;
                     if (dcOnLeft && cbOnLeft) {
-                      boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
+                      boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
                     } else if (dcOnRight && cbOnRight) {
-                      boundaries.push({ leftX: droppedEndX, rightX: cbStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
+                      boundaries.push({ leftX: droppedEndX, rightX: cbStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
                     }
                   } else if (hasDC) {
                     // 단내림만(커튼박스 없음): 메인↔단내림 경계
                     if (dcOnLeft) {
-                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     }
                   } else if (hasCB) {
                     // 슬롯배치 커튼박스만(단내림 없음): 메인↔커튼박스 경계
                     if (cbOnLeft) {
-                      boundaries.push({ leftX: cbEndX, rightX: mainStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: cbEndX, rightX: mainStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: cbStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
+                      boundaries.push({ leftX: mainEndX, rightX: cbStartX, editable: boundaryEditable, gapSide: 'middle', gapValue: middleGapMm });
                     }
                   } else if (hasSC) {
                     // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
@@ -4998,11 +4997,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
         const cbPos = spaceInfo.curtainBox!.position || 'right';
-        // 경계쪽 이격만 차감 (단내림이 있으면 middle2, 없으면 middle — middle 폴백 없이 기본값 1.5)
+        // 경계쪽 이격: 전체서라운드/양쪽서라운드는 1.5 고정, 노서라운드만 gapConfig 사용
+        const isNoSurround = spaceInfo.surroundType === 'no-surround';
         const hasDCForCB = !!spaceInfo.droppedCeiling?.enabled;
-        const boundaryGap = hasDCForCB
-          ? (spaceInfo.gapConfig?.middle2 ?? 1.5)
-          : (spaceInfo.gapConfig?.middle ?? 1.5);
+        const boundaryGap = isNoSurround
+          ? (hasDCForCB ? (spaceInfo.gapConfig?.middle2 ?? 1.5) : (spaceInfo.gapConfig?.middle ?? 1.5))
+          : 1.5;
         const internalW = cbW - boundaryGap;
         if (internalW <= 0) return null;
         const dimY = slotDimensionY;
