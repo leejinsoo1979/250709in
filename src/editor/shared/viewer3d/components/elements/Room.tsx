@@ -1852,24 +1852,6 @@ const Room: React.FC<RoomProps> = ({
                   <primitive
                     object={stepCeilingMaterial} />
                 </mesh>
-                {/* CB 프레임을 물리적으로 가리는 천장 박스 — 단내림 천장 위 공간을 채워 depth test로 오클루전 */}
-                {isCurtainBoxSlot && (() => {
-                  // CB 프레임 Z 범위: 뒷벽부터 전면 패널 앞면까지
-                  const cbFrontZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
-                  const ceilingBackZ = extendedZOffset;
-                  const ceilingBoxDepth = cbFrontZ + mmToThreeUnits(END_PANEL_THICKNESS) - ceilingBackZ;
-                  const ceilingBoxCenterZ = ceilingBackZ + ceilingBoxDepth / 2;
-                  // 단내림 천장부터 메인 천장(+여유)까지 채움 → CB 프레임 상부를 가림
-                  const cbDropH = spaceInfo.curtainBox?.dropHeight || 60;
-                  const occlusionHeight = droppedCeilingHeight + mmToThreeUnits(cbDropH) + mmToThreeUnits(50);
-                  const ceilingBoxY = droppedCeilingY + occlusionHeight / 2;
-                  return (
-                    <mesh position={[droppedAreaX, ceilingBoxY, ceilingBoxCenterZ]} renderOrder={1}>
-                      <boxGeometry args={[droppedAreaWidth, occlusionHeight, ceilingBoxDepth]} />
-                      <meshStandardMaterial color="#e8e8e8" depthWrite={true} />
-                    </mesh>
-                  );
-                })()}
 
                 {hasStepCeiling ? (
                   <>
