@@ -3009,14 +3009,9 @@ const Configurator: React.FC = () => {
 
     // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
     if (updates.customColumnCount !== undefined) {
-// console.log('🚨🚨🚨 customColumnCount 업데이트:', {
-        // 요청값: updates.customColumnCount,
-        // 현재값: spaceInfo.customColumnCount,
-        // finalUpdates_before: finalUpdates
-      // });
-      // 사용자가 설정한 값을 그대로 사용
       finalUpdates = { ...finalUpdates, customColumnCount: updates.customColumnCount };
-// console.log('🚨🚨🚨 finalUpdates after:', finalUpdates);
+      // mainDoorCount도 동기화 — 슬롯 수 변경 시 도어가 새 슬롯 수에 맞도록
+      finalUpdates = { ...finalUpdates, mainDoorCount: updates.customColumnCount };
     }
 
     // 단내림이 활성화된 경우 메인 구간의 도어 개수 자동 조정
