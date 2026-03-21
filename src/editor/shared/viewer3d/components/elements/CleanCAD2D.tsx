@@ -2246,7 +2246,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     // 프레임은 3단 치수선에 별도 표시 → 실배치에서 제외
                     mainPlacementWidth = floorValue(mainSlotTotalWidth, hasDualInMain);
-                    dcPlacementWidth = floorValue(droppedSlotTotalWidth, hasDualInDropped);
+                    // 노서라운드에서는 ColumnIndexer가 경계이격을 단내림에 흡수(+BOUNDARY_GAP)
+                    // 3단 치수선은 명목 내경(흡수 전)을 표시해야 하므로 경계이격 차감
+                    const isNoSurround = spaceInfo.surroundType !== 'surround';
+                    const absorbedBoundaryGap = (isNoSurround && hasDC) ? (zoneSlotInfoForDim.boundaryGap ?? middleGapMm) : 0;
+                    dcPlacementWidth = floorValue(droppedSlotTotalWidth - absorbedBoundaryGap, hasDualInDropped);
                     // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
 
