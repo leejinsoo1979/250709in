@@ -1841,12 +1841,13 @@ const Room: React.FC<RoomProps> = ({
 
             return renderMode === 'solid' ? (
               <>
-                {/* dropped 영역 천장 — 두께 있는 박스로 CB 프레임을 물리적으로 가림 */}
+                {/* dropped 영역 천장 */}
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                  rotation={[Math.PI / 2, 0, 0]}
                   renderOrder={1}
                 >
-                  <boxGeometry args={[droppedAreaWidth, mmToThreeUnits(18), extendedPanelDepth]} />
+                  <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
                     object={stepCeilingMaterial} />
                 </mesh>
