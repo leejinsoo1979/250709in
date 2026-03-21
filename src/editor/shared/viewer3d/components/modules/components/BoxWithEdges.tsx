@@ -561,7 +561,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
         receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
-        renderOrder={renderOrder ?? 0}
+        renderOrder={renderOrder ?? 2}
         onClick={onClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
