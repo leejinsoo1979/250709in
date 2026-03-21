@@ -10,7 +10,6 @@ import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/i
 import { useTranslation } from '@/i18n/useTranslation';
 import PreviewViewer from './PreviewViewer';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
-import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { useAuth } from '@/auth/AuthProvider';
 
 // Window 인터페이스 확장
@@ -1430,8 +1429,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {
                     topNum++;
-                    const bounds = getModuleBoundsX(mod);
-                    const modWidthMM = Math.round(bounds.right - bounds.left);
+                    const modWidthMM = mod.freeWidth || mod.customWidth || mod.adjustedWidth || mod.moduleWidth || (() => { const m = mod.moduleId?.match(/-(\d{3,})(?:$|-)/); return m ? parseInt(m[1], 10) : 0; })();
                     return (
                       <FrameRow key={`top-${mod.id}`}
                         label={`${toAlpha(topNum)}(상)`}
@@ -1455,8 +1453,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
                     const baseEnabled = mod.hasBase !== false;
-                    const baseBounds = getModuleBoundsX(mod);
-                    const baseModWidthMM = Math.round(baseBounds.right - baseBounds.left);
+                    const baseModWidthMM = mod.freeWidth || mod.customWidth || mod.adjustedWidth || mod.moduleWidth || (() => { const m = mod.moduleId?.match(/-(\d{3,})(?:$|-)/); return m ? parseInt(m[1], 10) : 0; })();
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
