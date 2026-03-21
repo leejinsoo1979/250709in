@@ -3957,9 +3957,10 @@ const Room: React.FC<RoomProps> = ({
             const cbWidthMM = spaceInfo.curtainBox!.width || 150;
             const panelThickMM = END_PANEL_THICKNESS; // 18mm
 
-            // 좌/우 엔드패널과 동일한 높이/Y (받침대 반영)
-            const cbPanelH = adjustedPanelHeight;
-            const cbCenterY = sideFrameCenterY;
+            // 커튼박스 프레임 높이: 커튼박스 천장(height + dropHeight)까지 (받침대 반영)
+            const cbDropH = spaceInfo.curtainBox!.dropHeight || 60;
+            const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
+            const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
             const cbFrameMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
@@ -3991,13 +3992,15 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  renderOrder={-1} />
                 {/* 경계면 칸막이 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  renderOrder={-1} />
               </group>
             );
           })()}
