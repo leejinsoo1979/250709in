@@ -1530,8 +1530,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 자유배치 모드: 좌측 이격 치수 미표시 (슬롯 모드 전용)
         if (isFreePlacement) return null;
 
-        // 커튼박스가 좌측에 있으면 좌측 외벽이격 치수 미표시 (CB 구간이 담당)
-        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') return null;
+        // 커튼박스가 좌측에 있고 벽이 없으면 좌측 외벽이격 치수 미표시
+        const hasCBLeft = spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left';
+        if (hasCBLeft && !spaceInfo.wallConfig?.left) return null;
 
         // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -1683,8 +1684,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 자유배치 모드: 우측 이격 치수 미표시 (슬롯 모드 전용)
         if (isFreePlacement) return null;
 
-        // 커튼박스가 우측에 있으면 우측 외벽이격 치수 미표시 (CB 구간이 담당)
-        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') return null;
+        // 커튼박스가 우측에 있고 벽이 없으면 우측 외벽이격 치수 미표시
+        const hasCBRight = spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right';
+        if (hasCBRight && !spaceInfo.wallConfig?.right) return null;
 
         // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
