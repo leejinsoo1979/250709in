@@ -3962,11 +3962,9 @@ const Room: React.FC<RoomProps> = ({
             const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
-            const baseMat = cbPos === 'left'
+            const cbFrameMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
               : (rightFrameMaterial ?? createFrameMaterial('right'));
-            const cbFrameMat = baseMat.clone();
-            cbFrameMat.depthTest = false;
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
