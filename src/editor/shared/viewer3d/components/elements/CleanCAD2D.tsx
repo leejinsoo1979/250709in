@@ -4920,6 +4920,50 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         ));
       })()}
 
+      {/* 서라운드 모드 프레임 실제 사이즈 (4단: slotDimensionY) — 프레임 - 이격 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.droppedCeiling?.enabled && (() => {
+        const leftGap = spaceInfo.gapConfig?.left ?? 0;
+        const rightGap = spaceInfo.gapConfig?.right ?? 0;
+        const frameThk = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
+        const dimY = slotDimensionY;
+        const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+        const hasCBLeft = spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left';
+        const hasCBRight = spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right';
+        const items: { startX: number; endX: number; val: number }[] = [];
+
+        // 좌측 프레임 실제 사이즈 (CB가 좌측이면 프레임 없으므로 스킵)
+        if (!hasCBLeft && frameThk.left > 0 && leftGap > 0) {
+          const realW = frameThk.left - leftGap;
+          if (realW > 0) {
+            items.push({ startX: leftOffset, endX: leftOffset + mmToThreeUnits(realW), val: realW });
+          }
+        }
+        // 우측 프레임 실제 사이즈 (CB가 우측이면 프레임 없으므로 스킵)
+        if (!hasCBRight && frameThk.right > 0 && rightGap > 0) {
+          const realW = frameThk.right - rightGap;
+          if (realW > 0) {
+            items.push({ startX: rightEdge - mmToThreeUnits(realW), endX: rightEdge, val: realW });
+          }
+        }
+
+        if (items.length === 0) return null;
+        const fmtDim = (v: number) => { const r = Math.round(v * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); };
+        return (<>
+          {items.map((it, i) => (
+            <group key={`frame-real-${i}`}>
+              <NativeLine name="dimension_line" points={[[it.startX, dimY, 0.002], [it.endX, dimY, 0.002]]} color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false} />
+              <NativeLine name="dimension_line" points={createArrowHead([it.startX, dimY, 0.002], [it.startX + 0.02, dimY, 0.002], 0.01)} color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false} />
+              <NativeLine name="dimension_line" points={createArrowHead([it.endX, dimY, 0.002], [it.endX - 0.02, dimY, 0.002], 0.01)} color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false} />
+              <Text renderOrder={1000000} depthTest={false}
+                position={[(it.startX + it.endX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+              >{fmtDim(it.val)}</Text>
+            </group>
+          ))}
+        </>);
+      })()}
+
       {/* 슬롯배치 커튼박스 내경 치수선 (4단: slotDimensionY) — cbWidth - 이격 */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
