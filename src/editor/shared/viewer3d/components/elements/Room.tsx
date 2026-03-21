@@ -3932,8 +3932,8 @@ const Room: React.FC<RoomProps> = ({
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
-            // ── 전면 가림판: 가구 앞면 위치 ──
-            const frontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+            // ── 전면 가림판: 좌/우 프레임과 동일한 Z 위치 ──
+            const frontZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
             // 전면 폭 = CB 전체 폭 (외측 엔드패널 ~ 경계면 칸막이까지 전부 덮음)
             const frontWidth = mmToThreeUnits(cbWidthMM);
             const frontCenterX = cbPos === 'left'
