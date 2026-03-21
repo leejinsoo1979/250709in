@@ -1586,7 +1586,7 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                   {/* 커튼박스 경계 수직 벽 */}
                   <mesh
-                    renderOrder={12}
+                    renderOrder={11}
                     position={[cbBoundaryX, cbBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -1617,11 +1617,11 @@ const Room: React.FC<RoomProps> = ({
 
               return renderMode === 'solid' ? (
                 <>
-                  {/* 단내림 영역 천장 (낮은 높이) — 커튼박스 천장보다 앞에 렌더링 */}
+                  {/* 단내림 영역 천장 (낮은 높이) — 가장 앞에 렌더링 */}
                   <mesh
                     position={[stepAreaX, stepCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    renderOrder={11}
+                    renderOrder={12}
                   >
                     <planeGeometry args={[stepAreaWidth, extendedPanelDepth]} />
                     <primitive object={stepCeilingMaterial} />
@@ -1637,7 +1637,7 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                   {/* 단내림 경계 수직 벽 */}
                   <mesh
-                    renderOrder={12}
+                    renderOrder={11}
                     position={[stepBoundaryX, stepBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -1812,11 +1812,11 @@ const Room: React.FC<RoomProps> = ({
 
             return renderMode === 'solid' ? (
               <>
-                {/* 단내림(dropped) 영역 천장 — 커튼박스 천장보다 앞에 렌더링 */}
+                {/* 단내림(dropped) 영역 천장 — 가장 앞에 렌더링 */}
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
-                  renderOrder={11}
+                  renderOrder={12}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
@@ -1825,11 +1825,11 @@ const Room: React.FC<RoomProps> = ({
 
                 {hasStepCeiling ? (
                   <>
-                    {/* 단내림 영역 천장 (낮은 높이) — 커튼박스 천장보다 앞에 렌더링 */}
+                    {/* 단내림 영역 천장 (낮은 높이) — 가장 앞에 렌더링 */}
                     <mesh
                       position={[stepAreaX2, stepCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[Math.PI / 2, 0, 0]}
-                      renderOrder={11}
+                      renderOrder={12}
                     >
                       <planeGeometry args={[scWidth, extendedPanelDepth]} />
                       <primitive object={stepCeilingMaterial} />
@@ -1843,9 +1843,9 @@ const Room: React.FC<RoomProps> = ({
                       <planeGeometry args={[actualMainWidth, extendedPanelDepth]} />
                       <primitive ref={topWallMaterialRef} object={topWallMaterial} />
                     </mesh>
-                    {/* 단내림 경계 수직 벽 — 천장 매쉬보다 앞에 */}
+                    {/* 단내림 경계 수직 벽 */}
                     <mesh
-                      renderOrder={12}
+                      renderOrder={11}
                       position={[stepBoundaryX2, stepBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
                     >
@@ -1865,9 +1865,9 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                 )}
 
-                {/* 커튼박스 경계 수직 벽 — 천장 매쉬보다 앞에 */}
+                {/* 커튼박스 경계 수직 벽 */}
                 <mesh
-                  renderOrder={12}
+                  renderOrder={11}
                   position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
@@ -1902,9 +1902,9 @@ const Room: React.FC<RoomProps> = ({
                         <planeGeometry args={[cbOnlyWidth, extendedPanelDepth]} />
                         <primitive object={opaqueTopWallMaterial} />
                       </mesh>
-                      {/* CB-DC 경계 수직 벽 — 천장 매쉬보다 앞에 */}
+                      {/* CB-DC 경계 수직 벽 */}
                       <mesh
-                        renderOrder={12}
+                        renderOrder={11}
                         position={[cbBoundaryX2, cbBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[0, Math.PI / 2, 0]}
                       >
