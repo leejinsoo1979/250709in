@@ -61,87 +61,111 @@ const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 
   return null;
 };
 
-/** 비하이라이트 패널 반투명 처리 (scene traverse) — 개별 패널 수준 하이라이트 지원 */
+/**
+ * panelName 접두사 제거 — mesh/edge 이름에서 패널명만 추출
+ */
+const NAME_PREFIX_RE = /^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/;
+function extractPanelName(objName: string): string | null {
+  const stripped = objName.replace(NAME_PREFIX_RE, '');
+  return stripped !== objName ? stripped : null;
+}
+
+/** 비하이라이트 패널 반투명 처리 (scene traverse) — wireframe + solid 모드 모두 지원 */
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
   highlightedPanelName: string | null;
   excludedMeshNames?: Set<string>;
 }> = ({ highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
   const { scene, invalidate } = useThree();
-  const originalMaterials = useRef<Map<string, { opacity: number; transparent: boolean; emissive: THREE.Color; emissiveIntensity: number }>>(new Map());
+  // 원본 색상/opacity 저장 (line + mesh 모두)
+  const originals = useRef<Map<string, { color: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
 
   useEffect(() => {
-    // 원본 머티리얼 속성 저장 (새 메시가 추가될 때마다 갱신)
+    // ── 원본 속성 저장 (최초 1회) ──
     scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
-        if (!originalMaterials.current.has(obj.uuid)) {
-          originalMaterials.current.set(obj.uuid, {
-            opacity: obj.material.opacity,
-            transparent: obj.material.transparent,
-            emissive: obj.material.emissive.clone(),
-            emissiveIntensity: obj.material.emissiveIntensity,
+      if (originals.current.has(obj.uuid)) return;
+      if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
+        originals.current.set(obj.uuid, {
+          color: obj.material.color.clone(),
+          opacity: obj.material.opacity,
+          transparent: obj.material.transparent,
+          visible: obj.visible,
+        });
+      } else if (obj instanceof THREE.Mesh) {
+        const mat = obj.material as THREE.Material;
+        if (mat instanceof THREE.MeshStandardMaterial) {
+          originals.current.set(obj.uuid, {
+            color: mat.emissive.clone(),
+            opacity: mat.opacity,
+            transparent: mat.transparent,
+            visible: obj.visible,
+          });
+        } else if (mat instanceof THREE.MeshBasicMaterial) {
+          originals.current.set(obj.uuid, {
+            color: mat.color.clone(),
+            opacity: mat.opacity,
+            transparent: mat.transparent,
+            visible: mat.visible, // wireframe mesh는 visible=false
           });
         }
       }
     });
 
-    // 제외 패널 visible 처리 (mesh + 부모 group 포함)
-    if (excludedMeshNames && excludedMeshNames.size > 0) {
-      scene.traverse((obj) => {
-        if (!obj.name) return;
-        // mesh name 또는 edge name에서 panelName 추출
-        const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
-        if (meshSuffix !== obj.name) {
-          obj.visible = !excludedMeshNames.has(meshSuffix);
-        }
-      });
-      invalidate();
-    } else {
-      // 제외 없으면 모두 visible 복원
-      scene.traverse((obj) => {
-        if (!obj.name) return;
-        const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
-        if (meshSuffix !== obj.name) {
-          obj.visible = true;
-        }
-      });
-      invalidate();
-    }
+    // ── 제외 패널 visible 처리 ──
+    scene.traverse((obj) => {
+      if (!obj.name) return;
+      const pn = extractPanelName(obj.name);
+      if (pn === null) return;
+      if (excludedMeshNames && excludedMeshNames.size > 0) {
+        obj.visible = !excludedMeshNames.has(pn);
+      } else {
+        obj.visible = true;
+      }
+    });
 
     if (!highlightedFurnitureId) {
-      // 하이라이트 없음 → 원래 상태 복원
+      // ── 하이라이트 없음 → 원래 상태 복원 ──
       scene.traverse((obj) => {
-        if (!(obj instanceof THREE.Mesh)) return;
-        const mat = obj.material;
-        if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-        const original = originalMaterials.current.get(obj.uuid);
-        if (!original) return;
-        mat.opacity = original.opacity;
-        mat.transparent = original.transparent;
-        mat.emissive.copy(original.emissive);
-        mat.emissiveIntensity = original.emissiveIntensity;
-        mat.needsUpdate = true;
+        const orig = originals.current.get(obj.uuid);
+        if (!orig) return;
+        if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
+          obj.material.color.copy(orig.color);
+          obj.material.opacity = orig.opacity;
+          obj.material.transparent = orig.transparent;
+          obj.material.needsUpdate = true;
+        } else if (obj instanceof THREE.Mesh) {
+          const mat = obj.material;
+          if (mat instanceof THREE.MeshStandardMaterial) {
+            mat.opacity = orig.opacity;
+            mat.transparent = orig.transparent;
+            mat.emissive.copy(orig.color);
+            mat.emissiveIntensity = 0;
+            mat.needsUpdate = true;
+          } else if (mat instanceof THREE.MeshBasicMaterial) {
+            mat.visible = orig.visible;
+            mat.color.copy(orig.color);
+            mat.opacity = orig.opacity;
+            mat.transparent = orig.transparent;
+            mat.needsUpdate = true;
+          }
+        }
       });
       invalidate();
       return;
     }
 
-    // furnitureId로 이름이 지정된 그룹 찾기
+    // ── 대상 가구 그룹 탐색 ──
     const targetGroup = scene.getObjectByName(highlightedFurnitureId);
-
-    // 대상 가구 내 모든 메시 UUID
-    const furnitureMeshUuids = new Set<string>();
-    // 대상 패널 메시 UUID (panelName 매칭)
+    const furnitureObjUuids = new Set<string>();
     const targetPanelUuids = new Set<string>();
 
     if (targetGroup) {
       targetGroup.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
-          furnitureMeshUuids.add(obj.uuid);
-          // 개별 패널 매칭: mesh.name이 "furniture-mesh-{panelName}" 또는 "back-panel-mesh-{panelName}" 형식
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
+          furnitureObjUuids.add(obj.uuid);
           if (highlightedPanelName && obj.name) {
-            const meshSuffix = obj.name.replace(/^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/, '');
-            if (meshSuffix === highlightedPanelName) {
+            const pn = extractPanelName(obj.name);
+            if (pn === highlightedPanelName) {
               targetPanelUuids.add(obj.uuid);
             }
           }
@@ -151,60 +175,118 @@ const PanelDimmer: React.FC<{
 
     const hasSpecificPanel = highlightedPanelName && targetPanelUuids.size > 0;
 
+    // ── 하이라이트 적용 ──
     scene.traverse((obj) => {
+      const orig = originals.current.get(obj.uuid);
+      if (!orig) return;
+
+      const isTarget = hasSpecificPanel && targetPanelUuids.has(obj.uuid);
+      const isSameFurniture = furnitureObjUuids.has(obj.uuid);
+
+      // ─ Line (wireframe edges) ─
+      if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
+        const mat = obj.material;
+        if (isTarget) {
+          mat.color.set(0x2266cc);
+          mat.opacity = 1;
+          mat.transparent = false;
+        } else if (isSameFurniture) {
+          if (hasSpecificPanel) {
+            mat.color.copy(orig.color);
+            mat.opacity = 0.15;
+            mat.transparent = true;
+          } else {
+            mat.color.set(0x2266cc);
+            mat.opacity = 1;
+            mat.transparent = false;
+          }
+        } else {
+          mat.color.copy(orig.color);
+          mat.opacity = 0.08;
+          mat.transparent = true;
+        }
+        mat.needsUpdate = true;
+        return;
+      }
+
+      // ─ Mesh ─
       if (!(obj instanceof THREE.Mesh)) return;
       const mat = obj.material;
-      if (!(mat instanceof THREE.MeshStandardMaterial)) return;
 
-      const original = originalMaterials.current.get(obj.uuid);
-      if (!original) return;
-
-      if (hasSpecificPanel && targetPanelUuids.has(obj.uuid)) {
-        // ★ 대상 패널: 강한 파란 강조
-        mat.opacity = 1;
-        mat.transparent = false;
-        mat.emissive.set(0x2266cc);
-        mat.emissiveIntensity = 0.5;
-      } else if (furnitureMeshUuids.has(obj.uuid)) {
-        if (hasSpecificPanel) {
-          // 같은 가구의 다른 패널: 살짝 투명 (컨텍스트 유지)
-          mat.opacity = 0.35;
+      // wireframe 모드: MeshBasicMaterial (보통 visible=false)
+      if (mat instanceof THREE.MeshBasicMaterial) {
+        if (isTarget) {
+          // 대상 패널: visible로 만들어 반투명 하이라이트 면 표시
+          mat.visible = true;
+          mat.color.set(0x2266cc);
+          mat.opacity = 0.25;
           mat.transparent = true;
-          mat.emissive.copy(original.emissive);
-          mat.emissiveIntensity = 0;
         } else {
-          // 패널 이름 없이 가구만 강조: 전체 가구 강조 (기존 동작)
+          // 비대상: 숨김 유지
+          mat.visible = false;
+        }
+        mat.needsUpdate = true;
+        return;
+      }
+
+      // solid 모드: MeshStandardMaterial
+      if (mat instanceof THREE.MeshStandardMaterial) {
+        if (isTarget) {
           mat.opacity = 1;
           mat.transparent = false;
           mat.emissive.set(0x2266cc);
-          mat.emissiveIntensity = 0.4;
+          mat.emissiveIntensity = 0.5;
+        } else if (isSameFurniture) {
+          if (hasSpecificPanel) {
+            mat.opacity = 0.35;
+            mat.transparent = true;
+            mat.emissive.copy(orig.color);
+            mat.emissiveIntensity = 0;
+          } else {
+            mat.opacity = 1;
+            mat.transparent = false;
+            mat.emissive.set(0x2266cc);
+            mat.emissiveIntensity = 0.4;
+          }
+        } else {
+          mat.opacity = 0.12;
+          mat.transparent = true;
+          mat.emissive.copy(orig.color);
+          mat.emissiveIntensity = 0;
         }
-      } else {
-        // 다른 가구: 매우 투명
-        mat.opacity = 0.12;
-        mat.transparent = true;
-        mat.emissive.copy(original.emissive);
-        mat.emissiveIntensity = 0;
+        mat.needsUpdate = true;
       }
-      mat.needsUpdate = true;
     });
 
     invalidate();
 
     return () => {
+      // cleanup: 원래 상태 복원
       scene.traverse((obj) => {
-        if (!(obj instanceof THREE.Mesh)) return;
-        // visible 복원
         obj.visible = true;
-        const mat = obj.material;
-        if (!(mat instanceof THREE.MeshStandardMaterial)) return;
-        const original = originalMaterials.current.get(obj.uuid);
-        if (!original) return;
-        mat.opacity = original.opacity;
-        mat.transparent = original.transparent;
-        mat.emissive.copy(original.emissive);
-        mat.emissiveIntensity = original.emissiveIntensity;
-        mat.needsUpdate = true;
+        const orig = originals.current.get(obj.uuid);
+        if (!orig) return;
+        if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
+          obj.material.color.copy(orig.color);
+          obj.material.opacity = orig.opacity;
+          obj.material.transparent = orig.transparent;
+          obj.material.needsUpdate = true;
+        } else if (obj instanceof THREE.Mesh) {
+          const mat = obj.material;
+          if (mat instanceof THREE.MeshStandardMaterial) {
+            mat.opacity = orig.opacity;
+            mat.transparent = orig.transparent;
+            mat.emissive.copy(orig.color);
+            mat.emissiveIntensity = 0;
+            mat.needsUpdate = true;
+          } else if (mat instanceof THREE.MeshBasicMaterial) {
+            mat.visible = orig.visible;
+            mat.color.copy(orig.color);
+            mat.opacity = orig.opacity;
+            mat.transparent = orig.transparent;
+            mat.needsUpdate = true;
+          }
+        }
       });
     };
   }, [highlightedFurnitureId, highlightedPanelName, excludedMeshNames, scene, invalidate]);
