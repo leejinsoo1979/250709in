@@ -3985,59 +3985,20 @@ const Room: React.FC<RoomProps> = ({
               : mmToThreeUnits(spaceHalfW - cbWidthMM + 1.5 + panelThickMM / 2);
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
-            // ── 단내림+CB 같은 쪽: CB 프레임을 단내림 천장 아래/위로 분할 ──
-            const dcEnabled = spaceInfo.droppedCeiling?.enabled;
-            const dcPos = spaceInfo.droppedCeiling?.position || 'right';
-            const dcSameSide = dcEnabled && dcPos === cbPos;
-
-            if (dcSameSide) {
-              const dcDropHMM = spaceInfo.droppedCeiling?.dropHeight || 200;
-              const dcCeilingY = panelStartY + height - mmToThreeUnits(dcDropHMM);
-              // 하부: 바닥 ~ 단내림 천장 (정상 renderOrder)
-              const lowerH = dcCeilingY - sideFrameStartY;
-              const lowerCenterY = sideFrameStartY + lowerH / 2;
-              // 상부: 단내림 천장 ~ CB 천장 (renderOrder=-1, 단내림 천장 뒤로)
-              const upperH = cbPanelH - lowerH;
-              const upperCenterY = dcCeilingY + upperH / 2;
-
-              return (
-                <group key="slot-curtain-box-finish">
-                  {/* 전면 가림판 하부 — 단내림 천장 아래 (정상 렌더링) */}
-                  <BoxWithEdges hideEdges={hideEdges} isOuterFrame
-                    name="slot-cb-front-panel-lower"
-                    args={[frontWidth, lowerH, mmToThreeUnits(panelThickMM)]}
-                    position={[frontCenterX, lowerCenterY, frontZ]}
-                    material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                  {/* 전면 가림판 상부 — 단내림 천장 위 (천장 뒤로 렌더링) */}
-                  <BoxWithEdges hideEdges={hideEdges} isOuterFrame
-                    name="slot-cb-front-panel-upper"
-                    args={[frontWidth, upperH, mmToThreeUnits(panelThickMM)]}
-                    position={[frontCenterX, upperCenterY, frontZ]}
-                    material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
-                  {/* 경계면 칸막이 — 천장 뒤로 렌더링 */}
-                  <BoxWithEdges hideEdges={hideEdges} isOuterFrame
-                    name="slot-cb-border-panel"
-                    args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
-                    position={[borderX, cbCenterY, sideZ]}
-                    material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
-                </group>
-              );
-            }
-
             return (
               <group key="slot-curtain-box-finish">
-                {/* 전면 가림판 */}
+                {/* 전면 가림판 — 단내림 천장(renderOrder=1) 뒤로 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                {/* 경계면 칸막이 */}
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
+                {/* 경계면 칸막이 — 단내림 천장 뒤로 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
               </group>
             );
           })()}
