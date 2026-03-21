@@ -982,6 +982,8 @@ const Room: React.FC<RoomProps> = ({
   const [topFrameMaterial, setTopFrameMaterial] = useState<THREE.Material>();
   const [topDroppedFrameMaterial, setTopDroppedFrameMaterial] = useState<THREE.Material>();
   const [topSubFrameMaterial, setTopSubFrameMaterial] = useState<THREE.Material>();
+  const [cbLeftFrameMaterial, setCbLeftFrameMaterial] = useState<THREE.Material>();
+  const [cbRightFrameMaterial, setCbRightFrameMaterial] = useState<THREE.Material>();
   // const [baseSubFrameMaterial, setBaseSubFrameMaterial] = useState<THREE.Material>(); // 하단 서브프레임 제거됨
 
   // 텍스처 로딩 완료 시 리렌더링 트리거용
@@ -1035,6 +1037,25 @@ const Room: React.FC<RoomProps> = ({
     setTopSubFrameMaterial(mat);
     return () => mat.dispose();
   }, [...frameDeps]);
+  // CB 프레임 전용 material (클리핑 플레인으로 천장 위 부분 가림)
+  const cbClipY = sideFrameStartY + adjustedPanelHeight;
+  useEffect(() => {
+    const mat = createFrameMaterial('left', triggerRerender);
+    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
+      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
+    ];
+    setCbLeftFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [...frameDeps, cbClipY]);
+  useEffect(() => {
+    const mat = createFrameMaterial('right', triggerRerender);
+    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
+      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
+    ];
+    setCbRightFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [...frameDeps, cbClipY]);
+
   // 하단 서브프레임 제거됨
   // useEffect(() => {
   //   const mat = createFrameMaterial('base');
@@ -3963,8 +3984,8 @@ const Room: React.FC<RoomProps> = ({
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
             const cbFrameMat = cbPos === 'left'
-              ? (leftFrameMaterial ?? createFrameMaterial('left'))
-              : (rightFrameMaterial ?? createFrameMaterial('right'));
+              ? (cbLeftFrameMaterial ?? leftFrameMaterial ?? createFrameMaterial('left'))
+              : (cbRightFrameMaterial ?? rightFrameMaterial ?? createFrameMaterial('right'));
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
