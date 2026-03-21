@@ -1132,7 +1132,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 치수선 균등 간격 배치: 4단 — 전체폭 → 구간사이즈 → 슬롯합계(실배치) → 슬롯폭
   // 자유배치+단내림: 슬롯합계 불필요 → 3단으로 축소
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
-  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : isFreePlacement ? 4 : 3;
+  const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : hasCurtainBox ? 4 : isFreePlacement ? 4 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
@@ -3015,6 +3016,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           cbEndX = leftOffset + totalW;
         }
         const EXTENSION_LEN = mmToThreeUnits(80);
+        // 커튼박스 천장 높이 (메인 천장보다 높음)
+        const cbCeilingH = spaceHeight + mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 0);
         return (
           <group key="cb-width-dimension">
             <Line
@@ -3048,7 +3051,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Text>
             )}
             <NativeLine name="dimension_line"
-              points={[[cbStartX, spaceHeight, 0.001], [cbStartX, slotDimensionY + EXTENSION_LEN, 0.001]]}
+              points={[[cbStartX, cbCeilingH, 0.001], [cbStartX, slotDimensionY + EXTENSION_LEN, 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
@@ -3057,7 +3060,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[cbEndX, spaceHeight, 0.001], [cbEndX, slotDimensionY + EXTENSION_LEN, 0.001]]}
+              points={[[cbEndX, cbCeilingH, 0.001], [cbEndX, slotDimensionY + EXTENSION_LEN, 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
