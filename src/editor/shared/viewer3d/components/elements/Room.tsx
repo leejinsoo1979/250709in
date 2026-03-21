@@ -3972,16 +3972,16 @@ const Room: React.FC<RoomProps> = ({
             // 전면 폭 = CB 폭에서 양쪽 1.5mm gap 적용 (150mm → 147mm)
             const cbRenderWidth = cbWidthMM - 3;
             const frontWidth = mmToThreeUnits(cbRenderWidth);
-            // 양쪽 1.5mm 이격: 중심은 CB 구간 중심과 동일
+            // 양쪽 1.5mm 이격: 벽에서 1.5mm, 안쪽에서 1.5mm
             const frontCenterX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbWidthMM / 2)
-              : mmToThreeUnits(spaceHalfW - cbWidthMM / 2);
+              ? mmToThreeUnits(-spaceHalfW + 1.5 + cbRenderWidth / 2)
+              : mmToThreeUnits(spaceHalfW - 1.5 - cbRenderWidth / 2);
 
-            // ── 경계면 칸막이: 안쪽 1.5mm 이격 위치 ──
+            // ── 경계면 칸막이: CB 구간 안쪽 경계에서 1.5mm 이격 ──
             const SIDE_BASE_DEPTH_MM = 40;
             const borderX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - panelThickMM / 2 - 1.5)
-              : mmToThreeUnits(spaceHalfW - cbWidthMM + panelThickMM / 2 + 1.5);
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - 1.5 - panelThickMM / 2)
+              : mmToThreeUnits(spaceHalfW - cbWidthMM + 1.5 + panelThickMM / 2);
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
             return (
