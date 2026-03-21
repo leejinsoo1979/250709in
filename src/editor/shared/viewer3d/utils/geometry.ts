@@ -348,8 +348,12 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
   }
 
   // 커튼박스가 있는 쪽은 서라운드 프레임 없음 (커튼박스 내벽이 프레임 역할)
-  if (spaceInfo.droppedCeiling?.enabled) {
-    const cbPosition = spaceInfo.droppedCeiling.position || 'right';
+  // 자유배치: droppedCeiling, 슬롯배치: curtainBox
+  const cbEnabled = spaceInfo.droppedCeiling?.enabled || spaceInfo.curtainBox?.enabled;
+  const cbPosition = spaceInfo.droppedCeiling?.enabled
+    ? (spaceInfo.droppedCeiling.position || 'right')
+    : (spaceInfo.curtainBox?.position || 'right');
+  if (cbEnabled) {
     if (cbPosition === 'left') {
       leftThickness = 0;
     } else {
