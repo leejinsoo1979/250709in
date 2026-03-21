@@ -4568,8 +4568,8 @@ const Configurator: React.FC = () => {
             </div>
           ) : null}
 
-          {/* 단내림 프레임 설정 (단내림 활성화 시) */}
-          {spaceInfo.droppedCeiling?.enabled && (
+          {/* 단내림 프레임 설정 — 숨김 (메인 프레임 설정에서 통합 관리) */}
+          {false && spaceInfo.droppedCeiling?.enabled && (
             <div className={styles.subSetting} style={{ marginTop: '12px', borderTop: '1px solid var(--theme-border)', paddingTop: '10px' }}>
               <div style={{ fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 600, marginBottom: '8px' }}>단내림 구간</div>
               <div className={styles.frameGrid}>
