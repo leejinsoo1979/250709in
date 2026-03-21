@@ -4589,6 +4589,52 @@ const Configurator: React.FC = () => {
                   );
                 })()}
 
+                {/* 단내림↔커튼박스 경계이격 (단내림+커튼박스 동시 활성 시) */}
+                {spaceInfo.droppedCeiling?.enabled && spaceInfo.curtainBox?.enabled && (() => {
+                  const curVal = spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5;
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>단내림↔CB</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, middle2: val } });
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={curVal}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, middle2: Math.max(0, Math.min(5, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, middle2: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, middle2: val } });
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
+
               </div>
 
             </div>
