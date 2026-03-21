@@ -4642,12 +4642,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
                 >
                   {(() => {
-                    const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-                    if (isDual) {
-                      const w = Math.floor(actualWidth * 2) / 2;
-                      return w % 1 === 0 ? w : w.toFixed(1);
-                    }
-                    return Math.floor(actualWidth);
+                    const w = Math.floor(actualWidth * 2) / 2; // 0.5mm 단위 내림
+                    return w % 1 === 0 ? w : w.toFixed(1);
                   })()}
                 </div>
               </Html>
@@ -4662,12 +4658,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthTest={false}
               >
                 {(() => {
-                  const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-                  if (isDual) {
-                    const w = Math.floor(actualWidth * 2) / 2;
+                    const w = Math.floor(actualWidth * 2) / 2; // 0.5mm 단위 내림
                     return w % 1 === 0 ? w : w.toFixed(1);
-                  }
-                  return Math.floor(actualWidth);
                 })()}
               </Text>
             )}
@@ -4709,10 +4701,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ? module.freeLeftGap : nearestLeftDistance;
               const rawRightGap = !hasAdjacentRight && module.freeRightGap != null
                 ? module.freeRightGap : nearestRightDistance;
-              // 소수점 표시: 정수면 정수로, 아니면 소수점 1자리
-              const formatGap = (v: number) => Number.isInteger(v) ? v.toString() : v.toFixed(1);
-              const leftGapMm = Math.round(rawLeftGap * 10) / 10; // 0.5 단위 보존
-              const rightGapMm = Math.round(rawRightGap * 10) / 10;
+              // 0.5mm 단위 내림 (가구 너비와 동일한 규칙)
+              const formatDim = (v: number) => v % 1 === 0 ? v.toString() : v.toFixed(1);
+              const leftGapMm = Math.floor(rawLeftGap * 2) / 2;
+              const rightGapMm = Math.floor(rawRightGap * 2) / 2;
               // 좌측 갭: 가구 왼쪽 ~ (왼쪽 인접 가구 또는 구간 경계)
               const gapLeftX = leftX - mmToThreeUnits(leftGapMm);
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
@@ -4738,7 +4730,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {formatGap(leftGapMm)}
+                    {formatDim(leftGapMm)}
                   </Text>
                   {/* 좌측 이격 연장선 */}
                   {!hasAdjacentLeft && (
@@ -4769,7 +4761,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {formatGap(rightGapMm)}
+                    {formatDim(rightGapMm)}
                   </Text>
                   {/* 우측 이격 연장선 */}
                   {!hasAdjacentRight && (
