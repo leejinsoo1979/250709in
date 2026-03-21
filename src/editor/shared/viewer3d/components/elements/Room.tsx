@@ -3987,18 +3987,18 @@ const Room: React.FC<RoomProps> = ({
 
             return (
               <group key="slot-curtain-box-finish">
-                {/* 전면 가림판 */}
+                {/* 전면 가림판 — 단내림 경계벽(renderOrder=-1)보다 뒤에 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                {/* 경계면 칸막이 */}
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-2} />
+                {/* 경계면 칸막이 — 단내림 경계벽보다 뒤에 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-2} />
               </group>
             );
           })()}
