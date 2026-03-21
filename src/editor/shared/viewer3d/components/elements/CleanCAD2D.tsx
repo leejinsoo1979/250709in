@@ -2512,14 +2512,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
                   // - 커튼박스/단내림 인접 → middleGap
                   // - 벽 인접 → wallGap (좌/우이격 치수선에서 별도 표시)
-                  const boundaries: { leftX: number; rightX: number }[] = [];
+                  const boundaries: { leftX: number; rightX: number; editable: boolean }[] = [];
 
                   // 단내림↔메인 경계이격 (단내림이 흡수하지만 이격 치수는 표시)
                   if (hasSC) {
                     if (scOnLeft) {
-                      boundaries.push({ leftX: scEndX, rightX: mainStartX });
+                      boundaries.push({ leftX: scEndX, rightX: mainStartX, editable: true });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: scStartX });
+                      boundaries.push({ leftX: mainEndX, rightX: scStartX, editable: true });
                     }
                   }
 
@@ -2528,48 +2528,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     if (sameSide) {
                       // 같은 쪽: 단내림↔커튼박스 경계
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: scStartX });
+                        boundaries.push({ leftX: droppedEndX, rightX: scStartX, editable: true });
                       } else {
-                        boundaries.push({ leftX: scEndX, rightX: droppedStartX });
+                        boundaries.push({ leftX: scEndX, rightX: droppedStartX, editable: true });
                       }
                     } else {
                       // 반대 쪽: 커튼박스↔메인 경계
                       if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
+                        boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
                       } else {
-                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
+                        boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
                       }
                     }
                   } else if (hasDC) {
                     // 커튼박스만(단내림 없음): 메인↔커튼박스 경계
                     if (dcOnLeft) {
-                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
                     } else {
-                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
                     }
                   } else if (hasSC) {
                     // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // CB 양쪽 1.5mm 이격 (프레임↔구간 경계)
+                  // CB 양쪽 1.5mm 이격 (프레임↔구간 경계) — 읽기 전용 (고정값)
                   if (hasCB) {
                     const cbGap = mmToThreeUnits(1.5);
                     // CB 안쪽(메인 쪽) 이격
                     if (cbOnLeft) {
-                      // CB가 좌측: 안쪽 = 우측 끝
-                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
+                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX, editable: false });
                     } else {
-                      // CB가 우측: 안쪽 = 좌측 끝
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap, editable: false });
                     }
                     // CB 바깥쪽(벽 쪽) 이격
                     if (cbOnLeft) {
-                      // CB가 좌측: 바깥 = 좌측 끝
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap, editable: false });
                     } else {
-                      // CB가 우측: 바깥 = 우측 끝
-                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
+                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX, editable: false });
                     }
                   }
 
@@ -2593,7 +2589,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {editingGapSide === 'middle' && idx === 0 ? (
+                        {b.editable && editingGapSide === 'middle' && idx === 0 ? (
                           <Html
                             position={[(b.leftX + b.rightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
                             center
@@ -2622,7 +2618,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           <Html
                             position={[(b.leftX + b.rightX) / 2, boundaryGapY + mmToThreeUnits(30), 0.01]}
                             center
-                            style={{ pointerEvents: 'auto' }}
+                            style={{ pointerEvents: b.editable ? 'auto' : 'none' }}
                             zIndexRange={[9999, 10000]}
                           >
                             <div
@@ -2631,15 +2627,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                                 fontSize: '12px',
                                 fontWeight: 'bold',
                                 color: dimensionColor,
-                                cursor: 'pointer',
+                                cursor: b.editable ? 'pointer' : 'default',
                                 userSelect: 'none',
                                 whiteSpace: 'nowrap',
-                                background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                                background: b.editable ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
                                 borderRadius: '3px',
                               }}
-                              onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', middleGapMm); }}
+                              onClick={(e) => { if (b.editable) { e.stopPropagation(); handleGapEdit('middle', middleGapMm); } }}
                             >
-                              {`${middleGapMm}`}
+                              {b.editable ? `${middleGapMm}` : `${1.5}`}
                             </div>
                           </Html>
                         )}
@@ -7006,213 +7002,174 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>}
 
-        {/* 단내림 구간 치수선 - 탑뷰 */}
-        {showDimensions && spaceInfo.droppedCeiling?.enabled && (
+        {/* 구간 치수선 - 탑뷰 (입면 2단: 원 사이즈 + 3단: 내경) */}
+        {showDimensions && (spaceInfo.droppedCeiling?.enabled || (isFreePlacement && spaceInfo.stepCeiling?.enabled)) && (
           <group>
             {(() => {
               const normalBounds = getNormalZoneBounds(spaceInfo);
               const droppedBounds = getDroppedZoneBounds(spaceInfo);
-              const subDimensionZ = spaceZOffset - mmToThreeUnits(280); // 전체 폭 치수선 아래
-              
-              // 프레임 두께 계산
+              // 2단: 원 구간 사이즈 (2000/900/150)
+              const zoneDimZ = spaceZOffset - mmToThreeUnits(250);
+              // 3단: 내경 (1997/901.5/147)
+              const subDimensionZ = spaceZOffset - mmToThreeUnits(310);
+
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-              
-              // 프레임을 포함한 전체 좌표 계산
-              // 슬롯배치 커튼박스: 메인에서 커튼박스 폭 추가 차감
-              const cbWidthMm3d = (!isFreePlacement && spaceInfo.curtainBox?.enabled) ? (spaceInfo.curtainBox.width || 150) : 0;
-              const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width - cbWidthMm3d;
-              const droppedWidth = spaceInfo.droppedCeiling.width;
 
-              // 메인 구간 치수선 — [CB][단내림][메인] 또는 [메인][단내림][CB]
-              const mainStartX = spaceInfo.droppedCeiling.position === 'left'
-                ? spaceXOffset + mmToThreeUnits(cbWidthMm3d + droppedWidth)
-                : spaceXOffset;
-              const mainEndX = spaceInfo.droppedCeiling.position === 'left'
-                ? spaceXOffset + spaceWidth
-                : spaceXOffset + mmToThreeUnits(mainWidth);
+              // 입면과 동일한 구간 계산 로직
+              const hasDC = !!spaceInfo.droppedCeiling?.enabled;
+              const hasSC = isFreePlacement && !!spaceInfo.stepCeiling?.enabled;
+              const dcWidth = hasDC ? (spaceInfo.droppedCeiling!.width || 0) : 0;
+              const scWidth = hasSC ? (spaceInfo.stepCeiling!.width || 0) : 0;
+              const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
+              const scPosition = spaceInfo.stepCeiling?.position || 'right';
+              const hasCB = !isFreePlacement && !!spaceInfo.curtainBox?.enabled;
+              const cbWidth = hasCB ? (spaceInfo.curtainBox!.width || 150) : 0;
+              const cbPosition = hasCB ? (spaceInfo.curtainBox!.position || 'right') : 'right';
 
-              // 단내림 구간 치수선
-              const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-                ? spaceXOffset + mmToThreeUnits(cbWidthMm3d)
-                : spaceXOffset + mmToThreeUnits(mainWidth);
-              const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-                ? spaceXOffset + mmToThreeUnits(cbWidthMm3d + droppedWidth)
-                : spaceXOffset + mmToThreeUnits(mainWidth + droppedWidth);
-              
+              const mainWidth = spaceInfo.width - dcWidth - scWidth - cbWidth;
+              const droppedWidth = dcWidth;
+
+              const dcOnLeft = hasDC && dcPosition === 'left';
+              const scOnLeft = hasSC && scPosition === 'left';
+              const cbOnLeft = hasCB && cbPosition === 'left';
+              const dcOnRight = hasDC && dcPosition === 'right';
+              const scOnRight = hasSC && scPosition === 'right';
+              const cbOnRight = hasCB && cbPosition === 'right';
+
+              const leftStackWidth = (cbOnLeft ? cbWidth : 0) + (dcOnLeft ? dcWidth : 0) + (scOnLeft ? scWidth : 0);
+              const rightStackWidth = (cbOnRight ? cbWidth : 0) + (dcOnRight ? dcWidth : 0) + (scOnRight ? scWidth : 0);
+
+              const mainStartX = spaceXOffset + mmToThreeUnits(leftStackWidth);
+              const mainEndX = spaceXOffset + mmToThreeUnits(spaceInfo.width - rightStackWidth);
+
+              // 단내림(stepCeiling) 구간 X 좌표
+              let scStartX = mainStartX, scEndX = mainStartX;
+              if (hasSC) {
+                if (scOnLeft) {
+                  const scLeftEdge = dcOnLeft ? dcWidth : 0;
+                  scStartX = spaceXOffset + mmToThreeUnits(scLeftEdge);
+                  scEndX = spaceXOffset + mmToThreeUnits(scLeftEdge + scWidth);
+                } else {
+                  scStartX = mainEndX;
+                  scEndX = mainEndX + mmToThreeUnits(scWidth);
+                }
+              }
+
+              // 단내림(droppedCeiling) 구간 X 좌표
+              let droppedStartX = mainStartX, droppedEndX = mainStartX;
+              if (hasDC) {
+                if (dcOnLeft) {
+                  const dcLeftEdge = cbOnLeft ? cbWidth : 0;
+                  droppedStartX = spaceXOffset + mmToThreeUnits(dcLeftEdge);
+                  droppedEndX = spaceXOffset + mmToThreeUnits(dcLeftEdge + dcWidth);
+                } else {
+                  const dcLeftEdge = spaceInfo.width - dcWidth - (cbOnRight ? cbWidth : 0);
+                  droppedStartX = spaceXOffset + mmToThreeUnits(dcLeftEdge);
+                  droppedEndX = spaceXOffset + mmToThreeUnits(dcLeftEdge + dcWidth);
+                }
+              }
+
+              // 슬롯배치 커튼박스 구간 X 좌표
+              let cbStartX = mainStartX, cbEndX = mainStartX;
+              if (hasCB) {
+                if (cbOnLeft) {
+                  cbStartX = spaceXOffset;
+                  cbEndX = spaceXOffset + mmToThreeUnits(cbWidth);
+                } else {
+                  cbStartX = spaceXOffset + mmToThreeUnits(spaceInfo.width - cbWidth);
+                  cbEndX = spaceXOffset + spaceWidth;
+                }
+              }
+
+              // 내경 계산용
+              const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+
+              // 헬퍼: 탑뷰 치수선 한 구간 렌더링
+              const renderZoneDim = (startX: number, endX: number, label: string, z: number) => (
+                <>
+                  <Line points={[[startX, spaceHeight, z], [endX, spaceHeight, z]]} color={dimensionColor} lineWidth={0.5} />
+                  <Line points={createArrowHead([startX, spaceHeight, z], [startX + 0.05, spaceHeight, z])} color={dimensionColor} lineWidth={0.5} />
+                  <Line points={createArrowHead([endX, spaceHeight, z], [endX - 0.05, spaceHeight, z])} color={dimensionColor} lineWidth={0.5} />
+                  {(showDimensionsText || isStep2) && (
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[(startX + endX) / 2, spaceHeight + 0.1, z - mmToThreeUnits(30)]}
+                      fontSize={smallFontSize} color={textColor} anchorX="center" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      rotation={[-Math.PI / 2, 0, 0]}
+                    >{label}</Text>
+                  )}
+                </>
+              );
+
               return (
                 <>
-                  {/* 메인 구간 치수선 */}
-                  <Line
-                    points={[[mainStartX, spaceHeight, subDimensionZ], [mainEndX, spaceHeight, subDimensionZ]]}
-                    color={dimensionColor}
-                    lineWidth={0.5}
-                  />
-                  <Line
-                    points={createArrowHead([mainStartX, spaceHeight, subDimensionZ], [mainStartX + 0.05, spaceHeight, subDimensionZ])}
-                    color={dimensionColor}
-                    lineWidth={0.5}
-                  />
-                  <Line
-                    points={createArrowHead([mainEndX, spaceHeight, subDimensionZ], [mainEndX - 0.05, spaceHeight, subDimensionZ])}
-                    color={dimensionColor}
-                    lineWidth={0.5}
-                  />
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[(mainStartX + mainEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(40)]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[-Math.PI / 2, 0, 0]}
-                  >
-                    {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
-                          leftReduction = 0;
-                          rightReduction = 0;
-                        }
-                      }
+                  {/* ===== 2단: 원 구간 사이즈 (2000/900/150) ===== */}
+                  {renderZoneDim(mainStartX, mainEndX, String(Math.round(mainWidth)), zoneDimZ)}
+                  {hasSC && renderZoneDim(scStartX, scEndX, String(Math.round(scWidth)), zoneDimZ)}
+                  {hasDC && renderZoneDim(droppedStartX, droppedEndX, String(Math.round(droppedWidth)), zoneDimZ)}
+                  {hasCB && renderZoneDim(cbStartX, cbEndX, String(Math.round(cbWidth)), zoneDimZ)}
 
-                      // 자유배치: 이격거리 없이 순수 너비 사용
-                      if (isFreePlacement) {
-                        return Math.round(mainWidth);
-                      }
-                      // ColumnIndexer의 실제 계산된 너비 사용
-                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zoneSlotInfo.normal.width);
-                    })()}
-                  </Text>
+                  {/* ===== 3단: 내경 (1997/901.5/147) ===== */}
+                  {renderZoneDim(mainStartX, mainEndX,
+                    String(isFreePlacement ? Math.round(mainWidth) : Math.round(zoneSlotInfo.normal.width)),
+                    subDimensionZ
+                  )}
+                  {(hasDC || hasSC) && renderZoneDim(
+                    hasDC ? droppedStartX : scStartX,
+                    hasDC ? droppedEndX : scEndX,
+                    String(isFreePlacement
+                      ? Math.round(hasDC ? droppedWidth : scWidth)
+                      : Math.round(zoneSlotInfo.dropped?.width || (hasDC ? dcWidth : scWidth))),
+                    subDimensionZ
+                  )}
+                  {hasCB && (() => {
+                    const cbInner = cbWidth - 3; // 양쪽 1.5mm 이격
+                    const cbInnerStartX = cbStartX + mmToThreeUnits(1.5);
+                    const cbInnerEndX = cbEndX - mmToThreeUnits(1.5);
+                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(Math.round(cbInner)), subDimensionZ);
+                  })()}
 
-                  {/* 단내림 구간 치수선 */}
-                  <Line
-                    points={[[droppedStartX, spaceHeight, subDimensionZ], [droppedEndX, spaceHeight, subDimensionZ]]}
-                    color={dimensionColor}
-                    lineWidth={0.5}
-                  />
-                  <Line
-                    points={createArrowHead([droppedStartX, spaceHeight, subDimensionZ], [droppedStartX + 0.05, spaceHeight, subDimensionZ])}
-                    color={dimensionColor}
-                    lineWidth={0.5}
-                  />
-                  <Line
-                    points={createArrowHead([droppedEndX, spaceHeight, subDimensionZ], [droppedEndX - 0.05, spaceHeight, subDimensionZ])}
-                    color={dimensionColor}
-                    lineWidth={0.5}
-                  />
-                  <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                    position={[(droppedStartX + droppedEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(40)]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[-Math.PI / 2, 0, 0]}
-                  >
-                    {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
-                            rightReduction = 20;
-                          } else {
-                            leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
-                          leftReduction = 0;
-                          rightReduction = 0;
-                        }
-                      }
-
-                      // 자유배치: 이격거리 없이 순수 너비 사용
-                      if (isFreePlacement) {
-                        return Math.round(droppedWidth);
-                      }
-                      // ColumnIndexer의 실제 계산된 너비 사용
-                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      return Math.round(zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width);
-                    })()}
-                  </Text>
-                  
                   {/* 구간 분리 가이드라인 */}
                   <Line
                     points={[
-                      [spaceInfo.droppedCeiling.position === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width), spaceHeight, spaceZOffset],
-                      [spaceInfo.droppedCeiling.position === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width), spaceHeight, subDimensionZ + mmToThreeUnits(20)]
+                      [hasDC
+                        ? (dcPosition === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width))
+                        : (scOnLeft ? scEndX : scStartX),
+                      spaceHeight, spaceZOffset],
+                      [hasDC
+                        ? (dcPosition === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width))
+                        : (scOnLeft ? scEndX : scStartX),
+                      spaceHeight, subDimensionZ + mmToThreeUnits(20)]
                     ]}
                     color={subGuideColor}
                     lineWidth={0.5}
                     dashed
                   />
-                  
-                  {/* 메인 구간 연장선 */}
-                  <Line
-                    points={[
-                      [mainStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
-                      [mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
-                    ]}
-                    color={subGuideColor}
-                    lineWidth={0.5}
-                  />
-                  <Line
-                    points={[
-                      [mainEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
-                      [mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
-                    ]}
-                    color={subGuideColor}
-                    lineWidth={0.5}
-                  />
-                  
-                  {/* 단내림 구간 연장선 */}
-                  <Line
-                    points={[
-                      [droppedStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
-                      [droppedStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
-                    ]}
-                    color={subGuideColor}
-                    lineWidth={0.5}
-                  />
-                  <Line
-                    points={[
-                      [droppedEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
-                      [droppedEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
-                    ]}
-                    color={subGuideColor}
-                    lineWidth={0.5}
-                  />
+
+                  {/* CB 구간 분리 가이드라인 */}
+                  {hasCB && (
+                    <Line
+                      points={[
+                        [cbOnLeft ? cbEndX : cbStartX, spaceHeight, spaceZOffset],
+                        [cbOnLeft ? cbEndX : cbStartX, spaceHeight, subDimensionZ + mmToThreeUnits(20)]
+                      ]}
+                      color={subGuideColor}
+                      lineWidth={0.5}
+                      dashed
+                    />
+                  )}
+
+                  {/* 연장선 */}
+                  <Line points={[[mainStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                  <Line points={[[mainEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                  {(hasDC || hasSC) && (<>
+                    <Line points={[[hasDC ? droppedStartX : scStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [hasDC ? droppedStartX : scStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                    <Line points={[[hasDC ? droppedEndX : scEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [hasDC ? droppedEndX : scEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                  </>)}
+                  {hasCB && (<>
+                    <Line points={[[cbStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [cbStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                    <Line points={[[cbEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)], [cbEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]]} color={subGuideColor} lineWidth={0.5} />
+                  </>)}
                 </>
               );
             })()}
