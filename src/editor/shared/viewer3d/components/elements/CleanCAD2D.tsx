@@ -2999,7 +2999,76 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
       </group>
       )}
-      
+
+      {/* 슬롯배치 커튼박스 구간 너비 치수선 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
+        const cbPos = spaceInfo.curtainBox!.position || 'right';
+        const cbW = spaceInfo.curtainBox!.width || 150;
+        const cbWThree = mmToThreeUnits(cbW);
+        const totalW = mmToThreeUnits(spaceInfo.width);
+        let cbStartX: number, cbEndX: number;
+        if (cbPos === 'left') {
+          cbStartX = leftOffset;
+          cbEndX = leftOffset + cbWThree;
+        } else {
+          cbStartX = leftOffset + totalW - cbWThree;
+          cbEndX = leftOffset + totalW;
+        }
+        const EXTENSION_LEN = mmToThreeUnits(80);
+        return (
+          <group key="cb-width-dimension">
+            <Line
+              points={[[cbStartX, slotDimensionY, 0.002], [cbEndX, slotDimensionY, 0.002]]}
+              color={dimensionColor}
+              lineWidth={0.5}
+            />
+            <Line
+              points={createArrowHead([cbStartX, slotDimensionY, 0.002], [cbStartX + 0.02, slotDimensionY, 0.002])}
+              color={dimensionColor}
+              lineWidth={0.5}
+            />
+            <Line
+              points={createArrowHead([cbEndX, slotDimensionY, 0.002], [cbEndX - 0.02, slotDimensionY, 0.002])}
+              color={dimensionColor}
+              lineWidth={0.5}
+            />
+            {(showDimensionsText || isStep2) && (
+              <Text
+                renderOrder={1000}
+                depthTest={false}
+                position={[(cbStartX + cbEndX) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                fontSize={baseFontSize}
+                color={textColor}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={textOutlineWidth}
+                outlineColor={textOutlineColor}
+              >
+                {cbW}
+              </Text>
+            )}
+            <NativeLine name="dimension_line"
+              points={[[cbStartX, spaceHeight, 0.001], [cbStartX, slotDimensionY + EXTENSION_LEN, 0.001]]}
+              color={dimensionColor}
+              lineWidth={1.5}
+              renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
+            />
+            <NativeLine name="dimension_line"
+              points={[[cbEndX, spaceHeight, 0.001], [cbEndX, slotDimensionY + EXTENSION_LEN, 0.001]]}
+              color={dimensionColor}
+              lineWidth={1.5}
+              renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
+            />
+          </group>
+        );
+      })()}
+
       {/* 전체 내부 너비 치수선 (자유배치/단내림 모드에서는 숨김) */}
       {!isFreePlacement && !hasDroppedCeiling && (() => {
         const internalLeftX = threeUnitBoundaries[0];
