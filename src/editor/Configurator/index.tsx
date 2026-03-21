@@ -196,7 +196,7 @@ const FrameOffsetRow: React.FC<{
 const ZoneSizeDroppedRow: React.FC<{
   spaceInfo: any; isFreeMode: boolean; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
 }> = ({ spaceInfo, isFreeMode, handleSpaceInfoUpdate, styles, marginBottom }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : '단내림'}</span>
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
@@ -264,7 +264,7 @@ const ZoneSizeDroppedRow: React.FC<{
 const ZoneSizeCurtainBoxRow: React.FC<{
   spaceInfo: any; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
 }> = ({ spaceInfo, handleSpaceInfoUpdate, styles, marginBottom }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>커튼박스</span>
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
@@ -3606,18 +3606,19 @@ const Configurator: React.FC = () => {
               <HelpBtn title="구간 사이즈" text="메인 구간과 단내림 구간의 실제 사용 가능한 너비×높이를 표시합니다. 너비를 직접 입력하면 구간 비율이 조정됩니다." />
             </div>
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {/* 좌측 커튼박스 먼저 표시 */}
             {!isFreeMode && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
-              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} marginBottom />
+              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
             )}
 
             {/* 좌단내림이면 단내림→메인, 우단내림이면 메인→단내림 순서 */}
             {spaceInfo.droppedCeiling?.position === 'left' && (
-              <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} marginBottom />
+              <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
             )}
 
             {/* 메인구간 한 줄 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>메인</span>
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
@@ -3684,7 +3685,7 @@ const Configurator: React.FC = () => {
 
             {/* stepCeiling 구간 사이즈 (자유배치 전용) */}
             {isFreeMode && spaceInfo.stepCeiling?.enabled && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
                 <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                   <input
@@ -3710,6 +3711,7 @@ const Configurator: React.FC = () => {
                 <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
               </div>
             )}
+            </div>
           </div>
         )}
 
