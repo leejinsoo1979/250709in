@@ -1085,19 +1085,19 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthTest=true → 카메라 거리 기준 자동 정렬)
+  // 커튼박스 영역 천장 material (depthTest=false → renderOrder 기반 오버레이)
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = true;
-    mat.depthTest = true;
+    mat.depthWrite = false;
+    mat.depthTest = false;
     return mat;
   }, []);
 
-  // 단내림 영역 천장 material (depthTest=true → 카메라 거리 기준 자동 정렬)
+  // 단내림 영역 천장 material (depthTest=false → renderOrder 기반 오버레이)
   const stepCeilingMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     // 셰이더 fragmentShader에서 opacity → 1.0 강제 (alpha 채널 완전 불투명)
@@ -1106,21 +1106,21 @@ const Room: React.FC<RoomProps> = ({
       'gl_FragColor = vec4(color, 1.0);'
     );
     mat.transparent = false;
-    mat.depthWrite = true;
-    mat.depthTest = true;
+    mat.depthWrite = false;
+    mat.depthTest = false;
     mat.needsUpdate = true;
     return mat;
   }, []);
 
-  // 천장 구간 경계벽 material (depthTest=true → 카메라 거리 기준 자동 정렬)
+  // 천장 구간 경계벽 material (depthTest=false → renderOrder 기반 오버레이)
   const ceilingBoundaryWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = true;
-    mat.depthTest = true;
+    mat.depthWrite = false;
+    mat.depthTest = false;
     return mat;
   }, []);
 
@@ -1386,7 +1386,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
-                      renderOrder={-1}
+                      renderOrder={2}
                     >
                       <planeGeometry args={[extendedPanelDepth, height]} />
                       <primitive
@@ -1486,7 +1486,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, -Math.PI / 2, 0]}
-                      renderOrder={-1}
+                      renderOrder={2}
                     >
                       <planeGeometry args={[extendedPanelDepth, height]} />
                       <primitive
@@ -1564,7 +1564,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[cbAreaX, cbCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    
+                    renderOrder={1}
                   >
                     <planeGeometry args={[cbAreaWidth, extendedPanelDepth]} />
                     <primitive object={opaqueTopWallMaterial} />
@@ -1573,14 +1573,14 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[mainAreaX, mainCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    
+                    renderOrder={1}
                   >
                     <planeGeometry args={[mainAreaWidth, extendedPanelDepth]} />
                     <primitive ref={topWallMaterialRef} object={topWallMaterial} />
                   </mesh>
                   {/* 커튼박스 경계 수직 벽 — 커튼박스 천장 앞, 천장 뒤 */}
                   <mesh
-                    
+                    renderOrder={1}
                     position={[cbBoundaryX, cbBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -1615,7 +1615,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[stepAreaX, stepCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    
+                    renderOrder={1}
                   >
                     <planeGeometry args={[stepAreaWidth, extendedPanelDepth]} />
                     <primitive object={stepCeilingMaterial} />
@@ -1624,14 +1624,14 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[mainAreaX, mainCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    
+                    renderOrder={1}
                   >
                     <planeGeometry args={[mainAreaWidth, extendedPanelDepth]} />
                     <primitive ref={topWallMaterialRef} object={topWallMaterial} />
                   </mesh>
                   {/* 단내림 경계 수직 벽 — 커튼박스 천장 앞, 천장 뒤 */}
                   <mesh
-                    
+                    renderOrder={1}
                     position={[stepBoundaryX, stepBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -1810,7 +1810,7 @@ const Room: React.FC<RoomProps> = ({
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
-                  
+                  renderOrder={1}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
@@ -1823,7 +1823,7 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[stepAreaX2, stepCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[Math.PI / 2, 0, 0]}
-                      
+                      renderOrder={1}
                     >
                       <planeGeometry args={[scWidth, extendedPanelDepth]} />
                       <primitive object={stepCeilingMaterial} />
@@ -1832,14 +1832,14 @@ const Room: React.FC<RoomProps> = ({
                     <mesh
                       position={[mainAreaX2, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[Math.PI / 2, 0, 0]}
-                      
+                      renderOrder={1}
                     >
                       <planeGeometry args={[actualMainWidth, extendedPanelDepth]} />
                       <primitive ref={topWallMaterialRef} object={topWallMaterial} />
                     </mesh>
                     {/* 단내림 경계 수직 벽 — 커튼박스 천장 앞, 천장 뒤 */}
                     <mesh
-                      
+                      renderOrder={1}
                       position={[stepBoundaryX2, stepBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[0, Math.PI / 2, 0]}
                     >
@@ -1852,7 +1852,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[normalAreaX, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    
+                    renderOrder={1}
                   >
                     <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
                     <primitive ref={topWallMaterialRef} object={topWallMaterial} />
@@ -1861,7 +1861,7 @@ const Room: React.FC<RoomProps> = ({
 
                 {/* 메인↔단내림 경계 수직 벽 — 커튼박스 천장 앞, 천장 뒤 */}
                 <mesh
-                  
+                  renderOrder={1}
                   position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
@@ -1890,14 +1890,14 @@ const Room: React.FC<RoomProps> = ({
                       <mesh
                         position={[cbAreaX, cbCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[Math.PI / 2, 0, 0]}
-                        
+                        renderOrder={1}
                       >
                         <planeGeometry args={[cbOnlyWidth, extendedPanelDepth]} />
                         <primitive object={opaqueTopWallMaterial} />
                       </mesh>
                       {/* CB-DC 경계 수직 벽 — 커튼박스 천장 앞, 천장 뒤 */}
                       <mesh
-                        
+                        renderOrder={1}
                         position={[cbBoundaryX2, cbBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[0, Math.PI / 2, 0]}
                       >
@@ -2269,7 +2269,7 @@ const Room: React.FC<RoomProps> = ({
             // 3D 모드나 다른 2D 뷰에서는 투명 처리
             <mesh
               position={[xOffset + width / 2, panelStartY + height / 2, zOffset - 0.01]}
-              renderOrder={-1}
+              renderOrder={2}
             >
               <planeGeometry args={[width, height]} />
               <meshStandardMaterial
@@ -2345,7 +2345,7 @@ const Room: React.FC<RoomProps> = ({
             <mesh
               position={[-width / 2, panelStartY + leftWallH / 2, zOffset]}
               rotation={[0, 0, 0]}
-              renderOrder={-1}
+              renderOrder={2}
             >
               <planeGeometry args={[0.02, leftWallH]} />
               <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2355,7 +2355,7 @@ const Room: React.FC<RoomProps> = ({
             <mesh
               position={[width / 2, panelStartY + rightWallH / 2, zOffset]}
               rotation={[0, 0, 0]}
-              renderOrder={-1}
+              renderOrder={2}
             >
               <planeGeometry args={[0.02, rightWallH]} />
               <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2392,7 +2392,7 @@ const Room: React.FC<RoomProps> = ({
                       zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[0.02, _mainW]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2405,7 +2405,7 @@ const Room: React.FC<RoomProps> = ({
                       zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[0.02, _zoneW]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2414,7 +2414,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[_bx, _boundaryMidY, zOffset]}
                     rotation={[0, 0, 0]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[0.02, _zoneDropH]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2425,7 +2425,7 @@ const Room: React.FC<RoomProps> = ({
               <mesh
                 position={[xOffset + width / 2, panelStartY + height, zOffset]}
                 rotation={[0, 0, Math.PI / 2]}
-                renderOrder={-1}
+                renderOrder={2}
               >
                 <planeGeometry args={[0.02, width]} />
                 <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2436,7 +2436,7 @@ const Room: React.FC<RoomProps> = ({
             <mesh
               position={[xOffset + width / 2, panelStartY, zOffset]}
               rotation={[0, 0, Math.PI / 2]}
-              renderOrder={-1}
+              renderOrder={2}
             >
               <planeGeometry args={[0.02, width]} />
               <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2515,7 +2515,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[_scBx, panelStartY + height - _scDropH2 / 2, zOffset]}
                     rotation={[0, 0, 0]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[0.02, _scDropH2]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2530,7 +2530,7 @@ const Room: React.FC<RoomProps> = ({
                       zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
-                    renderOrder={-1}
+                    renderOrder={2}
                   >
                     <planeGeometry args={[0.02, _scW]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
@@ -2792,7 +2792,7 @@ const Room: React.FC<RoomProps> = ({
               ]}
               rotation={[-Math.PI / 2, 0, 0]}
               receiveShadow={shadowEnabled}
-              renderOrder={-1}
+              renderOrder={2}
             >
               <planeGeometry args={[slotWidth, floorDepth]} />
               <meshStandardMaterial
