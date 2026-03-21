@@ -4198,7 +4198,8 @@ const Configurator: React.FC = () => {
           {(spaceInfo.surroundType || 'surround') === 'surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
-                {/* 좌프레임 */}
+                {/* 좌프레임 — 좌커튼박스 시 프레임 없으므로 숨김 */}
+                {!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>
                     {spaceInfo.installType === 'builtin' ? '좌측' :
@@ -4252,6 +4253,7 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                )}
 
                 {/* 좌이격 */}
                 <div className={styles.frameItem}>
@@ -4345,7 +4347,8 @@ const Configurator: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 우프레임 */}
+                {/* 우프레임 — 우커튼박스 시 프레임 없으므로 숨김 */}
+                {!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>
                     {spaceInfo.installType === 'builtin' ? '우측' :
@@ -4399,6 +4402,7 @@ const Configurator: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
 
             </div>
