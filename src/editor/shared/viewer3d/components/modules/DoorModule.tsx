@@ -1556,7 +1556,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ] : [
                       [-leftDoorWidthUnits / 2, dimensionLinePos, zPos],
                       [leftDoorWidthUnits / 2, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={2} />
+                    ]} color={dimColor} lineWidth={1} />
 
                     <Line name="door-dimension" points={isTopView ? [
                       [-leftDoorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
@@ -1564,7 +1564,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ] : [
                       [-leftDoorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
                       [-leftDoorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={2} />
+                    ]} color={dimColor} lineWidth={1} />
 
                     <Line name="door-dimension" points={isTopView ? [
                       [leftDoorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
@@ -1572,7 +1572,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ] : [
                       [leftDoorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
                       [leftDoorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={2} />
+                    ]} color={dimColor} lineWidth={1} />
 
                     <DimensionText
                       name="door-dimension-text"
@@ -1581,6 +1581,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
                         [0, dimensionLinePos + mmToThreeUnits(15), zPos]
                       }
+                      color={dimColor}
                       anchorX="center"
                       anchorY="bottom"
                       forceShow={true}
@@ -1928,7 +1929,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [rightDoorWidthUnits / 2, dimensionLinePos, zPos]
                       ]}
                       color={dimColor}
-                      lineWidth={2}
+                      lineWidth={1}
                     />
 
                     {/* 왼쪽 틱 마크 (수평선) */}
@@ -1942,7 +1943,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-rightDoorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
                       ]}
                       color={dimColor}
-                      lineWidth={2}
+                      lineWidth={1}
                     />
 
                     {/* 오른쪽 틱 마크 (수평선) */}
@@ -1956,7 +1957,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [rightDoorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
                       ]}
                       color={dimColor}
-                      lineWidth={2}
+                      lineWidth={1}
                     />
 
                     {/* 치수 텍스트 - 치수선 아래에 배치 */}
@@ -1967,6 +1968,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
                         [0, dimensionLinePos + mmToThreeUnits(15), zPos]
                       }
+                      color={dimColor}
                       anchorX="center"
                       anchorY="bottom"
                       forceShow={true}
@@ -2479,7 +2481,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [doorWidthUnits / 2, dimensionLinePos, zPos]
                     ]}
                     color={dimColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
 
                   {/* 왼쪽 틱 마크 */}
@@ -2493,7 +2495,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [-doorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
                     ]}
                     color={dimColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
 
                   {/* 오른쪽 틱 마크 */}
@@ -2507,7 +2509,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [doorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
                     ]}
                     color={dimColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
 
                   {/* 치수 텍스트 */}
@@ -2518,6 +2520,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
                       [0, dimensionLinePos + mmToThreeUnits(15), zPos]
                     }
+                    color={dimColor}
                     anchorX="center"
                     anchorY="bottom"
                     forceShow={true}
