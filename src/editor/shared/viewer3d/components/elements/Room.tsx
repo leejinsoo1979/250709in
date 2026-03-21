@@ -1134,6 +1134,16 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
+  // CB 프레임 전용 material (depthWrite=false — 단내림 천장이 덮을 수 있도록)
+  const cbFrameMaterial = useMemo(() => {
+    const cbPos = spaceInfo.curtainBox?.position || 'right';
+    const baseMat = cbPos === 'left' ? leftFrameMaterial : rightFrameMaterial;
+    if (!baseMat) return null;
+    const mat = baseMat.clone();
+    mat.depthWrite = false;
+    return mat;
+  }, [leftFrameMaterial, rightFrameMaterial, spaceInfo.curtainBox?.position]);
+
   // CB 전용 경계벽 material (depthTest=false + depthWrite=false)
   const cbBoundaryWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
@@ -3962,11 +3972,10 @@ const Room: React.FC<RoomProps> = ({
             const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
-            const cbFrameMatBase = cbPos === 'left'
-              ? (leftFrameMaterial ?? createFrameMaterial('left'))
-              : (rightFrameMaterial ?? createFrameMaterial('right'));
-            const cbFrameMat = cbFrameMatBase.clone();
-            cbFrameMat.depthWrite = false;
+            const cbFrameMat = cbFrameMaterial
+              ?? (cbPos === 'left'
+                ? (leftFrameMaterial ?? createFrameMaterial('left'))
+                : (rightFrameMaterial ?? createFrameMaterial('right')));
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
