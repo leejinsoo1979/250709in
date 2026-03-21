@@ -2841,8 +2841,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 서라운드 모드 좌측 커튼박스 너비 치수선 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
+      {/* 좌측 커튼박스 너비 치수선 (3단) */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
@@ -3116,8 +3116,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 서라운드 모드 우측 커튼박스 너비 치수선 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
+      {/* 우측 커튼박스 너비 치수선 (3단) */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
@@ -4965,7 +4965,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })()}
 
       {/* 슬롯배치 커튼박스 내경 치수선 (4단: slotDimensionY) — cbWidth - 이격 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && (() => {
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
         const cbPos = spaceInfo.curtainBox!.position || 'right';
         const gap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
