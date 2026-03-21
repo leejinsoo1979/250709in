@@ -2246,11 +2246,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     // 프레임은 3단 치수선에 별도 표시 → 실배치에서 제외
                     mainPlacementWidth = floorValue(mainSlotTotalWidth, hasDualInMain);
-                    // 노서라운드에서는 ColumnIndexer가 경계이격을 단내림에 흡수(+BOUNDARY_GAP)
-                    // 3단 치수선은 명목 내경(흡수 전)을 표시해야 하므로 경계이격 차감
-                    const isNoSurround = spaceInfo.surroundType !== 'surround';
-                    const absorbedBoundaryGap = (isNoSurround && hasDC) ? (zoneSlotInfoForDim.boundaryGap ?? middleGapMm) : 0;
-                    dcPlacementWidth = floorValue(droppedSlotTotalWidth - absorbedBoundaryGap, hasDualInDropped);
+                    dcPlacementWidth = floorValue(droppedSlotTotalWidth, hasDualInDropped);
                     // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
 
@@ -4998,17 +4994,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
         const cbPos = spaceInfo.curtainBox!.position || 'right';
-        // 벽쪽 이격
-        const wallGap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
-        // 단내림쪽 경계이격 (단내림이 있으면 단내림↔커튼박스 경계이격)
-        const boundaryGap = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.gapConfig?.middle ?? 1.5) : 0;
-        const internalW = cbW - wallGap - boundaryGap;
+        const gap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
+        const internalW = cbW - gap;
         if (internalW <= 0) return null;
         const dimY = slotDimensionY;
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-        // 커튼박스 내경 X좌표: 벽쪽에서 wallGap, 단내림쪽에서 boundaryGap 제외
-        const cbStartX = cbPos === 'right' ? rightEdge - mmToThreeUnits(cbW) + mmToThreeUnits(boundaryGap) : leftOffset + mmToThreeUnits(wallGap);
-        const cbEndX = cbPos === 'right' ? rightEdge - mmToThreeUnits(wallGap) : leftOffset + mmToThreeUnits(cbW) - mmToThreeUnits(boundaryGap);
+        const cbStartX = cbPos === 'right' ? rightEdge - mmToThreeUnits(cbW) : leftOffset + mmToThreeUnits(gap);
+        const cbEndX = cbPos === 'right' ? rightEdge - mmToThreeUnits(gap) : leftOffset + mmToThreeUnits(cbW);
         const fmtVal = (() => { const r = Math.round(internalW * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
         return (
           <group>
