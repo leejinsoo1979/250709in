@@ -2380,10 +2380,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   dashed
                 /> */}
                 
-                {/* 메인 구간 연장선 (치수선에서 벽면까지) */}
+                {/* 메인 구간 연장선 (공간 상단에서 치수선까지) */}
                 <Line
                   points={[
-                    [mainStartX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainStartX, spaceHeight, 0.001],
                     [mainStartX, subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
@@ -2391,19 +2391,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 <Line
                   points={[
-                    [mainEndX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainEndX, spaceHeight, 0.001],
                     [mainEndX, subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
-                
+
                 {/* 단내림(stepCeiling) 구간 연장선 */}
                 {hasSC && (
                 <>
                 <Line
                   points={[
-                    [scStartX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [scStartX, spaceHeight, 0.001],
                     [scStartX, subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
@@ -2411,7 +2411,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 <Line
                   points={[
-                    [scEndX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [scEndX, spaceHeight, 0.001],
                     [scEndX, subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
@@ -2419,12 +2419,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 </>
                 )}
-                {/* 커튼박스(droppedCeiling) 구간 연장선 */}
+                {/* 단내림(droppedCeiling) 구간 연장선 */}
                 {hasDC && (
                 <>
                 <Line
                   points={[
-                    [droppedStartX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedStartX, spaceHeight, 0.001],
                     [droppedStartX, subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
@@ -2432,7 +2432,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 <Line
                   points={[
-                    [droppedEndX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedEndX, spaceHeight, 0.001],
                     [droppedEndX, subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
