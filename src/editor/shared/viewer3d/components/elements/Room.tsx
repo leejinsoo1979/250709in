@@ -1290,27 +1290,43 @@ const Room: React.FC<RoomProps> = ({
                   : 0;
                 const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
-// console.log('🔍 왼쪽 벽 단내림 조건 체크:', {
-                  // 'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
-                  // hasDroppedCeiling,
-                  // isLeftDropped,
-                  // dropHeight,
-                  // condition: hasDroppedCeiling && isLeftDropped,
-                  // 'spaceInfo.height': spaceInfo.height,
-                  // 'droppedHeight(mm)': spaceInfo.height - dropHeight,
-                  // 'height(Three.js)': height / 0.01,
-                  // 'droppedHeight(Three.js)': (spaceInfo.height - dropHeight) * 0.01
-                // });
+                // 슬롯배치 커튼박스 좌측 체크 (droppedCeiling과 독립)
+                const hasLeftCB = !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left';
+                const leftCBDropH = hasLeftCB ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
 
                 // stepCeiling 좌측 확인
                 const hasLeftStep = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
                 const leftStepDropH = hasLeftStep ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
 
+                // 슬롯배치 커튼박스 단독 좌측: 벽 위로 확장
+                if (hasLeftCB && !hasDroppedCeiling) {
+                  const cbWallHeight = height + leftCBDropH;
+                  const cbCenterY = panelStartY + cbWallHeight / 2;
+                  return renderMode === 'solid' ? (
+                    <mesh
+                      position={[-width / 2 - 0.01, cbCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                      renderOrder={1}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
+                      <primitive object={opaqueLeftWallMaterial} />
+                    </mesh>
+                  ) : null;
+                }
+
                 // 왼쪽이 단내림(커튼박스) 영역인 경우
                 if (hasDroppedCeiling && isLeftDropped) {
                   // 자유배치 커튼박스: 위로 확장(+), 슬롯 단내림: 아래로(-)
-                  // 슬롯배치에서 curtainBox는 별도 필드이므로 droppedCeiling은 항상 아래로
-                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
+                  // 슬롯배치 단내림+커튼박스 동시: 벽은 커튼박스 높이(위로 확장)로 렌더
+                  let droppedWallHeight: number;
+                  if (isFreePlacement) {
+                    droppedWallHeight = height + droppedCeilingHeight;
+                  } else if (hasLeftCB) {
+                    // 단내림+커튼박스 동시: CB가 더 높으므로 CB 높이로 벽 렌더
+                    droppedWallHeight = height + leftCBDropH;
+                  } else {
+                    droppedWallHeight = height - droppedCeilingHeight;
+                  }
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
@@ -1375,24 +1391,42 @@ const Room: React.FC<RoomProps> = ({
                   : 0;
                 const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
-// console.log('🔍 오른쪽 벽 단내림 조건 체크:', {
-                  // 'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
-                  // hasDroppedCeiling,
-                  // isRightDropped,
-                  // dropHeight,
-                  // condition: hasDroppedCeiling && isRightDropped,
-                  // viewMode,
-                  // '벽 렌더링 조건': (viewMode === '3D' || viewMode === '3d')
-                // });
+                // 슬롯배치 커튼박스 우측 체크
+                const hasRightCB = !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right';
+                const rightCBDropH = hasRightCB ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
 
                 // stepCeiling 우측 확인
                 const hasRightStep = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
                 const rightStepDropH = hasRightStep ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
 
+                // 슬롯배치 커튼박스 단독 우측: 벽 위로 확장
+                if (hasRightCB && !hasDroppedCeiling) {
+                  const cbWallHeight = height + rightCBDropH;
+                  const cbCenterY = panelStartY + cbWallHeight / 2;
+                  return renderMode === 'solid' ? (
+                    <mesh
+                      position={[width / 2 + 0.01, cbCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
+                      renderOrder={1}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
+                      <primitive object={opaqueRightWallMaterial} />
+                    </mesh>
+                  ) : null;
+                }
+
                 // 오른쪽이 단내림 영역인 경우
                 if (hasDroppedCeiling && isRightDropped) {
                   // 자유배치 커튼박스: 위로 확장(+), 슬롯 단내림: 아래로(-)
-                  const droppedWallHeight = isFreePlacement ? (height + droppedCeilingHeight) : (height - droppedCeilingHeight);
+                  // 슬롯배치 단내림+커튼박스 동시: 벽은 커튼박스 높이(위로 확장)로 렌더
+                  let droppedWallHeight: number;
+                  if (isFreePlacement) {
+                    droppedWallHeight = height + droppedCeilingHeight;
+                  } else if (hasRightCB) {
+                    droppedWallHeight = height + rightCBDropH;
+                  } else {
+                    droppedWallHeight = height - droppedCeilingHeight;
+                  }
                   const droppedCenterY = panelStartY + droppedWallHeight / 2;
 
                   return renderMode === 'solid' ? (
@@ -1462,7 +1496,15 @@ const Room: React.FC<RoomProps> = ({
             const stepDropHeight = hasStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
             const isLeftStep = spaceInfo.stepCeiling?.position === 'left';
 
-            if (!hasDroppedCeiling && !hasStepCeiling) {
+            // 슬롯배치 커튼박스 (droppedCeiling과 독립)
+            const hasCBSlot = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+            const hasCBOnly = hasCBSlot && !hasDroppedCeiling; // CB 단독 (DC 없음)
+            const hasCBWithDC = hasCBSlot && hasDroppedCeiling; // CB + DC 동시
+            const cbOnlyWidth = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+            const cbOnlyDropH = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
+            const cbOnlyIsLeft = hasCBSlot && spaceInfo.curtainBox!.position === 'left';
+
+            if (!hasDroppedCeiling && !hasStepCeiling && !hasCBOnly) {
               // 단내림도 커튼박스도 없는 경우 전체 천장 렌더링
               return renderMode === 'solid' ? (
                 <mesh
@@ -1474,6 +1516,56 @@ const Room: React.FC<RoomProps> = ({
                     ref={topWallMaterialRef}
                     object={topWallMaterial} />
                 </mesh>
+              ) : null;
+            }
+
+            // 슬롯배치 커튼박스 단독: 2구간 (커튼박스 높은 천장 + 메인 천장)
+            if (hasCBOnly && !hasStepCeiling) {
+              const cbAreaWidth = cbOnlyWidth;
+              const mainAreaWidth = width - cbAreaWidth;
+              const cbAreaX = cbOnlyIsLeft
+                ? xOffset + cbAreaWidth / 2
+                : xOffset + mainAreaWidth + cbAreaWidth / 2;
+              const mainAreaX = cbOnlyIsLeft
+                ? xOffset + cbAreaWidth + mainAreaWidth / 2
+                : xOffset + mainAreaWidth / 2;
+              const cbCeilingY = panelStartY + height + cbOnlyDropH + 0.001; // 위로 확장
+              const mainCeilingY = panelStartY + height + 0.001;
+              const cbBoundaryX = cbOnlyIsLeft
+                ? xOffset + cbAreaWidth
+                : xOffset + mainAreaWidth;
+              const cbBoundaryY = panelStartY + height + cbOnlyDropH / 2;
+
+              return renderMode === 'solid' ? (
+                <>
+                  {/* 커튼박스 영역 천장 (높은 위치) */}
+                  <mesh
+                    position={[cbAreaX, cbCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[cbAreaWidth, extendedPanelDepth]} />
+                    <primitive object={opaqueTopWallMaterial} />
+                  </mesh>
+                  {/* 메인 영역 천장 */}
+                  <mesh
+                    position={[mainAreaX, mainCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    renderOrder={-1}
+                  >
+                    <planeGeometry args={[mainAreaWidth, extendedPanelDepth]} />
+                    <primitive ref={topWallMaterialRef} object={topWallMaterial} />
+                  </mesh>
+                  {/* 커튼박스 경계 수직 벽 */}
+                  <mesh
+                    renderOrder={-1}
+                    position={[cbBoundaryX, cbBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    <planeGeometry args={[extendedPanelDepth, cbOnlyDropH]} />
+                    <primitive ref={droppedWallMaterialRef} object={droppedWallMaterial} />
+                  </mesh>
+                </>
               ) : null;
             }
 
@@ -1556,25 +1648,30 @@ const Room: React.FC<RoomProps> = ({
 
             let droppedAreaWidth: number;
             let normalAreaWidth: number;
+            // DC+CB 동시: CB 너비를 normalArea에서 추가 제외
+            const cbWForCeiling = hasCBWithDC ? cbOnlyWidth : 0;
 
             if (isLeftDropped) {
               // 왼쪽 단내림: 천장은 전체 너비 사용
               droppedAreaWidth = droppedWidth;
-              normalAreaWidth = width - droppedWidth;
+              normalAreaWidth = width - droppedWidth - cbWForCeiling;
             } else {
               // 오른쪽 단내림: 천장은 전체 너비 사용
-              normalAreaWidth = width - droppedWidth;
+              normalAreaWidth = width - droppedWidth - cbWForCeiling;
               droppedAreaWidth = droppedWidth;
             }
 
+            // 구간 순서: 벽 → [CB] → [DC] → [메인] (같은 쪽 기준)
+            // DC+CB 동시: isLeftDropped → [CB(좌끝) | DC | 메인]
+            //              !isLeftDropped → [메인 | DC | CB(우끝)]
             // 단내림 영역의 X 위치 계산
             const droppedAreaX = isLeftDropped
-              ? xOffset + droppedAreaWidth / 2
+              ? xOffset + cbWForCeiling + droppedAreaWidth / 2
               : xOffset + normalAreaWidth + droppedAreaWidth / 2;
 
             // 일반 영역의 X 위치 계산
             const normalAreaX = isLeftDropped
-              ? xOffset + droppedAreaWidth + normalAreaWidth / 2
+              ? xOffset + cbWForCeiling + droppedAreaWidth + normalAreaWidth / 2
               : xOffset + normalAreaWidth / 2;
 
 // console.log('🔥 천장 분할 계산:', {
@@ -1751,6 +1848,44 @@ const Room: React.FC<RoomProps> = ({
                     ref={droppedWallMaterialRef}
                     object={droppedWallMaterial} />
                 </mesh>
+
+                {/* DC+CB 동시: 커튼박스 영역 천장 + 경계벽 */}
+                {hasCBWithDC && (() => {
+                  const cbAreaX = isLeftDropped
+                    ? xOffset + cbOnlyWidth / 2
+                    : xOffset + normalAreaWidth + droppedAreaWidth + cbOnlyWidth / 2;
+                  const cbCeilingY2 = panelStartY + height + cbOnlyDropH + 0.001;
+                  // CB-DC 경계벽: DC천장 ~ CB천장 사이 (또는 메인 천장 ~ CB 천장)
+                  const cbBoundaryX2 = isLeftDropped
+                    ? xOffset + cbOnlyWidth
+                    : xOffset + normalAreaWidth + droppedAreaWidth;
+                  // CB 경계벽 높이: DC천장 ~ CB천장 = dcDropH + cbDropH (슬롯: DC아래, CB위)
+                  const cbBoundaryH = droppedCeilingHeight + cbOnlyDropH;
+                  const cbBoundaryY2 = panelStartY + height - droppedCeilingHeight + cbBoundaryH / 2;
+
+                  return (
+                    <>
+                      {/* 커튼박스 천장 (위로 확장) */}
+                      <mesh
+                        position={[cbAreaX, cbCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
+                        rotation={[Math.PI / 2, 0, 0]}
+                        renderOrder={-1}
+                      >
+                        <planeGeometry args={[cbOnlyWidth, extendedPanelDepth]} />
+                        <primitive object={opaqueTopWallMaterial} />
+                      </mesh>
+                      {/* CB-DC 경계 수직 벽 */}
+                      <mesh
+                        renderOrder={-1}
+                        position={[cbBoundaryX2, cbBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
+                        rotation={[0, Math.PI / 2, 0]}
+                      >
+                        <planeGeometry args={[extendedPanelDepth, cbBoundaryH]} />
+                        <primitive object={droppedWallMaterial} />
+                      </mesh>
+                    </>
+                  );
+                })()}
               </>
             ) : null;
           })()}
@@ -1797,6 +1932,12 @@ const Room: React.FC<RoomProps> = ({
             // 경계선 수집 (그라데이션: 뒷벽=진한, 앞쪽=투명)
             const lines: [number, number, number, number, number, number][] = [];
 
+            // 슬롯배치 커튼박스 단독 정보
+            const hasCBStandalone = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+            const cbDropHLine = hasCBStandalone ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
+            const cbIsLeft = hasCBStandalone && spaceInfo.curtainBox?.position === 'left';
+            const cbIsRight = hasCBStandalone && spaceInfo.curtainBox?.position === 'right';
+
             // 천장-좌벽 경계
             // 슬롯배치에서 curtainBox는 별도 필드이므로 droppedCeiling 방향은 자유배치만 커튼박스
             if (hasLW) {
@@ -1806,7 +1947,10 @@ const Room: React.FC<RoomProps> = ({
                 if (dcIsLeft) leftCY = cY + dcDropH;
                 else if (scIsLeft) leftCY = cY - scDropHLine;
               } else {
-                if (dcIsLeft) leftCY = cY - dcDropH;           // 슬롯단내림: 아래로 축소
+                // 슬롯배치: DC+CB 동시이면 CB(위로)가 외벽 높이, DC단독이면 아래로, CB단독이면 위로
+                if (dcIsLeft && cbIsLeft) leftCY = cY + cbDropHLine;       // DC+CB 동시: 외벽은 CB 높이
+                else if (dcIsLeft) leftCY = cY - dcDropH;                  // 슬롯단내림: 아래로 축소
+                else if (cbIsLeft && !hasDC) leftCY = cY + cbDropHLine;    // 슬롯 커튼박스 단독: 위로 확장
               }
               lines.push([x1, leftCY, z1, x1, leftCY, z2]);
             }
@@ -1817,7 +1961,9 @@ const Room: React.FC<RoomProps> = ({
                 if (dcIsRight) rightCY = cY + dcDropH;  // 자유배치 커튼박스: 위로 확장
                 else if (scIsRight) rightCY = cY - scDropHLine;
               } else {
-                if (dcIsRight) rightCY = cY - dcDropH;
+                if (dcIsRight && cbIsRight) rightCY = cY + cbDropHLine;
+                else if (dcIsRight) rightCY = cY - dcDropH;
+                else if (cbIsRight && !hasDC) rightCY = cY + cbDropHLine;
               }
               lines.push([x2, rightCY, z1, x2, rightCY, z2]);
             }
@@ -1867,6 +2013,26 @@ const Room: React.FC<RoomProps> = ({
                 } else {
                   lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
                 }
+              }
+            }
+
+            // === 슬롯배치 커튼박스 단독 경계벽 Z축 라인 ===
+            if (hasCBStandalone && !hasDC && spaceInfo.curtainBox) {
+              const cbW = mmToThreeUnits(spaceInfo.curtainBox.width || 150);
+              const cbIsL = spaceInfo.curtainBox.position === 'left';
+              const cbBx = cbIsL ? x1 + cbW : x2 - cbW;
+              const cbCeilingY = cY + cbDropHLine; // 커튼박스: 위로 확장
+
+              // 경계벽 상단 (커튼박스 천장 높이에서)
+              lines.push([cbBx, cbCeilingY, z1, cbBx, cbCeilingY, z2]);
+              // 경계벽 하단 (메인 천장 높이 = cY) → 뒷벽 근처로만 제한 (천장 mesh 관통 방지)
+              lines.push([cbBx, cY, z1, cbBx, cY, z1 + 0.01]);
+
+              // 커튼박스 쪽 외벽의 천장 높이 Z축 라인 (뒷벽 근처로 제한)
+              if (cbIsL && hasLW) {
+                lines.push([x1, cbCeilingY, z1, x1, cbCeilingY, z1 + 0.01]);
+              } else if (!cbIsL && hasRW) {
+                lines.push([x2, cbCeilingY, z1, x2, cbCeilingY, z1 + 0.01]);
               }
             }
 
@@ -2107,15 +2273,55 @@ const Room: React.FC<RoomProps> = ({
             const _dcDropH = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             const _dcW = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
 
+            // 슬롯배치 커튼박스 단독 처리
+            const _hasCBOnly = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+            const _cbIsLeft = _hasCBOnly && spaceInfo.curtainBox?.position === 'left';
+            const _cbIsRight = _hasCBOnly && spaceInfo.curtainBox?.position === 'right';
+            const _cbDropH = _hasCBOnly ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
+            const _cbW = _hasCBOnly ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+
             // 커튼박스/단내림 고려한 좌/우 벽 높이
             // 자유배치 커튼박스: 위로 확장(+), 슬롯배치 단내림: 아래로(-)
-            const leftWallH = _dcIsLeft ? (isFreePlacement ? height + _dcDropH : height - _dcDropH) : height;
-            const rightWallH = _dcIsRight ? (isFreePlacement ? height + _dcDropH : height - _dcDropH) : height;
+            // 슬롯배치 커튼박스 단독: 위로 확장(+)
+            let leftWallH = height;
+            let rightWallH = height;
+            if (_dcIsLeft && _cbIsLeft) {
+              leftWallH = height + _cbDropH;  // DC+CB 동시: 외벽은 CB 높이(위로)
+            } else if (_dcIsLeft) {
+              leftWallH = isFreePlacement ? height + _dcDropH : height - _dcDropH;
+            } else if (_cbIsLeft && !_hasDC) {
+              leftWallH = height + _cbDropH;
+            }
+            if (_dcIsRight && _cbIsRight) {
+              rightWallH = height + _cbDropH;
+            } else if (_dcIsRight) {
+              rightWallH = isFreePlacement ? height + _dcDropH : height - _dcDropH;
+            } else if (_cbIsRight && !_hasDC) {
+              rightWallH = height + _cbDropH;
+            }
             // 좌/우 천장 Y
-            const leftCeilingY = _dcIsLeft ? (isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH) : (panelStartY + height);
-            const rightCeilingY = _dcIsRight ? (isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH) : (panelStartY + height);
-            // 경계벽 X 위치
-            const _bx = _dcIsLeft ? (xOffset + _dcW) : (xOffset + width - _dcW);
+            let leftCeilingY = panelStartY + height;
+            let rightCeilingY = panelStartY + height;
+            if (_dcIsLeft && _cbIsLeft) {
+              leftCeilingY = panelStartY + height + _cbDropH;
+            } else if (_dcIsLeft) {
+              leftCeilingY = isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH;
+            } else if (_cbIsLeft && !_hasDC) {
+              leftCeilingY = panelStartY + height + _cbDropH;
+            }
+            if (_dcIsRight && _cbIsRight) {
+              rightCeilingY = panelStartY + height + _cbDropH;
+            } else if (_dcIsRight) {
+              rightCeilingY = isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH;
+            } else if (_cbIsRight && !_hasDC) {
+              rightCeilingY = panelStartY + height + _cbDropH;
+            }
+            // 경계벽 X 위치 (droppedCeiling 또는 curtainBox)
+            const _bx = _dcIsLeft ? (xOffset + _dcW)
+              : _dcIsRight ? (xOffset + width - _dcW)
+              : _cbIsLeft ? (xOffset + _cbW)
+              : _cbIsRight ? (xOffset + width - _cbW)
+              : 0;
 
             return (
             <>
@@ -2139,16 +2345,27 @@ const Room: React.FC<RoomProps> = ({
               <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
             </mesh>
 
-            {/* 상단 가로 모서리 (천장과 뒷벽 사이) - 단내림 시 메인 구간만 */}
-            {_hasDC ? (() => {
-              // 메인 구간 너비: 커튼박스 + 단내림 제외
+            {/* 상단 가로 모서리 (천장과 뒷벽 사이) - 단내림/커튼박스 시 메인 구간만 */}
+            {(_hasDC || (_hasCBOnly && !_hasDC)) ? (() => {
+              // 단내림이 있으면 _dcW 사용, 커튼박스 단독이면 _cbW 사용
+              const _zoneW = _hasDC ? _dcW : _cbW;
+              const _zoneDropH = _hasDC ? _dcDropH : _cbDropH;
+              const _zoneIsLeft = _hasDC ? _dcIsLeft : _cbIsLeft;
               const _scEnabled = isFreePlacement && spaceInfo.stepCeiling?.enabled;
               const _scW2 = _scEnabled ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 900) : 0;
-              const _mainW = width - _dcW - _scW2;
-              // 메인 구간 시작 X: 좌측에 CB+SC가 있으면 그만큼 오른쪽으로
-              const _mainStartX = (_dcIsLeft || (_scEnabled && spaceInfo.stepCeiling?.position === 'left'))
-                ? xOffset + _dcW + _scW2
+              const _mainW = width - _zoneW - _scW2;
+              // 메인 구간 시작 X
+              const _mainStartX = (_zoneIsLeft || (_scEnabled && spaceInfo.stepCeiling?.position === 'left'))
+                ? xOffset + _zoneW + _scW2
                 : xOffset;
+              // 구간 천장 높이: 자유배치+DC = 위로, 슬롯+DC = 아래로, 슬롯+CB단독 = 위로
+              const _zoneCeilingY = _hasDC
+                ? (isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH)
+                : panelStartY + height + _cbDropH; // CB 단독은 항상 위로
+              // 경계벽 중심Y와 높이
+              const _boundaryMidY = _hasDC
+                ? (isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2)
+                : panelStartY + height + _cbDropH / 2;
               return (
                 <>
                   {/* 메인 구간 천장 가로선 */}
@@ -2167,23 +2384,23 @@ const Room: React.FC<RoomProps> = ({
                   {/* 커튼박스/단내림 구간 천장 가로선 */}
                   <mesh
                     position={[
-                      _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
-                      isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
+                      _zoneIsLeft ? (xOffset + _zoneW / 2) : (xOffset + width - _zoneW / 2),
+                      _zoneCeilingY,
                       zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
                     renderOrder={-1}
                   >
-                    <planeGeometry args={[0.02, _dcW]} />
+                    <planeGeometry args={[0.02, _zoneW]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                   </mesh>
                   {/* 경계벽 수직 음영선 (뒷벽) */}
                   <mesh
-                    position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset]}
+                    position={[_bx, _boundaryMidY, zOffset]}
                     rotation={[0, 0, 0]}
                     renderOrder={-1}
                   >
-                    <planeGeometry args={[0.02, _dcDropH]} />
+                    <planeGeometry args={[0.02, _zoneDropH]} />
                     <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
                   </mesh>
                 </>
@@ -4390,6 +4607,11 @@ const Room: React.FC<RoomProps> = ({
               return null;
             }
 
+            // 슬롯배치 커튼박스 단독이 좌측에 있으면 서브프레임 불필요 (가구 배치 안 함)
+            if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && !droppedCeilingEnabled) {
+              return null;
+            }
+
             // 왼쪽이 단내림(커튼박스) 영역인 경우 (슬롯모드)
             if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
               // 슬롯모드: 기존 로직
@@ -4558,6 +4780,11 @@ const Room: React.FC<RoomProps> = ({
 
             // 자유배치 커튼박스가 우측에 있으면 서브프레임 불필요
             if (droppedCeilingEnabled && droppedCeilingPosition === 'right' && isFreePlacement) {
+              return null;
+            }
+
+            // 슬롯배치 커튼박스 단독이 우측에 있으면 서브프레임 불필요 (가구 배치 안 함)
+            if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && !droppedCeilingEnabled) {
               return null;
             }
 
