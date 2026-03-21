@@ -4288,7 +4288,10 @@ const Room: React.FC<RoomProps> = ({
 
               // 측면뷰일 때 선택된 zone에 따라 프레임 표시 여부 결정
               // 슬롯 미선택 시 모든 프레임 표시 (PDF 내보내기용)
-              const showDroppedFrame = !isSideView || noSlotSelected || isSelectedSlotInDroppedZone;
+              // 단내림+커튼박스 동시: 단내림 구간 상부프레임 제거 (CB 프레임이 대체)
+              const cbReplacesDropped = isCurtainBoxSlot && spaceInfo.curtainBox?.enabled &&
+                spaceInfo.curtainBox.position === spaceInfo.droppedCeiling.position;
+              const showDroppedFrame = !cbReplacesDropped && (!isSideView || noSlotSelected || isSelectedSlotInDroppedZone);
               const showNormalFrame = !isSideView || noSlotSelected || !isSelectedSlotInDroppedZone;
 
               // 단내림 영역과 일반 영역 프레임 렌더링
@@ -4646,6 +4649,12 @@ const Room: React.FC<RoomProps> = ({
               return null;
             }
 
+            // 슬롯배치 단내림+커튼박스 동시 & 같은 쪽(좌측): DC 서브프레임 제거
+            if (!isFreePlacement && droppedCeilingEnabled && droppedCeilingPosition === 'left' &&
+                spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') {
+              return null;
+            }
+
             // 왼쪽이 단내림(커튼박스) 영역인 경우 (슬롯모드)
             if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
               // 슬롯모드: 기존 로직
@@ -4819,6 +4828,12 @@ const Room: React.FC<RoomProps> = ({
 
             // 슬롯배치 커튼박스 단독이 우측에 있으면 서브프레임 불필요 (가구 배치 안 함)
             if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && !droppedCeilingEnabled) {
+              return null;
+            }
+
+            // 슬롯배치 단내림+커튼박스 동시 & 같은 쪽(우측): DC 서브프레임 제거
+            if (!isFreePlacement && droppedCeilingEnabled && droppedCeilingPosition === 'right' &&
+                spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') {
               return null;
             }
 
@@ -5088,7 +5103,12 @@ const Room: React.FC<RoomProps> = ({
               // 단내림이 활성화된 경우 두 영역 모두에 하부프레임 렌더링
               const renderZones = [];
 
-              if (spaceInfo.droppedCeiling?.enabled && zoneInfo.dropped) {
+              // 단내림+커튼박스 동시 & 같은 쪽이면 단내림 구간 하부프레임도 제거
+              const cbReplacesDroppedBottom = isCurtainBoxSlot && spaceInfo.curtainBox?.enabled &&
+                spaceInfo.droppedCeiling?.enabled &&
+                spaceInfo.curtainBox.position === spaceInfo.droppedCeiling.position;
+
+              if (spaceInfo.droppedCeiling?.enabled && zoneInfo.dropped && !cbReplacesDroppedBottom) {
                 // 단내림 구간 추가
                 renderZones.push({
                   zone: 'dropped',
