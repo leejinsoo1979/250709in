@@ -158,10 +158,21 @@ export function useLivePanelData() {
         const visualBaseFrameH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
           ? Math.max(0, baseFrameH - floorFinishH) : baseFrameH;
 
+        // 단내림 구간 높이 계산 (도어 높이 산출용)
+        let moduleSpaceHeight = spaceInfo.height;
+        const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+        if (placedModule.zone === 'dropped') {
+          if (isFreePlacement && spaceInfo.stepCeiling?.enabled) {
+            moduleSpaceHeight = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+          } else if (!isFreePlacement && spaceInfo.droppedCeiling?.enabled) {
+            moduleSpaceHeight = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
+          }
+        }
+
         const allPanelsList = calculatePanelDetailsShared(
           moduleData, width, depth, hasDoor, t, undefined,
           moduleHingePosition, moduleHingeType,
-          spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap,
+          moduleSpaceHeight, moduleDoorTopGap, moduleDoorBottomGap,
           baseHeight, moduleBackPanelThickness, placedModule.customConfig,
           // --- 이전에 누락된 파라미터 8개 ---
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
@@ -645,10 +656,21 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const visualBaseFrameH2 = spaceInfo.baseConfig?.type === 'floor' && floorFinishH2 > 0
         ? Math.max(0, baseFrameH2 - floorFinishH2) : baseFrameH2;
 
+      // 단내림 구간 높이 계산 (도어 높이 산출용)
+      let moduleSpaceHeight2 = spaceInfo.height;
+      const isFreePlacement2 = spaceInfo.layoutMode === 'free-placement';
+      if (placedModule.zone === 'dropped') {
+        if (isFreePlacement2 && spaceInfo.stepCeiling?.enabled) {
+          moduleSpaceHeight2 = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+        } else if (!isFreePlacement2 && spaceInfo.droppedCeiling?.enabled) {
+          moduleSpaceHeight2 = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
+        }
+      }
+
       const allPanelsList = calculatePanelDetailsShared(
         moduleData, width, depth, hasDoor, t, undefined,
         moduleHingePosition, moduleHingeType,
-        spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap,
+        moduleSpaceHeight2, moduleDoorTopGap, moduleDoorBottomGap,
         baseHeight2, moduleBackPanelThickness2, placedModule.customConfig,
         // --- 이전에 누락된 파라미터 8개 ---
         placedModule.hasLeftEndPanel,
