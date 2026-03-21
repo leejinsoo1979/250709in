@@ -2370,7 +2370,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 커튼박스 구간 실배치 치수선 (3단: 147만 표시) */}
+                {/* 커튼박스 구간 실배치 치수선 (3단: 147) */}
                 {hasCB && !isFreePlacement && (() => {
                   const cbGap = mmToThreeUnits(1.5);
                   const innerLeft = cbStartX + cbGap;
@@ -2547,10 +2547,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // CB 안쪽 1.5mm 이격 (벽쪽은 4단 외벽이격에서 이미 표시)
+                  // CB 양쪽 1.5mm 이격
                   if (hasCB && !isFreePlacement) {
-                    const cbGapMm = 1.5;
-                    const cbGap = mmToThreeUnits(cbGapMm);
+                    const cbGap = mmToThreeUnits(1.5);
+                    // 벽쪽 1.5mm
+                    if (cbOnLeft) {
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
+                    } else {
+                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
+                    }
+                    // 안쪽 1.5mm
                     if (cbOnLeft) {
                       boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
                     } else {
