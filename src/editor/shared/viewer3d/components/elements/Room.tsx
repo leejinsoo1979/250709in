@@ -1125,9 +1125,8 @@ const Room: React.FC<RoomProps> = ({
       'gl_FragColor = vec4(color, 1.0);'
     );
     mat.transparent = false;
-    mat.depthWrite = false;
+    mat.depthWrite = true;
     mat.depthTest = true;
-    mat.depthFunc = THREE.AlwaysDepth;
     mat.polygonOffset = true;
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;

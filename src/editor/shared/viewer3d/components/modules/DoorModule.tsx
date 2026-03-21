@@ -64,7 +64,7 @@ const BoxWithEdges: React.FC<{
           material={material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
-          renderOrder={isEditMode ? 999 : 0}
+          renderOrder={isEditMode ? 999 : 10}
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
@@ -72,7 +72,7 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (
-        <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 0}>
+        <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 10}>
           <lineBasicMaterial
             color={isEditMode ? getThemeColor() : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : "#505050")}
             transparent={renderMode !== 'wireframe'}
