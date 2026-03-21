@@ -6152,7 +6152,13 @@ const Configurator: React.FC = () => {
               }}
               frameMergeEnabled={spaceInfo.frameMergeEnabled ?? false}
               onFrameMergeToggle={() => {
-                setSpaceInfo({ frameMergeEnabled: !(spaceInfo.frameMergeEnabled ?? false) });
+                const isCurrentlyMerged = spaceInfo.frameMergeEnabled ?? false;
+                if (isCurrentlyMerged) {
+                  // 병합 → 분절: 안내 팝업
+                  const confirmed = confirm('프레임을 분절하면 병합된 프레임이 개별 프레임으로 분리됩니다.\n분절하시겠습니까?');
+                  if (!confirmed) return;
+                }
+                setSpaceInfo({ frameMergeEnabled: !isCurrentlyMerged });
               }}
             />
           )}
