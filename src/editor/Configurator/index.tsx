@@ -75,7 +75,6 @@ import {
   BaseControls,
   FloorFinishControls
 } from '@/editor/shared/controls';
-import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 import { BoringExportDialog } from '@/editor/shared/controls/boring';
 import { useFurnitureBoring } from '@/domain/boring';
 import Step2SpaceAndCustomization from '@/editor/Step1/components/Step2SpaceAndCustomization';
@@ -4083,15 +4082,6 @@ const Configurator: React.FC = () => {
         {/* 자유배치 모드에서는 이격거리 불필요 — 제거됨 */}
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
-
-        {/* 자유배치 모드: 좌우 이격거리 설정 (노서라운드일 때만 — surround/both-sides는 프레임이 담당) */}
-        {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && spaceInfo.surroundType === 'no-surround' && (
-          <GapControls
-            spaceInfo={spaceInfo}
-            onUpdate={handleSpaceInfoUpdate}
-            forceShow={true}
-          />
-        )}
 
         {/* 프레임 설정 (슬롯/자유배치 공통) */}
         <div className={styles.configSection}>
