@@ -361,17 +361,31 @@ function PageInner(){
         const cutlistPanels: Panel[] = livePanels.map(p => {
           // 재단방향(grain) 기반으로 Length/Width 결정
           // Length = 재단방향(결방향) 치수, Width = 직교 치수
-          // 모든 유결 패널에서 재단방향 축이 곧 긴 쪽이므로 Length=max, Width=min
-          let width = Math.min(p.width, p.height);
-          let length = Math.max(p.width, p.height);
+          const panelName = (p.name || '').toLowerCase();
+          const isBackPanel = panelName.includes('백패널');
+
+          let width: number;
+          let length: number;
+
+          if (isBackPanel) {
+            // 백패널: 무조건 높이(Y축) = Length, 가로(X축) = Width
+            // MDF 무결이지만 2440 원판에서 높이방향이 항상 Length
+            length = p.height;
+            width = p.width;
+          } else {
+            // 일반 패널: 긴 쪽 = Length, 짧은 쪽 = Width
+            width = Math.min(p.width, p.height);
+            length = Math.max(p.width, p.height);
+          }
 
           // 결방향 매핑:
+          // - 백패널: 'H' (높이=Length 방향 고정, 회전 불가)
           // - NONE → 'NONE' (결 무관, MDF 등 회전 허용)
           // - VERTICAL/HORIZONTAL → 'H' (재단방향이 항상 Length 축과 평행)
           //   측판: Y축=Length, 결=Y=Length → H
           //   선반: X축=Length, 결=X=Length → H
           //   서랍측판: Z축=Length, 결=Z=Length → H
-          const grain: Grain = p.grain === 'NONE' ? 'NONE' : 'H';
+          const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
 
           // 도어와 엔드패널은 자동으로 PET 재질로 설정
           let material = p.material || 'PB';
@@ -513,13 +527,24 @@ function PageInner(){
       console.log('✅ livePanels에서 패널 초기화 시작:', livePanels.length, '개');
       const cutlistPanels: Panel[] = livePanels.map(p => {
         // 재단방향(grain) 기반으로 Length/Width 결정
-        let width = Math.min(p.width, p.height);
-        let length = Math.max(p.width, p.height);
-
-        // 결방향: NONE→NONE, 그 외→H (재단방향이 항상 Length 축과 평행)
-        const grain: Grain = p.grain === 'NONE' ? 'NONE' : 'H';
-        let material = p.material || 'PB';
         const panelName = (p.name || '').toLowerCase();
+        const isBackPanel = panelName.includes('백패널');
+
+        let width: number;
+        let length: number;
+
+        if (isBackPanel) {
+          // 백패널: 무조건 높이(Y축) = Length, 가로(X축) = Width
+          length = p.height;
+          width = p.width;
+        } else {
+          width = Math.min(p.width, p.height);
+          length = Math.max(p.width, p.height);
+        }
+
+        // 결방향: 백패널→H(높이고정), NONE→NONE, 그 외→H
+        const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
+        let material = p.material || 'PB';
         if (panelName.includes('도어') || panelName.includes('door') ||
             panelName.includes('엔드') || panelName.includes('end')) {
           material = 'PET';
@@ -662,9 +687,11 @@ function PageInner(){
         // 패널 치수를 그대로 사용 (width와 length를 변경하지 않음)
         // console.log(`Panel ${panel.label}: ${panel.width}x${panel.length} (grain: ${panel.grain}, thickness: ${panel.thickness}mm)`);
         
-        // CNC 최적화 모드에서는 결방향 무시하고 무조건 회전 가능 (효율 극대화)
-        // BY_LENGTH, BY_WIDTH 모드에서만 결방향 고려
-        if (effectiveOptimizationType === 'OPTIMAL_CNC') {
+        // 백패널: 어떤 모드에서든 회전 불가 (높이=Length 고정)
+        const isBackPanelForRotation = (panel.label || '').includes('백패널');
+        if (isBackPanelForRotation) {
+          processedPanel.canRotate = false;
+        } else if (effectiveOptimizationType === 'OPTIMAL_CNC') {
           // CNC 최적화: 테트리스처럼 최대 효율로 배치 - 결방향 무시
           processedPanel.canRotate = true;
         } else {

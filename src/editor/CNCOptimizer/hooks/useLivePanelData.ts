@@ -14,10 +14,11 @@ import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateSh
  * - 측판/백패널/도어/칸막이: VERTICAL (결이 높이 방향)
  * - 상판/바닥/선반/분할판/보강대: HORIZONTAL (결이 너비 방향)
  * - 서랍 바닥/MDF 패널: NONE (결 무관, 회전 허용)
+ * - 백패널: MDF 무결이지만 VERTICAL (무조건 2440방향=높이=Length, 회전 불가)
  */
 function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' {
-  // MDF 재질 패널 (결 방향 없음, 회전 허용)
-  if (panelName.includes('백패널')) return 'NONE';
+  // 백패널: MDF 무결이지만 무조건 높이(Y축)=Length 고정 → VERTICAL (회전 불가)
+  if (panelName.includes('백패널')) return 'VERTICAL';
   if (panelName.includes('바닥') && panelName.includes('서랍')) return 'NONE'; // 서랍 바닥 (MDF)
 
   // 서랍 부품
