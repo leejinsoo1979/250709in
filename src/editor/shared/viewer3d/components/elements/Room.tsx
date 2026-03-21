@@ -1210,11 +1210,13 @@ const Room: React.FC<RoomProps> = ({
 
   // CB 프레임 전용 material (클리핑 플레인으로 천장 위 부분 가림)
   const cbClipY = sideFrameStartY + adjustedPanelHeight;
+  console.log('🔪 CB clipping:', { cbClipY, sideFrameStartY, adjustedPanelHeight, height, panelStartY, floatHeight });
   useEffect(() => {
     const mat = createFrameMaterial('left', triggerRerender);
     (mat as THREE.MeshStandardMaterial).clippingPlanes = [
       new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
     ];
+    console.log('🔪 CB left material created with clipY:', cbClipY, 'mat:', mat);
     setCbLeftFrameMaterial(mat);
     return () => mat.dispose();
   }, [...frameDeps, cbClipY]);
@@ -3986,6 +3988,7 @@ const Room: React.FC<RoomProps> = ({
             const cbFrameMat = cbPos === 'left'
               ? (cbLeftFrameMaterial ?? leftFrameMaterial ?? createFrameMaterial('left'))
               : (cbRightFrameMaterial ?? rightFrameMaterial ?? createFrameMaterial('right'));
+            console.log('🔪 CB frame render:', { cbPos, cbPanelH, cbCenterY, cbClipY, hasCbMat: !!cbLeftFrameMaterial || !!cbRightFrameMaterial, clippingPlanes: (cbFrameMat as any).clippingPlanes });
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
