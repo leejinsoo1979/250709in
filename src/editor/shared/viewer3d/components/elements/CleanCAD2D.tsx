@@ -2098,9 +2098,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const leftGapMm = spaceInfo.gapConfig?.left ?? 1.5;
                   const rightGapMm = spaceInfo.gapConfig?.right ?? 1.5;
                   const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5; // 메인↔단내림(or 메인↔커튼박스) 경계
-                  // 단내림+커튼박스 동시 활성 시 단내림↔커튼박스 경계는 middle2
+                  // 단내림+커튼박스 동시 활성 시 단내림↔커튼박스 경계는 middle2 (middle 폴백 없음)
                   const middle2GapMm = (hasSC && hasDC)
-                    ? (spaceInfo.gapConfig?.middle2 ?? middleGapMm)
+                    ? (spaceInfo.gapConfig?.middle2 ?? 1.5)
                     : middleGapMm;
 
                   const isBuiltIn = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
@@ -2559,7 +2559,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const sameSide = dcPosition === scPosition;
                     if (sameSide) {
                       // 같은 쪽: 단내림↔커튼박스 경계 → middle2
-                      const m2Gap = spaceInfo.gapConfig?.middle2 ?? middleGapMm;
+                      const m2Gap = spaceInfo.gapConfig?.middle2 ?? 1.5;
                       if (dcOnLeft) {
                         boundaries.push({ leftX: droppedEndX, rightX: scStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
                       } else {
@@ -2582,7 +2582,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true, gapSide: 'middle', gapValue: middleGapMm });
                     }
                     // 2) 단내림↔커튼박스 경계 → middle2 (이격2와 독립)
-                    const m2Gap = spaceInfo.gapConfig?.middle2 ?? middleGapMm;
+                    const m2Gap = spaceInfo.gapConfig?.middle2 ?? 1.5;
                     if (dcOnLeft && cbOnLeft) {
                       boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: true, gapSide: 'middle2', gapValue: m2Gap });
                     } else if (dcOnRight && cbOnRight) {
@@ -4998,10 +4998,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
         const cbPos = spaceInfo.curtainBox!.position || 'right';
-        // 경계쪽 이격만 차감 (단내림이 있으면 middle2, 없으면 middle)
+        // 경계쪽 이격만 차감 (단내림이 있으면 middle2, 없으면 middle — middle 폴백 없이 기본값 1.5)
         const hasDCForCB = !!spaceInfo.droppedCeiling?.enabled;
         const boundaryGap = hasDCForCB
-          ? (spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5)
+          ? (spaceInfo.gapConfig?.middle2 ?? 1.5)
           : (spaceInfo.gapConfig?.middle ?? 1.5);
         const internalW = cbW - boundaryGap;
         if (internalW <= 0) return null;

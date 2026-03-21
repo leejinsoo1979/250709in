@@ -4591,7 +4591,7 @@ const Configurator: React.FC = () => {
 
                 {/* 단내림↔커튼박스 경계이격 (단내림+커튼박스 동시 활성 시) */}
                 {spaceInfo.droppedCeiling?.enabled && spaceInfo.curtainBox?.enabled && (() => {
-                  const curVal = spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5;
+                  const curVal = spaceInfo.gapConfig?.middle2 ?? 1.5;
                   return (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>단내림↔CB</label>
