@@ -289,14 +289,9 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
       rightThickness = hasRightFurniture ? END_PANEL_THICKNESS : 0;
     }
     
-    console.log('🎯 노서라운드 엔드패널 계산:', {
-      hasLeftFurniture,
-      hasRightFurniture,
-      leftThickness,
-      rightThickness,
-      installType,
-      wallConfig
-    });
+    // console.log('🎯 노서라운드 엔드패널 계산:', {
+    //   hasLeftFurniture, hasRightFurniture, leftThickness, rightThickness, installType, wallConfig
+    // });
     
     return {
       left: leftThickness,
