@@ -1085,27 +1085,27 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthTest=false: 커튼박스 프레임보다 앞에 렌더링)
+  // 커튼박스 영역 천장 material
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
+    mat.depthWrite = true;
+    mat.depthTest = true;
     return mat;
   }, []);
 
-  // 단내림 영역 천장 material (커튼박스 천장보다 앞에 렌더링 — renderOrder로 제어)
+  // 단내림 영역 천장 material
   const stepCeilingMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
+    mat.depthWrite = true;
+    mat.depthTest = true;
     return mat;
   }, []);
 
