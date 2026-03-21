@@ -3962,9 +3962,11 @@ const Room: React.FC<RoomProps> = ({
             const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
-            const cbFrameMat = cbPos === 'left'
+            const baseMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
               : (rightFrameMaterial ?? createFrameMaterial('right'));
+            const cbFrameMat = baseMat.clone();
+            cbFrameMat.depthTest = false;
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
@@ -3992,13 +3994,13 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
-                {/* 경계면 칸막이 — 단내림 천장 뒤로 렌더링 */}
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-99} />
+                {/* 경계면 칸막이 — 맨 뒤 렌더링 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-99} />
               </group>
             );
           })()}
