@@ -1125,16 +1125,12 @@ const Room: React.FC<RoomProps> = ({
       'gl_FragColor = vec4(color, 1.0);'
     );
     mat.transparent = false;
-    mat.depthWrite = true;
+    mat.depthWrite = false; // depth buffer에 안 써서 가구/도어에 영향 없음
     mat.depthTest = true;
+    mat.depthFunc = THREE.AlwaysDepth; // renderOrder 순서대로 CB프레임을 무조건 덮음
     mat.polygonOffset = true;
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;
-    // stencil: 단내림 천장이 그려지는 픽셀에 stencil=1 기록
-    mat.stencilWrite = true;
-    mat.stencilRef = 1;
-    mat.stencilFunc = THREE.AlwaysStencilFunc;
-    mat.stencilZPass = THREE.ReplaceStencilOp;
     mat.needsUpdate = true;
     return mat;
   }, []);
@@ -3967,14 +3963,9 @@ const Room: React.FC<RoomProps> = ({
             const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
-            const baseMat = cbPos === 'left'
+            const cbFrameMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
               : (rightFrameMaterial ?? createFrameMaterial('right'));
-            // CB 프레임: 단내림 천장(stencil=1)이 그려진 픽셀에서는 렌더링하지 않음
-            const cbFrameMat = baseMat.clone();
-            cbFrameMat.stencilWrite = false;
-            cbFrameMat.stencilRef = 1;
-            cbFrameMat.stencilFunc = THREE.NotEqualStencilFunc; // stencil ≠ 1 인 곳에서만 렌더링
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
