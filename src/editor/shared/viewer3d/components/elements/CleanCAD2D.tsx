@@ -2542,6 +2542,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
+                  // CB 양쪽 1.5mm 이격 (프레임↔구간 경계)
+                  if (hasCB) {
+                    const cbGap = mmToThreeUnits(1.5);
+                    // CB 안쪽(메인 쪽) 이격
+                    if (cbOnLeft) {
+                      // CB가 좌측: 안쪽 = 우측 끝
+                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
+                    } else {
+                      // CB가 우측: 안쪽 = 좌측 끝
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
+                    }
+                    // CB 바깥쪽(벽 쪽) 이격
+                    if (cbOnLeft) {
+                      // CB가 좌측: 바깥 = 좌측 끝
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
+                    } else {
+                      // CB가 우측: 바깥 = 우측 끝
+                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
+                    }
+                  }
+
 
 
                   return (<>
