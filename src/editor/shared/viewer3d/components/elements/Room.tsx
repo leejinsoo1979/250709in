@@ -982,8 +982,6 @@ const Room: React.FC<RoomProps> = ({
   const [topFrameMaterial, setTopFrameMaterial] = useState<THREE.Material>();
   const [topDroppedFrameMaterial, setTopDroppedFrameMaterial] = useState<THREE.Material>();
   const [topSubFrameMaterial, setTopSubFrameMaterial] = useState<THREE.Material>();
-  const [cbLeftFrameMaterial, setCbLeftFrameMaterial] = useState<THREE.Material>();
-  const [cbRightFrameMaterial, setCbRightFrameMaterial] = useState<THREE.Material>();
   // const [baseSubFrameMaterial, setBaseSubFrameMaterial] = useState<THREE.Material>(); // 하단 서브프레임 제거됨
 
   // 텍스처 로딩 완료 시 리렌더링 트리거용
@@ -1208,28 +1206,6 @@ const Room: React.FC<RoomProps> = ({
   const sideFrameStartY = panelStartY + floatHeight;
   const sideFrameCenterY = sideFrameStartY + adjustedPanelHeight / 2;
 
-  // CB 프레임 전용 material (클리핑 플레인으로 천장 위 부분 가림)
-  // 단내림이 함께 있으면 단내림 천장 높이에 맞춤, 없으면 메인 천장 높이
-  const cbDroppedHeight = spaceInfo.droppedCeiling?.enabled
-    ? mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 0)
-    : 0;
-  const cbClipY = panelStartY + height - cbDroppedHeight;
-  useEffect(() => {
-    const mat = createFrameMaterial('left', triggerRerender);
-    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
-      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
-    ];
-    setCbLeftFrameMaterial(mat);
-    return () => mat.dispose();
-  }, [...frameDeps, cbClipY]);
-  useEffect(() => {
-    const mat = createFrameMaterial('right', triggerRerender);
-    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
-      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
-    ];
-    setCbRightFrameMaterial(mat);
-    return () => mat.dispose();
-  }, [...frameDeps, cbClipY]);
 
   // 벽 여부 확인
   const { wallConfig = { left: true, right: true } } = spaceInfo;
@@ -1876,6 +1852,22 @@ const Room: React.FC<RoomProps> = ({
                   <primitive
                     object={stepCeilingMaterial} />
                 </mesh>
+                {/* CB 프레임을 물리적으로 가리는 두께 있는 천장 박스 */}
+                {isCurtainBoxSlot && (() => {
+                  // CB 프레임 전면 Z 위치까지 커버하는 두께 계산
+                  const cbFrontZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
+                  const ceilingBackZ = extendedZOffset;
+                  const ceilingBoxDepth = cbFrontZ + mmToThreeUnits(END_PANEL_THICKNESS) / 2 - ceilingBackZ;
+                  const ceilingBoxCenterZ = ceilingBackZ + ceilingBoxDepth / 2;
+                  const ceilingBoxThickness = mmToThreeUnits(30); // 30mm 두께
+                  const ceilingBoxY = droppedCeilingY - ceilingBoxThickness / 2;
+                  return (
+                    <mesh position={[droppedAreaX, ceilingBoxY, ceilingBoxCenterZ]} renderOrder={1}>
+                      <boxGeometry args={[droppedAreaWidth, ceilingBoxThickness, ceilingBoxDepth]} />
+                      <meshStandardMaterial color="#888888" />
+                    </mesh>
+                  );
+                })()}
 
                 {hasStepCeiling ? (
                   <>
@@ -3988,8 +3980,8 @@ const Room: React.FC<RoomProps> = ({
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
             const cbFrameMat = cbPos === 'left'
-              ? (cbLeftFrameMaterial ?? leftFrameMaterial ?? createFrameMaterial('left'))
-              : (cbRightFrameMaterial ?? rightFrameMaterial ?? createFrameMaterial('right'));
+              ? (leftFrameMaterial ?? createFrameMaterial('left'))
+              : (rightFrameMaterial ?? createFrameMaterial('right'));
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
