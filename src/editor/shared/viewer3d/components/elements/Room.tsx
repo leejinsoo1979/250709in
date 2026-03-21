@@ -3712,10 +3712,7 @@ const Room: React.FC<RoomProps> = ({
               ? mmToThreeUnits(-spaceHalfW + dcWidthMM / 2)
               : mmToThreeUnits(spaceHalfW - dcWidthMM / 2);
 
-            const baseFrameMat = leftFrameMaterial ?? createFrameMaterial('left');
-            // 천장 그라데이션 매쉬가 프레임 앞에 렌더링되도록 depthWrite 비활성
-            const frameMat = baseFrameMat.clone();
-            frameMat.depthWrite = false;
+            const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
 
             // L자 구조: 전면패널 + 경계면 측면패널
             const SIDE_BASE_DEPTH_MM = 40; // 측면패널 기본 깊이
@@ -3741,9 +3738,9 @@ const Room: React.FC<RoomProps> = ({
             return (
               <group key="slot-curtain-box-finish">
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="slot-curtain-box-front"
-                  args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-2} />
+                  args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="slot-curtain-box-side"
-                  args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-2} />
+                  args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
               </group>
             );
           })()}
