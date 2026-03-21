@@ -1914,20 +1914,6 @@ const Room: React.FC<RoomProps> = ({
                         <planeGeometry args={[extendedPanelDepth, cbBoundaryH]} />
                         <primitive object={ceilingBoundaryWallMaterial} />
                       </mesh>
-                      {/* CB 구간 정면 가림벽: 단내림천장~메인천장, CB 마감패널 앞에 배치 */}
-                      {(() => {
-                        const dcDropMm = spaceInfo.droppedCeiling?.dropHeight || 200;
-                        const maskH = mmToThreeUnits(dcDropMm);
-                        const maskY = panelStartY + height - maskH / 2;
-                        // CB 마감 패널 전면 Z보다 약간 앞
-                        const cbFrontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(4);
-                        return (
-                          <mesh position={[cbAreaX, maskY, cbFrontZ]} renderOrder={1}>
-                            <planeGeometry args={[cbOnlyWidth, maskH]} />
-                            <primitive object={opaqueTopWallMaterial} attach="material" />
-                          </mesh>
-                        );
-                      })()}
                     </>
                   );
                 })()}
