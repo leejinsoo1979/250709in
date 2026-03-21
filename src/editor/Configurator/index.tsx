@@ -4308,6 +4308,152 @@ const Configurator: React.FC = () => {
                 )}
               </div>
 
+              {/* 서라운드 모드에서 단내림 활성 시 이격 설정 (경계이격) */}
+              {spaceInfo.droppedCeiling?.enabled && (
+              <div className={styles.frameGrid} style={{ marginTop: '8px' }}>
+                {/* 이격1: 좌측 이격 (좌프레임↔가구) */}
+                {(() => {
+                  const gapKey = 'left' as const;
+                  const curVal = spaceInfo.gapConfig?.left ?? 1.5;
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>이격1</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={curVal}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
+
+                {/* 이격2: 경계 이격 (메인↔단내림) */}
+                {(() => {
+                  const gapKey = 'middle' as const;
+                  const curVal = spaceInfo.gapConfig?.middle ?? 1.5;
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>이격2</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={curVal}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
+
+                {/* 이격3: 우측 이격 (가구↔우프레임) */}
+                {(() => {
+                  const gapKey = 'right' as const;
+                  const curVal = spaceInfo.gapConfig?.right ?? 1.5;
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>이격3</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={curVal}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
+              </div>
+              )}
+
             </div>
           ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
             <div className={styles.subSetting}>

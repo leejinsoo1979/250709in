@@ -1094,21 +1094,24 @@ export class ColumnIndexer {
         } else {
           // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
+          const LEFT_GAP = spaceInfo.gapConfig?.left ?? 0;
+          const RIGHT_GAP = spaceInfo.gapConfig?.right ?? 0;
 
           // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
           // 단내림 시작이 커튼박스 뒤로 밀림
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 단내림구간(좌): 좌측 프레임(또는 커튼박스 경계) 빼고 + 중간이격 흡수
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.left);
-          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : frameThickness.left);
+          // 단내림구간(좌): 좌측 프레임(또는 커튼박스 경계) + 좌이격 빼고 + 중간이격 흡수
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.left) - LEFT_GAP;
+          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : frameThickness.left) + LEFT_GAP;
 
-          // 일반구간(우): 우측 프레임 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
+          // 일반구간(우): 우측 프레임 + 우이격 + 중간이격 빼기
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP - RIGHT_GAP;
           normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
           // console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
+          //   '좌이격': LEFT_GAP, '우이격': RIGHT_GAP,
           //   '프레임 두께': frameThickness,
           //   '단내림 내경': droppedAreaInternalWidth,
           //   '메인 내경': normalAreaInternalWidth,
@@ -1233,20 +1236,23 @@ export class ColumnIndexer {
         } else {
           // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
+          const LEFT_GAP = spaceInfo.gapConfig?.left ?? 0;
+          const RIGHT_GAP = spaceInfo.gapConfig?.right ?? 0;
 
           // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
 
-          // 일반구간(좌): 좌측 프레임 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
-          normalStartX = internalStartX;
+          // 일반구간(좌): 좌측 프레임 + 좌이격 + 중간이격 빼기
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP - LEFT_GAP;
+          normalStartX = internalStartX + LEFT_GAP;
 
-          // 단내림구간(우): 우측 프레임(또는 커튼박스 경계) 빼고 + 중간이격 흡수
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.right);
+          // 단내림구간(우): 우측 프레임(또는 커튼박스 경계) + 우이격 빼고 + 중간이격 흡수
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.right) - RIGHT_GAP;
           droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
 
           // console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
+          //   '좌이격': LEFT_GAP, '우이격': RIGHT_GAP,
           //   '프레임 두께': frameThickness,
           //   '메인 내경': normalAreaInternalWidth,
           //   '단내림 내경': droppedAreaInternalWidth,
