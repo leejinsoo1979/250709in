@@ -1099,14 +1099,13 @@ const Room: React.FC<RoomProps> = ({
 
   // 단내림 영역 천장 material (커튼박스 천장보다 앞 — renderOrder=11)
   const stepCeilingMaterial = useMemo(() => {
-    const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
-    if (mat.uniforms) {
-      mat.uniforms.opacity.value = 1.0;
-    }
-    mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
-    return mat;
+    return new THREE.MeshBasicMaterial({
+      color: '#e0e0e0',
+      side: THREE.DoubleSide,
+      transparent: false,
+      depthWrite: false,
+      depthTest: false,
+    });
   }, []);
 
   // 천장 구간 경계벽 material (depthTest=false → 프레임/천장보다 앞에, renderOrder=12)
