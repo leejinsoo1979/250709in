@@ -1564,16 +1564,16 @@ const Room: React.FC<RoomProps> = ({
 
               return renderMode === 'solid' ? (
                 <>
-                  {/* 커튼박스 영역 천장 — 가장 뒤 */}
+                  {/* 커튼박스 영역 천장 — 맨 뒤 */}
                   <mesh
                     position={[cbAreaX, cbCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    renderOrder={1}
+                    renderOrder={-1}
                   >
                     <planeGeometry args={[cbAreaWidth, extendedPanelDepth]} />
                     <primitive object={opaqueTopWallMaterial} />
                   </mesh>
-                  {/* 메인 영역 천장 — 경계벽보다 앞 */}
+                  {/* 메인 영역 천장 */}
                   <mesh
                     position={[mainAreaX, mainCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
@@ -1582,9 +1582,9 @@ const Room: React.FC<RoomProps> = ({
                     <planeGeometry args={[mainAreaWidth, extendedPanelDepth]} />
                     <primitive ref={topWallMaterialRef} object={topWallMaterial} />
                   </mesh>
-                  {/* 커튼박스 경계 수직 벽 — 천장보다 뒤 */}
+                  {/* 커튼박스 경계 수직 벽 — 맨 뒤 */}
                   <mesh
-                    renderOrder={0}
+                    renderOrder={-1}
                     position={[cbBoundaryX, cbBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -1890,18 +1890,18 @@ const Room: React.FC<RoomProps> = ({
 
                   return (
                     <>
-                      {/* 커튼박스 천장 (위로 확장) — 가장 뒤 */}
+                      {/* 커튼박스 천장 (위로 확장) — 맨 뒤 */}
                       <mesh
                         position={[cbAreaX, cbCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[Math.PI / 2, 0, 0]}
-                        renderOrder={1}
+                        renderOrder={-1}
                       >
                         <planeGeometry args={[cbOnlyWidth, extendedPanelDepth]} />
                         <primitive object={opaqueTopWallMaterial} />
                       </mesh>
-                      {/* CB-DC 경계 수직 벽 — 천장보다 뒤 */}
+                      {/* CB-DC 경계 수직 벽 — 맨 뒤 */}
                       <mesh
-                        renderOrder={0}
+                        renderOrder={-1}
                         position={[cbBoundaryX2, cbBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
                         rotation={[0, Math.PI / 2, 0]}
                       >
