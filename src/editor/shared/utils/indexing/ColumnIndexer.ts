@@ -387,7 +387,7 @@ export class ColumnIndexer {
       // 빌트인의 경우 최적화된 이격거리 사용
       let actualInternalWidth = internalWidth;
       if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
-        actualInternalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
+        actualInternalWidth = totalWidth - (optimizedGapConfig.left || 0) - (optimizedGapConfig.right || 0) - curtainBoxWidth;
       }
       const exactSlotWidth = parseFloat((actualInternalWidth / columnCount).toFixed(2));
 
