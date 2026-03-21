@@ -4416,8 +4416,8 @@ const Configurator: React.FC = () => {
                 </div>
                 )}
 
-                {/* 상부 - 항상 표시 */}
-                <div className={styles.frameItem}>
+                {/* 상부 - 숨김 처리 (상부프레임은 상,하부프레임 섹션에서 관리) */}
+                {/* <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>상부</label>
                   <div className={styles.frameItemInput}>
                     <button
@@ -4452,7 +4452,7 @@ const Configurator: React.FC = () => {
                       +
                     </button>
                   </div>
-                </div>
+                </div> */}
               </div>
 
             </div>
