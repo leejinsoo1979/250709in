@@ -622,7 +622,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   console.log('🚪🚪🚪 DOOR DEBUG:', {
     actualDoorWidth, effectiveColumnWidth, isDualByModuleId, isDualFurniture,
-    moduleWidth, originalSlotWidth, isFree, zone,
+    slotWidthsProp: slotWidths,
     indexingColumnWidth: indexing.columnWidth,
     customColumnCount: originalSpaceInfo.customColumnCount,
     moduleDataId: moduleData?.id,
@@ -1141,13 +1141,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       totalWidth = actualDoorWidth;
       leftDoorWidth = actualDoorWidth / 2 - doorGap;
       rightDoorWidth = actualDoorWidth / 2 - doorGap;
-    } else if (slotWidths && slotWidths.length >= 2) {
-      // 개별 슬롯 너비가 제공된 경우
-      totalWidth = slotWidths[0] + slotWidths[1];
-      leftDoorWidth = slotWidths[0] - doorGap;
-      rightDoorWidth = slotWidths[1] - doorGap;
     } else {
-      // fallback: effectiveColumnWidth 사용 (단내림 구간 고려)
+      // 슬롯 배치: 항상 spaceInfo에서 직접 계산한 effectiveColumnWidth 사용
+      // (slotWidths prop은 FurnitureItem 경유로 stale할 수 있으므로 무시)
       totalWidth = effectiveColumnWidth * 2;
       leftDoorWidth = effectiveColumnWidth - doorGap;
       rightDoorWidth = effectiveColumnWidth - doorGap;
@@ -1174,10 +1170,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
-    // 도어 위치 계산 (개별 슬롯 너비 기반)
-    // 자유배치: 슬롯 너비 대신 totalWidth를 균등 분할하여 사용
-    const leftSlotWidth = isFree ? totalWidth / 2 : (slotWidths?.[0] || effectiveColumnWidth);
-    const rightSlotWidth = isFree ? totalWidth / 2 : (slotWidths?.[1] || effectiveColumnWidth);
+    // 도어 위치 계산 — effectiveColumnWidth 기반 (spaceInfo 직접 계산)
+    const leftSlotWidth = isFree ? totalWidth / 2 : effectiveColumnWidth;
+    const rightSlotWidth = isFree ? totalWidth / 2 : effectiveColumnWidth;
     
     const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
     const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
