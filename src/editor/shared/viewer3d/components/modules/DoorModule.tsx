@@ -207,6 +207,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
   
+  // 도어 색상 밝기 기반 대각선 점선 색상 결정
+  // 어두운 도어 → 흰색 점선, 밝은 도어 → 테마색 점선
+  const doorDiagonalColor = React.useMemo(() => {
+    const hex = typeof doorColor === 'string' ? doorColor : '#E0E0E0';
+    const match = hex.match(/^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/);
+    if (!match) return '#FFFFFF';
+    const r = parseInt(match[1], 16) / 255;
+    const g = parseInt(match[2], 16) / 255;
+    const b = parseInt(match[3], 16) / 255;
+    // relative luminance (ITU-R BT.709)
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return luminance < 0.5 ? '#FFFFFF' : 'THEME';
+  }, [doorColor]);
+
   // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
   const { theme } = useViewerTheme();
   // BoxWithEdges와 동일한 강조색 함수
@@ -220,6 +234,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
     return '#10b981'; // 기본값 (green)
   };
+
+  // 3D 뷰 대각선 점선 색상: 도어 밝기에 따라 결정
+  const diagonalLineColor3D = doorDiagonalColor === 'THEME' ? getThemeColor() : '#FFFFFF';
   // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 초기 생성용
   const createDoorMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
@@ -1342,7 +1359,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1374,7 +1391,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1407,7 +1424,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1440,7 +1457,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1673,7 +1690,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1705,7 +1722,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1738,7 +1755,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -1771,7 +1788,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -2142,7 +2159,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [line1Start[0] + dx1 * t2, line1Start[1] + dy1 * t2, 0]
                           ]}
                           name="door-diagonal"
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent={true}
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -2176,7 +2193,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [line2Start[0] + dx2 * t2, line2Start[1] + dy2 * t2, 0]
                           ]}
                           name="door-diagonal"
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent={true}
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -2217,7 +2234,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
                           name="door-diagonal"
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent={true}
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -2240,7 +2257,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
                           name="door-diagonal"
-                          color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                          color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                           lineWidth={1}
                           transparent={true}
                           opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -2282,7 +2299,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
                             name="door-diagonal"
-                            color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                            color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                             lineWidth={1}
                             transparent={true}
                             opacity={viewMode === '3D' ? 0.5 : 1.0}
@@ -2305,7 +2322,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
                             name="door-diagonal"
-                            color={viewMode === '3D' ? dimensionColor : '#FF8800'}
+                            color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
                             lineWidth={1}
                             transparent={true}
                             opacity={viewMode === '3D' ? 0.5 : 1.0}
