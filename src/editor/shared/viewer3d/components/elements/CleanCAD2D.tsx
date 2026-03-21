@@ -1863,12 +1863,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cbPosition = hasCB ? (spaceInfo.curtainBox!.position || 'right') : 'right';
 
             // 메인 구간 = 전체 - 단내림 - 단내림(자유배치) - 커튼박스(슬롯)
-            // 2단 단내림 사이즈: 경계이격 흡수분 포함 (단내림이 메인 쪽 이격을 흡수)
-            const isNoSurroundDC = spaceInfo.surroundType === 'no-surround';
-            const boundaryGapForDC = !isFreePlacement && hasDC
-              ? (isNoSurroundDC ? (spaceInfo.gapConfig?.middle ?? 1.5) : 1.5)
-              : 0;
-            const droppedWidth = dcWidth + boundaryGapForDC;
+            // 2단: 설정된 구간 사이즈 그대로 표시 (이격거리 미반영)
+            const droppedWidth = dcWidth;
             const mainWidth = spaceInfo.width - droppedWidth - scWidth - cbWidth;
 
             // 슬롯 합계 너비 (실배치 공간)
@@ -1894,7 +1890,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cbOnRight = hasCB && cbPosition === 'right';
 
             // 좌측에 쌓이는 구간 너비 합계 (좌→우 순서: 커튼박스 → 단내림)
-            // 단내림은 경계이격 흡수분(boundaryGapForDC) 포함
             const leftStackWidth = (cbOnLeft ? cbWidth : 0) + (dcOnLeft ? droppedWidth : 0) + (scOnLeft ? scWidth : 0);
             // 우측에 쌓이는 구간 너비 합계 (우→좌 순서: 커튼박스 → 단내림)
             const rightStackWidth = (cbOnRight ? cbWidth : 0) + (dcOnRight ? droppedWidth : 0) + (scOnRight ? scWidth : 0);
