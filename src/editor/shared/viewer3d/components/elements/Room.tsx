@@ -3959,7 +3959,6 @@ const Room: React.FC<RoomProps> = ({
           {isCurtainBoxSlot && spaceInfo.curtainBox?.enabled && (() => {
             const dcPos = spaceInfo.curtainBox!.position || 'right';
             const dcWidthMM = spaceInfo.curtainBox!.width || 150;
-            const dcDropH = spaceInfo.curtainBox!.dropHeight || 20;
             const panelThickMM = 18;
 
             // 바닥 ~ 메인 천장 높이 (천장 매쉬가 상단을 덮으므로 메인 천장까지만)
@@ -3974,26 +3973,21 @@ const Room: React.FC<RoomProps> = ({
 
             const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
 
-            // L자 구조: 전면패널 + 경계면 측면패널
-            const SIDE_BASE_DEPTH_MM = 40; // 측면패널 기본 깊이
-            // 가구 앞면 Z 위치 계산 (surroundZPosition과 동일 로직)
-            const _cbBaseZ = isFullSurround
-              ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
-              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
-            const frontZ = _cbBaseZ + (spaceInfo.frameOffsetBase === 'door' ? mmToThreeUnits(spaceInfo.surroundDoorOffset ?? 0) : 0);
+            // 서라운드 엔드패널과 동일한 깊이/Z 위치 사용
+            const cbSideDepth = isFullSurround ? surroundEndPanelDepth : noSurroundEndPanelDepth;
+            const cbSideZ = isFullSurround ? surroundEndPanelZ : noSurroundEndPanelZ;
 
-            // 전면패널: 커튼박스 전체 폭, 가구 앞면 위치
+            // 전면패널: 커튼박스 전체 폭, 서라운드 엔드패널 앞면 위치
+            const frontZ = cbSideZ + cbSideDepth / 2 - mmToThreeUnits(panelThickMM) / 2;
             const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
             const frontPos: [number, number, number] = [dcCenterX, panelCenterY, frontZ];
 
-            // 경계면 측면패널: 18mm 두께, 전면 뒤쪽으로 깊이
+            // 경계면 측면패널: 엔드패널과 동일 깊이, CB와 메인 구간의 경계
             const borderX = dcPos === 'left'
               ? mmToThreeUnits(-spaceHalfW + dcWidthMM - panelThickMM / 2)
               : mmToThreeUnits(spaceHalfW - dcWidthMM + panelThickMM / 2);
-            const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
-            const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)];
-            const sidePos: [number, number, number] = [borderX, panelCenterY, sideZ];
+            const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, cbSideDepth];
+            const sidePos: [number, number, number] = [borderX, panelCenterY, cbSideZ];
 
             return (
               <group key="slot-curtain-box-finish">
