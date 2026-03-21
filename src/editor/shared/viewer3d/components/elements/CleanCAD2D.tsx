@@ -7346,27 +7346,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
             <group key="right-cabinet-depth-dimension">
             {/* 치수선 */}
-            <Line
+            <NativeLine name="dimension_line"
                 points={[[rightDimensionX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
             
             {/* 화살표들 */}
-            <Line
+            <NativeLine name="dimension_line"
                 points={createArrowHead([rightDimensionX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestBackZ + 0.02], 0.01)}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
-            <Line
+            <NativeLine name="dimension_line"
                 points={createArrowHead([rightDimensionX, spaceHeight, deepestFrontZ], [rightDimensionX, spaceHeight, deepestFrontZ - 0.02], 0.01)}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
             
               {/* 캐비넷 깊이 텍스트 */}
             <Text
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                 position={[rightDimensionX + mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
               fontSize={baseFontSize}
@@ -7379,15 +7376,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
 
               {/* 연장선들 - 캐비넷 뒷면과 앞면에서 치수선까지 */}
-            <Line
+            <NativeLine name="dimension_line"
                 points={[[deepestFurnitureLeftX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestBackZ]]}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} renderOrder={100000} depthTest={false}
             />
-            <Line
+            <NativeLine name="dimension_line"
                 points={[[deepestFurnitureLeftX, spaceHeight, deepestFrontZ], [rightDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor}
-              lineWidth={0.5}
+              color={dimensionColor} renderOrder={100000} depthTest={false}
             />
           </group>
         );
@@ -7617,33 +7612,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const leftX = actualPositionX - moduleWidth / 2;
           const rightX = actualPositionX + moduleWidth / 2;
 
-          // 캐비넷 외부로 치수선 이동 (가이드라인보다 안쪽으로)
-          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
+          // 4단: 개별 가구 치수선 — DIM_GAP 기반 (입면 slotDimensionY에 대응)
+          const dimZ = topSlotDimZ;
 
           return (
             <group key={`top-module-dim-${index}`}>
               {/* 캐비넷 폭 치수선 */}
-              <Line
+              <NativeLine name="dimension_line"
                 points={[[leftX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ]]}
-                color={dimensionColor}
-                lineWidth={0.5}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
 
               {/* 화살표들 */}
-              <Line
+              <NativeLine name="dimension_line"
                 points={createArrowHead([leftX, spaceHeight, dimZ], [leftX + 0.02, spaceHeight, dimZ], 0.01)}
-                color={dimensionColor}
-                lineWidth={0.5}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              <Line
+              <NativeLine name="dimension_line"
                 points={createArrowHead([rightX, spaceHeight, dimZ], [rightX - 0.02, spaceHeight, dimZ], 0.01)}
-                color={dimensionColor}
-                lineWidth={0.5}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
 
               {/* 캐비넷 폭 치수 텍스트 - 상단뷰용, 듀얼: 0.5 단위 내림, 싱글: 정수 내림 */}
               <Text
-                  renderOrder={1000}
+                  renderOrder={100000}
                   depthTest={false}
                 position={[actualPositionX, spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
                 fontSize={baseFontSize}
@@ -7692,16 +7684,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   return (
                     <>
                       {/* 좌측 연장선 */}
-                      <Line
+                      <NativeLine name="dimension_line"
                         points={[[leftX, spaceHeight, leftFrontZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
+                        color={dimensionColor} renderOrder={100000} depthTest={false}
                       />
                       {/* 우측 연장선 */}
-                      <Line
+                      <NativeLine name="dimension_line"
                         points={[[rightX, spaceHeight, rightFrontZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
+                        color={dimensionColor} renderOrder={100000} depthTest={false}
                       />
                     </>
                   );
@@ -7712,15 +7702,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   return (
                     <>
-                      <Line
+                      <NativeLine name="dimension_line"
                         points={[[leftX, spaceHeight, furnitureFrontZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
+                        color={dimensionColor} renderOrder={100000} depthTest={false}
                       />
-                      <Line
+                      <NativeLine name="dimension_line"
                         points={[[rightX, spaceHeight, furnitureFrontZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
-                        color={dimensionColor}
-                        lineWidth={0.5}
+                        color={dimensionColor} renderOrder={100000} depthTest={false}
                       />
                     </>
                   );
