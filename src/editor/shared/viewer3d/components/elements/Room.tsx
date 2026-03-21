@@ -1812,11 +1812,11 @@ const Room: React.FC<RoomProps> = ({
 
             return renderMode === 'solid' ? (
               <>
-                {/* 단내림(dropped) 영역 천장 — 가장 앞에 렌더링 */}
+                {/* dropped 영역 천장: 슬롯=단내림(가장앞), 자유=커튼박스(경계벽 뒤) */}
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
-                  renderOrder={12}
+                  renderOrder={isFreePlacement ? 10 : 12}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
