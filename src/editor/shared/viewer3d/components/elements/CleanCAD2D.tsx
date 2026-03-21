@@ -2552,6 +2552,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
+                  // 슬롯배치 커튼박스 양쪽 1.5mm 이격
+                  if (hasCB && !isFreePlacement) {
+                    const cbGapMm = 1.5;
+                    if (cbOnLeft) {
+                      // CB 벽쪽 이격: 벽 ~ CB 시작+1.5mm
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + mmToThreeUnits(cbGapMm) });
+                      // CB 안쪽 이격: CB 끝-1.5mm ~ CB 끝
+                      boundaries.push({ leftX: cbEndX - mmToThreeUnits(cbGapMm), rightX: cbEndX });
+                    } else {
+                      // CB 안쪽 이격: CB 시작 ~ CB 시작+1.5mm
+                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + mmToThreeUnits(cbGapMm) });
+                      // CB 벽쪽 이격: CB 끝-1.5mm ~ CB 끝
+                      boundaries.push({ leftX: cbEndX - mmToThreeUnits(cbGapMm), rightX: cbEndX });
+                    }
+                  }
+
                   return (<>
                     {boundaries.map((b, idx) => (
                       <React.Fragment key={`boundary-gap-${idx}`}>
