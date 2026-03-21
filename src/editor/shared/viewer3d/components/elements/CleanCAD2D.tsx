@@ -2370,55 +2370,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 커튼박스 구간 실배치 치수선 (3단: 147) */}
-                {hasCB && !isFreePlacement && (() => {
-                  const cbGap = mmToThreeUnits(1.5);
-                  const innerLeft = cbStartX + cbGap;
-                  const innerRight = cbEndX - cbGap;
-                  return (<>
-                    <Line
-                      points={[[innerLeft, slotTotalDimensionY, 0.002], [innerRight, slotTotalDimensionY, 0.002]]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([innerLeft, slotTotalDimensionY, 0.002], [innerLeft + 0.02, slotTotalDimensionY, 0.002])}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([innerRight, slotTotalDimensionY, 0.002], [innerRight - 0.02, slotTotalDimensionY, 0.002])}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    {(showDimensionsText || isStep2) && (
-                      <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                        position={[(innerLeft + innerRight) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                        fontSize={baseFontSize}
-                        color={textColor}
-                        anchorX="center"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                      >
-                        {Math.round(cbWidth - 3)}
-                      </Text>
-                    )}
-                    {/* 연장선 */}
-                    <Line
-                      points={[[innerLeft, spaceHeight, 0.001], [innerLeft, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
-                      color={subGuideColor}
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={[[innerRight, spaceHeight, 0.001], [innerRight, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
-                      color={subGuideColor}
-                      lineWidth={1}
-                    />
-                  </>);
-                })()}
+                {/* 커튼박스 구간 실배치 치수선 (3단: 147, 전체 구간 범위) */}
+                {hasCB && !isFreePlacement && (<>
+                <Line
+                  points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[(cbStartX + cbEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {Math.round(cbWidth - 3)}
+                  </Text>
+                )}
+                </>)}
 
                   </>);
                 })()}
@@ -2547,20 +2531,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // CB 양쪽 1.5mm 이격
+                  // CB 벽쪽 1.5mm 이격 (안쪽은 기존 경계 이격에서 표시)
                   if (hasCB && !isFreePlacement) {
                     const cbGap = mmToThreeUnits(1.5);
-                    // 벽쪽 1.5mm
                     if (cbOnLeft) {
                       boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
                     } else {
                       boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
-                    }
-                    // 안쪽 1.5mm
-                    if (cbOnLeft) {
-                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
-                    } else {
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
                     }
                   }
 
