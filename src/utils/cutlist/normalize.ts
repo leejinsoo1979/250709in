@@ -79,24 +79,21 @@ export function normalizeDimensions(width: number, length: number): { width: num
 
 /**
  * Normalize grain direction
- * If dimensions were swapped, grain direction should also swap (H <-> V)
+ * 재단방향은 항상 Length(긴 쪽) 축과 평행 → 유결 패널은 모두 'H'
+ * NONE(MDF 등 무결)은 그대로 유지
  */
-export function normalizeGrain(grain?: Grain, canRotate?: boolean, dimensionsSwapped?: boolean): 'H' | 'V' | 'NONE' {
-  let normalizedGrain: 'H' | 'V' | 'NONE';
-
-  if (canRotate === false && !grain) {
-    // If rotation is not allowed and no grain specified, default to horizontal
-    normalizedGrain = 'H';
-  } else {
-    normalizedGrain = grain || 'NONE';
+export function normalizeGrain(grain?: Grain | string, canRotate?: boolean, _dimensionsSwapped?: boolean): 'H' | 'V' | 'NONE' {
+  // 'VERTICAL'/'HORIZONTAL' → 'H' (재단방향이 항상 Length 축과 평행하므로)
+  // 'NONE'/undefined → 'NONE'
+  if (!grain || grain === 'NONE') {
+    if (canRotate === false) {
+      return 'H'; // 회전 불가 + 결 미지정 → Length 방향 기본
+    }
+    return 'NONE';
   }
 
-  // If dimensions were swapped, swap grain direction too
-  if (dimensionsSwapped && normalizedGrain !== 'NONE') {
-    return normalizedGrain === 'H' ? 'V' : 'H';
-  }
-
-  return normalizedGrain;
+  // 모든 유결 패널(VERTICAL, HORIZONTAL, H, V)은 재단방향=Length 축 → 'H'
+  return 'H';
 }
 
 /**

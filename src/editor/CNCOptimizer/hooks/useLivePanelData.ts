@@ -21,7 +21,7 @@ function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' 
   if (panelName.includes('바닥') && panelName.includes('서랍')) return 'NONE'; // 서랍 바닥 (MDF)
 
   // 서랍 부품
-  if (panelName.includes('마이다')) return 'VERTICAL';     // 서랍 손잡이판
+  if (panelName.includes('마이다')) return 'HORIZONTAL';    // 서랍 손잡이판 (X축 너비 = 재단방향)
   if (panelName.includes('서랍') && panelName.includes('앞판')) return 'HORIZONTAL';
   if (panelName.includes('서랍') && panelName.includes('뒷판')) return 'HORIZONTAL';
   if (panelName.includes('서랍') && (panelName.includes('좌측판') || panelName.includes('우측판'))) return 'VERTICAL';

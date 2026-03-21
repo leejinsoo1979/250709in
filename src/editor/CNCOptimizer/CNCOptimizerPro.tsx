@@ -33,7 +33,7 @@ import { showToast } from '@/utils/cutlist/csv';
 import { buildSequenceForPanel, generateGuillotineCuts } from '@/utils/cut/simulate';
 import { formatSize } from '@/utils/cut/format';
 import { computeSawStats } from '@/utils/cut/stats';
-import type { Panel, StockSheet, Placement } from '../../types/cutlist';
+import type { Panel, StockSheet, Placement, Grain } from '../../types/cutlist';
 import { OptimizedResult, PlacedPanel } from './types';
 
 // Styles
@@ -359,33 +359,33 @@ function PageInner(){
       // 항상 livePanels로 업데이트 (boringDepthPositions, groovePositions 포함)
       if (true) { // 항상 업데이트
         const cutlistPanels: Panel[] = livePanels.map(p => {
-          // 패널의 긴 방향을 L(세로) 방향으로 배치
-          // 긴 쪽이 length가 되도록 설정
-          let width = p.width;
-          let length = p.height;
-          
-          // 가로가 더 길면 회전시켜서 세로가 더 길게 만들기
-          if (width > length) {
-            width = p.height;
-            length = p.width;
-          }
-          
-          // 결방향: useLivePanelData의 실제 grain 값 사용 (VERTICAL→V, HORIZONTAL→H)
-          const grain = p.grain === 'HORIZONTAL' ? 'H' : 'V';
-          
+          // 재단방향(grain) 기반으로 Length/Width 결정
+          // Length = 재단방향(결방향) 치수, Width = 직교 치수
+          // 모든 유결 패널에서 재단방향 축이 곧 긴 쪽이므로 Length=max, Width=min
+          let width = Math.min(p.width, p.height);
+          let length = Math.max(p.width, p.height);
+
+          // 결방향 매핑:
+          // - NONE → 'NONE' (결 무관, MDF 등 회전 허용)
+          // - VERTICAL/HORIZONTAL → 'H' (재단방향이 항상 Length 축과 평행)
+          //   측판: Y축=Length, 결=Y=Length → H
+          //   선반: X축=Length, 결=X=Length → H
+          //   서랍측판: Z축=Length, 결=Z=Length → H
+          const grain: Grain = p.grain === 'NONE' ? 'NONE' : 'H';
+
           // 도어와 엔드패널은 자동으로 PET 재질로 설정
           let material = p.material || 'PB';
           const panelName = (p.name || '').toLowerCase();
-          if (panelName.includes('도어') || panelName.includes('door') || 
+          if (panelName.includes('도어') || panelName.includes('door') ||
               panelName.includes('엔드') || panelName.includes('end')) {
             material = 'PET';
           }
-          
+
           return {
             id: p.id,
             label: p.name || `Panel_${p.id}`,
-            width: width,   // 짧은 쪽
-            length: length, // 긴 쪽
+            width: width,   // 짧은 쪽 (재단방향 직교)
+            length: length, // 긴 쪽 (재단방향)
             thickness: p.thickness || 18,
             quantity: p.quantity || 1,
             material: material,
@@ -512,16 +512,12 @@ function PageInner(){
     if (livePanels.length > 0 && !hasInitializedFromLive.current) {
       console.log('✅ livePanels에서 패널 초기화 시작:', livePanels.length, '개');
       const cutlistPanels: Panel[] = livePanels.map(p => {
-        let width = p.width;
-        let length = p.height;
-        
-        if (width > length) {
-          width = p.height;
-          length = p.width;
-        }
-        
-        // 결방향: useLivePanelData의 실제 grain 값 사용 (VERTICAL→V, HORIZONTAL→H)
-        const grain = p.grain === 'HORIZONTAL' ? 'H' : 'V';
+        // 재단방향(grain) 기반으로 Length/Width 결정
+        let width = Math.min(p.width, p.height);
+        let length = Math.max(p.width, p.height);
+
+        // 결방향: NONE→NONE, 그 외→H (재단방향이 항상 Length 축과 평행)
+        const grain: Grain = p.grain === 'NONE' ? 'NONE' : 'H';
         let material = p.material || 'PB';
         const panelName = (p.name || '').toLowerCase();
         if (panelName.includes('도어') || panelName.includes('door') ||
