@@ -309,10 +309,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
 
-  // renderOrder가 음수(천장 뒤)면 depthWrite=false로 clone → 천장이 위에 그려짐
+  // renderOrder가 음수(천장 뒤)면 depthTest=false+depthWrite=false → 무조건 먼저 그려지고 나중 오브젝트가 덮어씀
   const finalMaterial = React.useMemo(() => {
     if (renderOrder !== undefined && renderOrder < 0 && panelSpecificMaterial instanceof THREE.Material) {
       const cloned = panelSpecificMaterial.clone();
+      cloned.depthTest = false;
       cloned.depthWrite = false;
       return cloned;
     }
