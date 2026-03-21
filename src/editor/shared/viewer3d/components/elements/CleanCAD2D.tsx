@@ -2159,7 +2159,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     var dcPlacEndX = droppedEndX - mmToThreeUnits(dcRightGap);
                   } else {
                     // 슬롯배치: ColumnIndexer 계산값 사용
-                    mainPlacementWidth = mainSlotTotalWidth;
+                    // 단내림 있을 때: 메인구간 쪽 프레임을 슬롯합계에 포함 (프레임을 별도 치수로 분리하지 않음)
+                    const mainSideFrame = hasDC
+                      ? (dcOnRight ? (frameSize?.left ?? 0) : (frameSize?.right ?? 0))
+                      : 0;
+                    mainPlacementWidth = Math.round((mainSlotTotalWidth + mainSideFrame) * 10) / 10;
                     dcPlacementWidth = droppedSlotTotalWidth;
                     // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
@@ -2446,7 +2450,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
                 {(() => {
                   const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
-                  const boundaryGapY = slotDimensionY;
+                  const boundaryGapY = slotTotalDimensionY;
 
                   // 경계면 이격 목록 생성
                   // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
@@ -2753,8 +2757,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 서라운드 모드 좌측 프레임 치수선 - 자유배치/커튼박스 좌측에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && !(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left') && (
+      {/* 서라운드 모드 좌측 프레임 치수선 - 자유배치/커튼박스 좌측/단내림 활성 시 숨김 */}
+      {/* 단내림 활성: 프레임이 3단 실배치 치수선에 포함되므로 별도 표시 불필요 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && !spaceInfo.droppedCeiling?.enabled && (
       <group>
             {/* 치수선 */}
             <Line
@@ -2999,8 +3004,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 서라운드 모드 우측 프레임 치수선 - 자유배치/커튼박스 우측에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && !(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right') && (
+      {/* 서라운드 모드 우측 프레임 치수선 - 자유배치/커튼박스 우측/단내림 활성 시 숨김 */}
+      {/* 단내림 활성: 프레임이 3단 실배치 치수선에 포함되므로 별도 표시 불필요 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && !spaceInfo.droppedCeiling?.enabled && (
       <group>
             {/* 치수선 */}
             <Line
