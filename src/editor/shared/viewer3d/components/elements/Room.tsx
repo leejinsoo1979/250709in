@@ -1859,17 +1859,19 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                 )}
 
-                {/* 커튼박스 경계 수직 벽 */}
-                <mesh
-                  renderOrder={11}
-                  position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
-                  rotation={[0, Math.PI / 2, 0]}
-                >
-                  <planeGeometry args={[extendedPanelDepth, boundaryWallTotalH]} />
-                  <primitive
-                    ref={droppedWallMaterialRef}
-                    object={ceilingBoundaryWallMaterial} />
-                </mesh>
+                {/* 단내림 경계 수직 벽 — CB+DC 동시일 때는 CB-DC 경계벽만 표시 */}
+                {!hasCBWithDC && (
+                  <mesh
+                    renderOrder={11}
+                    position={[boundaryWallX, boundaryWallY, extendedZOffset + extendedPanelDepth / 2]}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    <planeGeometry args={[extendedPanelDepth, boundaryWallTotalH]} />
+                    <primitive
+                      ref={droppedWallMaterialRef}
+                      object={ceilingBoundaryWallMaterial} />
+                  </mesh>
+                )}
 
                 {/* DC+CB 동시: 커튼박스 영역 천장 + 경계벽 */}
                 {hasCBWithDC && (() => {
