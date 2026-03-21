@@ -2882,10 +2882,7 @@ const Room: React.FC<RoomProps> = ({
         if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left' && isFreePlacement) {
           return null;
         }
-        // 슬롯배치 커튼박스만 좌측에 있고 단내림 없는 경우
-        if (!spaceInfo.droppedCeiling?.enabled && isCurtainBoxSlot && spaceInfo.curtainBox?.position === 'left') {
-          return null;
-        }
+        // 슬롯배치 커튼박스만 좌측: 기존 엔드패널 유지 (커튼박스 마감은 별도 블록에서 전면+경계면만 추가)
 
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
@@ -3244,10 +3241,7 @@ const Room: React.FC<RoomProps> = ({
         if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right' && isFreePlacement) {
           return null;
         }
-        // 슬롯배치 커튼박스만 우측에 있고 단내림 없는 경우
-        if (!spaceInfo.droppedCeiling?.enabled && isCurtainBoxSlot && spaceInfo.curtainBox?.position === 'right') {
-          return null;
-        }
+        // 슬롯배치 커튼박스만 우측: 기존 엔드패널 유지 (커튼박스 마감은 별도 블록에서 전면+경계면만 추가)
 
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
@@ -3955,46 +3949,72 @@ const Room: React.FC<RoomProps> = ({
         // 균등분할 모드: 기존 전체 너비 렌더링
         return (
         <>
-          {/* 슬롯배치 커튼박스 마감 패널 (L자: 전면 + 경계면 측면) */}
+          {/* 슬롯배치 커튼박스 L자 마감 (전면 가림판 + 경계면 칸막이) */}
+          {/* 외측 엔드패널은 기존 좌/우 프레임 코드가 그대로 렌더링 */}
           {isCurtainBoxSlot && spaceInfo.curtainBox?.enabled && (() => {
-            const dcPos = spaceInfo.curtainBox!.position || 'right';
-            const dcWidthMM = spaceInfo.curtainBox!.width || 150;
-            const panelThickMM = 18;
+            const cbPos = spaceInfo.curtainBox!.position || 'right';
+            const cbWidthMM = spaceInfo.curtainBox!.width || 150;
 
-            // 바닥 ~ 메인 천장 높이 (천장 매쉬가 상단을 덮으므로 메인 천장까지만)
-            const panelH = mmToThreeUnits(heightMm);
-            const panelCenterY = panelH / 2;
+            // 좌/우 엔드패널과 동일한 높이/Y (받침대 반영)
+            const cbPanelH = adjustedPanelHeight;
+            const cbCenterY = sideFrameCenterY;
 
-            // 커튼박스 구간 중심 X
+            // 커튼박스 쪽 프레임 두께 (해당 쪽 엔드패널과 동일)
+            const cbFrameThick = cbPos === 'left' ? frameRenderThickness.left : frameRenderThickness.right;
+
+            const cbFrameMat = cbPos === 'left'
+              ? (leftFrameMaterial ?? createFrameMaterial('left'))
+              : (rightFrameMaterial ?? createFrameMaterial('right'));
+
+            // 해당 쪽 벽 유무
+            const cbWallExists = cbPos === 'left' ? wallConfig?.left : wallConfig?.right;
+
+            // 엔드패널과 동일한 깊이/Z 계산
+            const cbDepth = spaceInfo.surroundType === 'no-surround'
+              ? (cbWallExists ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
+              : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !cbWallExists) ||
+                (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS));
+
+            const cbZ = spaceInfo.surroundType === 'no-surround'
+              ? (cbWallExists
+                ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                : noSurroundEndPanelZ)
+              : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !cbWallExists) ||
+                (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                ? surroundEndPanelZ
+                : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3));
+
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
-            const dcCenterX = dcPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + dcWidthMM / 2)
-              : mmToThreeUnits(spaceHalfW - dcWidthMM / 2);
 
-            const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
+            // 경계면 칸막이: CB와 메인 구간 경계 (18mm 두께)
+            const borderX = cbPos === 'left'
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - END_PANEL_THICKNESS / 2)
+              : mmToThreeUnits(spaceHalfW - cbWidthMM + END_PANEL_THICKNESS / 2);
 
-            // 서라운드 엔드패널과 동일한 깊이/Z 위치 사용
-            const cbSideDepth = isFullSurround ? surroundEndPanelDepth : noSurroundEndPanelDepth;
-            const cbSideZ = isFullSurround ? surroundEndPanelZ : noSurroundEndPanelZ;
-
-            // 전면패널: 커튼박스 전체 폭, 서라운드 엔드패널 앞면 위치
-            const frontZ = cbSideZ + cbSideDepth / 2 - mmToThreeUnits(panelThickMM) / 2;
-            const frontArgs: [number, number, number] = [mmToThreeUnits(dcWidthMM), panelH, mmToThreeUnits(panelThickMM)];
-            const frontPos: [number, number, number] = [dcCenterX, panelCenterY, frontZ];
-
-            // 경계면 측면패널: 엔드패널과 동일 깊이, CB와 메인 구간의 경계
-            const borderX = dcPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + dcWidthMM - panelThickMM / 2)
-              : mmToThreeUnits(spaceHalfW - dcWidthMM + panelThickMM / 2);
-            const sideArgs: [number, number, number] = [mmToThreeUnits(panelThickMM), panelH, cbSideDepth];
-            const sidePos: [number, number, number] = [borderX, panelCenterY, cbSideZ];
+            // 전면 가림판: 외측 엔드패널과 경계면 칸막이 사이 (앞면 막음)
+            const frontZ = cbZ + cbDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+            // 전면 폭 = CB 폭 - 외측 엔드패널 두께 - 경계면 패널 두께
+            const frontWidthMM = cbWidthMM - (cbPos === 'left' ? (spaceInfo.frameSize?.left || 42) : (spaceInfo.frameSize?.right || 42)) - END_PANEL_THICKNESS;
+            const frontWidth = mmToThreeUnits(Math.max(frontWidthMM, 0));
+            const frontCenterX = cbPos === 'left'
+              ? xOffset + cbFrameThick + frontWidth / 2
+              : xOffset + width - cbFrameThick - frontWidth / 2;
 
             return (
               <group key="slot-curtain-box-finish">
-                <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="slot-curtain-box-front"
-                  args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="slot-curtain-box-side"
-                  args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                {/* 전면 가림판 (앞면 L자 가로) */}
+                <BoxWithEdges hideEdges={hideEdges} isOuterFrame
+                  name="slot-cb-front-panel"
+                  args={[frontWidth, cbPanelH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                  position={[frontCenterX, cbCenterY, frontZ]}
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                {/* 경계면 칸막이 (L자 세로) */}
+                <BoxWithEdges hideEdges={hideEdges} isOuterFrame
+                  name="slot-cb-border-panel"
+                  args={[mmToThreeUnits(END_PANEL_THICKNESS), cbPanelH, cbDepth]}
+                  position={[borderX, cbCenterY, cbZ]}
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
               </group>
             );
           })()}
