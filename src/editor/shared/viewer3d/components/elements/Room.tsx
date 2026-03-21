@@ -1125,9 +1125,8 @@ const Room: React.FC<RoomProps> = ({
       'gl_FragColor = vec4(color, 1.0);'
     );
     mat.transparent = false;
-    mat.depthWrite = false; // depth buffer에 안 써서 가구/도어에 영향 없음
+    mat.depthWrite = true;
     mat.depthTest = true;
-    mat.depthFunc = THREE.AlwaysDepth; // renderOrder 순서대로 CB프레임을 무조건 덮음
     mat.polygonOffset = true;
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;
