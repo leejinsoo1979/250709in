@@ -4998,13 +4998,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
         const cbPos = spaceInfo.curtainBox!.position || 'right';
-        const gap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
-        const internalW = cbW - gap;
+        // 벽쪽 이격
+        const wallGap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
+        // 단내림쪽 경계이격 (단내림이 있으면 단내림↔커튼박스 경계이격)
+        const boundaryGap = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.gapConfig?.middle ?? 1.5) : 0;
+        const internalW = cbW - wallGap - boundaryGap;
         if (internalW <= 0) return null;
         const dimY = slotDimensionY;
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-        const cbStartX = cbPos === 'right' ? rightEdge - mmToThreeUnits(cbW) + mmToThreeUnits(gap) : leftOffset;
-        const cbEndX = cbPos === 'right' ? rightEdge : leftOffset + mmToThreeUnits(cbW) - mmToThreeUnits(gap);
+        // 커튼박스 내경 X좌표: 벽쪽에서 wallGap, 단내림쪽에서 boundaryGap 제외
+        const cbStartX = cbPos === 'right' ? rightEdge - mmToThreeUnits(cbW) + mmToThreeUnits(boundaryGap) : leftOffset + mmToThreeUnits(wallGap);
+        const cbEndX = cbPos === 'right' ? rightEdge - mmToThreeUnits(wallGap) : leftOffset + mmToThreeUnits(cbW) - mmToThreeUnits(boundaryGap);
         const fmtVal = (() => { const r = Math.round(internalW * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
         return (
           <group>
