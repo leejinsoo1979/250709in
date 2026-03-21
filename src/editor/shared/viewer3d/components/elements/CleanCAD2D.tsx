@@ -1558,25 +1558,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 이격거리가 0이면 표시하지 않음
         if (leftValue === 0) return null;
 
+        // 단내림 활성 시 이격 치수선을 4단 아래로 내림
+        const leftDimY = spaceInfo.droppedCeiling?.enabled ? slotDimensionY - mmToThreeUnits(80) : slotDimensionY;
+
         return (
           <group>
-            {/* 치수선 - slotDimensionY (보라색 슬롯 치수와 같은 높이) */}
+            {/* 치수선 */}
             <Line
-              points={[[leftOffset, slotDimensionY, 0.002], [leftOffset + mmToThreeUnits(leftValue), slotDimensionY, 0.002]]}
+              points={[[leftOffset, leftDimY, 0.002], [leftOffset + mmToThreeUnits(leftValue), leftDimY, 0.002]]}
               color={dimensionColor}
               lineWidth={1}
             />
 
             {/* 좌측 화살표 */}
             <Line
-              points={createArrowHead([leftOffset, slotDimensionY, 0.002], [leftOffset + 0.02, slotDimensionY, 0.002])}
+              points={createArrowHead([leftOffset, leftDimY, 0.002], [leftOffset + 0.02, leftDimY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
             />
 
             {/* 우측 화살표 */}
             <Line
-              points={createArrowHead([leftOffset + mmToThreeUnits(leftValue), slotDimensionY, 0.002], [leftOffset + mmToThreeUnits(leftValue) - 0.02, slotDimensionY, 0.002])}
+              points={createArrowHead([leftOffset + mmToThreeUnits(leftValue), leftDimY, 0.002], [leftOffset + mmToThreeUnits(leftValue) - 0.02, leftDimY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
             />
@@ -1584,7 +1587,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasLeftWall && editingGapSide === 'left' ? (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, leftDimY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1607,7 +1610,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                position={[leftOffset + mmToThreeUnits(leftValue) / 2, leftDimY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
                 zIndexRange={[9999, 10000]}
@@ -1633,20 +1636,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 */}
             <Line
-              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, leftDimY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
             <Line
-              points={[[leftOffset + mmToThreeUnits(leftValue), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(leftValue), slotDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftOffset + mmToThreeUnits(leftValue), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(leftValue), leftDimY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
           </group>
         );
       })()}
-      
-      {/* 서라운드 모드 좌측 이격거리 치수선 (단내림 활성 시) — 4단 아래 배치 */}
+
+      {/* 좌측 이격거리 치수선 (단내림 활성 시, 서라운드 전용) — 4단 아래 배치 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
         const leftGap = spaceInfo.gapConfig?.left ?? 0;
         if (leftGap <= 0) return null;
@@ -1709,12 +1712,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (rightValue === 0) return null;
 
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+        // 단내림 활성 시 이격 치수선을 4단 아래로 내림
+        const rightDimY = spaceInfo.droppedCeiling?.enabled ? slotDimensionY - mmToThreeUnits(80) : slotDimensionY;
 
         return (
           <group>
-            {/* 치수선 - slotDimensionY (보라색 슬롯 치수와 같은 높이) */}
+            {/* 치수선 */}
             <NativeLine name="dimension_line"
-              points={[[rightEdge - mmToThreeUnits(rightValue), slotDimensionY, 0.002], [rightEdge, slotDimensionY, 0.002]]}
+              points={[[rightEdge - mmToThreeUnits(rightValue), rightDimY, 0.002], [rightEdge, rightDimY, 0.002]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -1723,7 +1728,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 좌측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([rightEdge - mmToThreeUnits(rightValue), slotDimensionY, 0.002], [rightEdge - mmToThreeUnits(rightValue) + 0.02, slotDimensionY, 0.002])}
+              points={createArrowHead([rightEdge - mmToThreeUnits(rightValue), rightDimY, 0.002], [rightEdge - mmToThreeUnits(rightValue) + 0.02, rightDimY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -1732,7 +1737,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 우측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([rightEdge, slotDimensionY, 0.002], [rightEdge - 0.02, slotDimensionY, 0.002])}
+              points={createArrowHead([rightEdge, rightDimY, 0.002], [rightEdge - 0.02, rightDimY, 0.002])}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -1742,7 +1747,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 우측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasRightWall && editingGapSide === 'right' ? (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, rightDimY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: 'auto' }}
                 zIndexRange={[10000, 10001]}
@@ -1765,7 +1770,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]}
+                position={[rightEdge - mmToThreeUnits(rightValue) / 2, rightDimY + mmToThreeUnits(30), 0.01]}
                 center
                 style={{ pointerEvents: hasRightWall ? 'auto' : 'none' }}
                 zIndexRange={[9999, 10000]}
@@ -1791,12 +1796,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 */}
             <Line
-              points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), slotDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), rightDimY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
             <Line
-              points={[[rightEdge, spaceHeight, 0.001], [rightEdge, slotDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightEdge, spaceHeight, 0.001], [rightEdge, rightDimY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
@@ -1804,7 +1809,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 서라운드 모드 우측 이격거리 치수선 (단내림 활성 시) — 4단 아래 배치 */}
+      {/* 좌측 이격거리 치수선 (단내림 활성 시, 서라운드 전용) — 4단 아래 배치 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
         const rightGap = spaceInfo.gapConfig?.right ?? 0;
         if (rightGap <= 0) return null;
