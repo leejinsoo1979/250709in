@@ -601,44 +601,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
-  // 듀얼 가구인지 확인 — 절대 너비 기준 판단
-  // 600mm 이하 = 도어 1짝, 601mm 이상 = 도어 2짝
-  // 슬롯 배치: originalSlotWidth가 현재 슬롯 너비를 정확히 반영하므로 우선 사용
-  const effectiveFurnitureWidth = isFree
-    ? (storeFreeWidth || moduleWidth)
-    : (originalSlotWidth || moduleWidth);
-  const isDualFurniture = Math.round(effectiveFurnitureWidth) >= 601;
+  // 듀얼 가구인지 moduleData ID로 확실히 판단
+  const isDualByModuleId = moduleData?.id?.startsWith('dual-') || false;
 
-  // 도어 크기 계산
+  // 도어 크기 계산 — 현재 spaceInfo에서 직접 계산한 effectiveColumnWidth 사용
   let actualDoorWidth: number;
 
   if (isFree) {
-    // 자유배치: 슬롯 무시, store에서 가져온 freeWidth 또는 props moduleWidth 사용
+    // 자유배치: store에서 가져온 freeWidth 또는 props moduleWidth 사용
     actualDoorWidth = storeFreeWidth || moduleWidth;
-// console.log('🚪🟢🟢🟢 자유배치 도어:', { isFree, storeFreeWidth, moduleWidth, originalSlotWidth, actualDoorWidth, effectiveInternalHeight, moduleDataW: moduleData?.dimensions?.width, moduleDataH: moduleData?.dimensions?.height });
   } else {
-    // 균등분할: originalSlotWidth가 있으면 무조건 사용 (커버도어)
-    actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
-
-// console.log('🚪📏 도어 너비 계산:', {
-      // originalSlotWidth,
-      // moduleWidth,
-      // indexingColumnWidth: indexing.columnWidth,
-      // effectiveColumnWidth,
-      // isDualFurniture,
-      // 계산된도어너비: isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth,
-      // actualDoorWidth,
-      // zone: (spaceInfo as any).zone,
-      // 설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : (isDualFurniture ? '듀얼 도어 (슬롯너비 x 2)' : '싱글 도어')
-    // });
-
-    // 노서라운드 모드에서 도어 크기 처리
-    if (originalSpaceInfo.surroundType === 'no-surround') {
-      if (!originalSlotWidth) {
-        actualDoorWidth = isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth;
-      }
-    }
+    // 슬롯 배치: effectiveColumnWidth가 항상 최신 spaceInfo 기반이므로 직접 사용
+    actualDoorWidth = isDualByModuleId
+      ? effectiveColumnWidth * 2
+      : effectiveColumnWidth;
   }
+
+  const effectiveFurnitureWidth = actualDoorWidth;
+  const isDualFurniture = isDualByModuleId || Math.round(effectiveFurnitureWidth) >= 601;
   
   // 도어 모듈 디버깅
 // console.log('🚪🚪🚪 DoorModule 렌더링 DEBUG:', {
