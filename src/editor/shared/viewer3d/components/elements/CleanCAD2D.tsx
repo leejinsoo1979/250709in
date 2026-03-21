@@ -2370,39 +2370,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 커튼박스 구간 실배치 치수선 (3단: 147, 전체 구간 범위) */}
-                {hasCB && !isFreePlacement && (<>
-                <Line
-                  points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                    renderOrder={1000}
-                    depthTest={false}
-                    position={[(cbStartX + cbEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                  >
-                    {Math.round(cbWidth - 3)}
-                  </Text>
-                )}
-                </>)}
+                {/* 커튼박스 3단: 실배치 147mm + 4단: 양쪽 1.5mm 이격 */}
+                {hasCB && !isFreePlacement && (() => {
+                  const cbGap = mmToThreeUnits(1.5);
+                  const innerLeft = cbStartX + cbGap;
+                  const innerRight = cbEndX - cbGap;
+                  const gapDimY = slotDimensionY; // 4단 Y레벨
+                  return (<>
+                    {/* ── 3단: 147mm 치수선 ── */}
+                    <Line points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={1} />
+                    <Line points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
+                    <Line points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
+                    {(showDimensionsText || isStep2) && (
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[(cbStartX + cbEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(cbWidth - 3)}
+                      </Text>
+                    )}
+                    {/* ── 4단: 벽쪽 1.5mm 이격 ── */}
+                    <Line points={[[cbOnLeft ? cbStartX : cbEndX - cbGap, gapDimY, 0.002], [cbOnLeft ? innerLeft : cbEndX, gapDimY, 0.002]]} color={dimensionColor} lineWidth={1} />
+                    <Line points={createArrowHead([cbOnLeft ? cbStartX : cbEndX - cbGap, gapDimY, 0.002], [cbOnLeft ? cbStartX + 0.01 : cbEndX - cbGap + 0.01, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+                    <Line points={createArrowHead([cbOnLeft ? innerLeft : cbEndX, gapDimY, 0.002], [cbOnLeft ? innerLeft - 0.01 : cbEndX - 0.01, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+                    {(showDimensionsText || isStep2) && (
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[cbOnLeft ? (cbStartX + innerLeft) / 2 : (cbEndX - cbGap + cbEndX) / 2, gapDimY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize * 0.85} color={textColor} anchorX="center" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        1.5
+                      </Text>
+                    )}
+                    {/* ── 4단: 안쪽 1.5mm 이격 ── */}
+                    <Line points={[[cbOnLeft ? innerRight : cbStartX, gapDimY, 0.002], [cbOnLeft ? cbEndX : innerLeft, gapDimY, 0.002]]} color={dimensionColor} lineWidth={1} />
+                    <Line points={createArrowHead([cbOnLeft ? innerRight : cbStartX, gapDimY, 0.002], [cbOnLeft ? innerRight + 0.01 : cbStartX + 0.01, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+                    <Line points={createArrowHead([cbOnLeft ? cbEndX : innerLeft, gapDimY, 0.002], [cbOnLeft ? cbEndX - 0.01 : innerLeft - 0.01, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+                    {(showDimensionsText || isStep2) && (
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[cbOnLeft ? (innerRight + cbEndX) / 2 : (cbStartX + innerLeft) / 2, gapDimY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize * 0.85} color={textColor} anchorX="center" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        1.5
+                      </Text>
+                    )}
+                    {/* 연장선: 3단~4단 구간 내부 경계선 */}
+                    <Line points={[[innerLeft, slotTotalDimensionY, 0.001], [innerLeft, gapDimY + mmToThreeUnits(10), 0.001]]} color={subGuideColor} lineWidth={1} />
+                    <Line points={[[innerRight, slotTotalDimensionY, 0.001], [innerRight, gapDimY + mmToThreeUnits(10), 0.001]]} color={subGuideColor} lineWidth={1} />
+                  </>);
+                })()}
 
                   </>);
                 })()}
@@ -2484,7 +2502,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
                 {(() => {
                   const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
-                  const boundaryGapY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2) - DIM_GAP / 2);
+                  const boundaryGapY = slotTotalDimensionY;
 
                   // 경계면 이격 목록 생성
                   // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
@@ -2531,15 +2549,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // CB 벽쪽 1.5mm 이격 (안쪽은 기존 경계 이격에서 표시)
-                  if (hasCB && !isFreePlacement) {
-                    const cbGap = mmToThreeUnits(1.5);
-                    if (cbOnLeft) {
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap });
-                    } else {
-                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX });
-                    }
-                  }
 
                   return (<>
                     {boundaries.map((b, idx) => (
