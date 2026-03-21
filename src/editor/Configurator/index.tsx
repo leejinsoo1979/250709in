@@ -5546,8 +5546,8 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 받침대 */}
-        <div className={styles.configSection}>
+        {/* 받침대 — 숨김 처리 (상/하부프레임 섹션에서 설정 가능) */}
+        {/* <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>받침대</h3>
@@ -5558,7 +5558,7 @@ const Configurator: React.FC = () => {
             onUpdate={handleSpaceInfoUpdate}
             disabled={hasSpecialDualFurniture}
           />
-        </div>
+        </div> */}
 
         {/* 바닥마감재 */}
         <div className={styles.configSection}>
