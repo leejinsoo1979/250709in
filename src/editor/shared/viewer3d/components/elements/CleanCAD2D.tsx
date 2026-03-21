@@ -4704,12 +4704,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
             {isFreePlacement && (() => {
-              const leftGapMm = Math.round(nearestLeftDistance);
-              const rightGapMm = Math.round(nearestRightDistance);
+              // 벽 인접(hasAdjacentLeft=false) 시 모듈에 설정된 freeLeftGap 우선 사용
+              const rawLeftGap = !hasAdjacentLeft && module.freeLeftGap != null
+                ? module.freeLeftGap : nearestLeftDistance;
+              const rawRightGap = !hasAdjacentRight && module.freeRightGap != null
+                ? module.freeRightGap : nearestRightDistance;
+              // 소수점 표시: 정수면 정수로, 아니면 소수점 1자리
+              const formatGap = (v: number) => Number.isInteger(v) ? v.toString() : v.toFixed(1);
+              const leftGapMm = Math.round(rawLeftGap * 10) / 10; // 0.5 단위 보존
+              const rightGapMm = Math.round(rawRightGap * 10) / 10;
               // 좌측 갭: 가구 왼쪽 ~ (왼쪽 인접 가구 또는 구간 경계)
-              const gapLeftX = leftX - mmToThreeUnits(nearestLeftDistance);
+              const gapLeftX = leftX - mmToThreeUnits(leftGapMm);
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
-              const gapRightX = rightX + mmToThreeUnits(nearestRightDistance);
+              const gapRightX = rightX + mmToThreeUnits(rightGapMm);
               return (<>
                 {/* 좌측 이격 */}
                 {leftGapMm > 0 && (<>
@@ -4731,7 +4738,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {leftGapMm}
+                    {formatGap(leftGapMm)}
                   </Text>
                   {/* 좌측 이격 연장선 */}
                   {!hasAdjacentLeft && (
@@ -4762,7 +4769,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {rightGapMm}
+                    {formatGap(rightGapMm)}
                   </Text>
                   {/* 우측 이격 연장선 */}
                   {!hasAdjacentRight && (
