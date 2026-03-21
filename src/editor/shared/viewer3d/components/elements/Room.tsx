@@ -3701,9 +3701,8 @@ const Room: React.FC<RoomProps> = ({
             const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 200;
             const panelThickMM = 18;
 
-            // 바닥 ~ 커튼박스 천장 전체 높이
-            const dcTotalH = heightMm + dcDropH;
-            const panelH = mmToThreeUnits(dcTotalH);
+            // 바닥 ~ 메인 천장 높이 (천장 매쉬가 상단을 덮으므로 메인 천장까지만)
+            const panelH = mmToThreeUnits(heightMm);
             const panelCenterY = panelH / 2;
 
             // 커튼박스 구간 중심 X
