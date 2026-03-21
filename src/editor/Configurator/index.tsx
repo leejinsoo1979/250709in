@@ -4193,8 +4193,21 @@ const Configurator: React.FC = () => {
           {(spaceInfo.surroundType || 'surround') === 'surround' ? (
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
-                {/* 좌프레임 — 좌커튼박스 시 프레임 없으므로 숨김 */}
-                {!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (
+                {/* 좌프레임 — 좌커튼박스 시 CB 너비 표시 (읽기전용) */}
+                {(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') ? (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>좌측(커튼박스)</label>
+                  <div className={styles.frameItemInput}>
+                    <input
+                      type="text"
+                      value={spaceInfo.curtainBox?.width || 150}
+                      className={styles.frameNumberInput}
+                      disabled
+                      style={{ opacity: 0.6 }}
+                    />
+                  </div>
+                </div>
+                ) : (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>
                     {spaceInfo.installType === 'builtin' ? '좌측' :
@@ -4250,8 +4263,21 @@ const Configurator: React.FC = () => {
                 </div>
                 )}
 
-                {/* 우프레임 — 우커튼박스 시 프레임 없으므로 숨김 */}
-                {!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (
+                {/* 우프레임 — 우커튼박스 시 CB 너비 표시 (읽기전용) */}
+                {(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') ? (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>우측(커튼박스)</label>
+                  <div className={styles.frameItemInput}>
+                    <input
+                      type="text"
+                      value={spaceInfo.curtainBox?.width || 150}
+                      className={styles.frameNumberInput}
+                      disabled
+                      style={{ opacity: 0.6 }}
+                    />
+                  </div>
+                </div>
+                ) : (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>
                     {spaceInfo.installType === 'builtin' ? '우측' :
@@ -4309,6 +4335,7 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 서라운드 모드에서 단내림 활성 시 이격 설정 (경계이격) */}
+
               {spaceInfo.droppedCeiling?.enabled && (
               <div className={styles.frameGrid} style={{ marginTop: '8px' }}>
                 {/* 이격1: 좌측 이격 (좌프레임↔가구) */}
