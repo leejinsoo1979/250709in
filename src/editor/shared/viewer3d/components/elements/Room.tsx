@@ -3957,15 +3957,9 @@ const Room: React.FC<RoomProps> = ({
             const cbWidthMM = spaceInfo.curtainBox!.width || 150;
             const panelThickMM = END_PANEL_THICKNESS; // 18mm
 
-            // CB 프레임 높이: 단내림이 같은 쪽이면 단내림 천장까지만, 아니면 CB 천장까지
+            // CB 프레임 높이: 커튼박스 천장(height + cbDropH)까지
             const cbDropH = spaceInfo.curtainBox!.dropHeight || 60;
-            const dcEnabled = !!spaceInfo.droppedCeiling?.enabled;
-            const dcPos = spaceInfo.droppedCeiling?.position;
-            const dcSameSide = dcEnabled && dcPos === cbPos;
-            const dcDropHMM = spaceInfo.droppedCeiling?.dropHeight || 200;
-            const cbPanelH = dcSameSide
-              ? (adjustedPanelHeight - mmToThreeUnits(dcDropHMM))  // 단내림 천장까지
-              : (adjustedPanelHeight + mmToThreeUnits(cbDropH));    // CB 천장까지
+            const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
             const cbFrameMat = cbPos === 'left'
