@@ -197,7 +197,7 @@ const ZoneSizeDroppedRow: React.FC<{
   spaceInfo: any; isFreeMode: boolean; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
 }> = ({ spaceInfo, isFreeMode, handleSpaceInfoUpdate, styles, marginBottom }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
-    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : '단내림'}</span>
+    <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : '단내림'}</span>
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
@@ -265,7 +265,7 @@ const ZoneSizeCurtainBoxRow: React.FC<{
   spaceInfo: any; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
 }> = ({ spaceInfo, handleSpaceInfoUpdate, styles, marginBottom }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
-    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>커튼박스</span>
+    <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>커튼박스</span>
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
@@ -3618,7 +3618,7 @@ const Configurator: React.FC = () => {
 
             {/* 메인구간 한 줄 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>메인</span>
+              <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>메인</span>
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
                   type="text"
@@ -3685,7 +3685,7 @@ const Configurator: React.FC = () => {
             {/* stepCeiling 구간 사이즈 (자유배치 전용) */}
             {isFreeMode && spaceInfo.stepCeiling?.enabled && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
-                <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
+                <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
                 <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                   <input
                     type="text"
