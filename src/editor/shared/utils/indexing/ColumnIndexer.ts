@@ -1101,13 +1101,14 @@ export class ColumnIndexer {
           // 단내림 시작이 커튼박스 뒤로 밀림
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 단내림구간(좌): 좌측 프레임(또는 커튼박스 경계) + 좌이격 빼고 + 중간이격 흡수
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.left) - LEFT_GAP;
-          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : frameThickness.left) + LEFT_GAP;
+          // 단내림구간(좌): 이격거리는 단내림 가구에 영향 없음
+          // CB 있으면 프레임 불필요, CB 없으면 프레임+좌이격 차감
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.left + LEFT_GAP));
+          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : (frameThickness.left + LEFT_GAP));
 
           // 일반구간(우): 우측 프레임 + 우이격 + 중간이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP - RIGHT_GAP;
-          normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
+          normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // 경계이격 후 메인 시작
 
           // console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
@@ -1246,9 +1247,10 @@ export class ColumnIndexer {
           normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP - LEFT_GAP;
           normalStartX = internalStartX + LEFT_GAP;
 
-          // 단내림구간(우): 우측 프레임(또는 커튼박스 경계) + 우이격 빼고 + 중간이격 흡수
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.right) - RIGHT_GAP;
-          droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
+          // 단내림구간(우): 이격거리는 단내림 가구에 영향 없음
+          // CB 있으면 프레임 불필요, CB 없으면 프레임+우이격 차감
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.right + RIGHT_GAP));
+          droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 경계이격 후 단내림 시작
 
           // console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
