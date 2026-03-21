@@ -641,22 +641,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
   
   // 도어 모듈 디버깅
-  console.log('🚪🚪🚪 DoorModule 렌더링 DEBUG:', {
-    moduleWidth,
-    originalSlotWidth,
-    actualDoorWidth,
-    isDualFurniture,
-    effectiveFurnitureWidth,
-    effectiveColumnWidth,
-    indexingColumnWidth: indexing.columnWidth,
-    isFree,
-    zone,
-    customColumnCount: originalSpaceInfo.customColumnCount,
-    mainDoorCount: originalSpaceInfo.mainDoorCount,
-    slotCenterX,
-    moduleDataId: moduleData?.id,
-    moduleDataWidth: moduleData?.dimensions?.width,
-  });
+// console.log('🚪🚪🚪 DoorModule 렌더링 DEBUG:', {
+    // moduleWidth, originalSlotWidth, actualDoorWidth, isDualFurniture,
+    // effectiveFurnitureWidth, effectiveColumnWidth, isFree, zone,
+  // });
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;

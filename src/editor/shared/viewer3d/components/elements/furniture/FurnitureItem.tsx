@@ -2046,30 +2046,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       targetZoneInfo = targetZone;
     }
 
-    // 도어 너비가 가구 너비와 크게 차이나는 경우 - 기둥 침범 시와 엔드패널 있는 경우에는 보정하지 않음
+    // 도어 너비 보정: originalSlotWidthMm(indexing 기반)과 furnitureWidthMm(customWidth/moduleData 기반) 비교
     // 기둥 침범 시 도어는 원래 슬롯 너비를 유지해야 함 (커버도어)
     // 키큰장에 엔드패널이 있을 때도 도어는 원래 슬롯 너비를 유지해야 함
-    const widthDifference = Math.abs(originalSlotWidthMm - furnitureWidthMm);
-    console.log('🚪🔍 도어 너비 보정 체크:', {
-      originalSlotWidthMm,
-      furnitureWidthMm,
-      widthDifference,
-      moduleDataWidth: actualModuleData?.dimensions?.width,
-      customWidth: placedModule.customWidth,
-      moduleWidth: placedModule.moduleWidth,
-      moduleId: placedModule.moduleId,
-      targetModuleId,
-      slotIndex: placedModule.slotIndex,
-      zone: placedModule.zone,
-      hasColumn: !!(slotInfo && slotInfo.hasColumn),
-      needsEndPanelAdjustment,
-      willOverwrite: widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment,
-    });
-    if (widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
-      // 기둥이 없고 엔드패널도 없는 경우에만 가구 너비를 기준으로 도어 너비 보정
-      originalSlotWidthMm = furnitureWidthMm;
-    } else if (needsEndPanelAdjustment) {
-    }
+    // 주의: 슬롯 수 변경 시 customWidth가 아직 업데이트 안 됐을 수 있으므로
+    //       originalSlotWidthMm(현재 indexing 기반)을 절대 furnitureWidthMm으로 덮어쓰지 않음
+    //       대신, 도어용 originalSlotWidthMm은 그대로 유지하고 가구 렌더링만 furnitureWidthMm 사용
   }
 
   // 벽없음 + 노서라운드 모드에서 벽이 없는 쪽의 가구는 도어가 엔드패널을 덮도록 확장
