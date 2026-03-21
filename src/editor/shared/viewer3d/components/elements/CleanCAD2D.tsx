@@ -1863,8 +1863,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cbPosition = hasCB ? (spaceInfo.curtainBox!.position || 'right') : 'right';
 
             // 메인 구간 = 전체 - 단내림 - 단내림(자유배치) - 커튼박스(슬롯)
-            const mainWidth = spaceInfo.width - dcWidth - scWidth - cbWidth;
-            const droppedWidth = dcWidth; // 커튼박스(자유배치) or 단내림(슬롯)
+            // 2단: 설정된 구간 사이즈 그대로 표시 (이격거리 미반영)
+            const droppedWidth = dcWidth;
+            const mainWidth = spaceInfo.width - droppedWidth - scWidth - cbWidth;
 
             // 슬롯 합계 너비 (실배치 공간)
             const zoneSlotInfoForDim = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
@@ -1889,9 +1890,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cbOnRight = hasCB && cbPosition === 'right';
 
             // 좌측에 쌓이는 구간 너비 합계 (좌→우 순서: 커튼박스 → 단내림)
-            const leftStackWidth = (cbOnLeft ? cbWidth : 0) + (dcOnLeft ? dcWidth : 0) + (scOnLeft ? scWidth : 0);
+            // 단내림은 경계이격 흡수분(boundaryGapForDC) 포함
+            const leftStackWidth = (cbOnLeft ? cbWidth : 0) + (dcOnLeft ? droppedWidth : 0) + (scOnLeft ? scWidth : 0);
             // 우측에 쌓이는 구간 너비 합계 (우→좌 순서: 커튼박스 → 단내림)
-            const rightStackWidth = (cbOnRight ? cbWidth : 0) + (dcOnRight ? dcWidth : 0) + (scOnRight ? scWidth : 0);
+            const rightStackWidth = (cbOnRight ? cbWidth : 0) + (dcOnRight ? droppedWidth : 0) + (scOnRight ? scWidth : 0);
 
             // 메인 구간: 좌측 스택 뒤 ~ 우측 스택 앞
             const mainStartX = leftOffset + mmToThreeUnits(leftStackWidth);
@@ -1918,15 +1920,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let droppedEndX = mainStartX;
             if (hasDC) {
               if (dcOnLeft) {
-                // 좌측 단내림: CB(좌)가 있으면 CB 오른쪽부터
+                // 좌측 단내림: CB(좌)가 있으면 CB 오른쪽부터, 경계이격 흡수분 포함
                 const dcLeftEdge = cbOnLeft ? cbWidth : 0;
                 droppedStartX = leftOffset + mmToThreeUnits(dcLeftEdge);
-                droppedEndX = leftOffset + mmToThreeUnits(dcLeftEdge + dcWidth);
+                droppedEndX = leftOffset + mmToThreeUnits(dcLeftEdge + droppedWidth);
               } else {
-                // 우측 단내림: 메인 끝 ~ CB(우) 왼쪽
-                const dcLeftEdge = spaceInfo.width - dcWidth - (cbOnRight ? cbWidth : 0);
+                // 우측 단내림: 메인 끝 ~ CB(우) 왼쪽, 경계이격 흡수분 포함
+                const dcLeftEdge = spaceInfo.width - droppedWidth - (cbOnRight ? cbWidth : 0);
                 droppedStartX = leftOffset + mmToThreeUnits(dcLeftEdge);
-                droppedEndX = leftOffset + mmToThreeUnits(dcLeftEdge + dcWidth);
+                droppedEndX = leftOffset + mmToThreeUnits(dcLeftEdge + droppedWidth);
               }
             }
 
@@ -2039,7 +2041,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(droppedWidth)}
+                    {(() => { const r = Math.round(droppedWidth * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}
                   </Text>
                 )}
                 </>)}
