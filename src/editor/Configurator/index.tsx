@@ -3598,7 +3598,7 @@ const Configurator: React.FC = () => {
         </div>
 
         {/* 단내림/커튼박스/stepCeiling이 있을 때 메인 구간 사이즈 표시 */}
-        {(spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled)) && (
+        {(spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled) || (!isFreeMode && spaceInfo.curtainBox?.enabled)) && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
