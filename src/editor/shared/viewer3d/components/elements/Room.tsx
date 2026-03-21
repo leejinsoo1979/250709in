@@ -1838,7 +1838,7 @@ const Room: React.FC<RoomProps> = ({
               const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
               const stepSameSideAsDC = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
               const bwTop = isFreePlacement ? droppedCY : cY;
-              const bwBot = _zCBOrFree
+              const bwBot = isFreePlacement
                 ? (stepSameSideAsDC ? cY - scDropHLine : cY)
                 : droppedCY;
 
@@ -1846,7 +1846,7 @@ const Room: React.FC<RoomProps> = ({
               lines.push([bx, bwTop, z1, bx, bwTop, z2]);  // 경계벽 상단
               // 경계벽 하단: 커튼박스에서 bwBot이 메인 천장과 같은 높이이면
               // 천장 mesh(단면)를 뚫고 안쪽에서 보이므로, 뒷벽 근처로만 제한
-              if (_zCBOrFree && !stepSameSideAsDC && bwBot === cY) {
+              if (isFreePlacement && !stepSameSideAsDC && bwBot === cY) {
                 // 메인 천장과 동일 높이 → 뒷벽 실선만 (Z축 앞으로 연장 안 함)
                 lines.push([bx, bwBot, z1, bx, bwBot, z1 + 0.01]);
               } else {
@@ -1856,13 +1856,13 @@ const Room: React.FC<RoomProps> = ({
               // 커튼박스쪽 외벽의 천장 높이 Z축 라인
               if (dcIsL && hasLW) {
                 // 커튼박스: 천장이 메인보다 높으므로 외벽 라인도 뒷벽 근처로 제한
-                if (_zCBOrFree) {
+                if (isFreePlacement) {
                   lines.push([x1, droppedCY, z1, x1, droppedCY, z1 + 0.01]);
                 } else {
                   lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
                 }
               } else if (!dcIsL && hasRW) {
-                if (_zCBOrFree) {
+                if (isFreePlacement) {
                   lines.push([x2, droppedCY, z1, x2, droppedCY, z1 + 0.01]);
                 } else {
                   lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
@@ -2168,7 +2168,7 @@ const Room: React.FC<RoomProps> = ({
                   <mesh
                     position={[
                       _dcIsLeft ? (xOffset + _dcW / 2) : (xOffset + width - _dcW / 2),
-                      _isCBOrFree ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
+                      isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH,
                       zOffset
                     ]}
                     rotation={[0, 0, Math.PI / 2]}
@@ -2179,7 +2179,7 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                   {/* 경계벽 수직 음영선 (뒷벽) */}
                   <mesh
-                    position={[_bx, _isCBOrFree ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset]}
+                    position={[_bx, isFreePlacement ? panelStartY + height + _dcDropH / 2 : panelStartY + height - _dcDropH / 2, zOffset]}
                     rotation={[0, 0, 0]}
                     renderOrder={-1}
                   >
