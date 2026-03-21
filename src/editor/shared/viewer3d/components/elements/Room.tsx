@@ -4050,6 +4050,18 @@ const Room: React.FC<RoomProps> = ({
               const droppedBoundaryMm = isLeftDropped
                 ? -(totalWidthMm / 2) + droppedWidthMm
                 : (totalWidthMm / 2) - droppedWidthMm;
+              // 커튼박스 구간 판별 — 단내림과 같은 쪽이면 프레임 높이를 단내림으로 제한
+              const hasCBForFrame = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+              const cbWidthMm = hasCBForFrame ? (spaceInfo.curtainBox!.width || 150) : 0;
+              const cbIsLeft = hasCBForFrame && spaceInfo.curtainBox!.position === 'left';
+              const cbBoundaryMm = hasCBForFrame
+                ? (cbIsLeft
+                  ? -(totalWidthMm / 2) + cbWidthMm
+                  : (totalWidthMm / 2) - cbWidthMm)
+                : 0;
+              // 커튼박스가 단내림과 같은 쪽인지 판별
+              const cbSameSideAsDropped = hasCBForFrame && hasDroppedCeiling &&
+                ((cbIsLeft && isLeftDropped) || (!cbIsLeft && !isLeftDropped));
 
               // 세그먼트 수집
               const slotTopSegments: (FrameRenderSegment & { key: string })[] = [];
@@ -4091,7 +4103,14 @@ const Room: React.FC<RoomProps> = ({
                       ? modCenterForZone < droppedBoundaryMm
                       : modCenterForZone > droppedBoundaryMm
                   );
-                  const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
+                  // 커튼박스 구간 판별: 커튼박스가 단내림과 같은 쪽이면 프레임도 단내림 높이로 제한
+                  const isInCBZone = hasCBForFrame && (
+                    cbIsLeft
+                      ? modCenterForZone < cbBoundaryMm
+                      : modCenterForZone > cbBoundaryMm
+                  );
+                  const cbNeedsDroppedHeight = isInCBZone && cbSameSideAsDropped;
+                  const ceilingHeight = (isInDroppedZone || cbNeedsDroppedHeight) ? droppedCeilingHeight : height;
                   const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
                   const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
 
