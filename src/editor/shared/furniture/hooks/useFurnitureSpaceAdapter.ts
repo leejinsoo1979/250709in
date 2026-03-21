@@ -107,6 +107,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
 
         // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
+        console.log('🔄🔄🔄 updateFurnitureForNewSpace 가구 처리:', {
+          moduleId: module.moduleId,
+          zone: module.zone,
+          slotIndex: module.slotIndex,
+          customWidth: module.customWidth,
+          moduleWidth: module.moduleWidth,
+          isDualSlot: module.isDualSlot,
+          droppedCeilingEnabled: newSpaceInfo.droppedCeiling?.enabled,
+          customColumnCount: newSpaceInfo.customColumnCount,
+          willEnterZonePath: !!(module.zone && newSpaceInfo.droppedCeiling?.enabled),
+        });
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
           const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(newSpaceInfo, newSpaceInfo.customColumnCount);
           
@@ -163,7 +174,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           const newModuleId = `${baseType}-${Math.round(moduleWidth * 10) / 10}`;
 
           // slotWidths에서 customWidth 계산 (이격거리 반영)
-          let newCustomWidth: number | undefined;
+          let newCustomWidth: number = moduleWidth; // 기본값: 슬롯 너비 기반
           if (targetZone.slotWidths && targetZone.slotWidths[slotIndex] !== undefined) {
             if (isDual && slotIndex + 1 < targetZone.slotWidths.length) {
               newCustomWidth = targetZone.slotWidths[slotIndex] + targetZone.slotWidths[slotIndex + 1];
@@ -172,6 +183,19 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             }
           }
 
+          console.log('🔄✅ zone 경로 결과:', {
+            oldModuleId: module.moduleId,
+            newModuleId,
+            oldCustomWidth: module.customWidth,
+            newCustomWidth,
+            moduleWidth,
+            slotWidth,
+            isDual,
+            slotIndex,
+            targetZoneColumnWidth: targetZone.columnWidth,
+            targetZoneSlotWidths: targetZone.slotWidths,
+            targetZoneColumnCount: targetZone.columnCount,
+          });
           updatedModules.push({
             ...module,
             moduleId: newModuleId,
