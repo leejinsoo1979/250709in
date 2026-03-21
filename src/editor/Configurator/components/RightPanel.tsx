@@ -21,7 +21,7 @@ declare global {
 }
 
 /* ── 프레임 행 컴포넌트 (모듈 레벨) ── */
-const FrameRow = React.memo(({ label, enabled, widthMM, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame }: {
+const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame }: {
   label: string; enabled: boolean; widthMM?: number; sizeMM: number; offset: number;
   onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
   setHighlightedFrame: (v: string | null) => void;
@@ -58,17 +58,15 @@ const FrameRow = React.memo(({ label, enabled, widthMM, sizeMM, offset, onToggle
       {enabled && (
         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
           {/* 너비 - 읽기전용 */}
-          {widthMM != null && (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
-              <input type="text" inputMode="numeric"
-                value={widthMM || ''} readOnly
-                onFocus={() => setHighlightedFrame(hlKey)}
-                onBlur={() => setHighlightedFrame(null)}
-                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
-              />
-            </div>
-          )}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+            <input type="text" inputMode="numeric"
+              value={widthMM || ''} readOnly
+              onFocus={() => setHighlightedFrame(hlKey)}
+              onBlur={() => setHighlightedFrame(null)}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+            />
+          </div>
           {/* 높이 */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
