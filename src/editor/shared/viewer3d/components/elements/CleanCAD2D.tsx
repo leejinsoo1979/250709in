@@ -2370,60 +2370,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 슬롯배치 커튼박스 구간 실배치 치수선 — 양쪽 1.5mm 이격 반영 */}
-                {hasCB && !isFreePlacement && (() => {
-                  const cbGap = 1.5; // 양쪽 이격
-                  const cbPlacWidth = Math.round((cbWidth - cbGap * 2) * 10) / 10;
-                  const cbsx = cbOnLeft
-                    ? cbStartX + mmToThreeUnits(cbGap)
-                    : cbStartX + mmToThreeUnits(cbGap);
-                  const cbex = cbOnLeft
-                    ? cbEndX - mmToThreeUnits(cbGap)
-                    : cbEndX - mmToThreeUnits(cbGap);
-                  return (<>
-                <Line
-                  points={[[cbsx, slotTotalDimensionY, 0.002], [cbex, slotTotalDimensionY, 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([cbsx, slotTotalDimensionY, 0.002], [cbsx + 0.05, slotTotalDimensionY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([cbex, slotTotalDimensionY, 0.002], [cbex - 0.05, slotTotalDimensionY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                    renderOrder={1000}
-                    depthTest={false}
-                    position={[(cbsx + cbex) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                  >
-                    {cbPlacWidth}
-                  </Text>
-                )}
-                {/* 커튼박스 구간 실배치 연장선 */}
-                <Line
-                  points={[[cbsx, spaceHeight, 0.001], [cbsx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
-                  color={subGuideColor}
-                  lineWidth={1}
-                />
-                <Line
-                  points={[[cbex, spaceHeight, 0.001], [cbex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
-                  color={subGuideColor}
-                  lineWidth={1}
-                />
-                  </>);
-                })()}
 
                   </>);
                 })()}
