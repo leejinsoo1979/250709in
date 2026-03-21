@@ -1797,15 +1797,15 @@ const Room: React.FC<RoomProps> = ({
 
             return renderMode === 'solid' ? (
               <>
-                {/* 커튼박스 영역 천장 */}
+                {/* 단내림(dropped) 영역 천장 — 커튼박스 천장보다 앞에 렌더링 */}
                 <mesh
                   position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                   rotation={[Math.PI / 2, 0, 0]}
-                  renderOrder={2}
+                  renderOrder={3}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive
-                    object={opaqueTopWallMaterial} />
+                    object={stepCeilingMaterial} />
                 </mesh>
 
                 {hasStepCeiling ? (
