@@ -260,44 +260,12 @@ const BoxWithEdges: React.FC<{
     };
   }, [geometry, edgesGeometry]);
 
-  // renderOrder < 0 (CB 프레임): 원본 material의 텍스처를 실시간 동기화하는 별도 material
-  const cbMaterial = useMemo(() => {
-    if (renderOrder === undefined || renderOrder >= 0) return null;
-    if (!(material instanceof THREE.MeshStandardMaterial)) return null;
-    const mat = new THREE.MeshStandardMaterial();
-    mat.depthWrite = false;
-    return mat;
-  }, [renderOrder, material instanceof THREE.MeshStandardMaterial]);
-
-  // 매 프레임마다 원본 material 속성을 CB material에 동기화
-  useEffect(() => {
-    if (!cbMaterial || !(material instanceof THREE.MeshStandardMaterial)) return;
-    const sync = () => {
-      cbMaterial.color.copy(material.color);
-      cbMaterial.map = material.map;
-      cbMaterial.metalness = material.metalness;
-      cbMaterial.roughness = material.roughness;
-      cbMaterial.envMapIntensity = material.envMapIntensity;
-      cbMaterial.emissive.copy(material.emissive);
-      cbMaterial.emissiveIntensity = material.emissiveIntensity;
-      cbMaterial.transparent = material.transparent;
-      cbMaterial.opacity = material.opacity;
-      cbMaterial.depthWrite = false; // 항상 유지
-      cbMaterial.needsUpdate = true;
-    };
-    sync();
-    const interval = setInterval(sync, 500);
-    return () => clearInterval(interval);
-  }, [cbMaterial, material]);
-
-  const activeMaterial = cbMaterial ?? material;
-
   return (
     <group position={position} name={name}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined} renderOrder={renderOrder}>
-          <primitive key={activeMaterial.uuid} object={activeMaterial} attach="material" />
+          <primitive key={material.uuid} object={material} attach="material" />
         </mesh>
       )}
       {/* 모서리 라인 렌더링 - hideEdges가 false일 때만 표시 */}
