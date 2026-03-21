@@ -2046,12 +2046,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       targetZoneInfo = targetZone;
     }
 
-    // 도어 너비 보정: originalSlotWidthMm(indexing 기반)과 furnitureWidthMm(customWidth/moduleData 기반) 비교
+    // 도어 너비 보정: originalSlotWidthMm(indexing 기반)과 가구 너비 비교
     // 기둥 침범 시 도어는 원래 슬롯 너비를 유지해야 함 (커버도어)
     // 키큰장에 엔드패널이 있을 때도 도어는 원래 슬롯 너비를 유지해야 함
-    // 주의: 슬롯 수 변경 시 customWidth가 아직 업데이트 안 됐을 수 있으므로
-    //       originalSlotWidthMm(현재 indexing 기반)을 절대 furnitureWidthMm으로 덮어쓰지 않음
-    //       대신, 도어용 originalSlotWidthMm은 그대로 유지하고 가구 렌더링만 furnitureWidthMm 사용
+    const widthDifference = Math.abs(originalSlotWidthMm - furnitureWidthMm);
+    if (widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
+      // 기둥이 없고 엔드패널도 없는 경우:
+      // furnitureWidthMm(customWidth 기반)이 실제 가구 크기이므로 도어를 가구에 맞춤
+      originalSlotWidthMm = furnitureWidthMm;
+    }
   }
 
   // 벽없음 + 노서라운드 모드에서 벽이 없는 쪽의 가구는 도어가 엔드패널을 덮도록 확장
