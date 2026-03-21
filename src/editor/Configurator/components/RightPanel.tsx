@@ -61,7 +61,7 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
             <input type="text" inputMode="numeric"
-              value={widthMM || ''} readOnly
+              value={widthMM ? (Number.isInteger(widthMM) ? widthMM : Number(widthMM.toFixed(1))) : ''} readOnly
               onFocus={() => setHighlightedFrame(hlKey)}
               onBlur={() => setHighlightedFrame(null)}
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
@@ -154,7 +154,7 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
             <input type="text" inputMode="numeric"
-              value={widthMM || ''} readOnly
+              value={widthMM ? (Number.isInteger(widthMM) ? widthMM : Number(widthMM.toFixed(1))) : ''} readOnly
               onFocus={() => setHighlightedFrame(hlKey)}
               onBlur={() => setHighlightedFrame(null)}
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
@@ -1485,7 +1485,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
                               <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
                               <input type="text" inputMode="numeric"
-                                value={baseModWidthMM || ''} readOnly
+                                value={baseModWidthMM ? (Number.isInteger(baseModWidthMM) ? baseModWidthMM : Number(baseModWidthMM.toFixed(1))) : ''} readOnly
                                 onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                                 onBlur={() => setHighlightedFrame(null)}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
