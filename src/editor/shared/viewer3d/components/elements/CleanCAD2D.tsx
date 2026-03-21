@@ -4918,6 +4918,42 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         ));
       })()}
 
+      {/* 슬롯배치 커튼박스 내경 치수선 (4단: slotDimensionY) — cbWidth - 이격 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && spaceInfo.curtainBox?.enabled && (() => {
+        const cbW = spaceInfo.curtainBox!.width || 150;
+        const cbPos = spaceInfo.curtainBox!.position || 'right';
+        const gap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
+        const internalW = cbW - gap;
+        if (internalW <= 0) return null;
+        const dimY = slotDimensionY;
+        const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+        const cbStartX = cbPos === 'right' ? rightEdge - mmToThreeUnits(cbW) + mmToThreeUnits(gap) : leftOffset;
+        const cbEndX = cbPos === 'right' ? rightEdge : leftOffset + mmToThreeUnits(cbW) - mmToThreeUnits(gap);
+        const fmtVal = (() => { const r = Math.round(internalW * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
+        return (
+          <group>
+            <NativeLine name="dimension_line"
+              points={[[cbStartX, dimY, 0.002], [cbEndX, dimY, 0.002]]}
+              color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+            />
+            <NativeLine name="dimension_line"
+              points={createArrowHead([cbStartX, dimY, 0.002], [cbStartX + 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+            />
+            <NativeLine name="dimension_line"
+              points={createArrowHead([cbEndX, dimY, 0.002], [cbEndX - 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor} lineWidth={1} renderOrder={1000000} depthTest={false}
+            />
+            <Text renderOrder={1000000} depthTest={false}
+              position={[(cbStartX + cbEndX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize} color={textColor}
+              anchorX="center" anchorY="middle"
+              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+            >{fmtVal}</Text>
+          </group>
+        );
+      })()}
+
       {/* 기둥별 치수선 (개별 기둥 너비) - 불필요하므로 비활성화 */}
       {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
         const columnWidthM = column.width * 0.01;
