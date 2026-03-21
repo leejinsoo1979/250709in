@@ -1972,95 +1972,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
                 </>)}
-                {/* 슬롯배치 커튼박스 구간 치수선 (양쪽 1.5mm 이격 포함) */}
-                {hasCB && (() => {
-                  const cbGapMm = 1.5;
-                  const cbGap = mmToThreeUnits(cbGapMm);
-                  // 이격 반영 실배치 구간
-                  const innerLeft = cbOnLeft ? cbStartX + cbGap : cbStartX + cbGap;
-                  const innerRight = cbOnLeft ? cbEndX - cbGap : cbEndX - cbGap;
-                  // 벽쪽 이격 구간
-                  const wallGapLeft = cbOnLeft ? cbStartX : cbEndX - cbGap;
-                  const wallGapRight = cbOnLeft ? cbStartX + cbGap : cbEndX;
-                  // 안쪽 이격 구간
-                  const innerGapLeft = cbOnLeft ? cbEndX - cbGap : cbStartX;
-                  const innerGapRight = cbOnLeft ? cbEndX : cbStartX + cbGap;
-                  return (<>
-                  {/* 실배치 구간 147mm */}
-                  <Line
-                    points={[[innerLeft, subDimensionY, 0.002], [innerRight, subDimensionY, 0.002]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([innerLeft, subDimensionY, 0.002], [innerLeft + 0.05, subDimensionY, 0.002])}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([innerRight, subDimensionY, 0.002], [innerRight - 0.05, subDimensionY, 0.002])}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  {(showDimensionsText || isStep2) && (
-                    <Text
-                      renderOrder={1000}
-                      depthTest={false}
-                      position={[(innerLeft + innerRight) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
-                      fontSize={baseFontSize}
-                      color={textColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      outlineWidth={textOutlineWidth}
-                      outlineColor={textOutlineColor}
-                    >
-                      {Math.round(cbWidth - 3)}
-                    </Text>
-                  )}
-                  {/* 벽쪽 1.5mm 이격 */}
-                  <Line
-                    points={[[wallGapLeft, subDimensionY, 0.002], [wallGapRight, subDimensionY, 0.002]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  {(showDimensionsText || isStep2) && (
-                    <Text
-                      renderOrder={1000}
-                      depthTest={false}
-                      position={[(wallGapLeft + wallGapRight) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
-                      fontSize={baseFontSize * 0.85}
-                      color={textColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      outlineWidth={textOutlineWidth}
-                      outlineColor={textOutlineColor}
-                    >
-                      {cbGapMm}
-                    </Text>
-                  )}
-                  {/* 안쪽 1.5mm 이격 */}
-                  <Line
-                    points={[[innerGapLeft, subDimensionY, 0.002], [innerGapRight, subDimensionY, 0.002]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                  />
-                  {(showDimensionsText || isStep2) && (
-                    <Text
-                      renderOrder={1000}
-                      depthTest={false}
-                      position={[(innerGapLeft + innerGapRight) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
-                      fontSize={baseFontSize * 0.85}
-                      color={textColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      outlineWidth={textOutlineWidth}
-                      outlineColor={textOutlineColor}
-                    >
-                      {cbGapMm}
-                    </Text>
-                  )}
-                  </>);
-                })()}
+                {/* 슬롯배치 커튼박스 구간 치수선 (2단: 원 사이즈 150) */}
+                {hasCB && (<>
+                <Line
+                  points={[[cbStartX, subDimensionY, 0.002], [cbEndX, subDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([cbStartX, subDimensionY, 0.002], [cbStartX + 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([cbEndX, subDimensionY, 0.002], [cbEndX - 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[(cbStartX + cbEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {Math.round(cbWidth)}
+                  </Text>
+                )}
+                </>)}
 
                 {/* ===== 3단: 실배치 공간 치수선 ===== */}
                 {(() => {
@@ -2426,6 +2370,99 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
+                {/* 커튼박스 구간 실배치 치수선 (3단: 1.5 | 147 | 1.5) */}
+                {hasCB && !isFreePlacement && (() => {
+                  const cbGapMm = 1.5;
+                  const cbGap = mmToThreeUnits(cbGapMm);
+                  const innerLeft = cbStartX + cbGap;
+                  const innerRight = cbEndX - cbGap;
+                  return (<>
+                    {/* 147mm 실배치 구간 */}
+                    <Line
+                      points={[[innerLeft, slotTotalDimensionY, 0.002], [innerRight, slotTotalDimensionY, 0.002]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([innerLeft, slotTotalDimensionY, 0.002], [innerLeft + 0.02, slotTotalDimensionY, 0.002])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([innerRight, slotTotalDimensionY, 0.002], [innerRight - 0.02, slotTotalDimensionY, 0.002])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    {(showDimensionsText || isStep2) && (
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[(innerLeft + innerRight) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                      >
+                        {Math.round(cbWidth - 3)}
+                      </Text>
+                    )}
+                    {/* 벽쪽 1.5mm 이격 */}
+                    <Line
+                      points={[[cbOnLeft ? cbStartX : cbEndX - cbGap, slotTotalDimensionY, 0.002], [cbOnLeft ? cbStartX + cbGap : cbEndX, slotTotalDimensionY, 0.002]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    {(showDimensionsText || isStep2) && (
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[cbOnLeft ? cbStartX + cbGap / 2 : cbEndX - cbGap / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize * 0.85}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                      >
+                        {cbGapMm}
+                      </Text>
+                    )}
+                    {/* 안쪽 1.5mm 이격 */}
+                    <Line
+                      points={[[cbOnLeft ? cbEndX - cbGap : cbStartX, slotTotalDimensionY, 0.002], [cbOnLeft ? cbEndX : cbStartX + cbGap, slotTotalDimensionY, 0.002]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    {(showDimensionsText || isStep2) && (
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[cbOnLeft ? cbEndX - cbGap / 2 : cbStartX + cbGap / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize * 0.85}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                      >
+                        {cbGapMm}
+                      </Text>
+                    )}
+                    {/* 연장선 */}
+                    <Line
+                      points={[[innerLeft, spaceHeight, 0.001], [innerLeft, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                      color={subGuideColor}
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={[[innerRight, spaceHeight, 0.001], [innerRight, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                      color={subGuideColor}
+                      lineWidth={1}
+                    />
+                  </>);
+                })()}
 
                   </>);
                 })()}
