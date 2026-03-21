@@ -1646,7 +1646,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
       
-      {/* 서라운드 모드 좌측 이격거리 치수선 (단내림 활성 시) */}
+      {/* 서라운드 모드 좌측 이격거리 치수선 (단내림 활성 시) — 4단 아래 배치 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
         const leftGap = spaceInfo.gapConfig?.left ?? 0;
         if (leftGap <= 0) return null;
@@ -1654,19 +1654,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const gapStartX = leftOffset + mmToThreeUnits(frameThk.left);
         const gapEndX = gapStartX + mmToThreeUnits(leftGap);
         const fmtVal = (() => { const r = Math.round(leftGap * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
+        const gapDimY = slotDimensionY - mmToThreeUnits(80);
         return (
           <group>
-            <Line points={[[gapStartX, slotDimensionY, 0.002], [gapEndX, slotDimensionY, 0.002]]} color={dimensionColor} lineWidth={1} />
-            <Line points={createArrowHead([gapStartX, slotDimensionY, 0.002], [gapStartX + 0.02, slotDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
-            <Line points={createArrowHead([gapEndX, slotDimensionY, 0.002], [gapEndX - 0.02, slotDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
-            <Html position={[(gapStartX + gapEndX) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]} center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+            <Line points={[[gapStartX, gapDimY, 0.002], [gapEndX, gapDimY, 0.002]]} color={dimensionColor} lineWidth={1} />
+            <Line points={createArrowHead([gapStartX, gapDimY, 0.002], [gapStartX + 0.02, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+            <Line points={createArrowHead([gapEndX, gapDimY, 0.002], [gapEndX - 0.02, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+            <Html position={[(gapStartX + gapEndX) / 2, gapDimY + mmToThreeUnits(30), 0.01]} center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
               <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)', borderRadius: '3px' }}
                 onClick={(e) => { e.stopPropagation(); handleGapEdit('left', leftGap); }}>
                 {fmtVal}
               </div>
             </Html>
-            <Line points={[[gapStartX, spaceHeight, 0.001], [gapStartX, slotDimensionY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
-            <Line points={[[gapEndX, spaceHeight, 0.001], [gapEndX, slotDimensionY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
+            <Line points={[[gapStartX, spaceHeight, 0.001], [gapStartX, gapDimY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
+            <Line points={[[gapEndX, spaceHeight, 0.001], [gapEndX, gapDimY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
           </group>
         );
       })()}
@@ -1803,7 +1804,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 서라운드 모드 우측 이격거리 치수선 (단내림 활성 시) */}
+      {/* 서라운드 모드 우측 이격거리 치수선 (단내림 활성 시) — 4단 아래 배치 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
         const rightGap = spaceInfo.gapConfig?.right ?? 0;
         if (rightGap <= 0) return null;
@@ -1815,19 +1816,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const gapEndX = rightEdge - mmToThreeUnits(cbW) - mmToThreeUnits(frameThk.right);
         const gapStartX = gapEndX - mmToThreeUnits(rightGap);
         const fmtVal = (() => { const r = Math.round(rightGap * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
+        const gapDimY = slotDimensionY - mmToThreeUnits(80);
         return (
           <group>
-            <NativeLine name="dimension_line" points={[[gapStartX, slotDimensionY, 0.002], [gapEndX, slotDimensionY, 0.002]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-            <Line points={createArrowHead([gapStartX, slotDimensionY, 0.002], [gapStartX + 0.02, slotDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
-            <Line points={createArrowHead([gapEndX, slotDimensionY, 0.002], [gapEndX - 0.02, slotDimensionY, 0.002])} color={dimensionColor} lineWidth={1} />
-            <Html position={[(gapStartX + gapEndX) / 2, slotDimensionY + mmToThreeUnits(30), 0.01]} center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
+            <NativeLine name="dimension_line" points={[[gapStartX, gapDimY, 0.002], [gapEndX, gapDimY, 0.002]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+            <Line points={createArrowHead([gapStartX, gapDimY, 0.002], [gapStartX + 0.02, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+            <Line points={createArrowHead([gapEndX, gapDimY, 0.002], [gapEndX - 0.02, gapDimY, 0.002])} color={dimensionColor} lineWidth={1} />
+            <Html position={[(gapStartX + gapEndX) / 2, gapDimY + mmToThreeUnits(30), 0.01]} center style={{ pointerEvents: 'auto' }} zIndexRange={[9999, 10000]}>
               <div style={{ padding: '2px 6px', fontSize: '12px', fontWeight: 'bold', color: dimensionColor, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)', borderRadius: '3px' }}
                 onClick={(e) => { e.stopPropagation(); handleGapEdit('right', rightGap); }}>
                 {fmtVal}
               </div>
             </Html>
-            <Line points={[[gapStartX, spaceHeight, 0.001], [gapStartX, slotDimensionY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
-            <Line points={[[gapEndX, spaceHeight, 0.001], [gapEndX, slotDimensionY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
+            <Line points={[[gapStartX, spaceHeight, 0.001], [gapStartX, gapDimY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
+            <Line points={[[gapEndX, spaceHeight, 0.001], [gapEndX, gapDimY + mmToThreeUnits(20), 0.001]]} color={dimensionColor} lineWidth={0.5} />
           </group>
         );
       })()}
