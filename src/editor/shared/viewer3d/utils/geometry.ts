@@ -343,9 +343,11 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
   }
 
   // 커튼박스가 있는 쪽은 서라운드 프레임 없음 (커튼박스 내벽이 프레임 역할)
-  // 자유배치: droppedCeiling, 슬롯배치: curtainBox
-  const cbEnabled = spaceInfo.droppedCeiling?.enabled || spaceInfo.curtainBox?.enabled;
-  const cbPosition = spaceInfo.droppedCeiling?.enabled
+  // 자유배치: droppedCeiling (커튼박스 역할), 슬롯배치: curtainBox
+  // 주의: 슬롯배치의 droppedCeiling은 일반 단내림이므로 프레임 제거하면 안됨
+  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+  const cbEnabled = (isFreePlacement && spaceInfo.droppedCeiling?.enabled) || spaceInfo.curtainBox?.enabled;
+  const cbPosition = (isFreePlacement && spaceInfo.droppedCeiling?.enabled)
     ? (spaceInfo.droppedCeiling.position || 'right')
     : (spaceInfo.curtainBox?.position || 'right');
   if (cbEnabled) {
