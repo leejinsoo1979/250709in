@@ -1037,25 +1037,6 @@ const Room: React.FC<RoomProps> = ({
     setTopSubFrameMaterial(mat);
     return () => mat.dispose();
   }, [...frameDeps]);
-  // CB 프레임 전용 material (클리핑 플레인으로 천장 위 부분 가림)
-  const cbClipY = sideFrameStartY + adjustedPanelHeight;
-  useEffect(() => {
-    const mat = createFrameMaterial('left', triggerRerender);
-    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
-      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
-    ];
-    setCbLeftFrameMaterial(mat);
-    return () => mat.dispose();
-  }, [...frameDeps, cbClipY]);
-  useEffect(() => {
-    const mat = createFrameMaterial('right', triggerRerender);
-    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
-      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
-    ];
-    setCbRightFrameMaterial(mat);
-    return () => mat.dispose();
-  }, [...frameDeps, cbClipY]);
-
   // 하단 서브프레임 제거됨
   // useEffect(() => {
   //   const mat = createFrameMaterial('base');
@@ -1226,6 +1207,25 @@ const Room: React.FC<RoomProps> = ({
   // 좌우 프레임의 시작 Y 위치 (띄워서 배치일 때 위로 이동)
   const sideFrameStartY = panelStartY + floatHeight;
   const sideFrameCenterY = sideFrameStartY + adjustedPanelHeight / 2;
+
+  // CB 프레임 전용 material (클리핑 플레인으로 천장 위 부분 가림)
+  const cbClipY = sideFrameStartY + adjustedPanelHeight;
+  useEffect(() => {
+    const mat = createFrameMaterial('left', triggerRerender);
+    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
+      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
+    ];
+    setCbLeftFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [...frameDeps, cbClipY]);
+  useEffect(() => {
+    const mat = createFrameMaterial('right', triggerRerender);
+    (mat as THREE.MeshStandardMaterial).clippingPlanes = [
+      new THREE.Plane(new THREE.Vector3(0, -1, 0), cbClipY)
+    ];
+    setCbRightFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [...frameDeps, cbClipY]);
 
   // 벽 여부 확인
   const { wallConfig = { left: true, right: true } } = spaceInfo;
