@@ -163,6 +163,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [isFrameMergeModalOpen, setIsFrameMergeModalOpen] = useState(false);
   // UIStore에서 카메라 및 그래픽 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
   const { colors } = useThemeColors();
@@ -194,6 +195,35 @@ const Header: React.FC<HeaderProps> = ({
   // 로고 클릭 → 나가기 확인 모달 표시
   const handleLogoClick = () => {
     setIsExitModalOpen(true);
+  };
+
+  // CNC 옵티마이저로 이동
+  const navigateToCncOptimizer = () => {
+    const currentState = {
+      projectId,
+      designFileId,
+      basicInfo: useProjectStore.getState().basicInfo,
+      spaceInfo: useSpaceConfigStore.getState().spaceInfo,
+      placedModules: useFurnitureStore.getState().placedModules,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
+    console.log('💾 Configurator 상태 백업 완료');
+
+    const params = new URLSearchParams();
+    if (projectId) params.set('projectId', projectId);
+    if (designFileId) params.set('designFileId', designFileId);
+    if (projectName) params.set('projectName', encodeURIComponent(projectName));
+    if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
+    const queryString = params.toString();
+
+    console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
+      projectId, designFileId, projectName, designFileName, queryString
+    });
+
+    navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
+      state: { fromConfigurator: true }
+    });
   };
 
   // 저장하고 나가기
@@ -817,47 +847,14 @@ const Header: React.FC<HeaderProps> = ({
                       const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
                       const isFrameMerged = currentSpaceInfo.frameMergeEnabled ?? false;
 
-                      // 프레임 병합 안 된 상태면 팝업으로 병합 여부 확인
+                      // 프레임 병합 안 된 상태면 커스텀 모달로 병합 여부 확인
                       if (!isFrameMerged) {
-                        const mergeAndExport = confirm('분절된 상하부 프레임을 병합하여 내보내시겠습니까?');
-                        if (mergeAndExport) {
-                          // 병합 상태로 변경 후 내보내기
-                          useSpaceConfigStore.getState().setSpaceInfo({ frameMergeEnabled: true });
-                        }
+                        setIsConvertMenuOpen(false);
+                        setIsFrameMergeModalOpen(true);
+                        return;
                       }
 
-                      // 현재 전체 상태를 sessionStorage에 저장
-                      const currentState = {
-                        projectId,
-                        designFileId,
-                        basicInfo: useProjectStore.getState().basicInfo,
-                        spaceInfo: useSpaceConfigStore.getState().spaceInfo,
-                        placedModules: useFurnitureStore.getState().placedModules,
-                        timestamp: Date.now()
-                      };
-                      sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
-                      console.log('💾 Configurator 상태 백업 완료');
-
-                      // 프로젝트 ID, 디자인 파일 ID, 프로젝트명, 디자인 파일명을 URL 파라미터로 전달
-                      const params = new URLSearchParams();
-                      if (projectId) params.set('projectId', projectId);
-                      if (designFileId) params.set('designFileId', designFileId);
-                      if (projectName) params.set('projectName', encodeURIComponent(projectName));
-                      if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
-                      const queryString = params.toString();
-
-                      console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
-                        projectId,
-                        designFileId,
-                        projectName,
-                        designFileName,
-                        queryString
-                      });
-
-                      // state로 현재 페이지 정보 전달
-                      navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
-                        state: { fromConfigurator: true }
-                      });
+                      navigateToCncOptimizer();
                       setIsConvertMenuOpen(false);
                     }}
                   >
@@ -1164,6 +1161,97 @@ const Header: React.FC<HeaderProps> = ({
                 }}
               >
                 저장하고 나가기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 프레임 병합 확인 모달 */}
+      {isFrameMergeModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+          }}
+          onClick={() => setIsFrameMergeModalOpen(false)}
+        >
+          <div
+            style={{
+              background: 'var(--theme-surface, #fff)',
+              borderRadius: '12px',
+              padding: '24px',
+              minWidth: '320px',
+              maxWidth: '400px',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              border: '1px solid var(--theme-border, #e5e7eb)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{
+              margin: '0 0 8px 0',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: 'var(--theme-text, #111)',
+            }}>
+              프레임 병합
+            </h3>
+            <p style={{
+              margin: '0 0 20px 0',
+              fontSize: '14px',
+              color: 'var(--theme-text-secondary, #6b7280)',
+              lineHeight: 1.5,
+            }}>
+              분절된 상하부 프레임을 병합하여 내보내시겠습니까?
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              justifyContent: 'flex-end',
+            }}>
+              <button
+                onClick={() => {
+                  setIsFrameMergeModalOpen(false);
+                  navigateToCncOptimizer();
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--theme-border, #e5e7eb)',
+                  background: 'transparent',
+                  color: 'var(--theme-text-secondary, #6b7280)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                아니오
+              </button>
+              <button
+                onClick={() => {
+                  useSpaceConfigStore.getState().setSpaceInfo({ frameMergeEnabled: true });
+                  setIsFrameMergeModalOpen(false);
+                  navigateToCncOptimizer();
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'var(--theme-primary, #667eea)',
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                네
               </button>
             </div>
           </div>
