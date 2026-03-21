@@ -2012,6 +2012,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 </>)}
 
+                {/* 커튼박스 프레임 폭 치수선 (3단: 양쪽 이격 적용된 실제 프레임 폭) */}
+                {hasCB && (() => {
+                  const cbFrameWidth = cbWidth - 3; // 양쪽 1.5mm 이격
+                  const cbFrameStartX = cbStartX + mmToThreeUnits(1.5);
+                  const cbFrameEndX = cbEndX - mmToThreeUnits(1.5);
+                  return (<>
+                    <Line
+                      points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.05, slotTotalDimensionY, 0.002])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([cbFrameEndX, slotTotalDimensionY, 0.002], [cbFrameEndX - 0.05, slotTotalDimensionY, 0.002])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    {(showDimensionsText || isStep2) && (
+                      <Text
+                        renderOrder={1000}
+                        depthTest={false}
+                        position={[(cbFrameStartX + cbFrameEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                        fontSize={baseFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                      >
+                        {Math.round(cbFrameWidth)}
+                      </Text>
+                    )}
+                  </>);
+                })()}
+
                 {/* ===== 3단: 실배치 공간 치수선 ===== */}
                 {(() => {
                   // 자유배치: 각 구간별 이격거리를 빼서 실배치 폭 계산
