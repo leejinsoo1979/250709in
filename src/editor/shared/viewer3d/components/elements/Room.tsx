@@ -1086,9 +1086,54 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthTest=true + polygonOffset으로 프레임보다 앞에 렌더링)
+  // CB 전용 벽 material (depthWrite=false → 단내림 천장이 위에 그려짐)
+  const cbLeftWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
+    if (mat.uniforms) { mat.uniforms.opacity.value = 1.0; }
+    mat.transparent = false;
+    mat.depthWrite = false;
+    return mat;
+  }, []);
+  const cbRightWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', '3D');
+    if (mat.uniforms) { mat.uniforms.opacity.value = 1.0; }
+    mat.transparent = false;
+    mat.depthWrite = false;
+    return mat;
+  }, []);
+
+  // 커튼박스 영역 천장 material (depthWrite=false → 단내림 천장이 위에 그려짐)
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
+    mat.transparent = false;
+    mat.depthWrite = false;
+    return mat;
+  }, []);
+
+  // 단내림 영역 천장 material (일반 depth 처리 — polygonOffset으로 프레임보다 앞)
+  const stepCeilingMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
+    // 셰이더 fragmentShader에서 opacity → 1.0 강제 (alpha 채널 완전 불투명)
+    mat.fragmentShader = mat.fragmentShader.replace(
+      'gl_FragColor = vec4(color, opacity);',
+      'gl_FragColor = vec4(color, 1.0);'
+    );
+    mat.transparent = false;
+    mat.depthWrite = true;
+    mat.depthTest = true;
+    mat.polygonOffset = true;
+    mat.polygonOffsetFactor = -1;
+    mat.polygonOffsetUnits = -1;
+    mat.needsUpdate = true;
+    return mat;
+  }, []);
+
+  // 천장 구간 경계벽 material (일반 depth 처리 — polygonOffset으로 프레임보다 앞)
+  const ceilingBoundaryWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
@@ -1098,33 +1143,6 @@ const Room: React.FC<RoomProps> = ({
     mat.polygonOffset = true;
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;
-    return mat;
-  }, []);
-
-  // 단내림 영역 천장 material (depthTest=false, depthWrite=false → CB만 가리고 가구/프레임은 안 가림)
-  const stepCeilingMaterial = useMemo(() => {
-    const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
-    // 셰이더 fragmentShader에서 opacity → 1.0 강제 (alpha 채널 완전 불투명)
-    mat.fragmentShader = mat.fragmentShader.replace(
-      'gl_FragColor = vec4(color, opacity);',
-      'gl_FragColor = vec4(color, 1.0);'
-    );
-    mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
-    mat.needsUpdate = true;
-    return mat;
-  }, []);
-
-  // 천장 구간 경계벽 material (depthTest=false, depthWrite=false → CB만 가리고 가구/프레임은 안 가림)
-  const ceilingBoundaryWallMaterial = useMemo(() => {
-    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
-    if (mat.uniforms) {
-      mat.uniforms.opacity.value = 1.0;
-    }
-    mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
     return mat;
   }, []);
 
@@ -1335,7 +1353,7 @@ const Room: React.FC<RoomProps> = ({
                       renderOrder={-1}
                     >
                       <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
-                      <primitive object={opaqueLeftWallMaterial} />
+                      <primitive object={cbLeftWallMaterial} />
                     </mesh>
                   ) : null;
                 }
@@ -1362,7 +1380,7 @@ const Room: React.FC<RoomProps> = ({
                       renderOrder={hasLeftCB ? -1 : 1}
                     >
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                      <primitive object={opaqueLeftWallMaterial} />
+                      <primitive object={hasLeftCB ? cbLeftWallMaterial : opaqueLeftWallMaterial} />
                     </mesh>
                   ) : null;
                 }
@@ -1436,7 +1454,7 @@ const Room: React.FC<RoomProps> = ({
                       renderOrder={-1}
                     >
                       <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
-                      <primitive object={opaqueRightWallMaterial} />
+                      <primitive object={cbRightWallMaterial} />
                     </mesh>
                   ) : null;
                 }
@@ -1462,7 +1480,7 @@ const Room: React.FC<RoomProps> = ({
                       renderOrder={hasRightCB ? -1 : 1}
                     >
                       <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                      <primitive object={opaqueRightWallMaterial} />
+                      <primitive object={hasRightCB ? cbRightWallMaterial : opaqueRightWallMaterial} />
                     </mesh>
                   ) : null;
                 }
