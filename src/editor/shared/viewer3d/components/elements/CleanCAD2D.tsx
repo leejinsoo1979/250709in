@@ -2470,29 +2470,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   if (hasDC && hasSC) {
                     const sameSide = dcPosition === scPosition;
-                    if (sameSide) {
-                      // 같은 쪽: 커튼박스↔단내림 경계
-                      if (dcOnLeft) {
-                        boundaries.push({ leftX: droppedEndX, rightX: scStartX });
-                      } else {
-                        boundaries.push({ leftX: scEndX, rightX: droppedStartX });
-                      }
-                    } else {
-                      // 반대 쪽: 커튼박스↔메인(or 통합배치공간) 경계만 표시
-                      // 단내림 벽쪽은 통합 배치공간 외벽이격으로 처리 (별도 경계 치수 불필요)
+                    if (!sameSide) {
+                      // 반대 쪽: 커튼박스↔메인 경계
                       if (dcOnLeft) {
                         boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
                       } else {
                         boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
                       }
                     }
+                    // 같은 쪽(단내림↔CB 경계): CB 구간 이격은 별도 처리이므로 여기서 표시 안 함
                   } else if (hasDC) {
-                    // 커튼박스만: 배치영역↔커튼박스 경계
-                    if (dcOnLeft) {
-                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX });
-                    } else {
-                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX });
-                    }
+                    // 커튼박스만(단내림 없음): 메인↔커튼박스 경계 — CB 이격은 별도 처리
+                    // boundaries에 추가하지 않음
                   } else if (hasSC) {
                     // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
