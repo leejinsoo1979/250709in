@@ -210,10 +210,12 @@ const ZoneSizeDroppedRow: React.FC<{
           const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
           if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentDroppedWidth.toString(); return; }
           const newDroppedWidth = parseInt(inputValue);
+          const isCurtainBox = isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box';
+          const maxWidth = isCurtainBox ? 200 : totalWidth - 100;
           if (newDroppedWidth < 100) {
             handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
-          } else if (newDroppedWidth > totalWidth - 100) {
-            handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
+          } else if (newDroppedWidth > maxWidth) {
+            handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: maxWidth } });
           } else {
             handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
           }
@@ -237,7 +239,9 @@ const ZoneSizeDroppedRow: React.FC<{
             if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentCurtainH.toString(); return; }
             const newCurtainH = parseInt(inputValue);
             const newDropHeight = newCurtainH - totalHeight;
-            const clampedDrop = Math.max(10, Math.min(500, newDropHeight));
+            const maxCurtainH = 2420;
+            const maxDrop = maxCurtainH - totalHeight;
+            const clampedDrop = Math.max(10, Math.min(Math.max(10, maxDrop), newDropHeight));
             e.target.value = (totalHeight + clampedDrop).toString();
             handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: clampedDrop } });
           } else {
