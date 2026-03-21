@@ -3934,11 +3934,13 @@ const Room: React.FC<RoomProps> = ({
 
             // ── 전면 가림판: 좌/우 프레임과 동일한 Z 위치 ──
             const frontZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
-            // 전면 폭 = CB 전체 폭 (외측 엔드패널 ~ 경계면 칸막이까지 전부 덮음)
-            const frontWidth = mmToThreeUnits(cbWidthMM);
+            // 전면 폭 = CB 폭에서 1.5mm gap 적용 (서라운드 프레임과 동일)
+            const cbRenderWidth = cbWidthMM - 1.5;
+            const frontWidth = mmToThreeUnits(cbRenderWidth);
+            // 바깥쪽 정렬: 1.5mm가 안쪽(메인 구간 쪽)으로 줄어듦
             const frontCenterX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbWidthMM / 2)
-              : mmToThreeUnits(spaceHalfW - cbWidthMM / 2);
+              ? mmToThreeUnits(-spaceHalfW + cbRenderWidth / 2)
+              : mmToThreeUnits(spaceHalfW - cbRenderWidth / 2);
 
             // ── 경계면 칸막이: 서라운드 프레임과 동일하게 1.5mm 줄여서 바깥 정렬 ──
             const SIDE_BASE_DEPTH_MM = 40; // 자유배치와 동일한 측면 깊이
