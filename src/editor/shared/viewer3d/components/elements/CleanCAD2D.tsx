@@ -2513,17 +2513,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // CB 양쪽 1.5mm 이격
+                  // CB 벽쪽 1.5mm 이격만 (안쪽은 기존 경계 이격에서 표시됨)
                   if (hasCB && !isFreePlacement) {
                     const cbGap = mmToThreeUnits(1.5);
-                    // 벽쪽
                     boundaries.push(cbOnLeft
                       ? { leftX: cbStartX, rightX: cbStartX + cbGap }
                       : { leftX: cbEndX - cbGap, rightX: cbEndX });
-                    // 안쪽
-                    boundaries.push(cbOnLeft
-                      ? { leftX: cbEndX - cbGap, rightX: cbEndX }
-                      : { leftX: cbStartX, rightX: cbStartX + cbGap });
                   }
 
 
