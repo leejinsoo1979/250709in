@@ -603,9 +603,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 듀얼 가구인지 확인 — 절대 너비 기준 판단
   // 600mm 이하 = 도어 1짝, 601mm 이상 = 도어 2짝
+  // 슬롯 배치: originalSlotWidth가 현재 슬롯 너비를 정확히 반영하므로 우선 사용
   const effectiveFurnitureWidth = isFree
     ? (storeFreeWidth || moduleWidth)
-    : moduleWidth;
+    : (originalSlotWidth || moduleWidth);
   const isDualFurniture = Math.round(effectiveFurnitureWidth) >= 601;
 
   // 도어 크기 계산

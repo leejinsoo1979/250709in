@@ -175,6 +175,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           updatedModules.push({
             ...module,
             moduleId: newModuleId,
+            moduleWidth: moduleWidth, // 새 슬롯 너비로 업데이트
             position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
             isValidInCurrentSpace: true,
             adjustedWidth: undefined,
@@ -392,9 +393,15 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           newCustomWidth = customWidth;
         }
         
+        // 새 슬롯 너비로 moduleWidth 계산
+        const newModuleWidth = isDualModule
+          ? newIndexing.columnWidth * 2
+          : newIndexing.columnWidth;
+
         updatedModules.push({
           ...module,
           moduleId: newModuleId,
+          moduleWidth: newCustomWidth || newModuleWidth, // 새 슬롯 너비로 업데이트
           position: { ...module.position, x: newX },
           slotIndex,
           isDualSlot: newModuleId.includes('dual'),
