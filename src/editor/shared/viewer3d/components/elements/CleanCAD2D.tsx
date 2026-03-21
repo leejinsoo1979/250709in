@@ -2871,28 +2871,29 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 좌측 커튼박스 너비 치수선 (3단) */}
+      {/* 좌측 커튼박스 프레임 너비 치수선 (3단) — cbW - 3 (양쪽 1.5mm 이격 제외) */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
-              const cbStartX = leftOffset;
-              const cbEndX = leftOffset + mmToThreeUnits(cbW);
+              const cbFrameW = cbW - 3; // 프레임 너비 = CB 폭 - 양쪽 1.5mm 이격
+              const cbFrameStartX = leftOffset + mmToThreeUnits(1.5); // 벽쪽 1.5mm 이격 후
+              const cbFrameEndX = leftOffset + mmToThreeUnits(cbW - 1.5); // 경계쪽 1.5mm 이격 전
               return (<>
-                <Line points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
-                <Line points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
-                <Line points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Line points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbFrameEndX, slotTotalDimensionY, 0.002], [cbFrameEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
                 <Text renderOrder={1000} depthTest={false}
-                  position={[cbStartX + mmToThreeUnits(cbW) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                  position={[(cbFrameStartX + cbFrameEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                   fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                >{cbW}</Text>
+                >{Math.round(cbFrameW)}</Text>
                 <NativeLine name="dimension_line"
-                  points={[[cbStartX, spaceHeight, 0.001], [cbStartX, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                  points={[[cbFrameStartX, spaceHeight, 0.001], [cbFrameStartX, topDimensionY + mmToThreeUnits(40), 0.001]]}
                   color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
                 />
                 <NativeLine name="dimension_line"
-                  points={[[cbEndX, spaceHeight, 0.001], [cbEndX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+                  points={[[cbFrameEndX, spaceHeight, 0.001], [cbFrameEndX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
                   color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
                 />
               </>);
@@ -3146,29 +3147,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 우측 커튼박스 너비 치수선 (3단) */}
+      {/* 우측 커튼박스 프레임 너비 치수선 (3단) — cbW - 3 (양쪽 1.5mm 이격 제외) */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
+              const cbFrameW = cbW - 3; // 프레임 너비 = CB 폭 - 양쪽 1.5mm 이격
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-              const cbStartX = rightEdge - mmToThreeUnits(cbW);
-              const cbEndX = rightEdge;
+              const cbFrameStartX = rightEdge - mmToThreeUnits(cbW - 1.5); // 경계쪽 1.5mm 이격 후
+              const cbFrameEndX = rightEdge - mmToThreeUnits(1.5); // 벽쪽 1.5mm 이격 전
               return (<>
-                <Line points={[[cbStartX, slotTotalDimensionY, 0.002], [cbEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
-                <Line points={createArrowHead([cbStartX, slotTotalDimensionY, 0.002], [cbStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
-                <Line points={createArrowHead([cbEndX, slotTotalDimensionY, 0.002], [cbEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Line points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
+                <Line points={createArrowHead([cbFrameEndX, slotTotalDimensionY, 0.002], [cbFrameEndX - 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
                 <Text renderOrder={1000} depthTest={false}
-                  position={[cbStartX + mmToThreeUnits(cbW) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
+                  position={[(cbFrameStartX + cbFrameEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                   fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                >{cbW}</Text>
+                >{Math.round(cbFrameW)}</Text>
                 <NativeLine name="dimension_line"
-                  points={[[cbStartX, spaceHeight, 0.001], [cbStartX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+                  points={[[cbFrameStartX, spaceHeight, 0.001], [cbFrameStartX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
                   color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
                 />
                 <NativeLine name="dimension_line"
-                  points={[[cbEndX, spaceHeight, 0.001], [cbEndX, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                  points={[[cbFrameEndX, spaceHeight, 0.001], [cbFrameEndX, topDimensionY + mmToThreeUnits(40), 0.001]]}
                   color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
                 />
               </>);
