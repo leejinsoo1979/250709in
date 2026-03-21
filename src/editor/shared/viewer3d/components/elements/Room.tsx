@@ -3698,11 +3698,11 @@ const Room: React.FC<RoomProps> = ({
             const dcPos = spaceInfo.droppedCeiling!.position || 'right';
             const dcWidthMM = spaceInfo.droppedCeiling!.width || 900;
             const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 200;
-            const dcTotalH = heightMm + dcDropH; // 커튼박스 전체 높이(mm)
             const panelThickMM = 18;
 
-            const panelH = mmToThreeUnits(dcTotalH);
-            const panelCenterY = panelH / 2; // 바닥(0)부터 커튼박스 천장까지
+            // 메인 천장 ~ 커튼박스 천장 구간만 (공간 매쉬를 가리지 않도록)
+            const panelH = mmToThreeUnits(dcDropH);
+            const panelCenterY = mmToThreeUnits(heightMm) + panelH / 2; // 메인 천장 위부터 시작
 
             // 커튼박스 구간 중심 X
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
