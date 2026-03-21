@@ -10,6 +10,7 @@ import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/i
 import { useTranslation } from '@/i18n/useTranslation';
 import PreviewViewer from './PreviewViewer';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
+import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { useAuth } from '@/auth/AuthProvider';
 
 // Window 인터페이스 확장
@@ -1431,11 +1432,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {
                     topNum++;
+                    const bounds = getModuleBoundsX(mod);
+                    const modWidthMM = Math.round(bounds.right - bounds.left);
                     return (
                       <FrameRow key={`top-${mod.id}`}
                         label={`${toAlpha(topNum)}(상)`}
                         enabled={mod.hasTopFrame !== false}
-                        widthMM={mod.moduleWidth ?? mod.dimensions?.width ?? 0}
+                        widthMM={modWidthMM}
                         sizeMM={mod.topFrameThickness ?? globalTop}
                         offset={mod.topFrameOffset ?? 0}
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
@@ -1454,6 +1457,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
                     const baseEnabled = mod.hasBase !== false;
+                    const baseBounds = getModuleBoundsX(mod);
+                    const baseModWidthMM = Math.round(baseBounds.right - baseBounds.left);
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
@@ -1482,7 +1487,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
                               <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
                               <input type="text" inputMode="numeric"
-                                value={mod.moduleWidth ?? mod.dimensions?.width ?? ''} readOnly
+                                value={baseModWidthMM || ''} readOnly
                                 onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                                 onBlur={() => setHighlightedFrame(null)}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
