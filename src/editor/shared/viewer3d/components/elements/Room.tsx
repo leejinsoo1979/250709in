@@ -1894,6 +1894,12 @@ const Room: React.FC<RoomProps> = ({
                   const cbBoundaryH = droppedCeilingHeight + cbOnlyDropH;
                   const cbBoundaryY2 = panelStartY + height - droppedCeilingHeight + cbBoundaryH / 2;
 
+                  // CB 구간 가림벽: 단내림천장~메인천장 사이를 가구 앞면까지 불투명하게 채움
+                  const cbMaskH = mmToThreeUnits(spaceInfo.droppedCeiling?.dropHeight || 200);
+                  const cbMaskY = panelStartY + height - cbMaskH / 2; // 단내림천장 ~ 메인천장 중앙
+                  const cbMaskZ = furnitureZOffset; // 가구 중심 Z
+                  const cbMaskDepth = furnitureDepth + mmToThreeUnits(20); // 가구 깊이 + 여유
+
                   return (
                     <>
                       {/* 커튼박스 천장 (위로 확장) — 가장 뒤 */}
@@ -1913,6 +1919,14 @@ const Room: React.FC<RoomProps> = ({
                       >
                         <planeGeometry args={[extendedPanelDepth, cbBoundaryH]} />
                         <primitive object={ceilingBoundaryWallMaterial} />
+                      </mesh>
+                      {/* CB 구간 가림벽: 단내림천장~메인천장, 가구 앞면까지 불투명 박스 */}
+                      <mesh
+                        position={[cbAreaX, cbMaskY, cbMaskZ]}
+                        renderOrder={2}
+                      >
+                        <boxGeometry args={[cbOnlyWidth, cbMaskH, cbMaskDepth]} />
+                        <primitive object={opaqueTopWallMaterial} attach="material" />
                       </mesh>
                     </>
                   );
