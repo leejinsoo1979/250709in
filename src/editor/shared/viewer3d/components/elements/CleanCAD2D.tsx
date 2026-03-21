@@ -1976,7 +1976,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(mainWidth)}
+                    {(() => { const r = Math.round(mainWidth * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}
                   </Text>
                 )}
                 {/* 단내림(stepCeiling) 구간 치수선 — 자유배치 전용 */}
