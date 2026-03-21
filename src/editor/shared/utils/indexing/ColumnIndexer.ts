@@ -266,7 +266,16 @@ export class ColumnIndexer {
     
     // 일단 기본 내경 계산
     let internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
-    
+
+    // 슬롯배치 커튼박스: CB 너비를 내경에서 제외 (CB 구간에는 가구 배치 안 함)
+    const layoutMode = spaceInfo.layoutMode ?? 'equal-division';
+    const isSlotMode = layoutMode !== 'free-placement';
+    const hasCurtainBox = isSlotMode && spaceInfo.curtainBox?.enabled;
+    const curtainBoxWidth = hasCurtainBox ? (spaceInfo.curtainBox!.width || 150) : 0;
+    if (curtainBoxWidth > 0) {
+      internalWidth -= curtainBoxWidth;
+    }
+
     // 컬럼 수 결정 로직
     let columnCount: number;
     
@@ -458,6 +467,11 @@ export class ColumnIndexer {
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;
+    }
+
+    // 슬롯배치 커튼박스가 좌측이면 시작점을 CB 너비만큼 오른쪽으로 이동
+    if (hasCurtainBox && spaceInfo.curtainBox?.position === 'left') {
+      internalStartX += curtainBoxWidth;
     }
 
     // 각 컬럼 경계의 위치 계산 (실제 슬롯 너비 사용)
