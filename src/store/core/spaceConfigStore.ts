@@ -163,6 +163,9 @@ export interface SpaceInfo {
   // 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간)
   stepCeiling?: StepCeilingConfig;
 
+  // 슬롯배치 커튼박스 설정 (단내림과 독립적으로 동작)
+  curtainBox?: CurtainBoxConfig;
+
   // 상하부 프레임 병합 활성화 (기본: false)
   frameMergeEnabled?: boolean;
 
@@ -176,11 +179,18 @@ export interface DroppedCeilingConfig {
   position: 'left' | 'right';   // 단내림 위치
   width: number;                 // 단내림 영역 폭 (mm)
   dropHeight: number;            // 천장에서 내려오는 높이 (mm)
-  mode?: 'dropped' | 'curtain-box';  // 슬롯배치 모드: 단내림(기본) vs 커튼박스
   depth?: number;                // 공간 깊이 (생략 시 spaceInfo.depth 사용)
   topFrame?: number;             // 단내림 상부프레임 높이 (mm, 기본: frameSize.top과 동일)
   bottomFrame?: number;          // 단내림 하부프레임 높이 (mm, 기본: 0)
   sideFrame?: number;            // 단내림 벽쪽 프레임 폭 (mm, 서라운드 시 사용, 기본: frameSize.left/right와 동일)
+}
+
+// 슬롯배치 커튼박스 설정 (단내림과 독립)
+export interface CurtainBoxConfig {
+  enabled: boolean;
+  position: 'left' | 'right';
+  width: number;       // mm (최대 200)
+  dropHeight: number;  // mm (height + dropHeight ≤ 2420)
 }
 
 // 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간)

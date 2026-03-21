@@ -197,7 +197,7 @@ const ZoneSizeDroppedRow: React.FC<{
   spaceInfo: any; isFreeMode: boolean; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
 }> = ({ spaceInfo, isFreeMode, handleSpaceInfoUpdate, styles, marginBottom }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
-    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '커튼박스' : '단내림')}</span>
+    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>{isFreeMode ? '커튼박스' : '단내림'}</span>
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
@@ -210,8 +210,7 @@ const ZoneSizeDroppedRow: React.FC<{
           const currentDroppedWidth = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
           if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentDroppedWidth.toString(); return; }
           const newDroppedWidth = parseInt(inputValue);
-          const isCurtainBox = isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box';
-          const maxWidth = isCurtainBox ? 200 : totalWidth - 100;
+          const maxWidth = isFreeMode ? 200 : totalWidth - 100;
           if (newDroppedWidth < 100) {
             handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
           } else if (newDroppedWidth > maxWidth) {
@@ -228,19 +227,18 @@ const ZoneSizeDroppedRow: React.FC<{
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
-        defaultValue={(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || (isFreeMode ? 100 : 20)) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-        key={`dropped-height-${(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+        defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+        key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
         onBlur={(e) => {
           const inputValue = e.target.value;
           const totalHeight = spaceInfo.height || 2400;
-          if (isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') {
+          if (isFreeMode) {
             const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
             if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentCurtainH.toString(); return; }
             const newCurtainH = parseInt(inputValue);
             const newDropHeight = newCurtainH - totalHeight;
-            const maxCurtainH = 2420;
-            const maxDrop = maxCurtainH - totalHeight;
+            const maxDrop = 2420 - totalHeight;
             const clampedDrop = Math.max(10, Math.min(Math.max(10, maxDrop), newDropHeight));
             e.target.value = (totalHeight + clampedDrop).toString();
             handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: clampedDrop } });
@@ -253,6 +251,56 @@ const ZoneSizeDroppedRow: React.FC<{
             else if (newDropHeight > 500) { e.target.value = (totalHeight - 500).toString(); handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: 500 } }); }
             else { handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDropHeight } }); }
           }
+        }}
+        className={`${styles.input} ${styles.inputWithUnitField}`}
+        style={{ textAlign: 'center', fontSize: '12px' }}
+      />
+    </div>
+    <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
+  </div>
+);
+
+/** 슬롯배치 커튼박스 구간 사이즈 행 (curtainBox 필드 사용) */
+const ZoneSizeCurtainBoxRow: React.FC<{
+  spaceInfo: any; handleSpaceInfoUpdate: (u: any) => void; styles: any; marginBottom?: boolean;
+}> = ({ spaceInfo, handleSpaceInfoUpdate, styles, marginBottom }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: marginBottom ? '6px' : undefined }}>
+    <span style={{ minWidth: '52px', fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>커튼박스</span>
+    <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+      <input
+        type="text"
+        defaultValue={spaceInfo.curtainBox?.width || 150}
+        key={`cb-width-${spaceInfo.curtainBox?.width || 150}`}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+        onBlur={(e) => {
+          const inputValue = e.target.value;
+          const currentW = spaceInfo.curtainBox?.width || 150;
+          if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentW.toString(); return; }
+          const newW = Math.max(100, Math.min(200, parseInt(inputValue)));
+          handleSpaceInfoUpdate({ curtainBox: { ...spaceInfo.curtainBox, width: newW } });
+        }}
+        className={`${styles.input} ${styles.inputWithUnitField}`}
+        style={{ textAlign: 'center', fontSize: '12px' }}
+      />
+    </div>
+    <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+    <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+      <input
+        type="text"
+        defaultValue={(spaceInfo.height || 2400) + (spaceInfo.curtainBox?.dropHeight || 20)}
+        key={`cb-height-${spaceInfo.height}-${spaceInfo.curtainBox?.dropHeight}`}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+        onBlur={(e) => {
+          const inputValue = e.target.value;
+          const totalHeight = spaceInfo.height || 2400;
+          const currentH = totalHeight + (spaceInfo.curtainBox?.dropHeight || 20);
+          if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentH.toString(); return; }
+          const newTotalH = parseInt(inputValue);
+          const newDrop = newTotalH - totalHeight;
+          const maxDrop = 2420 - totalHeight;
+          const clampedDrop = Math.max(10, Math.min(Math.max(10, maxDrop), newDrop));
+          e.target.value = (totalHeight + clampedDrop).toString();
+          handleSpaceInfoUpdate({ curtainBox: { ...spaceInfo.curtainBox, dropHeight: clampedDrop } });
         }}
         className={`${styles.input} ${styles.inputWithUnitField}`}
         style={{ textAlign: 'center', fontSize: '12px' }}
@@ -3558,6 +3606,11 @@ const Configurator: React.FC = () => {
               <HelpBtn title="구간 사이즈" text="메인 구간과 단내림 구간의 실제 사용 가능한 너비×높이를 표시합니다. 너비를 직접 입력하면 구간 비율이 조정됩니다." />
             </div>
 
+            {/* 좌측 커튼박스 먼저 표시 */}
+            {!isFreeMode && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
+              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} marginBottom />
+            )}
+
             {/* 좌단내림이면 단내림→메인, 우단내림이면 메인→단내림 순서 */}
             {spaceInfo.droppedCeiling?.position === 'left' && (
               <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} marginBottom />
@@ -3569,8 +3622,8 @@ const Configurator: React.FC = () => {
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
                   type="text"
-                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0))}
-                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0) - (spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 0) : 0)}`}
+                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0) - (!isFreeMode && spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0))}
+                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0) - (spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 0) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 0) : 0)}`}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
                   onBlur={(e) => {
                     const inputValue = e.target.value;
@@ -3619,9 +3672,14 @@ const Configurator: React.FC = () => {
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
             </div>
 
-            {/* 우단내림(커튼박스)이면 메인 다음에 표시 */}
+            {/* 우단내림이면 메인 다음에 표시 */}
             {spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position !== 'left' && (
               <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+            )}
+
+            {/* 슬롯배치 커튼박스 구간 (우측이면 메인 다음에 표시) */}
+            {!isFreeMode && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position !== 'left' && (
+              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
             )}
 
             {/* stepCeiling 구간 사이즈 (자유배치 전용) */}
@@ -3846,15 +3904,14 @@ const Configurator: React.FC = () => {
 
           <div className={styles.toggleButtonGroup}>
             <button
-              className={`${styles.toggleButton} ${!(spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped') ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${!(spaceInfo.droppedCeiling?.enabled) ? styles.toggleButtonActive : ''}`}
               onClick={() => {
-                if (spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped') {
+                if (spaceInfo.droppedCeiling?.enabled) {
                   clearAllModules();
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
                       ...spaceInfo.droppedCeiling,
                       enabled: false,
-                      mode: undefined
                     },
                     mainDoorCount: undefined,
                     droppedCeilingDoorCount: undefined
@@ -3866,10 +3923,10 @@ const Configurator: React.FC = () => {
               없음
             </button>
             <button
-              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
               disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
-                const isActive = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'left';
+                const isActive = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'left';
                 if (isActive) return;
 
                 clearAllModules();
@@ -3889,7 +3946,6 @@ const Configurator: React.FC = () => {
                     width: droppedWidth,
                     dropHeight: 200,
                     position: 'left',
-                    mode: 'dropped'
                   },
                   droppedCeilingDoorCount: droppedDoorCount,
                   mainDoorCount: adjustedMainDoorCount
@@ -3900,10 +3956,10 @@ const Configurator: React.FC = () => {
               좌단내림
             </button>
             <button
-              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
               disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
-                const isActive = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'right';
+                const isActive = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'right';
                 if (isActive) return;
 
                 clearAllModules();
@@ -3923,7 +3979,6 @@ const Configurator: React.FC = () => {
                     width: droppedWidth,
                     dropHeight: 200,
                     position: 'right',
-                    mode: 'dropped'
                   },
                   droppedCeilingDoorCount: droppedDoorCount,
                   mainDoorCount: adjustedMainDoorCount
@@ -3936,7 +3991,7 @@ const Configurator: React.FC = () => {
           </div>
         </div>)}
 
-        {/* 슬롯배치: 커튼박스 설정 (단내림과 독립된 별도 섹션) */}
+        {/* 슬롯배치: 커튼박스 설정 (단내림과 독립된 별도 curtainBox 필드) */}
         {!isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -3946,18 +4001,12 @@ const Configurator: React.FC = () => {
 
           <div className={styles.toggleButtonGroup}>
             <button
-              className={`${styles.toggleButton} ${!(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box') ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${!spaceInfo.curtainBox?.enabled ? styles.toggleButtonActive : ''}`}
               onClick={() => {
-                if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box') {
+                if (spaceInfo.curtainBox?.enabled) {
                   clearAllModules();
                   handleSpaceInfoUpdate({
-                    droppedCeiling: {
-                      ...spaceInfo.droppedCeiling,
-                      enabled: false,
-                      mode: undefined
-                    },
-                    mainDoorCount: undefined,
-                    droppedCeilingDoorCount: undefined
+                    curtainBox: { enabled: false, position: 'right', width: 150, dropHeight: 20 },
                   });
                   setActiveRightPanelTab('placement');
                 }
@@ -3966,31 +4015,15 @@ const Configurator: React.FC = () => {
               없음
             </button>
             <button
-              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' ? styles.toggleButtonActive : ''}`}
               disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
-                const isActive = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'left';
-                if (isActive) return;
+                if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') return;
 
                 clearAllModules();
-                const totalWidth = spaceInfo.width || 4800;
-                const cbWidth = 150;
-                const mainWidth = totalWidth - cbWidth;
-                const mainRange = calculateDoorRange(mainWidth);
-                const currentCount = getCurrentColumnCount();
-                const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-
                 const cbDropHeight = Math.max(10, 2420 - (spaceInfo.height || 2400));
                 handleSpaceInfoUpdate({
-                  droppedCeiling: {
-                    enabled: true,
-                    width: cbWidth,
-                    dropHeight: cbDropHeight,
-                    position: 'left',
-                    mode: 'curtain-box'
-                  },
-                  droppedCeilingDoorCount: undefined,
-                  mainDoorCount: adjustedMainDoorCount
+                  curtainBox: { enabled: true, position: 'left', width: 150, dropHeight: cbDropHeight },
                 });
                 setActiveRightPanelTab('placement');
               }}
@@ -3998,31 +4031,15 @@ const Configurator: React.FC = () => {
               좌측
             </button>
             <button
-              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
+              className={`${styles.toggleButton} ${spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' ? styles.toggleButtonActive : ''}`}
               disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
               onClick={() => {
-                const isActive = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'right';
-                if (isActive) return;
+                if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') return;
 
                 clearAllModules();
-                const totalWidth = spaceInfo.width || 4800;
-                const cbWidth = 150;
-                const mainWidth = totalWidth - cbWidth;
-                const mainRange = calculateDoorRange(mainWidth);
-                const currentCount = getCurrentColumnCount();
-                const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-
                 const cbDropHeight = Math.max(10, 2420 - (spaceInfo.height || 2400));
                 handleSpaceInfoUpdate({
-                  droppedCeiling: {
-                    enabled: true,
-                    width: cbWidth,
-                    dropHeight: cbDropHeight,
-                    position: 'right',
-                    mode: 'curtain-box'
-                  },
-                  droppedCeilingDoorCount: undefined,
-                  mainDoorCount: adjustedMainDoorCount
+                  curtainBox: { enabled: true, position: 'right', width: 150, dropHeight: cbDropHeight },
                 });
                 setActiveRightPanelTab('placement');
               }}
@@ -4066,19 +4083,17 @@ const Configurator: React.FC = () => {
                   />
                 </div>
 
-                {/* 단내림구간 도어 개수 — 커튼박스 모드에서는 숨김 (가구 배치 불가) */}
-                {spaceInfo.droppedCeiling?.mode !== 'curtain-box' && (
-                  <div className={styles.inputGroup}>
-                    <DoorSlider
-                      value={spaceInfo.droppedCeilingDoorCount || 1}
-                      onChange={(value) => {
-                        handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                      }}
-                      width={spaceInfo.droppedCeiling?.width || 900}
-                      label="단내림"
-                    />
-                  </div>
-                )}
+                {/* 단내림구간 도어 개수 */}
+                <div className={styles.inputGroup}>
+                  <DoorSlider
+                    value={spaceInfo.droppedCeilingDoorCount || 1}
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                    }}
+                    width={spaceInfo.droppedCeiling?.width || 900}
+                    label="단내림"
+                  />
+                </div>
               </div>
             )}
 
@@ -5935,6 +5950,7 @@ const Configurator: React.FC = () => {
                         dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT,
                       };
                     }
+                    updates.curtainBox = { enabled: false, position: 'right', width: 150, dropHeight: 20 };
                     handleSpaceInfoUpdate(updates);
                   }}
                 >
@@ -5959,6 +5975,7 @@ const Configurator: React.FC = () => {
                         dropHeight: 100,
                       };
                     }
+                    updates.curtainBox = { enabled: false, position: 'right', width: 150, dropHeight: 20 };
                     handleSpaceInfoUpdate(updates);
                   }}
                 >

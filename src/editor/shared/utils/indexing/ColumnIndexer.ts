@@ -876,18 +876,26 @@ export class ColumnIndexer {
     const totalWidth = spaceInfo.width;
     const droppedWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
-    const isCurtainBoxMode = !isFreePlacement && spaceInfo.droppedCeiling.mode === 'curtain-box';
+    // 슬롯배치 커튼박스: curtainBox 필드에서 별도 확인
+    const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+    const curtainBoxWidth = hasCurtainBox ? (spaceInfo.curtainBox!.width || 150) : 0;
+    const curtainBoxPosition = hasCurtainBox ? (spaceInfo.curtainBox!.position || 'right') : 'right';
 
     console.log('🔍 단내림 구간 너비 설정:', {
       'spaceInfo.droppedCeiling.width': spaceInfo.droppedCeiling.width,
       'droppedWidth (최종)': droppedWidth,
       'droppedPosition': droppedPosition,
       'totalWidth': totalWidth,
-      'isCurtainBoxMode': isCurtainBoxMode
+      'hasCurtainBox': hasCurtainBox,
+      'curtainBoxWidth': curtainBoxWidth
     });
 
-    // 슬롯배치 커튼박스 모드: 커튼박스 구간을 전체에서 제외하고 메인만 반환 (가구 배치 불가)
-    if (isCurtainBoxMode) {
+    // 슬롯배치 커튼박스: 커튼박스 구간도 전체에서 제외 (가구 배치 불가)
+    // 단내림과 커튼박스가 동시에 있을 수 있으므로 커튼박스 너비를 추가로 제외
+    if (hasCurtainBox && !spaceInfo.droppedCeiling?.enabled) {
+      // 커튼박스만 있고 단내림 없는 경우: 커튼박스 전용 로직
+      const cbWidth = curtainBoxWidth;
+      const cbPosition = curtainBoxPosition;
       const frameThickness2 = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
       // 메인 구간 너비 = 전체 - 커튼박스 - 프레임 - 경계이격
       const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
@@ -895,15 +903,14 @@ export class ColumnIndexer {
       let mainStartX: number;
 
       if (spaceInfo.surroundType === 'surround') {
-        if (droppedPosition === 'left') {
+        if (cbPosition === 'left') {
           // 커튼박스(좌): 메인은 우측 프레임 + 경계이격 제외
-          mainInternalWidth = (totalWidth - droppedWidth) - frameThickness2.right - BOUNDARY_GAP;
-          mainStartX = -(totalWidth / 2) + droppedWidth + BOUNDARY_GAP + frameThickness2.left;
+          mainInternalWidth = (totalWidth - cbWidth) - frameThickness2.right - BOUNDARY_GAP;
           // 좌측 프레임은 커튼박스 쪽이므로 메인에서 제외하지 않고 BOUNDARY_GAP 지점부터 시작
-          mainStartX = -(totalWidth / 2) + droppedWidth + BOUNDARY_GAP;
+          mainStartX = -(totalWidth / 2) + cbWidth + BOUNDARY_GAP;
         } else {
           // 커튼박스(우): 메인은 좌측 프레임 + 경계이격 제외
-          mainInternalWidth = (totalWidth - droppedWidth) - frameThickness2.left - BOUNDARY_GAP;
+          mainInternalWidth = (totalWidth - cbWidth) - frameThickness2.left - BOUNDARY_GAP;
           mainStartX = -(totalWidth / 2) + frameThickness2.left;
         }
       } else {
@@ -918,11 +925,11 @@ export class ColumnIndexer {
           if (spaceInfo.wallConfig?.right) rightReduction = spaceInfo.gapConfig?.right || 2;
         }
 
-        if (droppedPosition === 'left') {
-          mainInternalWidth = (totalWidth - droppedWidth) - rightReduction - BOUNDARY_GAP;
-          mainStartX = -(totalWidth / 2) + droppedWidth + BOUNDARY_GAP;
+        if (cbPosition === 'left') {
+          mainInternalWidth = (totalWidth - cbWidth) - rightReduction - BOUNDARY_GAP;
+          mainStartX = -(totalWidth / 2) + cbWidth + BOUNDARY_GAP;
         } else {
-          mainInternalWidth = (totalWidth - droppedWidth) - leftReduction - BOUNDARY_GAP;
+          mainInternalWidth = (totalWidth - cbWidth) - leftReduction - BOUNDARY_GAP;
           mainStartX = -(totalWidth / 2) + leftReduction;
         }
       }
@@ -950,7 +957,8 @@ export class ColumnIndexer {
       else if (diff < 0) { for (let i = 0; i < Math.min(adjCount, mainColumnCount); i++) mainSlotWidths[i] -= 0.5; }
 
       console.log('🎯 [커튼박스모드] 메인만 반환, dropped=null:', {
-        mainStartX, mainInternalWidth, mainColumnCount, mainSlotWidth
+        mainStartX, mainInternalWidth, mainColumnCount, mainSlotWidth,
+        curtainBoxWidth: cbWidth, curtainBoxPosition: cbPosition
       });
 
       return {
@@ -1011,7 +1019,12 @@ export class ColumnIndexer {
       : (spaceInfo.gapConfig?.middle ?? 1.5);
 
     // 각 구간의 외부 너비 (프레임 제외 전)
-    const normalAreaOuterWidth = totalWidth - droppedWidth;
+    // 커튼박스는 항상 가장 바깥쪽 (단내림과 같은 쪽, 벽 쪽)
+    // 레이아웃: [메인] | [단내림] | [커튼박스] (우측인 경우)
+    // 커튼박스 너비는 전체에서 별도 차감 (메인 = total - dropped - curtainBox)
+    const curtainBoxSameSide = hasCurtainBox; // 커튼박스는 항상 단내림과 같은 쪽
+    const cbDeduction = curtainBoxSameSide ? curtainBoxWidth : 0;
+    const normalAreaOuterWidth = totalWidth - droppedWidth - cbDeduction;
     const droppedAreaOuterWidth = droppedWidth;
     
     // 각 구간의 내부 너비 계산
@@ -1047,11 +1060,15 @@ export class ColumnIndexer {
           // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
 
-          // 단내림구간(좌): 좌측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.left;
-          droppedStartX = internalStartX; // 수정된 internalStartX 사용
+          // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
+          // 단내림 시작이 커튼박스 뒤로 밀림
+          const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 일반구간(우): 우측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+          // 단내림구간(좌): 좌측 프레임(또는 커튼박스 경계) 빼고 + 중간이격 흡수
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.left);
+          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : frameThickness.left);
+
+          // 일반구간(우): 우측 프레임 + 중간이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
           normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
@@ -1060,9 +1077,7 @@ export class ColumnIndexer {
             '프레임 두께': frameThickness,
             '단내림 내경': droppedAreaInternalWidth,
             '메인 내경': normalAreaInternalWidth,
-            'spaceInfo.gapConfig': spaceInfo.gapConfig,
-            'spaceInfo.wallConfig': spaceInfo.wallConfig,
-            'spaceInfo.installType': spaceInfo.installType
+            '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 좌측` : '없음',
           });
         }
       } else {
@@ -1131,11 +1146,14 @@ export class ColumnIndexer {
             }
           }
 
-          // 단내림구간(좌): 좌측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - leftReduction;
-          droppedStartX = internalStartX; // 수정된 internalStartX 사용
+          // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
+          const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 일반구간(우): 우측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
+          // 단내림구간(좌): 좌측 이격거리(또는 커튼박스 경계) 빼고 + 중간이격 흡수
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : leftReduction);
+          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : leftReduction);
+
+          // 일반구간(우): 우측 이격거리 + 중간이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
           normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 슬롯 영역 직후 메인 시작
 
@@ -1146,11 +1164,10 @@ export class ColumnIndexer {
           '단내림구간 내경': droppedAreaInternalWidth,
           '일반구간 외부너비': normalAreaOuterWidth,
           '우측이격거리': rightReduction,
+          '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 좌측` : '없음',
           '일반구간 내경': normalAreaInternalWidth,
           '단내림 시작X': droppedStartX,
-          '단내림 끝X': droppedStartX + droppedAreaInternalWidth,
           '메인 시작X': normalStartX,
-          '검증 총합': droppedAreaInternalWidth + normalAreaInternalWidth + leftReduction + rightReduction,
           '전체너비': totalWidth
         });
         }
@@ -1182,12 +1199,15 @@ export class ColumnIndexer {
           // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
 
-          // 일반구간(좌): 좌측 프레임 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
-          normalStartX = internalStartX; // 수정된 internalStartX 사용
+          // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]
+          const cbShift = curtainBoxSameSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
 
-          // 단내림구간(우): 우측 프레임 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - frameThickness.right;
+          // 일반구간(좌): 좌측 프레임 + 중간이격 빼기
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
+          normalStartX = internalStartX;
+
+          // 단내림구간(우): 우측 프레임(또는 커튼박스 경계) 빼고 + 중간이격 흡수
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : frameThickness.right);
           droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
 
           console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
@@ -1195,9 +1215,7 @@ export class ColumnIndexer {
             '프레임 두께': frameThickness,
             '메인 내경': normalAreaInternalWidth,
             '단내림 내경': droppedAreaInternalWidth,
-            'spaceInfo.gapConfig': spaceInfo.gapConfig,
-            'spaceInfo.wallConfig': spaceInfo.wallConfig,
-            'spaceInfo.installType': spaceInfo.installType
+            '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 우측` : '없음',
           });
         }
       } else {
@@ -1266,12 +1284,15 @@ export class ColumnIndexer {
             }
           }
 
-          // 일반구간(좌): 좌측 이격거리 + 중간이격 빼기 (중간이격은 메인에서 빠지고 단내림에 포함)
-          normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
-          normalStartX = internalStartX; // 수정된 internalStartX 사용
+          // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]
+          const cbShift = curtainBoxSameSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
 
-          // 단내림구간(우): 우측 이격거리 빼고 + 중간이격 흡수 (배치사이즈에 포함)
-          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - rightReduction;
+          // 일반구간(좌): 좌측 이격거리 + 중간이격 빼기
+          normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
+          normalStartX = internalStartX;
+
+          // 단내림구간(우): 우측 이격거리(또는 커튼박스 경계) 빼고 + 중간이격 흡수
+          droppedAreaInternalWidth = droppedAreaOuterWidth + BOUNDARY_GAP - (cbShift > 0 ? 0 : rightReduction);
           droppedStartX = normalStartX + normalAreaInternalWidth; // 메인 슬롯 영역 직후 단내림 시작
 
           console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
@@ -1281,11 +1302,10 @@ export class ColumnIndexer {
             '단내림구간 외부너비': droppedAreaOuterWidth,
             '중간경계이격거리(배치포함)': BOUNDARY_GAP,
             '우측이격거리': rightReduction,
+            '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 우측` : '없음',
             '단내림구간 내경': droppedAreaInternalWidth,
             '메인 시작X': normalStartX,
-            '메인 끝X': normalStartX + normalAreaInternalWidth,
             '단내림 시작X': droppedStartX,
-            '검증 총합': normalAreaInternalWidth + droppedAreaInternalWidth + leftReduction + rightReduction,
             '전체너비': totalWidth
           });
         }
