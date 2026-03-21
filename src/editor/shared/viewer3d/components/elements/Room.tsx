@@ -2960,6 +2960,11 @@ const Room: React.FC<RoomProps> = ({
 
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
+          // 단내림+커튼박스 동시 활성 & 같은 쪽(좌측): CB 마감패널이 좌측 프레임 역할 → 좌측 프레임 생략
+          if (isCurtainBoxSlot && spaceInfo.curtainBox?.position === 'left') {
+            return null;
+          }
+
           // 슬롯배치에서 커튼박스만 있고 단내림 없으면 여기 도달하지 않음
           // 단내림+커튼박스 동시 활성시 단내림은 정상 렌더링
 
