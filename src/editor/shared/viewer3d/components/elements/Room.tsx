@@ -1085,15 +1085,17 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthTest=false → 프레임보다 앞에 렌더링, renderOrder=10)
+  // 커튼박스 영역 천장 material (depthTest=false, alpha 강제 1.0)
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
-    if (mat.uniforms) {
-      mat.uniforms.opacity.value = 1.0;
-    }
+    mat.fragmentShader = mat.fragmentShader.replace(
+      'gl_FragColor = vec4(color, opacity);',
+      'gl_FragColor = vec4(color, 1.0);'
+    );
     mat.transparent = false;
     mat.depthWrite = false;
     mat.depthTest = false;
+    mat.needsUpdate = true;
     return mat;
   }, []);
 
@@ -1112,15 +1114,17 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 천장 구간 경계벽 material (depthTest=false → 프레임/천장보다 앞에, renderOrder=12)
+  // 천장 구간 경계벽 material (depthTest=false, alpha 강제 1.0)
   const ceilingBoundaryWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
-    if (mat.uniforms) {
-      mat.uniforms.opacity.value = 1.0;
-    }
+    mat.fragmentShader = mat.fragmentShader.replace(
+      'gl_FragColor = vec4(color, opacity);',
+      'gl_FragColor = vec4(color, 1.0);'
+    );
     mat.transparent = false;
     mat.depthWrite = false;
     mat.depthTest = false;
+    mat.needsUpdate = true;
     return mat;
   }, []);
 
