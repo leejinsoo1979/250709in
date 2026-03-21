@@ -3726,16 +3726,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           return (
             <>
-              {/* ── 2단: 단내림 높이 or 전체 높이 ── */}
+              {/* ── 2단: 공간 전체 높이 (단내림 기둥 구분 포함) ── */}
               {(() => {
-                // 커튼박스 있으면 2단은 단내림 높이, 없으면 전체 높이
-                const dim2Height = (hasCB_R && isRightDrop) ? rEffectiveH : spaceInfo.height;
-                const dim2HeightY = mmToThreeUnits(dim2Height);
-                const dim2DisplayH = dim2Height - floorFinishHeightMmGlobal;
-                const dim2MidY = floorFinishYR + (dim2HeightY - floorFinishYR) / 2;
+                const spaceHeightMm = spaceInfo.height;
+                const spaceTopY = mmToThreeUnits(spaceHeightMm);
+                // 단내림 기둥 높이 분리 표시 여부
+                const showDropTick = isRightDrop && dropHeight > 0;
+                const dropBoundaryY = showDropTick ? mmToThreeUnits(spaceHeightMm - dropHeight) : spaceTopY;
+                // 아래쪽(단내림 구간 높이) 중간Y
+                const lowerMidY = floorFinishYR + (dropBoundaryY - floorFinishYR) / 2;
+                // 위쪽(기둥 높이) 중간Y
+                const upperMidY = (dropBoundaryY + spaceTopY) / 2;
+
                 return (<>
+                  {/* 세로 메인 라인: 0 ~ spaceHeight */}
                   <NativeLine name="dimension_line"
-                    points={[[rightOuterX, 0, 0.002], [rightOuterX, dim2HeightY, 0.002]]}
+                    points={[[rightOuterX, 0, 0.002], [rightOuterX, spaceTopY, 0.002]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
@@ -3743,7 +3749,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([rightOuterX, dim2HeightY, 0.002], [rightOuterX, dim2HeightY - 0.05, 0.002])}
+                    points={createArrowHead([rightOuterX, spaceTopY, 0.002], [rightOuterX, spaceTopY - 0.05, 0.002])}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   {/* 바닥마감재 구분 틱 & 치수 */}
@@ -3763,15 +3769,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       </Text>
                     </>
                   )}
-                  {/* 높이 텍스트 */}
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[rightOuterX + mmToThreeUnits(10), dim2MidY, 0.01]}
-                    fontSize={largeFontSize} color={textColor}
-                    anchorX="left" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {dim2DisplayH}
-                  </Text>
+                  {/* 단내림 경계 구분 틱 & 기둥 높이 */}
+                  {showDropTick && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[rightOuterX - mmToThreeUnits(30), dropBoundaryY, 0.002], [rightOuterX + mmToThreeUnits(30), dropBoundaryY, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+                      {/* 단내림 구간 높이 (아래쪽) */}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[rightOuterX + mmToThreeUnits(10), lowerMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {spaceHeightMm - dropHeight - floorFinishHeightMmGlobal}
+                      </Text>
+                      {/* 기둥 높이 (위쪽) */}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[rightOuterX + mmToThreeUnits(10), upperMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {dropHeight}
+                      </Text>
+                    </>
+                  )}
+                  {/* 단내림 없을 때 전체 높이 텍스트 */}
+                  {!showDropTick && (
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[rightOuterX + mmToThreeUnits(10), floorFinishYR + (spaceTopY - floorFinishYR) / 2, 0.01]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {spaceHeightMm - floorFinishHeightMmGlobal}
+                    </Text>
+                  )}
                 </>);
               })()}
 
@@ -3912,8 +3947,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 points={[[rightWallX, 0, 0.001], [(hasCB_R ? rightCBOuterX : rightOuterX) + mmToThreeUnits(20), 0, 0.001]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 단내림 천장 연장선 (커튼박스 있고 단내림 있을 때) */}
-              {hasCB_R && isRightDrop && (
+              {/* 단내림 천장 연장선 (단내림이 우측에 있을 때) */}
+              {isRightDrop && dropHeight > 0 && (
                 <NativeLine name="dimension_line"
                   points={[[rightWallX, rEffectiveCeilingY, 0.001], [rightOuterX + mmToThreeUnits(20), rEffectiveCeilingY, 0.001]]}
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
