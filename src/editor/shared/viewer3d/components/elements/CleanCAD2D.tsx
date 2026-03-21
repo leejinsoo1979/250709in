@@ -2016,44 +2016,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 </>)}
 
-                {/* 커튼박스 프레임 폭 치수선 (3단: 양쪽 이격 적용된 실제 프레임 폭) */}
-                {hasCB && (() => {
-                  const cbFrameWidth = cbWidth - 3; // 양쪽 1.5mm 이격
-                  const cbFrameStartX = cbStartX + mmToThreeUnits(1.5);
-                  const cbFrameEndX = cbEndX - mmToThreeUnits(1.5);
-                  return (<>
-                    <Line
-                      points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.05, slotTotalDimensionY, 0.002])}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([cbFrameEndX, slotTotalDimensionY, 0.002], [cbFrameEndX - 0.05, slotTotalDimensionY, 0.002])}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    {(showDimensionsText || isStep2) && (
-                      <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                        position={[(cbFrameStartX + cbFrameEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                        fontSize={baseFontSize}
-                        color={textColor}
-                        anchorX="center"
-                        anchorY="middle"
-                        outlineWidth={textOutlineWidth}
-                        outlineColor={textOutlineColor}
-                      >
-                        {Math.round(cbFrameWidth)}
-                      </Text>
-                    )}
-                  </>);
-                })()}
+                {/* 커튼박스 프레임 폭 치수선 — 숨김 (좁은 영역에서 텍스트 겹침 방지) */}
 
                 {/* ===== 3단: 실배치 공간 치수선 ===== */}
                 {(() => {
@@ -2558,22 +2521,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 벽↔단내림 이격은 외벽이격으로 처리됨
                   }
 
-                  // CB 양쪽 1.5mm 이격 (프레임↔구간 경계) — 읽기 전용 (고정값)
-                  if (hasCB) {
-                    const cbGap = mmToThreeUnits(1.5);
-                    // CB 안쪽(메인 쪽) 이격
-                    if (cbOnLeft) {
-                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX, editable: false });
-                    } else {
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap, editable: false });
-                    }
-                    // CB 바깥쪽(벽 쪽) 이격
-                    if (cbOnLeft) {
-                      boundaries.push({ leftX: cbStartX, rightX: cbStartX + cbGap, editable: false });
-                    } else {
-                      boundaries.push({ leftX: cbEndX - cbGap, rightX: cbEndX, editable: false });
-                    }
-                  }
+                  // CB 양쪽 1.5mm 이격 — 숨김 (좁은 영역에서 텍스트 겹침 방지)
 
 
 
