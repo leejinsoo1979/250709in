@@ -3940,11 +3940,12 @@ const Room: React.FC<RoomProps> = ({
               ? mmToThreeUnits(-spaceHalfW + cbWidthMM / 2)
               : mmToThreeUnits(spaceHalfW - cbWidthMM / 2);
 
-            // ── 경계면 칸막이: 전면패널 뒤쪽으로 연장되는 L자 세로 ──
+            // ── 경계면 칸막이: 서라운드 프레임과 동일하게 1.5mm 줄여서 바깥 정렬 ──
             const SIDE_BASE_DEPTH_MM = 40; // 자유배치와 동일한 측면 깊이
+            const cbRenderThick = panelThickMM - 1.5; // 서라운드 프레임처럼 1.5mm gap
             const borderX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - panelThickMM / 2)
-              : mmToThreeUnits(spaceHalfW - cbWidthMM + panelThickMM / 2);
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - cbRenderThick / 2)  // 바깥 정렬: 1.5mm 안쪽으로
+              : mmToThreeUnits(spaceHalfW - cbWidthMM + cbRenderThick / 2);  // 바깥 정렬: 1.5mm 안쪽으로
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
             return (
@@ -3955,10 +3956,10 @@ const Room: React.FC<RoomProps> = ({
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
                   material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
-                {/* 경계면 칸막이 — 전면 뒤로 40mm 깊이 L자 세로 */}
+                {/* 경계면 칸막이 — 서라운드처럼 1.5mm 줄여서 바깥 정렬, 전면 뒤로 40mm */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
-                  args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
+                  args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
                   material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
               </group>
