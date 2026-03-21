@@ -3974,11 +3974,11 @@ const Room: React.FC<RoomProps> = ({
               : mmToThreeUnits(spaceHalfW - cbWidthMM + cbRenderThick / 2);  // 바깥 정렬: 1.5mm 안쪽으로
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
-            // CB 패널: polygonOffset으로 뒤로 밀기 (천장은 factor=-1, CB는 factor=2)
+            // CB 패널: depthTest=false로 먼저 그리되, depthWrite=true로 depth에 기록
+            // → 나중에 그려지는 천장/프레임이 CB를 정상적으로 가림
             const cbMat = cbFrameMat.clone();
-            cbMat.polygonOffset = true;
-            cbMat.polygonOffsetFactor = 2;
-            cbMat.polygonOffsetUnits = 2;
+            cbMat.depthTest = false;
+            cbMat.depthWrite = true;
 
             return (
               <group key="slot-curtain-box-finish">
