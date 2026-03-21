@@ -4994,28 +4994,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </>);
       })()}
 
-      {/* 슬롯배치 커튼박스 내경 치수선 (4단: slotDimensionY) — cbWidth - 벽이격 - 경계이격 */}
+      {/* 슬롯배치 커튼박스 내경 치수선 (4단: slotDimensionY) — cbWidth - 경계이격 */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
         const cbPos = spaceInfo.curtainBox!.position || 'right';
-        // 벽쪽 이격
-        const wallGap = cbPos === 'right' ? (spaceInfo.gapConfig?.right ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
-        // 경계쪽 이격 (단내림이 있으면 middle2, 없으면 middle)
+        // 경계쪽 이격만 차감 (단내림이 있으면 middle2, 없으면 middle)
         const hasDCForCB = !!spaceInfo.droppedCeiling?.enabled;
         const boundaryGap = hasDCForCB
           ? (spaceInfo.gapConfig?.middle2 ?? spaceInfo.gapConfig?.middle ?? 1.5)
           : (spaceInfo.gapConfig?.middle ?? 1.5);
-        const internalW = cbW - wallGap - boundaryGap;
+        const internalW = cbW - boundaryGap;
         if (internalW <= 0) return null;
         const dimY = slotDimensionY;
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-        // 우측 CB: 벽쪽(right)에서 wallGap, 경계쪽(left)에서 boundaryGap
-        // 좌측 CB: 벽쪽(left)에서 wallGap, 경계쪽(right)에서 boundaryGap
+        // 우측 CB: 경계쪽(좌측)에서 boundaryGap만큼 안쪽
+        // 좌측 CB: 경계쪽(우측)에서 boundaryGap만큼 안쪽
         const cbStartX = cbPos === 'right'
           ? rightEdge - mmToThreeUnits(cbW) + mmToThreeUnits(boundaryGap)
-          : leftOffset + mmToThreeUnits(wallGap);
+          : leftOffset;
         const cbEndX = cbPos === 'right'
-          ? rightEdge - mmToThreeUnits(wallGap)
+          ? rightEdge
           : leftOffset + mmToThreeUnits(cbW) - mmToThreeUnits(boundaryGap);
         const fmtVal = (() => { const r = Math.round(internalW * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
         return (
