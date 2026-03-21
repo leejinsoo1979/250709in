@@ -1951,8 +1951,8 @@ const Room: React.FC<RoomProps> = ({
             const dcDropH = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
-            // stepCeiling 정보
-            const hasSC = spaceInfo.stepCeiling?.enabled;
+            // stepCeiling 정보 (자유배치 전용)
+            const hasSC = isFreePlacement && spaceInfo.stepCeiling?.enabled;
             const scDropHLine = hasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
             const scIsLeft = hasSC && spaceInfo.stepCeiling?.position === 'left';
             const scIsRight = hasSC && spaceInfo.stepCeiling?.position === 'right';
@@ -2896,7 +2896,7 @@ const Room: React.FC<RoomProps> = ({
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
         // stepCeiling 단내림 관련 변수
-        const hasLeftStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+        const hasLeftStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
         const stepDropHeight = hasLeftStepCeiling ? (spaceInfo.stepCeiling!.dropHeight || 200) : 0;
         const stepDropH = mmToThreeUnits(stepDropHeight);
 
@@ -3258,7 +3258,7 @@ const Room: React.FC<RoomProps> = ({
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
 
         // stepCeiling 단내림 관련 변수
-        const hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+        const hasRightStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
         const stepDropHeightR = hasRightStepCeiling ? (spaceInfo.stepCeiling!.dropHeight || 200) : 0;
         const stepDropHR = mmToThreeUnits(stepDropHeightR);
 
@@ -3738,7 +3738,7 @@ const Room: React.FC<RoomProps> = ({
                 // 바닥배치: 전체높이 - 바닥마감재
                 // 띄워서배치: 전체높이 - 바닥마감재 - 띄움높이
                 // 단내림이 왼쪽에 있으면 서라운드 높이를 단내림 천장에 맞춤
-                const _hasLeftStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+                const _hasLeftStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
                 const leftStepDropH = _hasLeftStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
                 const surrH = _hasLeftStepCeiling ? adjustedPanelHeight - leftStepDropH : adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
@@ -3795,7 +3795,7 @@ const Room: React.FC<RoomProps> = ({
                 const frontZ = surroundZPosition + rightZOffset;
                 // 서라운드 높이 = 가구 배치공간 높이 (바닥마감재/띄움높이 반영)
                 // 단내림이 오른쪽에 있으면 서라운드 높이를 단내림 천장에 맞춤
-                const _hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+                const _hasRightStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
                 const rightStepDropH = _hasRightStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
                 const surrH = _hasRightStepCeiling ? adjustedPanelHeight - rightStepDropH : adjustedPanelHeight;
                 const surrCenterY = sideFrameStartY + surrH / 2;
@@ -4703,8 +4703,8 @@ const Room: React.FC<RoomProps> = ({
               );
             }
 
-            // stepCeiling: 왼쪽이 단내림 영역인 경우 (자유배치)
-            const hasLeftStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
+            // stepCeiling: 왼쪽이 단내림 영역인 경우 (자유배치 전용)
+            const hasLeftStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
             if (hasLeftStepCeiling) {
               const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
               const droppedH = adjustedPanelHeight - stepDropH;
@@ -4877,8 +4877,8 @@ const Room: React.FC<RoomProps> = ({
               );
             }
 
-            // stepCeiling: 오른쪽이 단내림 영역인 경우 (자유배치, 커튼박스 없음)
-            const hasRightStepCeiling = spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
+            // stepCeiling: 오른쪽이 단내림 영역인 경우 (자유배치 전용)
+            const hasRightStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
             if (hasRightStepCeiling) {
               const stepDropH = mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200);
               const droppedH = adjustedPanelHeight - stepDropH;
