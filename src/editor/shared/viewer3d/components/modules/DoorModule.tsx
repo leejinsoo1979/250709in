@@ -1617,6 +1617,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   </>
                 );
               })()}
+
+              {/* 3D 왼쪽 도어 폭 치수 — 도어 하단에 표시 */}
+              {viewMode === '3D' && (
+                <DimensionText
+                  name="door-dimension-text-3d"
+                  value={leftDoorWidth}
+                  position={[0, -doorHeight / 2 - mmToThreeUnits(40), doorThicknessUnits / 2 + 0.01]}
+                  anchorX="center"
+                  anchorY="top"
+                  forceShow={true}
+                />
+              )}
             </group>
           </animated.group>
         </group>
@@ -2001,6 +2013,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   </>
                 );
               })()}
+
+              {/* 3D 오른쪽 도어 폭 치수 — 도어 하단에 표시 */}
+              {viewMode === '3D' && (
+                <DimensionText
+                  name="door-dimension-text-3d"
+                  value={rightDoorWidth}
+                  position={[0, -doorHeight / 2 - mmToThreeUnits(40), doorThicknessUnits / 2 + 0.01]}
+                  anchorX="center"
+                  anchorY="top"
+                  forceShow={true}
+                />
+              )}
             </group>
           </animated.group>
         </group>
@@ -2549,6 +2573,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               );
             })()}
+
+            {/* 3D 도어 폭 치수 — 도어 하단에 표시 */}
+            {viewMode === '3D' && (
+              <DimensionText
+                name="door-dimension-text-3d"
+                value={doorWidth}
+                position={[0, -doorHeight / 2 - mmToThreeUnits(40), doorThicknessUnits / 2 + 0.01]}
+                anchorX="center"
+                anchorY="top"
+                forceShow={true}
+              />
+            )}
           </group>
         </animated.group>
       </group>
