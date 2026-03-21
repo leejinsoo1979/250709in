@@ -1021,7 +1021,9 @@ export class ColumnIndexer {
     // 각 구간의 외부 너비 (프레임 제외 전)
     // 커튼박스는 항상 가장 바깥쪽 (단내림과 같은 쪽, 벽 쪽)
     // 레이아웃: [메인] | [단내림] | [커튼박스] (우측인 경우)
-    // 커튼박스 너비는 전체에서 별도 차감 (메인 = total - dropped - curtainBox)
+    // 커튼박스는 단내림과 별도 구간 — 메인에서 차감
+    // 레이아웃: [메인] | [단내림] | [커튼박스] (우측인 경우)
+    // 메인 = total - droppedWidth - curtainBoxWidth, 단내림 = droppedWidth (가구영역 유지)
     const curtainBoxSameSide = hasCurtainBox; // 커튼박스는 항상 단내림과 같은 쪽
     const cbDeduction = curtainBoxSameSide ? curtainBoxWidth : 0;
     const normalAreaOuterWidth = totalWidth - droppedWidth - cbDeduction;

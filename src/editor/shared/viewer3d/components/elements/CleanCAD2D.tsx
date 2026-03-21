@@ -4574,24 +4574,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
             
             // 프레임을 포함한 전체 좌표 계산
-            const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
+            // 슬롯배치 커튼박스: 메인에서 커튼박스 폭 추가 차감
+            const cbWidthMm = (!isFreePlacement && spaceInfo.curtainBox?.enabled) ? (spaceInfo.curtainBox.width || 150) : 0;
+            const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width - cbWidthMm;
             const droppedWidth = spaceInfo.droppedCeiling.width;
-            
-            // 메인 구간 치수선
-            const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
-              ? spaceXOffset + mmToThreeUnits(droppedWidth)
+
+            // 메인 구간 치수선 — 커튼박스는 단내림 바깥쪽(벽쪽)
+            // 좌단내림: [CB][단내림][메인], 우단내림: [메인][단내림][CB]
+            const mainStartX = spaceInfo.droppedCeiling.position === 'left'
+              ? spaceXOffset + mmToThreeUnits(cbWidthMm + droppedWidth)
               : spaceXOffset;
             const mainEndX = spaceInfo.droppedCeiling.position === 'left'
               ? spaceXOffset + spaceWidth
               : spaceXOffset + mmToThreeUnits(mainWidth);
-            
+
             // 단내림 구간 치수선
             const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-              ? spaceXOffset
+              ? spaceXOffset + mmToThreeUnits(cbWidthMm)
               : spaceXOffset + mmToThreeUnits(mainWidth);
             const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? spaceXOffset + mmToThreeUnits(droppedWidth)
-              : spaceXOffset + spaceWidth;
+              ? spaceXOffset + mmToThreeUnits(cbWidthMm + droppedWidth)
+              : spaceXOffset + mmToThreeUnits(mainWidth + droppedWidth);
             
             return (
               <>
@@ -5411,22 +5414,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const normalBounds = getNormalZoneBounds(spaceInfo);
               const droppedBounds = getDroppedZoneBounds(spaceInfo);
               const subDimensionY = actualSpaceHeight + mmToThreeUnits(50); // 전체 폭 치수선 아래
-              
-              // 메인 구간 치수선 (좌측뷰에서는 좌우가 반대)
-              const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
-                ? -actualSpaceWidth/2 + mmToThreeUnits(droppedBounds.width)
+
+              // 슬롯배치 커튼박스 폭 — 단내림 바깥쪽(벽쪽)에 위치
+              const cbW = (!isFreePlacement && spaceInfo.curtainBox?.enabled) ? (spaceInfo.curtainBox.width || 150) : 0;
+              const mainW = spaceInfo.width - spaceInfo.droppedCeiling.width - cbW;
+              const droppedW = spaceInfo.droppedCeiling.width;
+
+              // 메인 구간 치수선 — [CB][단내림][메인] 또는 [메인][단내림][CB]
+              const mainStartX = spaceInfo.droppedCeiling.position === 'left'
+                ? -actualSpaceWidth/2 + mmToThreeUnits(cbW + droppedW)
                 : -actualSpaceWidth/2;
               const mainEndX = spaceInfo.droppedCeiling.position === 'left'
                 ? actualSpaceWidth/2
-                : -actualSpaceWidth/2 + mmToThreeUnits(normalBounds.width);
-              
+                : -actualSpaceWidth/2 + mmToThreeUnits(mainW);
+
               // 단내림 구간 치수선
               const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-                ? -actualSpaceWidth/2
-                : -actualSpaceWidth/2 + mmToThreeUnits(normalBounds.width);
+                ? -actualSpaceWidth/2 + mmToThreeUnits(cbW)
+                : -actualSpaceWidth/2 + mmToThreeUnits(mainW);
               const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-                ? -actualSpaceWidth/2 + mmToThreeUnits(droppedBounds.width)
-                : actualSpaceWidth/2;
+                ? -actualSpaceWidth/2 + mmToThreeUnits(cbW + droppedW)
+                : -actualSpaceWidth/2 + mmToThreeUnits(mainW + droppedW);
               
               return (
                 <>
@@ -5457,9 +5465,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(spaceInfo.width - spaceInfo.droppedCeiling.width)}
+                    {Math.round(mainW)}
                   </Text>
-                  
+
                   {/* 단내림 구간 치수선 */}
                   <Line
                     points={[[droppedStartX, subDimensionY, 0], [droppedEndX, subDimensionY, 0]]}
@@ -5487,7 +5495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {Math.round(spaceInfo.droppedCeiling.width)}
+                    {Math.round(droppedW)}
                   </Text>
                   
                   {/* 구간 분리 가이드라인 */}
@@ -6637,24 +6645,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 프레임을 포함한 전체 좌표 계산
-              const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
+              // 슬롯배치 커튼박스: 메인에서 커튼박스 폭 추가 차감
+              const cbWidthMm3d = (!isFreePlacement && spaceInfo.curtainBox?.enabled) ? (spaceInfo.curtainBox.width || 150) : 0;
+              const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width - cbWidthMm3d;
               const droppedWidth = spaceInfo.droppedCeiling.width;
-              
-              // 메인 구간 치수선
-              const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
-                ? spaceXOffset + mmToThreeUnits(droppedWidth)
+
+              // 메인 구간 치수선 — [CB][단내림][메인] 또는 [메인][단내림][CB]
+              const mainStartX = spaceInfo.droppedCeiling.position === 'left'
+                ? spaceXOffset + mmToThreeUnits(cbWidthMm3d + droppedWidth)
                 : spaceXOffset;
               const mainEndX = spaceInfo.droppedCeiling.position === 'left'
                 ? spaceXOffset + spaceWidth
                 : spaceXOffset + mmToThreeUnits(mainWidth);
-              
+
               // 단내림 구간 치수선
               const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-                ? spaceXOffset
+                ? spaceXOffset + mmToThreeUnits(cbWidthMm3d)
                 : spaceXOffset + mmToThreeUnits(mainWidth);
               const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-                ? spaceXOffset + mmToThreeUnits(droppedWidth)
-                : spaceXOffset + spaceWidth;
+                ? spaceXOffset + mmToThreeUnits(cbWidthMm3d + droppedWidth)
+                : spaceXOffset + mmToThreeUnits(mainWidth + droppedWidth);
               
               return (
                 <>
