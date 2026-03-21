@@ -2202,12 +2202,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 메인 구간 실배치 연장선 */}
                 <Line
-                  points={[[msx, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [msx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[msx, spaceHeight, 0.001], [msx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[mex, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [mex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[mex, spaceHeight, 0.001], [mex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
@@ -2248,12 +2248,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 단내림 구간 실배치 연장선 */}
                 <Line
-                  points={[[scPlacStartX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scPlacStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[scPlacStartX, spaceHeight, 0.001], [scPlacStartX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[scPlacEndX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [scPlacEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[scPlacEndX, spaceHeight, 0.001], [scPlacEndX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
@@ -2305,12 +2305,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 프레임 연장선 */}
                 <Line
-                  points={[[frameLX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [frameLX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[frameLX, spaceHeight, 0.001], [frameLX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[frameRX, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [frameRX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[frameRX, spaceHeight, 0.001], [frameRX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
@@ -2354,12 +2354,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 커튼박스 구간 실배치 연장선 */}
                 <Line
-                  points={[[dsx, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [dsx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[dsx, spaceHeight, 0.001], [dsx, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <Line
-                  points={[[dex, slotTotalDimensionY - mmToThreeUnits(40), 0.001], [dex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
+                  points={[[dex, spaceHeight, 0.001], [dex, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
