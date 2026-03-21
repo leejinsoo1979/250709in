@@ -1336,6 +1336,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalTop = spaceInfo.frameSize?.top ?? 30;
               const globalBase = spaceInfo.baseConfig?.height ?? 65;
               const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
+              const indexing = calculateSpaceIndexing(spaceInfo);
+              const slotColWidth = indexing.columnWidth || 0;
 
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
@@ -1429,7 +1431,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {
                     topNum++;
-                    const modWidthMM = mod.freeWidth || mod.customWidth || mod.adjustedWidth || mod.moduleWidth || (() => { const m = mod.moduleId?.match(/-(\d{3,})(?:$|-)/); return m ? parseInt(m[1], 10) : 0; })();
+                    const modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
                     return (
                       <FrameRow key={`top-${mod.id}`}
                         label={`${toAlpha(topNum)}(상)`}
@@ -1453,7 +1455,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
                     const baseEnabled = mod.hasBase !== false;
-                    const baseModWidthMM = mod.freeWidth || mod.customWidth || mod.adjustedWidth || mod.moduleWidth || (() => { const m = mod.moduleId?.match(/-(\d{3,})(?:$|-)/); return m ? parseInt(m[1], 10) : 0; })();
+                    const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
