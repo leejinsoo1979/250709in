@@ -2457,7 +2457,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
                 {(() => {
                   const middleGapMm = spaceInfo.gapConfig?.middle ?? 1.5;
-                  const boundaryGapY = slotTotalDimensionY;
+                  const boundaryGapY = slotDimensionY;
 
                   // 경계면 이격 목록 생성
                   // getInternalSpaceBoundsX의 gap 적용과 동일한 로직:
