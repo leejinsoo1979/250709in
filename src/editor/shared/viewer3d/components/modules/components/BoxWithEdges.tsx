@@ -309,17 +309,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
 
-  // renderOrder < 0 (CB 프레임 등 맨 뒤): depthTest=false + depthWrite=false
-  // → 먼저 그려지고, 단내림 천장(renderOrder=1)이 나중에 덮어씌움
-  const finalMaterial = React.useMemo(() => {
-    if (renderOrder !== undefined && renderOrder < 0 && panelSpecificMaterial instanceof THREE.Material) {
-      const cloned = panelSpecificMaterial.clone();
-      cloned.depthTest = false;
-      cloned.depthWrite = false;
-      return cloned;
-    }
-    return panelSpecificMaterial;
-  }, [panelSpecificMaterial, renderOrder]);
+  const finalMaterial = panelSpecificMaterial;
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 

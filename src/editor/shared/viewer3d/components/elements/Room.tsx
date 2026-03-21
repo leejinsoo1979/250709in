@@ -1125,8 +1125,9 @@ const Room: React.FC<RoomProps> = ({
       'gl_FragColor = vec4(color, 1.0);'
     );
     mat.transparent = false;
-    mat.depthWrite = true;
+    mat.depthWrite = false;
     mat.depthTest = true;
+    mat.depthFunc = THREE.AlwaysDepth;
     mat.polygonOffset = true;
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;
@@ -3992,13 +3993,13 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
                 {/* 경계면 칸막이 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-1} />
               </group>
             );
           })()}
