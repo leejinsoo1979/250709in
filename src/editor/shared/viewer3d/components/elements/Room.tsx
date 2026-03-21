@@ -1085,9 +1085,20 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 단내림 천장을 위한 불투명 material (그라데이션 유지, 투명도 제거)
-  // depthTest=false: 커튼박스 프레임보다 앞에 렌더링되도록
+  // 커튼박스 영역 천장 material (depthTest=false: 커튼박스 프레임보다 앞에 렌더링)
   const opaqueTopWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
+    mat.transparent = false;
+    mat.depthWrite = false;
+    mat.depthTest = false;
+    return mat;
+  }, []);
+
+  // 단내림 영역 천장 material (커튼박스 천장보다 앞에 렌더링 — renderOrder로 제어)
+  const stepCeilingMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
@@ -1591,14 +1602,14 @@ const Room: React.FC<RoomProps> = ({
 
               return renderMode === 'solid' ? (
                 <>
-                  {/* 단내림 영역 천장 (낮은 높이) */}
+                  {/* 단내림 영역 천장 (낮은 높이) — 커튼박스 천장보다 앞에 렌더링 */}
                   <mesh
                     position={[stepAreaX, stepCeilingY, extendedZOffset + extendedPanelDepth / 2]}
                     rotation={[Math.PI / 2, 0, 0]}
-                    renderOrder={2}
+                    renderOrder={3}
                   >
                     <planeGeometry args={[stepAreaWidth, extendedPanelDepth]} />
-                    <primitive object={opaqueTopWallMaterial} />
+                    <primitive object={stepCeilingMaterial} />
                   </mesh>
                   {/* 메인 영역 천장 */}
                   <mesh
@@ -1799,14 +1810,14 @@ const Room: React.FC<RoomProps> = ({
 
                 {hasStepCeiling ? (
                   <>
-                    {/* 단내림 영역 천장 (낮은 높이) */}
+                    {/* 단내림 영역 천장 (낮은 높이) — 커튼박스 천장보다 앞에 렌더링 */}
                     <mesh
                       position={[stepAreaX2, stepCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
                       rotation={[Math.PI / 2, 0, 0]}
-                      renderOrder={2}
+                      renderOrder={3}
                     >
                       <planeGeometry args={[scWidth, extendedPanelDepth]} />
-                      <primitive object={opaqueTopWallMaterial} />
+                      <primitive object={stepCeilingMaterial} />
                     </mesh>
                     {/* 메인 영역 천장 */}
                     <mesh
