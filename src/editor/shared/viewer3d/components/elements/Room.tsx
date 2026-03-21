@@ -1085,46 +1085,36 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthTest=false, alpha 강제 1.0)
+  // 커튼박스 영역 천장 material
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
-    mat.fragmentShader = mat.fragmentShader.replace(
-      'gl_FragColor = vec4(color, opacity);',
-      'gl_FragColor = vec4(color, 1.0);'
-    );
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
-    mat.needsUpdate = true;
+    mat.depthWrite = true;
     return mat;
   }, []);
 
-  // 단내림 영역 천장 material (커튼박스 천장보다 앞 — renderOrder=11, alpha 강제 1.0)
+  // 단내림 영역 천장 material
   const stepCeilingMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
-    // 셰이더 fragmentShader에서 opacity → 1.0 강제 (alpha 채널 완전 불투명)
-    mat.fragmentShader = mat.fragmentShader.replace(
-      'gl_FragColor = vec4(color, opacity);',
-      'gl_FragColor = vec4(color, 1.0);'
-    );
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
-    mat.needsUpdate = true;
+    mat.depthWrite = true;
     return mat;
   }, []);
 
-  // 천장 구간 경계벽 material (depthTest=false, alpha 강제 1.0)
+  // 천장 구간 경계벽 material
   const ceilingBoundaryWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
-    mat.fragmentShader = mat.fragmentShader.replace(
-      'gl_FragColor = vec4(color, opacity);',
-      'gl_FragColor = vec4(color, 1.0);'
-    );
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
     mat.transparent = false;
-    mat.depthWrite = false;
-    mat.depthTest = false;
-    mat.needsUpdate = true;
+    mat.depthWrite = true;
     return mat;
   }, []);
 
