@@ -309,6 +309,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
 
+  // renderOrder가 음수(천장 뒤)면 depthWrite=false로 clone → 천장이 위에 그려짐
+  const finalMaterial = React.useMemo(() => {
+    if (renderOrder !== undefined && renderOrder < 0 && panelSpecificMaterial instanceof THREE.Material) {
+      const cloned = panelSpecificMaterial.clone();
+      cloned.depthWrite = false;
+      return cloned;
+    }
+    return panelSpecificMaterial;
+  }, [panelSpecificMaterial, renderOrder]);
+
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
   // 테마 색상 매핑
@@ -573,8 +583,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ) : (
           // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
           <primitive
-            key={`${panelSpecificMaterial.uuid}-${viewMode}-${renderMode}`}
-            object={panelSpecificMaterial}
+            key={`${finalMaterial.uuid}-${viewMode}-${renderMode}-${renderOrder}`}
+            object={finalMaterial}
             attach="material"
           />
         )}
