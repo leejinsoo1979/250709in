@@ -207,19 +207,51 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
   
-  // 도어 색상 밝기 기반 대각선 점선 색상 결정
+  // 도어 색상/텍스처 밝기 기반 대각선 점선 색상 결정
   // 어두운 도어 → 흰색 점선, 밝은 도어 → 테마색 점선
-  const doorDiagonalColor = React.useMemo(() => {
+  const doorTextureUrl = materialConfig.doorTexture || undefined;
+
+  // hex 색상 기반 밝기 (텍스처 없을 때 사용)
+  const colorLuminance = React.useMemo(() => {
     const hex = typeof doorColor === 'string' ? doorColor : '#E0E0E0';
     const match = hex.match(/^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/);
-    if (!match) return '#FFFFFF';
+    if (!match) return 0.8;
     const r = parseInt(match[1], 16) / 255;
     const g = parseInt(match[2], 16) / 255;
     const b = parseInt(match[3], 16) / 255;
-    // relative luminance (ITU-R BT.709)
-    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    return luminance < 0.5 ? '#FFFFFF' : 'THEME';
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }, [doorColor]);
+
+  // 텍스처 이미지 평균 밝기 계산
+  const [textureLuminance, setTextureLuminance] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (!doorTextureUrl) {
+      setTextureLuminance(null);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 32; // 작은 크기로 샘플링 (성능)
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+      let totalLum = 0;
+      const pixelCount = size * size;
+      for (let i = 0; i < data.length; i += 4) {
+        totalLum += 0.2126 * (data[i] / 255) + 0.7152 * (data[i + 1] / 255) + 0.0722 * (data[i + 2] / 255);
+      }
+      setTextureLuminance(totalLum / pixelCount);
+    };
+    img.src = doorTextureUrl;
+  }, [doorTextureUrl]);
+
+  const isDoorDark = (textureLuminance !== null ? textureLuminance : colorLuminance) < 0.5;
 
   // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
   const { theme } = useViewerTheme();
@@ -236,7 +268,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   };
 
   // 3D 뷰 대각선 점선 색상: 도어 밝기에 따라 결정
-  const diagonalLineColor3D = doorDiagonalColor === 'THEME' ? getThemeColor() : '#FFFFFF';
+  const diagonalLineColor3D = isDoorDark ? '#FFFFFF' : getThemeColor();
   // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 초기 생성용
   const createDoorMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
