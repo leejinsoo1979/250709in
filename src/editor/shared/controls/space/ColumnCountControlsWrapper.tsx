@@ -1,6 +1,7 @@
 import React from 'react';
 import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import ColumnCountControls from '../customization/components/ColumnCountControls';
 
 interface ColumnCountControlsWrapperProps {
@@ -52,26 +53,28 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
   // 소수점 1자리까지 정확히 계산
   const currentColumnWidth = Math.round((internalWidth / columnCount) * 10) / 10;
   
+  const { placedModules, clearAllModules } = useFurnitureStore();
+
+  // 슬롯 배치 가구(비자유배치)가 있는지 확인
+  const hasSlotPlacedFurniture = placedModules.some(m => !m.isFreePlacement);
+
   const handleColumnCountChange = (newCount: number) => {
-    console.log('🎯 handleColumnCountChange 호출:', {
-      newCount,
-      zone,
-      currentMainDoorCount: spaceInfo.mainDoorCount,
-      currentCustomColumnCount: spaceInfo.customColumnCount
-    });
-    
     if (zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
       // 단내림 구간 도어 개수 변경
       onUpdate({ droppedCeilingDoorCount: newCount });
     } else {
-      // 메인 구간 - 항상 customColumnCount 업데이트 (mainDoorCount는 undefined로 유지)
-      const updates: Partial<SpaceInfo> = { 
+      // 슬롯 배치 가구가 있으면 확인 팝업
+      if (hasSlotPlacedFurniture) {
+        if (!window.confirm('슬롯 수를 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) {
+          return;
+        }
+        clearAllModules();
+      }
+
+      const updates: Partial<SpaceInfo> = {
         customColumnCount: newCount,
-        mainDoorCount: undefined  // mainDoorCount는 항상 undefined로 설정하여 자동 계산 비활성화
+        mainDoorCount: undefined,
       };
-      
-      // 노서라운드 빌트인 모드에서는 스토어의 adjustForIntegerSlotWidth가 자동으로 이격거리 조정
-      
       onUpdate(updates);
     }
   };
@@ -81,10 +84,15 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
       // 단내림 구간은 리셋 시 최소값(1)으로
       onUpdate({ droppedCeilingDoorCount: 1 });
     } else {
-      // 메인 구간은 자동 모드로 - mainDoorCount와 customColumnCount 모두 undefined로
-      onUpdate({ 
+      if (hasSlotPlacedFurniture) {
+        if (!window.confirm('슬롯 수를 초기화하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) {
+          return;
+        }
+        clearAllModules();
+      }
+      onUpdate({
         mainDoorCount: undefined,
-        customColumnCount: undefined 
+        customColumnCount: undefined
       });
     }
   };
