@@ -803,7 +803,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
-              panelName="상판"
+              panelName={panelName}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
@@ -888,7 +888,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
-              panelName="바닥판"
+              panelName={panelName}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
