@@ -397,6 +397,13 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
     // 서라운드: 프레임 두께를 고려한 너비 계산
     const frameThickness = calculateFrameThickness(spaceInfo);
     baseWidthMm = spaceInfo.width - frameThickness.leftMm - frameThickness.rightMm;
+
+    // 슬롯배치 커튼박스: CB 구간 너비도 제외 (CB쪽 프레임이 0이라서 기본 계산으로 부족)
+    const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+    const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+    if (hasCurtainBox) {
+      baseWidthMm -= (spaceInfo.curtainBox!.width || 150);
+    }
   }
   
   return {

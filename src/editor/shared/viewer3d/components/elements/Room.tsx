@@ -1294,19 +1294,13 @@ const Room: React.FC<RoomProps> = ({
   return (
     <group position={[0, 0, groupZOffset]}>
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
-      {console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode)}
+      {/* console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode) */}
       {viewMode !== '2D' && cameraMode === 'perspective' && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
           {/* 3D orthographic 모드에서 카메라 각도에 따라 숨김 */}
-          {console.log('🔍 왼쪽 벽 installType 체크:', {
-            installType: spaceInfo.installType,
-            wallConfig,
-            wallConfigLeft: wallConfig?.left,
-            condition: (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
-              (spaceInfo.installType === 'semistanding' && wallConfig?.left))
-          })}
+          {/* console.log('🔍 왼쪽 벽 installType 체크:', { ... }) */}
           {/* 2D 측면뷰(좌/우)에서는 좌우벽 숨김 */}
           {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
             (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
@@ -2165,12 +2159,7 @@ const Room: React.FC<RoomProps> = ({
           }, [])}
 
           {/* 뒤쪽 외부 벽면 */}
-          {console.log('🔍 백패널 렌더링 조건:', {
-            viewMode,
-            view2DDirection,
-            is2DFront: viewMode === '2D' && view2DDirection === 'front',
-            position: [xOffset + width / 2, panelStartY + height / 2, zOffset - 0.01]
-          })}
+          {/* console.log('🔍 백패널 렌더링 조건:', { ... }) */}
           {false ? (
             // 사용하지 않음
             (() => {
@@ -2822,13 +2811,7 @@ const Room: React.FC<RoomProps> = ({
       })()}
 
       {/* 프레임 렌더링 디버그 */}
-      {spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && console.log('🔍 프레임 렌더링 체크:', {
-        showFrame,
-        frameThicknessLeft: frameThickness.left,
-        frameThicknessRight: frameThickness.right,
-        leftCondition: showFrame && frameThickness.left > 0,
-        rightCondition: showFrame && frameThickness.right > 0
-      })}
+      {/* spaceInfo.surroundType === 'no-surround' && ... console.log('🔍 프레임 렌더링 체크:', { ... }) */}
 
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {(() => {
@@ -2855,22 +2838,7 @@ const Room: React.FC<RoomProps> = ({
 
         return null;
       })()}
-      {console.log('🚨 왼쪽 엔드패널 렌더링 직전 체크:', {
-        frameThicknessLeft: frameThickness.left,
-        frameThicknessLeftMm: frameThicknessMm.left,
-        'frameThickness.left > 0': frameThickness.left > 0,
-        showFrame,
-        effectiveShowFrame,
-        isFreePlacement,
-        surroundType: spaceInfo.surroundType,
-        installType: spaceInfo.installType,
-        hasLeftFurniture,
-        hasRightFurniture,
-        stepCeilingEnabled: spaceInfo.stepCeiling?.enabled,
-        stepCeilingPosition: spaceInfo.stepCeiling?.position,
-        stepCeilingDropHeight: spaceInfo.stepCeiling?.dropHeight,
-        '전체조건': effectiveShowFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasLeftFurniture),
-      })}
+      {/* console.log('🚨 왼쪽 엔드패널 렌더링 직전 체크:', { ... }) */}
       {effectiveShowFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasLeftFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
 // console.log('🔥🔥🔥 [좌측 프레임/엔드패널 메인 렌더링 블록]', {
           // surroundType: spaceInfo.surroundType,
