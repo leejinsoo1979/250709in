@@ -1215,9 +1215,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 슬롯배치: 단내림이 아래로 축소 (normalHeight=totalHeight-droppedHeight, 해칭은 normalHeight~totalHeight)
         const normalHeight = isFreePlacement ? totalHeight : totalHeight - droppedHeight;
 
+        // 슬롯배치 커튼박스가 같은 쪽에 있으면 해칭 영역을 안쪽으로 이동
+        const hatchCBShift = (!isFreePlacement && spaceInfo.curtainBox?.enabled &&
+          spaceInfo.curtainBox.position === spaceInfo.droppedCeiling.position)
+          ? (spaceInfo.curtainBox.width || 150) : 0;
         const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-          ? leftOffset
-          : leftOffset + mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900)));
+          ? leftOffset + mmToThreeUnits(hatchCBShift)
+          : leftOffset + mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900)) - hatchCBShift);
         const droppedEndX = droppedStartX + droppedWidth;
 
         // 단내림 구간 빗금 해칭 (대각선 패턴)
@@ -1782,9 +1786,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const scWidth = hasSC ? (spaceInfo.stepCeiling!.width || 0) : 0;
             const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
             const scPosition = spaceInfo.stepCeiling?.position || 'right';
+            // 슬롯배치 커튼박스 (droppedCeiling과 독립)
+            const hasCB = !isFreePlacement && !!spaceInfo.curtainBox?.enabled;
+            const cbWidth = hasCB ? (spaceInfo.curtainBox!.width || 150) : 0;
+            const cbPosition = hasCB ? (spaceInfo.curtainBox!.position || 'right') : 'right';
 
-            // 메인 구간 = 전체 - 커튼박스 - 단내림
-            const mainWidth = spaceInfo.width - dcWidth - scWidth;
+            // 메인 구간 = 전체 - 단내림 - 단내림(자유배치) - 커튼박스(슬롯)
+            const mainWidth = spaceInfo.width - dcWidth - scWidth - cbWidth;
             const droppedWidth = dcWidth; // 커튼박스(자유배치) or 단내림(슬롯)
 
             // 슬롯 합계 너비 (실배치 공간)
@@ -1806,11 +1814,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const dcOnRight = hasDC && dcPosition === 'right';
             const scOnLeft = hasSC && scPosition === 'left';
             const scOnRight = hasSC && scPosition === 'right';
+            const cbOnLeft = hasCB && cbPosition === 'left';
+            const cbOnRight = hasCB && cbPosition === 'right';
 
             // 좌측에 쌓이는 구간 너비 합계 (좌→우 순서: 커튼박스 → 단내림)
-            const leftStackWidth = (dcOnLeft ? dcWidth : 0) + (scOnLeft ? scWidth : 0);
+            const leftStackWidth = (cbOnLeft ? cbWidth : 0) + (dcOnLeft ? dcWidth : 0) + (scOnLeft ? scWidth : 0);
             // 우측에 쌓이는 구간 너비 합계 (우→좌 순서: 커튼박스 → 단내림)
-            const rightStackWidth = (dcOnRight ? dcWidth : 0) + (scOnRight ? scWidth : 0);
+            const rightStackWidth = (cbOnRight ? cbWidth : 0) + (dcOnRight ? dcWidth : 0) + (scOnRight ? scWidth : 0);
 
             // 메인 구간: 좌측 스택 뒤 ~ 우측 스택 앞
             const mainStartX = leftOffset + mmToThreeUnits(leftStackWidth);
@@ -1832,18 +1842,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               }
             }
 
-            // 커튼박스(droppedCeiling) 구간 X 좌표
+            // 단내림(droppedCeiling) 구간 X 좌표
             let droppedStartX = mainStartX;
             let droppedEndX = mainStartX;
             if (hasDC) {
               if (dcOnLeft) {
-                droppedStartX = leftOffset;
-                droppedEndX = leftOffset + mmToThreeUnits(dcWidth);
-              } else {
-                // 우측 커튼박스: 단내림 오른쪽 ~ 공간 끝
-                const dcLeftEdge = spaceInfo.width - dcWidth;
+                // 좌측 단내림: CB(좌)가 있으면 CB 오른쪽부터
+                const dcLeftEdge = cbOnLeft ? cbWidth : 0;
                 droppedStartX = leftOffset + mmToThreeUnits(dcLeftEdge);
-                droppedEndX = leftOffset + mmToThreeUnits(spaceInfo.width);
+                droppedEndX = leftOffset + mmToThreeUnits(dcLeftEdge + dcWidth);
+              } else {
+                // 우측 단내림: 메인 끝 ~ CB(우) 왼쪽
+                const dcLeftEdge = spaceInfo.width - dcWidth - (cbOnRight ? cbWidth : 0);
+                droppedStartX = leftOffset + mmToThreeUnits(dcLeftEdge);
+                droppedEndX = leftOffset + mmToThreeUnits(dcLeftEdge + dcWidth);
+              }
+            }
+
+            // 슬롯배치 커튼박스 구간 X 좌표
+            let cbStartX = mainStartX;
+            let cbEndX = mainStartX;
+            if (hasCB) {
+              if (cbOnLeft) {
+                cbStartX = leftOffset;
+                cbEndX = leftOffset + mmToThreeUnits(cbWidth);
+              } else {
+                // 우측 커튼박스: 가장 오른쪽 (벽 바로 안쪽)
+                cbStartX = leftOffset + mmToThreeUnits(spaceInfo.width - cbWidth);
+                cbEndX = leftOffset + mmToThreeUnits(spaceInfo.width);
               }
             }
             
@@ -1943,6 +1969,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                   >
                     {Math.round(droppedWidth)}
+                  </Text>
+                )}
+                </>)}
+                {/* 슬롯배치 커튼박스 구간 치수선 */}
+                {hasCB && (<>
+                <Line
+                  points={[[cbStartX, subDimensionY, 0.002], [cbEndX, subDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([cbStartX, subDimensionY, 0.002], [cbStartX + 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([cbEndX, subDimensionY, 0.002], [cbEndX - 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[(cbStartX + cbEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                  >
+                    {Math.round(cbWidth)}
                   </Text>
                 )}
                 </>)}
