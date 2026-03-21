@@ -5926,10 +5926,11 @@ const Configurator: React.FC = () => {
                       setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'equal-division' };
-                    // 자유배치→슬롯 전환 시 기존 커튼박스가 켜져 있으면 단내림 기본값으로 변경
+                    // 자유배치→슬롯 전환 시 커튼박스/단내림 초기화
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
-                        ...spaceInfo.droppedCeiling,
+                        enabled: false,
+                        position: 'right',
                         width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
                         dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT,
                       };
@@ -5949,12 +5950,13 @@ const Configurator: React.FC = () => {
                       setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
-                    // 슬롯→자유배치 전환 시 단내림 유지 (커튼박스 기본값으로 변환)
+                    // 슬롯→자유배치 전환 시 단내림/커튼박스 초기화
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
-                        ...spaceInfo.droppedCeiling,
+                        enabled: false,
+                        position: 'right',
                         width: 150,
-                        dropHeight: Math.max(10, 2400 - (spaceInfo.height || 2360)),
+                        dropHeight: 100,
                       };
                     }
                     handleSpaceInfoUpdate(updates);
