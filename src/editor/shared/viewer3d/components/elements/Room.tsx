@@ -1127,6 +1127,7 @@ const Room: React.FC<RoomProps> = ({
     mat.transparent = false;
     mat.depthWrite = true;
     mat.depthTest = true;
+    mat.depthFunc = THREE.AlwaysDepth; // renderOrder=1로 나중에 그려지며 CB프레임을 무조건 덮음
     mat.polygonOffset = true;
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;
