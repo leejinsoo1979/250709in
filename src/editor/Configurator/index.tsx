@@ -3598,7 +3598,7 @@ const Configurator: React.FC = () => {
         </div>
 
         {/* 단내림/커튼박스/stepCeiling이 있을 때 메인 구간 사이즈 표시 */}
-        {(spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled) || (!isFreeMode && spaceInfo.curtainBox?.enabled)) && (
+        {(spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled) || spaceInfo.curtainBox?.enabled) && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
@@ -3608,7 +3608,7 @@ const Configurator: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {/* 좌측 커튼박스 먼저 표시 */}
-            {!isFreeMode && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
+            {spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
               <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
             )}
 
@@ -3623,7 +3623,7 @@ const Configurator: React.FC = () => {
               <div className={styles.inputWithUnit} style={{ width: '80px' }}>
                 <input
                   type="text"
-                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0) - (!isFreeMode && spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0))}
+                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0))}
                   key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0) - (spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 0) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 0) : 0)}`}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
                   onBlur={(e) => {
@@ -3678,8 +3678,8 @@ const Configurator: React.FC = () => {
               <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
             )}
 
-            {/* 슬롯배치 커튼박스 구간 (우측이면 메인 다음에 표시) */}
-            {!isFreeMode && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position !== 'left' && (
+            {/* 커튼박스 구간 (우측이면 메인 다음에 표시) */}
+            {spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position !== 'left' && (
               <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
             )}
 
