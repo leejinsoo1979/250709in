@@ -3624,14 +3624,17 @@ const Configurator: React.FC = () => {
                   onBlur={(e) => {
                     const inputValue = e.target.value;
                     const totalWidth = spaceInfo.width || 4800;
-                    const currentMainOuter = totalWidth - (spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900));
+                    const cbW = spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0;
+                    const scW = isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0;
+                    const currentDroppedW = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
+                    const currentMainOuter = totalWidth - currentDroppedW - cbW - scW;
                     if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = Math.round(currentMainOuter).toString(); return; }
                     const newMainOuter = parseInt(inputValue);
-                    const newDroppedWidth = totalWidth - newMainOuter;
+                    const newDroppedWidth = totalWidth - newMainOuter - cbW - scW;
                     if (newDroppedWidth < 100) {
                       handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
-                    } else if (newDroppedWidth > totalWidth - 100) {
-                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 } });
+                    } else if (newDroppedWidth > totalWidth - 100 - cbW - scW) {
+                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 - cbW - scW } });
                     } else {
                       handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
                     }
