@@ -3967,13 +3967,15 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  renderOrder={-1} />
                 {/* 경계면 칸막이 — 서라운드처럼 1.5mm 줄여서 바깥 정렬, 전면 뒤로 40mm */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  renderOrder={-1} />
               </group>
             );
           })()}
