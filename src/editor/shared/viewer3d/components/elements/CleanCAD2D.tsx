@@ -3325,12 +3325,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {(() => {
           // ── 가구 데이터 수집 (자유배치 + 슬롯배치 공통) ──
           const allMods = placedModules.filter(m => !m.isSurroundPanel);
+          // 단내림 정보 — 모드별 분기 (슬롯: droppedCeiling, 자유배치: stepCeiling)
+          const hasDrop_L = isFreePlacement
+            ? (spaceInfo.stepCeiling?.enabled === true)
+            : (spaceInfo.droppedCeiling?.enabled === true);
+          const isLeftDrop_pre = hasDrop_L && (isFreePlacement
+            ? spaceInfo.stepCeiling!.position === 'left'
+            : spaceInfo.droppedCeiling!.position === 'left');
           // 단내림이 좌측이면 단내림 구간 가구 기준, 아니면 가장 좌측 가구
-          const hasDrop_L = spaceInfo.droppedCeiling?.enabled === true;
-          const isLeftDrop_pre = hasDrop_L && spaceInfo.droppedCeiling!.position === 'left';
           const leftmostMod = (() => {
             if (isLeftDrop_pre) {
-              const droppedMods = allMods.filter(m => m.zone === 'dropped');
+              // 슬롯: zone='dropped', 자유배치: zone='stepCeiling'
+              const dropZoneName = isFreePlacement ? 'stepCeiling' : 'dropped';
+              const droppedMods = allMods.filter(m => m.zone === dropZoneName);
               if (droppedMods.length > 0) return droppedMods.reduce((l, m) => m.position.x < l.position.x ? m : l);
             }
             return allMods.length > 0 ? allMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
@@ -3339,16 +3346,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // ── 공통 변수 ──
           const outerX = leftDimensionX + leftOffset;  // 2단(바깥) X
           const innerX = leftFrameDimensionX + leftOffset;  // 1단(안쪽) X
+          const leftCBOuterX = outerX - mmToThreeUnits(200); // 3단(더 바깥): 커튼박스 높이
           const floorFinishY = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
           const hasFloorFinish = floorFinishHeightMmGlobal > 0;
 
           const floorFinishMidY = floorFinishY / 2;
           const spaceMidY = floorFinishY + (spaceHeight - floorFinishY) / 2;
 
-          // ── 단내림 정보 ──
-          const hasDrop = spaceInfo.droppedCeiling?.enabled === true;
-          const dropHeight = hasDrop ? (spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
-          const isLeftDrop = hasDrop && spaceInfo.droppedCeiling!.position === 'left';
+          // ── 단내림 정보 (hasDrop_L 재사용) ──
+          const hasDrop = hasDrop_L;
+          const dropHeight = hasDrop ? (isFreePlacement
+            ? (spaceInfo.stepCeiling!.dropHeight || 200)
+            : (spaceInfo.droppedCeiling!.dropHeight || 200)) : 0;
+          const isLeftDrop = isLeftDrop_pre;
+
+          // ── 커튼박스 정보 — 모드별 분기 (슬롯: curtainBox, 자유배치: droppedCeiling) ──
+          const hasCB_L = isFreePlacement
+            ? (spaceInfo.droppedCeiling?.enabled === true)
+            : (spaceInfo.curtainBox?.enabled === true);
+          const cbDropH_L = hasCB_L ? (isFreePlacement
+            ? (spaceInfo.droppedCeiling!.dropHeight || 0)
+            : (spaceInfo.curtainBox!.dropHeight || 0)) : 0;
+          const cbTotalH_L = spaceInfo.height + cbDropH_L;
+          // CB가 좌측에 있는지
+          const isCBLeft = hasCB_L && (isFreePlacement
+            ? spaceInfo.droppedCeiling!.position === 'left'
+            : spaceInfo.curtainBox!.position === 'left');
 
           // ── 1단 분해 계산 (가구 유무 무관 — 항상 표시) ──
           const _internalHeight = calculateInternalSpace(spaceInfo).height;
@@ -3435,45 +3458,117 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           return (
             <>
-              {/* ── 2단(바깥): 배치공간 전체 높이 (항상 표시) ── */}
-              <NativeLine name="dimension_line"
-                points={[[outerX, 0, 0.002], [outerX, spaceHeight, 0.002]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={createArrowHead([outerX, 0, 0.002], [outerX, 0.05, 0.002])}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={createArrowHead([outerX, spaceHeight, 0.002], [outerX, spaceHeight - 0.05, 0.002])}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              {/* 바닥마감재 구분 틱 & 치수 */}
-              {hasFloorFinish && (
-                <>
+              {/* ── 2단(바깥): 공간 전체 높이 (단내림 기둥 구분 포함) ── */}
+              {(() => {
+                const spaceHeightMm = spaceInfo.height;
+                const spaceTopY = mmToThreeUnits(spaceHeightMm);
+                // 단내림 기둥 높이 분리 표시 여부
+                const showDropTick = isLeftDrop && dropHeight > 0;
+                const dropBoundaryY = showDropTick ? mmToThreeUnits(spaceHeightMm - dropHeight) : spaceTopY;
+                // 아래쪽(단내림 구간 높이) 중간Y
+                const lowerMidY = floorFinishY + (dropBoundaryY - floorFinishY) / 2;
+                // 위쪽(기둥 높이) 중간Y
+                const upperMidY = (dropBoundaryY + spaceTopY) / 2;
+
+                return (<>
+                  {/* 세로 메인 라인: 0 ~ spaceHeight */}
                   <NativeLine name="dimension_line"
-                    points={[[outerX - mmToThreeUnits(30), floorFinishY, 0.002], [outerX + mmToThreeUnits(30), floorFinishY, 0.002]]}
+                    points={[[outerX, 0, 0.002], [outerX, spaceTopY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([outerX, 0, 0.002], [outerX, 0.05, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([outerX, spaceTopY, 0.002], [outerX, spaceTopY - 0.05, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 바닥마감재 구분 틱 & 치수 */}
+                  {hasFloorFinish && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[outerX - mmToThreeUnits(30), floorFinishY, 0.002], [outerX + mmToThreeUnits(30), floorFinishY, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[outerX - mmToThreeUnits(10), floorFinishMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {floorFinishHeightMmGlobal}
+                      </Text>
+                    </>
+                  )}
+                  {/* 단내림 경계 구분 틱 & 기둥 높이 */}
+                  {showDropTick && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[outerX - mmToThreeUnits(30), dropBoundaryY, 0.002], [outerX + mmToThreeUnits(30), dropBoundaryY, 0.002]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+                      {/* 단내림 구간 높이 (아래쪽) */}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[outerX - mmToThreeUnits(10), lowerMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {spaceHeightMm - dropHeight - floorFinishHeightMmGlobal}
+                      </Text>
+                      {/* 기둥 높이 (위쪽) */}
+                      <Text renderOrder={1000} depthTest={false}
+                        position={[outerX - mmToThreeUnits(10), upperMidY, 0.01]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {dropHeight}
+                      </Text>
+                    </>
+                  )}
+                  {/* 단내림 없을 때 전체 높이 텍스트 */}
+                  {!showDropTick && (
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[outerX - mmToThreeUnits(10), floorFinishY + (spaceTopY - floorFinishY) / 2, 0.01]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="right" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {spaceHeightMm - floorFinishHeightMmGlobal}
+                    </Text>
+                  )}
+                </>);
+              })()}
+
+              {/* ── 3단(더 바깥): 커튼박스 전체 높이 (CB가 좌측일 때만) ── */}
+              {isCBLeft && (() => {
+                const cbHeightY = mmToThreeUnits(cbTotalH_L);
+                const cbMidY = cbHeightY / 2;
+                return (<>
+                  <NativeLine name="dimension_line"
+                    points={[[leftCBOuterX, 0, 0.002], [leftCBOuterX, cbHeightY, 0.002]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftCBOuterX, 0, 0.002], [leftCBOuterX, 0.05, 0.002])}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([leftCBOuterX, cbHeightY, 0.002], [leftCBOuterX, cbHeightY - 0.05, 0.002])}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <Text renderOrder={1000} depthTest={false}
-                    position={[outerX - mmToThreeUnits(10), floorFinishMidY, 0.01]}
+                    position={[leftCBOuterX - mmToThreeUnits(10), cbMidY, 0.01]}
                     fontSize={largeFontSize} color={textColor}
                     anchorX="right" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {floorFinishHeightMmGlobal}
+                    {cbTotalH_L}
                   </Text>
-                </>
-              )}
-              {/* 공간 높이 텍스트 */}
-              <Text renderOrder={1000} depthTest={false}
-                position={[outerX - mmToThreeUnits(10), spaceMidY, 0.01]}
-                fontSize={largeFontSize} color={textColor}
-                anchorX="right" anchorY="middle"
-                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-              >
-                {spaceInfo.height - floorFinishHeightMmGlobal}
-              </Text>
+                </>);
+              })()}
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
               {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
@@ -3576,29 +3671,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
-
               {/* ── 연장선: 각 경계점에서 수평선 ── */}
-              {/* 바닥(Y=0) */}
+              {/* 바닥(Y=0) — 커튼박스 있으면 3단까지 연장 */}
               <NativeLine name="dimension_line"
-                points={[[leftOffset, 0, 0.001], [outerX - mmToThreeUnits(20), 0, 0.001]]}
+                points={[[(isCBLeft ? leftCBOuterX : outerX) - mmToThreeUnits(20), 0, 0.001], [leftOffset, 0, 0.001]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 천장(spaceHeight) */}
+              {/* 단내림 천장 연장선 (단내림이 좌측에 있을 때) */}
+              {isLeftDrop && dropHeight > 0 && (
+                <NativeLine name="dimension_line"
+                  points={[[outerX - mmToThreeUnits(20), effectiveCeilingY, 0.001], [leftOffset, effectiveCeilingY, 0.001]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+              )}
+              {/* 공간 천장(spaceHeight) 연장선 — 커튼박스 있으면 3단까지 */}
               <NativeLine name="dimension_line"
-                points={[[leftOffset, spaceHeight, 0.001], [outerX - mmToThreeUnits(20), spaceHeight, 0.001]]}
+                points={[[(isCBLeft ? leftCBOuterX : outerX) - mmToThreeUnits(20), spaceHeight, 0.001], [leftOffset, spaceHeight, 0.001]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
+              {/* 커튼박스 천장 연장선 */}
+              {isCBLeft && (
+                <NativeLine name="dimension_line"
+                  points={[[leftCBOuterX - mmToThreeUnits(20), mmToThreeUnits(cbTotalH_L), 0.001], [leftOffset, mmToThreeUnits(cbTotalH_L), 0.001]]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+              )}
               {/* 받침대 상단 */}
               {bottomFrameH > 0 && (
                 <NativeLine name="dimension_line"
-                  points={[[leftOffset, bottomFrameTopY, 0.001], [innerX - mmToThreeUnits(20), bottomFrameTopY, 0.001]]}
+                  points={[[innerX - mmToThreeUnits(20), bottomFrameTopY, 0.001], [leftOffset, bottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
               )}
               {/* 가구(내경) 상단 */}
               <NativeLine name="dimension_line"
-                points={[[leftOffset, furnitureTopY, 0.001], [innerX - mmToThreeUnits(20), furnitureTopY, 0.001]]}
+                points={[[innerX - mmToThreeUnits(20), furnitureTopY, 0.001], [leftOffset, furnitureTopY, 0.001]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
             </>
@@ -3613,36 +3720,54 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {(() => {
           // ── 가구 데이터 수집 (자유배치 + 슬롯배치 공통) ──
           const allMods_R = placedModules.filter(m => !m.isSurroundPanel);
+          // 단내림 정보 — 모드별 분기 (슬롯: droppedCeiling, 자유배치: stepCeiling)
+          const hasDrop_R = isFreePlacement
+            ? (spaceInfo.stepCeiling?.enabled === true)
+            : (spaceInfo.droppedCeiling?.enabled === true);
+          const isRightDrop_pre = hasDrop_R && (isFreePlacement
+            ? spaceInfo.stepCeiling!.position === 'right'
+            : spaceInfo.droppedCeiling!.position === 'right');
           // 단내림이 우측이면 단내림 구간 가구 기준, 아니면 가장 우측 가구
-          const hasDrop_R = spaceInfo.droppedCeiling?.enabled === true;
-          const isRightDrop_pre = hasDrop_R && spaceInfo.droppedCeiling!.position === 'right';
           const rightmostMod = (() => {
             if (isRightDrop_pre) {
-              const droppedMods = allMods_R.filter(m => m.zone === 'dropped');
+              // 슬롯: zone='dropped', 자유배치: zone='stepCeiling'
+              const dropZoneName = isFreePlacement ? 'stepCeiling' : 'dropped';
+              const droppedMods = allMods_R.filter(m => m.zone === dropZoneName);
               if (droppedMods.length > 0) return droppedMods.reduce((r, m) => m.position.x > r.position.x ? m : r);
             }
             return allMods_R.length > 0 ? allMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
           })();
 
-          // ── 커튼박스 정보 ──
-          const hasCB_R = spaceInfo.curtainBox?.enabled === true;
-          const cbDropH_R = hasCB_R ? (spaceInfo.curtainBox!.dropHeight || 0) : 0;
+          // ── 커튼박스 정보 — 모드별 분기 (슬롯: curtainBox, 자유배치: droppedCeiling) ──
+          const hasCB_R_any = isFreePlacement
+            ? (spaceInfo.droppedCeiling?.enabled === true)
+            : (spaceInfo.curtainBox?.enabled === true);
+          // CB가 우측에 있는지
+          const isCBRight = hasCB_R_any && (isFreePlacement
+            ? spaceInfo.droppedCeiling!.position === 'right'
+            : spaceInfo.curtainBox!.position === 'right');
+          const hasCB_R = isCBRight; // 우측 치수선에서는 CB가 우측일 때만 표시
+          const cbDropH_R = hasCB_R ? (isFreePlacement
+            ? (spaceInfo.droppedCeiling!.dropHeight || 0)
+            : (spaceInfo.curtainBox!.dropHeight || 0)) : 0;
           const cbTotalH_R = spaceInfo.height + cbDropH_R; // 커튼박스 전체 높이
 
           // ── 공통 변수 ──
           const rightWallX = mmToThreeUnits(spaceInfo.width) + leftOffset;
           const rightInnerX = rightWallX + mmToThreeUnits(200);   // 1단(안쪽): 프레임 분해
-          const rightOuterX = rightWallX + mmToThreeUnits(hasCB_R ? 400 : 400);   // 2단: 단내림 높이 or 전체 높이
+          const rightOuterX = rightWallX + mmToThreeUnits(400);   // 2단: 단내림 높이 or 전체 높이
           const rightCBOuterX = rightWallX + mmToThreeUnits(600); // 3단(바깥): 커튼박스 높이
           const floorFinishYR = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
           const hasFloorFinishR = floorFinishHeightMmGlobal > 0;
           const floorFinishMidYR = floorFinishYR / 2;
           const spaceMidYR = floorFinishYR + (spaceHeight - floorFinishYR) / 2;
 
-          // ── 단내림 정보 ──
-          const hasDrop = spaceInfo.droppedCeiling?.enabled === true;
-          const dropHeight = hasDrop ? (spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
-          const isRightDrop = hasDrop && spaceInfo.droppedCeiling!.position === 'right';
+          // ── 단내림 정보 (hasDrop_R 재사용) ──
+          const hasDrop = hasDrop_R;
+          const dropHeight = hasDrop ? (isFreePlacement
+            ? (spaceInfo.stepCeiling!.dropHeight || 200)
+            : (spaceInfo.droppedCeiling!.dropHeight || 200)) : 0;
+          const isRightDrop = isRightDrop_pre;
           // ── 1단 분해 계산 (가구 유무 무관 — 항상 표시) ──
           const rInternalHeight = calculateInternalSpace(spaceInfo).height;
           const rGlobalBottomFrameH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
