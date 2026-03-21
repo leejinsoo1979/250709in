@@ -309,16 +309,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
 
-  // renderOrder가 음수(천장 뒤)면 depthTest=false+depthWrite=false → 무조건 먼저 그려지고 나중 오브젝트가 덮어씀
-  const finalMaterial = React.useMemo(() => {
-    if (renderOrder !== undefined && renderOrder < 0 && panelSpecificMaterial instanceof THREE.Material) {
-      const cloned = panelSpecificMaterial.clone();
-      cloned.depthTest = false;
-      cloned.depthWrite = false;
-      return cloned;
-    }
-    return panelSpecificMaterial;
-  }, [panelSpecificMaterial, renderOrder]);
+  // renderOrder < 0: 천장/경계벽 뒤로 보내기 위한 material 처리
+  const finalMaterial = panelSpecificMaterial;
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
