@@ -3970,7 +3970,7 @@ const Configurator: React.FC = () => {
 
                 clearAllModules();
                 const totalWidth = spaceInfo.width || 4800;
-                const cbWidth = 900;
+                const cbWidth = 150;
                 const mainWidth = totalWidth - cbWidth;
                 const mainRange = calculateDoorRange(mainWidth);
                 const currentCount = getCurrentColumnCount();
@@ -4001,7 +4001,7 @@ const Configurator: React.FC = () => {
 
                 clearAllModules();
                 const totalWidth = spaceInfo.width || 4800;
-                const cbWidth = 900;
+                const cbWidth = 150;
                 const mainWidth = totalWidth - cbWidth;
                 const mainRange = calculateDoorRange(mainWidth);
                 const currentCount = getCurrentColumnCount();
