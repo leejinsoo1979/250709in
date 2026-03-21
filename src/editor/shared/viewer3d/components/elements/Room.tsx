@@ -4608,8 +4608,8 @@ const Room: React.FC<RoomProps> = ({
               return null;
             }
 
-            // 슬롯배치 커튼박스 단독이 좌측에 있으면 서브프레임 불필요 (가구 배치 안 함)
-            if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && !droppedCeilingEnabled) {
+            // 슬롯배치 커튼박스가 좌측에 있으면 서브프레임 불필요
+            if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') {
               return null;
             }
 
@@ -4784,8 +4784,8 @@ const Room: React.FC<RoomProps> = ({
               return null;
             }
 
-            // 슬롯배치 커튼박스 단독이 우측에 있으면 서브프레임 불필요 (가구 배치 안 함)
-            if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && !droppedCeilingEnabled) {
+            // 슬롯배치 커튼박스가 우측에 있으면 서브프레임 불필요
+            if (!isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') {
               return null;
             }
 
