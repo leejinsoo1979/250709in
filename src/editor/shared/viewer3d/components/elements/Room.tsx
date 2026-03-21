@@ -3962,9 +3962,13 @@ const Room: React.FC<RoomProps> = ({
             const cbPanelH = adjustedPanelHeight + mmToThreeUnits(cbDropH);
             const cbCenterY = sideFrameStartY + cbPanelH / 2;
 
-            const cbFrameMat = cbPos === 'left'
+            const baseCbMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
               : (rightFrameMaterial ?? createFrameMaterial('right'));
+            // CB 프레임은 단내림 천장 뒤로 렌더링 — depthTest/depthWrite 비활성화
+            const cbFrameMat = baseCbMat.clone();
+            cbFrameMat.depthTest = false;
+            cbFrameMat.depthWrite = false;
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
