@@ -2693,8 +2693,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 서라운드 모드 좌측 프레임 치수선 - 자유배치 모드에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && (
+      {/* 서라운드 모드 좌측 프레임 치수선 - 자유배치/커튼박스 좌측에서는 숨김 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && !(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left') && (
       <group>
             {/* 치수선 */}
             <Line
@@ -2939,8 +2939,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 서라운드 모드 우측 프레임 치수선 - 자유배치 모드에서는 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && (
+      {/* 서라운드 모드 우측 프레임 치수선 - 자유배치/커튼박스 우측에서는 숨김 */}
+      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && !(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right') && (
       <group>
             {/* 치수선 */}
             <Line
