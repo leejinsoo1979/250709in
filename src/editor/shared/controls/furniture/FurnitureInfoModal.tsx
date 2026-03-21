@@ -380,7 +380,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     placedModule?.hasLeftEndPanel, placedModule?.hasRightEndPanel,
     placedModule?.endPanelThickness, placedModule?.freeHeight,
     topFrameHeightMm, visualBaseFrameHeightMm,
-    placedModule?.hasTopFrame, placedModule?.hasBase
+    placedModule?.hasTopFrame, placedModule?.hasBase,
+    placedModule?.isDualSlot
   );
 
   // 서라운드 패널 (공간 전체 단위)

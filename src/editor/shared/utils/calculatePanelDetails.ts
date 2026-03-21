@@ -27,7 +27,8 @@ export const calculatePanelDetails = (
   topFrameHeightMm?: number, // 상부프레임 높이 (mm) — 0이면 프레임 없음
   baseFrameHeightMm?: number, // 하부프레임(받침대) 높이 (mm) — 0이면 받침대 없음
   hasTopFrame?: boolean, // 상부프레임 표시 여부 (기본: true)
-  hasBase?: boolean // 하부프레임(받침대) 표시 여부 (기본: true)
+  hasBase?: boolean, // 하부프레임(받침대) 표시 여부 (기본: true)
+  isDualSlot?: boolean // 듀얼 슬롯 가구 여부 (커스텀 가구에서 moduleId에 'dual'이 없어도 듀얼 판단)
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -734,7 +735,7 @@ export const calculatePanelDetails = (
       };
     };
 
-    if (moduleData.id.includes('dual')) {
+    if (isDualSlot || moduleData.id.includes('dual')) {
       // 3D 렌더링과 동일: 각 도어 = 전체폭/2 - doorGap (DoorModule.tsx: actualDoorWidth/2 - doorGap)
       const singleDoorWidth = Math.floor(doorWidth / 2 - doorGap);
       const doorH = actualDoorH;
@@ -878,7 +879,7 @@ export const calculatePanelDetails = (
       }
     };
 
-    if (moduleData.id.includes('dual')) {
+    if (isDualSlot || moduleData.id.includes('dual')) {
       allSidePanels.forEach((panel: any) => {
         if (isLeftSidePanel(panel.name) || isRightSidePanel(panel.name)) {
           injectBracketBoring(panel);

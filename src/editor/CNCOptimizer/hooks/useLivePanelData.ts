@@ -171,7 +171,8 @@ export function useLivePanelData() {
           topFrameH,                        // 상부프레임 높이
           visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
-          (placedModule as any).hasBase      // 하부프레임 표시 여부
+          (placedModule as any).hasBase,     // 하부프레임 표시 여부
+          placedModule.isDualSlot            // 듀얼 슬롯 가구 여부
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -657,7 +658,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,
-        (placedModule as any).hasBase
+        (placedModule as any).hasBase,
+        placedModule.isDualSlot            // 듀얼 슬롯 가구 여부
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

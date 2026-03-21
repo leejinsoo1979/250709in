@@ -1119,9 +1119,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
       currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight,
       topFrameHeightMm, visualBaseFrameHeightMm,
-      currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase
+      currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase,
+      currentPlacedModule?.isDualSlot
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
