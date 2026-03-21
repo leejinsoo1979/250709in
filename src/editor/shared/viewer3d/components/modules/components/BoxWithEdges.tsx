@@ -30,6 +30,7 @@ interface BoxWithEdgesProps {
   panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향 (fallback)
   textureUrl?: string; // 텍스처 URL
   furnitureId?: string; // 가구 ID - 스토어에서 직접 panelGrainDirections 가져오기 위함
+  renderOrder?: number; // 렌더링 순서 (천장 뒤로 보낼 때 사용)
 }
 
 /**
@@ -57,7 +58,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   onPointerOut,
   panelName,
   panelGrainDirections,
-  textureUrl
+  textureUrl,
+  renderOrder
 }) => {
 
   const { viewMode } = useSpace3DView();
@@ -557,6 +559,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
         receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
+        renderOrder={renderOrder ?? 0}
         onClick={onClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}

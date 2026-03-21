@@ -109,6 +109,7 @@ interface FrameRenderSegment {
   yPosition: number;   // Three.js Y
   material?: THREE.Material;
   placedModuleId?: string; // 개별 프레임 하이라이트용 (비병합 모드)
+  behindCeiling?: boolean; // 천장 뒤로 보낼 프레임 (커튼박스 구간)
 }
 
 // 같은 Z축 위치의 프레임들을 좌측부터 2410mm 이내로 병합하는 유틸 함수
@@ -4103,14 +4104,13 @@ const Room: React.FC<RoomProps> = ({
                       ? modCenterForZone < droppedBoundaryMm
                       : modCenterForZone > droppedBoundaryMm
                   );
-                  // 커튼박스 구간 판별: 커튼박스가 단내림과 같은 쪽이면 프레임도 단내림 높이로 제한
+                  // 커튼박스 구간 판별: 단내림과 같은 쪽이면 천장 뒤로 보냄
                   const isInCBZone = hasCBForFrame && (
                     cbIsLeft
                       ? modCenterForZone < cbBoundaryMm
                       : modCenterForZone > cbBoundaryMm
                   );
-                  const cbNeedsDroppedHeight = isInCBZone && cbSameSideAsDropped;
-                  const ceilingHeight = (isInDroppedZone || cbNeedsDroppedHeight) ? droppedCeilingHeight : height;
+                  const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
                   const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
                   const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
 
@@ -4123,6 +4123,7 @@ const Room: React.FC<RoomProps> = ({
                     material: topFrameMat,
                     key: `slot-top-${mod.id}`,
                     placedModuleId: mod.id,
+                    behindCeiling: isInCBZone && cbSameSideAsDropped,
                   });
                 });
 
@@ -4156,6 +4157,7 @@ const Room: React.FC<RoomProps> = ({
                           material={seg.material ?? topFrameMat}
                           renderMode={renderMode}
                           shadowEnabled={shadowEnabled}
+                          renderOrder={seg.behindCeiling ? -1 : undefined}
                         />
                         {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                       </React.Fragment>
@@ -5228,6 +5230,7 @@ const Room: React.FC<RoomProps> = ({
                               material={seg.material ?? baseMat}
                               renderMode={renderMode}
                               shadowEnabled={shadowEnabled}
+                              renderOrder={seg.behindCeiling ? -1 : undefined}
                             />
                             {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                           </React.Fragment>
