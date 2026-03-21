@@ -1841,13 +1841,12 @@ const Room: React.FC<RoomProps> = ({
 
             return renderMode === 'solid' ? (
               <>
-                {/* dropped 영역 천장 — 경계벽보다 앞 */}
+                {/* dropped 영역 천장 — CB 프레임을 가리기 위해 두께 있는 박스 사용 */}
                 <mesh
-                  position={[droppedAreaX, droppedCeilingY, extendedZOffset + extendedPanelDepth / 2]}
-                  rotation={[Math.PI / 2, 0, 0]}
+                  position={[droppedAreaX, droppedCeilingY - mmToThreeUnits(50) / 2, extendedZOffset + extendedPanelDepth / 2]}
                   renderOrder={1}
                 >
-                  <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
+                  <boxGeometry args={[droppedAreaWidth, mmToThreeUnits(50), extendedPanelDepth]} />
                   <primitive
                     object={stepCeilingMaterial} />
                 </mesh>
