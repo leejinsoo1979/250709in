@@ -235,7 +235,8 @@ const BoxWithEdges: React.FC<{
   hideEdges?: boolean; // 외곽선 숨김
   isOuterFrame?: boolean; // 외곽 프레임 여부 (3D 은선모드에서 경계선 숨김용)
   name?: string; // 씬 추출용 이름
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name }) => {
+  renderOrder?: number; // 렌더링 순서 (낮을수록 먼저 그려짐)
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder }) => {
   // Debug: 측면 프레임 확인
   if (args[0] < 1 && args[1] > 15) {
     const bottom = position[1] - args[1] / 2;
@@ -262,7 +263,7 @@ const BoxWithEdges: React.FC<{
     <group position={position} name={name}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined}>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined} renderOrder={renderOrder}>
           <primitive key={material.uuid} object={material} attach="material" />
         </mesh>
       )}
@@ -3700,9 +3701,10 @@ const Room: React.FC<RoomProps> = ({
             const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 200;
             const panelThickMM = 18;
 
-            // 메인 천장 ~ 커튼박스 천장 구간만 (공간 매쉬를 가리지 않도록)
-            const panelH = mmToThreeUnits(dcDropH);
-            const panelCenterY = mmToThreeUnits(heightMm) + panelH / 2; // 메인 천장 위부터 시작
+            // 바닥 ~ 커튼박스 천장 전체 높이
+            const dcTotalH = heightMm + dcDropH;
+            const panelH = mmToThreeUnits(dcTotalH);
+            const panelCenterY = panelH / 2;
 
             // 커튼박스 구간 중심 X
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
@@ -3710,7 +3712,10 @@ const Room: React.FC<RoomProps> = ({
               ? mmToThreeUnits(-spaceHalfW + dcWidthMM / 2)
               : mmToThreeUnits(spaceHalfW - dcWidthMM / 2);
 
-            const frameMat = leftFrameMaterial ?? createFrameMaterial('left');
+            const baseFrameMat = leftFrameMaterial ?? createFrameMaterial('left');
+            // 천장 그라데이션 매쉬가 프레임 앞에 렌더링되도록 depthWrite 비활성
+            const frameMat = baseFrameMat.clone();
+            frameMat.depthWrite = false;
 
             // L자 구조: 전면패널 + 경계면 측면패널
             const SIDE_BASE_DEPTH_MM = 40; // 측면패널 기본 깊이
@@ -3736,9 +3741,9 @@ const Room: React.FC<RoomProps> = ({
             return (
               <group key="slot-curtain-box-finish">
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="slot-curtain-box-front"
-                  args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  args={frontArgs} position={frontPos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-2} />
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame name="slot-curtain-box-side"
-                  args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  args={sideArgs} position={sidePos} material={frameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} renderOrder={-2} />
               </group>
             );
           })()}
