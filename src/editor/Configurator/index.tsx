@@ -228,7 +228,7 @@ const ZoneSizeDroppedRow: React.FC<{
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
-        defaultValue={(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || (isFreeMode ? 100 : 200)) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+        defaultValue={(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || (isFreeMode ? 100 : 20)) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
         key={`dropped-height-${(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
         onBlur={(e) => {
@@ -3980,11 +3980,12 @@ const Configurator: React.FC = () => {
                 const currentCount = getCurrentColumnCount();
                 const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
 
+                const cbDropHeight = Math.max(10, 2420 - (spaceInfo.height || 2400));
                 handleSpaceInfoUpdate({
                   droppedCeiling: {
                     enabled: true,
                     width: cbWidth,
-                    dropHeight: 200,
+                    dropHeight: cbDropHeight,
                     position: 'left',
                     mode: 'curtain-box'
                   },
@@ -4011,11 +4012,12 @@ const Configurator: React.FC = () => {
                 const currentCount = getCurrentColumnCount();
                 const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
 
+                const cbDropHeight = Math.max(10, 2420 - (spaceInfo.height || 2400));
                 handleSpaceInfoUpdate({
                   droppedCeiling: {
                     enabled: true,
                     width: cbWidth,
-                    dropHeight: 200,
+                    dropHeight: cbDropHeight,
                     position: 'right',
                     mode: 'curtain-box'
                   },
