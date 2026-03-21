@@ -3969,20 +3969,19 @@ const Room: React.FC<RoomProps> = ({
 
             // ── 전면 가림판: 좌/우 프레임과 동일한 Z 위치 ──
             const frontZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
-            // 전면 폭 = CB 폭에서 1.5mm gap 적용 (서라운드 프레임과 동일)
-            const cbRenderWidth = cbWidthMM - 1.5;
+            // 전면 폭 = CB 폭에서 양쪽 1.5mm gap 적용 (150mm → 147mm)
+            const cbRenderWidth = cbWidthMM - 3;
             const frontWidth = mmToThreeUnits(cbRenderWidth);
-            // 바깥쪽 정렬: 1.5mm가 안쪽(메인 구간 쪽)으로 줄어듦
+            // 양쪽 1.5mm 이격: 중심은 CB 구간 중심과 동일
             const frontCenterX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbRenderWidth / 2)
-              : mmToThreeUnits(spaceHalfW - cbRenderWidth / 2);
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM / 2)
+              : mmToThreeUnits(spaceHalfW - cbWidthMM / 2);
 
-            // ── 경계면 칸막이: 서라운드 프레임과 동일하게 1.5mm 줄여서 바깥 정렬 ──
-            const SIDE_BASE_DEPTH_MM = 40; // 자유배치와 동일한 측면 깊이
-            const cbRenderThick = panelThickMM - 1.5; // 서라운드 프레임처럼 1.5mm gap
+            // ── 경계면 칸막이: 안쪽 1.5mm 이격 위치 ──
+            const SIDE_BASE_DEPTH_MM = 40;
             const borderX = cbPos === 'left'
-              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - cbRenderThick / 2)  // 바깥 정렬: 1.5mm 안쪽으로
-              : mmToThreeUnits(spaceHalfW - cbWidthMM + cbRenderThick / 2);  // 바깥 정렬: 1.5mm 안쪽으로
+              ? mmToThreeUnits(-spaceHalfW + cbWidthMM - panelThickMM / 2 - 1.5)
+              : mmToThreeUnits(spaceHalfW - cbWidthMM + panelThickMM / 2 + 1.5);
             const sideZ = frontZ - mmToThreeUnits(panelThickMM) / 2 - mmToThreeUnits(SIDE_BASE_DEPTH_MM) / 2;
 
             return (
@@ -3992,15 +3991,13 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                  renderOrder={-1} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
                 {/* 경계면 칸막이 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
-                  args={[mmToThreeUnits(cbRenderThick), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
+                  args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                  renderOrder={-1} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
               </group>
             );
           })()}
