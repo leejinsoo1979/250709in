@@ -3884,7 +3884,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <Html
           position={[
             adjustedPosition.x,
-            finalYPosition - height / 2 - 2.0, // 가구 하단 아래 200mm
+            finalYPosition - height / 2 - 2.8, // 가구 하단 아래 280mm (도어 치수선보다 아래)
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
           center
