@@ -620,11 +620,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const effectiveFurnitureWidth = actualDoorWidth;
   const isDualFurniture = isDualByModuleId || Math.round(effectiveFurnitureWidth) >= 601;
   
-  // 도어 모듈 디버깅
-// console.log('🚪🚪🚪 DoorModule 렌더링 DEBUG:', {
-    // moduleWidth, originalSlotWidth, actualDoorWidth, isDualFurniture,
-    // effectiveFurnitureWidth, effectiveColumnWidth, isFree, zone,
-  // });
+  console.log('🚪🚪🚪 DOOR DEBUG:', {
+    actualDoorWidth, effectiveColumnWidth, isDualByModuleId, isDualFurniture,
+    moduleWidth, originalSlotWidth, isFree, zone,
+    indexingColumnWidth: indexing.columnWidth,
+    customColumnCount: originalSpaceInfo.customColumnCount,
+    moduleDataId: moduleData?.id,
+  });
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
