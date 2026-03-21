@@ -389,7 +389,6 @@ function PageInner(){
 
           // 도어와 엔드패널은 자동으로 PET 재질로 설정
           let material = p.material || 'PB';
-          const panelName = (p.name || '').toLowerCase();
           if (panelName.includes('도어') || panelName.includes('door') ||
               panelName.includes('엔드') || panelName.includes('end')) {
             material = 'PET';
@@ -398,8 +397,8 @@ function PageInner(){
           return {
             id: p.id,
             label: p.name || `Panel_${p.id}`,
-            width: width,   // 짧은 쪽 (재단방향 직교)
-            length: length, // 긴 쪽 (재단방향)
+            width: width,   // 백패널: X축 가로 / 일반: 짧은 쪽
+            length: length, // 백패널: Y축 높이 / 일반: 긴 쪽
             thickness: p.thickness || 18,
             quantity: p.quantity || 1,
             material: material,
