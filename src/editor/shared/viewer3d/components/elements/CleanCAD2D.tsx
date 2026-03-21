@@ -1530,9 +1530,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 자유배치 모드: 좌측 이격 치수 미표시 (슬롯 모드 전용)
         if (isFreePlacement) return null;
 
-        // 커튼박스가 좌측에 있고 벽이 없으면 좌측 외벽이격 치수 미표시
-        const hasCBLeft = spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left';
-        if (hasCBLeft && !spaceInfo.wallConfig?.left) return null;
+        // 커튼박스가 좌측에 있으면 좌측 외벽이격 치수 미표시 (CB 구간이 담당)
+        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') return null;
 
         // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -1684,9 +1683,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 자유배치 모드: 우측 이격 치수 미표시 (슬롯 모드 전용)
         if (isFreePlacement) return null;
 
-        // 커튼박스가 우측에 있고 벽이 없으면 우측 외벽이격 치수 미표시
-        const hasCBRight = spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right';
-        if (hasCBRight && !spaceInfo.wallConfig?.right) return null;
+        // 커튼박스가 우측에 있으면 우측 외벽이격 치수 미표시 (CB 구간이 담당)
+        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') return null;
 
         // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -2576,12 +2574,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
                       }
                     }
-                  } else if (hasDC) {
-                    // 커튼박스만(단내림 없음): 메인↔커튼박스 경계
+                  } else if (hasDC && hasCB) {
+                    // 슬롯배치: 단내림 + 커튼박스 동시 활성
+                    // 1) 메인↔단내림 경계
                     if (dcOnLeft) {
                       boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
                     } else {
                       boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
+                    }
+                    // 2) 단내림↔커튼박스 경계
+                    if (dcOnLeft && cbOnLeft) {
+                      boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: true });
+                    } else if (dcOnRight && cbOnRight) {
+                      boundaries.push({ leftX: droppedEndX, rightX: cbStartX, editable: true });
+                    }
+                  } else if (hasDC) {
+                    // 단내림만(커튼박스 없음): 메인↔단내림 경계
+                    if (dcOnLeft) {
+                      boundaries.push({ leftX: droppedEndX, rightX: mainStartX, editable: true });
+                    } else {
+                      boundaries.push({ leftX: mainEndX, rightX: droppedStartX, editable: true });
+                    }
+                  } else if (hasCB) {
+                    // 슬롯배치 커튼박스만(단내림 없음): 메인↔커튼박스 경계
+                    if (cbOnLeft) {
+                      boundaries.push({ leftX: cbEndX, rightX: mainStartX, editable: true });
+                    } else {
+                      boundaries.push({ leftX: mainEndX, rightX: cbStartX, editable: true });
                     }
                   } else if (hasSC) {
                     // 단내림만 (커튼박스 없음): 통합 배치공간이므로 경계 이격 없음
