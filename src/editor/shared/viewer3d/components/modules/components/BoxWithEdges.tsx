@@ -309,11 +309,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
 
-  // renderOrder < 0 (CB 프레임 등 맨 뒤)이면 depthWrite=false로 depth buffer에 안 남김
-  // → 단내림 천장이 자연스럽게 위에 그려짐
+  // renderOrder < 0 (CB 프레임 등 맨 뒤): depthTest=false + depthWrite=false
+  // → 먼저 그려지고, 단내림 천장(renderOrder=1)이 나중에 덮어씌움
   const finalMaterial = React.useMemo(() => {
     if (renderOrder !== undefined && renderOrder < 0 && panelSpecificMaterial instanceof THREE.Material) {
       const cloned = panelSpecificMaterial.clone();
+      cloned.depthTest = false;
       cloned.depthWrite = false;
       return cloned;
     }

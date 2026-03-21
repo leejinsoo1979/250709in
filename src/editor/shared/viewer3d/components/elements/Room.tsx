@@ -1086,11 +1086,12 @@ const Room: React.FC<RoomProps> = ({
     return mat;
   }, []);
 
-  // CB 전용 벽 material (depthWrite=false → 단내림 천장이 위에 그려짐)
+  // CB 전용 벽 material (depthTest=false + depthWrite=false → 먼저 그려지고 천장이 덮음)
   const cbLeftWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
     if (mat.uniforms) { mat.uniforms.opacity.value = 1.0; }
     mat.transparent = false;
+    mat.depthTest = false;
     mat.depthWrite = false;
     return mat;
   }, []);
@@ -1098,17 +1099,19 @@ const Room: React.FC<RoomProps> = ({
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', '3D');
     if (mat.uniforms) { mat.uniforms.opacity.value = 1.0; }
     mat.transparent = false;
+    mat.depthTest = false;
     mat.depthWrite = false;
     return mat;
   }, []);
 
-  // 커튼박스 영역 천장 material (depthWrite=false → 단내림 천장이 위에 그려짐)
+  // 커튼박스 영역 천장 material (depthTest=false + depthWrite=false → 먼저 그려지고 천장이 덮음)
   const opaqueTopWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
     mat.transparent = false;
+    mat.depthTest = false;
     mat.depthWrite = false;
     return mat;
   }, []);
@@ -1128,6 +1131,16 @@ const Room: React.FC<RoomProps> = ({
     mat.polygonOffsetFactor = -1;
     mat.polygonOffsetUnits = -1;
     mat.needsUpdate = true;
+    return mat;
+  }, []);
+
+  // CB 전용 경계벽 material (depthTest=false + depthWrite=false)
+  const cbBoundaryWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
+    if (mat.uniforms) { mat.uniforms.opacity.value = 1.0; }
+    mat.transparent = false;
+    mat.depthTest = false;
+    mat.depthWrite = false;
     return mat;
   }, []);
 
@@ -1607,7 +1620,7 @@ const Room: React.FC<RoomProps> = ({
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <planeGeometry args={[extendedPanelDepth, cbOnlyDropH]} />
-                    <primitive ref={droppedWallMaterialRef} object={ceilingBoundaryWallMaterial} />
+                    <primitive ref={droppedWallMaterialRef} object={cbBoundaryWallMaterial} />
                   </mesh>
                 </>
               ) : null;
@@ -1924,7 +1937,7 @@ const Room: React.FC<RoomProps> = ({
                         rotation={[0, Math.PI / 2, 0]}
                       >
                         <planeGeometry args={[extendedPanelDepth, cbBoundaryH]} />
-                        <primitive object={ceilingBoundaryWallMaterial} />
+                        <primitive object={cbBoundaryWallMaterial} />
                       </mesh>
                     </>
                   );
