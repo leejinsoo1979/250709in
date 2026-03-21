@@ -227,13 +227,13 @@ const ZoneSizeDroppedRow: React.FC<{
     <div className={styles.inputWithUnit} style={{ width: '80px' }}>
       <input
         type="text"
-        defaultValue={isFreeMode ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || 100) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-        key={`dropped-height-${isFreeMode ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+        defaultValue={(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? (spaceInfo.height || 2400) + (spaceInfo.droppedCeiling?.dropHeight || (isFreeMode ? 100 : 200)) : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+        key={`dropped-height-${(isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') ? `${spaceInfo.height}-${spaceInfo.droppedCeiling?.dropHeight}` : (spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
         onBlur={(e) => {
           const inputValue = e.target.value;
           const totalHeight = spaceInfo.height || 2400;
-          if (isFreeMode) {
+          if (isFreeMode || spaceInfo.droppedCeiling?.mode === 'curtain-box') {
             const currentCurtainH = totalHeight + (spaceInfo.droppedCeiling?.dropHeight || 100);
             if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentCurtainH.toString(); return; }
             const newCurtainH = parseInt(inputValue);
@@ -3724,17 +3724,12 @@ const Configurator: React.FC = () => {
 
         </div>)}
 
-        {/* 커튼박스/단내림 설정 (슬롯모드: 단내림/커튼박스, 자유배치: 커튼박스) */}
-        {(<div className={styles.configSection}>
+        {/* 자유배치: 커튼박스 설정 */}
+        {isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>{isFreeMode ? '커튼박스' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '커튼박스' : '단내림')}</h3>
-            <HelpBtn title={isFreeMode ? '커튼박스' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '커튼박스' : '단내림')} text={isFreeMode
-              ? "벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다. 위치(좌/우)와 너비를 설정하여 가구 배치 가능 영역을 정확히 구분합니다."
-              : spaceInfo.droppedCeiling?.mode === 'curtain-box'
-                ? "벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다."
-                : "공간의 한쪽 천장이 낮아지는(단이 내려오는) 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 좌측/우측 위치, 구간 너비, 단 높이를 설정하면 해당 영역의 가구 높이가 자동으로 맞춰집니다."
-            } />
+            <h3 className={styles.sectionTitle}>커튼박스</h3>
+            <HelpBtn title="커튼박스" text="벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다. 위치(좌/우)와 너비를 설정하여 가구 배치 가능 영역을 정확히 구분합니다." />
           </div>
 
           <div className={styles.toggleButtonGroup}>
@@ -3767,23 +3762,19 @@ const Configurator: React.FC = () => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   clearAllModules();
                   const totalWidth = spaceInfo.width || 4800;
-                  const droppedWidth = isFreeMode ? 150 : 900;
+                  const droppedWidth = 150;
                   const mainWidth = totalWidth - droppedWidth;
                   const mainRange = calculateDoorRange(mainWidth);
                   const currentCount = getCurrentColumnCount();
                   const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-                  const frameThickness = 50;
-                  const droppedInternalWidth = droppedWidth - frameThickness;
-                  const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
 
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
                       enabled: true,
                       width: droppedWidth,
-                      dropHeight: isFreeMode ? Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)) : 200,
+                      dropHeight: Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)),
                       position: 'left'
                     },
-                    droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
                   });
                 } else {
@@ -3798,7 +3789,7 @@ const Configurator: React.FC = () => {
                 setActiveRightPanelTab('placement');
               }}
             >
-              {isFreeMode ? '좌측' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '좌측' : '좌단내림')}
+              좌측
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
@@ -3810,23 +3801,19 @@ const Configurator: React.FC = () => {
                 if (!spaceInfo.droppedCeiling?.enabled) {
                   clearAllModules();
                   const totalWidth = spaceInfo.width || 4800;
-                  const droppedWidth = isFreeMode ? 150 : 900;
+                  const droppedWidth = 150;
                   const mainWidth = totalWidth - droppedWidth;
                   const mainRange = calculateDoorRange(mainWidth);
                   const currentCount = getCurrentColumnCount();
                   const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-                  const frameThickness = 50;
-                  const droppedInternalWidth = droppedWidth - frameThickness;
-                  const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
 
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
                       enabled: true,
                       width: droppedWidth,
-                      dropHeight: isFreeMode ? Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)) : 200,
+                      dropHeight: Math.max(10, 2400 - (spaceInfo.height || DEFAULT_SPACE_VALUES.HEIGHT)),
                       position: 'right'
                     },
-                    droppedCeilingDoorCount: droppedDoorCount,
                     mainDoorCount: adjustedMainDoorCount
                   });
                 } else {
@@ -3841,59 +3828,203 @@ const Configurator: React.FC = () => {
                 setActiveRightPanelTab('placement');
               }}
             >
-              {isFreeMode ? '우측' : (spaceInfo.droppedCeiling?.mode === 'curtain-box' ? '우측' : '우단내림')}
+              우측
             </button>
           </div>
+        </div>)}
 
-          {/* 슬롯배치: 단내림/커튼박스 모드 전환 토글 */}
-          {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
-            <div className={styles.toggleButtonGroup} style={{ marginTop: '4px' }}>
-              <button
-                className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' ? styles.toggleButtonActive : ''}`}
-                onClick={() => {
-                  if ((spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped') return;
-                  // 커튼박스 → 단내림 전환
-                  clearAllModules();
-                  const totalWidth = spaceInfo.width || 4800;
-                  const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                  const mainWidth = totalWidth - droppedWidth;
-                  const mainRange = calculateDoorRange(mainWidth);
-                  const currentCount = getCurrentColumnCount();
-                  const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-                  const frameThickness = 50;
-                  const droppedInternalWidth = droppedWidth - frameThickness;
-                  const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
-                  handleSpaceInfoUpdate({
-                    droppedCeiling: {
-                      ...spaceInfo.droppedCeiling!,
-                      mode: 'dropped'
-                    },
-                    droppedCeilingDoorCount: droppedDoorCount,
-                    mainDoorCount: adjustedMainDoorCount
-                  });
-                }}
-              >
-                단내림
-              </button>
-              <button
-                className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.mode === 'curtain-box' ? styles.toggleButtonActive : ''}`}
-                onClick={() => {
-                  if (spaceInfo.droppedCeiling?.mode === 'curtain-box') return;
-                  // 단내림 → 커튼박스 전환: 가구 삭제, droppedCeilingDoorCount 제거
+        {/* 슬롯배치: 단내림 설정 (독립 섹션) */}
+        {!isFreeMode && (<div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>단내림</h3>
+            <HelpBtn title="단내림" text="공간의 한쪽 천장이 낮아지는(단이 내려오는) 구간이 있을 때 활성화합니다. 에어컨 배관, 보 등으로 천장 높이가 달라지는 경우에 사용합니다. 좌측/우측 위치, 구간 너비, 단 높이를 설정하면 해당 영역의 가구 높이가 자동으로 맞춰집니다." />
+          </div>
+
+          <div className={styles.toggleButtonGroup}>
+            <button
+              className={`${styles.toggleButton} ${!(spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped') ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                if (spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped') {
                   clearAllModules();
                   handleSpaceInfoUpdate({
                     droppedCeiling: {
-                      ...spaceInfo.droppedCeiling!,
-                      mode: 'curtain-box'
+                      ...spaceInfo.droppedCeiling,
+                      enabled: false,
+                      mode: undefined
                     },
+                    mainDoorCount: undefined,
                     droppedCeilingDoorCount: undefined
                   });
-                }}
-              >
-                커튼박스
-              </button>
-            </div>
-          )}
+                  setActiveRightPanelTab('placement');
+                }
+              }}
+            >
+              없음
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
+              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
+              onClick={() => {
+                const isActive = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'left';
+                if (isActive) return;
+
+                clearAllModules();
+                const totalWidth = spaceInfo.width || 4800;
+                const droppedWidth = 900;
+                const mainWidth = totalWidth - droppedWidth;
+                const mainRange = calculateDoorRange(mainWidth);
+                const currentCount = getCurrentColumnCount();
+                const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+                const frameThickness = 50;
+                const droppedInternalWidth = droppedWidth - frameThickness;
+                const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+
+                handleSpaceInfoUpdate({
+                  droppedCeiling: {
+                    enabled: true,
+                    width: droppedWidth,
+                    dropHeight: 200,
+                    position: 'left',
+                    mode: 'dropped'
+                  },
+                  droppedCeilingDoorCount: droppedDoorCount,
+                  mainDoorCount: adjustedMainDoorCount
+                });
+                setActiveRightPanelTab('placement');
+              }}
+            >
+              좌단내림
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
+              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
+              onClick={() => {
+                const isActive = spaceInfo.droppedCeiling?.enabled && (spaceInfo.droppedCeiling?.mode || 'dropped') === 'dropped' && (spaceInfo.droppedCeiling?.position || 'right') === 'right';
+                if (isActive) return;
+
+                clearAllModules();
+                const totalWidth = spaceInfo.width || 4800;
+                const droppedWidth = 900;
+                const mainWidth = totalWidth - droppedWidth;
+                const mainRange = calculateDoorRange(mainWidth);
+                const currentCount = getCurrentColumnCount();
+                const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+                const frameThickness = 50;
+                const droppedInternalWidth = droppedWidth - frameThickness;
+                const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+
+                handleSpaceInfoUpdate({
+                  droppedCeiling: {
+                    enabled: true,
+                    width: droppedWidth,
+                    dropHeight: 200,
+                    position: 'right',
+                    mode: 'dropped'
+                  },
+                  droppedCeilingDoorCount: droppedDoorCount,
+                  mainDoorCount: adjustedMainDoorCount
+                });
+                setActiveRightPanelTab('placement');
+              }}
+            >
+              우단내림
+            </button>
+          </div>
+        </div>)}
+
+        {/* 슬롯배치: 커튼박스 설정 (단내림과 독립된 별도 섹션) */}
+        {!isFreeMode && (<div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>커튼박스</h3>
+            <HelpBtn title="커튼박스" text="벽 상단에 커튼레일 박스가 있는 경우 활성화합니다. 커튼박스 구간은 메인구간보다 천장이 높아 가구가 배치되지 않는 영역입니다. 위치(좌/우)와 너비를 설정하면 해당 구간이 가구 배치에서 제외됩니다." />
+          </div>
+
+          <div className={styles.toggleButtonGroup}>
+            <button
+              className={`${styles.toggleButton} ${!(spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box') ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box') {
+                  clearAllModules();
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      ...spaceInfo.droppedCeiling,
+                      enabled: false,
+                      mode: undefined
+                    },
+                    mainDoorCount: undefined,
+                    droppedCeilingDoorCount: undefined
+                  });
+                  setActiveRightPanelTab('placement');
+                }
+              }}
+            >
+              없음
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
+              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
+              onClick={() => {
+                const isActive = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'left';
+                if (isActive) return;
+
+                clearAllModules();
+                const totalWidth = spaceInfo.width || 4800;
+                const cbWidth = 900;
+                const mainWidth = totalWidth - cbWidth;
+                const mainRange = calculateDoorRange(mainWidth);
+                const currentCount = getCurrentColumnCount();
+                const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+
+                handleSpaceInfoUpdate({
+                  droppedCeiling: {
+                    enabled: true,
+                    width: cbWidth,
+                    dropHeight: 200,
+                    position: 'left',
+                    mode: 'curtain-box'
+                  },
+                  droppedCeilingDoorCount: undefined,
+                  mainDoorCount: adjustedMainDoorCount
+                });
+                setActiveRightPanelTab('placement');
+              }}
+            >
+              좌측
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
+              disabled={!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right}
+              onClick={() => {
+                const isActive = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.mode === 'curtain-box' && (spaceInfo.droppedCeiling?.position || 'right') === 'right';
+                if (isActive) return;
+
+                clearAllModules();
+                const totalWidth = spaceInfo.width || 4800;
+                const cbWidth = 900;
+                const mainWidth = totalWidth - cbWidth;
+                const mainRange = calculateDoorRange(mainWidth);
+                const currentCount = getCurrentColumnCount();
+                const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+
+                handleSpaceInfoUpdate({
+                  droppedCeiling: {
+                    enabled: true,
+                    width: cbWidth,
+                    dropHeight: 200,
+                    position: 'right',
+                    mode: 'curtain-box'
+                  },
+                  droppedCeilingDoorCount: undefined,
+                  mainDoorCount: adjustedMainDoorCount
+                });
+                setActiveRightPanelTab('placement');
+              }}
+            >
+              우측
+            </button>
+          </div>
         </div>)}
 
         {/* 컬럼수 표시 - 단내림 아래 */}
