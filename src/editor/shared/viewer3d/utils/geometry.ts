@@ -346,7 +346,17 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
       leftThickness = leftFrameSize;
       rightThickness = rightFrameSize;
   }
-  
+
+  // 커튼박스가 있는 쪽은 서라운드 프레임 없음 (커튼박스 내벽이 프레임 역할)
+  if (spaceInfo.droppedCeiling?.enabled) {
+    const cbPosition = spaceInfo.droppedCeiling.position || 'right';
+    if (cbPosition === 'left') {
+      leftThickness = 0;
+    } else {
+      rightThickness = 0;
+    }
+  }
+
   return {
     left: leftThickness,
     right: rightThickness,
