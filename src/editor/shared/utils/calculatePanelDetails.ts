@@ -1132,6 +1132,7 @@ export const calculatePanelDetails = (
       width: height,
       height: customDepth,
       thickness: epT,
+      material: 'PET',
       quantity: 1,
     });
   }
@@ -1141,6 +1142,7 @@ export const calculatePanelDetails = (
       width: height,
       height: customDepth,
       thickness: epT,
+      material: 'PET',
       quantity: 1,
     });
   }
@@ -1155,7 +1157,7 @@ export const calculatePanelDetails = (
       width: customWidth,
       height: topFrameHeightMm,
       thickness: FRAME_THICKNESS,
-      material: 'PB',
+      material: 'PET',
     });
   }
 
@@ -1166,7 +1168,7 @@ export const calculatePanelDetails = (
       width: customWidth,
       height: baseFrameHeightMm,
       thickness: FRAME_THICKNESS,
-      material: 'PB',
+      material: 'PET',
     });
   }
 
@@ -1203,14 +1205,14 @@ export const calculateSurroundPanels = (
         width: SURROUND_SIDE_DEPTH,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
       result.push({
         name: '좌측 서라운드 전면판',
         width: gapMm,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
     } else if (method === 'ep') {
       // 엔드패널형: 단일 패널
@@ -1219,7 +1221,7 @@ export const calculateSurroundPanels = (
         width: SURROUND_PANEL_THICKNESS,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
     }
   }
@@ -1235,14 +1237,14 @@ export const calculateSurroundPanels = (
         width: SURROUND_SIDE_DEPTH,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
       result.push({
         name: '우측 서라운드 전면판',
         width: gapMm,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
     } else if (method === 'ep') {
       result.push({
@@ -1250,7 +1252,7 @@ export const calculateSurroundPanels = (
         width: SURROUND_PANEL_THICKNESS,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
     }
   }
@@ -1270,7 +1272,7 @@ export const calculateSurroundPanels = (
         width: SURROUND_SIDE_DEPTH,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
       // 우측 측면판
       result.push({
@@ -1278,7 +1280,7 @@ export const calculateSurroundPanels = (
         width: SURROUND_SIDE_DEPTH,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
       // 전면판
       result.push({
@@ -1286,7 +1288,7 @@ export const calculateSurroundPanels = (
         width: gapMm,
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
-        material: 'PB',
+        material: 'PET',
       });
     });
   }
