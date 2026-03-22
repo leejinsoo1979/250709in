@@ -309,6 +309,15 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const baseType = moduleId.replace(/-[\d.]+$/, '');
   // 서랍 모듈은 하부 섹션 상판 85mm 들여쓰기 기본값 적용
   const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer')) ? 85 : undefined;
+  // 단내림 구간 가구 높이 계산: 공간높이 - 단내림높이 - 프레임 - 받침대
+  let droppedCustomHeight: number | undefined;
+  if (hasDroppedCeiling && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight) {
+    const dropH = spaceInfo.droppedCeiling.dropHeight;
+    const frameTop = spaceInfo.frameSize?.top || 0;
+    const baseH = spaceInfo.baseConfig?.height || 0;
+    droppedCustomHeight = spaceInfo.height - dropH - frameTop - baseH;
+  }
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId: moduleId,
@@ -321,7 +330,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     rotation: 0,
     slotIndex: slotIndex,
     isDualSlot: isDualFurniture,
-    customHeight: undefined,
+    customHeight: droppedCustomHeight,
     customDepth: customDepth,
     customWidth: customWidth,
     adjustedWidth: adjustedWidth,
