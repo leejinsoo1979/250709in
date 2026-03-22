@@ -16,6 +16,7 @@ import { Line, Html } from '@react-three/drei';
 import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
+import { useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -33,6 +34,11 @@ const BoxWithEdges: React.FC<{
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
   furnitureId?: string;
 }> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId }) => {
+  const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
+    if (s.excludedKeys.size === 0) return false;
+    return panelName ? s.excludedKeys.has(panelName) : false;
+  });
+
   const { theme } = useViewerTheme();
   const { view2DTheme, shadowEnabled } = useUIStore();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
@@ -54,6 +60,8 @@ const BoxWithEdges: React.FC<{
   };
 
   // Shadow auto-update enabled - manual shadow updates removed
+
+  if (isExcludedByOptimizer) return null;
 
   return (
     <group position={position}>

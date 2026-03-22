@@ -7,6 +7,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
+import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -61,6 +62,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   textureUrl,
   renderOrder
 }) => {
+
+  // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략
+  const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
+    if (s.excludedKeys.size === 0) return false;
+    return panelName ? s.excludedKeys.has(panelName) : false;
+  });
 
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
@@ -552,6 +559,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       </>
     );
   }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme]);
+
+  // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
+  if (isExcludedByOptimizer) return null;
 
   return (
     <group position={position}>

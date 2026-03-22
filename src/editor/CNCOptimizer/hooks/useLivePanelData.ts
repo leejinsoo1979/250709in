@@ -10,6 +10,16 @@ import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateSh
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 
 /**
+ * CNC 패널 이름 → 3D panelName 변환
+ * calculatePanelDetails와 BaseFurnitureShell/DrawerRenderer/ShelfRenderer 간 이름 차이 보정
+ */
+function toMeshName(cncName: string): string {
+  // 단일 섹션 가구: "바닥" → "바닥판" (3D BaseFurnitureShell에서 단일 섹션이면 '바닥판' 사용)
+  if (cncName === '바닥') return '바닥판';
+  return cncName;
+}
+
+/**
  * 패널 이름에서 기본 결방향(grain) 결정
  * - 사용자가 panelGrainDirections에 명시적으로 설정하지 않은 패널에 적용
  * - 측판/백패널/도어/칸막이: VERTICAL (결이 높이 방향)
@@ -410,7 +420,7 @@ export function useLivePanelData() {
             bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
             isBracketSide: panel.isBracketSide,
             // 3D 뷰어 패널 하이라이트용
-            meshName: panel.name,
+            meshName: toMeshName(panel.name),
             furnitureId: placedModule.id,
           };
         });
@@ -537,7 +547,7 @@ export function useLivePanelData() {
             color: placedModules[0]?.color || 'MW',
             quantity: 1,
             grain: getDefaultGrain(panel.name),
-            meshName: panel.name,
+            meshName: toMeshName(panel.name),
             furnitureId,
           });
         });
@@ -1120,7 +1130,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           color: placedModules[0]?.color || 'MW',
           quantity: 1,
           grain: getDefaultGrain(panel.name),
-          meshName: panel.name,
+          meshName: toMeshName(panel.name),
           furnitureId: furnitureId2,
         });
       });
