@@ -556,39 +556,11 @@ function normalizeOrientation(panels: Rect[], binWidth: number, stripDirection?:
 }
 
 /**
- * 백패널 전용 방향 정규화
- * - 같은 가구의 (상)(하) 백패널은 동일한 width(내경폭+10)
- * - 가구별로 묶어서, 해당 가구의 width > binWidth이면 그 가구 전체를 스왑
- * - 일부만 스왑하면 vertical에서 다른 그룹이 되어 분리되므로, 가구 단위 통일
+ * 백패널 전용 방향 정규화 — 회전 금지 (MDF 백패널은 2440방향=height 고정)
+ * 원본 방향 그대로 유지, rotated=false 명시만 추가
  */
-function normalizeBackPanels(panels: Rect[], binWidth: number): Rect[] {
-  if (panels.length === 0) return [];
-
-  // 가구번호별 그룹
-  const byFurniture = new Map<number, Rect[]>();
-  for (const p of panels) {
-    const fn = extractFurnitureNum(p.name || '');
-    if (!byFurniture.has(fn)) byFurniture.set(fn, []);
-    byFurniture.get(fn)!.push(p);
-  }
-
-  const result: Rect[] = [];
-  for (const [, group] of byFurniture) {
-    // 이 가구의 백패널 width (모두 동일해야 함)
-    const w = group[0].width;
-    if (w > binWidth) {
-      // 전체 스왑 — 모든 패널을 같은 방향으로
-      for (const p of group) {
-        result.push({ ...p, width: p.height, height: p.width, rotated: true });
-      }
-    } else {
-      // 스왑 불필요 — 원본 방향 유지
-      for (const p of group) {
-        result.push({ ...p, rotated: false });
-      }
-    }
-  }
-  return result;
+function normalizeBackPanels(panels: Rect[]): Rect[] {
+  return panels.map(p => ({ ...p, rotated: false }));
 }
 
 /**
@@ -648,7 +620,7 @@ function packCategoryToMultiBins(
  */
 
 /**
- * 한 가구의 백패널들을 시트 내에 최적 배치 (회전 허용)
+ * 한 가구의 백패널들을 시트 내에 최적 배치 (회전 금지 — MDF 백패널은 2440방향=height 고정)
  * 반환: 배치된 패널 배열 [{...panel, x, y, rotated, width, height}]
  *       또는 null (시트에 수용 불가)
  */
@@ -663,20 +635,11 @@ function placeFurnitureBackPanels(
   if (panels.length === 0) return null;
   if (panels.length === 1) {
     const p = panels[0];
-    // 원본 방향
     if (p.width <= binWidth - startX && p.height <= binHeight - startY) {
       return {
         placed: [{ ...p, x: startX, y: startY, rotated: false }],
         usedWidth: p.width,
         usedHeight: p.height
-      };
-    }
-    // 회전
-    if (p.height <= binWidth - startX && p.width <= binHeight - startY) {
-      return {
-        placed: [{ ...p, x: startX, y: startY, width: p.height, height: p.width, rotated: true }],
-        usedWidth: p.height,
-        usedHeight: p.width
       };
     }
     return null;
@@ -688,14 +651,14 @@ function placeFurnitureBackPanels(
   // 여러 배치 전략을 시도하고 가장 좋은 결과 선택
   const candidates: { placed: Rect[]; usedWidth: number; usedHeight: number }[] = [];
 
-  // === 전략 생성: 첫 패널의 방향(원본/회전) × 나머지 패널 배치 방식 ===
-  for (const firstRotated of [false, true]) {
+  // === 전략 생성: 백패널 회전 금지 — 원본 방향만 시도 ===
+  {
     const first = sorted[0];
-    const fw = firstRotated ? first.height : first.width;
-    const fh = firstRotated ? first.width : first.height;
+    const fw = first.width;
+    const fh = first.height;
 
-    // 첫 패널이 시트에 안 들어가면 스킵
-    if (fw > binWidth - startX || fh > binHeight - startY) continue;
+    // 첫 패널이 시트에 안 들어가면 null 반환
+    if (fw > binWidth - startX || fh > binHeight - startY) return null;
 
     const placedFirst: Rect = {
       ...first,
@@ -703,47 +666,46 @@ function placeFurnitureBackPanels(
       y: startY,
       width: fw,
       height: fh,
-      rotated: firstRotated
+      rotated: false
     };
 
     const remaining = sorted.slice(1);
     if (remaining.length === 0) {
       candidates.push({ placed: [placedFirst], usedWidth: fw, usedHeight: fh });
-      continue;
-    }
+    } else {
+      // 나머지 패널 배치 — 2가지 영역 시도:
+      // 영역 A: 첫 패널 아래
+      // 영역 B: 첫 패널 오른쪽
 
-    // 나머지 패널 배치 — 2가지 영역 시도:
-    // 영역 A: 첫 패널 아래 (x=startX, y=startY+fh+kerf, availW=binWidth-startX, availH=binHeight-startY-fh-kerf)
-    // 영역 B: 첫 패널 오른쪽 (x=startX+fw+kerf, y=startY, availW=binWidth-startX-fw-kerf, availH=binHeight-startY)
+      const regionBelow = {
+        x: startX, y: startY + fh + kerf,
+        w: binWidth - startX, h: binHeight - startY - fh - kerf
+      };
+      const regionRight = {
+        x: startX + fw + kerf, y: startY,
+        w: binWidth - startX - fw - kerf, h: binHeight - startY
+      };
 
-    const regionBelow = {
-      x: startX, y: startY + fh + kerf,
-      w: binWidth - startX, h: binHeight - startY - fh - kerf
-    };
-    const regionRight = {
-      x: startX + fw + kerf, y: startY,
-      w: binWidth - startX - fw - kerf, h: binHeight - startY
-    };
-
-    // 전략 A: 나머지를 아래 영역에 쌓기
-    const belowResult = tryPlaceRemainingInRegion(remaining, regionBelow, kerf);
-    if (belowResult) {
-      candidates.push({
-        placed: [placedFirst, ...belowResult.placed],
-        usedWidth: Math.max(fw, belowResult.maxX - startX),
-        usedHeight: fh + kerf + belowResult.maxY - regionBelow.y
-      });
-    }
-
-    // 전략 B: 나머지를 오른쪽 영역에 쌓기
-    if (regionRight.w > 0) {
-      const rightResult = tryPlaceRemainingInRegion(remaining, regionRight, kerf);
-      if (rightResult) {
+      // 전략 A: 나머지를 아래 영역에 쌓기
+      const belowResult = tryPlaceRemainingInRegion(remaining, regionBelow, kerf);
+      if (belowResult) {
         candidates.push({
-          placed: [placedFirst, ...rightResult.placed],
-          usedWidth: fw + kerf + rightResult.maxX - regionRight.x,
-          usedHeight: Math.max(fh, rightResult.maxY - startY)
+          placed: [placedFirst, ...belowResult.placed],
+          usedWidth: Math.max(fw, belowResult.maxX - startX),
+          usedHeight: fh + kerf + belowResult.maxY - regionBelow.y
         });
+      }
+
+      // 전략 B: 나머지를 오른쪽 영역에 쌓기
+      if (regionRight.w > 0) {
+        const rightResult = tryPlaceRemainingInRegion(remaining, regionRight, kerf);
+        if (rightResult) {
+          candidates.push({
+            placed: [placedFirst, ...rightResult.placed],
+            usedWidth: fw + kerf + rightResult.maxX - regionRight.x,
+            usedHeight: Math.max(fh, rightResult.maxY - startY)
+          });
+        }
       }
     }
   }
@@ -756,7 +718,7 @@ function placeFurnitureBackPanels(
 }
 
 /**
- * 남은 패널들을 주어진 직사각형 영역 내에 배치 시도 (회전 허용)
+ * 남은 백패널들을 주어진 직사각형 영역 내에 배치 시도 (회전 금지)
  */
 function tryPlaceRemainingInRegion(
   panels: Rect[],
@@ -773,7 +735,7 @@ function tryPlaceRemainingInRegion(
   for (const panel of panels) {
     let fitted = false;
 
-    // 원본 방향으로 현재 행에 배치 시도
+    // 현재 행에 배치 시도
     if (panel.width <= region.x + region.w - curX && panel.height <= region.y + region.h - curY) {
       placed.push({ ...panel, x: curX, y: curY, rotated: false });
       maxX = Math.max(maxX, curX + panel.width);
@@ -783,23 +745,12 @@ function tryPlaceRemainingInRegion(
       fitted = true;
     }
 
-    // 회전해서 배치 시도
-    if (!fitted && panel.height <= region.x + region.w - curX && panel.width <= region.y + region.h - curY) {
-      placed.push({ ...panel, x: curX, y: curY, width: panel.height, height: panel.width, rotated: true });
-      maxX = Math.max(maxX, curX + panel.height);
-      maxY = Math.max(maxY, curY + panel.width);
-      rowHeight = Math.max(rowHeight, panel.width);
-      curX += panel.height + kerf;
-      fitted = true;
-    }
-
     // 현재 행에 안 들어가면 다음 행으로
     if (!fitted) {
       curX = region.x;
       curY += rowHeight + kerf;
       rowHeight = 0;
 
-      // 원본 방향
       if (panel.width <= region.w && panel.height <= region.y + region.h - curY) {
         placed.push({ ...panel, x: curX, y: curY, rotated: false });
         maxX = Math.max(maxX, curX + panel.width);
@@ -809,17 +760,7 @@ function tryPlaceRemainingInRegion(
         fitted = true;
       }
 
-      // 회전
-      if (!fitted && panel.height <= region.w && panel.width <= region.y + region.h - curY) {
-        placed.push({ ...panel, x: curX, y: curY, width: panel.height, height: panel.width, rotated: true });
-        maxX = Math.max(maxX, curX + panel.height);
-        maxY = Math.max(maxY, curY + panel.width);
-        rowHeight = panel.width;
-        curX += panel.height + kerf;
-        fitted = true;
-      }
-
-      if (!fitted) return null; // 어디에도 안 들어감
+      if (!fitted) return null;
     }
   }
 
@@ -977,8 +918,8 @@ export function packGuillotine(
   const doorPanels = normalizeOrientation(doorPanelsRaw, binWidth, stripDirection);
   const surroundPanels = normalizeOrientation(surroundPanelsRaw, binWidth, stripDirection);
   const framePanels = normalizeOrientation(framePanelsRaw, binWidth, stripDirection);
-  // 백패널: 같은 가구의 (상)(하)는 동일 width → 가구 단위 스왑
-  const backPanels = normalizeBackPanels(backPanelsRaw, binWidth);
+  // 백패널: 회전 금지 — 원본 방향 고정
+  const backPanels = normalizeBackPanels(backPanelsRaw);
 
   // ── 2단계: 카테고리별 패킹 ──
   // stripDirection 결정: auto면 카테고리별 기본값, 아니면 전달받은 방향 사용
