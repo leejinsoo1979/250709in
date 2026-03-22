@@ -1827,12 +1827,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     let customWidth;
     let dualTargetModuleId = targetModuleId; // 듀얼 가구용 모듈 ID
 
-    if (isDual && zoneTargetIndexing.slotWidths && zoneTargetIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-      // 듀얼: 원시 columnWidth × 2에 0.5 단위 내림
-      const rawDualWidth = zoneTargetIndexing.columnWidth * 2;
-      customWidth = Math.floor(rawDualWidth * 2) / 2;
+    if (isDual && zoneTargetIndexing.slotWidths && zoneTargetIndexing.slotWidths[zoneSlotIndex] !== undefined
+        && zoneSlotIndex < zoneTargetIndexing.slotWidths.length - 1) {
+      // 듀얼: 정수 내림된 slotWidths 합산 (3D 렌더링과 동일)
+      customWidth = zoneTargetIndexing.slotWidths[zoneSlotIndex] + zoneTargetIndexing.slotWidths[zoneSlotIndex + 1];
 
-      // 듀얼 가구는 0.5 내림된 너비로 ID 생성
+      // 듀얼 가구는 합산 너비로 ID 생성
       dualTargetModuleId = `${moduleBaseType}-${customWidth}`;
 
       debugLog('🎯 [SlotDropZones] Dual furniture width calculation:', {
