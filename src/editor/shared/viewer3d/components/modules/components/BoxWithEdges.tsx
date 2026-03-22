@@ -65,7 +65,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   const { viewMode } = useSpace3DView();
   const excludedPanels = useExcludedPanels();
-  const isPanelExcluded = !!(panelName && excludedPanels?.has(panelName));
+  const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const isPanelExcluded = !!(compositeKey && excludedPanels?.has(compositeKey));
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
