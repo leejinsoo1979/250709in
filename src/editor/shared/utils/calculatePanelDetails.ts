@@ -714,8 +714,10 @@ export const calculatePanelDetails = (
       // 3D 렌더링과 동일: 각 도어 = 전체폭/2 - doorGap (DoorModule.tsx: actualDoorWidth/2 - doorGap)
       const singleDoorWidth = Math.floor(doorWidth / 2 - doorGap);
       const doorH = actualDoorH;
-      const leftDoorBoring = createDoorBoringData(singleDoorWidth, doorH, true);
-      const rightDoorBoring = createDoorBoringData(singleDoorWidth, doorH, false);
+      // 좌측 도어: 가구 좌측에 달림 → 경첩은 좌측판(=도어 우측 가장자리)에 체결
+      // 우측 도어: 가구 우측에 달림 → 경첩은 우측판(=도어 좌측 가장자리)에 체결
+      const leftDoorBoring = createDoorBoringData(singleDoorWidth, doorH, false);
+      const rightDoorBoring = createDoorBoringData(singleDoorWidth, doorH, true);
 
       panels.door.push({
         name: '좌측 도어',
@@ -729,7 +731,7 @@ export const calculatePanelDetails = (
         screwDepthPositions: leftDoorBoring.screwDepthPositions,
         screwHoleSpacing: leftDoorBoring.screwHoleSpacing,
         isDoor: true,
-        isLeftHinge: true,
+        isLeftHinge: false,
       });
       panels.door.push({
         name: '우측 도어',
@@ -743,7 +745,7 @@ export const calculatePanelDetails = (
         screwDepthPositions: rightDoorBoring.screwDepthPositions,
         screwHoleSpacing: rightDoorBoring.screwHoleSpacing,
         isDoor: true,
-        isLeftHinge: false,
+        isLeftHinge: true,
       });
     } else {
       // 3D 렌더링과 동일: doorWidth = actualDoorWidth - doorGap (DoorModule.tsx)
