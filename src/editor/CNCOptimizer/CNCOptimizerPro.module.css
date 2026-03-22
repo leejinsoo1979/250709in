@@ -398,7 +398,7 @@
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 420px minmax(600px, 1fr) 380px;
+  grid-template-columns: 460px minmax(600px, 1fr) 380px;
   grid-template-rows: 1fr;
   gap: 8px;
   padding: 8px;
@@ -410,16 +410,16 @@
 
 /* 스왑 모드: 중앙 가구뷰어(4) : 우측 패널뷰어(3) */
 .mainSwapped {
-  grid-template-columns: 420px 4fr 3fr;
+  grid-template-columns: 460px 4fr 3fr;
 }
 
 .leftSidebar {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 420px;
-  min-width: 420px;
-  max-width: 420px;
+  width: 460px;
+  min-width: 460px;
+  max-width: 460px;
   height: calc(100vh - 72px);
   overflow: hidden;
 }
