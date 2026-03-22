@@ -185,8 +185,8 @@ const PanelDimmer: React.FC<{
       });
     }
 
-    // 가구 그룹이 없거나 그 안에서 못 찾은 경우에만 씬 전체 폴백 (프레임/서라운드 등 공간 요소)
-    if (highlightedPanelName && targetPanelUuids.size === 0 && allFurnitureGroups.length === 0) {
+    // 가구 그룹 내에서 못 찾은 경우 씬 전체 폴백 (프레임/서라운드 등 Room 레벨 요소)
+    if (highlightedPanelName && targetPanelUuids.size === 0) {
       scene.traverse((obj) => {
         if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && matchesPanelName(obj)) {
           targetPanelUuids.add(obj.uuid);
