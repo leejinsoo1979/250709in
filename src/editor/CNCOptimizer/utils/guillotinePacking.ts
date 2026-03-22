@@ -477,17 +477,23 @@ function extractFurnitureNum(name: string): number {
  * 패널 카테고리 분류 — 같은 카테고리끼리만 같은 시트에 배치
  *
  * 카테고리 (우선순위 = 큰 패널부터 재단):
- *   1. side    — 측판 (좌측/우측, 서랍·백패널 제외)
+ *   1. side    — 측판 (좌측/우측, 서랍·백패널·도어·서라운드 제외)
  *   2. back    — 백패널 (같은 width끼리 strip에 나란히)
  *   3. body    — 상판/하판/선반/칸막이/바닥판/서랍 등 본체 패널
- *   4. frame   — 상부프레임/하부프레임 (맨 마지막 재단)
+ *   4. door    — 도어 (듀얼 우선, 싱글 나중)
+ *   5. surround — 서라운드 프레임 (도어 뒤, 상/하 프레임 앞)
+ *   6. frame   — 상부프레임/하부프레임 (맨 마지막 재단)
  */
-function getPanelCategory(name: string): 'side' | 'back' | 'body' | 'frame' {
+function getPanelCategory(name: string): 'side' | 'back' | 'body' | 'door' | 'surround' | 'frame' {
   if (!name) return 'body';
+  // 서라운드 판별 (프레임보다 먼저! '서라운드'가 포함되면 surround)
+  if (name.includes('서라운드')) return 'surround';
   // 프레임 판별 (최하위 우선순위)
   if (name.includes('프레임') || name.includes('프래임')) return 'frame';
   // 백패널 판별 (측판보다 먼저! '백패널'이 포함되면 무조건 back)
   if (name.includes('백패널')) return 'back';
+  // 도어 판별 (측판보다 먼저! '도어'가 포함되면 door)
+  if (name.includes('도어') || name.includes('Door')) return 'door';
   // 측판 판별 (서랍 제외)
   if (!name.includes('서랍')) {
     if (name.includes('좌측판') || name.includes('우측판') ||
@@ -599,15 +605,23 @@ function packCategoryToMultiBins(
   if (panels.length === 0) return [];
 
   const bins: PackedBin[] = [];
-  // 가구번호 → 좌/우 → 면적 내림차순 정렬 (가구 배치 순서대로 시트 생성)
+  // 듀얼/싱글 → 가구번호 → 좌/우 → 면적 내림차순 정렬
+  // 도어: 듀얼 우선(0), 싱글 나중(1) — 도어 재단 시 듀얼부터 재단
   const extractFN = (name: string) => { const m = name.match(/^\[(\d+)\]/); return m ? parseInt(m[1], 10) : 0; };
   const sideOrder: Record<string, number> = { '좌측': 0, '좌측판': 0, '우측': 1, '우측판': 1 };
   const extractSide = (name: string) => { const m = name.match(/(좌측|우측|좌측판|우측판)/); return m ? (sideOrder[m[1]] ?? 2) : 2; };
+  const extractDoorType = (name: string) => name.includes('듀얼') ? 0 : (name.includes('싱글') ? 1 : 2);
   let remaining = [...panels].sort((a, b) => {
+    // 1순위: 듀얼 우선, 싱글 나중
+    const dtDiff = extractDoorType(a.name || '') - extractDoorType(b.name || '');
+    if (dtDiff !== 0) return dtDiff;
+    // 2순위: 가구번호 순
     const fnDiff = extractFN(a.name || '') - extractFN(b.name || '');
     if (fnDiff !== 0) return fnDiff;
+    // 3순위: 좌/우
     const sideDiff = extractSide(a.name || '') - extractSide(b.name || '');
     if (sideDiff !== 0) return sideDiff;
+    // 4순위: 면적 내림차순
     return (b.width * b.height) - (a.width * a.height);
   });
 
@@ -917,10 +931,12 @@ function packBackPanelsToMultiBins(
  * 길로틴 방식 멀티 빈 패킹
  *
  * 핵심 원칙:
- *   1. 측판 / 본체 / 프레임 — 카테고리별로 시트 분리
+ *   1. 측판 / 백패널 / 본체 / 도어 / 서라운드 / 프레임 — 카테고리별 시트 분리
  *   2. 측판: vertical (같은 width끼리 한 줄, 상하 대칭)
  *   3. 본체/프레임: horizontal (width → x축=W방향)
- *   4. 큰 패널부터 먼저 재단, 프레임은 맨 마지막
+ *   4. 도어: 듀얼 우선 재단, 싱글 나중
+ *   5. 서라운드: 도어 뒤, 프레임 앞
+ *   6. 큰 패널부터 먼저 재단, 프레임은 맨 마지막
  */
 export function packGuillotine(
   panels: Rect[],
@@ -934,11 +950,15 @@ export function packGuillotine(
   const sidePanelsRaw: Rect[] = [];
   const backPanelsRaw: Rect[] = [];
   const bodyPanelsRaw: Rect[] = [];
+  const doorPanelsRaw: Rect[] = [];
+  const surroundPanelsRaw: Rect[] = [];
   const framePanelsRaw: Rect[] = [];
   for (const panel of panels) {
     const cat = getPanelCategory(panel.name || '');
     if (cat === 'side') sidePanelsRaw.push(panel);
     else if (cat === 'back') backPanelsRaw.push(panel);
+    else if (cat === 'door') doorPanelsRaw.push(panel);
+    else if (cat === 'surround') surroundPanelsRaw.push(panel);
     else if (cat === 'frame') framePanelsRaw.push(panel);
     else bodyPanelsRaw.push(panel);
   }
@@ -947,6 +967,8 @@ export function packGuillotine(
   // stripDirection에 따라 패널 긴 쪽을 올바른 축에 배치
   const sidePanels = normalizeOrientation(sidePanelsRaw, binWidth, stripDirection);
   const bodyPanels = normalizeOrientation(bodyPanelsRaw, binWidth, stripDirection);
+  const doorPanels = normalizeOrientation(doorPanelsRaw, binWidth, stripDirection);
+  const surroundPanels = normalizeOrientation(surroundPanelsRaw, binWidth, stripDirection);
   const framePanels = normalizeOrientation(framePanelsRaw, binWidth, stripDirection);
   // 백패널: 같은 가구의 (상)(하)는 동일 width → 가구 단위 스왑
   const backPanels = normalizeBackPanels(backPanelsRaw, binWidth);
@@ -955,6 +977,8 @@ export function packGuillotine(
   // stripDirection 결정: auto면 카테고리별 기본값, 아니면 전달받은 방향 사용
   const sideDir = stripDirection === 'auto' ? 'vertical' : stripDirection;
   const bodyDir = stripDirection === 'auto' ? 'horizontal' : stripDirection;
+  const doorDir = stripDirection === 'auto' ? 'vertical' : stripDirection;
+  const surroundDir = stripDirection === 'auto' ? 'vertical' : stripDirection;
   const frameDir = stripDirection === 'auto' ? 'horizontal' : stripDirection;
 
   // 측판
@@ -963,11 +987,15 @@ export function packGuillotine(
   const backBins = packBackPanelsToMultiBins(backPanels, binWidth, binHeight, kerf);
   // 본체(상판/하판/선반 등)
   const bodyBins = packCategoryToMultiBins(bodyPanels, binWidth, binHeight, kerf, bodyDir);
+  // 도어 (듀얼 우선 → 싱글, 가구번호 순)
+  const doorBins = packCategoryToMultiBins(doorPanels, binWidth, binHeight, kerf, doorDir);
+  // 서라운드 (도어 뒤, 프레임 앞)
+  const surroundBins = packCategoryToMultiBins(surroundPanels, binWidth, binHeight, kerf, surroundDir);
   // 프레임 (맨 마지막)
   const frameBins = packCategoryToMultiBins(framePanels, binWidth, binHeight, kerf, frameDir);
 
-  // 순서: 측판 → 백패널 → 본체 → 프레임
-  const allBins = [...sideBins, ...backBins, ...bodyBins, ...frameBins];
+  // 순서: 측판 → 백패널 → 본체 → 도어 → 서라운드 → 프레임
+  const allBins = [...sideBins, ...backBins, ...bodyBins, ...doorBins, ...surroundBins, ...frameBins];
 
   // ── 3단계: 후처리 — 저효율 시트의 패널을 다른 시트의 빈 공간에 합치기 ──
   // 같은 재질(material) 시트끼리만 합침 (카테고리 무관)
