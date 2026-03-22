@@ -106,6 +106,10 @@ export default function PanelsTable(){
         };
       })
       .sort((a, b) => {
+        // 서라운드/프레임(상부하부)/도어(tp>=90)는 맨 아래로
+        const aBottom = a.tp >= 90 ? 1 : 0;
+        const bBottom = b.tp >= 90 ? 1 : 0;
+        if (aBottom !== bBottom) return aBottom - bBottom;
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
         if (a.section !== b.section) return a.section - b.section; // 상부 → 하부
         if (a.tp !== b.tp) return a.tp - b.tp;               // 패널유형 순서
