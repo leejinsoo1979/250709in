@@ -468,9 +468,11 @@ export function useLivePanelData() {
         const fs = spaceInfo.frameSize;
         const surroundThickness = 18;
         const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
-        // 벽이 없는 쪽은 L자 구조: 전면판 + 측면판(고정목)
-        const isLeftLShape = !spaceInfo.wallConfig?.left;
-        const isRightLShape = !spaceInfo.wallConfig?.right;
+        // L자 판단: 반독립형(벽 없는 쪽) 또는 독립형(양쪽 다)
+        const isFreestanding = spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing';
+        const isSemistanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+        const isLeftLShape = isFreestanding || (isSemistanding && !spaceInfo.wallConfig?.left);
+        const isRightLShape = isFreestanding || (isSemistanding && !spaceInfo.wallConfig?.right);
         console.log('🔍 [서라운드 경로] 균등배치:', { surroundType: spaceInfo.surroundType, frameSize: fs, wallConfig: spaceInfo.wallConfig, isLeftLShape, isRightLShape });
 
         if (dropH > 0) {

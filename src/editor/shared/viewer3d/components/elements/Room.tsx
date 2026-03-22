@@ -2955,7 +2955,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
+                excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left)) ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -2992,7 +2992,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                  excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
+                  excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left)) ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
                 />
               )}
             </>
@@ -3089,7 +3089,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
+                excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left)) ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
               />
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -3131,7 +3131,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                  excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
+                  excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left)) ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
                 />
               )}
             </>
@@ -3208,7 +3208,7 @@ const Room: React.FC<RoomProps> = ({
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
             excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-            excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
+            excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left)) ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
           />
         ) : null);
       })()}
@@ -3326,7 +3326,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-                excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
+                excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right)) ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -3365,7 +3365,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-                  excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
+                  excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right)) ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
                 />
               )}
             </>
@@ -3512,7 +3512,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-                excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
+                excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right)) ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
               />
             </>
           );
@@ -3581,7 +3581,7 @@ const Room: React.FC<RoomProps> = ({
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
             excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-            excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
+            excludeKeys={((spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') || ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right)) ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
           />
         ) : null);
       })()}
