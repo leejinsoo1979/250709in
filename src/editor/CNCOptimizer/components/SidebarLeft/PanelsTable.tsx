@@ -130,6 +130,11 @@ export default function PanelsTable(){
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     e.preventDefault();
+    // 포커스된 input blur → 테두리가 이전 위치에 남지 않도록
+    if (document.activeElement && document.activeElement !== tableContainerRef.current) {
+      (document.activeElement as HTMLElement).blur();
+      tableContainerRef.current?.focus();
+    }
 
     const currentIdx = selectedPanelId
       ? sortedPanelIndices.findIndex(i => panels[i].id === selectedPanelId)
