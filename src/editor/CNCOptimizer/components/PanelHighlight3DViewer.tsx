@@ -86,6 +86,8 @@ const PanelDimmer: React.FC<{
 }> = ({ highlightedFurnitureId, highlightedPanelName }) => {
   const { scene, invalidate } = useThree();
   const originals = useRef<Map<string, { color: THREE.Color; emissiveColor: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
+  // 타겟 메시에 클론된 material 할당 시, 원본 material 참조 보관 (cleanup 시 복원)
+  const originalMaterials = useRef<Map<string, THREE.Material>>(new Map());
 
   useEffect(() => {
     // ── 원본 속성 저장 (최초 1회) ──
@@ -273,14 +275,21 @@ const PanelDimmer: React.FC<{
 
       if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
         if (isTarget) {
-          // 선택된 패널만 강조
-          mat.color.set(0x3366ff);
-          mat.opacity = 1;
-          mat.transparent = false;
-          if ((mat as any).emissive) {
-            (mat as any).emissive.set(0x0033ee);
-            (mat as any).emissiveIntensity = 1.0;
+          // 타겟: 공유 material 오염 방지 → 클론 후 교체
+          if (!originalMaterials.current.has(obj.uuid)) {
+            originalMaterials.current.set(obj.uuid, mat);
+            const cloned = mat.clone();
+            (obj as THREE.Mesh).material = cloned;
           }
+          const tMat = (obj as THREE.Mesh).material as THREE.MeshStandardMaterial;
+          tMat.color.set(0x3366ff);
+          tMat.opacity = 1;
+          tMat.transparent = false;
+          if ((tMat as any).emissive) {
+            (tMat as any).emissive.set(0x0033ee);
+            (tMat as any).emissiveIntensity = 1.0;
+          }
+          tMat.needsUpdate = true;
         } else {
           // 나머지 전체 투명
           mat.color.copy(orig.color);
@@ -290,8 +299,8 @@ const PanelDimmer: React.FC<{
             (mat as any).emissive.copy(orig.emissiveColor);
             (mat as any).emissiveIntensity = 0;
           }
+          mat.needsUpdate = true;
         }
-        mat.needsUpdate = true;
       }
     });
 
@@ -299,6 +308,14 @@ const PanelDimmer: React.FC<{
 
     return () => {
       scene.traverse((obj) => {
+        // 클론된 material 복원: 원본 material로 되돌리고 클론 dispose
+        const origMat = originalMaterials.current.get(obj.uuid);
+        if (origMat && obj instanceof THREE.Mesh) {
+          const cloned = obj.material;
+          obj.material = origMat;
+          if (cloned !== origMat) (cloned as THREE.Material).dispose();
+        }
+
         const orig = originals.current.get(obj.uuid);
         if (!orig) return;
         if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
@@ -326,6 +343,7 @@ const PanelDimmer: React.FC<{
           }
         }
       });
+      originalMaterials.current.clear();
     };
   }, [highlightedFurnitureId, highlightedPanelName, scene, invalidate]);
 
