@@ -100,14 +100,14 @@ const CNCOptimizer: React.FC = () => {
     });
   };
   const excludedMeshNames = useMemo(() => {
-    const keys = new Set<string>();
+    const names = new Set<string>();
     hiddenPanelIds.forEach(id => {
       const panel = panelsList.find(p => p.id === id);
-      if (panel?.furnitureId && panel?.meshName) {
-        keys.add(`${panel.furnitureId}::${panel.meshName}`);
+      if (panel?.meshName) {
+        names.add(panel.meshName);
       }
     });
-    return keys;
+    return names;
   }, [hiddenPanelIds, panelsList]);
 
   // 프로젝트 정보 가져오기

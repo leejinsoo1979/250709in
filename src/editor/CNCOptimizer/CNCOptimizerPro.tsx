@@ -618,21 +618,16 @@ function PageInner(){
     }
   }, [livePanels, userHasModifiedPanels, setPanels]);
 
-  // 제외 패널 ID → furnitureId::meshName 복합키 변환 (3D 뷰어에서 사용)
+  // 제외 패널 ID → meshName 변환 (3D 뷰어 패널 숨김용)
   const excludedMeshNames = useMemo(() => {
-    const keys = new Set<string>();
+    const names = new Set<string>();
     excludedPanelIds.forEach(panelId => {
       const panel = panels.find(p => p.id === panelId);
-      // DEBUG
-      console.log(`[Pro excludedMesh] panelId="${panelId}" → meshName="${panel?.meshName}" furnitureId="${panel?.furnitureId}" name="${panel?.name}"`);
-      if (panel?.furnitureId && panel?.meshName) {
-        keys.add(`${panel.furnitureId}::${panel.meshName}`);
+      if (panel?.meshName) {
+        names.add(panel.meshName);
       }
     });
-    if (keys.size > 0) {
-      console.log(`[Pro excludedMeshNames] final keys:`, [...keys]);
-    }
-    return keys;
+    return names;
   }, [excludedPanelIds, panels]);
 
   const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC', silent?: boolean) => {
