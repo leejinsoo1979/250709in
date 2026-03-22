@@ -67,6 +67,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const excludedPanels = useExcludedPanels();
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isPanelExcluded = !!(compositeKey && excludedPanels?.has(compositeKey));
+
+  // DEBUG: Context 전달 확인용 (확인 후 제거)
+  if (panelName && excludedPanels && excludedPanels.size > 0) {
+    console.log(`[BoxWithEdges] panelName="${panelName}" furnitureId="${furnitureId}" compositeKey="${compositeKey}" excluded=${isPanelExcluded} contextSize=${excludedPanels.size} contextKeys=[${[...excludedPanels].join(', ')}]`);
+  }
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
