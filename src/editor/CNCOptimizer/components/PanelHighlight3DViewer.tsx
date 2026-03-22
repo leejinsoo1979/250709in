@@ -62,81 +62,11 @@ function extractPanelName(objName: string): string | null {
 }
 
 /**
- * 제외 패널 숨김 — useFrame으로 매 프레임 obj.visible = false 설정.
- * BoxWithEdges/DoorModule의 <mesh>에 visible prop이 없으므로 R3F가 복원하지 않음.
+ * 제외 패널 숨김 — BoxWithEdges/DoorModule의 return null 방식으로 대체됨.
+ * composite key(furnitureId::panelName)는 컴포넌트 레벨에서 처리하므로
+ * scene traverse 방식은 더 이상 사용하지 않음.
  */
 const PanelHider: React.FC = () => {
-  const { scene } = useThree();
-  const excludedRef = useRef<Set<string>>(new Set());
-  const dumpedRef = useRef(false);
-
-  // Zustand store 구독 (R3F reconciler와 무관하게 동작)
-  useEffect(() => {
-    const unsub = useExcludedPanelsStore.subscribe((state) => {
-      excludedRef.current = state.excludedKeys;
-      dumpedRef.current = false; // re-dump on change
-    });
-    excludedRef.current = useExcludedPanelsStore.getState().excludedKeys;
-    return unsub;
-  }, []);
-
-  useFrame(() => {
-    const excluded = excludedRef.current;
-    if (!excluded || excluded.size === 0) {
-      // 모두 복원
-      scene.traverse((obj) => {
-        if (obj.userData.__hiddenByOptimizer) {
-          obj.visible = true;
-          obj.userData.__hiddenByOptimizer = false;
-        }
-      });
-      return;
-    }
-
-    // 디버그: 한 번만 씬 전체 오브젝트 이름 덤프
-    if (!dumpedRef.current) {
-      dumpedRef.current = true;
-      const allNames: string[] = [];
-      const matchedNames: string[] = [];
-      const unmatchedExcluded: string[] = [];
-      scene.traverse((obj) => {
-        if (obj.name) allNames.push(obj.name);
-      });
-      const extractedSet = new Set<string>();
-      allNames.forEach(n => {
-        const pn = extractPanelName(n);
-        if (pn) extractedSet.add(pn);
-      });
-      excluded.forEach(key => {
-        if (extractedSet.has(key)) {
-          matchedNames.push(key);
-        } else {
-          unmatchedExcluded.push(key);
-        }
-      });
-      console.log('[PanelHider] 씬 오브젝트 중 furniture-mesh/back-panel-mesh 이름들:',
-        allNames.filter(n => n.startsWith('furniture-mesh') || n.startsWith('back-panel-mesh')).slice(0, 30));
-      console.log('[PanelHider] excluded 키:', [...excluded]);
-      console.log('[PanelHider] 매칭 성공:', matchedNames);
-      console.log('[PanelHider] 매칭 실패:', unmatchedExcluded);
-    }
-
-    scene.traverse((obj) => {
-      if (!obj.name) return;
-      const pn = extractPanelName(obj.name);
-      if (pn === null) return;
-
-      const shouldHide = excluded.has(pn);
-      if (shouldHide) {
-        obj.visible = false;
-        obj.userData.__hiddenByOptimizer = true;
-      } else if (obj.userData.__hiddenByOptimizer) {
-        obj.visible = true;
-        obj.userData.__hiddenByOptimizer = false;
-      }
-    });
-  });
-
   return null;
 };
 
