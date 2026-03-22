@@ -138,7 +138,16 @@ const PanelDimmer: React.FC<{
           furnitureObjUuids.add(obj.uuid);
           if (highlightedPanelName && obj.name) {
             const pn = extractPanelName(obj.name);
-            if (pn === highlightedPanelName) {
+            // 1) 접두사 제거 후 정확히 일치
+            if (pn && pn === highlightedPanelName) {
+              targetPanelUuids.add(obj.uuid);
+            }
+            // 2) 메시 이름 자체가 meshName과 일치 (접두사 없는 경우)
+            else if (obj.name === highlightedPanelName) {
+              targetPanelUuids.add(obj.uuid);
+            }
+            // 3) 메시 이름이 meshName을 포함 (예: "furniture-mesh-서랍1 좌측판" vs "서랍1 좌측판")
+            else if (obj.name.includes(highlightedPanelName) || (pn && pn.includes(highlightedPanelName))) {
               targetPanelUuids.add(obj.uuid);
             }
           }
@@ -147,6 +156,17 @@ const PanelDimmer: React.FC<{
     }
 
     const hasSpecificPanel = highlightedPanelName && targetPanelUuids.size > 0;
+
+    // 디버그: 매칭 실패 시 원인 추적
+    if (highlightedPanelName && targetPanelUuids.size === 0 && targetGroup) {
+      const meshNames: string[] = [];
+      targetGroup.traverse((obj) => {
+        if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && obj.name) {
+          meshNames.push(obj.name);
+        }
+      });
+      console.warn(`[PanelDimmer] 패널 매칭 실패! 찾는 이름: "${highlightedPanelName}", 가구 내 메시 이름들:`, meshNames.map(n => `"${n}" → "${extractPanelName(n)}"`));
+    }
 
     // ── 하이라이트 적용 ──
     scene.traverse((obj) => {
