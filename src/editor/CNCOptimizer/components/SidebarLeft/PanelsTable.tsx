@@ -104,7 +104,7 @@ export default function PanelsTable(){
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
         if (a.section !== b.section) return a.section - b.section; // 상부 → 하부
         if (a.tp !== b.tp) return a.tp - b.tp;               // 패널유형 순서
-        if (a.drawerNum !== b.drawerNum) return a.drawerNum - b.drawerNum; // 서랍1 → 서랍2 → 서랍3
+        if (a.drawerNum !== b.drawerNum) return b.drawerNum - a.drawerNum; // 서랍3(위) → 서랍2 → 서랍1(아래)
         return a.label.localeCompare(b.label, 'ko');
       })
       .map(item => item.index);
