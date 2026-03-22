@@ -467,10 +467,11 @@ export const calculatePanelDetails = (
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
           // DrawerRenderer: drawerWidth - 70 - 26 = drawerWidth - 96
+          // L방향 = 깊이(앞뒤), W방향 = 폭(좌우)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 바닥`,
-            width: drawerWidth - 96, // drawerWidth - 70 - 26
-            depth: drawerBodyDepth - 20, // drawerBodyDepth - 20
+            width: drawerBodyDepth - 20, // 깊이 방향 → L방향
+            depth: drawerWidth - 96, // 폭 방향 → W방향
             thickness: drawerBottomThickness,
             material: 'MDF'
           });
@@ -975,11 +976,11 @@ export const calculatePanelDetails = (
                   thickness: drawerSideThicknessCC,
                   material: 'PB'
                 });
-                // 서랍 바닥판
+                // 서랍 바닥판 - L방향 = 깊이(앞뒤), W방향 = 폭(좌우)
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 바닥`,
-                  width: drawerWidth - 96,
-                  depth: drawerBodyDepth - 20,
+                  width: drawerBodyDepth - 20, // 깊이 방향 → L방향
+                  depth: drawerWidth - 96, // 폭 방향 → W방향
                   thickness: drawerBottomThicknessCC,
                   material: 'MDF'
                 });
