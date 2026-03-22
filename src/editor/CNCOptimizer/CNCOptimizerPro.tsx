@@ -1517,6 +1517,7 @@ function PageInner(){
                       }
                     }}
                     allowRotation={!settings.considerGrain}
+                    rotation={0}
                     sheetInfo={{
                       currentIndex: currentSheetIndex,
                       totalSheets: optimizationResults.length,
