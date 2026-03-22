@@ -7135,7 +7135,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       : Math.round(zoneSlotInfo.dropped?.width || (hasDC ? dcWidth : scWidth))),
                     subDimensionZ
                   )}
-                  {hasCB && renderZoneDim(cbStartX, cbEndX, String(Math.round(cbWidth)), subDimensionZ)}
+                  {hasCB && (() => {
+                    const cbInner = cbWidth - 3; // 양쪽 1.5mm 이격
+                    const cbInnerStartX = cbStartX + mmToThreeUnits(1.5);
+                    const cbInnerEndX = cbEndX - mmToThreeUnits(1.5);
+                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(Math.round(cbInner)), subDimensionZ);
+                  })()}
 
                   {/* 구간 분리 가이드라인 */}
                   <NativeLine name="dimension_line"
