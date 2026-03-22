@@ -1975,7 +1975,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => { const r = Math.round(mainWidth * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}
+                    {(() => {
+                      // 3단: 내경 표시 — zoneSlotInfo 기반 (자유배치는 원 사이즈)
+                      const val = isFreePlacement ? mainWidth : zoneSlotInfoForDim.normal.width;
+                      const r = Math.round(val * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1);
+                    })()}
                   </Text>
                 )}
                 {/* 단내림(stepCeiling) 구간 치수선 — 자유배치 전용 */}
@@ -2040,7 +2044,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => { const r = Math.round(droppedWidth * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}
+                    {(() => {
+                      // 3단: 내경 표시 — zoneSlotInfo 기반 (자유배치는 원 사이즈)
+                      const val = isFreePlacement ? droppedWidth : (zoneSlotInfoForDim.dropped?.width || droppedWidth);
+                      const r = Math.round(val * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1);
+                    })()}
                   </Text>
                 )}
                 </>)}
@@ -7127,12 +7135,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       : Math.round(zoneSlotInfo.dropped?.width || (hasDC ? dcWidth : scWidth))),
                     subDimensionZ
                   )}
-                  {hasCB && (() => {
-                    const cbInner = cbWidth - 3; // 양쪽 1.5mm 이격
-                    const cbInnerStartX = cbStartX + mmToThreeUnits(1.5);
-                    const cbInnerEndX = cbEndX - mmToThreeUnits(1.5);
-                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(Math.round(cbInner)), subDimensionZ);
-                  })()}
+                  {hasCB && renderZoneDim(cbStartX, cbEndX, String(Math.round(cbWidth)), subDimensionZ)}
 
                   {/* 구간 분리 가이드라인 */}
                   <NativeLine name="dimension_line"
