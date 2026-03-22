@@ -3785,10 +3785,10 @@ const Room: React.FC<RoomProps> = ({
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
                       args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`} />
+                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
                       args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`} />
+                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`} />
                     {isLeftHighlighted && (
                       <>
                         <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
@@ -3845,10 +3845,10 @@ const Room: React.FC<RoomProps> = ({
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
                       args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`} />
+                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
                       args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`} />
+                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`} />
                     {isRightHighlighted && (
                       <>
                         <mesh position={rSidePos}><boxGeometry args={rSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>

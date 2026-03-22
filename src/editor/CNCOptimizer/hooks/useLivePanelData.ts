@@ -22,6 +22,12 @@ function toMeshName(cncName: string): string {
   if (cncName.includes('상부프레임') || cncName.includes('상부 프레임')) return 'top-frame';
   if (cncName.includes('하부프레임') || cncName.includes('하부 프레임')) return 'base-frame';
   // 서라운드: CNC → 3D Room name
+  // L자 측면판/전면판 (자유배치)
+  if (cncName.includes('좌측 서라운드 측면판')) return 'left-surround-lshape-side';
+  if (cncName.includes('좌측 서라운드 전면판')) return 'left-surround-lshape-front';
+  if (cncName.includes('우측 서라운드 측면판')) return 'right-surround-lshape-side';
+  if (cncName.includes('우측 서라운드 전면판')) return 'right-surround-lshape-front';
+  // 일반 서라운드
   if (cncName.includes('좌측 서라운드 프레임') || cncName === '좌측 서라운드') return 'left-surround-ep';
   if (cncName.includes('우측 서라운드 프레임') || cncName === '우측 서라운드') return 'right-surround-ep';
   if (cncName.includes('상부 서라운드 프레임')) return 'top-frame';
