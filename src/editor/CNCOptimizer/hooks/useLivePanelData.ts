@@ -153,7 +153,11 @@ export function useLivePanelData() {
         const furnitureLabel = placedModules.length > 1 ? `[${furnitureNumber}]` : '';
 
         // Get actual module configuration
-        const width = placedModule.customWidth || placedModule.adjustedWidth || moduleData.dimensions.width;
+        // 듀얼 가구: placedModule.width는 전체 듀얼 폭이지만, calculatePanelDetails는 칼럼 폭 기준
+        // PlacedModulePropertiesPanel과 동일 순서: adjustedWidth → customWidth → moduleData.dimensions.width
+        const width = (placedModule as any).adjustedWidth
+          ?? (placedModule as any).customWidth
+          ?? moduleData.dimensions.width;
         const depth = placedModule.customDepth || moduleData.dimensions.depth;
         const hasDoor = placedModule.hasDoor || false;
         const material = placedModule.material || 'PB';
