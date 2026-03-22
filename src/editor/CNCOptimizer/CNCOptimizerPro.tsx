@@ -304,6 +304,8 @@ function PageInner(){
   const hasAutoOptimized = useRef(false);
   // Track if panels have been initialized from livePanels
   const hasInitializedFromLive = useRef(false);
+  // livePanels 변경 감지용 — 내용 기반 비교로 불필요한 재동기화 방지
+  const prevLivePanelsKey = useRef('');
 
   // Configurator에서 온 경우 hasInitializedFromLive 리셋
   useEffect(() => {
@@ -516,7 +518,13 @@ function PageInner(){
       console.log('User has modified panels, skipping livePanels sync');
       return;
     }
-    
+
+    // livePanels 내용 기반 키 생성 — 실제 변경 시에만 재동기화
+    const livePanelsKey = livePanels.map(p => `${p.id}:${p.name}:${p.width}:${p.height}:${p.material}`).join('|');
+    if (livePanelsKey === prevLivePanelsKey.current) {
+      return; // 내용이 동일하면 스킵
+    }
+
     console.log('🔄 패널 초기화 체크:', {
       livePanelsCount: livePanels.length,
       hasInitializedFromLive: hasInitializedFromLive.current,
@@ -587,6 +595,7 @@ function PageInner(){
       });
 
       setPanels(cutlistPanels);
+      prevLivePanelsKey.current = livePanelsKey;
       hasInitializedFromLive.current = true;
     }
   }, [livePanels, userHasModifiedPanels, setPanels]);
