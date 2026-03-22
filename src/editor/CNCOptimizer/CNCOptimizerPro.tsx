@@ -621,14 +621,26 @@ function PageInner(){
   // 제외 패널 ID → furnitureId::meshName 복합키 변환 (3D 뷰어 패널 숨김용)
   const excludedMeshNames = useMemo(() => {
     const names = new Set<string>();
+    if (excludedPanelIds.size > 0) {
+      console.log('[CNCOptimizer] excludedPanelIds:', [...excludedPanelIds]);
+      console.log('[CNCOptimizer] panels count:', panels.length, 'first panel:', panels[0] ? { id: panels[0].id, meshName: panels[0].meshName, furnitureId: panels[0].furnitureId, label: panels[0].label } : 'none');
+    }
     excludedPanelIds.forEach(panelId => {
       const panel = panels.find(p => p.id === panelId);
-      if (panel?.meshName && panel?.furnitureId) {
-        names.add(`${panel.furnitureId}::${panel.meshName}`);
+      if (!panel) {
+        console.warn(`[CNCOptimizer] ❌ panel not found for id: "${panelId}"`);
+        return;
       }
+      if (!panel.meshName || !panel.furnitureId) {
+        console.warn(`[CNCOptimizer] ❌ panel missing meshName/furnitureId:`, { id: panel.id, label: panel.label, meshName: panel.meshName, furnitureId: panel.furnitureId });
+        return;
+      }
+      names.add(`${panel.furnitureId}::${panel.meshName}`);
     });
     if (names.size > 0) {
-      console.log('[CNCOptimizer] excludedMeshNames:', [...names]);
+      console.log('[CNCOptimizer] ✅ excludedMeshNames:', [...names]);
+    } else if (excludedPanelIds.size > 0) {
+      console.warn('[CNCOptimizer] ⚠️ excludedPanelIds 있지만 excludedMeshNames 비어있음!');
     }
     return names;
   }, [excludedPanelIds, panels]);
