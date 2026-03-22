@@ -124,6 +124,44 @@ export default function PanelsTable(){
     }
   }, [selectedPanelId]);
 
+  // 키보드 방향키로 패널 선택 이동
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+
+    const currentIdx = selectedPanelId
+      ? sortedPanelIndices.findIndex(i => panels[i].id === selectedPanelId)
+      : -1;
+
+    let nextIdx: number;
+    if (e.key === 'ArrowDown') {
+      nextIdx = currentIdx < sortedPanelIndices.length - 1 ? currentIdx + 1 : 0;
+    } else {
+      nextIdx = currentIdx > 0 ? currentIdx - 1 : sortedPanelIndices.length - 1;
+    }
+
+    const nextPanel = panels[sortedPanelIndices[nextIdx]];
+    if (nextPanel) {
+      setSelectedPanelId(nextPanel.id);
+      const info = panelHighlightMap.get(nextPanel.id);
+      if (info) {
+        setHoveredPanel(info.meshName, info.furnitureId);
+      }
+      // 시트 이동
+      if (placements.length > 0) {
+        const placement = placements.find(pl => pl.panelId.startsWith(nextPanel.id + '-') || pl.panelId === nextPanel.id);
+        if (placement) {
+          const uniqueSheetIds = [...new Set(placements.map(pl => pl.sheetId))];
+          const sheetIdx = uniqueSheetIds.indexOf(placement.sheetId);
+          if (sheetIdx >= 0) {
+            setCurrentSheetIndex(sheetIdx);
+            setSelectedSheetId(placement.sheetId);
+          }
+        }
+      }
+    }
+  };
+
   // Auto-focus on name input when a new panel is added
   useEffect(() => {
     if (newlyAddedPanelId) {
@@ -390,7 +428,7 @@ export default function PanelsTable(){
         />
       </div>
       
-      <div className={styles.tableContainer} ref={tableContainerRef}>
+      <div className={styles.tableContainer} ref={tableContainerRef} tabIndex={0} onKeyDown={handleKeyDown} style={{ outline: 'none' }}>
         {panels.length === 0 ? (
           <div className={styles.empty}>
             {t('cnc.noPanelsMessage')}
