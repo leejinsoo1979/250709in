@@ -4,6 +4,7 @@ import type { Panel } from '../../../../types/cutlist';
 import { Package, Plus, Upload } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useLivePanelData } from '../../hooks/useLivePanelData';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import styles from './SidebarLeft.module.css';
 
 /**
@@ -35,22 +36,47 @@ export default function PanelsTable(){
   const { t } = useTranslation();
   const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion, placements, setCurrentSheetIndex, setSelectedSheetId, stock } = useCNCStore();
   const { panels: livePanels } = useLivePanelData();
+  const placedModules = useFurnitureStore((s) => s.placedModules);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newlyAddedPanelId, setNewlyAddedPanelId] = useState<string | null>(null);
 
-  // 패널 정렬: 가구번호 → 패널유형 순서
+  // 가구 ID → slotIndex 매핑 (왼쪽부터 배치 순서)
+  const furnitureSlotMap = useMemo(() => {
+    const map = new Map<string, number>();
+    placedModules.forEach((pm) => {
+      map.set(pm.id, pm.slotIndex ?? 0);
+    });
+    return map;
+  }, [placedModules]);
+
+  // 패널 ID → furnitureId 매핑
+  const panelFurnitureMap = useMemo(() => {
+    const map = new Map<string, string>();
+    livePanels.forEach((lp) => {
+      if ((lp as any).furnitureId) {
+        map.set(lp.id, (lp as any).furnitureId);
+      }
+    });
+    return map;
+  }, [livePanels]);
+
+  // 패널 정렬: 왼쪽 가구(slotIndex) → 패널유형 순서
   const sortedPanelIndices = useMemo(() => {
     return panels
-      .map((p, i) => ({ index: i, fn: extractFurnitureNumber(p.label), tp: panelTypePriority(p.label), label: p.label }))
+      .map((p, i) => {
+        const furnitureId = panelFurnitureMap.get(p.id);
+        const slot = furnitureId ? (furnitureSlotMap.get(furnitureId) ?? 999) : 999;
+        return { index: i, slot, fn: extractFurnitureNumber(p.label), tp: panelTypePriority(p.label), label: p.label };
+      })
       .sort((a, b) => {
-        if (a.fn !== b.fn) return a.fn - b.fn;
+        if (a.slot !== b.slot) return a.slot - b.slot;
         if (a.tp !== b.tp) return a.tp - b.tp;
         return a.label.localeCompare(b.label, 'ko');
       })
       .map(item => item.index);
-  }, [panels]);
+  }, [panels, panelFurnitureMap, furnitureSlotMap]);
 
   // 패널 ID → meshName/furnitureId 매핑 (3D 하이라이트용)
   const panelHighlightMap = useMemo(() => {
@@ -395,10 +421,13 @@ export default function PanelsTable(){
                 const p = panels[i];
                 const isNewPanel = p.label === '' && p.width === 0 && p.length === 0;
 
-                // 가구 그룹 구분: 이전 패널과 가구번호가 다르면 구분선 표시
-                const currentFn = extractFurnitureNumber(p.label);
-                const prevFn = sortIdx > 0 ? extractFurnitureNumber(panels[sortedPanelIndices[sortIdx - 1]].label) : currentFn;
-                const showGroupSeparator = sortIdx > 0 && currentFn !== prevFn;
+                // 가구 그룹 구분: 이전 패널과 가구(slotIndex)가 다르면 구분선 표시
+                const currentFid = panelFurnitureMap.get(p.id);
+                const currentSlot = currentFid ? (furnitureSlotMap.get(currentFid) ?? -1) : -1;
+                const prevP = sortIdx > 0 ? panels[sortedPanelIndices[sortIdx - 1]] : null;
+                const prevFid = prevP ? panelFurnitureMap.get(prevP.id) : undefined;
+                const prevSlot = prevFid ? (furnitureSlotMap.get(prevFid) ?? -1) : -1;
+                const showGroupSeparator = sortIdx > 0 && currentSlot !== prevSlot;
 
                 return (
                 <React.Fragment key={p.id}>
