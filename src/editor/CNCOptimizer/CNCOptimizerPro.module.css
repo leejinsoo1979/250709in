@@ -602,13 +602,13 @@
   height: auto;
   min-height: unset;
   max-height: unset;
-  width: 85px;
-  min-width: 85px;
-  max-width: 85px;
+  width: 82px;
+  min-width: 82px;
+  max-width: 82px;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: 8px;
-  padding: 10px;
+  padding: 6px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -704,6 +704,12 @@
   flex-shrink: 0;
   align-items: flex-start;
   width: 128px; /* 캔버스 너비 120px + 패딩 8px */
+}
+
+/* 세로 썸네일 바 내 wrapper 크기 조정 */
+.thumbnailBarVertical .thumbnailWrapper {
+  width: 68px;
+  align-items: center;
 }
 
 .thumbnailTitle {
