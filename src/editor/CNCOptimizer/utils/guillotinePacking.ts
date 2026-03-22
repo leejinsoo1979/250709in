@@ -93,10 +93,15 @@ export class GuillotinePacker {
         const fnB = this.extractFurnitureNumber(b.name || '');
         if (fnA !== fnB) return fnA - fnB;
 
-        // 2순위: 패널 종류 — 같은 좌/우 끼리 묶기 (보링 효율)
+        // 2순위: 패널 종류 — 좌측 먼저, 우측 나중 (원장에서 좌→우 순서 일치)
         const sideA = this.extractPanelSide(a.name || '');
         const sideB = this.extractPanelSide(b.name || '');
-        if (sideA !== sideB) return sideA.localeCompare(sideB);
+        if (sideA !== sideB) {
+          const order: Record<string, number> = { '좌측': 0, '좌측판': 0, '우측': 1, '우측판': 1 };
+          const oA = order[sideA] ?? 2;
+          const oB = order[sideB] ?? 2;
+          if (oA !== oB) return oA - oB;
+        }
 
         // 3순위: 채우기 방향 치수 내림차순
         const fillA = horizontal ? a.width : a.height;
