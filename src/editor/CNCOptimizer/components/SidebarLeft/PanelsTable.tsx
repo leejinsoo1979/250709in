@@ -49,6 +49,16 @@ function panelTypePriority(label: string, material?: string): number {
 }
 
 /**
+ * 좌우 우선순위: 좌측(0) → 우측(1) → 기타(2)
+ */
+function leftRightPriority(label: string): number {
+  const name = label.toLowerCase();
+  if (name.includes('좌측') || name.includes('left') || name.includes('좌측면')) return 0;
+  if (name.includes('우측') || name.includes('right') || name.includes('우측면')) return 1;
+  return 2;
+}
+
+/**
  * 서랍 번호 추출: "서랍3 앞판" → 3, 서랍이 아니면 0
  */
 function extractDrawerNumber(label: string): number {
@@ -101,6 +111,7 @@ export default function PanelsTable(){
           slot,
           section: sectionPriority(p.label),
           tp: panelTypePriority(p.label, p.material),
+          lr: leftRightPriority(p.label),
           drawerNum: extractDrawerNumber(p.label),
           label: p.label,
         };
@@ -113,6 +124,7 @@ export default function PanelsTable(){
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
         if (a.section !== b.section) return a.section - b.section; // 상부 → 하부
         if (a.tp !== b.tp) return a.tp - b.tp;               // 패널유형 순서
+        if (a.lr !== b.lr) return a.lr - b.lr;               // 좌측 → 우측
         if (a.drawerNum !== b.drawerNum) return b.drawerNum - a.drawerNum; // 서랍3(위) → 서랍2 → 서랍1(아래)
         return a.label.localeCompare(b.label, 'ko');
       })
