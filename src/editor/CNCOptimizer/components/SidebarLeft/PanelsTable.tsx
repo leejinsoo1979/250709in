@@ -447,20 +447,8 @@ export default function PanelsTable(){
                       setHoveredPanel(info.meshName, info.furnitureId);
                     }
                   }}
-                  onMouseEnter={() => {
-                    const info = panelHighlightMap.get(p.id);
-                    if (info) {
-                      setHoveredPanel(info.meshName, info.furnitureId);
-                    } else {
-                      setHoveredPanel(p.label, null);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    // 선택된 패널이 아닌 경우에만 하이라이트 해제 (클릭으로 선택된 패널은 유지)
-                    if (selectedPanelId !== p.id) {
-                      setHoveredPanel(null, null);
-                    }
-                  }}
+                  onMouseEnter={() => {}}
+                  onMouseLeave={() => {}}
                   data-panel-id={p.id}
                 >
                   <td>
