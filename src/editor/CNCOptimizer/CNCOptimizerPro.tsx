@@ -715,10 +715,13 @@ function PageInner(){
           }
         }
         
-        // 재질과 두께를 모두 고려하여 그룹화
-        const key = settings.considerMaterial 
-          ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}` 
-          : `THICKNESS_${processedPanel.thickness || 18}`;
+        // 재질+두께+가구번호로 그룹화 (같은 가구의 패널은 같은 시트에 배치)
+        // 패널 이름에서 가구 번호 추출: "[1] 좌측판" → "1", 없으면 "0"
+        const furnitureMatch = (processedPanel.label || processedPanel.name || '').match(/^\[(\d+)\]/);
+        const furnitureNum = furnitureMatch ? furnitureMatch[1] : '0';
+        const key = settings.considerMaterial
+          ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}_F${furnitureNum}`
+          : `THICKNESS_${processedPanel.thickness || 18}_F${furnitureNum}`;
         if (!panelGroups.has(key)) {
           panelGroups.set(key, []);
         }
@@ -744,13 +747,14 @@ function PageInner(){
         let thickness: number;
         
         if (key.startsWith('THICKNESS_')) {
-          // 재질 구분 없이 두께만 고려
+          // 재질 구분 없이 두께만 고려: THICKNESS_18_F1
           thickness = parseInt(key.split('_')[1]) || 18;
         } else {
-          // 재질과 두께 모두 고려
+          // 재질+두께+가구번호: PET_18_F1
           const parts = key.split('_');
           material = parts[0];
           thickness = parseInt(parts[1]) || 18;
+          // parts[2]는 F1 등 가구번호 (원판 매칭에는 사용 안 함)
         }
         
         // Find matching stock by material and thickness
