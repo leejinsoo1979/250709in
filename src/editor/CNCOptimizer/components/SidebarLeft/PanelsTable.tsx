@@ -33,14 +33,15 @@ function panelTypePriority(label: string): number {
   if (name.includes('좌측') || name.includes('left')) return 1;
   if (name.includes('우측') || name.includes('right')) return 2;
   if (name.includes('측판')) return 3;
-  if (name.includes('상판') || name.includes('바닥')) return 4;
+  if (name.includes('상판')) return 4;
   if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 5;
-  if (name.includes('백패널') || name.includes('뒷판')) return 6;
-  if (name.includes('보강')) return 7;
-  if (name.includes('프레임')) return 8;
-  if (name.includes('서랍') || name.includes('마이다')) return 9;
-  if (name.includes('도어') || name.includes('door')) return 10;
-  return 11;
+  if (name.includes('바닥')) return 6;
+  if (name.includes('백패널') || name.includes('뒷판')) return 7;
+  if (name.includes('보강')) return 8;
+  if (name.includes('프레임')) return 9;
+  if (name.includes('서랍') || name.includes('마이다')) return 10;
+  if (name.includes('도어') || name.includes('door')) return 11;
+  return 12;
 }
 
 export default function PanelsTable(){
