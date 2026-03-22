@@ -66,9 +66,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const isPortraitSheet = result && result.stockPanel.height > result.stockPanel.width;
   
   // 외부 상태가 있으면 사용, 없으면 내부 상태 사용
-  // 기본적으로 -90도 회전하여 가로로 표시 (모든 시트를 가로보기로)
   const [internalScale, setInternalScale] = useState(1);
-  const [internalRotation, setInternalRotation] = useState(0); // 세로보기 기본 (외부 state 미전달 시)
+  const [internalRotation, setInternalRotation] = useState(-90);
   const [internalOffset, setInternalOffset] = useState({ x: 0, y: 0 });
   
   const scale = externalScale ?? internalScale;

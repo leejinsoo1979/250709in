@@ -236,6 +236,15 @@ function PageInner(){
   const [viewerOffset, setViewerOffset] = useState({ x: 0, y: 0 });
   const [showCuttingList, setShowCuttingList] = useState(true); // 컷팅 리스트 탭 기본 선택
   const [viewSwapped, setViewSwapped] = useState(false); // 패널뷰어 ↔ 3D뷰어 위치 스왑
+  const handleSwapView = useCallback(() => {
+    setViewSwapped(v => {
+      const next = !v;
+      // 스왑 시 패널 레이아웃 세로(0도) ↔ 가로(-90도) 자동 전환
+      setViewerRotation(next ? 0 : -90);
+      setViewerOffset({ x: 0, y: 0 });
+      return next;
+    });
+  }, []);
   const [expandedSheets, setExpandedSheets] = useState<Set<number>>(new Set()); // 펼쳐진 시트 인덱스들
   const [showTotalStats, setShowTotalStats] = useState(true); // 전체 통계 표시 여부
   const [showSheetStats, setShowSheetStats] = useState(true); // 시트 통계 표시 여부
@@ -1382,7 +1391,7 @@ function PageInner(){
           {viewSwapped ? (
             /* 스왑 모드: 3D 뷰어가 메인 중앙에 표시 */
             <div className={styles.viewerContainer}>
-              <button className={styles.swapButton} onClick={() => setViewSwapped(v => !v)} title="뷰어 위치 변경">
+              <button className={styles.swapButton} onClick={handleSwapView} title="뷰어 위치 변경">
                 <ArrowLeftRight size={14} />
               </button>
               <div className={styles.mainViewer}>
@@ -1482,7 +1491,7 @@ function PageInner(){
           <div className={styles.rightSidebarContent}>
             {/* 3D 패널 하이라이트 뷰어 / 스왑 시 커팅 레이아웃 축소 */}
             <div className={`${styles.viewer3dContainer} ${viewSwapped ? styles.viewer3dContainerSwapped : ''}`}>
-              <button className={styles.swapButton} onClick={() => setViewSwapped(v => !v)} title="뷰어 위치 변경">
+              <button className={styles.swapButton} onClick={handleSwapView} title="뷰어 위치 변경">
                 <ArrowLeftRight size={14} />
               </button>
               {viewSwapped ? (
