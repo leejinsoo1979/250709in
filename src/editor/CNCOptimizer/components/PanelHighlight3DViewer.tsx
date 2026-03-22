@@ -276,8 +276,24 @@ const PanelDimmer: React.FC<{
 
     // ── 하이라이트 적용 ──
     scene.traverse((obj) => {
-      const orig = originals.current.get(obj.uuid);
-      if (!orig) return;
+      let orig = originals.current.get(obj.uuid);
+      // originals에 아직 없으면 즉시 저장 (비동기 씬 로딩 대응)
+      if (!orig) {
+        if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
+          orig = { color: obj.material.color.clone(), emissiveColor: new THREE.Color(0,0,0), opacity: obj.material.opacity, transparent: obj.material.transparent, visible: obj.visible };
+          originals.current.set(obj.uuid, orig);
+        } else if (obj instanceof THREE.Mesh) {
+          const m = obj.material as THREE.Material;
+          if (m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshLambertMaterial) {
+            orig = { color: m.color.clone(), emissiveColor: (m as any).emissive?.clone() || new THREE.Color(0,0,0), opacity: m.opacity, transparent: m.transparent, visible: obj.visible };
+            originals.current.set(obj.uuid, orig);
+          } else if (m instanceof THREE.MeshBasicMaterial) {
+            orig = { color: m.color.clone(), emissiveColor: new THREE.Color(0,0,0), opacity: m.opacity, transparent: m.transparent, visible: m.visible };
+            originals.current.set(obj.uuid, orig);
+          }
+        }
+        if (!orig) return;
+      }
 
       const isTarget = targetPanelUuids.has(obj.uuid);
       const isSameFurniture = furnitureObjUuids.has(obj.uuid);
