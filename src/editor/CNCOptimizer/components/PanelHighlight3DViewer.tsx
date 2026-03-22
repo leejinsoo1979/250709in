@@ -154,23 +154,12 @@ const PanelDimmer: React.FC<{
     const furnitureObjUuids = new Set<string>();
     const targetPanelUuids = new Set<string>();
 
-    // 패널 이름 매칭 헬퍼
+    // 패널 이름 매칭 — 정확히 일치만 허용 (toMeshName이 CNC→3D 변환 담당)
     const matchesPanelName = (obj: THREE.Object3D): boolean => {
       if (!highlightedPanelName || !obj.name) return false;
       const pn = extractPanelName(obj.name);
-      // 1) 정확히 일치
       if (pn && pn === highlightedPanelName) return true;
       if (obj.name === highlightedPanelName) return true;
-      // 2) includes 매칭 — 섹션 접두사 (상)/(하) 제거 후에도 시도
-      if (obj.name.includes(highlightedPanelName) || (pn && pn.includes(highlightedPanelName))) return true;
-      // 3) 섹션 접두사 제거 후 includes 매칭
-      //    예: pn="(상)상단보강대", highlighted="(상)보강대"
-      //    → stripped pn="상단보강대", stripped highlighted="보강대"
-      //    → "상단보강대".includes("보강대") = true
-      const stripSection = (s: string) => s.replace(/^\([상하]\)/, '');
-      const strippedPn = pn ? stripSection(pn) : null;
-      const strippedHighlight = stripSection(highlightedPanelName);
-      if (strippedPn && strippedPn.includes(strippedHighlight)) return true;
       return false;
     };
 

@@ -1282,7 +1282,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       furnitureId={placedFurnitureId}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
-                      panelName="(좌)하단보강대"
+                      panelName="보강대"
                     />
                     <BoxWithEdges
                       key="left-reinforcement-top"
@@ -1293,7 +1293,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       furnitureId={placedFurnitureId}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
-                      panelName="(좌)상단보강대"
+                      panelName="보강대"
                     />
                   </>
                 )}
@@ -1353,7 +1353,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                    panelName="(좌하)하단보강대"
+                    panelName="(하)보강대"
                   />
                   <BoxWithEdges
                     key="left-lower-reinforcement-top"
@@ -1365,7 +1365,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                    panelName="(좌하)상단보강대"
+                    panelName="(하)보강대"
                   />
                 </>
               )}
@@ -1399,7 +1399,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                    panelName="(좌상)하단보강대"
+                    panelName="(상)보강대"
                   />
                   <BoxWithEdges
                     key="left-upper-reinforcement-top"
@@ -1411,7 +1411,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                    panelName="(좌상)상단보강대"
+                    panelName="(상)보강대"
                   />
                 </>
               )}
@@ -1467,7 +1467,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     furnitureId={placedFurnitureId}
                     isDragging={isDragging}
                     isEditMode={isEditMode}
-                    panelName="(우)하단보강대"
+                    panelName="우보강대"
                     edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
                   />
                   <BoxWithEdges
@@ -1479,7 +1479,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     furnitureId={placedFurnitureId}
                     isDragging={isDragging}
                     isEditMode={isEditMode}
-                    panelName="(우)상단보강대"
+                    panelName="우보강대"
                     edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
                   />
                 </>
