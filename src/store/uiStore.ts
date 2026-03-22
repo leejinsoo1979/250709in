@@ -853,22 +853,20 @@ export const useUIStore = create<UIState>()(
       name: 'ui-store', // localStorage 키
       partialize: (state) => ({
         viewMode: state.viewMode,
-        view2DDirection: state.view2DDirection,  // localStorage에 저장
-        // showDimensions는 항상 켜진 상태로 시작 (persist 제외)
-        shadowEnabled: state.shadowEnabled,  // 그래픽 설정 유지
-        edgeOutlineEnabled: state.edgeOutlineEnabled,  // 그래픽 설정 유지
-        dashboardLayout: state.dashboardLayout,  // 대시보드 레이아웃 유지
-        openTabs: state.openTabs,  // 디자인 탭 유지
-        activeTabId: state.activeTabId,  // 활성 탭 유지
-        // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
-        // doorsOpen과 activePopup은 세션별로 초기화
-      }),
-      merge: (persistedState, currentState) => ({
-        ...currentState,
-        ...(persistedState as object),
-        // 새로고침 시 치수는 항상 ON (이전 localStorage 잔존값 무시)
-        showDimensions: true,
-        showDimensionsText: true,
+        view2DDirection: state.view2DDirection,
+        shadowEnabled: state.shadowEnabled,
+        edgeOutlineEnabled: state.edgeOutlineEnabled,
+        dashboardLayout: state.dashboardLayout,
+        openTabs: state.openTabs,
+        activeTabId: state.activeTabId,
+        // 뷰 토글 상태 유지
+        showDimensions: state.showDimensions,
+        showDimensionsText: state.showDimensionsText,
+        showAll: state.showAll,
+        showGuides: state.showGuides,
+        showAxis: state.showAxis,
+        showFurniture: state.showFurniture,
+        showFurnitureEditHandles: state.showFurnitureEditHandles,
       }),
     }
   )
