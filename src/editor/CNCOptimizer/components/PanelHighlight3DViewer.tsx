@@ -131,8 +131,16 @@ const PanelDimmer: React.FC<{
       return;
     }
 
-    // ── 대상 가구 그룹 탐색 ──
-    const targetGroup = scene.getObjectByName(highlightedFurnitureId);
+    // ── 대상 가구 그룹 탐색 (userData.furnitureId 또는 name으로 검색) ──
+    let targetGroup: THREE.Object3D | undefined;
+    scene.traverse((obj) => {
+      if (!targetGroup && obj.userData?.furnitureId === highlightedFurnitureId) {
+        targetGroup = obj;
+      }
+    });
+    if (!targetGroup) {
+      targetGroup = scene.getObjectByName(highlightedFurnitureId) ?? undefined;
+    }
     const furnitureObjUuids = new Set<string>();
     const targetPanelUuids = new Set<string>();
 
