@@ -1380,7 +1380,7 @@ function PageInner(){
       </div>
 
       {/* Main Content */}
-      <div className={styles.main}>
+      <div className={`${styles.main} ${viewSwapped ? styles.mainSwapped : ''}`}>
         {/* Left Sidebar */}
         <div className={styles.leftSidebar}>
           <PanelsTable />

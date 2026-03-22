@@ -408,6 +408,10 @@
   align-items: start;
 }
 
+/* 스왑 모드: 중앙 가구뷰어 줄이고 우측 패널뷰어 넓히기 */
+.mainSwapped {
+  grid-template-columns: 460px minmax(300px, 1fr) 500px;
+}
 
 .leftSidebar {
   display: flex;
