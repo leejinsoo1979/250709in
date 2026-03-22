@@ -469,9 +469,9 @@ export function useLivePanelData() {
         const fs = spaceInfo.frameSize;
         const surroundThickness = 18;
         const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
-        // L자 판단: 벽이 없는 쪽은 무조건 L자 (전면판 + 측면판)
-        const isLeftLShape = !spaceInfo.wallConfig?.left;
-        const isRightLShape = !spaceInfo.wallConfig?.right;
+        // 서라운드 프레임은 항상 L자 구조 (전면판 + 측면판으로 재단)
+        const isLeftLShape = true;
+        const isRightLShape = true;
         console.log('🔍 [서라운드 경로] 균등배치:', { surroundType: spaceInfo.surroundType, frameSize: fs, wallConfig: spaceInfo.wallConfig, isLeftLShape, isRightLShape });
 
         if (dropH > 0) {
