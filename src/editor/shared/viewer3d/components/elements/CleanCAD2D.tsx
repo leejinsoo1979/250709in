@@ -2248,7 +2248,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   } else {
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     // 프레임은 3단 치수선에 별도 표시 → 실배치에서 제외
-                    mainPlacementWidth = floorValue(mainSlotTotalWidth, hasDualInMain);
+                    mainPlacementWidth = zoneSlotInfoForDim.normal.width;
                     dcPlacementWidth = zoneSlotInfoForDim.dropped?.width || droppedWidth;
                     // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
@@ -7114,13 +7114,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {hasDC && renderZoneDim(droppedStartX, droppedEndX, String(Math.round(droppedWidth)), zoneDimZ)}
                   {hasCB && renderZoneDim(cbStartX, cbEndX, String(Math.round(cbWidth)), zoneDimZ)}
 
-                  {/* ===== 3단: 슬롯 합산 (이격 반영된 실배치 공간) ===== */}
+                  {/* ===== 3단: 이격 반영된 내경 ===== */}
                   {renderZoneDim(mainStartX, mainEndX,
                     String(isFreePlacement ? Math.round(mainWidth) : (() => {
-                      const sum = zoneSlotInfo.normal.slotWidths
-                        ? zoneSlotInfo.normal.slotWidths.reduce((s: number, w: number) => s + w, 0)
-                        : zoneSlotInfo.normal.columnWidth * zoneSlotInfo.normal.columnCount;
-                      return Math.round(sum);
+                      // 내경 원값 (slotWidths 정수내림 합산이 아닌 이격 반영된 내경)
+                      const val = zoneSlotInfo.normal.width;
+                      const r = Math.round(val * 10) / 10;
+                      return r % 1 === 0 ? String(r) : r.toFixed(1);
                     })()),
                     subDimensionZ
                   )}
