@@ -1,13 +1,12 @@
 import React, { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useSpaceConfigStore, SpaceInfo } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import Room from '@/editor/shared/viewer3d/components/elements/Room';
+import ThreeCanvas from '@/editor/shared/viewer3d/components/base/ThreeCanvas';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
-import { ViewerThemeProvider } from '@/editor/shared/viewer3d/context/ViewerThemeContext';
 import { calculateOptimalDistance, mmToThreeUnits } from '@/editor/shared/viewer3d/components/base/utils/threeUtils';
 import styles from './PanelHighlight3DViewer.module.css';
 
@@ -56,7 +55,6 @@ const PanelDimmer: React.FC<{
   excludedMeshNames?: Set<string>;
 }> = ({ highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
   const { scene, invalidate } = useThree();
-  // 원본 색상/opacity 저장 (line + mesh 모두)
   const originals = useRef<Map<string, { color: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
 
   useEffect(() => {
@@ -84,7 +82,7 @@ const PanelDimmer: React.FC<{
             color: mat.color.clone(),
             opacity: mat.opacity,
             transparent: mat.transparent,
-            visible: mat.visible, // wireframe mesh는 visible=false
+            visible: mat.visible,
           });
         }
       }
@@ -162,7 +160,6 @@ const PanelDimmer: React.FC<{
       const isTarget = hasSpecificPanel && targetPanelUuids.has(obj.uuid);
       const isSameFurniture = furnitureObjUuids.has(obj.uuid);
 
-      // ─ Line (wireframe edges) ─
       if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
         const mat = obj.material;
         if (isTarget) {
@@ -188,27 +185,22 @@ const PanelDimmer: React.FC<{
         return;
       }
 
-      // ─ Mesh ─
       if (!(obj instanceof THREE.Mesh)) return;
       const mat = obj.material;
 
-      // wireframe 모드: MeshBasicMaterial (보통 visible=false)
       if (mat instanceof THREE.MeshBasicMaterial) {
         if (isTarget) {
-          // 대상 패널: visible로 만들어 반투명 하이라이트 면 표시
           mat.visible = true;
           mat.color.set(0x2266cc);
           mat.opacity = 0.25;
           mat.transparent = true;
         } else {
-          // 비대상: 숨김 유지
           mat.visible = false;
         }
         mat.needsUpdate = true;
         return;
       }
 
-      // solid 모드: MeshStandardMaterial
       if (mat instanceof THREE.MeshStandardMaterial) {
         if (isTarget) {
           mat.opacity = 1;
@@ -240,7 +232,6 @@ const PanelDimmer: React.FC<{
     invalidate();
 
     return () => {
-      // cleanup: 원래 상태 복원
       scene.traverse((obj) => {
         obj.visible = true;
         const orig = originals.current.get(obj.uuid);
@@ -271,78 +262,6 @@ const PanelDimmer: React.FC<{
   }, [highlightedFurnitureId, highlightedPanelName, excludedMeshNames, scene, invalidate]);
 
   return null;
-};
-
-/** Canvas 내부 3D Scene — Room 컴포넌트 기반으로 에디터와 동일하게 렌더링 */
-const Scene3D: React.FC<{
-  spaceInfo: SpaceInfo;
-  cameraPosition: [number, number, number];
-  highlightedFurnitureId: string | null;
-  highlightedPanelName: string | null;
-  excludedMeshNames?: Set<string>;
-}> = ({ spaceInfo, cameraPosition, highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
-  return (
-    <Suspense fallback={null}>
-      <ViewerThemeProvider viewMode="3D">
-        <Space3DViewProvider
-          spaceInfo={spaceInfo}
-          svgSize={{ width: 400, height: 225 }}
-          renderMode="wireframe"
-          viewMode="3D"
-        >
-          {/* 조명 — Space3DViewerReadOnly와 동일 */}
-          <directionalLight
-            position={[5, 15, 20]}
-            intensity={2.5}
-            color="#ffffff"
-            castShadow
-            shadow-mapSize-width={4096}
-            shadow-mapSize-height={4096}
-            shadow-camera-far={50}
-            shadow-camera-left={-25}
-            shadow-camera-right={25}
-            shadow-camera-top={25}
-            shadow-camera-bottom={-25}
-            shadow-bias={-0.0005}
-            shadow-radius={12}
-            shadow-normalBias={0.02}
-          />
-          <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
-          <ambientLight intensity={0.5} color="#ffffff" />
-
-          {/* 궤도 컨트롤 */}
-          <OrbitControls
-            {...{
-              enablePan: true,
-              enableZoom: true,
-              enableRotate: true,
-              minDistance: 0.3,
-              maxDistance: 50,
-              target: [0, mmToThreeUnits(spaceInfo.height * 0.5), 0],
-            } as any}
-          />
-
-          {/* Room 컴포넌트 — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
-          <Room
-            spaceInfo={spaceInfo}
-            viewMode="3D"
-            renderMode="wireframe"
-            showAll={false}
-            showFrame={true}
-            showDimensions={false}
-            isReadOnly={true}
-          />
-
-          {/* 반투명 처리 (furnitureId + panelName 기반 개별 패널 매칭) */}
-          <PanelDimmer
-            highlightedFurnitureId={highlightedFurnitureId}
-            highlightedPanelName={highlightedPanelName}
-            excludedMeshNames={excludedMeshNames}
-          />
-        </Space3DViewProvider>
-      </ViewerThemeProvider>
-    </Suspense>
-  );
 };
 
 const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
@@ -394,6 +313,14 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     return [centerX, centerY, baseDistance];
   }, [spaceInfo, placedModules.length]);
 
+  // 재질 설정
+  const materialConfig = useMemo(() => {
+    return (spaceInfo as any)?.materialConfig || {
+      interiorColor: '#FFFFFF',
+      doorColor: '#E0E0E0',
+    };
+  }, [spaceInfo]);
+
   if (!spaceInfo || placedModules.length === 0) {
     return (
       <div className={styles.empty}>
@@ -402,7 +329,6 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     );
   }
 
-  // 지연 마운트 대기 중
   if (!ready) {
     return (
       <div className={styles.empty}>
@@ -420,35 +346,64 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   return (
     <div className={styles.container}>
       <WebGLErrorBoundary fallback={fallbackUI}>
-        <Canvas
-          gl={{
-            antialias: true,
-            alpha: true,
-            powerPreference: 'low-power',
-            failIfMajorPerformanceCaveat: false,
-          }}
-          dpr={[1, 1.5]}
-          frameloop="demand"
-          style={{ background: 'transparent' }}
-          onCreated={({ gl }) => {
-            console.log('[PanelHighlight3DViewer] WebGL context created');
-            gl.domElement.addEventListener('webglcontextlost', (e) => {
-              e.preventDefault();
-              console.warn('[PanelHighlight3DViewer] WebGL context lost');
-            });
-          }}
+        {/* Space3DViewerReadOnly와 동일한 구조: Provider → ThreeCanvas → Room */}
+        <Space3DViewProvider
+          spaceInfo={spaceInfo}
+          svgSize={{ width: 800, height: 600 }}
+          renderMode="solid"
+          viewMode="3D"
         >
-          <Scene3D
-            spaceInfo={spaceInfo}
+          <ThreeCanvas
             cameraPosition={cameraPosition}
-            highlightedFurnitureId={highlightedFurnitureId}
-            highlightedPanelName={highlightedPanelName}
-            excludedMeshNames={excludedMeshNames}
-          />
-        </Canvas>
+            viewMode="3D"
+            view2DDirection="front"
+            renderMode="solid"
+            cameraMode="perspective"
+          >
+            <React.Suspense fallback={null}>
+              {/* 조명 — Space3DViewerReadOnly와 동일 */}
+              <directionalLight
+                position={[5, 15, 20]}
+                intensity={2.5}
+                color="#ffffff"
+                castShadow
+                shadow-mapSize-width={4096}
+                shadow-mapSize-height={4096}
+                shadow-camera-far={50}
+                shadow-camera-left={-25}
+                shadow-camera-right={25}
+                shadow-camera-top={25}
+                shadow-camera-bottom={-25}
+                shadow-bias={-0.0005}
+                shadow-radius={12}
+                shadow-normalBias={0.02}
+              />
+              <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
+              <ambientLight intensity={0.5} color="#ffffff" />
+
+              {/* Room — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
+              <Room
+                spaceInfo={spaceInfo}
+                viewMode="3D"
+                materialConfig={materialConfig}
+                showAll={false}
+                showFrame={true}
+                showDimensions={false}
+                isReadOnly={true}
+                cameraModeOverride="perspective"
+              />
+
+              {/* 패널 하이라이트 */}
+              <PanelDimmer
+                highlightedFurnitureId={highlightedFurnitureId}
+                highlightedPanelName={highlightedPanelName}
+                excludedMeshNames={excludedMeshNames}
+              />
+            </React.Suspense>
+          </ThreeCanvas>
+        </Space3DViewProvider>
       </WebGLErrorBoundary>
 
-      {/* 하이라이트 안내 */}
       {highlightedPanelName && (
         <div className={styles.panelLabel}>
           {highlightedPanelName}
