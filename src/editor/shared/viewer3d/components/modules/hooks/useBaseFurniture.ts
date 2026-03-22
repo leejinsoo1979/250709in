@@ -172,8 +172,13 @@ export const useBaseFurniture = (
   // adjustedWidth가 있으면 최우선 사용 (엔드패널이나 기둥 침범 시 조정된 너비)
   if (adjustedWidth !== undefined && adjustedWidth !== null) {
     actualWidthMm = adjustedWidth;
+
+  } else if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
+    // 듀얼 가구: 두 슬롯 너비 합산
+    actualWidthMm = slotWidths[0] + slotWidths[1];
+
   } else {
-    // moduleData.dimensions.width 사용 (customWidth 반영된 모듈 ID로 조회된 값)
+    // 기본값: 원래 모듈 너비 사용
     actualWidthMm = moduleData.dimensions.width;
   }
   
