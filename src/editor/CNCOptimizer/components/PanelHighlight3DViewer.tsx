@@ -1,5 +1,5 @@
 import React, { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -7,6 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import Room from '@/editor/shared/viewer3d/components/elements/Room';
 import ThreeCanvas from '@/editor/shared/viewer3d/components/base/ThreeCanvas';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
+import { ExcludedPanelsProvider } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import { calculateOptimalDistance, mmToThreeUnits } from '@/editor/shared/viewer3d/components/base/utils/threeUtils';
 import styles from './PanelHighlight3DViewer.module.css';
 
@@ -52,42 +53,9 @@ function extractPanelName(objName: string): string | null {
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
   highlightedPanelName: string | null;
-  excludedMeshNames?: Set<string>;
-}> = ({ highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
+}> = ({ highlightedFurnitureId, highlightedPanelName }) => {
   const { scene, invalidate } = useThree();
   const originals = useRef<Map<string, { color: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
-  // ref로 최신 props 유지 (useFrame에서 사용)
-  const excludedRef = useRef(excludedMeshNames);
-  excludedRef.current = excludedMeshNames;
-
-  // ── useFrame: 매 프레임 exclude 패널 visible 강제 적용 ──
-  const debugFrameRef = useRef(0);
-  useFrame(() => {
-    const excluded = excludedRef.current;
-    if (!excluded || excluded.size === 0) return;
-
-    // 5초마다 디버그 로그
-    debugFrameRef.current++;
-    const shouldLog = debugFrameRef.current % 300 === 1;
-
-    let hidCount = 0;
-    scene.traverse((obj) => {
-      if (!obj.name) return;
-      const pn = extractPanelName(obj.name);
-      if (pn === null) return;
-      const shouldBeVisible = !excluded.has(pn);
-      if (shouldLog && !shouldBeVisible) {
-        console.log(`[PanelDimmer] HIDING: obj.name="${obj.name}" → pn="${pn}" visible=${obj.visible}→${shouldBeVisible}`);
-        hidCount++;
-      }
-      if (obj.visible !== shouldBeVisible) {
-        obj.visible = shouldBeVisible;
-      }
-    });
-    if (shouldLog) {
-      console.log(`[PanelDimmer] excluded=[${[...excluded]}], hidden ${hidCount} objects`);
-    }
-  });
 
   useEffect(() => {
     // ── 원본 속성 저장 (최초 1회) ──
@@ -117,18 +85,6 @@ const PanelDimmer: React.FC<{
             visible: mat.visible,
           });
         }
-      }
-    });
-
-    // ── 제외 패널 visible 처리 (useEffect에서도 1회 적용) ──
-    scene.traverse((obj) => {
-      if (!obj.name) return;
-      const pn = extractPanelName(obj.name);
-      if (pn === null) return;
-      if (excludedMeshNames && excludedMeshNames.size > 0) {
-        obj.visible = !excludedMeshNames.has(pn);
-      } else {
-        obj.visible = true;
       }
     });
 
@@ -274,7 +230,6 @@ const PanelDimmer: React.FC<{
 
     return () => {
       scene.traverse((obj) => {
-        obj.visible = true;
         const orig = originals.current.get(obj.uuid);
         if (!orig) return;
         if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
@@ -300,7 +255,7 @@ const PanelDimmer: React.FC<{
         }
       });
     };
-  }, [highlightedFurnitureId, highlightedPanelName, excludedMeshNames, scene, invalidate]);
+  }, [highlightedFurnitureId, highlightedPanelName, scene, invalidate]);
 
   return null;
 };
@@ -388,61 +343,62 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     <div className={styles.container}>
       <WebGLErrorBoundary fallback={fallbackUI}>
         {/* Space3DViewerReadOnly와 동일한 구조: Provider → ThreeCanvas → Room */}
-        <Space3DViewProvider
-          spaceInfo={spaceInfo}
-          svgSize={{ width: 800, height: 600 }}
-          renderMode="solid"
-          viewMode="3D"
-        >
-          <ThreeCanvas
-            cameraPosition={cameraPosition}
-            viewMode="3D"
-            view2DDirection="front"
+        <ExcludedPanelsProvider value={excludedMeshNames}>
+          <Space3DViewProvider
+            spaceInfo={spaceInfo}
+            svgSize={{ width: 800, height: 600 }}
             renderMode="solid"
-            cameraMode="perspective"
+            viewMode="3D"
           >
-            <React.Suspense fallback={null}>
-              {/* 조명 — Space3DViewerReadOnly와 동일 */}
-              <directionalLight
-                position={[5, 15, 20]}
-                intensity={2.5}
-                color="#ffffff"
-                castShadow
-                shadow-mapSize-width={4096}
-                shadow-mapSize-height={4096}
-                shadow-camera-far={50}
-                shadow-camera-left={-25}
-                shadow-camera-right={25}
-                shadow-camera-top={25}
-                shadow-camera-bottom={-25}
-                shadow-bias={-0.0005}
-                shadow-radius={12}
-                shadow-normalBias={0.02}
-              />
-              <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
-              <ambientLight intensity={0.5} color="#ffffff" />
+            <ThreeCanvas
+              cameraPosition={cameraPosition}
+              viewMode="3D"
+              view2DDirection="front"
+              renderMode="solid"
+              cameraMode="perspective"
+            >
+              <React.Suspense fallback={null}>
+                {/* 조명 — Space3DViewerReadOnly와 동일 */}
+                <directionalLight
+                  position={[5, 15, 20]}
+                  intensity={2.5}
+                  color="#ffffff"
+                  castShadow
+                  shadow-mapSize-width={4096}
+                  shadow-mapSize-height={4096}
+                  shadow-camera-far={50}
+                  shadow-camera-left={-25}
+                  shadow-camera-right={25}
+                  shadow-camera-top={25}
+                  shadow-camera-bottom={-25}
+                  shadow-bias={-0.0005}
+                  shadow-radius={12}
+                  shadow-normalBias={0.02}
+                />
+                <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
+                <ambientLight intensity={0.5} color="#ffffff" />
 
-              {/* Room — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
-              <Room
-                spaceInfo={spaceInfo}
-                viewMode="3D"
-                materialConfig={materialConfig}
-                showAll={false}
-                showFrame={true}
-                showDimensions={false}
-                isReadOnly={true}
-                cameraModeOverride="perspective"
-              />
+                {/* Room — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
+                <Room
+                  spaceInfo={spaceInfo}
+                  viewMode="3D"
+                  materialConfig={materialConfig}
+                  showAll={false}
+                  showFrame={true}
+                  showDimensions={false}
+                  isReadOnly={true}
+                  cameraModeOverride="perspective"
+                />
 
-              {/* 패널 하이라이트 */}
-              <PanelDimmer
-                highlightedFurnitureId={highlightedFurnitureId}
-                highlightedPanelName={highlightedPanelName}
-                excludedMeshNames={excludedMeshNames}
-              />
-            </React.Suspense>
-          </ThreeCanvas>
-        </Space3DViewProvider>
+                {/* 패널 하이라이트 */}
+                <PanelDimmer
+                  highlightedFurnitureId={highlightedFurnitureId}
+                  highlightedPanelName={highlightedPanelName}
+                />
+              </React.Suspense>
+            </ThreeCanvas>
+          </Space3DViewProvider>
+        </ExcludedPanelsProvider>
       </WebGLErrorBoundary>
 
       {highlightedPanelName && (

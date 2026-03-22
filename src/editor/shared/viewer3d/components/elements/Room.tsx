@@ -51,7 +51,6 @@ interface RoomProps {
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
   ghostHighlightSlotIndex?: number | null; // 미리보기용 슬롯 강조
-
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -338,7 +337,7 @@ const Room: React.FC<RoomProps> = ({
   cameraModeOverride,
   readOnly = false,
   onFurnitureClick,
-  ghostHighlightSlotIndex
+  ghostHighlightSlotIndex,
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;

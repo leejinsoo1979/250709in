@@ -5,7 +5,9 @@ import styles from '../style.module.css';
 interface PanelListItemProps {
   panel: Panel;
   isSelected: boolean;
+  isVisible?: boolean;
   onToggle: () => void;
+  onVisibilityToggle?: () => void;
   onQuantityChange: (delta: number) => void;
   getColorHex: (color: string) => string;
   getMaterialName: (material: string) => string;
@@ -15,7 +17,9 @@ interface PanelListItemProps {
 const PanelListItem: React.FC<PanelListItemProps> = ({
   panel,
   isSelected,
+  isVisible = true,
   onToggle,
+  onVisibilityToggle,
   onQuantityChange,
   getColorHex,
   getMaterialName,
@@ -24,11 +28,24 @@ const PanelListItem: React.FC<PanelListItemProps> = ({
   return (
     <div
       className={`${styles.panelItem} ${isSelected ? styles.selected : ''}`}
+      style={{ opacity: isVisible ? 1 : 0.4 }}
       onClick={onToggle}
       onMouseEnter={() => onHover?.(panel.meshName || panel.name, panel.furnitureId || null)}
       onMouseLeave={() => onHover?.(null, null)}
     >
-      <div 
+      {onVisibilityToggle && (
+        <input
+          type="checkbox"
+          checked={isVisible}
+          onChange={(e) => {
+            e.stopPropagation();
+            onVisibilityToggle();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          style={{ marginRight: 6, cursor: 'pointer', accentColor: '#3b82f6' }}
+        />
+      )}
+      <div
         className={styles.panelColor}
         style={{ backgroundColor: getColorHex(panel.color) }}
       />
