@@ -1708,7 +1708,7 @@ function PageInner(){
             )}
 
             {/* Sheet List with Tabs */}
-            {optimizationResults.length > 0 && (
+            {!viewSwapped && optimizationResults.length > 0 && (
               <div className={`${styles.statsCard} ${styles.sheetListCard}`}>
                 <div className={styles.sheetListHeader}>
                   <div className={styles.tabButtons}>
