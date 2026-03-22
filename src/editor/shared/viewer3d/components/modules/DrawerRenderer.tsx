@@ -598,8 +598,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 서랍 레일 (좌/우) === */}
+        {/* === 서랍 레일 (좌/우) — 임시 비활성화 === */}
         {(() => {
+          return null;
           // 2D에서는 레일 숨김
           if (viewMode === '2D') {
             return null;
