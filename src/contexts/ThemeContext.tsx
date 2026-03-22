@@ -354,6 +354,9 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   const colors = colorPalettes[theme.color];
   const mode = modeColors[theme.mode];
 
+  // --theme HSL 채널 변수도 동기화 (hsl(var(--theme)) 사용하는 컴포넌트용)
+  setThemeCssVariables(colors.primary);
+
   // CSS 변수 적용
   root.style.setProperty('--theme-mode', theme.mode); // 모드 정보 추가
   root.style.setProperty('--theme-color', theme.color); // 색상 정보 추가
