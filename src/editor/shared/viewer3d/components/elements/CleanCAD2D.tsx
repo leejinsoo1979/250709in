@@ -7780,10 +7780,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         {/* 캐비넷별 폭 치수선 - 외부로 이동하고 정면처럼 표시 */}
         {showDimensions && placedModules.length > 0 && placedModules.map((module, index) => {
+          // 단내림 구간 가구는 zone 정보를 포함한 spaceInfo로 moduleData 조회
+          let topViewSpaceInfo = spaceInfo;
+          if (module.zone === 'dropped') {
+            topViewSpaceInfo = { ...spaceInfo, zone: 'dropped' as const };
+          }
           const moduleData = getModuleById(
             module.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-            spaceInfo
+            calculateInternalSpace(topViewSpaceInfo),
+            topViewSpaceInfo
           );
 
           if (!moduleData) return null;
