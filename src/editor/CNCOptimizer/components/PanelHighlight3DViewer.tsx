@@ -162,10 +162,10 @@ const PanelDimmer: React.FC<{
         });
       } else if (obj instanceof THREE.Mesh) {
         const mat = obj.material as THREE.Material;
-        if (mat instanceof THREE.MeshStandardMaterial) {
+        if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
           originals.current.set(obj.uuid, {
             color: mat.color.clone(),
-            emissiveColor: mat.emissive.clone(),
+            emissiveColor: (mat as any).emissive?.clone() || new THREE.Color(0, 0, 0),
             opacity: mat.opacity,
             transparent: mat.transparent,
             visible: obj.visible,
@@ -194,12 +194,14 @@ const PanelDimmer: React.FC<{
           obj.material.needsUpdate = true;
         } else if (obj instanceof THREE.Mesh) {
           const mat = obj.material;
-          if (mat instanceof THREE.MeshStandardMaterial) {
+          if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
             mat.color.copy(orig.color);
             mat.opacity = orig.opacity;
             mat.transparent = orig.transparent;
-            mat.emissive.copy(orig.emissiveColor);
-            mat.emissiveIntensity = 0;
+            if ((mat as any).emissive) {
+              (mat as any).emissive.copy(orig.emissiveColor);
+              (mat as any).emissiveIntensity = 0;
+            }
             mat.needsUpdate = true;
           } else if (mat instanceof THREE.MeshBasicMaterial) {
             mat.visible = orig.visible;
@@ -312,21 +314,25 @@ const PanelDimmer: React.FC<{
         return;
       }
 
-      if (mat instanceof THREE.MeshStandardMaterial) {
+      if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
         if (isTarget) {
           // 선택된 패널만 강조
           mat.color.set(0x3366ff);
           mat.opacity = 1;
           mat.transparent = false;
-          mat.emissive.set(0x0033ee);
-          mat.emissiveIntensity = 1.0;
+          if ((mat as any).emissive) {
+            (mat as any).emissive.set(0x0033ee);
+            (mat as any).emissiveIntensity = 1.0;
+          }
         } else {
           // 나머지 전체 투명
           mat.color.copy(orig.color);
           mat.opacity = isSameFurniture ? 0.08 : 0.06;
           mat.transparent = true;
-          mat.emissive.copy(orig.emissiveColor);
-          mat.emissiveIntensity = 0;
+          if ((mat as any).emissive) {
+            (mat as any).emissive.copy(orig.emissiveColor);
+            (mat as any).emissiveIntensity = 0;
+          }
         }
         mat.needsUpdate = true;
       }
@@ -345,12 +351,14 @@ const PanelDimmer: React.FC<{
           obj.material.needsUpdate = true;
         } else if (obj instanceof THREE.Mesh) {
           const mat = obj.material;
-          if (mat instanceof THREE.MeshStandardMaterial) {
+          if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
             mat.color.copy(orig.color);
             mat.opacity = orig.opacity;
             mat.transparent = orig.transparent;
-            mat.emissive.copy(orig.emissiveColor);
-            mat.emissiveIntensity = 0;
+            if ((mat as any).emissive) {
+              (mat as any).emissive.copy(orig.emissiveColor);
+              (mat as any).emissiveIntensity = 0;
+            }
             mat.needsUpdate = true;
           } else if (mat instanceof THREE.MeshBasicMaterial) {
             mat.visible = orig.visible;

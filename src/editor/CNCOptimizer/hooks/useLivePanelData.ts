@@ -19,6 +19,13 @@ function toMeshName(cncName: string): string {
   // 보강대: CNC "후면 보강대" / "(상)후면 보강대" → 3D "보강대" / "(상)보강대" 로 변환
   // PanelDimmer에서 includes 매칭하므로 "보강대"가 "상단보강대"/"하단보강대" 모두 매칭
   if (cncName.includes('후면 보강대')) return cncName.replace('후면 보강대', '보강대');
+  // 프레임: CNC "상부프레임" / "하부프레임" → 3D "top-frame" / "base-frame"
+  if (cncName.includes('상부프레임') || cncName.includes('상부 프레임')) return 'top-frame';
+  if (cncName.includes('하부프레임') || cncName.includes('하부 프레임')) return 'base-frame';
+  // 서라운드: CNC → 3D Room name
+  if (cncName.includes('좌측 서라운드 프레임') || cncName === '좌측 서라운드') return 'left-surround-ep';
+  if (cncName.includes('우측 서라운드 프레임') || cncName === '우측 서라운드') return 'right-surround-ep';
+  if (cncName.includes('상부 서라운드 프레임')) return 'top-frame';
   return cncName;
 }
 
