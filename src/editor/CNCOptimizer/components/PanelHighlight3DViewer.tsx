@@ -48,18 +48,6 @@ function extractPanelName(objName: string): string | null {
   return stripped !== objName ? stripped : null;
 }
 
-/**
- * obj의 조상을 거슬러 올라가서 furnitureId를 가진 그룹을 찾는다.
- */
-function findFurnitureId(obj: THREE.Object3D): string | null {
-  let cur: THREE.Object3D | null = obj;
-  while (cur) {
-    if (cur.userData?.furnitureId) return cur.userData.furnitureId;
-    cur = cur.parent;
-  }
-  return null;
-}
-
 /** 비하이라이트 패널 반투명 처리 (scene traverse) — wireframe + solid 모드 모두 지원 */
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
@@ -73,21 +61,32 @@ const PanelDimmer: React.FC<{
   excludedRef.current = excludedMeshNames;
 
   // ── useFrame: 매 프레임 exclude 패널 visible 강제 적용 ──
-  // Scene이 지연 로드되어도 확실히 적용됨
+  const debugFrameRef = useRef(0);
   useFrame(() => {
     const excluded = excludedRef.current;
     if (!excluded || excluded.size === 0) return;
+
+    // 5초마다 디버그 로그
+    debugFrameRef.current++;
+    const shouldLog = debugFrameRef.current % 300 === 1;
+
+    let hidCount = 0;
     scene.traverse((obj) => {
       if (!obj.name) return;
       const pn = extractPanelName(obj.name);
       if (pn === null) return;
-      const fid = findFurnitureId(obj);
-      const compositeKey = fid ? `${fid}::${pn}` : pn;
-      const shouldBeVisible = !excluded.has(compositeKey);
+      const shouldBeVisible = !excluded.has(pn);
+      if (shouldLog && !shouldBeVisible) {
+        console.log(`[PanelDimmer] HIDING: obj.name="${obj.name}" → pn="${pn}" visible=${obj.visible}→${shouldBeVisible}`);
+        hidCount++;
+      }
       if (obj.visible !== shouldBeVisible) {
         obj.visible = shouldBeVisible;
       }
     });
+    if (shouldLog) {
+      console.log(`[PanelDimmer] excluded=[${[...excluded]}], hidden ${hidCount} objects`);
+    }
   });
 
   useEffect(() => {
@@ -127,9 +126,7 @@ const PanelDimmer: React.FC<{
       const pn = extractPanelName(obj.name);
       if (pn === null) return;
       if (excludedMeshNames && excludedMeshNames.size > 0) {
-        const fid = findFurnitureId(obj);
-        const compositeKey = fid ? `${fid}::${pn}` : pn;
-        obj.visible = !excludedMeshNames.has(compositeKey);
+        obj.visible = !excludedMeshNames.has(pn);
       } else {
         obj.visible = true;
       }

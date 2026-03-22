@@ -103,8 +103,8 @@ const CNCOptimizer: React.FC = () => {
     const names = new Set<string>();
     hiddenPanelIds.forEach(id => {
       const panel = panelsList.find(p => p.id === id);
-      if (panel?.meshName && panel?.furnitureId) {
-        names.add(`${panel.furnitureId}::${panel.meshName}`);
+      if (panel?.meshName) {
+        names.add(panel.meshName);
       }
     });
     return names;
