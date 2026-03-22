@@ -5,12 +5,10 @@ import * as THREE from 'three';
 import { useSpaceConfigStore, SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
-import { calculateInternalSpace } from '@/editor/shared/utils/indexing';
-import BoxModule from '@/editor/shared/viewer3d/components/modules/BoxModule';
+import Room from '@/editor/shared/viewer3d/components/elements/Room';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
 import { ViewerThemeProvider } from '@/editor/shared/viewer3d/context/ViewerThemeContext';
-import { PlacedModule } from '@/editor/shared/furniture/types';
+import { calculateOptimalDistance, mmToThreeUnits } from '@/editor/shared/viewer3d/components/base/utils/threeUtils';
 import styles from './PanelHighlight3DViewer.module.css';
 
 interface PanelHighlight3DViewerProps {
@@ -41,25 +39,6 @@ class WebGLErrorBoundary extends Component<
     return this.props.children;
   }
 }
-
-/** 카메라 자동 위치 조정 컴포넌트 — 전체 가구가 화면에 들어오도록 */
-const CameraFitter: React.FC<{ targetSize: THREE.Vector3; center: THREE.Vector3 }> = ({ targetSize, center }) => {
-  const { camera } = useThree();
-
-  useEffect(() => {
-    const maxDim = Math.max(targetSize.x, targetSize.y, targetSize.z);
-    const distance = maxDim * 3.0;
-    camera.position.set(
-      center.x + distance * 0.6,
-      center.y + distance * 0.4,
-      center.z + distance * 0.8
-    );
-    camera.lookAt(center.x, center.y, center.z);
-    camera.updateProjectionMatrix();
-  }, [targetSize, center, camera]);
-
-  return null;
-};
 
 /**
  * panelName 접두사 제거 — mesh/edge 이름에서 패널명만 추출
@@ -294,78 +273,14 @@ const PanelDimmer: React.FC<{
   return null;
 };
 
-/** 단일 가구 렌더러 */
-const FurnitureRenderer: React.FC<{
-  placedModule: PlacedModule;
-  spaceInfo: SpaceInfo;
-}> = ({ placedModule, spaceInfo }) => {
-  const internalSpace = useMemo(
-    () => calculateInternalSpace(spaceInfo),
-    [spaceInfo]
-  );
-
-  const moduleData = useMemo(() => {
-    return (
-      (placedModule as any).moduleData ||
-      getModuleById(placedModule.moduleId, internalSpace, spaceInfo) ||
-      buildModuleDataFromPlacedModule(placedModule)
-    );
-  }, [placedModule, internalSpace, spaceInfo]);
-
-  if (!moduleData) return null;
-
-  const pm = placedModule as any;
-
-  // customSections 반영
-  const finalModuleData = useMemo(() => {
-    if (pm.customSections && moduleData.modelConfig) {
-      return {
-        ...moduleData,
-        modelConfig: {
-          ...moduleData.modelConfig,
-          sections: pm.customSections,
-        },
-      };
-    }
-    return moduleData;
-  }, [moduleData, pm.customSections]);
-
-  const width = pm.adjustedWidth ?? pm.customWidth ?? finalModuleData.dimensions.width;
-  const depth = pm.customDepth ?? finalModuleData.dimensions.depth;
-
-  return (
-    <BoxModule
-      moduleData={finalModuleData}
-      viewMode="3D"
-      renderMode="wireframe"
-      placedFurnitureId={placedModule.id}
-      spaceInfo={spaceInfo}
-      hasDoor={placedModule.hasDoor ?? false}
-      customDepth={depth}
-      adjustedWidth={width}
-      panelGrainDirections={placedModule.panelGrainDirections}
-      backPanelThickness={pm.backPanelThickness}
-      isCustomizable={pm.isCustomizable}
-      customConfig={pm.customConfig}
-      customSections={pm.customSections}
-      lowerSectionDepth={pm.lowerSectionDepth}
-      upperSectionDepth={pm.upperSectionDepth}
-      lowerSectionDepthDirection={pm.lowerSectionDepthDirection}
-      upperSectionDepthDirection={pm.upperSectionDepthDirection}
-    />
-  );
-};
-
-/** Canvas 내부 3D Scene */
+/** Canvas 내부 3D Scene — Room 컴포넌트 기반으로 에디터와 동일하게 렌더링 */
 const Scene3D: React.FC<{
   spaceInfo: SpaceInfo;
-  placedModules: PlacedModule[];
-  targetSize: THREE.Vector3;
-  targetCenter: THREE.Vector3;
+  cameraPosition: [number, number, number];
   highlightedFurnitureId: string | null;
   highlightedPanelName: string | null;
   excludedMeshNames?: Set<string>;
-}> = ({ spaceInfo, placedModules, targetSize, targetCenter, highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
+}> = ({ spaceInfo, cameraPosition, highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
   return (
     <Suspense fallback={null}>
       <ViewerThemeProvider viewMode="3D">
@@ -375,13 +290,25 @@ const Scene3D: React.FC<{
           renderMode="wireframe"
           viewMode="3D"
         >
-          {/* 조명 */}
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[5, 10, 8]} intensity={1.8} />
-          <directionalLight position={[-3, 5, -5]} intensity={0.4} />
-
-          {/* 카메라 자동 맞춤 */}
-          <CameraFitter targetSize={targetSize} center={targetCenter} />
+          {/* 조명 — Space3DViewerReadOnly와 동일 */}
+          <directionalLight
+            position={[5, 15, 20]}
+            intensity={2.5}
+            color="#ffffff"
+            castShadow
+            shadow-mapSize-width={4096}
+            shadow-mapSize-height={4096}
+            shadow-camera-far={50}
+            shadow-camera-left={-25}
+            shadow-camera-right={25}
+            shadow-camera-top={25}
+            shadow-camera-bottom={-25}
+            shadow-bias={-0.0005}
+            shadow-radius={12}
+            shadow-normalBias={0.02}
+          />
+          <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
+          <ambientLight intensity={0.5} color="#ffffff" />
 
           {/* 궤도 컨트롤 */}
           <OrbitControls
@@ -391,30 +318,27 @@ const Scene3D: React.FC<{
               enableRotate: true,
               minDistance: 0.3,
               maxDistance: 50,
-              target: [targetCenter.x, targetCenter.y, targetCenter.z],
+              target: [0, mmToThreeUnits(spaceInfo.height * 0.5), 0],
             } as any}
           />
 
-          {/* 가구 렌더링 - name에 furniture ID 설정 (PanelDimmer 매칭용) */}
-          {placedModules.map((pm) => (
-            <group
-              key={pm.id}
-              name={pm.id}
-              position={[
-                pm.position?.x || 0,
-                pm.position?.y || 0,
-                pm.position?.z || 0,
-              ]}
-            >
-              <FurnitureRenderer
-                placedModule={pm}
-                spaceInfo={spaceInfo}
-              />
-            </group>
-          ))}
+          {/* Room 컴포넌트 — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
+          <Room
+            spaceInfo={spaceInfo}
+            viewMode="3D"
+            renderMode="wireframe"
+            showAll={false}
+            showFrame={true}
+            showDimensions={false}
+            isReadOnly={true}
+          />
 
           {/* 반투명 처리 (furnitureId + panelName 기반 개별 패널 매칭) */}
-          <PanelDimmer highlightedFurnitureId={highlightedFurnitureId} highlightedPanelName={highlightedPanelName} excludedMeshNames={excludedMeshNames} />
+          <PanelDimmer
+            highlightedFurnitureId={highlightedFurnitureId}
+            highlightedPanelName={highlightedPanelName}
+            excludedMeshNames={excludedMeshNames}
+          />
         </Space3DViewProvider>
       </ViewerThemeProvider>
     </Suspense>
@@ -437,6 +361,19 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // 미리보기 모드에서는 치수 표시 끄기
+  useEffect(() => {
+    const uiStore = useUIStore.getState();
+    const prevShowDimensions = uiStore.showDimensions;
+    const prevShowDimensionsText = uiStore.showDimensionsText;
+    uiStore.setShowDimensions(false);
+    uiStore.setShowDimensionsText(false);
+    return () => {
+      uiStore.setShowDimensions(prevShowDimensions);
+      uiStore.setShowDimensionsText(prevShowDimensionsText);
+    };
+  }, []);
+
   // UIStore 하이라이트 동기화
   useEffect(() => {
     if (highlightedPanelName && highlightedFurnitureId) {
@@ -447,50 +384,15 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     return () => setHighlightedPanel(null);
   }, [highlightedPanelName, highlightedFurnitureId, setHighlightedPanel]);
 
-  // 전체 가구 바운딩 박스 계산 (카메라 위치용)
-  const { targetSize, targetCenter } = useMemo(() => {
-    if (!placedModules.length || !spaceInfo) {
-      return {
-        targetSize: new THREE.Vector3(1, 2, 0.6),
-        targetCenter: new THREE.Vector3(0, 1, 0),
-      };
-    }
-
-    let minX = Infinity, maxX = -Infinity;
-    let minZ = Infinity, maxZ = -Infinity;
-    let maxH = 0;
-
-    const internalSpace = calculateInternalSpace(spaceInfo);
-
-    placedModules.forEach((pm: any) => {
-      // width/height/depth는 mm → Three.js 단위로 변환 (* 0.01)
-      const moduleData = getModuleById(pm.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(pm);
-      const wMm = pm.freeWidth || pm.moduleWidth || moduleData?.dimensions?.width || 600;
-      const hMm = pm.freeHeight || moduleData?.dimensions?.height || spaceInfo.height || 2400;
-      const dMm = pm.freeDepth || moduleData?.dimensions?.depth || spaceInfo.depth || 600;
-
-      const w = wMm * 0.01;
-      const h = hMm * 0.01;
-      const d = dMm * 0.01;
-
-      // position은 이미 Three.js 단위 (mm * 0.01)
-      const posX = pm.position?.x || 0;
-      const posZ = pm.position?.z || 0;
-
-      minX = Math.min(minX, posX);
-      maxX = Math.max(maxX, posX + w);
-      minZ = Math.min(minZ, posZ);
-      maxZ = Math.max(maxZ, posZ + d);
-      maxH = Math.max(maxH, h);
-    });
-
-    const totalW = maxX - minX;
-    const totalD = maxZ - minZ;
-    return {
-      targetSize: new THREE.Vector3(totalW, maxH, totalD),
-      targetCenter: new THREE.Vector3((minX + maxX) / 2, maxH / 2, (minZ + maxZ) / 2),
-    };
-  }, [placedModules, spaceInfo]);
+  // 카메라 위치 계산 — Space3DViewerReadOnly와 동일
+  const cameraPosition = useMemo<[number, number, number]>(() => {
+    if (!spaceInfo) return [0, 10, 30];
+    const { width, height, depth = 1500 } = spaceInfo;
+    const baseDistance = calculateOptimalDistance(width, height, depth, placedModules.length);
+    const centerX = 0;
+    const centerY = mmToThreeUnits(height * 0.5);
+    return [centerX, centerY, baseDistance];
+  }, [spaceInfo, placedModules.length]);
 
   if (!spaceInfo || placedModules.length === 0) {
     return (
@@ -529,9 +431,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
           frameloop="demand"
           style={{ background: 'transparent' }}
           onCreated={({ gl }) => {
-            // Canvas 생성 성공 로그
             console.log('[PanelHighlight3DViewer] WebGL context created');
-            // unmount 시 컨텍스트 정리
             gl.domElement.addEventListener('webglcontextlost', (e) => {
               e.preventDefault();
               console.warn('[PanelHighlight3DViewer] WebGL context lost');
@@ -540,9 +440,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
         >
           <Scene3D
             spaceInfo={spaceInfo}
-            placedModules={placedModules}
-            targetSize={targetSize}
-            targetCenter={targetCenter}
+            cameraPosition={cameraPosition}
             highlightedFurnitureId={highlightedFurnitureId}
             highlightedPanelName={highlightedPanelName}
             excludedMeshNames={excludedMeshNames}
