@@ -4488,6 +4488,7 @@ const Room: React.FC<RoomProps> = ({
                   hideEdges={hideEdges}
                   isOuterFrame
                   key={`top-frame-segment-${index}`}
+                  name="top-frame"
                   args={[
                     segment.width,
                     topBottomFrameHeight,
@@ -5354,6 +5355,7 @@ const Room: React.FC<RoomProps> = ({
                       hideEdges={hideEdges}
                       isOuterFrame
                       key={`base-frame-zone-${zoneIndex}`}
+                      name="base-frame"
                       args={[
                         frameWidth,
                         baseFrameHeight,
@@ -5396,6 +5398,7 @@ const Room: React.FC<RoomProps> = ({
                       hideEdges={hideEdges}
                       isOuterFrame
                       key={`base-frame-zone-${zoneIndex}-segment-${segmentIndex}`}
+                      name="base-frame"
                       args={[
                         segment.width,
                         baseFrameHeight,

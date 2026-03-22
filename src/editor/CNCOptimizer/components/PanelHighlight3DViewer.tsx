@@ -49,7 +49,7 @@ class WebGLErrorBoundary extends Component<
 const MESH_PREFIX_RE = /^(furniture-mesh-|back-panel-mesh-)/;
 const EDGE_PREFIX_RE = /^(furniture-edge-|back-panel-edge-)/;
 function extractPanelName(objName: string): string | null {
-  // mesh 이름 처리
+  // mesh 이름 처리 (shared BoxWithEdges: "furniture-mesh-좌측판" → "좌측판")
   const meshStripped = objName.replace(MESH_PREFIX_RE, '');
   if (meshStripped !== objName) return meshStripped || null;
   // edge 이름 처리 — 끝의 "-숫자" (라인 인덱스) 제거
@@ -57,6 +57,10 @@ function extractPanelName(objName: string): string | null {
   if (edgeStripped !== objName) {
     // "좌측판-0" → "좌측판", "좌측판" → "좌측판"
     return edgeStripped.replace(/-\d+$/, '') || null;
+  }
+  // Room BoxWithEdges: "top-frame-0-mesh" → "top-frame-0" (접미사 -mesh 제거)
+  if (objName.endsWith('-mesh')) {
+    return objName.slice(0, -5) || null;
   }
   return null;
 }

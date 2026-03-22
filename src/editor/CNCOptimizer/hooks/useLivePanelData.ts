@@ -616,7 +616,7 @@ export function useLivePanelData() {
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
               grain: 'H' as any,
-              meshName: toMeshName('상부프레임'),
+              meshName: `top-frame-${gIdx}`,
               furnitureId: placedModules[0]?.id || '',
             });
           }
@@ -634,7 +634,7 @@ export function useLivePanelData() {
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
               grain: 'H' as any,
-              meshName: toMeshName('하부프레임'),
+              meshName: `base-frame-${gIdx}`,
               furnitureId: placedModules[0]?.id || '',
             });
           }
