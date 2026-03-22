@@ -151,27 +151,27 @@ export const calculatePanelDetails = (
         sectionName = '';
       }
 
-      // 실제 섹션 높이 계산 (drawer 고정, non-drawer만 높이 변화 흡수)
+      // 실제 섹션 높이 계산
+      // - 다중 섹션: 첫 번째 섹션(하단)은 고정, 마지막 섹션(상단)이 높이 변화 흡수
+      // - 단일 섹션: 전체 높이 사용
       let sectionHeightMm;
       if (section.heightType === 'absolute') {
-        // drawer 섹션은 고정, non-drawer 섹션만 높이 변화 흡수
-        const drawerTotal = sections
-          .filter(s => s.heightType === 'absolute' && s.type === 'drawer')
-          .reduce((sum, s) => sum + (s.height || 0), 0);
-        const nonDrawerTotal = totalFixedHeight - drawerTotal;
-        const hasDrawerSections = drawerTotal > 0 && nonDrawerTotal > 0;
-
-        if (hasDrawerSections && section.type === 'drawer') {
-          // 서랍 섹션은 고정
-          sectionHeightMm = section.height || 0;
-        } else if (hasDrawerSections) {
-          // non-drawer 섹션: 잔여 높이를 비례 배분
-          const remainingForNonDrawer = height - drawerTotal;
-          const nonDrawerRatio = remainingForNonDrawer / nonDrawerTotal;
-          sectionHeightMm = Math.round((section.height || 0) * nonDrawerRatio);
+        if (sections.length >= 2) {
+          // 다중 섹션: 마지막 섹션이 나머지 높이를 흡수
+          const isLastSection = sectionIndex === sections.length - 1;
+          if (isLastSection) {
+            // 마지막 섹션: 전체 높이 - 이전 섹션들의 고정 높이
+            const previousSectionsHeight = sections
+              .filter((_, idx) => idx < sectionIndex)
+              .reduce((sum, s) => sum + (s.height || 0), 0);
+            sectionHeightMm = height - previousSectionsHeight;
+          } else {
+            // 이전 섹션들: 고정 높이 유지
+            sectionHeightMm = section.height || 0;
+          }
         } else {
-          // drawer 섹션이 없으면 기존처럼 전체 비례 조정
-          sectionHeightMm = Math.round((section.height || 0) * heightRatio);
+          // 단일 섹션: 전체 높이 사용
+          sectionHeightMm = height;
         }
       } else {
         // 비율 섹션은 남은 높이에서 계산
