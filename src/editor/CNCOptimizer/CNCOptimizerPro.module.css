@@ -398,7 +398,7 @@
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 460px minmax(600px, 1fr) 380px;
+  grid-template-columns: 460px 1fr 380px;
   grid-template-rows: 1fr;
   gap: 8px;
   padding: 8px;
@@ -438,7 +438,7 @@
   flex-direction: column;
   gap: 0;
   height: 100%;
-  min-width: 600px;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }
