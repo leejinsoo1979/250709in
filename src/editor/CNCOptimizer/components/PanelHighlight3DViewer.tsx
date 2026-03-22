@@ -432,17 +432,6 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
                 position={[5, 15, 20]}
                 intensity={2.5}
                 color="#ffffff"
-                castShadow
-                shadow-mapSize-width={4096}
-                shadow-mapSize-height={4096}
-                shadow-camera-far={50}
-                shadow-camera-left={-25}
-                shadow-camera-right={25}
-                shadow-camera-top={25}
-                shadow-camera-bottom={-25}
-                shadow-bias={-0.0005}
-                shadow-radius={12}
-                shadow-normalBias={0.02}
               />
               <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
               <ambientLight intensity={0.5} color="#ffffff" />
