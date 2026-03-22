@@ -3757,7 +3757,7 @@ const Room: React.FC<RoomProps> = ({
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
                         args={epArgs} position={epPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                        excludeKey={`${placedModulesFromStore[0]?.id || ''}::엔드패널(좌)`} />
+                        excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`} />
                       {isLeftHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
                   );
@@ -3776,10 +3776,10 @@ const Room: React.FC<RoomProps> = ({
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
                       args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::좌측 서라운드 측면판`} />
+                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
                       args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::좌측 서라운드 전면판`} />
+                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`} />
                     {isLeftHighlighted && (
                       <>
                         <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
@@ -3817,7 +3817,7 @@ const Room: React.FC<RoomProps> = ({
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
                         args={epArgs} position={epPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                        excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::엔드패널(우)`} />
+                        excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`} />
                       {isRightHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
                   );
@@ -3836,10 +3836,10 @@ const Room: React.FC<RoomProps> = ({
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
                       args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::우측 서라운드 측면판`} />
+                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
                       args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::우측 서라운드 전면판`} />
+                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`} />
                     {isRightHighlighted && (
                       <>
                         <mesh position={rSidePos}><boxGeometry args={rSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
