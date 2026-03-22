@@ -1371,7 +1371,7 @@ function PageInner(){
       </div>
 
       {/* Main Content */}
-      <div className={styles.main}>
+      <div className={`${styles.main} ${viewSwapped ? styles.mainSwapped : ''}`}>
         {/* Left Sidebar */}
         <div className={styles.leftSidebar}>
           <PanelsTable />
@@ -1481,7 +1481,7 @@ function PageInner(){
         <div className={styles.rightSidebar}>
           <div className={styles.rightSidebarContent}>
             {/* 3D 패널 하이라이트 뷰어 / 스왑 시 커팅 레이아웃 축소 */}
-            <div className={styles.viewer3dContainer}>
+            <div className={`${styles.viewer3dContainer} ${viewSwapped ? styles.viewer3dContainerSwapped : ''}`}>
               <button className={styles.swapButton} onClick={() => setViewSwapped(v => !v)} title="뷰어 위치 변경">
                 <ArrowLeftRight size={14} />
               </button>
@@ -1538,7 +1538,7 @@ function PageInner(){
               )}
             </div>
 
-            <div className={styles.statsCard}>
+            {!viewSwapped && <div className={styles.statsCard}>
               <div className={styles.statsCardTitle}>
                 <h3>{t('cnc.totalStats')}</h3>
                 <button
@@ -1617,9 +1617,9 @@ function PageInner(){
                 </div>
               </div>
               )}
-            </div>
+            </div>}
 
-            {optimizationResults[currentSheetIndex] && (
+            {!viewSwapped && optimizationResults[currentSheetIndex] && (
               <div className={styles.statsCard}>
                 <div className={styles.statsCardTitle}>
                   <h3>{t('cnc.sheetStats')}</h3>

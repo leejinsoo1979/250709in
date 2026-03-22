@@ -408,6 +408,11 @@
   align-items: start;
 }
 
+/* 스왑 모드: 중앙 3D뷰어 줄이고 우측 패널뷰어 넓히기 */
+.mainSwapped {
+  grid-template-columns: 460px minmax(400px, 1fr) 500px;
+}
+
 .leftSidebar {
   display: flex;
   flex-direction: column;
@@ -936,6 +941,13 @@
   border: 1px solid var(--theme-border);
   overflow: hidden;
   background: var(--theme-background-secondary);
+}
+
+/* 스왑 모드: 패널 뷰어가 우측에 세로로 크게 표시 */
+.viewer3dContainerSwapped {
+  aspect-ratio: unset;
+  flex: 1;
+  min-height: 0;
 }
 
 .swapButton {
