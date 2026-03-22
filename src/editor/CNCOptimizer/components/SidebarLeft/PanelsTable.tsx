@@ -26,13 +26,14 @@ function sectionPriority(label: string): number {
 
 /**
  * 패널 유형 우선순위 (낮을수록 먼저)
- * 좌측판 → 우측판 → 상판 → 선반 → 바닥 → 백패널 → 보강대 → 프레임 → 서랍 → 서라운드 → 도어
+ * 본체 → 서랍 → 도어 → 서라운드 → 프레임(PET)
  */
-function panelTypePriority(label: string): number {
+function panelTypePriority(label: string, material?: string): number {
   const name = label.toLowerCase();
-  // 서라운드·도어는 맨 아래 분리
-  if (name.includes('서라운드') || name.includes('surround')) return 90;
-  if (name.includes('도어') || name.includes('door')) return 91;
+  // 도어·서라운드·프레임(PET)은 맨 아래 분리
+  if (name.includes('도어') || name.includes('door')) return 90;
+  if (name.includes('서라운드') || name.includes('surround')) return 91;
+  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 92;
   // 본체 패널
   if (name.includes('좌측') || name.includes('left')) return 1;
   if (name.includes('우측') || name.includes('right')) return 2;
@@ -42,7 +43,7 @@ function panelTypePriority(label: string): number {
   if (name.includes('바닥')) return 6;
   if (name.includes('백패널') || name.includes('뒷판')) return 7;
   if (name.includes('보강')) return 8;
-  if (name.includes('프레임')) return 9;
+  if (name.includes('프레임') || name.includes('프래임')) return 9;
   if (name.includes('서랍') || name.includes('마이다')) return 10;
   return 11;
 }
@@ -99,7 +100,7 @@ export default function PanelsTable(){
           index: i,
           slot,
           section: sectionPriority(p.label),
-          tp: panelTypePriority(p.label),
+          tp: panelTypePriority(p.label, p.material),
           drawerNum: extractDrawerNumber(p.label),
           label: p.label,
         };
