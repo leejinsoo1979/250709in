@@ -16,6 +16,9 @@ import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 function toMeshName(cncName: string): string {
   // 단일 섹션 가구: "바닥" → "바닥판" (3D BaseFurnitureShell에서 단일 섹션이면 '바닥판' 사용)
   if (cncName === '바닥') return '바닥판';
+  // 보강대: CNC "후면 보강대" / "(상)후면 보강대" → 3D "보강대" / "(상)보강대" 로 변환
+  // PanelDimmer에서 includes 매칭하므로 "보강대"가 "상단보강대"/"하단보강대" 모두 매칭
+  if (cncName.includes('후면 보강대')) return cncName.replace('후면 보강대', '보강대');
   return cncName;
 }
 
