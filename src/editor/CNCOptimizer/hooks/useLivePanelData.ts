@@ -448,6 +448,7 @@ export function useLivePanelData() {
       // 자유배치: freeSurround 설정에서 패널 생성
       // 균등배치: surroundType + frameSize에서 패널 생성
       let surroundPanelList: any[] = [];
+      console.warn('🚨🚨🚨 서라운드 코드 진입! freeSurround:', !!spaceInfo.freeSurround, 'surroundType:', spaceInfo.surroundType, 'frameSize:', !!spaceInfo.frameSize, 'wallConfig:', JSON.stringify(spaceInfo.wallConfig));
       const spaceH = spaceInfo.height || 2400;
       const floorFinishForSurround = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
       const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
