@@ -1059,7 +1059,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                            panelName="(하)하단보강대"
+                            panelName="(하)보강대"
                           />
                           {/* 하부 섹션 상단 보강대 */}
                           <BoxWithEdges
@@ -1071,7 +1071,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                            panelName="(하)상단보강대"
+                            panelName="(하)보강대"
                           />
                           {/* 상부 섹션 하단 보강대 */}
                           <BoxWithEdges
@@ -1083,7 +1083,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                            panelName="(상)하단보강대"
+                            panelName="(상)보강대"
                           />
                           {/* 상부 섹션 상단 보강대 */}
                           <BoxWithEdges
@@ -1095,7 +1095,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                            panelName="(상)상단보강대"
+                            panelName="(상)보강대"
                           />
                         </>
                       );
@@ -1174,7 +1174,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
-                            panelName="하단보강대"
+                            panelName="보강대"
                           />
                           {/* 상단 보강대 */}
                           <BoxWithEdges
@@ -1185,7 +1185,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
-                            panelName="상단보강대"
+                            panelName="보강대"
                           />
                         </>
                       );

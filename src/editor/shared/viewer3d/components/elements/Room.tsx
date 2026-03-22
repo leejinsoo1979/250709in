@@ -26,6 +26,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
 import { FurnitureBoringOverlay } from './boring';
 import { useThree, useFrame } from '@react-three/fiber';
+import { useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -236,7 +237,8 @@ const BoxWithEdges: React.FC<{
   isOuterFrame?: boolean; // 외곽 프레임 여부 (3D 은선모드에서 경계선 숨김용)
   name?: string; // 씬 추출용 이름
   renderOrder?: number; // 렌더링 순서 (낮을수록 먼저 그려짐)
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder }) => {
+  excludeKey?: string; // CNC 옵티마이저 패널 제외용 복합키 (furnitureId::meshName)
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey }) => {
   // Debug: 측면 프레임 확인
   if (args[0] < 1 && args[1] > 15) {
     const bottom = position[1] - args[1] / 2;
@@ -244,6 +246,13 @@ const BoxWithEdges: React.FC<{
 // console.log('📍 Room BoxWithEdges 측면 프레임 - Y:', position[1], 'H:', args[1], '하단:', bottom, '상단:', top, 'position:', position, 'args:', args);
 
   }
+
+  // CNC 옵티마이저 패널 제외 체크: excludeKey가 있으면 정확 매칭
+  const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
+    if (s.excludedKeys.size === 0) return false;
+    if (excludeKey) return s.excludedKeys.has(excludeKey);
+    return false;
+  });
 
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
@@ -258,6 +267,8 @@ const BoxWithEdges: React.FC<{
       edgesGeometry.dispose();
     };
   }, [geometry, edgesGeometry]);
+
+  if (isExcludedByOptimizer) return null;
 
   return (
     <group position={position} name={name}>
@@ -351,6 +362,7 @@ const Room: React.FC<RoomProps> = ({
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore();
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
+  const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
   const isFreePlacement = layoutMode === 'free-placement';
   // 슬롯배치 커튼박스: curtainBox 필드에서 확인 (단내림과 독립)
@@ -3710,6 +3722,7 @@ const Room: React.FC<RoomProps> = ({
                         material={seg.material ?? topSurrMat}
                         renderMode={renderMode}
                         shadowEnabled={shadowEnabled}
+                        excludeKey={`${firstModuleId}::상부프레임`}
                       />
                       {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </React.Fragment>
@@ -3745,7 +3758,8 @@ const Room: React.FC<RoomProps> = ({
                   return (
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
-                        args={epArgs} position={epPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                        args={epArgs} position={epPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                        excludeKey={`${placedModulesFromStore[0]?.id || ''}::엔드패널(좌)`} />
                       {isLeftHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
                   );
@@ -3763,9 +3777,11 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
-                      args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                      args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::좌측 서라운드 측면판`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
-                      args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                      args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::좌측 서라운드 전면판`} />
                     {isLeftHighlighted && (
                       <>
                         <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
@@ -3802,7 +3818,8 @@ const Room: React.FC<RoomProps> = ({
                   return (
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
-                        args={epArgs} position={epPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                        args={epArgs} position={epPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                        excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::엔드패널(우)`} />
                       {isRightHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
                   );
@@ -3820,9 +3837,11 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
-                      args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                      args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::우측 서라운드 측면판`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
-                      args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                      args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::우측 서라운드 전면판`} />
                     {isRightHighlighted && (
                       <>
                         <mesh position={rSidePos}><boxGeometry args={rSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
@@ -4183,6 +4202,7 @@ const Room: React.FC<RoomProps> = ({
                           renderMode={renderMode}
                           shadowEnabled={shadowEnabled}
                           renderOrder={seg.behindCeiling ? -1 : undefined}
+                          excludeKey={`${firstModuleId}::상부프레임`}
                         />
                         {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                       </React.Fragment>
@@ -5083,6 +5103,7 @@ const Room: React.FC<RoomProps> = ({
                       material={seg.material ?? baseMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKey={`${firstModuleId}::하부프레임`}
                     />
                     {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                   </React.Fragment>
@@ -5256,6 +5277,7 @@ const Room: React.FC<RoomProps> = ({
                               renderMode={renderMode}
                               shadowEnabled={shadowEnabled}
                               renderOrder={seg.behindCeiling ? -1 : undefined}
+                              excludeKey={`${firstModuleId}::하부프레임`}
                             />
                             {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                           </React.Fragment>

@@ -68,11 +68,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isExcludedByOptimizer = excludedKeys.size > 0 && compositeKey ? excludedKeys.has(compositeKey) : false;
 
-  // 디버그: excludedKeys가 있을 때만 로그
-  if (excludedKeys.size > 0 && panelName) {
-    console.log(`[BWE] check: compositeKey="${compositeKey}", furnitureId="${furnitureId}", panelName="${panelName}", excluded=${isExcludedByOptimizer}, storeKeys=[${[...excludedKeys].join(', ')}]`);
-  }
-
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
