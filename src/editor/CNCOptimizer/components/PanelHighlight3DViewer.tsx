@@ -343,20 +343,20 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
     <div className={styles.container}>
       <WebGLErrorBoundary fallback={fallbackUI}>
         {/* Space3DViewerReadOnly와 동일한 구조: Provider → ThreeCanvas → Room */}
-        <ExcludedPanelsProvider value={excludedMeshNames}>
-          <Space3DViewProvider
-            spaceInfo={spaceInfo}
-            svgSize={{ width: 800, height: 600 }}
-            renderMode="solid"
+        <Space3DViewProvider
+          spaceInfo={spaceInfo}
+          svgSize={{ width: 800, height: 600 }}
+          renderMode="solid"
+          viewMode="3D"
+        >
+          <ThreeCanvas
+            cameraPosition={cameraPosition}
             viewMode="3D"
+            view2DDirection="front"
+            renderMode="solid"
+            cameraMode="perspective"
           >
-            <ThreeCanvas
-              cameraPosition={cameraPosition}
-              viewMode="3D"
-              view2DDirection="front"
-              renderMode="solid"
-              cameraMode="perspective"
-            >
+            <ExcludedPanelsProvider value={excludedMeshNames}>
               <React.Suspense fallback={null}>
                 {/* 조명 — Space3DViewerReadOnly와 동일 */}
                 <directionalLight
@@ -396,9 +396,9 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
                   highlightedPanelName={highlightedPanelName}
                 />
               </React.Suspense>
-            </ThreeCanvas>
-          </Space3DViewProvider>
-        </ExcludedPanelsProvider>
+            </ExcludedPanelsProvider>
+          </ThreeCanvas>
+        </Space3DViewProvider>
       </WebGLErrorBoundary>
 
       {highlightedPanelName && (
