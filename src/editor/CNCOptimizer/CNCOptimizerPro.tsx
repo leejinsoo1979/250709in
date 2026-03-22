@@ -1461,11 +1461,6 @@ function PageInner(){
                       index={index}
                       isActive={index === currentSheetIndex}
                       onClick={() => setCurrentSheetIndex(index)}
-                      // 뷰어 상태 전달 (활성 시트만)
-                      viewerScale={index === currentSheetIndex ? viewerScale : 1}
-                      viewerRotation={index === currentSheetIndex ? viewerRotation : 0}
-                      viewerOffset={index === currentSheetIndex ? viewerOffset : { x: 0, y: 0 }}
-                      highlightedPanelId={index === currentSheetIndex ? selectedPanelId : null}
                     />
                   ))}
                 </div>
@@ -1547,10 +1542,7 @@ function PageInner(){
                           index={index}
                           isActive={index === currentSheetIndex}
                           onClick={() => setCurrentSheetIndex(index)}
-                          viewerScale={1}
-                          viewerRotation={0}
-                          viewerOffset={{ x: 0, y: 0 }}
-                          highlightedPanelId={index === currentSheetIndex ? selectedPanelId : null}
+                          portrait
                         />
                       ))}
                     </div>

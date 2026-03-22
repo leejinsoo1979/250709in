@@ -7,13 +7,15 @@ interface SheetThumbnailProps {
   index: number;
   isActive: boolean;
   onClick: () => void;
+  portrait?: boolean;
 }
 
-export default function SheetThumbnail({ 
-  result, 
-  index, 
-  isActive, 
-  onClick
+export default function SheetThumbnail({
+  result,
+  index,
+  isActive,
+  onClick,
+  portrait = false,
 }: SheetThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -27,15 +29,15 @@ export default function SheetThumbnail({
     // 원본 시트 크기
     const originalWidth = result.stockPanel.width;
     const originalHeight = result.stockPanel.height;
-    
-    // 세로형이면 회전시켜서 가로로 표시
-    const isPortrait = originalHeight > originalWidth;
+
+    // portrait 모드면 회전 없이 원본 그대로, 아니면 가로로 회전
+    const isPortrait = !portrait && originalHeight > originalWidth;
     const stockWidth = isPortrait ? originalHeight : originalWidth;
     const stockHeight = isPortrait ? originalWidth : originalHeight;
-    
-    // 고정 캔버스 크기 (항상 가로 비율)
-    const canvasWidth = 120;
-    const canvasHeight = 60;
+
+    // portrait 모드면 세로 캔버스, 아니면 가로 캔버스
+    const canvasWidth = portrait ? 60 : 120;
+    const canvasHeight = portrait ? 120 : 60;
     const scale = Math.min(canvasWidth / stockWidth, canvasHeight / stockHeight);
     
     // 고화질을 위한 DPR 적용
@@ -180,7 +182,7 @@ export default function SheetThumbnail({
       ctx.restore();
     }
 
-  }, [result]);
+  }, [result, portrait]);
 
   // Get panel thickness (assuming all panels have same thickness)
   const thickness = result.panels.length > 0 ? result.panels[0].thickness : 18;
