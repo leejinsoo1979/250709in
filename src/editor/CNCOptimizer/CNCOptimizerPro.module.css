@@ -602,9 +602,9 @@
   height: auto;
   min-height: unset;
   max-height: unset;
-  width: 150px;
-  min-width: 150px;
-  max-width: 150px;
+  width: 85px;
+  min-width: 85px;
+  max-width: 85px;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: 8px;
