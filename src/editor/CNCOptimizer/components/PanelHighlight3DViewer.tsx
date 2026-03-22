@@ -330,8 +330,8 @@ const FurnitureRenderer: React.FC<{
     return moduleData;
   }, [moduleData, pm.customSections]);
 
-  const width = pm.width || finalModuleData.dimensions.width;
-  const depth = pm.depth || finalModuleData.dimensions.depth;
+  const width = pm.adjustedWidth ?? pm.customWidth ?? finalModuleData.dimensions.width;
+  const depth = pm.customDepth ?? finalModuleData.dimensions.depth;
 
   return (
     <BoxModule

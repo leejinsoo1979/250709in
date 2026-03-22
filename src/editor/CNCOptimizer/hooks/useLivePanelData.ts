@@ -760,7 +760,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const furnitureNumber2 = moduleIndex + 1;
       const furnitureLabel2 = placedModules.length > 1 ? `[${furnitureNumber2}]` : '';
 
-      const width = placedModule.customWidth || placedModule.adjustedWidth || moduleData.dimensions.width;
+      const width = (placedModule as any).adjustedWidth
+        ?? (placedModule as any).customWidth
+        ?? moduleData.dimensions.width;
       const depth = placedModule.customDepth || moduleData.dimensions.depth;
       const hasDoor = placedModule.hasDoor || false;
       const material = placedModule.material || 'PB';
