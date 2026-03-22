@@ -112,8 +112,24 @@ export function useLivePanelData() {
         // Find module data with dynamic sizing
         // 배치된 가구의 moduleData가 있으면 그것을 사용 (높이 변경 등 반영), 없으면 원본 가져오기
         // 커스텀 가구(customizable-*)는 PlacedModule 속성에서 ModuleData를 빌드
+        // 단내림 구간 가구는 zone 반영된 spaceInfo로 moduleData 조회 (3D 렌더링과 동일)
+        let effectiveSpaceInfo = spaceInfo;
+        let effectiveInternalSpace = internalSpace;
+        if (placedModule.zone === 'dropped') {
+          effectiveSpaceInfo = { ...spaceInfo, zone: 'dropped' as const };
+          const dropFrameTop = spaceInfo.frameSize?.top || 0;
+          const dropBaseH = spaceInfo.baseConfig?.height || 0;
+          const isFreePlc = spaceInfo.layoutMode === 'free-placement';
+          let dropH = 0;
+          if (isFreePlc && spaceInfo.stepCeiling?.enabled) dropH = spaceInfo.stepCeiling.dropHeight || 0;
+          else if (!isFreePlc && spaceInfo.droppedCeiling?.enabled) dropH = spaceInfo.droppedCeiling.dropHeight || 0;
+          effectiveInternalSpace = {
+            ...internalSpace,
+            height: spaceInfo.height - dropH - dropFrameTop - dropBaseH,
+          };
+        }
         let moduleData = (placedModule as any).moduleData
-          || getModuleById(moduleId, internalSpace, spaceInfo)
+          || getModuleById(moduleId, effectiveInternalSpace, effectiveSpaceInfo)
           || buildModuleDataFromPlacedModule(placedModule);
         if (!moduleData) {
           console.warn(`Module ${moduleIndex}: No module data found for ${moduleId}`);
@@ -170,13 +186,6 @@ export function useLivePanelData() {
           }
         }
 
-        // 가구 본체 높이 결정: freeHeight > customHeight > 단내림 보정 높이
-        let moduleFreeHeight = placedModule.freeHeight || placedModule.customHeight;
-        if (!moduleFreeHeight && placedModule.zone === 'dropped' && moduleSpaceHeight < spaceInfo.height) {
-          // 균등배치 단내림 구간: customHeight 미설정이므로 직접 계산
-          moduleFreeHeight = moduleSpaceHeight - frameTop - baseHeight;
-        }
-
         const allPanelsList = calculatePanelDetailsShared(
           moduleData, width, depth, hasDoor, t, undefined,
           moduleHingePosition, moduleHingeType,
@@ -186,7 +195,7 @@ export function useLivePanelData() {
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
-          moduleFreeHeight,                 // 자유배치/단내림 높이
+          placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이 (moduleData에 이미 단내림 반영)
           topFrameH,                        // 상부프레임 높이
           visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
@@ -216,7 +225,7 @@ export function useLivePanelData() {
         // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
         const modelConfig = moduleData.modelConfig;
         const sections = modelConfig?.sections || modelConfig?.leftSections || [];
-        const furnitureHeight = moduleFreeHeight || placedModule.customHeight || moduleData.dimensions.height;
+        const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
         const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
         console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
@@ -713,8 +722,22 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       if (!moduleId) return;
 
       // 배치된 가구의 moduleData가 있으면 그것을 사용 (높이 변경 등 반영), 없으면 원본 가져오기
+      // 단내림 구간 가구는 zone 반영된 spaceInfo로 moduleData 조회 (3D 렌더링과 동일)
+      let effectiveSpaceInfo2 = spaceInfo;
+      let effectiveInternalSpace2 = internalSpace;
+      if (placedModule.zone === 'dropped') {
+        effectiveSpaceInfo2 = { ...spaceInfo, zone: 'dropped' as const };
+        const isFreePlc2 = spaceInfo.layoutMode === 'free-placement';
+        let dropH2 = 0;
+        if (isFreePlc2 && spaceInfo.stepCeiling?.enabled) dropH2 = spaceInfo.stepCeiling.dropHeight || 0;
+        else if (!isFreePlc2 && spaceInfo.droppedCeiling?.enabled) dropH2 = spaceInfo.droppedCeiling.dropHeight || 0;
+        effectiveInternalSpace2 = {
+          ...internalSpace,
+          height: spaceInfo.height - dropH2 - frameTop2 - baseHeight2,
+        };
+      }
       let moduleData = (placedModule as any).moduleData
-        || getModuleById(moduleId, internalSpace, spaceInfo)
+        || getModuleById(moduleId, effectiveInternalSpace2, effectiveSpaceInfo2)
         || buildModuleDataFromPlacedModule(placedModule);
       if (!moduleData) return;
 
@@ -765,13 +788,6 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         }
       }
 
-      // 가구 본체 높이 결정: freeHeight > customHeight > 단내림 보정 높이
-      let moduleFreeHeight2 = placedModule.freeHeight || placedModule.customHeight;
-      if (!moduleFreeHeight2 && placedModule.zone === 'dropped' && moduleSpaceHeight2 < spaceInfo.height) {
-        // 균등배치 단내림 구간: customHeight 미설정이므로 직접 계산
-        moduleFreeHeight2 = moduleSpaceHeight2 - frameTop2 - baseHeight2;
-      }
-
       const allPanelsList = calculatePanelDetailsShared(
         moduleData, width, depth, hasDoor, t, undefined,
         moduleHingePosition, moduleHingeType,
@@ -781,7 +797,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.hasLeftEndPanel,
         placedModule.hasRightEndPanel,
         (placedModule as any).endPanelThickness,
-        moduleFreeHeight2,                 // 자유배치/단내림 높이
+        placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이 (moduleData에 이미 단내림 반영)
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,
@@ -805,7 +821,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
       const modelConfig = moduleData.modelConfig;
       const sections = modelConfig?.sections || modelConfig?.leftSections || [];
-      const furnitureHeight = moduleFreeHeight2 || placedModule.customHeight || moduleData.dimensions.height;
+      const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
       const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
       console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);
