@@ -85,6 +85,25 @@ const CNCOptimizer: React.FC = () => {
   // 3D 패널 하이라이트 상태
   const [hoveredPanelName, setHoveredPanelName] = useState<string | null>(null);
   const [hoveredFurnitureId, setHoveredFurnitureId] = useState<string | null>(null);
+
+  // 패널 숨김 상태 (체크박스 해제 시 뷰어에서 숨김)
+  const [hiddenPanelIds, setHiddenPanelIds] = useState<Set<string>>(new Set());
+  const togglePanelVisibility = (panelId: string) => {
+    setHiddenPanelIds(prev => {
+      const next = new Set(prev);
+      if (next.has(panelId)) next.delete(panelId);
+      else next.add(panelId);
+      return next;
+    });
+  };
+  const excludedMeshNames = useMemo(() => {
+    const names = new Set<string>();
+    hiddenPanelIds.forEach(id => {
+      const panel = panelsList.find(p => p.id === id);
+      if (panel?.meshName) names.add(panel.meshName);
+    });
+    return names;
+  }, [hiddenPanelIds, panelsList]);
   
   // Use live panels instead of local state
   const panelsList = livePanels;
@@ -426,7 +445,9 @@ const CNCOptimizer: React.FC = () => {
                         key={panel.id}
                         panel={panel}
                         isSelected={selectedPanels.has(panel.id)}
+                        isVisible={!hiddenPanelIds.has(panel.id)}
                         onToggle={() => handlePanelToggle(panel.id)}
+                        onVisibilityToggle={() => togglePanelVisibility(panel.id)}
                         onQuantityChange={(delta) => handleQuantityChange(panel.id, delta)}
                         getColorHex={getColorHex}
                         getMaterialName={getMaterialName}
@@ -465,6 +486,7 @@ const CNCOptimizer: React.FC = () => {
                   <PanelHighlight3DViewer
                     highlightedPanelName={hoveredPanelName}
                     highlightedFurnitureId={hoveredFurnitureId}
+                    excludedMeshNames={excludedMeshNames}
                   />
                 </div>
 
