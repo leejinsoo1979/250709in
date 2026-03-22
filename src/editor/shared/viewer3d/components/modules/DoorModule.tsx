@@ -61,10 +61,8 @@ const BoxWithEdges: React.FC<{
 
   // Shadow auto-update enabled - manual shadow updates removed
 
-  if (isExcludedByOptimizer) return null;
-
   return (
-    <group position={position}>
+    <group position={position} visible={!isExcludedByOptimizer}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh

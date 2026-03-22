@@ -268,10 +268,8 @@ const BoxWithEdges: React.FC<{
     };
   }, [geometry, edgesGeometry]);
 
-  if (isExcludedByOptimizer) return null;
-
   return (
-    <group position={position} name={name}>
+    <group position={position} name={name} visible={!isExcludedByOptimizer}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined} renderOrder={renderOrder}>

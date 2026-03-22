@@ -571,13 +571,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
-  if (isExcludedByOptimizer) {
-    console.log(`[BWE] EXCLUDED → null: key="${furnitureId}::${panelName}"`);
-    return null;
-  }
-
+  // return null 대신 visible={false}로 처리 — R3F scene graph에서 확실히 숨김
   return (
-    <group position={position}>
+    <group position={position} visible={!isExcludedByOptimizer}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
