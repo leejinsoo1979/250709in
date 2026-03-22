@@ -607,9 +607,14 @@ export const calculatePanelDetails = (
         ? (sectionIndex === 0 ? '우(하)' : '우(상)')
         : '우';
 
+      // 우측 섹션 상부/하부 구분: 첫 번째 섹션이 하부, 나머지가 상부
+      const rTargetPanel = (rightSectionsForType5or6.length > 1 && sectionIndex === 0)
+        ? panels.lower
+        : panels.upper;
+
       // 우측 섹션 백패널
       const rBackPanelHeight = rSectionHeight - basicThickness * 2 + 10 + 26; // heightExtension + totalHeightExtension
-      panels.upper.push({
+      rTargetPanel.push({
         name: `${rSectionPrefix}백패널`,
         width: rightInnerWidth + 10,
         height: rBackPanelHeight,
@@ -619,14 +624,14 @@ export const calculatePanelDetails = (
 
       // 우측 섹션 보강대 (상/하 2개)
       const rReinforcementWidth = rightInnerWidth - 1;
-      panels.upper.push({
+      rTargetPanel.push({
         name: `${rSectionPrefix}후면 보강대 1`,
         width: rReinforcementWidth,
         height: 60,
         thickness: 15,
         material: 'PB'
       });
-      panels.upper.push({
+      rTargetPanel.push({
         name: `${rSectionPrefix}후면 보강대 2`,
         width: rReinforcementWidth,
         height: 60,
@@ -637,7 +642,7 @@ export const calculatePanelDetails = (
       // 우측 섹션별 내부 요소 (hanging → 선반)
       if (section.type === 'hanging') {
         if (section.shelfPositions && section.shelfPositions.length > 0) {
-          panels.upper.push({
+          rTargetPanel.push({
             name: `${rSectionPrefix}선반 1`,
             width: rightHorizontalPanelWidth,
             depth: customDepth - 8 - basicThickness,
@@ -647,7 +652,7 @@ export const calculatePanelDetails = (
         }
       } else if (section.type === 'shelf' && section.count) {
         for (let i = 1; i <= section.count; i++) {
-          panels.upper.push({
+          rTargetPanel.push({
             name: `${rSectionPrefix}선반 ${i}`,
             width: rightHorizontalPanelWidth,
             depth: customDepth - 8 - basicThickness,
