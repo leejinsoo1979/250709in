@@ -766,7 +766,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           const baseType = currentPlacedModule.moduleId.replace(/-[\d.]+$/, '');
           targetModuleId = `${baseType}-${currentPlacedModule.customWidth}`;
         }
-        return getModuleById(targetModuleId, calculateInternalSpace(spaceInfo), spaceInfo)
+        // 단내림 구간 가구는 zone 정보를 포함한 spaceInfo로 moduleData 조회
+        // (3D 렌더링의 FurnitureItem.tsx와 동일하게 zone 반영)
+        let effectiveSpaceInfo = spaceInfo;
+        if (currentPlacedModule.zone === 'dropped') {
+          effectiveSpaceInfo = { ...spaceInfo, zone: 'dropped' as const };
+        }
+        return getModuleById(targetModuleId, calculateInternalSpace(effectiveSpaceInfo), effectiveSpaceInfo)
           || buildModuleDataFromPlacedModule(currentPlacedModule);
       })()
     : null;
@@ -2625,7 +2631,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
             const totalD = currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
-            // 표준 가구의 섹션 높이 계산 (비율 기반)
+            // 표준 가구의 섹션 높이 계산 (3D 렌더링과 동일한 로직)
             const getStdSectionHeightMM = (sIdx: number): number => {
               if (!mcSections || mcSections.length < 2) return totalH;
               const sec = mcSections[sIdx];
@@ -2633,7 +2639,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const dividerH = (mcSections.length - 1) * pt; // 중간 칸막이
               const availH = innerH - dividerH;
               const ht = sec.heightType || 'percentage';
-              if (ht === 'absolute') return sec.height || 0;
+              if (ht === 'absolute') {
+                // 마지막 섹션은 나머지 높이 흡수 (이전 고정 섹션 합 차감)
+                const isLast = sIdx === mcSections.length - 1;
+                if (isLast) {
+                  const prevFixed = mcSections
+                    .filter((_, idx) => idx < sIdx)
+                    .reduce((sum, s) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
+                  return Math.max(0, availH - prevFixed);
+                }
+                return sec.height || 0;
+              }
               const ratio = (sec.height || sec.heightRatio || 50) / 100;
               return Math.round(availH * ratio);
             };
