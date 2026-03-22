@@ -525,16 +525,7 @@ export default function PanelsTable(){
                       className={styles.input}
                       title={p.label}
                       data-panel-id={p.id}
-                      style={{
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        ...(selectedPanelId === p.id ? {
-                          color: 'hsl(var(--theme))',
-                          fontWeight: 700,
-                          borderColor: 'hsl(var(--theme) / 0.4)',
-                          background: 'hsl(var(--theme) / 0.06)',
-                        } : {}),
-                      }}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
                     />
                   </td>
                   <td>
