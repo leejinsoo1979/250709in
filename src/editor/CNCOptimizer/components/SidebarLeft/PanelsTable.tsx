@@ -16,6 +16,15 @@ function extractFurnitureNumber(label: string): number {
 }
 
 /**
+ * 섹션 우선순위: 상부(상) → 하부(하) → 기타
+ */
+function sectionPriority(label: string): number {
+  if (label.includes('(상)')) return 0;
+  if (label.includes('(하)')) return 1;
+  return 0; // 분리되지 않은 패널은 상부와 같은 순서
+}
+
+/**
  * 패널 유형 우선순위 (낮을수록 먼저)
  * 측판 → 상판/바닥 → 선반/칸막이 → 백패널 → 보강대 → 프레임 → 서랍 → 도어
  */
@@ -62,17 +71,24 @@ export default function PanelsTable(){
     return map;
   }, [livePanels]);
 
-  // 패널 정렬: 왼쪽 가구(slotIndex) → 패널유형 순서
+  // 패널 정렬: 왼쪽 가구(slotIndex) → 상부/하부 섹션 → 패널유형 순서
   const sortedPanelIndices = useMemo(() => {
     return panels
       .map((p, i) => {
         const furnitureId = panelFurnitureMap.get(p.id);
         const slot = furnitureId ? (furnitureSlotMap.get(furnitureId) ?? 999) : 999;
-        return { index: i, slot, fn: extractFurnitureNumber(p.label), tp: panelTypePriority(p.label), label: p.label };
+        return {
+          index: i,
+          slot,
+          section: sectionPriority(p.label),
+          tp: panelTypePriority(p.label),
+          label: p.label,
+        };
       })
       .sort((a, b) => {
-        if (a.slot !== b.slot) return a.slot - b.slot;
-        if (a.tp !== b.tp) return a.tp - b.tp;
+        if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
+        if (a.section !== b.section) return a.section - b.section; // 상부 → 하부
+        if (a.tp !== b.tp) return a.tp - b.tp;               // 패널유형 순서
         return a.label.localeCompare(b.label, 'ko');
       })
       .map(item => item.index);
