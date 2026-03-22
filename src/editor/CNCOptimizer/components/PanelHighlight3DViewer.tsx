@@ -160,12 +160,18 @@ const PanelDimmer: React.FC<{
     const furnitureObjUuids = new Set<string>();
     const targetPanelUuids = new Set<string>();
 
-    // 패널 이름 매칭 — 정확히 일치만 허용 (toMeshName이 CNC→3D 변환 담당)
+    // 패널 이름 매칭 — 정확히 일치 + 서라운드 L자→EP 폴백
     const matchesPanelName = (obj: THREE.Object3D): boolean => {
       if (!highlightedPanelName || !obj.name) return false;
       const pn = extractPanelName(obj.name);
       if (pn && pn === highlightedPanelName) return true;
       if (obj.name === highlightedPanelName) return true;
+      // 서라운드 폴백: L자형(lshape-side/front) → EP 단일 박스 매칭 (슬롯배치)
+      if (highlightedPanelName.includes('surround-lshape')) {
+        const epName = highlightedPanelName.replace(/-lshape-(side|front)$/, '-ep');
+        const objPn = pn || obj.name;
+        if (objPn === epName) return true;
+      }
       return false;
     };
 
