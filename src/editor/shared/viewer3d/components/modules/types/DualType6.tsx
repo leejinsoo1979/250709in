@@ -537,6 +537,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             furnitureId={placedFurnitureId}
             isDragging={isDragging}
             isEditMode={isEditMode}
+            panelName="칸막이"
           />
         )}
         
@@ -551,6 +552,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
+              panelName="(하)상판"
             />
             
             {/* 중단선반 두께 치수 표시 - 탑뷰/3D에서는 숨김 */}
@@ -614,6 +616,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
+              panelName="안전선반"
             />
             
             {/* 안전선반 두께 치수 표시 - 탑뷰/3D에서는 숨김 */}
@@ -731,8 +734,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        panelName="좌측판"
       />
-      
+
       {/* 우측 측면 판재 - 통짜 (측면판 분할 안됨) */}
       <BoxWithEdges
         args={[basicThickness, height, depth]}
@@ -742,8 +746,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        panelName="우측판"
       />
-      
+
       {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음), 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
         args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - mmToThreeUnits(26)]}
@@ -753,6 +758,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        panelName="상판"
       />
       
       {/* 하단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
@@ -765,6 +771,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           renderMode={useSpace3DView().renderMode}
           furnitureId={placedFurnitureId}
           isDragging={isDragging}
+          panelName="(하)바닥"
         />
 
         {/* 우측 하단판 */}
@@ -775,6 +782,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           renderMode={useSpace3DView().renderMode}
           furnitureId={placedFurnitureId}
           isDragging={isDragging}
+          panelName="바닥판"
         />
         
         {/* 우측 하단 가로 치수 표시 - 하부장(서랍영역) 내부에 표시, 탑뷰/3D에서는 숨김 */}
@@ -848,6 +856,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               isBackPanel={true} // 백패널임을 표시
+              panelName="백패널"
             />
             {/* 보강대 (백패널 상/하단) - 60mm 높이, 15.5mm 두께
                 2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
