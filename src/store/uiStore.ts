@@ -858,7 +858,8 @@ export const useUIStore = create<UIState>()(
         shadowEnabled: state.shadowEnabled,  // 그래픽 설정 유지
         edgeOutlineEnabled: state.edgeOutlineEnabled,  // 그래픽 설정 유지
         dashboardLayout: state.dashboardLayout,  // 대시보드 레이아웃 유지
-        // openTabs, activeTabId는 persist하지 않음 (세션마다 파일 로드 시 생성)
+        openTabs: state.openTabs,  // 디자인 탭 유지
+        activeTabId: state.activeTabId,  // 활성 탭 유지
         // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
         // doorsOpen과 activePopup은 세션별로 초기화
       }),
