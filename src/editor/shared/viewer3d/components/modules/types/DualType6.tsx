@@ -872,7 +872,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
-                  panelName="보강대"
+                  panelName="보강대 1"
                 />
                 <BoxWithEdges
                   key="reinforcement-top"
@@ -883,7 +883,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
-                  panelName="보강대"
+                  panelName="보강대 2"
                 />
               </>
             )}

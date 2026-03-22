@@ -459,7 +459,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                        panelName="(하)보강대"
+                        panelName="(하)보강대 1"
                       />
                       {/* 하부 섹션 상단 보강대 */}
                       <BoxWithEdges
@@ -470,7 +470,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                        panelName="(하)보강대"
+                        panelName="(하)보강대 2"
                       />
                       {/* 상부 섹션 하단 보강대 */}
                       <BoxWithEdges
@@ -481,7 +481,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                        panelName="(상)보강대"
+                        panelName="(상)보강대 1"
                       />
                       {/* 상부 섹션 상단 보강대 */}
                       <BoxWithEdges
@@ -492,7 +492,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                        panelName="(상)보강대"
+                        panelName="(상)보강대 2"
                       />
                     </>
                   );
@@ -539,7 +539,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   renderMode={renderMode}
                   furnitureId={placedFurnitureId}
                   isDragging={isDragging}
-                  panelName="보강대"
+                  panelName="보강대 1"
                 />
                 {/* 상단 보강대 */}
                 <BoxWithEdges
@@ -549,7 +549,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   renderMode={renderMode}
                   furnitureId={placedFurnitureId}
                   isDragging={isDragging}
-                  panelName="보강대"
+                  panelName="보강대 2"
                 />
               </>
             );

@@ -304,14 +304,14 @@ export const calculatePanelDetails = (
       const reinforcementDepth = 15; // mm
       const reinforcementWidth = innerWidth - 1; // 양쪽 0.5mm씩 축소
       targetPanel.push({
-        name: `${sectionPrefix}후면 보강대`,
+        name: `${sectionPrefix}후면 보강대 1`,
         width: reinforcementWidth,
         height: reinforcementHeight,
         thickness: reinforcementDepth,
         material: 'PB'
       });
       targetPanel.push({
-        name: `${sectionPrefix}후면 보강대`,
+        name: `${sectionPrefix}후면 보강대 2`,
         width: reinforcementWidth,
         height: reinforcementHeight,
         thickness: reinforcementDepth,
@@ -620,14 +620,14 @@ export const calculatePanelDetails = (
       // 우측 섹션 보강대 (상/하 2개)
       const rReinforcementWidth = rightInnerWidth - 1;
       panels.upper.push({
-        name: `${rSectionPrefix}후면 보강대`,
+        name: `${rSectionPrefix}후면 보강대 1`,
         width: rReinforcementWidth,
         height: 60,
         thickness: 15,
         material: 'PB'
       });
       panels.upper.push({
-        name: `${rSectionPrefix}후면 보강대`,
+        name: `${rSectionPrefix}후면 보강대 2`,
         width: rReinforcementWidth,
         height: 60,
         thickness: 15,
