@@ -1170,14 +1170,10 @@ export const calculateSurroundPanels = (
 
   const result: any[] = [];
 
-  console.log('🔍 [calculateSurroundPanels] left:', { enabled: freeSurround.left?.enabled, method: freeSurround.left?.method, gap: freeSurround.left?.gap });
-  console.log('🔍 [calculateSurroundPanels] right:', { enabled: freeSurround.right?.enabled, method: freeSurround.right?.method, gap: freeSurround.right?.gap });
-
   // 좌측 서라운드
   if (freeSurround.left?.enabled && freeSurround.left.method !== 'none') {
     const method = freeSurround.left.method || 'lshape';
     const gapMm = freeSurround.left.gap || 0;
-    console.log('🔍 [calculateSurroundPanels] 좌측 분기:', { method, gapMm, willBeLShape: method === 'lshape' && gapMm > 0 });
 
     if (method === 'lshape' && gapMm > 0) {
       // L자형: 측면판 + 전면판
