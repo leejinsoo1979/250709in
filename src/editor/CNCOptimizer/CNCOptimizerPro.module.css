@@ -943,6 +943,15 @@
   background: var(--theme-background-secondary);
 }
 
+/* 스왑 모드: 패널 뷰어 + 썸네일 가로 배치 */
+.swappedViewerRow {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
 /* 스왑 모드: 패널 뷰어가 우측에 세로로 크게 표시 */
 .viewer3dContainerSwapped {
   aspect-ratio: unset;

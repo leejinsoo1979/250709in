@@ -1491,57 +1491,84 @@ function PageInner(){
         <div className={styles.rightSidebar}>
           <div className={styles.rightSidebarContent}>
             {/* 3D 패널 하이라이트 뷰어 / 스왑 시 커팅 레이아웃 축소 */}
-            <div className={`${styles.viewer3dContainer} ${viewSwapped ? styles.viewer3dContainerSwapped : ''}`}>
-              <button className={styles.swapButton} onClick={handleSwapView} title="뷰어 위치 변경">
-                <ArrowLeftRight size={14} />
-              </button>
-              {viewSwapped ? (
-                optimizationResults.length > 0 ? (
-                  <CuttingLayoutPreview2
-                    result={optimizationResults[currentSheetIndex]}
-                    highlightedPanelId={selectedPanelId}
-                    showLabels={settings.labelsOnPanels}
-                    onPanelClick={(id) => {
-                      setSelectedPanelId(id);
-                      const currentResult = optimizationResults[currentSheetIndex];
-                      const placedPanel = currentResult?.panels.find(p => p.id === id);
-                      if (placedPanel?.meshName && placedPanel?.furnitureId) {
-                        setHoveredPanel(placedPanel.meshName, placedPanel.furnitureId);
-                      } else {
-                        const baseId = id?.replace(/-\d+$/, '');
-                        const origPanel = panels.find(p => p.id === baseId || p.id === id);
-                        if (origPanel?.meshName && origPanel?.furnitureId) {
-                          setHoveredPanel(origPanel.meshName, origPanel.furnitureId);
+            {viewSwapped ? (
+              /* 스왑 모드: 패널 뷰어 + 우측 썸네일 바 */
+              <div className={styles.swappedViewerRow}>
+                <div className={`${styles.viewer3dContainer} ${styles.viewer3dContainerSwapped}`}>
+                  <button className={styles.swapButton} onClick={handleSwapView} title="뷰어 위치 변경">
+                    <ArrowLeftRight size={14} />
+                  </button>
+                  {optimizationResults.length > 0 ? (
+                    <CuttingLayoutPreview2
+                      result={optimizationResults[currentSheetIndex]}
+                      highlightedPanelId={selectedPanelId}
+                      showLabels={settings.labelsOnPanels}
+                      onPanelClick={(id) => {
+                        setSelectedPanelId(id);
+                        const currentResult = optimizationResults[currentSheetIndex];
+                        const placedPanel = currentResult?.panels.find(p => p.id === id);
+                        if (placedPanel?.meshName && placedPanel?.furnitureId) {
+                          setHoveredPanel(placedPanel.meshName, placedPanel.furnitureId);
                         } else {
-                          setHoveredPanel(null, null);
+                          const baseId = id?.replace(/-\d+$/, '');
+                          const origPanel = panels.find(p => p.id === baseId || p.id === id);
+                          if (origPanel?.meshName && origPanel?.furnitureId) {
+                            setHoveredPanel(origPanel.meshName, origPanel.furnitureId);
+                          } else {
+                            setHoveredPanel(null, null);
+                          }
                         }
-                      }
-                    }}
-                    allowRotation={!settings.considerGrain}
-                    rotation={0}
-                    sheetInfo={{
-                      currentIndex: currentSheetIndex,
-                      totalSheets: optimizationResults.length,
-                      onOptimize: handleOptimize,
-                      isOptimizing: isOptimizing,
-                      stock: stock
-                    }}
-                    onCurrentSheetIndexChange={setCurrentSheetIndex}
-                    showCuttingListTab={showCuttingList}
-                    allCutSteps={allCutSteps}
-                    boringData={boringPanels}
-                    shelfBoringPositions={customShelfPositionsByFurniture}
-                    onSimulationComplete={handleSimulationComplete}
-                  />
-                ) : null
-              ) : (
+                      }}
+                      allowRotation={!settings.considerGrain}
+                      rotation={0}
+                      sheetInfo={{
+                        currentIndex: currentSheetIndex,
+                        totalSheets: optimizationResults.length,
+                        onOptimize: handleOptimize,
+                        isOptimizing: isOptimizing,
+                        stock: stock
+                      }}
+                      onCurrentSheetIndexChange={setCurrentSheetIndex}
+                      showCuttingListTab={showCuttingList}
+                      allCutSteps={allCutSteps}
+                      boringData={boringPanels}
+                      shelfBoringPositions={customShelfPositionsByFurniture}
+                      onSimulationComplete={handleSimulationComplete}
+                    />
+                  ) : null}
+                </div>
+                {optimizationResults.length > 0 && (
+                  <div className={styles.thumbnailBarVertical}>
+                    <div className={styles.thumbnailScrollVertical}>
+                      {optimizationResults.map((result, index) => (
+                        <SheetThumbnail
+                          key={index}
+                          result={result}
+                          index={index}
+                          isActive={index === currentSheetIndex}
+                          onClick={() => setCurrentSheetIndex(index)}
+                          viewerScale={1}
+                          viewerRotation={0}
+                          viewerOffset={{ x: 0, y: 0 }}
+                          highlightedPanelId={index === currentSheetIndex ? selectedPanelId : null}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={styles.viewer3dContainer}>
+                <button className={styles.swapButton} onClick={handleSwapView} title="뷰어 위치 변경">
+                  <ArrowLeftRight size={14} />
+                </button>
                 <PanelHighlight3DViewer
                   highlightedPanelName={hoveredPanelName}
                   highlightedFurnitureId={hoveredFurnitureId}
                   excludedMeshNames={excludedMeshNames}
                 />
-              )}
-            </div>
+              </div>
+            )}
 
             {!viewSwapped && <div className={styles.statsCard}>
               <div className={styles.statsCardTitle}>
