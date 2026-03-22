@@ -55,7 +55,7 @@ const PanelDimmer: React.FC<{
   highlightedPanelName: string | null;
 }> = ({ highlightedFurnitureId, highlightedPanelName }) => {
   const { scene, invalidate } = useThree();
-  const originals = useRef<Map<string, { color: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
+  const originals = useRef<Map<string, { color: THREE.Color; emissiveColor: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
 
   useEffect(() => {
     // ── 원본 속성 저장 (최초 1회) ──
@@ -64,6 +64,7 @@ const PanelDimmer: React.FC<{
       if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
         originals.current.set(obj.uuid, {
           color: obj.material.color.clone(),
+          emissiveColor: new THREE.Color(0, 0, 0),
           opacity: obj.material.opacity,
           transparent: obj.material.transparent,
           visible: obj.visible,
@@ -72,7 +73,8 @@ const PanelDimmer: React.FC<{
         const mat = obj.material as THREE.Material;
         if (mat instanceof THREE.MeshStandardMaterial) {
           originals.current.set(obj.uuid, {
-            color: mat.emissive.clone(),
+            color: mat.color.clone(),
+            emissiveColor: mat.emissive.clone(),
             opacity: mat.opacity,
             transparent: mat.transparent,
             visible: obj.visible,
@@ -80,6 +82,7 @@ const PanelDimmer: React.FC<{
         } else if (mat instanceof THREE.MeshBasicMaterial) {
           originals.current.set(obj.uuid, {
             color: mat.color.clone(),
+            emissiveColor: new THREE.Color(0, 0, 0),
             opacity: mat.opacity,
             transparent: mat.transparent,
             visible: mat.visible,
@@ -101,9 +104,10 @@ const PanelDimmer: React.FC<{
         } else if (obj instanceof THREE.Mesh) {
           const mat = obj.material;
           if (mat instanceof THREE.MeshStandardMaterial) {
+            mat.color.copy(orig.color);
             mat.opacity = orig.opacity;
             mat.transparent = orig.transparent;
-            mat.emissive.copy(orig.color);
+            mat.emissive.copy(orig.emissiveColor);
             mat.emissiveIntensity = 0;
             mat.needsUpdate = true;
           } else if (mat instanceof THREE.MeshBasicMaterial) {
@@ -219,9 +223,10 @@ const PanelDimmer: React.FC<{
           mat.emissiveIntensity = 1.0;
         } else {
           // 나머지 전체 투명
+          mat.color.copy(orig.color);
           mat.opacity = isSameFurniture ? 0.08 : 0.06;
           mat.transparent = true;
-          mat.emissive.copy(orig.color);
+          mat.emissive.copy(orig.emissiveColor);
           mat.emissiveIntensity = 0;
         }
         mat.needsUpdate = true;
@@ -242,9 +247,10 @@ const PanelDimmer: React.FC<{
         } else if (obj instanceof THREE.Mesh) {
           const mat = obj.material;
           if (mat instanceof THREE.MeshStandardMaterial) {
+            mat.color.copy(orig.color);
             mat.opacity = orig.opacity;
             mat.transparent = orig.transparent;
-            mat.emissive.copy(orig.color);
+            mat.emissive.copy(orig.emissiveColor);
             mat.emissiveIntensity = 0;
             mat.needsUpdate = true;
           } else if (mat instanceof THREE.MeshBasicMaterial) {
