@@ -30,6 +30,10 @@ function sectionPriority(label: string): number {
  */
 function panelTypePriority(label: string): number {
   const name = label.toLowerCase();
+  // 서라운드·도어는 맨 아래 분리
+  if (name.includes('서라운드') || name.includes('surround')) return 90;
+  if (name.includes('도어') || name.includes('door')) return 91;
+  // 본체 패널
   if (name.includes('좌측') || name.includes('left')) return 1;
   if (name.includes('우측') || name.includes('right')) return 2;
   if (name.includes('측판')) return 3;
@@ -40,8 +44,7 @@ function panelTypePriority(label: string): number {
   if (name.includes('보강')) return 8;
   if (name.includes('프레임')) return 9;
   if (name.includes('서랍') || name.includes('마이다')) return 10;
-  if (name.includes('도어') || name.includes('door')) return 11;
-  return 12;
+  return 11;
 }
 
 export default function PanelsTable(){
