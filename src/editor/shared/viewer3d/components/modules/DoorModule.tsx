@@ -314,7 +314,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 재질 속성 업데이트 (재생성 없이) - 성능 최적화
   // 중요: mat.map은 절대 건드리지 않음! 텍스처는 별도 useEffect에서만 관리
+  // plainMaterial 모드(CNC 옵티마이저)에서는 PanelDimmer가 재질을 직접 제어하므로 건너뜀
   useEffect(() => {
+    if (isPlainMaterial) return;
     const materials = [doorMaterialRef.current, leftDoorMaterialRef.current, rightDoorMaterialRef.current];
     materials.forEach((mat) => {
       if (mat) {
@@ -371,7 +373,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme]);
+  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme, isPlainMaterial]);
 
   // 편집/드래그/2D 모드일 때 텍스처 제거
   useEffect(() => {
@@ -567,7 +569,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [activePanelGrainDirectionsStr, doorMaterial, leftDoorMaterial, rightDoorMaterial, getDoorPanelName]);
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
+  // plainMaterial 모드(CNC 옵티마이저)에서는 PanelDimmer가 재질을 직접 제어하므로 건너뜀
   useEffect(() => {
+    if (isPlainMaterial) return;
     // 도어 전용 텍스처만 사용 (내부재질 텍스처로 fallback하지 않음)
     // doorTexture가 명시적으로 설정된 경우에만 텍스처 적용, 그렇지 않으면 doorColor(단색) 사용
     const doorTextureUrl = materialConfig.doorTexture || undefined;
@@ -619,7 +623,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
       // });
     }
-  }, [materialConfig.doorTexture, materialConfig.interiorTexture, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
+  }, [materialConfig.doorTexture, materialConfig.interiorTexture, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName, isPlainMaterial]);
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);

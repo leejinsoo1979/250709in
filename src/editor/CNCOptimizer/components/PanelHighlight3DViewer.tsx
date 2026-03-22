@@ -158,9 +158,19 @@ const PanelDimmer: React.FC<{
     const matchesPanelName = (obj: THREE.Object3D): boolean => {
       if (!highlightedPanelName || !obj.name) return false;
       const pn = extractPanelName(obj.name);
+      // 1) 정확히 일치
       if (pn && pn === highlightedPanelName) return true;
       if (obj.name === highlightedPanelName) return true;
+      // 2) includes 매칭 — 섹션 접두사 (상)/(하) 제거 후에도 시도
       if (obj.name.includes(highlightedPanelName) || (pn && pn.includes(highlightedPanelName))) return true;
+      // 3) 섹션 접두사 제거 후 includes 매칭
+      //    예: pn="(상)상단보강대", highlighted="(상)보강대"
+      //    → stripped pn="상단보강대", stripped highlighted="보강대"
+      //    → "상단보강대".includes("보강대") = true
+      const stripSection = (s: string) => s.replace(/^\([상하]\)/, '');
+      const strippedPn = pn ? stripSection(pn) : null;
+      const strippedHighlight = stripSection(highlightedPanelName);
+      if (strippedPn && strippedPn.includes(strippedHighlight)) return true;
       return false;
     };
 
@@ -199,27 +209,30 @@ const PanelDimmer: React.FC<{
     // highlightedPanelName이 있으면 항상 개별 패널 모드 (매칭 실패해도 전체 파란색 X)
     const isPanelMode = !!highlightedPanelName;
 
-    // 디버그: 매칭 결과
-    if (highlightedPanelName && targetPanelUuids.size > 0) {
-      const matched: string[] = [];
+    // 디버그: 매칭 결과 (MESH vs LINE/LINESEG 분리 표시)
+    if (highlightedPanelName) {
+      const matchedMeshes: string[] = [];
+      const matchedLines: string[] = [];
+      const unmatchedMeshes: string[] = [];
       scene.traverse((obj) => {
         if (targetPanelUuids.has(obj.uuid)) {
-          const type = obj instanceof THREE.Mesh ? 'MESH' : obj instanceof THREE.LineSegments ? 'LINESEG' : obj instanceof THREE.Line ? 'LINE' : 'OTHER';
-          matched.push(`${type}: "${obj.name}"`);
+          if (obj instanceof THREE.Mesh) {
+            const mat = obj.material;
+            const matType = mat instanceof THREE.MeshStandardMaterial ? 'Std' : mat instanceof THREE.MeshLambertMaterial ? 'Lam' : mat instanceof THREE.MeshBasicMaterial ? 'Bas' : mat?.constructor?.name || '?';
+            matchedMeshes.push(`"${obj.name}" [${matType}]`);
+          } else {
+            const type = obj instanceof THREE.LineSegments ? 'LSEG' : 'LINE';
+            matchedLines.push(`${type}:"${obj.name}"`);
+          }
+        } else if (furnitureObjUuids.has(obj.uuid) && obj instanceof THREE.Mesh && obj.name) {
+          unmatchedMeshes.push(`"${obj.name}" → "${extractPanelName(obj.name)}"`);
         }
       });
-      console.log(`[PanelDimmer] 매칭 성공! 찾는 이름: "${highlightedPanelName}", 매칭된 오브젝트:`, matched);
-    }
-
-    // 디버그: 매칭 실패 시 원인 추적
-    if (highlightedPanelName && targetPanelUuids.size === 0) {
-      const meshNames: string[] = [];
-      scene.traverse((obj) => {
-        if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && obj.name) {
-          meshNames.push(obj.name);
-        }
-      });
-      console.warn(`[PanelDimmer] 패널 매칭 실패! 찾는 이름: "${highlightedPanelName}", 씬 내 메시 이름들:`, meshNames.slice(0, 30).map(n => `"${n}" → "${extractPanelName(n)}"`));
+      if (matchedMeshes.length > 0 || matchedLines.length > 0) {
+        console.log(`[PanelDimmer] 찾는: "${highlightedPanelName}" | MESH(${matchedMeshes.length}):`, matchedMeshes, `| LINE(${matchedLines.length}):`, matchedLines);
+      } else {
+        console.warn(`[PanelDimmer] 매칭 실패! 찾는: "${highlightedPanelName}" | 가구 내 미매칭 메시:`, unmatchedMeshes.slice(0, 20));
+      }
     }
 
     // ── 하이라이트 적용 ──
