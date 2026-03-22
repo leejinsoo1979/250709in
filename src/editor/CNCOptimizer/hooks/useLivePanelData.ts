@@ -409,6 +409,10 @@ export function useLivePanelData() {
         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
       const surroundH = spaceH - floorFinishForSurround - floatH;
 
+      // 단내림 구간 서라운드 높이: 단내림 높이만큼 차감
+      const dropH = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
+      const surroundHDropped = surroundH - dropH;
+
       if (spaceInfo.freeSurround) {
         // 자유배치 서라운드
         surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
@@ -416,34 +420,59 @@ export function useLivePanelData() {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
         const fs = spaceInfo.frameSize;
         const surroundThickness = 18;
-        // 서라운드 높이 = 공간높이 - 상부프레임높이 - 바닥마감재 - 띄움높이
-        const panelH = surroundH - (fs.top || 0);
-        if (fs.left > 0) {
-          surroundPanelList.push({
-            name: '좌측 서라운드 프레임',
-            width: fs.left,
-            height: panelH,
-            thickness: surroundThickness,
-            material: 'PET',
-          });
-        }
-        if (fs.right > 0) {
-          surroundPanelList.push({
-            name: '우측 서라운드 프레임',
-            width: fs.right,
-            height: panelH,
-            thickness: surroundThickness,
-            material: 'PET',
-          });
+
+        if (dropH > 0) {
+          // 단내림 활성: 메인구간 + 단내림구간 서라운드를 각각 생성
+          const mainPanelH = surroundH - (fs.top || 0);
+          const droppedPanelH = surroundHDropped - (fs.top || 0);
+          if (fs.left > 0) {
+            surroundPanelList.push({
+              name: '좌측 서라운드 프레임 (메인구간)',
+              width: fs.left, height: mainPanelH,
+              thickness: surroundThickness, material: 'PET',
+            });
+            surroundPanelList.push({
+              name: '좌측 서라운드 프레임 (단내림구간)',
+              width: fs.left, height: droppedPanelH,
+              thickness: surroundThickness, material: 'PET',
+            });
+          }
+          if (fs.right > 0) {
+            surroundPanelList.push({
+              name: '우측 서라운드 프레임 (메인구간)',
+              width: fs.right, height: mainPanelH,
+              thickness: surroundThickness, material: 'PET',
+            });
+            surroundPanelList.push({
+              name: '우측 서라운드 프레임 (단내림구간)',
+              width: fs.right, height: droppedPanelH,
+              thickness: surroundThickness, material: 'PET',
+            });
+          }
+        } else {
+          // 단내림 없음: 기존 로직
+          const panelH = surroundH - (fs.top || 0);
+          if (fs.left > 0) {
+            surroundPanelList.push({
+              name: '좌측 서라운드 프레임',
+              width: fs.left, height: panelH,
+              thickness: surroundThickness, material: 'PET',
+            });
+          }
+          if (fs.right > 0) {
+            surroundPanelList.push({
+              name: '우측 서라운드 프레임',
+              width: fs.right, height: panelH,
+              thickness: surroundThickness, material: 'PET',
+            });
+          }
         }
         if (fs.top > 0) {
-          // 상부 프레임: 너비 = 공간 너비 - 좌/우 서라운드 (좌/우 사이에 끼움)
           surroundPanelList.push({
             name: '상부 서라운드 프레임',
             width: spaceInfo.width - (fs.left || 0) - (fs.right || 0),
             height: fs.top,
-            thickness: surroundThickness,
-            material: 'PET',
+            thickness: surroundThickness, material: 'PET',
           });
         }
       }
@@ -515,9 +544,16 @@ export function useLivePanelData() {
       console.log('All panels:', allPanels);
 
       // ★ 프레임 병합 처리: frameMergeEnabled=true일 때 개별 상부/하부 프레임을 병합
+      // 병합 조건: 프레임 높이(Y축)·두께(Z축)가 동일하고 합산 너비(X축) ≤ 2420mm
       if (spaceInfo.frameMergeEnabled && placedModules.length > 1) {
-        const topGroups = computeFrameMergeGroups(placedModules, 'top');
-        const baseGroups = computeFrameMergeGroups(placedModules, 'base');
+        const frameTop = spaceInfo.frameSize?.top || 0;
+        const baseHeight = spaceInfo.baseConfig?.height || 0;
+        const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+        const visualBaseH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
+          ? Math.max(0, baseHeight - floorFinishH) : baseHeight;
+
+        const topGroups = computeFrameMergeGroups(placedModules, 'top', 2420, frameTop);
+        const baseGroups = computeFrameMergeGroups(placedModules, 'base', 2420, visualBaseH);
 
         // 기존 개별 프레임 패널 제거
         const framePanelIndices: number[] = [];
@@ -533,19 +569,13 @@ export function useLivePanelData() {
         }
 
         // 병합된 프레임 패널 추가
-        const frameTop = spaceInfo.frameSize?.top || 0;
-        const baseHeight = spaceInfo.baseConfig?.height || 0;
-        const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
-        const visualBaseH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
-          ? Math.max(0, baseHeight - floorFinishH) : baseHeight;
-
         topGroups.forEach((group, gIdx) => {
-          if (frameTop > 0) {
+          if (group.frameHeight > 0) {
             allPanels.push({
               id: `merged_top_${gIdx}`,
               name: `${group.label} 상부프레임`,
               width: Math.round(group.totalWidthMm * 10) / 10,
-              height: frameTop,
+              height: group.frameHeight,
               thickness: 18,
               material: 'PET',
               color: placedModules[0]?.color || 'MW',
@@ -558,12 +588,12 @@ export function useLivePanelData() {
         });
 
         baseGroups.forEach((group, gIdx) => {
-          if (visualBaseH > 0) {
+          if (group.frameHeight > 0) {
             allPanels.push({
               id: `merged_base_${gIdx}`,
               name: `${group.label} 하부프레임`,
               width: Math.round(group.totalWidthMm * 10) / 10,
-              height: visualBaseH,
+              height: group.frameHeight,
               thickness: 18,
               material: 'PET',
               color: placedModules[0]?.color || 'MW',
@@ -959,29 +989,58 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
     const surroundH2 = spaceH2 - floorFinishForSurround2 - floatH2;
 
+    const dropH2 = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
+    const surroundHDropped2 = surroundH2 - dropH2;
+
     if (spaceInfo.freeSurround) {
       surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2);
     } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
       const fs2 = spaceInfo.frameSize;
       const surroundThickness2 = 18;
-      const panelH2 = surroundH2 - (fs2.top || 0);
-      if (fs2.left > 0) {
-        surroundPanelList2.push({
-          name: '좌측 서라운드 프레임',
-          width: fs2.left,
-          height: panelH2,
-          thickness: surroundThickness2,
-          material: 'PET',
-        });
-      }
-      if (fs2.right > 0) {
-        surroundPanelList2.push({
-          name: '우측 서라운드 프레임',
-          width: fs2.right,
-          height: panelH2,
-          thickness: surroundThickness2,
-          material: 'PET',
-        });
+
+      if (dropH2 > 0) {
+        const mainPanelH2 = surroundH2 - (fs2.top || 0);
+        const droppedPanelH2 = surroundHDropped2 - (fs2.top || 0);
+        if (fs2.left > 0) {
+          surroundPanelList2.push({
+            name: '좌측 서라운드 프레임 (메인구간)',
+            width: fs2.left, height: mainPanelH2,
+            thickness: surroundThickness2, material: 'PET',
+          });
+          surroundPanelList2.push({
+            name: '좌측 서라운드 프레임 (단내림구간)',
+            width: fs2.left, height: droppedPanelH2,
+            thickness: surroundThickness2, material: 'PET',
+          });
+        }
+        if (fs2.right > 0) {
+          surroundPanelList2.push({
+            name: '우측 서라운드 프레임 (메인구간)',
+            width: fs2.right, height: mainPanelH2,
+            thickness: surroundThickness2, material: 'PET',
+          });
+          surroundPanelList2.push({
+            name: '우측 서라운드 프레임 (단내림구간)',
+            width: fs2.right, height: droppedPanelH2,
+            thickness: surroundThickness2, material: 'PET',
+          });
+        }
+      } else {
+        const panelH2 = surroundH2 - (fs2.top || 0);
+        if (fs2.left > 0) {
+          surroundPanelList2.push({
+            name: '좌측 서라운드 프레임',
+            width: fs2.left, height: panelH2,
+            thickness: surroundThickness2, material: 'PET',
+          });
+        }
+        if (fs2.right > 0) {
+          surroundPanelList2.push({
+            name: '우측 서라운드 프레임',
+            width: fs2.right, height: panelH2,
+            thickness: surroundThickness2, material: 'PET',
+          });
+        }
       }
       if (fs2.top > 0) {
         surroundPanelList2.push({
