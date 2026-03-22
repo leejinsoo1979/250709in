@@ -627,6 +627,9 @@ function PageInner(){
         names.add(panel.meshName);
       }
     });
+    if (names.size > 0) {
+      console.log('[CNCOptimizer] excludedMeshNames:', [...names]);
+    }
     return names;
   }, [excludedPanelIds, panels]);
 
