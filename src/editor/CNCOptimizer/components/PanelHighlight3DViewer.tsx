@@ -227,25 +227,33 @@ const PanelDimmer: React.FC<{
     const furnitureObjUuids = new Set<string>();
     const targetPanelUuids = new Set<string>();
 
+    // 패널 이름 매칭 헬퍼
+    const matchesPanelName = (obj: THREE.Object3D): boolean => {
+      if (!highlightedPanelName || !obj.name) return false;
+      const pn = extractPanelName(obj.name);
+      if (pn && pn === highlightedPanelName) return true;
+      if (obj.name === highlightedPanelName) return true;
+      if (obj.name.includes(highlightedPanelName) || (pn && pn.includes(highlightedPanelName))) return true;
+      return false;
+    };
+
     if (targetGroup) {
       targetGroup.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
           furnitureObjUuids.add(obj.uuid);
-          if (highlightedPanelName && obj.name) {
-            const pn = extractPanelName(obj.name);
-            // 1) 접두사 제거 후 정확히 일치
-            if (pn && pn === highlightedPanelName) {
-              targetPanelUuids.add(obj.uuid);
-            }
-            // 2) 메시 이름 자체가 meshName과 일치 (접두사 없는 경우)
-            else if (obj.name === highlightedPanelName) {
-              targetPanelUuids.add(obj.uuid);
-            }
-            // 3) 메시 이름이 meshName을 포함 (예: "furniture-mesh-서랍1 좌측판" vs "서랍1 좌측판")
-            else if (obj.name.includes(highlightedPanelName) || (pn && pn.includes(highlightedPanelName))) {
-              targetPanelUuids.add(obj.uuid);
-            }
+          if (matchesPanelName(obj)) {
+            targetPanelUuids.add(obj.uuid);
           }
+        }
+      });
+    }
+
+    // 가구 그룹에서 못 찾았으면 씬 전체에서 이름 매칭 (프레임/서라운드 등 공간 요소)
+    if (highlightedPanelName && targetPanelUuids.size === 0) {
+      scene.traverse((obj) => {
+        if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && matchesPanelName(obj)) {
+          targetPanelUuids.add(obj.uuid);
+          furnitureObjUuids.add(obj.uuid);
         }
       });
     }
@@ -254,14 +262,14 @@ const PanelDimmer: React.FC<{
     const isPanelMode = !!highlightedPanelName;
 
     // 디버그: 매칭 실패 시 원인 추적
-    if (highlightedPanelName && targetPanelUuids.size === 0 && targetGroup) {
+    if (highlightedPanelName && targetPanelUuids.size === 0) {
       const meshNames: string[] = [];
-      targetGroup.traverse((obj) => {
+      scene.traverse((obj) => {
         if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && obj.name) {
           meshNames.push(obj.name);
         }
       });
-      console.warn(`[PanelDimmer] 패널 매칭 실패! 찾는 이름: "${highlightedPanelName}", 가구 내 메시 이름들:`, meshNames.map(n => `"${n}" → "${extractPanelName(n)}"`));
+      console.warn(`[PanelDimmer] 패널 매칭 실패! 찾는 이름: "${highlightedPanelName}", 씬 내 메시 이름들:`, meshNames.slice(0, 30).map(n => `"${n}" → "${extractPanelName(n)}"`));
     }
 
     // ── 하이라이트 적용 ──
