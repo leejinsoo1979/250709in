@@ -1230,7 +1230,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       } else {
         // 기둥이 없는 경우 슬롯 내경 그대로 사용
         if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-          customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
+          // 듀얼: columnWidth * 2의 0.5mm 단위 내림
+          customWidth = Math.floor(zoneIndexing.columnWidth * 2 * 2) / 2;
         } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
           customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
 
@@ -1829,8 +1830,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     if (isDual && zoneTargetIndexing.slotWidths && zoneTargetIndexing.slotWidths[zoneSlotIndex] !== undefined
         && zoneSlotIndex < zoneTargetIndexing.slotWidths.length - 1) {
-      // 듀얼: 정수 내림된 slotWidths 합산 (3D 렌더링과 동일)
-      customWidth = zoneTargetIndexing.slotWidths[zoneSlotIndex] + zoneTargetIndexing.slotWidths[zoneSlotIndex + 1];
+      // 듀얼: columnWidth * 2의 0.5mm 단위 내림
+      customWidth = Math.floor(zoneTargetIndexing.columnWidth * 2 * 2) / 2;
 
       // 듀얼 가구는 합산 너비로 ID 생성
       dualTargetModuleId = `${moduleBaseType}-${customWidth}`;

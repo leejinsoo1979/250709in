@@ -236,8 +236,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   if (targetIndexing.slotWidths && targetIndexing.slotWidths[slotIndex] !== undefined) {
     if (isDualFurniture && slotIndex < targetIndexing.slotWidths.length - 1) {
-      // 듀얼: 정수 내림된 slotWidths 합산 (3D 렌더링과 동일)
-      customWidth = targetIndexing.slotWidths[slotIndex] + targetIndexing.slotWidths[slotIndex + 1];
+      // 듀얼: columnWidth * 2의 0.5mm 단위 내림 (소수점 유지)
+      customWidth = Math.floor(columnWidth * 2 * 2) / 2;
     } else {
       // 싱글: slotWidths에서 정수 내림된 값 사용
       customWidth = targetIndexing.slotWidths[slotIndex];
