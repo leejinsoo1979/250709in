@@ -257,6 +257,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   
   if (shelfPositions && shelfPositions.length === shelfCount) {
     // 절대 위치 모드: 지정된 위치에 선반 배치
+    // positionMm === 0인 항목은 스킵되므로, CNC 패널 이름과 일치시키기 위해
+    // 실제 렌더링되는 선반만 카운트하는 별도 인덱스 사용
+    let shelfRenderIndex = 0;
     return (
       <group position={[0, yOffset, 0]}>
         {shelfPositions.map((positionMm, i) => {
@@ -264,7 +267,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           if (positionMm === 0) {
             return null;
           }
-          
+
+          // 실제 렌더링되는 선반의 1-based 인덱스 (CNC 패널 이름과 일치)
+          shelfRenderIndex++;
+
           // 섹션 하단 기준 위치를 Three.js 좌표로 변환
           const relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm);
 
@@ -278,7 +284,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             ? basicThickness/2 + zOffset - mmToThreeUnits(5) // 뒤로 5mm 이동 (백패널에 붙임)
             : basicThickness/2 + zOffset - frontInset / 2; // 다보 선반: 뒤쪽으로 이동
 
-          const panelName = sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`;
+          const panelName = sectionName ? `${sectionName}선반 ${shelfRenderIndex}` : `선반 ${shelfRenderIndex}`;
           const shelfMat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
