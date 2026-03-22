@@ -26,19 +26,21 @@ function sectionPriority(label: string): number {
 
 /**
  * 패널 유형 우선순위 (낮을수록 먼저)
- * 측판 → 상판/바닥 → 선반/칸막이 → 백패널 → 보강대 → 프레임 → 서랍 → 도어
+ * 좌측판 → 우측판 → 상판/바닥 → 선반/칸막이 → 백패널 → 보강대 → 프레임 → 서랍 → 도어
  */
 function panelTypePriority(label: string): number {
   const name = label.toLowerCase();
-  if (name.includes('좌측') || name.includes('우측') || name.includes('측판')) return 1;
-  if (name.includes('상판') || name.includes('바닥')) return 2;
-  if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 3;
-  if (name.includes('백패널') || name.includes('뒷판')) return 4;
-  if (name.includes('보강')) return 5;
-  if (name.includes('프레임')) return 6;
-  if (name.includes('서랍') || name.includes('마이다')) return 7;
-  if (name.includes('도어') || name.includes('door')) return 8;
-  return 9;
+  if (name.includes('좌측') || name.includes('left')) return 1;
+  if (name.includes('우측') || name.includes('right')) return 2;
+  if (name.includes('측판')) return 3;
+  if (name.includes('상판') || name.includes('바닥')) return 4;
+  if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 5;
+  if (name.includes('백패널') || name.includes('뒷판')) return 6;
+  if (name.includes('보강')) return 7;
+  if (name.includes('프레임')) return 8;
+  if (name.includes('서랍') || name.includes('마이다')) return 9;
+  if (name.includes('도어') || name.includes('door')) return 10;
+  return 11;
 }
 
 export default function PanelsTable(){
