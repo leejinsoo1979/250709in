@@ -599,8 +599,17 @@ function packCategoryToMultiBins(
   if (panels.length === 0) return [];
 
   const bins: PackedBin[] = [];
-  // 면적 내림차순 정렬 (큰 패널 먼저)
-  let remaining = [...panels].sort((a, b) => (b.width * b.height) - (a.width * a.height));
+  // 가구번호 → 좌/우 → 면적 내림차순 정렬 (가구 배치 순서대로 시트 생성)
+  const extractFN = (name: string) => { const m = name.match(/^\[(\d+)\]/); return m ? parseInt(m[1], 10) : 0; };
+  const sideOrder: Record<string, number> = { '좌측': 0, '좌측판': 0, '우측': 1, '우측판': 1 };
+  const extractSide = (name: string) => { const m = name.match(/(좌측|우측|좌측판|우측판)/); return m ? (sideOrder[m[1]] ?? 2) : 2; };
+  let remaining = [...panels].sort((a, b) => {
+    const fnDiff = extractFN(a.name || '') - extractFN(b.name || '');
+    if (fnDiff !== 0) return fnDiff;
+    const sideDiff = extractSide(a.name || '') - extractSide(b.name || '');
+    if (sideDiff !== 0) return sideDiff;
+    return (b.width * b.height) - (a.width * a.height);
+  });
 
   while (remaining.length > 0) {
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
