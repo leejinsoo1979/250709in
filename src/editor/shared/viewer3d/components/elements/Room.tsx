@@ -4739,6 +4739,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
                     />
                   </group>
                   {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
@@ -4761,6 +4762,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4797,6 +4799,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
                     />
                   </group>
                   {/* 좌측 벽 안쪽 정면 프레임 (stepCeiling 단내림 높이) */}
@@ -4819,6 +4822,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4851,6 +4855,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4911,6 +4916,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
                     />
                   </group>
 
@@ -4935,6 +4941,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4970,6 +4977,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
                     />
                   </group>
                   {/* 우측 벽 안쪽 세로 서브프레임 (stepCeiling 단내림 높이) */}
@@ -4993,6 +5001,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -5025,6 +5034,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
                     />
                   </group>
                 </>
