@@ -822,9 +822,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
-          // L방향 치수 (패널 중앙 상단) - panel.height = Y축(2440) = L방향
+          // L방향 치수 (패널 중앙 상단) - 항상 panel.width 표시
           if (width > 50) {
-          const widthText = `${Math.round(panel.height)}`;
+          const widthText = `${Math.round(panel.width)}`;
           const textY = y + 35; // 패널 상단에서 35px 아래
 
           // 치수 텍스트
@@ -841,9 +841,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           }
         }
 
-        // W방향 치수 (패널 중앙 왼쪽) - panel.width = X축(1220) = W방향
+        // W방향 치수 (패널 중앙 왼쪽) - 항상 panel.height 표시
         if (height > 50) {
-          const heightText = `${Math.round(panel.width)}`;
+          const heightText = `${Math.round(panel.height)}`;
           const textX = x + 35; // 패널 왼쪽에서 35px 오른쪽
           
           // 치수 텍스트
