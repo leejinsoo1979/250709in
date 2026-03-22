@@ -1076,13 +1076,13 @@ export class ColumnIndexer {
           const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
           const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
 
-          // 단내림구간(좌): 좌벽이격만 (경계이격은 메인에서 차감)
-          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap;
+          // 단내림구간(좌): 좌벽이격 차감 + 경계이격만큼 메인쪽으로 확장
+          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap + normalDroppedBoundaryGap;
           droppedStartX = internalStartX;
 
           // 일반구간(우): 우벽이격 + 경계이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - rightGap - normalDroppedBoundaryGap;
-          normalStartX = droppedStartX + droppedAreaInternalWidth + normalDroppedBoundaryGap;
+          normalStartX = droppedStartX + droppedAreaInternalWidth;
 
           // console.log('🔍 자유배치 서라운드 왼쪽 단내림 경계 계산:', {
           //   '좌벽이격': leftGap,
@@ -1101,14 +1101,14 @@ export class ColumnIndexer {
           // 단내림 시작이 커튼박스 뒤로 밀림
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 단내림구간(좌): 이격거리는 단내림 가구에 영향 없음
+          // 단내림구간(좌): 경계이격만큼 메인쪽으로 확장
           // CB 있으면 프레임 불필요, CB 없으면 프레임+좌이격 차감
-          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.left + LEFT_GAP));
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.left + LEFT_GAP)) + BOUNDARY_GAP;
           droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : (frameThickness.left + LEFT_GAP));
 
           // 일반구간(우): 우측 프레임 + 우이격 + 중간이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP - RIGHT_GAP;
-          normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // 경계이격 후 메인 시작
+          normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 확장 후 메인 시작
 
           // console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
@@ -1126,13 +1126,13 @@ export class ColumnIndexer {
           const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
           const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
 
-          // 단내림구간(좌): 좌벽이격만 (경계이격은 메인에서 차감)
-          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap;
+          // 단내림구간(좌): 좌벽이격 차감 + 경계이격만큼 메인쪽으로 확장
+          droppedAreaInternalWidth = droppedAreaOuterWidth - leftGap + normalDroppedBoundaryGap;
           droppedStartX = internalStartX;
 
           // 일반구간(우): 우벽이격 + 경계이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - rightGap - normalDroppedBoundaryGap;
-          normalStartX = droppedStartX + droppedAreaInternalWidth + normalDroppedBoundaryGap;
+          normalStartX = droppedStartX + droppedAreaInternalWidth;
 
           // console.log('🔍 자유배치 노서라운드 왼쪽 단내림 경계 계산:', {
           //   '좌벽이격': leftGap,
@@ -1188,14 +1188,14 @@ export class ColumnIndexer {
           // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 단내림구간(좌): 이격거리는 단내림 가구에 영향 없음
+          // 단내림구간(좌): 경계이격만큼 메인쪽으로 확장
           // CB 있으면 좌측 이격 불필요, CB 없으면 좌측 이격 차감
-          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : leftReduction);
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : leftReduction) + BOUNDARY_GAP;
           droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : leftReduction);
 
           // 일반구간(우): 우측 이격거리 + 중간이격 빼기
           normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
-          normalStartX = droppedStartX + droppedAreaInternalWidth + BOUNDARY_GAP; // 경계이격 후 메인 시작
+          normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 확장 후 메인 시작
 
           // console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
           //   '단내림구간 외부너비': droppedAreaOuterWidth,
@@ -1224,9 +1224,9 @@ export class ColumnIndexer {
           normalAreaInternalWidth = normalAreaOuterWidth - leftGap - normalDroppedBoundaryGap;
           normalStartX = internalStartX;
 
-          // 단내림구간(우): 우벽이격만 (경계이격은 메인에서 차감)
-          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap;
-          droppedStartX = normalStartX + normalAreaInternalWidth + normalDroppedBoundaryGap;
+          // 단내림구간(우): 우벽이격 차감 + 경계이격만큼 메인쪽으로 확장
+          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap + normalDroppedBoundaryGap;
+          droppedStartX = normalStartX + normalAreaInternalWidth;
 
           // console.log('🔍 자유배치 서라운드 오른쪽 단내림 경계 계산:', {
           //   '좌벽이격': leftGap,
@@ -1248,10 +1248,10 @@ export class ColumnIndexer {
           normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP - LEFT_GAP;
           normalStartX = internalStartX + LEFT_GAP;
 
-          // 단내림구간(우): 이격거리는 단내림 가구에 영향 없음
+          // 단내림구간(우): 경계이격만큼 메인쪽으로 확장
           // CB 있으면 프레임 불필요, CB 없으면 프레임+우이격 차감
-          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.right + RIGHT_GAP));
-          droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 경계이격 후 단내림 시작
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.right + RIGHT_GAP)) + BOUNDARY_GAP;
+          droppedStartX = normalStartX + normalAreaInternalWidth; // 단내림이 메인 바로 뒤에서 시작 (이격 흡수)
 
           // console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
@@ -1273,9 +1273,9 @@ export class ColumnIndexer {
           normalAreaInternalWidth = normalAreaOuterWidth - leftGap - normalDroppedBoundaryGap;
           normalStartX = internalStartX;
 
-          // 단내림구간(우): 우벽이격만 (경계이격은 메인에서 차감)
-          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap;
-          droppedStartX = normalStartX + normalAreaInternalWidth + normalDroppedBoundaryGap;
+          // 단내림구간(우): 우벽이격 차감 + 경계이격만큼 메인쪽으로 확장
+          droppedAreaInternalWidth = droppedAreaOuterWidth - rightGap + normalDroppedBoundaryGap;
+          droppedStartX = normalStartX + normalAreaInternalWidth;
 
           // console.log('🔍 자유배치 노서라운드 오른쪽 단내림 경계 계산:', {
           //   '좌벽이격': leftGap,
@@ -1335,10 +1335,10 @@ export class ColumnIndexer {
           normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
           normalStartX = internalStartX;
 
-          // 단내림구간(우): 이격거리는 단내림 가구에 영향 없음
+          // 단내림구간(우): 경계이격만큼 메인쪽으로 확장
           // CB 있으면 우측 이격 불필요, CB 없으면 우측 이격 차감
-          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : rightReduction);
-          droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 경계이격 후 단내림 시작
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : rightReduction) + BOUNDARY_GAP;
+          droppedStartX = normalStartX + normalAreaInternalWidth; // 단내림이 메인 바로 뒤에서 시작 (이격 흡수)
 
           // console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           //   '일반구간 외부너비': normalAreaOuterWidth,
