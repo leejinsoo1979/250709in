@@ -470,8 +470,8 @@ export const calculatePanelDetails = (
           // L = 폭(좌우), W = 깊이(앞뒤)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 바닥`,
-            width: drawerWidth - 96, // 폭 → L방향
-            depth: drawerBodyDepth - 20, // 깊이 → W방향
+            width: drawerWidth - 96, // 폭(좌우) → L방향
+            depth: drawerBodyDepth - 20, // 깊이(앞뒤) → W방향
             thickness: drawerBottomThickness,
             material: 'MDF'
           });
