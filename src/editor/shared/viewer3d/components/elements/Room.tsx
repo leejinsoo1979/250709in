@@ -357,7 +357,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
-  const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
+  const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore();
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
@@ -864,7 +864,7 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
 
-    let frameColor = materialConfig?.doorColor || materialConfig?.frameColor || defaultColor;
+    let frameColor = isPlainMaterial ? defaultColor : (materialConfig?.doorColor || materialConfig?.frameColor || defaultColor);
     let baseFrameTransparent = false;
 
     const isHighlighted = frameType && highlightedFrame && (
@@ -922,7 +922,7 @@ const Room: React.FC<RoomProps> = ({
     });
 
     // 프레임 텍스처 적용 (doorTexture 우선, frameTexture 폴백)
-    const frameTextureUrl = materialConfig?.doorTexture || materialConfig?.frameTexture;
+    const frameTextureUrl = isPlainMaterial ? undefined : (materialConfig?.doorTexture || materialConfig?.frameTexture);
     const shouldApplyTexture =
       !isHighlighted &&
       frameTextureUrl &&

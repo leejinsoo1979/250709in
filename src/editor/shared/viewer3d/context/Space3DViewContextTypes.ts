@@ -22,6 +22,9 @@ export interface Space3DViewContextType {
 
   // 악세서리(옷봉, 조절발 등) 숨김 여부 (옵티마이저 뷰어용)
   hideAccessories?: boolean;
+
+  // 재질/텍스처 미적용 (옵티마이저 뷰어용 — 기본 색상만 표시)
+  plainMaterial?: boolean;
 }
 
 // 컨텍스트 생성

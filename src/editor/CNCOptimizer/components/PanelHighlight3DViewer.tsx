@@ -194,6 +194,18 @@ const PanelDimmer: React.FC<{
     // highlightedPanelName이 있으면 항상 개별 패널 모드 (매칭 실패해도 전체 파란색 X)
     const isPanelMode = !!highlightedPanelName;
 
+    // 디버그: 매칭 결과
+    if (highlightedPanelName && targetPanelUuids.size > 0) {
+      const matched: string[] = [];
+      scene.traverse((obj) => {
+        if (targetPanelUuids.has(obj.uuid)) {
+          const type = obj instanceof THREE.Mesh ? 'MESH' : obj instanceof THREE.LineSegments ? 'LINESEG' : obj instanceof THREE.Line ? 'LINE' : 'OTHER';
+          matched.push(`${type}: "${obj.name}"`);
+        }
+      });
+      console.log(`[PanelDimmer] 매칭 성공! 찾는 이름: "${highlightedPanelName}", 매칭된 오브젝트:`, matched);
+    }
+
     // 디버그: 매칭 실패 시 원인 추적
     if (highlightedPanelName && targetPanelUuids.size === 0) {
       const meshNames: string[] = [];
@@ -414,6 +426,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
         {/* Space3DViewerReadOnly와 동일한 구조: Provider → ThreeCanvas → Room */}
         <Space3DViewProvider
           hideAccessories={true}
+          plainMaterial={true}
           spaceInfo={spaceInfo}
           svgSize={{ width: 800, height: 600 }}
           renderMode="solid"

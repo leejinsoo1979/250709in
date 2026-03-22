@@ -172,7 +172,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
   const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
-  const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
+  const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
 
@@ -186,10 +186,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
-  const materialConfig = currentSpaceInfo.materialConfig || {
-    interiorColor: '#FFFFFF',
-    doorColor: '#E0E0E0'  // 기본값 변경
-  };
+  const materialConfig = isPlainMaterial
+    ? { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' }
+    : (currentSpaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' });
 
 // console.log('🎨🎨🎨 DoorModule materialConfig:', {
     // doorTexture: materialConfig.doorTexture,

@@ -68,7 +68,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isExcludedByOptimizer = excludedKeys.size > 0 && compositeKey ? excludedKeys.has(compositeKey) : false;
 
-  const { viewMode } = useSpace3DView();
+  const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
@@ -111,8 +111,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     };
   }, [material, defaultMaterial]);
   
-  // 실제 사용할 material (prop이 없으면 기본값 사용)
-  const baseMaterial = material || defaultMaterial;
+  // 실제 사용할 material (plainMaterial 모드면 항상 기본 색상, 아니면 prop 우선)
+  const baseMaterial = isPlainMaterial ? defaultMaterial : (material || defaultMaterial);
 
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외)
@@ -239,6 +239,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
+    // plainMaterial 모드에서는 텍스처/결 방향 처리 건너뜀
+    if (isPlainMaterial) return processedMaterial;
+
     if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
       return processedMaterial;
     }
@@ -313,7 +316,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     panelMaterialRef.current = panelMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode, isPlainMaterial]);
 
   const finalMaterial = panelSpecificMaterial;
 
