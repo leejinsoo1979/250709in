@@ -561,7 +561,7 @@ function normalizeOrientation(panels: Rect[], binWidth: number, stripDirection?:
  * - 가구별로 묶어서, 해당 가구의 width > binWidth이면 그 가구 전체를 스왑
  * - 일부만 스왑하면 vertical에서 다른 그룹이 되어 분리되므로, 가구 단위 통일
  */
-function normalizeBackPanels(panels: Rect[], binWidth: number): Rect[] {
+function normalizeBackPanels(panels: Rect[], binWidth: number, binHeight: number): Rect[] {
   if (panels.length === 0) return [];
 
   // 가구번호별 그룹
@@ -574,9 +574,12 @@ function normalizeBackPanels(panels: Rect[], binWidth: number): Rect[] {
 
   const result: Rect[] = [];
   for (const [, group] of byFurniture) {
-    // 이 가구의 백패널 width (모두 동일해야 함)
+    // 이 가구의 백패널 width/height 대표값
     const w = group[0].width;
-    if (w > binWidth) {
+    const h = group[0].height;
+    // width가 binWidth 초과하거나, height가 binHeight 초과하면 스왑 필요
+    const needsSwap = w > binWidth || h > binHeight;
+    if (needsSwap) {
       // 전체 스왑 — 모든 패널을 같은 방향으로
       for (const p of group) {
         result.push({ ...p, width: p.height, height: p.width, rotated: true });
@@ -971,7 +974,7 @@ export function packGuillotine(
   const surroundPanels = normalizeOrientation(surroundPanelsRaw, binWidth, stripDirection);
   const framePanels = normalizeOrientation(framePanelsRaw, binWidth, stripDirection);
   // 백패널: 같은 가구의 (상)(하)는 동일 width → 가구 단위 스왑
-  const backPanels = normalizeBackPanels(backPanelsRaw, binWidth);
+  const backPanels = normalizeBackPanels(backPanelsRaw, binWidth, binHeight);
 
   // ── 2단계: 카테고리별 패킹 ──
   // stripDirection 결정: auto면 카테고리별 기본값, 아니면 전달받은 방향 사용
