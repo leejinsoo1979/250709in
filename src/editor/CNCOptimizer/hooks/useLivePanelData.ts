@@ -7,6 +7,7 @@ import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '@/edito
 import { Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
+import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 
 /**
  * 패널 이름에서 기본 결방향(grain) 결정
@@ -512,6 +513,70 @@ export function useLivePanelData() {
       });
       console.log('========================================');
       console.log('All panels:', allPanels);
+
+      // ★ 프레임 병합 처리: frameMergeEnabled=true일 때 개별 상부/하부 프레임을 병합
+      if (spaceInfo.frameMergeEnabled && placedModules.length > 1) {
+        const topGroups = computeFrameMergeGroups(placedModules, 'top');
+        const baseGroups = computeFrameMergeGroups(placedModules, 'base');
+
+        // 기존 개별 프레임 패널 제거
+        const framePanelIndices: number[] = [];
+        allPanels.forEach((p, idx) => {
+          if (p.name.includes('상부프레임') || p.name.includes('하부프레임')) {
+            framePanelIndices.push(idx);
+          }
+        });
+
+        // 뒤에서부터 제거 (인덱스 밀림 방지)
+        for (let i = framePanelIndices.length - 1; i >= 0; i--) {
+          allPanels.splice(framePanelIndices[i], 1);
+        }
+
+        // 병합된 프레임 패널 추가
+        const frameTop = spaceInfo.frameSize?.top || 0;
+        const baseHeight = spaceInfo.baseConfig?.height || 0;
+        const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
+        const visualBaseH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
+          ? Math.max(0, baseHeight - floorFinishH) : baseHeight;
+
+        topGroups.forEach((group, gIdx) => {
+          if (frameTop > 0) {
+            allPanels.push({
+              id: `merged_top_${gIdx}`,
+              name: `${group.label} 상부프레임`,
+              width: Math.round(group.totalWidthMm * 10) / 10,
+              height: frameTop,
+              thickness: 18,
+              material: 'PET',
+              color: placedModules[0]?.color || 'MW',
+              quantity: 1,
+              grain: 'H' as any,
+              meshName: '상부프레임',
+              furnitureId: placedModules[0]?.id || '',
+            });
+          }
+        });
+
+        baseGroups.forEach((group, gIdx) => {
+          if (visualBaseH > 0) {
+            allPanels.push({
+              id: `merged_base_${gIdx}`,
+              name: `${group.label} 하부프레임`,
+              width: Math.round(group.totalWidthMm * 10) / 10,
+              height: visualBaseH,
+              thickness: 18,
+              material: 'PET',
+              color: placedModules[0]?.color || 'MW',
+              quantity: 1,
+              grain: 'H' as any,
+              meshName: '하부프레임',
+              furnitureId: placedModules[0]?.id || '',
+            });
+          }
+        });
+
+        console.log(`🔗 프레임 병합: 상부 ${topGroups.length}그룹, 하부 ${baseGroups.length}그룹 (개별 ${framePanelIndices.length}개 제거)`);
+      }
 
       setPanels(allPanels);
       } catch (error) {
