@@ -1,5 +1,5 @@
 import React, { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -68,6 +68,27 @@ const PanelDimmer: React.FC<{
 }> = ({ highlightedFurnitureId, highlightedPanelName, excludedMeshNames }) => {
   const { scene, invalidate } = useThree();
   const originals = useRef<Map<string, { color: THREE.Color; opacity: number; transparent: boolean; visible: boolean }>>(new Map());
+  // ref로 최신 props 유지 (useFrame에서 사용)
+  const excludedRef = useRef(excludedMeshNames);
+  excludedRef.current = excludedMeshNames;
+
+  // ── useFrame: 매 프레임 exclude 패널 visible 강제 적용 ──
+  // Scene이 지연 로드되어도 확실히 적용됨
+  useFrame(() => {
+    const excluded = excludedRef.current;
+    if (!excluded || excluded.size === 0) return;
+    scene.traverse((obj) => {
+      if (!obj.name) return;
+      const pn = extractPanelName(obj.name);
+      if (pn === null) return;
+      const fid = findFurnitureId(obj);
+      const compositeKey = fid ? `${fid}::${pn}` : pn;
+      const shouldBeVisible = !excluded.has(compositeKey);
+      if (obj.visible !== shouldBeVisible) {
+        obj.visible = shouldBeVisible;
+      }
+    });
+  });
 
   useEffect(() => {
     // ── 원본 속성 저장 (최초 1회) ──
@@ -100,8 +121,7 @@ const PanelDimmer: React.FC<{
       }
     });
 
-    // ── 제외 패널 visible 처리 ──
-    // excludedMeshNames는 "furnitureId::meshName" 형태의 복합키를 담고 있음
+    // ── 제외 패널 visible 처리 (useEffect에서도 1회 적용) ──
     scene.traverse((obj) => {
       if (!obj.name) return;
       const pn = extractPanelName(obj.name);
@@ -186,7 +206,6 @@ const PanelDimmer: React.FC<{
       if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
         const mat = obj.material;
         if (isTarget) {
-          // 대상 패널 엣지: 굵은 파란색
           mat.color.set(0x0033ee);
           mat.opacity = 1;
           mat.transparent = false;
@@ -201,7 +220,6 @@ const PanelDimmer: React.FC<{
             mat.transparent = false;
           }
         } else {
-          // 나머지 가구 엣지: 투명
           mat.color.copy(orig.color);
           mat.opacity = 0.08;
           mat.transparent = true;
@@ -228,7 +246,6 @@ const PanelDimmer: React.FC<{
 
       if (mat instanceof THREE.MeshStandardMaterial) {
         if (isTarget) {
-          // 대상 패널: 선명한 파란색 (불투명)
           mat.color.set(0x3366ff);
           mat.opacity = 1;
           mat.transparent = false;
@@ -236,7 +253,6 @@ const PanelDimmer: React.FC<{
           mat.emissiveIntensity = 1.0;
         } else if (isSameFurniture) {
           if (hasSpecificPanel) {
-            // 같은 가구 내 비대상: 거의 투명
             mat.opacity = 0.08;
             mat.transparent = true;
             mat.emissive.copy(orig.color);
@@ -248,7 +264,6 @@ const PanelDimmer: React.FC<{
             mat.emissiveIntensity = 0.6;
           }
         } else {
-          // 나머지 가구: 투명
           mat.opacity = 0.06;
           mat.transparent = true;
           mat.emissive.copy(orig.color);
