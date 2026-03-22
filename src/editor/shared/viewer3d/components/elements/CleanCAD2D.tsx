@@ -1975,11 +1975,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      // 3단: 슬롯 합산 (이격 반영된 실배치 공간)
-                      const val = isFreePlacement ? mainWidth : mainSlotTotalWidth;
-                      const r = Math.round(val * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1);
-                    })()}
+                    {(() => { const r = Math.round(mainWidth * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}
                   </Text>
                 )}
                 {/* 단내림(stepCeiling) 구간 치수선 — 자유배치 전용 */}
@@ -2044,11 +2040,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineWidth={textOutlineWidth}
                     outlineColor={textOutlineColor}
                   >
-                    {(() => {
-                      // 3단: 슬롯 합산 (이격 반영된 실배치 공간)
-                      const val = isFreePlacement ? droppedWidth : (droppedSlotTotalWidth || droppedWidth);
-                      const r = Math.round(val * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1);
-                    })()}
+                    {(() => { const r = Math.round(droppedWidth * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}
                   </Text>
                 )}
                 </>)}
