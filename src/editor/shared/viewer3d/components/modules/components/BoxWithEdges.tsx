@@ -68,6 +68,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isExcludedByOptimizer = excludedKeys.size > 0 && compositeKey ? excludedKeys.has(compositeKey) : false;
 
+  // DEBUG: 한 번만 로그 (첫 렌더 시)
+  React.useEffect(() => {
+    if (panelName && furnitureId) {
+      console.log(`[BWE-DEBUG] panelName="${panelName}" furnitureId="${furnitureId?.slice(0,8)}" excludedKeys.size=${excludedKeys.size} compositeKey="${compositeKey}" isExcluded=${isExcludedByOptimizer}`);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [excludedKeys.size]);
+
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();

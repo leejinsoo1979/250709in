@@ -67,6 +67,11 @@ function extractPanelName(objName: string): string | null {
  * scene traverse 방식은 더 이상 사용하지 않음.
  */
 const PanelHider: React.FC = () => {
+  // DEBUG: R3F Canvas 내부에서 store 읽기 확인
+  const excludedKeys = useExcludedPanelsStore((s) => s.excludedKeys);
+  React.useEffect(() => {
+    console.log('[PanelHider-R3F] excludedKeys.size inside Canvas:', excludedKeys.size);
+  }, [excludedKeys.size]);
   return null;
 };
 
@@ -346,8 +351,13 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
 
   // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 접근 가능하게)
   useEffect(() => {
-    setExcludedKeys(excludedMeshNames ?? new Set());
-    return () => setExcludedKeys(new Set());
+    const keys = excludedMeshNames ?? new Set();
+    console.log('[PH3DV] useEffect fired! excludedMeshNames.size=', keys.size, 'calling setExcludedKeys');
+    setExcludedKeys(keys);
+    return () => {
+      console.log('[PH3DV] useEffect cleanup! clearing excludedKeys');
+      setExcludedKeys(new Set());
+    };
   }, [excludedMeshNames, setExcludedKeys]);
 
   // 지연 마운트: 이전 WebGL 컨텍스트 정리 대기
