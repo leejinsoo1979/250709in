@@ -404,7 +404,7 @@ export default function PanelsTable(){
                 <React.Fragment key={p.id}>
                 {showGroupSeparator && (
                   <tr className={styles.groupSeparator}>
-                    <td colSpan={7} style={{ padding: 0, height: '2px', background: 'var(--border-color, #e5e7eb)' }}></td>
+                    <td colSpan={6} style={{ padding: 0, height: '2px', background: 'var(--border-color, #e5e7eb)' }}></td>
                   </tr>
                 )}
                 <tr

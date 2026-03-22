@@ -417,9 +417,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 460px;
-  min-width: 460px;
-  max-width: 460px;
+  width: 100%;
+  min-width: 0;
   height: calc(100vh - 72px);
   overflow: hidden;
 }
