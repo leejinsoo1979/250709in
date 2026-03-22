@@ -218,6 +218,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
+                        panelName="(하)좌측"
                       />
 
                       {/* 오른쪽 측면 판재 */}
@@ -230,6 +231,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
+                        panelName="(하)우측"
                       />
                     </>
                   ) : (
@@ -245,6 +247,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
+                        panelName="(상)좌측"
                       />
 
                       {/* 오른쪽 측면 판재 */}
@@ -257,6 +260,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
+                        panelName="(상)우측"
                       />
                     </>
                   )}
@@ -304,6 +308,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                        panelName="(상)바닥"
                       />
                     );
                   })()}
@@ -324,8 +329,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             furnitureId={placedFurnitureId}
             isDragging={isDragging}
             isEditMode={isEditMode}
+            panelName="좌측판"
           />
-          
+
           {/* 오른쪽 측면 판재 */}
           <BoxWithEdges
             args={[basicThickness, height, depth]}
@@ -335,6 +341,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             furnitureId={placedFurnitureId}
             isDragging={isDragging}
             isEditMode={isEditMode}
+            panelName="우측판"
           />
         </>
       )}
@@ -349,6 +356,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         isDragging={isDragging}
         isEditMode={isEditMode}
         isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
+        panelName={isMultiSectionFurniture() ? "(상)상판" : "상판"}
       />
       
       {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만, 띄워서 배치가 아닐 때만 */}
@@ -407,6 +415,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         isDragging={isDragging}
         isEditMode={isEditMode}
         isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
+        panelName={isMultiSectionFurniture() ? "(하)바닥" : "바닥판"}
       />
       
       {/* 뒷면 판재 (9mm 백패널, 섹션별로 분리) */}
@@ -450,6 +459,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                  panelName="(하)백패널"
                 />
 
                 {/* 상부 섹션 백패널 */}
@@ -462,6 +472,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                  panelName="(상)백패널"
                 />
 
                 {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
@@ -540,6 +551,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             furnitureId={placedFurnitureId}
             isDragging={isDragging}
             isBackPanel={true}
+            panelName="백패널"
           />
 
           {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
