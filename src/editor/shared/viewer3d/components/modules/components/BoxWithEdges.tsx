@@ -448,7 +448,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       if (isDrawerFrame) return 0.15;
       if (isDrawerPanel) return 0.15;
       // 하부섹션 상판: 옵셋으로 뒤에 있으므로 약간 흐리게
-      if (panelName.includes('(하)상판') || panelName === '하부섹션 상판') return 0.5;
+      if (panelName.includes('(하)상판')) return 0.5;
       return 1.0;
     }
 

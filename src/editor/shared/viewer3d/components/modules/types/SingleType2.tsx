@@ -199,7 +199,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
                   onClick={handleCabinetBodyClick}
-                  panelName="좌측판"
+                  panelName={`${index === 0 ? '(하)' : '(상)'}좌측`}
                   panelGrainDirections={hookPanelGrainDirections}
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
@@ -214,7 +214,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
                   onClick={handleCabinetBodyClick}
-                  panelName="우측판"
+                  panelName={`${index === 0 ? '(하)' : '(상)'}우측`}
                   panelGrainDirections={hookPanelGrainDirections}
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
@@ -265,7 +265,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isLowerHighlighted}
                         onClick={handleCabinetBodyClick}
-                        panelName="중간판"
+                        panelName="(하)상판"
                         panelGrainDirections={hookPanelGrainDirections}
                         textureUrl={spaceInfo.materialConfig?.doorTexture}
                       />
@@ -280,7 +280,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isUpperHighlighted}
                         onClick={handleCabinetBodyClick}
-                        panelName="중간판"
+                        panelName="(상)바닥"
                         panelGrainDirections={hookPanelGrainDirections}
                         textureUrl={spaceInfo.materialConfig?.doorTexture}
                       />
@@ -548,7 +548,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isEditMode={isEditMode}
             isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${lastSectionIndex}` : false}
             onClick={handleCabinetBodyClick}
-            panelName="상판"
+            panelName={isMultiSectionFurniture() ? "(상)상판" : "상판"}
             panelGrainDirections={hookPanelGrainDirections}
             textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
@@ -573,7 +573,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isEditMode={isEditMode}
             isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
             onClick={handleCabinetBodyClick}
-            panelName="하판"
+            panelName={isMultiSectionFurniture() ? "(하)바닥" : "바닥판"}
             panelGrainDirections={hookPanelGrainDirections}
             textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
@@ -625,7 +625,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                  panelName="백패널"
+                  panelName="(하)백패널"
                   panelGrainDirections={hookPanelGrainDirections}
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
@@ -640,7 +640,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                  panelName="백패널"
+                  panelName="(상)백패널"
                   panelGrainDirections={hookPanelGrainDirections}
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
