@@ -467,14 +467,18 @@ export const calculatePanelDetails = (
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
           // DrawerRenderer: drawerWidth - 70 - 26 = drawerWidth - 96
-          // L방향 = 깊이(앞뒤), W방향 = 폭(좌우)
-          targetPanel.push({
-            name: `${sectionPrefix}서랍${drawerNum} 바닥`,
-            width: drawerBodyDepth - 20, // 깊이 방향 → L방향
-            depth: drawerWidth - 96, // 폭 방향 → W방향
-            thickness: drawerBottomThickness,
-            material: 'MDF'
-          });
+          // L방향 = 긴 쪽, W방향 = 짧은 쪽 (CNC 재단 관례)
+          {
+            const bottomW = drawerWidth - 96; // 폭 방향
+            const bottomD = drawerBodyDepth - 20; // 깊이 방향
+            targetPanel.push({
+              name: `${sectionPrefix}서랍${drawerNum} 바닥`,
+              width: Math.max(bottomW, bottomD), // 긴 쪽 → L방향
+              depth: Math.min(bottomW, bottomD), // 짧은 쪽 → W방향
+              thickness: drawerBottomThickness,
+              material: 'MDF'
+            });
+          }
         }
 
         // === 서랍속장 (날개벽) 패널 ===
@@ -976,14 +980,18 @@ export const calculatePanelDetails = (
                   thickness: drawerSideThicknessCC,
                   material: 'PB'
                 });
-                // 서랍 바닥판 - L방향 = 깊이(앞뒤), W방향 = 폭(좌우)
-                targetPanel.push({
-                  name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 바닥`,
-                  width: drawerBodyDepth - 20, // 깊이 방향 → L방향
-                  depth: drawerWidth - 96, // 폭 방향 → W방향
-                  thickness: drawerBottomThicknessCC,
-                  material: 'MDF'
-                });
+                // 서랍 바닥판 - L방향 = 긴 쪽, W방향 = 짧은 쪽
+                {
+                  const bottomW = drawerWidth - 96;
+                  const bottomD = drawerBodyDepth - 20;
+                  targetPanel.push({
+                    name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 바닥`,
+                    width: Math.max(bottomW, bottomD),
+                    depth: Math.min(bottomW, bottomD),
+                    thickness: drawerBottomThicknessCC,
+                    material: 'MDF'
+                  });
+                }
               }
               break;
             }
