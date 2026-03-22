@@ -134,7 +134,7 @@
   table-layout: fixed;
 }
 
-/* 패널 테이블 열 너비 — 체크|이름|치수|두께|재질|결방향|삭제 */
+/* 패널 테이블 열 너비 — 체크|이름|치수|두께|재질|결방향 */
 .table th:nth-child(1),
 .table td:nth-child(1) {
   width: 20px; /* 체크박스 */
@@ -174,13 +174,6 @@
   padding: 0 2px !important;
 }
 
-.table th:last-child,
-.table td:last-child {
-  width: 20px; /* 삭제 */
-  text-align: center;
-  padding: 0 1px !important;
-}
-
 /* 원자재 테이블 열 너비 지정 */
 .stockTable th:first-child,
 .stockTable td:first-child {
@@ -202,10 +195,9 @@
   width: 60px;
 }
 
-.stockTable th:last-child,
-.stockTable td:last-child {
-  width: 25px;
-  text-align: center;
+.stockTable th:nth-child(5),
+.stockTable td:nth-child(5) {
+  /* 재질 — 남은 공간 사용 */
 }
 
 .table thead {
