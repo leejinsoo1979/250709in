@@ -30,10 +30,10 @@ function sectionPriority(label: string): number {
  */
 function panelTypePriority(label: string, material?: string): number {
   const name = label.toLowerCase();
-  // 도어·서라운드·프레임(PET)은 맨 아래 분리
-  if (name.includes('도어') || name.includes('door')) return 90;
-  if (name.includes('서라운드') || name.includes('surround')) return 91;
-  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 92;
+  // 서라운드·프레임(PET)·도어는 맨 아래 분리 (도어가 최하단)
+  if (name.includes('서라운드') || name.includes('surround')) return 90;
+  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 91;
+  if (name.includes('도어') || name.includes('door')) return 92;
   // 본체 패널
   if (name.includes('좌측') || name.includes('left')) return 1;
   if (name.includes('우측') || name.includes('right')) return 2;
