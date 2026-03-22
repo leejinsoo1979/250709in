@@ -20,7 +20,7 @@ import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' {
   // 백패널: MDF 무결이지만 무조건 높이(Y축)=Length 고정 → VERTICAL (회전 불가)
   if (panelName.includes('백패널')) return 'VERTICAL';
-  if (panelName.includes('바닥') && panelName.includes('서랍')) return 'NONE'; // 서랍 바닥 (MDF)
+  if (panelName.includes('바닥') && panelName.includes('서랍')) return 'HORIZONTAL'; // 서랍 바닥 (MDF) - 폭(L)방향 고정, 회전 불가
 
   // 서랍 부품
   if (panelName.includes('마이다')) return 'HORIZONTAL';    // 서랍 손잡이판 (X축 너비 = 재단방향)
