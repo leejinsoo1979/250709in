@@ -1109,6 +1109,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
   const visualBaseFrameHeightMm = baseFrameHeightMm;
 
+  // 단내림 구간 가구 높이 보정: zone=dropped이고 freeHeight/customHeight 미설정 시 직접 계산
+  const droppedFreeHeight = React.useMemo(() => {
+    let h = currentPlacedModule?.freeHeight || currentPlacedModule?.customHeight;
+    if (!h && currentPlacedModule?.zone === 'dropped') {
+      const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+      let dropH = 0;
+      if (isFreePlacement && spaceInfo.stepCeiling?.enabled) {
+        dropH = spaceInfo.stepCeiling.dropHeight || 0;
+      } else if (!isFreePlacement && spaceInfo.droppedCeiling?.enabled) {
+        dropH = spaceInfo.droppedCeiling.dropHeight || 0;
+      }
+      if (dropH > 0) {
+        const frameTop = spaceInfo.frameSize?.top || 0;
+        const baseH = spaceInfo.baseConfig?.height || 0;
+        h = (spaceInfo.height - dropH) - frameTop - baseH;
+      }
+    }
+    return h;
+  }, [currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.zone, spaceInfo]);
+
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
@@ -1117,12 +1137,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       undefined, undefined, undefined, undefined, undefined, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
-      currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight || currentPlacedModule?.customHeight,
+      currentPlacedModule?.endPanelThickness, droppedFreeHeight,
       topFrameHeightMm, visualBaseFrameHeightMm,
       currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase,
       currentPlacedModule?.isDualSlot
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, droppedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
