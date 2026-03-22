@@ -107,10 +107,6 @@ const CNCOptimizer: React.FC = () => {
         keys.add(`${panel.furnitureId}::${panel.meshName}`);
       }
     });
-    // DEBUG: 확인 후 제거
-    if (keys.size > 0) {
-      console.log(`[CNCOptimizer] excludedMeshNames:`, [...keys]);
-    }
     return keys;
   }, [hiddenPanelIds, panelsList]);
 
