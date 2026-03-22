@@ -68,14 +68,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isPanelExcluded = !!(compositeKey && excludedPanels?.has(compositeKey));
 
-  // DEBUG: Zustand store 전달 확인용 (확인 후 제거)
-  React.useEffect(() => {
-    if (panelName) {
-      console.log(`[BoxWithEdges MOUNT] panelName="${panelName}" furnitureId="${furnitureId}" storeSize=${excludedPanels?.size ?? 'undefined'} keys=[${excludedPanels ? [...excludedPanels].join(', ') : 'N/A'}]`);
-    }
-  }, []);
-  if (isPanelExcluded) {
-    console.log(`[BoxWithEdges HIDING] compositeKey="${compositeKey}"`);
+  // DEBUG: 매 렌더마다 store 상태 확인 (확인 후 제거)
+  if (panelName && excludedPanels.size > 0) {
+    console.log(`[BWE] pn="${panelName}" fId="${furnitureId}" key="${compositeKey}" match=${isPanelExcluded} store=[${[...excludedPanels]}]`);
   }
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
