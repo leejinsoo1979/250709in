@@ -36,7 +36,7 @@ const BoxWithEdges: React.FC<{
 }> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId }) => {
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
     if (s.excludedKeys.size === 0) return false;
-    return panelName ? s.excludedKeys.has(panelName) : false;
+    return panelName && furnitureId ? s.excludedKeys.has(`${furnitureId}::${panelName}`) : false;
   });
 
   const { theme } = useViewerTheme();

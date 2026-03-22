@@ -63,9 +63,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   renderOrder
 }) => {
 
-  // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략
+  // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
   const excludedKeys = useExcludedPanelsStore((s) => s.excludedKeys);
-  const isExcludedByOptimizer = excludedKeys.size > 0 && panelName ? excludedKeys.has(panelName) : false;
+  const isExcludedByOptimizer = excludedKeys.size > 0 && panelName && furnitureId ? excludedKeys.has(`${furnitureId}::${panelName}`) : false;
 
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
@@ -560,7 +560,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   if (isExcludedByOptimizer) {
-    console.log(`[BWE] EXCLUDED → null: panelName="${panelName}"`);
+    console.log(`[BWE] EXCLUDED → null: key="${furnitureId}::${panelName}"`);
     return null;
   }
 

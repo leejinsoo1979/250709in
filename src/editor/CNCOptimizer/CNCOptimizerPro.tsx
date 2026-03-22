@@ -618,13 +618,13 @@ function PageInner(){
     }
   }, [livePanels, userHasModifiedPanels, setPanels]);
 
-  // 제외 패널 ID → meshName 변환 (3D 뷰어 패널 숨김용)
+  // 제외 패널 ID → furnitureId::meshName 복합키 변환 (3D 뷰어 패널 숨김용)
   const excludedMeshNames = useMemo(() => {
     const names = new Set<string>();
     excludedPanelIds.forEach(panelId => {
       const panel = panels.find(p => p.id === panelId);
-      if (panel?.meshName) {
-        names.add(panel.meshName);
+      if (panel?.meshName && panel?.furnitureId) {
+        names.add(`${panel.furnitureId}::${panel.meshName}`);
       }
     });
     if (names.size > 0) {
