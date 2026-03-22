@@ -697,22 +697,17 @@ function PageInner(){
         // 패널 치수를 그대로 사용 (width와 length를 변경하지 않음)
         // console.log(`Panel ${panel.label}: ${panel.width}x${panel.length} (grain: ${panel.grain}, thickness: ${panel.thickness}mm)`);
         
-        // 백패널: 어떤 모드에서든 회전 불가 (높이=Length 고정)
-        const isBackPanelForRotation = (panel.label || '').includes('백패널');
-        if (isBackPanelForRotation) {
+        // 결방향(grain)이 있는 패널은 모든 모드에서 회전 불가
+        // NONE만 회전 허용 (MDF 등 무결 + 회전 가능한 패널)
+        const hasGrain = panel.grain && panel.grain !== 'NONE';
+        if (hasGrain) {
           processedPanel.canRotate = false;
         } else if (effectiveOptimizationType === 'OPTIMAL_CNC') {
-          // CNC 최적화: 테트리스처럼 최대 효율로 배치 - 결방향 무시
+          // CNC 최적화: 무결 패널만 회전 허용
           processedPanel.canRotate = true;
         } else {
-          // 세로/가로 절단 모드: 결방향 고려 설정에 따름
-          if (settings.considerGrain && panel.grain && (panel.grain === 'V' || panel.grain === 'H')) {
-            processedPanel.canRotate = false;
-          } else if (!settings.considerGrain) {
-            processedPanel.canRotate = true;
-          } else {
-            processedPanel.canRotate = true;
-          }
+          // 세로/가로 절단 모드: 무결 패널만 회전 허용
+          processedPanel.canRotate = !settings.considerGrain ? true : true;
         }
         
         // 재질+두께로 그룹화 (같은 재질의 패널은 한 시트에 최대한 채움)
