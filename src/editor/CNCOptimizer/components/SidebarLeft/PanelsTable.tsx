@@ -26,13 +26,13 @@ function sectionPriority(label: string): number {
 
 /**
  * 패널 유형 우선순위 (낮을수록 먼저)
- * 본체 → 서랍 → 도어 → 서라운드 → 프레임(PET)
+ * 본체 → 서랍 → 상하부프레임 → 서라운드 → 도어
  */
 function panelTypePriority(label: string, material?: string): number {
   const name = label.toLowerCase();
-  // 서라운드·프레임(PET)·도어는 맨 아래 분리 (도어가 최하단)
-  if (name.includes('서라운드') || name.includes('surround')) return 90;
-  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 91;
+  // 상하부프레임 → 서라운드 → 도어 순서로 맨 아래 분리
+  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 90;
+  if (name.includes('서라운드') || name.includes('surround')) return 91;
   if (name.includes('도어') || name.includes('door')) return 92;
   // 본체 패널
   if (name.includes('좌측') || name.includes('left')) return 1;
