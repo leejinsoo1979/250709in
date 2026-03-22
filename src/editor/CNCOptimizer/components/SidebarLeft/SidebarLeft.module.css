@@ -247,9 +247,11 @@
   font-weight: 700;
 }
 
-.table tbody tr.selected td .input {
+.table tbody tr.selected td .input,
+.table tbody tr.selected td .input:not(:focus) {
   color: hsl(var(--theme)) !important;
   font-weight: 700;
+  border-color: hsl(var(--theme) / 0.3);
 }
 
 .table tbody tr.selected td .dimensions,
