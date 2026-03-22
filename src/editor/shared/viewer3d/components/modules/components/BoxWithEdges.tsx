@@ -201,7 +201,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // 기본 상태: baseMaterial 투명도를 정상 복원 (useEffect 타이밍 이슈 방지)
     // isEditMode/isDragging false인데 baseMaterial이 아직 투명 상태면 즉시 복원
-    if (baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // plainMaterial 모드(CNC 옵티마이저)에서는 PanelDimmer가 재질을 직접 제어하므로 건너뜀
+    if (!isPlainMaterial && baseMaterial instanceof THREE.MeshStandardMaterial) {
       if (baseMaterial.transparent || baseMaterial.opacity < 1.0) {
         baseMaterial.transparent = false;
         baseMaterial.opacity = 1.0;

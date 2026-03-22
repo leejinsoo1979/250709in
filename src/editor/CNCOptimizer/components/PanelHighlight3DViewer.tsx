@@ -209,30 +209,17 @@ const PanelDimmer: React.FC<{
     // highlightedPanelName이 있으면 항상 개별 패널 모드 (매칭 실패해도 전체 파란색 X)
     const isPanelMode = !!highlightedPanelName;
 
-    // 디버그: 매칭 결과 (MESH vs LINE/LINESEG 분리 표시)
-    if (highlightedPanelName) {
-      const matchedMeshes: string[] = [];
-      const matchedLines: string[] = [];
+    // 디버그: 매칭 실패 시만 경고 출력
+    if (highlightedPanelName && targetPanelUuids.size === 0) {
       const unmatchedMeshes: string[] = [];
-      scene.traverse((obj) => {
-        if (targetPanelUuids.has(obj.uuid)) {
-          if (obj instanceof THREE.Mesh) {
-            const mat = obj.material;
-            const matType = mat instanceof THREE.MeshStandardMaterial ? 'Std' : mat instanceof THREE.MeshLambertMaterial ? 'Lam' : mat instanceof THREE.MeshBasicMaterial ? 'Bas' : mat?.constructor?.name || '?';
-            matchedMeshes.push(`"${obj.name}" [${matType}]`);
-          } else {
-            const type = obj instanceof THREE.LineSegments ? 'LSEG' : 'LINE';
-            matchedLines.push(`${type}:"${obj.name}"`);
+      for (const grp of allFurnitureGroups) {
+        grp.traverse((obj) => {
+          if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && obj.name) {
+            unmatchedMeshes.push(`"${obj.name}" → "${extractPanelName(obj.name)}"`);
           }
-        } else if (furnitureObjUuids.has(obj.uuid) && obj instanceof THREE.Mesh && obj.name) {
-          unmatchedMeshes.push(`"${obj.name}" → "${extractPanelName(obj.name)}"`);
-        }
-      });
-      if (matchedMeshes.length > 0 || matchedLines.length > 0) {
-        console.log(`[PanelDimmer] 찾는: "${highlightedPanelName}" | MESH(${matchedMeshes.length}):`, matchedMeshes, `| LINE(${matchedLines.length}):`, matchedLines);
-      } else {
-        console.warn(`[PanelDimmer] 매칭 실패! 찾는: "${highlightedPanelName}" | 가구 내 미매칭 메시:`, unmatchedMeshes.slice(0, 20));
+        });
       }
+      console.warn(`[PanelDimmer] 매칭 실패! 찾는: "${highlightedPanelName}" | 가구 내 메시:`, unmatchedMeshes.slice(0, 20));
     }
 
     // ── 하이라이트 적용 ──
