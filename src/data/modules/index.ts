@@ -62,27 +62,6 @@ export const getModuleById = (
   const widthMatch = id.match(/-([\d.]+)$/);
   const requestedWidth = widthMatch ? parseFloat(widthMatch[1]) : null;
   
-  console.log('🔍🔍🔍 getModuleById 요청:', {
-    id,
-    baseType,
-    requestedWidth,
-    '소수점1자리': requestedWidth ? Math.round(requestedWidth * 10) / 10 : null,
-    '상하부장여부': {
-      isUpperCabinet: id.includes('upper-cabinet'),
-      isLowerCabinet: id.includes('lower-cabinet')
-    },
-    internalSpace: internalSpace ? {
-      width: internalSpace.width,
-      height: internalSpace.height
-    } : null,
-    spaceInfo: spaceInfo ? {
-      width: spaceInfo.width,
-      surroundType: spaceInfo.surroundType,
-      customColumnCount: spaceInfo.customColumnCount
-    } : null
-  });
-  
-  
   // ID로 직접 찾기
   if (internalSpace) {
     // 요청된 너비가 있으면 해당 너비를 포함한 모듈 생성을 위해 spaceInfo 수정
@@ -117,36 +96,6 @@ export const getModuleById = (
     }
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
-    
-    // 상하부장 모듈 확인
-    const upperCabinets = dynamicModules.filter(m => m.id.includes('upper-cabinet'));
-    const lowerCabinets = dynamicModules.filter(m => m.id.includes('lower-cabinet'));
-    
-    // 상하부장 요청인 경우 특별 처리
-    if (id.includes('upper-cabinet') || id.includes('lower-cabinet')) {
-      console.log('🗄️🗄️🗄️ 상하부장 요청 감지!', {
-        요청ID: id,
-        baseType,
-        requestedWidth,
-        생성된상부장: upperCabinets.map(m => m.id),
-        생성된하부장: lowerCabinets.map(m => m.id)
-      });
-    }
-    
-    console.log('📦📦📦 생성된 모듈 중 매칭 시도:', {
-      요청ID: id,
-      전체개수: dynamicModules.length,
-      상부장개수: upperCabinets.length,
-      하부장개수: lowerCabinets.length,
-      상부장ID: upperCabinets.map(m => m.id),
-      하부장ID: lowerCabinets.map(m => m.id),
-      생성된모든ID: dynamicModules.map(m => m.id),
-      생성된싱글: dynamicModules.filter(m => m.id.includes('single-')).map(m => m.id),
-      modifiedSpaceInfo: modifiedSpaceInfo ? {
-        _tempSlotWidths: (modifiedSpaceInfo as any)._tempSlotWidths,
-        zone: (modifiedSpaceInfo as any).zone
-      } : null
-    });
     
     // 먼저 정확히 일치하는 모듈 찾기
     let found = dynamicModules.find(module => module.id === id);

@@ -193,8 +193,6 @@ export const calculatePanelDetails = (
         moduleData.id.includes('4drawer-pantshanger') ||
         moduleData.id.includes('2drawer-styler');
 
-      console.log(`[PANEL-DEBUG] moduleData.id="${moduleData.id}", sections.length=${sections.length}, isSplitSidePanelFurniture=${isSplitSidePanelFurniture}, sectionIndex=${sectionIndex}, sectionName="${sectionName}", sectionPrefix="${sectionPrefix}"`);
-
       // 측판 높이는 섹션 높이 그대로 사용 (3D 렌더링의 getSectionHeights와 동일)
       const adjustedSectionHeight = sectionHeightMm;
 
