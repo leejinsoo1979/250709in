@@ -2952,6 +2952,7 @@ const Room: React.FC<RoomProps> = ({
                 material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
+                excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -2987,6 +2988,7 @@ const Room: React.FC<RoomProps> = ({
                   material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
+                  excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
                 />
               )}
             </>
@@ -3082,6 +3084,7 @@ const Room: React.FC<RoomProps> = ({
                 material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
+                excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
               />
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -3122,6 +3125,7 @@ const Room: React.FC<RoomProps> = ({
                   material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
+                  excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
                 />
               )}
             </>
@@ -3197,6 +3201,7 @@ const Room: React.FC<RoomProps> = ({
             material={leftFrameMaterial ?? createFrameMaterial('left')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
+            excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
           />
         ) : null);
       })()}
@@ -3313,6 +3318,7 @@ const Room: React.FC<RoomProps> = ({
                 material={rightFrameMaterial ?? createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
+                excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -3350,6 +3356,7 @@ const Room: React.FC<RoomProps> = ({
                   material={rightFrameMaterial ?? createFrameMaterial('right')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
+                  excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
                 />
               )}
             </>
@@ -3495,6 +3502,7 @@ const Room: React.FC<RoomProps> = ({
                 material={rightFrameMaterial ?? createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
+                excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
               />
             </>
           );
@@ -3562,6 +3570,7 @@ const Room: React.FC<RoomProps> = ({
             material={rightFrameMaterial ?? createFrameMaterial('right')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
+            excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
           />
         ) : null);
       })()}
@@ -3714,7 +3723,7 @@ const Room: React.FC<RoomProps> = ({
                       <BoxWithEdges
                         hideEdges={hideEdges}
                         isOuterFrame
-                        name="top-frame"
+                        name={spaceInfo.frameMergeEnabled ? `top-frame-${idx}` : 'top-frame'}
                         args={args}
                         position={pos}
                         material={seg.material ?? topSurrMat}
@@ -4193,7 +4202,7 @@ const Room: React.FC<RoomProps> = ({
                         <BoxWithEdges
                           hideEdges={hideEdges}
                           isOuterFrame
-                          name="top-frame"
+                          name={spaceInfo.frameMergeEnabled ? `top-frame-${idx}` : 'top-frame'}
                           args={args}
                           position={pos}
                           material={seg.material ?? topFrameMat}
@@ -5095,7 +5104,7 @@ const Room: React.FC<RoomProps> = ({
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
-                      name="base-frame"
+                      name={spaceInfo.frameMergeEnabled ? `base-frame-${idx}` : 'base-frame'}
                       args={args}
                       position={pos}
                       material={seg.material ?? baseMat}
@@ -5268,7 +5277,7 @@ const Room: React.FC<RoomProps> = ({
                             <BoxWithEdges
                               hideEdges={hideEdges}
                               isOuterFrame
-                              name="base-frame"
+                              name={spaceInfo.frameMergeEnabled ? `base-frame-${idx}` : 'base-frame'}
                               args={args}
                               position={pos}
                               material={seg.material ?? baseMat}
