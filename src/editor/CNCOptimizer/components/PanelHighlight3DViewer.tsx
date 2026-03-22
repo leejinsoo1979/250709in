@@ -155,7 +155,8 @@ const PanelDimmer: React.FC<{
       });
     }
 
-    const hasSpecificPanel = highlightedPanelName && targetPanelUuids.size > 0;
+    // highlightedPanelName이 있으면 항상 개별 패널 모드 (매칭 실패해도 전체 파란색 X)
+    const isPanelMode = !!highlightedPanelName;
 
     // 디버그: 매칭 실패 시 원인 추적
     if (highlightedPanelName && targetPanelUuids.size === 0 && targetGroup) {
@@ -173,7 +174,7 @@ const PanelDimmer: React.FC<{
       const orig = originals.current.get(obj.uuid);
       if (!orig) return;
 
-      const isTarget = hasSpecificPanel && targetPanelUuids.has(obj.uuid);
+      const isTarget = targetPanelUuids.has(obj.uuid);
       const isSameFurniture = furnitureObjUuids.has(obj.uuid);
 
       if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
@@ -182,19 +183,10 @@ const PanelDimmer: React.FC<{
           mat.color.set(0x0033ee);
           mat.opacity = 1;
           mat.transparent = false;
-        } else if (isSameFurniture) {
-          if (hasSpecificPanel) {
-            mat.color.copy(orig.color);
-            mat.opacity = 0.15;
-            mat.transparent = true;
-          } else {
-            mat.color.set(0x0033ee);
-            mat.opacity = 1;
-            mat.transparent = false;
-          }
         } else {
+          // 타겟이 아닌 모든 라인 → 투명
           mat.color.copy(orig.color);
-          mat.opacity = 0.08;
+          mat.opacity = isSameFurniture ? 0.15 : 0.08;
           mat.transparent = true;
         }
         mat.needsUpdate = true;
@@ -219,23 +211,18 @@ const PanelDimmer: React.FC<{
 
       if (mat instanceof THREE.MeshStandardMaterial) {
         if (isTarget) {
+          // 선택된 패널만 강조
           mat.color.set(0x3366ff);
           mat.opacity = 1;
           mat.transparent = false;
           mat.emissive.set(0x0033ee);
           mat.emissiveIntensity = 1.0;
-        } else if (isSameFurniture) {
-          if (hasSpecificPanel) {
-            mat.opacity = 0.08;
-            mat.transparent = true;
-            mat.emissive.copy(orig.color);
-            mat.emissiveIntensity = 0;
-          } else {
-            mat.opacity = 1;
-            mat.transparent = false;
-            mat.emissive.set(0x0033ee);
-            mat.emissiveIntensity = 0.6;
-          }
+        } else {
+          // 나머지 전체 투명
+          mat.opacity = isSameFurniture ? 0.08 : 0.06;
+          mat.transparent = true;
+          mat.emissive.copy(orig.color);
+          mat.emissiveIntensity = 0;
         } else {
           mat.opacity = 0.06;
           mat.transparent = true;
