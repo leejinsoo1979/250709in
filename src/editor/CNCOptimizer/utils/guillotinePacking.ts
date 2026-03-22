@@ -561,7 +561,7 @@ function normalizeOrientation(panels: Rect[], binWidth: number, stripDirection?:
  * - 가구별로 묶어서, 해당 가구의 width > binWidth이면 그 가구 전체를 스왑
  * - 일부만 스왑하면 vertical에서 다른 그룹이 되어 분리되므로, 가구 단위 통일
  */
-function normalizeBackPanels(panels: Rect[], binWidth: number, binHeight: number): Rect[] {
+function normalizeBackPanels(panels: Rect[], binWidth: number): Rect[] {
   if (panels.length === 0) return [];
 
   // 가구번호별 그룹
@@ -574,12 +574,9 @@ function normalizeBackPanels(panels: Rect[], binWidth: number, binHeight: number
 
   const result: Rect[] = [];
   for (const [, group] of byFurniture) {
-    // 이 가구의 백패널 width/height 대표값
+    // 이 가구의 백패널 width (모두 동일해야 함)
     const w = group[0].width;
-    const h = group[0].height;
-    // width가 binWidth 초과하거나, height가 binHeight 초과하면 스왑 필요
-    const needsSwap = w > binWidth || h > binHeight;
-    if (needsSwap) {
+    if (w > binWidth) {
       // 전체 스왑 — 모든 패널을 같은 방향으로
       for (const p of group) {
         result.push({ ...p, width: p.height, height: p.width, rotated: true });
@@ -861,21 +858,28 @@ function packBackPanelsToMultiBins(
       const totalArea = group.reduce((s, p) => s + p.width * p.height, 0);
       furnitureLayouts.push({ fn, placed: result.placed, usedWidth: result.usedWidth, usedHeight: result.usedHeight, totalArea });
     } else {
-      // 배치 실패 시 원본 그대로 강제 배치 (오버플로우 감수)
-      const sorted = [...group].sort((a, b) => (b.width * b.height) - (a.width * a.height));
-      let yPos = 0;
-      const placed: Rect[] = [];
-      for (const p of sorted) {
-        placed.push({ ...p, x: 0, y: yPos, rotated: false });
-        yPos += p.height + kerf;
+      // 배치 실패: 패널 하나씩 개별 배치 시도 (원장 초과 방지)
+      for (const p of group) {
+        const singleResult = placeFurnitureBackPanels([p], binWidth, binHeight, kerf);
+        if (singleResult) {
+          furnitureLayouts.push({
+            fn, placed: singleResult.placed,
+            usedWidth: singleResult.usedWidth, usedHeight: singleResult.usedHeight,
+            totalArea: p.width * p.height
+          });
+        } else {
+          // 단일 패널도 원장에 안 들어감 → 원장 경계 내에 클램프하여 배치
+          const clampedW = Math.min(p.width, binWidth);
+          const clampedH = Math.min(p.height, binHeight);
+          console.warn(`[백패널] 원장 초과! "${p.name}" ${p.width}×${p.height} > 원장 ${binWidth}×${binHeight}`);
+          furnitureLayouts.push({
+            fn,
+            placed: [{ ...p, x: 0, y: 0, width: clampedW, height: clampedH, rotated: false }],
+            usedWidth: clampedW, usedHeight: clampedH,
+            totalArea: p.width * p.height
+          });
+        }
       }
-      const totalArea = group.reduce((s, p) => s + p.width * p.height, 0);
-      furnitureLayouts.push({
-        fn, placed,
-        usedWidth: Math.max(...group.map(p => p.width)),
-        usedHeight: yPos - kerf,
-        totalArea
-      });
     }
   }
 
@@ -974,7 +978,7 @@ export function packGuillotine(
   const surroundPanels = normalizeOrientation(surroundPanelsRaw, binWidth, stripDirection);
   const framePanels = normalizeOrientation(framePanelsRaw, binWidth, stripDirection);
   // 백패널: 같은 가구의 (상)(하)는 동일 width → 가구 단위 스왑
-  const backPanels = normalizeBackPanels(backPanelsRaw, binWidth, binHeight);
+  const backPanels = normalizeBackPanels(backPanelsRaw, binWidth);
 
   // ── 2단계: 카테고리별 패킹 ──
   // stripDirection 결정: auto면 카테고리별 기본값, 아니면 전달받은 방향 사용
