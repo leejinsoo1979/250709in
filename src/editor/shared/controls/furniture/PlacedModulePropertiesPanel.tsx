@@ -941,7 +941,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           const mcSections = moduleData.modelConfig?.sections || [];
           if (mcSections.length >= 2) {
             const pt = moduleData.modelConfig?.basicThickness || 18;
-            const totalH = currentPlacedModule.freeHeight || moduleData.dimensions.height;
+            // 단내림 구간 가구 높이 보정
+            let stdTotalH = currentPlacedModule.freeHeight || currentPlacedModule.customHeight;
+            if (!stdTotalH && currentPlacedModule.zone === 'dropped') {
+              const isFree = spaceInfo.layoutMode === 'free-placement';
+              let dH = 0;
+              if (isFree && spaceInfo.stepCeiling?.enabled) dH = spaceInfo.stepCeiling.dropHeight || 0;
+              else if (!isFree && spaceInfo.droppedCeiling?.enabled) dH = spaceInfo.droppedCeiling.dropHeight || 0;
+              if (dH > 0) {
+                const fTop = spaceInfo.frameSize?.top || 0;
+                const bH = spaceInfo.baseConfig?.height || 0;
+                stdTotalH = (spaceInfo.height - dH) - fTop - bH;
+              }
+            }
+            const totalH = stdTotalH || moduleData.dimensions.height;
             const totalD = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth || moduleData.dimensions.width;
             const innerH = totalH - 2 * pt;
@@ -2608,7 +2621,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isCustom = !!(ccSections && ccSections.length >= 2);
             const sectionCount = isCustom ? ccSections!.length : mcSections!.length;
             const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
-            const totalH = currentPlacedModule.freeHeight || moduleData?.dimensions?.height || 2200;
+            const totalH = droppedFreeHeight || currentPlacedModule.freeHeight || moduleData?.dimensions?.height || 2200;
             const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
             const totalD = currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
