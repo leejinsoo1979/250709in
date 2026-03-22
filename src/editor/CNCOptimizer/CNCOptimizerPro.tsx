@@ -706,9 +706,6 @@ function PageInner(){
       const panelGroups = new Map<string, Panel[]>();
 
       panels.forEach(panel => {
-        // 제외된 패널 스킵
-        if (excludedPanelIds.has(panel.id)) return;
-
         // Apply grain and rotation settings
         const processedPanel = { ...panel };
         
@@ -999,7 +996,7 @@ function PageInner(){
     } finally {
       setIsOptimizing(false);
     }
-  }, [panels, stock, settings, excludedPanelIds, setPlacements, setCurrentSheetIndex, setSawStats]);
+  }, [panels, stock, settings, setPlacements, setCurrentSheetIndex, setSawStats]);
 
   // 시뮬레이션 완료 콜백 - 전체 시뮬레이션 모드일 때 다음 시트로 진행
   const handleSimulationComplete = useCallback(() => {
@@ -1077,15 +1074,14 @@ function PageInner(){
   const prevPanelsRef = useRef<string>('');
   useEffect(() => {
     if (!hasAutoOptimized.current || panels.length === 0 || stock.length === 0) return;
-    // panels의 grain/width/length 변경 + excludedPanelIds 변경 감지
-    const excludedSig = [...excludedPanelIds].sort().join(',');
-    const panelsSig = panels.map(p => `${p.id}:${p.grain}:${p.width}:${p.length}`).join('|') + '||' + excludedSig;
+    // panels의 grain/width/length 변경 감지
+    const panelsSig = panels.map(p => `${p.id}:${p.grain}:${p.width}:${p.length}`).join('|');
     if (prevPanelsRef.current && prevPanelsRef.current !== panelsSig) {
       console.log('🔄 패널 변경 감지 → 자동 재최적화 (silent)');
       handleOptimize(undefined, true);
     }
     prevPanelsRef.current = panelsSig;
-  }, [panels, stock, excludedPanelIds, handleOptimize]);
+  }, [panels, stock, handleOptimize]);
 
   // URL 파라미터에서 프로젝트명 읽기 (fallback용)
   const urlProjectName = useMemo(() => {
