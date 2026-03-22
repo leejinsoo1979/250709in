@@ -193,12 +193,26 @@ const PanelDimmer: React.FC<{
 
     // 가구 그룹 내에서 못 찾은 경우 씬 전체 폴백 (프레임/서라운드 등 Room 레벨 요소)
     if (highlightedPanelName && targetPanelUuids.size === 0) {
+      console.log(`[PanelDimmer] 가구 내 매칭 실패 → 씬 전체 폴백. 찾는: "${highlightedPanelName}"`);
       scene.traverse((obj) => {
         if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && matchesPanelName(obj)) {
+          console.log(`[PanelDimmer] 씬 폴백 매칭! obj.name="${obj.name}" type=${obj.type}`);
           targetPanelUuids.add(obj.uuid);
           furnitureObjUuids.add(obj.uuid);
         }
       });
+      console.log(`[PanelDimmer] 씬 폴백 결과: targetPanelUuids.size=${targetPanelUuids.size}`);
+    }
+
+    // 서라운드 디버그: 씬 내 서라운드 관련 오브젝트 목록
+    if (highlightedPanelName?.includes('surround')) {
+      const surrObjs: string[] = [];
+      scene.traverse((obj) => {
+        if (obj.name && obj.name.includes('surround')) {
+          surrObjs.push(`"${obj.name}" (${obj.type}, uuid=${obj.uuid.slice(0,8)})`);
+        }
+      });
+      console.log(`[PanelDimmer] 씬 내 surround 오브젝트 (${surrObjs.length}개):`, surrObjs);
     }
 
     // highlightedPanelName이 있으면 항상 개별 패널 모드 (매칭 실패해도 전체 파란색 X)
