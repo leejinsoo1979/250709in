@@ -598,7 +598,8 @@ export function useLivePanelData() {
         const leftLabel = placedModules.length > 1 ? `[${leftFurnitureNumber}]` : '';
         const rightLabel = placedModules.length > 1 ? `[${rightFurnitureNumber}]` : '';
 
-        console.log(`서라운드 패널 ${surroundPanelList.length}개: 좌측→가구${leftFurnitureNumber}, 우측→가구${rightFurnitureNumber}`);
+        console.log(`서라운드 패널 ${surroundPanelList.length}개: 좌측→가구${leftFurnitureNumber}(idx=${leftMostIdx}, id=${placedModules[leftMostIdx]?.id}), 우측→가구${rightFurnitureNumber}(idx=${rightMostIdx}, id=${placedModules[rightMostIdx]?.id})`);
+        console.log(`  배열 첫번째: id=${placedModules[0]?.id}, 배열 마지막: id=${placedModules[placedModules.length - 1]?.id}`);
 
         surroundPanelList.forEach((panel: any, idx: number) => {
           const isLeft = panel.name.includes('좌측');

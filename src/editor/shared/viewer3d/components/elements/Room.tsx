@@ -363,6 +363,27 @@ const Room: React.FC<RoomProps> = ({
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
+  // CNC와 동일한 방식으로 좌/우 끝 모듈 ID 계산 (slotIndex 기준)
+  const leftMostModuleId = useMemo(() => {
+    if (placedModulesFromStore.length <= 1) return placedModulesFromStore[0]?.id || '';
+    let minSlot = Infinity;
+    let leftId = placedModulesFromStore[0]?.id || '';
+    placedModulesFromStore.forEach((pm) => {
+      const slot = pm.slotIndex ?? 0;
+      if (slot < minSlot) { minSlot = slot; leftId = pm.id; }
+    });
+    return leftId;
+  }, [placedModulesFromStore]);
+  const rightMostModuleId = useMemo(() => {
+    if (placedModulesFromStore.length <= 1) return placedModulesFromStore[0]?.id || '';
+    let maxSlot = -Infinity;
+    let rightId = placedModulesFromStore[placedModulesFromStore.length - 1]?.id || '';
+    placedModulesFromStore.forEach((pm, idx) => {
+      const slot = pm.slotIndex ?? idx;
+      if (slot > maxSlot) { maxSlot = slot; rightId = pm.id; }
+    });
+    return rightId;
+  }, [placedModulesFromStore]);
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
   const isFreePlacement = layoutMode === 'free-placement';
   // 슬롯배치 커튼박스: curtainBox 필드에서 확인 (단내림과 독립)
@@ -2924,6 +2945,7 @@ const Room: React.FC<RoomProps> = ({
               <BoxWithEdges
                 hideEdges={hideEdges}
                 isOuterFrame
+                name="left-surround-ep"
                 key={`left-step-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left}
                 args={[
@@ -2954,8 +2976,8 @@ const Room: React.FC<RoomProps> = ({
                 material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
-                excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                excludeKey={`${leftMostModuleId}::left-surround-ep`}
+                excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -2991,8 +3013,8 @@ const Room: React.FC<RoomProps> = ({
                   material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
-                  excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                  excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                  excludeKey={`${leftMostModuleId}::left-surround-ep`}
+                  excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                 />
               )}
             </>
@@ -3051,6 +3073,7 @@ const Room: React.FC<RoomProps> = ({
               <BoxWithEdges
                 hideEdges={hideEdges}
                 isOuterFrame
+                name="left-surround-ep"
                 key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
@@ -3088,14 +3111,15 @@ const Room: React.FC<RoomProps> = ({
                 material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
-                excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                excludeKey={`${leftMostModuleId}::left-surround-ep`}
+                excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
               />
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
                   hideEdges={hideEdges}
                   isOuterFrame
+                  name="left-surround-ep"
                   isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                   args={[
                     frameRenderThickness.left,
@@ -3130,8 +3154,8 @@ const Room: React.FC<RoomProps> = ({
                   material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
-                  excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-                  excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                  excludeKey={`${leftMostModuleId}::left-surround-ep`}
+                  excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                 />
               )}
             </>
@@ -3188,6 +3212,7 @@ const Room: React.FC<RoomProps> = ({
           <BoxWithEdges
             hideEdges={hideEdges}
             isOuterFrame
+            name="left-surround-ep"
             key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
@@ -3207,8 +3232,8 @@ const Room: React.FC<RoomProps> = ({
             material={leftFrameMaterial ?? createFrameMaterial('left')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
-            excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
-            excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+            excludeKey={`${leftMostModuleId}::left-surround-ep`}
+            excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
           />
         ) : null);
       })()}
@@ -3293,6 +3318,7 @@ const Room: React.FC<RoomProps> = ({
               <BoxWithEdges
                 hideEdges={hideEdges}
                 isOuterFrame
+                name="right-surround-ep"
                 key={`right-step-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right}
                 args={[
@@ -3325,14 +3351,15 @@ const Room: React.FC<RoomProps> = ({
                 material={rightFrameMaterial ?? createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
-                excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-                excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                excludeKey={`${rightMostModuleId}::right-surround-ep`}
+                excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
                 <BoxWithEdges
                   hideEdges={hideEdges}
                   isOuterFrame
+                  name="right-surround-ep"
                   isEndPanel={!wallConfig?.right}
                   args={[
                     frameRenderThickness.right,
@@ -3364,8 +3391,8 @@ const Room: React.FC<RoomProps> = ({
                   material={rightFrameMaterial ?? createFrameMaterial('right')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
-                  excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-                  excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                  excludeKey={`${rightMostModuleId}::right-surround-ep`}
+                  excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
                 />
               )}
             </>
@@ -3474,6 +3501,7 @@ const Room: React.FC<RoomProps> = ({
               <BoxWithEdges
                 hideEdges={hideEdges}
                 isOuterFrame
+                name="right-surround-ep"
                 key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
@@ -3511,8 +3539,8 @@ const Room: React.FC<RoomProps> = ({
                 material={rightFrameMaterial ?? createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
-                excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-                excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                excludeKey={`${rightMostModuleId}::right-surround-ep`}
+                excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
               />
             </>
           );
@@ -3541,6 +3569,7 @@ const Room: React.FC<RoomProps> = ({
           <BoxWithEdges
             hideEdges={hideEdges}
             isOuterFrame
+            name="right-surround-ep"
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
@@ -3580,8 +3609,8 @@ const Room: React.FC<RoomProps> = ({
             material={rightFrameMaterial ?? createFrameMaterial('right')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
-            excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
-            excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+            excludeKey={`${rightMostModuleId}::right-surround-ep`}
+            excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
           />
         ) : null);
       })()}
@@ -3777,7 +3806,7 @@ const Room: React.FC<RoomProps> = ({
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
                         args={epArgs} position={epPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                        excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`} />
+                        excludeKey={`${leftMostModuleId}::left-surround-ep`} />
                       {isLeftHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
                   );
@@ -3796,10 +3825,10 @@ const Room: React.FC<RoomProps> = ({
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-side" name="left-surround-lshape-side"
                       args={sideArgs} position={sidePos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`} />
+                      excludeKey={`${leftMostModuleId}::left-surround-lshape-side`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-lshape-front" name="left-surround-lshape-front"
                       args={frontArgs} position={frontPos} material={leftSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`} />
+                      excludeKey={`${leftMostModuleId}::left-surround-lshape-front`} />
                     {isLeftHighlighted && (
                       <>
                         <mesh position={sidePos}><boxGeometry args={sideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
@@ -3837,7 +3866,7 @@ const Room: React.FC<RoomProps> = ({
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
                         args={epArgs} position={epPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                        excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`} />
+                        excludeKey={`${rightMostModuleId}::right-surround-ep`} />
                       {isRightHighlighted && <mesh position={epPos}><boxGeometry args={epArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </>
                   );
@@ -3856,10 +3885,10 @@ const Room: React.FC<RoomProps> = ({
                   <>
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-side" name="right-surround-lshape-side"
                       args={rSideArgs} position={rSidePos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`} />
+                      excludeKey={`${rightMostModuleId}::right-surround-lshape-side`} />
                     <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-lshape-front" name="right-surround-lshape-front"
                       args={rFrontArgs} position={rFrontPos} material={rightSurrMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
-                      excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`} />
+                      excludeKey={`${rightMostModuleId}::right-surround-lshape-front`} />
                     {isRightHighlighted && (
                       <>
                         <mesh position={rSidePos}><boxGeometry args={rSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
@@ -4739,7 +4768,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                      excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                     />
                   </group>
                   {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
@@ -4762,7 +4791,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                      excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4799,7 +4828,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                      excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                     />
                   </group>
                   {/* 좌측 벽 안쪽 정면 프레임 (stepCeiling 단내림 높이) */}
@@ -4822,7 +4851,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                      excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4855,7 +4884,7 @@ const Room: React.FC<RoomProps> = ({
                       material={leftSubFrameMaterial ?? createFrameMaterial('left')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`]}
+                      excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4916,7 +4945,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                      excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
                     />
                   </group>
 
@@ -4941,7 +4970,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                      excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -4977,7 +5006,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                      excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
                     />
                   </group>
                   {/* 우측 벽 안쪽 세로 서브프레임 (stepCeiling 단내림 높이) */}
@@ -5001,7 +5030,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                      excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
                     />
                   </group>
                 </>
@@ -5034,7 +5063,7 @@ const Room: React.FC<RoomProps> = ({
                       material={rightSubFrameMaterial ?? createFrameMaterial('right')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKeys={[`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`]}
+                      excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
                     />
                   </group>
                 </>
