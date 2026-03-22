@@ -171,22 +171,22 @@ const PanelDimmer: React.FC<{
       if (obj instanceof THREE.Line && obj.material instanceof THREE.LineBasicMaterial) {
         const mat = obj.material;
         if (isTarget) {
-          mat.color.set(0x2266cc);
+          mat.color.set(0x1144ff);
           mat.opacity = 1;
           mat.transparent = false;
         } else if (isSameFurniture) {
           if (hasSpecificPanel) {
             mat.color.copy(orig.color);
-            mat.opacity = 0.15;
+            mat.opacity = 0.4;
             mat.transparent = true;
           } else {
-            mat.color.set(0x2266cc);
+            mat.color.set(0x1144ff);
             mat.opacity = 1;
             mat.transparent = false;
           }
         } else {
           mat.color.copy(orig.color);
-          mat.opacity = 0.08;
+          mat.opacity = 0.25;
           mat.transparent = true;
         }
         mat.needsUpdate = true;
@@ -199,8 +199,8 @@ const PanelDimmer: React.FC<{
       if (mat instanceof THREE.MeshBasicMaterial) {
         if (isTarget) {
           mat.visible = true;
-          mat.color.set(0x2266cc);
-          mat.opacity = 0.25;
+          mat.color.set(0x1144ff);
+          mat.opacity = 0.6;
           mat.transparent = true;
         } else {
           mat.visible = false;
@@ -211,24 +211,27 @@ const PanelDimmer: React.FC<{
 
       if (mat instanceof THREE.MeshStandardMaterial) {
         if (isTarget) {
+          // 대상 패널: 뚜렷한 파란색
           mat.opacity = 1;
           mat.transparent = false;
-          mat.emissive.set(0x2266cc);
-          mat.emissiveIntensity = 0.5;
+          mat.emissive.set(0x1144ff);
+          mat.emissiveIntensity = 0.8;
         } else if (isSameFurniture) {
           if (hasSpecificPanel) {
-            mat.opacity = 0.35;
+            // 같은 가구 내 비대상: 반투명하지만 보임
+            mat.opacity = 0.5;
             mat.transparent = true;
             mat.emissive.copy(orig.color);
             mat.emissiveIntensity = 0;
           } else {
             mat.opacity = 1;
             mat.transparent = false;
-            mat.emissive.set(0x2266cc);
-            mat.emissiveIntensity = 0.4;
+            mat.emissive.set(0x1144ff);
+            mat.emissiveIntensity = 0.6;
           }
         } else {
-          mat.opacity = 0.12;
+          // 다른 가구: 약간 흐리게
+          mat.opacity = 0.25;
           mat.transparent = true;
           mat.emissive.copy(orig.color);
           mat.emissiveIntensity = 0;
