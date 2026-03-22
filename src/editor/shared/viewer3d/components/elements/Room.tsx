@@ -238,7 +238,8 @@ const BoxWithEdges: React.FC<{
   name?: string; // 씬 추출용 이름
   renderOrder?: number; // 렌더링 순서 (낮을수록 먼저 그려짐)
   excludeKey?: string; // CNC 옵티마이저 패널 제외용 복합키 (furnitureId::meshName)
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey }) => {
+  excludeKeys?: string[]; // 복수 excludeKey (L자 서라운드: 전면+측면 중 어느 쪽이든 제외 시 숨김)
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey, excludeKeys }) => {
   // Debug: 측면 프레임 확인
   if (args[0] < 1 && args[1] > 15) {
     const bottom = position[1] - args[1] / 2;
@@ -247,10 +248,11 @@ const BoxWithEdges: React.FC<{
 
   }
 
-  // CNC 옵티마이저 패널 제외 체크: excludeKey가 있으면 정확 매칭
+  // CNC 옵티마이저 패널 제외 체크: excludeKey 또는 excludeKeys 중 하나라도 매칭되면 숨김
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
     if (s.excludedKeys.size === 0) return false;
-    if (excludeKey) return s.excludedKeys.has(excludeKey);
+    if (excludeKey && s.excludedKeys.has(excludeKey)) return true;
+    if (excludeKeys) return excludeKeys.some(k => s.excludedKeys.has(k));
     return false;
   });
 
@@ -2953,6 +2955,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
+                excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -2989,6 +2992,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
+                  excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
                 />
               )}
             </>
@@ -3085,6 +3089,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
+                excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
               />
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -3126,6 +3131,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
+                  excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
                 />
               )}
             </>
@@ -3202,6 +3208,7 @@ const Room: React.FC<RoomProps> = ({
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
             excludeKey={`${placedModulesFromStore[0]?.id || ''}::left-surround-ep`}
+            excludeKeys={!wallConfig?.left ? [`${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-side`, `${placedModulesFromStore[0]?.id || ''}::left-surround-lshape-front`] : undefined}
           />
         ) : null);
       })()}
@@ -3319,6 +3326,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
+                excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
               />
               {/* 상부 구간 프레임 (단내림 천장 ~ 메인 천장) - 서라운드 모드에서는 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
@@ -3357,6 +3365,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
+                  excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
                 />
               )}
             </>
@@ -3503,6 +3512,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
                 excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
+                excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
               />
             </>
           );
@@ -3571,6 +3581,7 @@ const Room: React.FC<RoomProps> = ({
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
             excludeKey={`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-ep`}
+            excludeKeys={!wallConfig?.right ? [`${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-side`, `${placedModulesFromStore[placedModulesFromStore.length - 1]?.id || ''}::right-surround-lshape-front`] : undefined}
           />
         ) : null);
       })()}

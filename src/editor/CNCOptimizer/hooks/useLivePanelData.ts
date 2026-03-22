@@ -465,6 +465,10 @@ export function useLivePanelData() {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
         const fs = spaceInfo.frameSize;
         const surroundThickness = 18;
+        const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
+        // 벽이 없는 쪽은 L자 구조: 전면판 + 측면판(고정목)
+        const isLeftLShape = !spaceInfo.wallConfig?.left;
+        const isRightLShape = !spaceInfo.wallConfig?.right;
 
         if (dropH > 0) {
           // 단내림 활성: position에 따라 해당 쪽만 단내림 높이 적용
@@ -475,37 +479,89 @@ export function useLivePanelData() {
           // 좌측 서라운드: 단내림이 좌측이면 단내림 높이, 아니면 메인 높이
           if (fs.left > 0) {
             const leftH = dropPosition === 'left' ? droppedPanelH : mainPanelH;
-            surroundPanelList.push({
-              name: '좌측 서라운드 프레임',
-              width: fs.left, height: leftH,
-              thickness: surroundThickness, material: 'PET',
-            });
+            if (isLeftLShape) {
+              surroundPanelList.push({
+                name: '좌측 서라운드 측면판',
+                width: SIDE_DEPTH, height: leftH,
+                thickness: surroundThickness, material: 'PET',
+              });
+              surroundPanelList.push({
+                name: '좌측 서라운드 전면판',
+                width: fs.left, height: leftH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            } else {
+              surroundPanelList.push({
+                name: '좌측 서라운드 프레임',
+                width: fs.left, height: leftH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            }
           }
           // 우측 서라운드: 단내림이 우측이면 단내림 높이, 아니면 메인 높이
           if (fs.right > 0) {
             const rightH = dropPosition === 'right' ? droppedPanelH : mainPanelH;
-            surroundPanelList.push({
-              name: '우측 서라운드 프레임',
-              width: fs.right, height: rightH,
-              thickness: surroundThickness, material: 'PET',
-            });
+            if (isRightLShape) {
+              surroundPanelList.push({
+                name: '우측 서라운드 측면판',
+                width: SIDE_DEPTH, height: rightH,
+                thickness: surroundThickness, material: 'PET',
+              });
+              surroundPanelList.push({
+                name: '우측 서라운드 전면판',
+                width: fs.right, height: rightH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            } else {
+              surroundPanelList.push({
+                name: '우측 서라운드 프레임',
+                width: fs.right, height: rightH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            }
           }
         } else {
           // 단내림 없음: 기존 로직
           const panelH = surroundH - (fs.top || 0);
           if (fs.left > 0) {
-            surroundPanelList.push({
-              name: '좌측 서라운드 프레임',
-              width: fs.left, height: panelH,
-              thickness: surroundThickness, material: 'PET',
-            });
+            if (isLeftLShape) {
+              surroundPanelList.push({
+                name: '좌측 서라운드 측면판',
+                width: SIDE_DEPTH, height: panelH,
+                thickness: surroundThickness, material: 'PET',
+              });
+              surroundPanelList.push({
+                name: '좌측 서라운드 전면판',
+                width: fs.left, height: panelH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            } else {
+              surroundPanelList.push({
+                name: '좌측 서라운드 프레임',
+                width: fs.left, height: panelH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            }
           }
           if (fs.right > 0) {
-            surroundPanelList.push({
-              name: '우측 서라운드 프레임',
-              width: fs.right, height: panelH,
-              thickness: surroundThickness, material: 'PET',
-            });
+            if (isRightLShape) {
+              surroundPanelList.push({
+                name: '우측 서라운드 측면판',
+                width: SIDE_DEPTH, height: panelH,
+                thickness: surroundThickness, material: 'PET',
+              });
+              surroundPanelList.push({
+                name: '우측 서라운드 전면판',
+                width: fs.right, height: panelH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            } else {
+              surroundPanelList.push({
+                name: '우측 서라운드 프레임',
+                width: fs.right, height: panelH,
+                thickness: surroundThickness, material: 'PET',
+              });
+            }
           }
         }
         if (fs.top > 0) {
