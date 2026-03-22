@@ -284,27 +284,11 @@ export const calculatePanelDetails = (
       // 예: 가구 586×1000 → 백패널 560×974
       //     가로: 586-(18+18)+10=560, 세로: 1000-(18+18)+10=974
 
-      // 백패널 높이 계산 (BaseFurnitureShell.tsx 3D 렌더링과 동일)
+      // 백패널 높이 계산
       // 기본: 섹션높이 - 상하판(36) + heightExtension(10) + 상하확장(26) = 섹션높이
-      // 2hanging 상부: 추가로 -basicThickness(18) = 섹션높이 - 18
-      // 2hanging 하부: 추가로 +lowerHeightBonus(18) = 섹션높이 + 18
       const heightExtension = 10; // backPanelConfig.heightExtension
-      const totalHeightExtension = basicThickness * 2 - heightExtension; // 위아래 각 (basicThickness-5)mm씩
-      const lowerHeightBonus = basicThickness; // backPanelConfig.lowerHeightBonus (= 가구재 두께)
-      const is2Hanging = moduleData.id.includes('2hanging') && !moduleData.id.includes('2drawer');
-      const baseBackPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
-      let backPanelHeight: number;
-      if (is2Hanging && sections.length === 2) {
-        if (sectionIndex === 0) {
-          // 하부 백패널: + lowerHeightBonus
-          backPanelHeight = baseBackPanelHeight + lowerHeightBonus;
-        } else {
-          // 상부 백패널: - basicThickness
-          backPanelHeight = baseBackPanelHeight - basicThickness;
-        }
-      } else {
-        backPanelHeight = baseBackPanelHeight;
-      }
+      const totalHeightExtension = basicThickness * 2 - heightExtension;
+      const backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
       targetPanel.push({
         name: `${sectionPrefix}백패널`,
