@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useCNCStore } from '../../store';
 import type { Panel } from '../../../../types/cutlist';
-import { Package, Plus, Trash2, Upload } from 'lucide-react';
+import { Package, Plus, Upload } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useLivePanelData } from '../../hooks/useLivePanelData';
 import styles from './SidebarLeft.module.css';
@@ -388,7 +388,6 @@ export default function PanelsTable(){
                 <th>{t('cnc.thickness')}</th>
                 <th>{t('cnc.material')}</th>
                 <th>{t('cnc.grain')}</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -549,17 +548,6 @@ export default function PanelsTable(){
                       title={p.grain === 'V' ? t('cnc.grainVerticalTooltip') : t('cnc.grainHorizontalTooltip')}
                     >
                       {p.grain === 'V' ? '↑' : '→'}
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        delRow(i);
-                      }}
-                      className={styles.deleteButton}
-                    >
-                      <Trash2 size={12} />
                     </button>
                   </td>
                 </tr>

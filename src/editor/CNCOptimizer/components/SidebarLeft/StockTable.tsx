@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useCNCStore } from '../../store';
 import type { StockSheet } from '../../../../types/cutlist';
-import { Layers, Plus, Trash2, Upload } from 'lucide-react';
+import { Layers, Plus, Upload } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './SidebarLeft.module.css';
 import { showToast } from '@/utils/cutlist/csv';
@@ -123,7 +123,6 @@ export default function StockTable(){
                 <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
                 <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>{t('cnc.quantity')}</th>
                 <th style={{ width: '21%', textAlign: 'center' }}>{t('cnc.material')}</th>
-                <th style={{ width: '7%', textAlign: 'center' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -200,14 +199,6 @@ export default function StockTable(){
                       <option value="HPL">HPL</option>
                       <option value="LPM">LPM</option>
                     </select>
-                  </td>
-                  <td style={{ padding: '6px 6px 6px 0', textAlign: 'center' }}>
-                    <button 
-                      onClick={() => delRow(i)}
-                      className={styles.deleteButton}
-                    >
-                      <Trash2 size={12} />
-                    </button>
                   </td>
                 </tr>
               ))}
