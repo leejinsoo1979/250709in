@@ -461,6 +461,8 @@ export function useLivePanelData() {
       if (spaceInfo.freeSurround) {
         // 자유배치 서라운드
         surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+        console.log('🔍 [서라운드 경로] 자유배치 freeSurround:', JSON.stringify(spaceInfo.freeSurround));
+        console.log('🔍 [서라운드 결과]', surroundPanelList.map(p => `${p.name}(${p.width}x${p.height})`));
       } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
         const fs = spaceInfo.frameSize;
@@ -469,6 +471,7 @@ export function useLivePanelData() {
         // 벽이 없는 쪽은 L자 구조: 전면판 + 측면판(고정목)
         const isLeftLShape = !spaceInfo.wallConfig?.left;
         const isRightLShape = !spaceInfo.wallConfig?.right;
+        console.log('🔍 [서라운드 경로] 균등배치:', { surroundType: spaceInfo.surroundType, frameSize: fs, wallConfig: spaceInfo.wallConfig, isLeftLShape, isRightLShape });
 
         if (dropH > 0) {
           // 단내림 활성: position에 따라 해당 쪽만 단내림 높이 적용
@@ -573,6 +576,8 @@ export function useLivePanelData() {
           });
         }
       }
+
+      console.log('🔍 [서라운드 최종]', surroundPanelList.length, '개:', surroundPanelList.map((p: any) => `${p.name}(${p.width}x${p.height})`));
 
       if (surroundPanelList.length > 0) {
         // 맨 좌측/우측 가구 인덱스 판별 (slotIndex 기준, 없으면 배열 순서)
