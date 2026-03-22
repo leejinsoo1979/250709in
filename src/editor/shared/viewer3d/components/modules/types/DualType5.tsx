@@ -390,6 +390,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+              panelName="(하)상판"
             />
           );
         }
@@ -1086,6 +1087,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
+                panelName="칸막이"
               />
             );
           });
@@ -1141,6 +1143,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+                  panelName={totalSections > 1 ? (isFirstSection ? '(하)좌측' : '(상)좌측') : '좌측판'}
                 />
               );
             });
@@ -1156,6 +1159,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         isDragging={isDragging}
         isEditMode={isEditMode}
         edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+        panelName="우측판"
       />
       
       {/* 상단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
@@ -1170,6 +1174,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+          panelName="(상)상판"
         />
 
         {/* 우측 상단판 */}
@@ -1182,6 +1187,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+          panelName="상판"
         />
       </>
       
@@ -1197,6 +1203,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+          panelName="(하)바닥"
         />
 
         {/* 우측 하단판 */}
@@ -1209,6 +1216,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+          panelName="바닥판"
         />
       </>
       
@@ -1267,6 +1275,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   hideEdges={false}
                   isBackPanel={true}
+                  panelName="백패널"
                 />
                 {/* 보강대 (좌측 전체 백패널 상/하단)
                     2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
@@ -1336,6 +1345,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isEditMode={isEditMode}
                 hideEdges={false}
                 isBackPanel={true}
+                panelName="(하)백패널"
               />
 
               {/* 하부 백패널 보강대 (상/하단)
@@ -1382,6 +1392,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isEditMode={isEditMode}
                 hideEdges={false}
                 isBackPanel={true}
+                panelName="(상)백패널"
               />
 
               {/* 상부 백패널 보강대 (상/하단)
@@ -1426,6 +1437,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 furnitureId={placedFurnitureId}
                 isDragging={isDragging}
                 isEditMode={isEditMode}
+                panelName="(상)바닥"
               />
             </>
           );
@@ -1452,6 +1464,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 hideEdges={false} // 엣지는 표시하되
                 isBackPanel={true} // 백패널임을 표시
                 edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
+                panelName="백패널"
               />
               {/* 우측 백패널 보강대 (상/하단)
                   2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
@@ -1467,7 +1480,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     furnitureId={placedFurnitureId}
                     isDragging={isDragging}
                     isEditMode={isEditMode}
-                    panelName="우보강대"
+                    panelName="보강대"
                     edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
                   />
                   <BoxWithEdges
@@ -1479,7 +1492,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     furnitureId={placedFurnitureId}
                     isDragging={isDragging}
                     isEditMode={isEditMode}
-                    panelName="우보강대"
+                    panelName="보강대"
                     edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
                   />
                 </>
