@@ -639,6 +639,8 @@ function PageInner(){
 
       if (meshName && furnitureId) {
         names.add(`${furnitureId}::${meshName}`);
+      } else {
+        console.warn(`[CNCOptimizer] ⚠️ 패널 ${panelId} meshName/furnitureId 없음:`, { meshName, furnitureId, label: panel?.label });
       }
     });
     if (names.size > 0) {

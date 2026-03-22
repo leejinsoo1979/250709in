@@ -4517,6 +4517,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
 
                   shadowEnabled={shadowEnabled}
+                  excludeKey={`${firstModuleId}::top-frame`}
                 />
               );
             });
@@ -5385,6 +5386,7 @@ const Room: React.FC<RoomProps> = ({
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
+                      excludeKey={`${firstModuleId}::base-frame`}
                     />
                   );
                 }
@@ -5427,6 +5429,7 @@ const Room: React.FC<RoomProps> = ({
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
+                      excludeKey={`${firstModuleId}::base-frame`}
                     />
                   );
                 });

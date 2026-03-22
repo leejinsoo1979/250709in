@@ -630,6 +630,16 @@ export function useLivePanelData() {
         });
       }
 
+      // 프레임 패널 furnitureId 통일: 3D에서 프레임은 하나의 공유 객체이므로
+      // 모든 모듈의 프레임 패널을 첫 번째 모듈 ID로 통일해야 Room.tsx의 excludeKey와 매칭됨
+      // (상부 서라운드 프레임도 meshName='top-frame'이므로 포함)
+      const firstId = placedModules[0]?.id || '';
+      allPanels.forEach(p => {
+        if ((p.meshName === 'top-frame' || p.meshName === 'base-frame') && p.furnitureId !== firstId) {
+          p.furnitureId = firstId;
+        }
+      });
+
       console.log('========================================');
       console.log('📊 패널 추출 완료 요약:');
       console.log(`   - 배치된 가구 수: ${placedModules.length}`);
@@ -684,7 +694,7 @@ export function useLivePanelData() {
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
               grain: 'H' as any,
-              meshName: `top-frame-${gIdx}`,
+              meshName: 'top-frame',
               furnitureId: placedModules[0]?.id || '',
             });
           }
@@ -702,7 +712,7 @@ export function useLivePanelData() {
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
               grain: 'H' as any,
-              meshName: `base-frame-${gIdx}`,
+              meshName: 'base-frame',
               furnitureId: placedModules[0]?.id || '',
             });
           }
