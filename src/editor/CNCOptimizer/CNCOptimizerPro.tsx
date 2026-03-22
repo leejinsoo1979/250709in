@@ -387,10 +387,11 @@ function PageInner(){
           //   서랍측판: Z축=Length, 결=Z=Length → H
           const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
 
-          // 도어와 엔드패널은 자동으로 PET 재질로 설정
+          // 도어·엔드패널·프레임·서라운드는 PET 재질
           let material = p.material || 'PB';
           if (panelName.includes('도어') || panelName.includes('door') ||
-              panelName.includes('엔드') || panelName.includes('end')) {
+              panelName.includes('엔드') || panelName.includes('end') ||
+              panelName.includes('프레임') || panelName.includes('서라운드')) {
             material = 'PET';
           }
 
@@ -522,7 +523,7 @@ function PageInner(){
       userHasModifiedPanels
     });
 
-    if (livePanels.length > 0 && !hasInitializedFromLive.current) {
+    if (livePanels.length > 0) {
       console.log('✅ livePanels에서 패널 초기화 시작:', livePanels.length, '개');
       const cutlistPanels: Panel[] = livePanels.map(p => {
         // 재단방향(grain) 기반으로 Length/Width 결정
@@ -545,7 +546,8 @@ function PageInner(){
         const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
         let material = p.material || 'PB';
         if (panelName.includes('도어') || panelName.includes('door') ||
-            panelName.includes('엔드') || panelName.includes('end')) {
+            panelName.includes('엔드') || panelName.includes('end') ||
+            panelName.includes('프레임') || panelName.includes('서라운드')) {
           material = 'PET';
         }
 

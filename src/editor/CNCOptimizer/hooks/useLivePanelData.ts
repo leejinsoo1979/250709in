@@ -424,7 +424,7 @@ export function useLivePanelData() {
             width: fs.left,
             height: panelH,
             thickness: surroundThickness,
-            material: 'PB',
+            material: 'PET',
           });
         }
         if (fs.right > 0) {
@@ -433,7 +433,7 @@ export function useLivePanelData() {
             width: fs.right,
             height: panelH,
             thickness: surroundThickness,
-            material: 'PB',
+            material: 'PET',
           });
         }
         if (fs.top > 0) {
@@ -443,7 +443,7 @@ export function useLivePanelData() {
             width: spaceInfo.width - (fs.left || 0) - (fs.right || 0),
             height: fs.top,
             thickness: surroundThickness,
-            material: 'PB',
+            material: 'PET',
           });
         }
       }
@@ -971,7 +971,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           width: fs2.left,
           height: panelH2,
           thickness: surroundThickness2,
-          material: 'PB',
+          material: 'PET',
         });
       }
       if (fs2.right > 0) {
@@ -980,7 +980,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           width: fs2.right,
           height: panelH2,
           thickness: surroundThickness2,
-          material: 'PB',
+          material: 'PET',
         });
       }
       if (fs2.top > 0) {
@@ -989,7 +989,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           width: spaceInfo.width - (fs2.left || 0) - (fs2.right || 0),
           height: fs2.top,
           thickness: surroundThickness2,
-          material: 'PB',
+          material: 'PET',
         });
       }
     }
