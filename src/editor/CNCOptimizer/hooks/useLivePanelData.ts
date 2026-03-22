@@ -153,8 +153,8 @@ export function useLivePanelData() {
         const furnitureLabel = placedModules.length > 1 ? `[${furnitureNumber}]` : '';
 
         // Get actual module configuration
-        const width = placedModule.width || moduleData.dimensions.width;
-        const depth = placedModule.depth || moduleData.dimensions.depth;
+        const width = placedModule.customWidth || placedModule.adjustedWidth || moduleData.dimensions.width;
+        const depth = placedModule.customDepth || moduleData.dimensions.depth;
         const hasDoor = placedModule.hasDoor || false;
         const material = placedModule.material || 'PB';
         const color = placedModule.color || 'MW';
@@ -756,8 +756,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const furnitureNumber2 = moduleIndex + 1;
       const furnitureLabel2 = placedModules.length > 1 ? `[${furnitureNumber2}]` : '';
 
-      const width = placedModule.width || moduleData.dimensions.width;
-      const depth = placedModule.depth || moduleData.dimensions.depth;
+      const width = placedModule.customWidth || placedModule.adjustedWidth || moduleData.dimensions.width;
+      const depth = placedModule.customDepth || moduleData.dimensions.depth;
       const hasDoor = placedModule.hasDoor || false;
       const material = placedModule.material || 'PB';
       const color = placedModule.color || 'MW';
