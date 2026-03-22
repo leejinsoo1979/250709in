@@ -27,6 +27,8 @@ type Store = {
   hoveredFurnitureId: string | null;
   // 패널 제외 (체크박스)
   excludedPanelIds: Set<string>;
+  // 조립 애니메이션
+  assemblyPlaying: boolean;
   // Actions
   setPanels: (p: Panel[], isUserModified?: boolean) => void;
   setStock: (s: StockSheet[]) => void;
@@ -53,6 +55,9 @@ type Store = {
   setHoveredPanel: (name: string | null, furnitureId: string | null) => void;
   // 패널 제외 액션
   togglePanelExclusion: (id: string) => void;
+  setExcludedPanelIds: (ids: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
+  // 조립 애니메이션 액션
+  setAssemblyPlaying: (v: boolean) => void;
   metrics: () => { partsCount: number; partsArea: number; stockArea: number };
 };
 
@@ -150,6 +155,8 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
   };
   // 패널 제외 (체크박스)
   const [excludedPanelIds, setExcludedPanelIds] = useState<Set<string>>(new Set());
+  // 조립 애니메이션
+  const [assemblyPlaying, setAssemblyPlaying] = useState(false);
   const togglePanelExclusion = (id: string) => {
     setExcludedPanelIds(prev => {
       const next = new Set(prev);
@@ -248,11 +255,15 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     // 패널 제외
     excludedPanelIds,
     togglePanelExclusion,
+    setExcludedPanelIds,
+    // 조립 애니메이션
+    assemblyPlaying,
+    setAssemblyPlaying,
     metrics
   }), [panels, stock, settings, selectedPanelId, currentSheetIndex, userHasModifiedPanels,
       placements, cuts, selectedSheetId, selectedCutIndex, selectedCutId, simulating, simSpeed, simProgress, sawStats,
       fullSimulating, fullSimCurrentSheet, fullSimTotalSheets,
-      hoveredPanelName, hoveredFurnitureId, excludedPanelIds]);
+      hoveredPanelName, hoveredFurnitureId, excludedPanelIds, assemblyPlaying]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

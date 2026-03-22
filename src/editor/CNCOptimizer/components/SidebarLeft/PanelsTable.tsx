@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useCNCStore } from '../../store';
 import type { Panel } from '../../../../types/cutlist';
 import { Package, Plus, Upload } from 'lucide-react';
@@ -57,13 +57,17 @@ function extractDrawerNumber(label: string): number {
 
 export default function PanelsTable(){
   const { t } = useTranslation();
-  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion, placements, setCurrentSheetIndex, setSelectedSheetId, stock } = useCNCStore();
+  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings, setHoveredPanel, excludedPanelIds, togglePanelExclusion, setExcludedPanelIds, assemblyPlaying, setAssemblyPlaying, placements, setCurrentSheetIndex, setSelectedSheetId, stock } = useCNCStore();
   const { panels: livePanels } = useLivePanelData();
   const placedModules = useFurnitureStore((s) => s.placedModules);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newlyAddedPanelId, setNewlyAddedPanelId] = useState<string | null>(null);
+
+  // 조립 애니메이션 refs
+  const assemblyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const assemblyStepRef = useRef<number>(0);
 
   // 가구 ID → slotIndex 매핑 (왼쪽부터 배치 순서)
   const furnitureSlotMap = useMemo(() => {
@@ -109,6 +113,48 @@ export default function PanelsTable(){
       })
       .map(item => item.index);
   }, [panels, panelFurnitureMap, furnitureSlotMap]);
+
+  // 조립 애니메이션 시작
+  const startAssembly = useCallback(() => {
+    setAssemblyPlaying(true);
+    assemblyStepRef.current = 0;
+  }, [setAssemblyPlaying]);
+
+  // 조립 애니메이션 중지
+  const stopAssembly = useCallback(() => {
+    setAssemblyPlaying(false);
+    if (assemblyTimerRef.current) {
+      clearInterval(assemblyTimerRef.current);
+      assemblyTimerRef.current = null;
+    }
+  }, [setAssemblyPlaying]);
+
+  // 조립 애니메이션 루프
+  useEffect(() => {
+    if (!assemblyPlaying) return;
+
+    assemblyTimerRef.current = setInterval(() => {
+      const step = assemblyStepRef.current;
+      if (step >= sortedPanelIndices.length) {
+        stopAssembly();
+        return;
+      }
+      const panelIdx = sortedPanelIndices[step];
+      const panelId = panels[panelIdx].id;
+      setExcludedPanelIds(prev => {
+        const next = new Set(prev);
+        next.delete(panelId);
+        return next;
+      });
+      assemblyStepRef.current = step + 1;
+    }, 500);
+
+    return () => {
+      if (assemblyTimerRef.current) {
+        clearInterval(assemblyTimerRef.current);
+      }
+    };
+  }, [assemblyPlaying, sortedPanelIndices, panels, stopAssembly, setExcludedPanelIds]);
 
   // 패널 ID → meshName/furnitureId 매핑 (3D 하이라이트용)
   const panelHighlightMap = useMemo(() => {
@@ -427,8 +473,18 @@ export default function PanelsTable(){
         <Package size={16} />
         <h3>{t('cnc.panelList')} ({panels.length})</h3>
         <div style={{ display: 'flex', gap: '4px' }}>
-          <button 
-            className={styles.addButton} 
+          {panels.length > 0 && (assemblyPlaying || excludedPanelIds.size === panels.length) && (
+            <button
+              className={styles.addButton}
+              onClick={assemblyPlaying ? stopAssembly : startAssembly}
+              title={assemblyPlaying ? '조립 중지' : '조립 애니메이션'}
+              style={{ color: assemblyPlaying ? '#ef4444' : '#22c55e', minWidth: '28px' }}
+            >
+              {assemblyPlaying ? '■' : '▶'}
+            </button>
+          )}
+          <button
+            className={styles.addButton}
             onClick={() => fileInputRef.current?.click()}
             title="CSV 파일 업로드"
           >
