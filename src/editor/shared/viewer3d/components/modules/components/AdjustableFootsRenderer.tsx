@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import * as THREE from 'three';
 import { AdjustableFoot } from './AdjustableFoot';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { Space3DViewContext } from '../../../context/Space3DViewContextTypes';
 
 interface AdjustableFootsRendererProps {
   width: number; // 가구 폭 (Three.js units)
@@ -39,6 +40,9 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   viewMode = '3D',
   view2DDirection,
 }) => {
+  // 옵티마이저 뷰어에서는 조절발 숨김
+  const space3DCtx = useContext(Space3DViewContext);
+
   const storeViewMode = useUIStore(state => state.viewMode);
   const storeView2DDirection = useUIStore(state => state.view2DDirection);
   // Store에서 직접 baseDepth 읽기 (실시간 반영 보장)
@@ -72,6 +76,9 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';
   const effectiveView2DDirection =
     view2DDirection ?? (effectiveViewMode === '2D' ? storeView2DDirection : undefined);
+
+  // 옵티마이저 뷰어에서는 조절발 숨김
+  if (space3DCtx?.hideAccessories) return null;
 
   // 띄움배치일 때는 발통 렌더링 안 함
   if (effectiveIsFloating) {

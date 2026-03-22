@@ -19,6 +19,9 @@ export interface Space3DViewContextType {
   
   // 현재 활성 영역 (단내림 사용 시)
   activeZone?: 'normal' | 'dropped';
+
+  // 악세서리(옷봉, 조절발 등) 숨김 여부 (옵티마이저 뷰어용)
+  hideAccessories?: boolean;
 }
 
 // 컨텍스트 생성

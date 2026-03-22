@@ -39,7 +39,11 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   furnitureId,
 }) => {
   const { view2DTheme, view2DDirection, highlightedPanel } = useUIStore();
-  const { viewMode } = useSpace3DView();
+  const ctx = useSpace3DView();
+  const viewMode = ctx.viewMode;
+
+  // 옵티마이저 뷰어에서는 옷봉 숨김
+  if (ctx.hideAccessories) return null;
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
   const shouldDim = highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);

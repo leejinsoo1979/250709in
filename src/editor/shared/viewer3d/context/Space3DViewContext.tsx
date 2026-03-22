@@ -5,12 +5,13 @@ import { calculateRoomDimensions } from '../utils/geometry';
 import { Space3DViewContext, Space3DViewContextType } from './Space3DViewContextTypes';
 
 // 컨텍스트 프로바이더 컴포넌트
-export const Space3DViewProvider: React.FC<Space3DViewProps & { children: React.ReactNode; viewMode?: '2D' | '3D' }> = ({
+export const Space3DViewProvider: React.FC<Space3DViewProps & { children: React.ReactNode; viewMode?: '2D' | '3D'; hideAccessories?: boolean }> = ({
   spaceInfo,
   svgSize,
   renderMode = 'wireframe',
   viewMode = '3D',
   activeZone = undefined,
+  hideAccessories = false,
   children
 }) => {
   // 3D 오브젝트 스타일 생성
@@ -27,7 +28,8 @@ export const Space3DViewProvider: React.FC<Space3DViewProps & { children: React.
     renderMode,
     viewMode,
     roomDimensions,
-    activeZone
+    activeZone,
+    hideAccessories
   };
   
   return (

@@ -413,6 +413,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
       <WebGLErrorBoundary fallback={fallbackUI}>
         {/* Space3DViewerReadOnly와 동일한 구조: Provider → ThreeCanvas → Room */}
         <Space3DViewProvider
+          hideAccessories={true}
           spaceInfo={spaceInfo}
           svgSize={{ width: 800, height: 600 }}
           renderMode="solid"
