@@ -216,16 +216,6 @@ const PanelDimmer: React.FC<{
       return;
     }
 
-    // ── 대상 가구 그룹 탐색 (userData.furnitureId 또는 name으로 검색) ──
-    let targetGroup: THREE.Object3D | undefined;
-    scene.traverse((obj) => {
-      if (!targetGroup && obj.userData?.furnitureId === highlightedFurnitureId) {
-        targetGroup = obj;
-      }
-    });
-    if (!targetGroup) {
-      targetGroup = scene.getObjectByName(highlightedFurnitureId) ?? undefined;
-    }
     const furnitureObjUuids = new Set<string>();
     const targetPanelUuids = new Set<string>();
 
@@ -239,8 +229,19 @@ const PanelDimmer: React.FC<{
       return false;
     };
 
-    if (targetGroup) {
-      targetGroup.traverse((obj) => {
+    // 동일 furnitureId를 가진 모든 그룹에서 검색 (가구는 여러 depth에 중첩 그룹 존재)
+    const allFurnitureGroups: THREE.Object3D[] = [];
+    if (highlightedFurnitureId) {
+      scene.traverse((obj) => {
+        if (obj.userData?.furnitureId === highlightedFurnitureId) {
+          allFurnitureGroups.push(obj);
+        }
+      });
+    }
+
+    // 가구 그룹 내 오브젝트 수집 + 패널 매칭
+    for (const grp of allFurnitureGroups) {
+      grp.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
           furnitureObjUuids.add(obj.uuid);
           if (matchesPanelName(obj)) {
@@ -250,8 +251,8 @@ const PanelDimmer: React.FC<{
       });
     }
 
-    // 가구 그룹에서 못 찾았으면 씬 전체에서 이름 매칭 (프레임/서라운드 등 공간 요소)
-    if (highlightedPanelName && targetPanelUuids.size === 0) {
+    // 가구 그룹이 없거나 그 안에서 못 찾은 경우에만 씬 전체 폴백 (프레임/서라운드 등 공간 요소)
+    if (highlightedPanelName && targetPanelUuids.size === 0 && allFurnitureGroups.length === 0) {
       scene.traverse((obj) => {
         if ((obj instanceof THREE.Mesh || obj instanceof THREE.Line) && matchesPanelName(obj)) {
           targetPanelUuids.add(obj.uuid);

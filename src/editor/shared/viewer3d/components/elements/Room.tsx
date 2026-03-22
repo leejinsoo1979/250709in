@@ -3722,7 +3722,7 @@ const Room: React.FC<RoomProps> = ({
                         material={seg.material ?? topSurrMat}
                         renderMode={renderMode}
                         shadowEnabled={shadowEnabled}
-                        excludeKey={`${firstModuleId}::상부프레임`}
+                        excludeKey={`${firstModuleId}::top-frame`}
                       />
                       {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </React.Fragment>
@@ -4202,7 +4202,7 @@ const Room: React.FC<RoomProps> = ({
                           renderMode={renderMode}
                           shadowEnabled={shadowEnabled}
                           renderOrder={seg.behindCeiling ? -1 : undefined}
-                          excludeKey={`${firstModuleId}::상부프레임`}
+                          excludeKey={`${firstModuleId}::top-frame`}
                         />
                         {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                       </React.Fragment>
@@ -5103,7 +5103,7 @@ const Room: React.FC<RoomProps> = ({
                       material={seg.material ?? baseMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
-                      excludeKey={`${firstModuleId}::하부프레임`}
+                      excludeKey={`${firstModuleId}::base-frame`}
                     />
                     {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                   </React.Fragment>
@@ -5277,7 +5277,7 @@ const Room: React.FC<RoomProps> = ({
                               renderMode={renderMode}
                               shadowEnabled={shadowEnabled}
                               renderOrder={seg.behindCeiling ? -1 : undefined}
-                              excludeKey={`${firstModuleId}::하부프레임`}
+                              excludeKey={`${firstModuleId}::base-frame`}
                             />
                             {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                           </React.Fragment>
