@@ -7,7 +7,6 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
-import { useExcludedPanels } from '../../../context/ExcludedPanelsContext';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -64,8 +63,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 }) => {
 
   const { viewMode } = useSpace3DView();
-  const excludedPanels = useExcludedPanels();
-  const isPanelExcluded = !!(panelName && excludedPanels.size > 0 && excludedPanels.has(panelName));
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
@@ -557,7 +554,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme]);
 
   return (
-    <group position={position} visible={!isPanelExcluded}>
+    <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh

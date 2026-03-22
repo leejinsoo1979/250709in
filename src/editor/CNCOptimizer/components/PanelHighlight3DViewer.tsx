@@ -1,5 +1,5 @@
 import React, { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -48,6 +48,61 @@ function extractPanelName(objName: string): string | null {
   const stripped = objName.replace(NAME_PREFIX_RE, '');
   return stripped !== objName ? stripped : null;
 }
+
+/**
+ * 제외 패널 숨김 — useFrame으로 매 프레임 mesh의 scale을 0으로 설정.
+ * R3F는 visible을 복원할 수 있지만 scale은 props에 명시하지 않으면 건드리지 않음.
+ */
+const PanelHider: React.FC = () => {
+  const { scene } = useThree();
+  const excludedRef = useRef<Set<string>>(new Set());
+
+  // Zustand store 구독 (R3F reconciler와 무관하게 동작)
+  useEffect(() => {
+    const unsub = useExcludedPanelsStore.subscribe((state) => {
+      excludedRef.current = state.excludedKeys;
+    });
+    excludedRef.current = useExcludedPanelsStore.getState().excludedKeys;
+    return unsub;
+  }, []);
+
+  const zeroScale = useRef(new THREE.Vector3(0, 0, 0));
+  const oneScale = useRef(new THREE.Vector3(1, 1, 1));
+
+  useFrame(() => {
+    const excluded = excludedRef.current;
+    if (!excluded || excluded.size === 0) {
+      // 모두 복원
+      scene.traverse((obj) => {
+        if (obj.userData.__hiddenByOptimizer) {
+          obj.scale.copy(oneScale.current);
+          obj.userData.__hiddenByOptimizer = false;
+        }
+      });
+      return;
+    }
+
+    scene.traverse((obj) => {
+      if (!obj.name) return;
+      const pn = extractPanelName(obj.name);
+      if (pn === null) return;
+
+      if (excluded.has(pn)) {
+        if (!obj.userData.__hiddenByOptimizer) {
+          obj.scale.copy(zeroScale.current);
+          obj.userData.__hiddenByOptimizer = true;
+        }
+      } else {
+        if (obj.userData.__hiddenByOptimizer) {
+          obj.scale.copy(oneScale.current);
+          obj.userData.__hiddenByOptimizer = false;
+        }
+      }
+    });
+  });
+
+  return null;
+};
 
 /** 비하이라이트 패널 반투명 처리 (scene traverse) — wireframe + solid 모드 모두 지원 */
 const PanelDimmer: React.FC<{
@@ -403,6 +458,9 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
                 isReadOnly={true}
                 cameraModeOverride="perspective"
               />
+
+              {/* 제외 패널 숨김 (scale=0) */}
+              <PanelHider />
 
               {/* 패널 하이라이트 */}
               <PanelDimmer
