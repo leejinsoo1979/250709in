@@ -197,17 +197,7 @@ export const calculatePanelDetails = (
       // 다중 섹션이고 상하 분리 측판 가구인 경우만 섹션별로 추가
       // 그 외는 통짜로 첫 번째 섹션에만 추가
       if (sections.length >= 2 && isSplitSidePanelFurniture) {
-        // 2hanging 분할 측판: 3D 렌더링(BaseFurnitureShell.tsx)과 동일하게
-        // 하부 측판 +bt, 상부 측판 -bt 보정
-        const is2HangingSplit = moduleData.id.includes('2hanging') && !moduleData.id.includes('2drawer');
-        let sidePanelHeight = adjustedSectionHeight;
-        if (is2HangingSplit && sections.length === 2) {
-          if (sectionIndex === 0) {
-            sidePanelHeight = adjustedSectionHeight + basicThickness; // 하부: +bt
-          } else {
-            sidePanelHeight = adjustedSectionHeight - basicThickness; // 상부: -bt
-          }
-        }
+        const sidePanelHeight = adjustedSectionHeight;
         // 상하 분리: 각 섹션마다 측판 추가
         targetPanel.push({
           name: `${sectionPrefix}좌측`,
