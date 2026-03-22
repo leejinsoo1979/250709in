@@ -170,6 +170,13 @@ export function useLivePanelData() {
           }
         }
 
+        // 가구 본체 높이 결정: freeHeight > customHeight > 단내림 보정 높이
+        let moduleFreeHeight = placedModule.freeHeight || placedModule.customHeight;
+        if (!moduleFreeHeight && placedModule.zone === 'dropped' && moduleSpaceHeight < spaceInfo.height) {
+          // 균등배치 단내림 구간: customHeight 미설정이므로 직접 계산
+          moduleFreeHeight = moduleSpaceHeight - frameTop - baseHeight;
+        }
+
         const allPanelsList = calculatePanelDetailsShared(
           moduleData, width, depth, hasDoor, t, undefined,
           moduleHingePosition, moduleHingeType,
@@ -179,7 +186,7 @@ export function useLivePanelData() {
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
-          placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
+          moduleFreeHeight,                 // 자유배치/단내림 높이
           topFrameH,                        // 상부프레임 높이
           visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
@@ -209,7 +216,7 @@ export function useLivePanelData() {
         // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
         const modelConfig = moduleData.modelConfig;
         const sections = modelConfig?.sections || modelConfig?.leftSections || [];
-        const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
+        const furnitureHeight = moduleFreeHeight || placedModule.customHeight || moduleData.dimensions.height;
         const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
         console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
@@ -758,6 +765,13 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         }
       }
 
+      // 가구 본체 높이 결정: freeHeight > customHeight > 단내림 보정 높이
+      let moduleFreeHeight2 = placedModule.freeHeight || placedModule.customHeight;
+      if (!moduleFreeHeight2 && placedModule.zone === 'dropped' && moduleSpaceHeight2 < spaceInfo.height) {
+        // 균등배치 단내림 구간: customHeight 미설정이므로 직접 계산
+        moduleFreeHeight2 = moduleSpaceHeight2 - frameTop2 - baseHeight2;
+      }
+
       const allPanelsList = calculatePanelDetailsShared(
         moduleData, width, depth, hasDoor, t, undefined,
         moduleHingePosition, moduleHingeType,
@@ -767,7 +781,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.hasLeftEndPanel,
         placedModule.hasRightEndPanel,
         (placedModule as any).endPanelThickness,
-        placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
+        moduleFreeHeight2,                 // 자유배치/단내림 높이
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,
@@ -791,7 +805,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
       const modelConfig = moduleData.modelConfig;
       const sections = modelConfig?.sections || modelConfig?.leftSections || [];
-      const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
+      const furnitureHeight = moduleFreeHeight2 || placedModule.customHeight || moduleData.dimensions.height;
       const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
       console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);
