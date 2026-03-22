@@ -86,6 +86,9 @@ const CNCOptimizer: React.FC = () => {
   const [hoveredPanelName, setHoveredPanelName] = useState<string | null>(null);
   const [hoveredFurnitureId, setHoveredFurnitureId] = useState<string | null>(null);
 
+  // Use live panels instead of local state
+  const panelsList = livePanels;
+
   // 패널 숨김 상태 (체크박스 해제 시 뷰어에서 숨김)
   const [hiddenPanelIds, setHiddenPanelIds] = useState<Set<string>>(new Set());
   const togglePanelVisibility = (panelId: string) => {
@@ -100,13 +103,12 @@ const CNCOptimizer: React.FC = () => {
     const names = new Set<string>();
     hiddenPanelIds.forEach(id => {
       const panel = panelsList.find(p => p.id === id);
-      if (panel?.meshName) names.add(panel.meshName);
+      if (panel?.meshName && panel?.furnitureId) {
+        names.add(`${panel.furnitureId}::${panel.meshName}`);
+      }
     });
     return names;
   }, [hiddenPanelIds, panelsList]);
-  
-  // Use live panels instead of local state
-  const panelsList = livePanels;
   
   // 프로젝트 정보 가져오기
   const projectInfo = useMemo(() => {

@@ -48,6 +48,18 @@ function extractPanelName(objName: string): string | null {
   return stripped !== objName ? stripped : null;
 }
 
+/**
+ * obj의 조상을 거슬러 올라가서 furnitureId를 가진 그룹을 찾는다.
+ */
+function findFurnitureId(obj: THREE.Object3D): string | null {
+  let cur: THREE.Object3D | null = obj;
+  while (cur) {
+    if (cur.userData?.furnitureId) return cur.userData.furnitureId;
+    cur = cur.parent;
+  }
+  return null;
+}
+
 /** 비하이라이트 패널 반투명 처리 (scene traverse) — wireframe + solid 모드 모두 지원 */
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
@@ -89,12 +101,15 @@ const PanelDimmer: React.FC<{
     });
 
     // ── 제외 패널 visible 처리 ──
+    // excludedMeshNames는 "furnitureId::meshName" 형태의 복합키를 담고 있음
     scene.traverse((obj) => {
       if (!obj.name) return;
       const pn = extractPanelName(obj.name);
       if (pn === null) return;
       if (excludedMeshNames && excludedMeshNames.size > 0) {
-        obj.visible = !excludedMeshNames.has(pn);
+        const fid = findFurnitureId(obj);
+        const compositeKey = fid ? `${fid}::${pn}` : pn;
+        obj.visible = !excludedMeshNames.has(compositeKey);
       } else {
         obj.visible = true;
       }
