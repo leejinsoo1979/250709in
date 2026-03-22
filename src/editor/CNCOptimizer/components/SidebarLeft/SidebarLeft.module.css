@@ -149,7 +149,7 @@
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-  width: 95px; /* 치수 */
+  width: 110px; /* 치수 */
   padding: 0 2px !important;
 }
 
@@ -340,7 +340,7 @@
 }
 
 .inputSmall {
-  width: 36px;
+  width: 42px;
   padding: 2px 1px;
   border: 1px solid var(--theme-border);
   background: white !important;
