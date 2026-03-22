@@ -11,7 +11,10 @@ interface ExcludedPanelsState {
 
 export const useExcludedPanelsStore = create<ExcludedPanelsState>((set) => ({
   excludedKeys: new Set<string>(),
-  setExcludedKeys: (keys) => set({ excludedKeys: keys }),
+  setExcludedKeys: (keys) => {
+    console.log('[ExcludedPanelsStore] setExcludedKeys:', [...keys]);
+    set({ excludedKeys: keys });
+  },
 }));
 
 /** BoxWithEdges에서 사용: 현재 제외된 패널 키 Set 반환 */
