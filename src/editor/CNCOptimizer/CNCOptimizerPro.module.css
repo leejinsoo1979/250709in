@@ -400,8 +400,8 @@
   display: grid;
   grid-template-columns: 420px minmax(600px, 1fr) 380px;
   grid-template-rows: 1fr;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 8px;
   overflow: hidden;
   max-height: calc(100vh - 56px);
   height: calc(100vh - 56px);
@@ -416,11 +416,11 @@
 .leftSidebar {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   width: 420px;
   min-width: 420px;
   max-width: 420px;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 72px);
   overflow: hidden;
 }
 
