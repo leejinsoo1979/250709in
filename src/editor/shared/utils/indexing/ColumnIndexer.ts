@@ -1092,32 +1092,20 @@ export class ColumnIndexer {
           //   '메인 내경': normalAreaInternalWidth,
           // });
         } else {
-          // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
+          // 슬롯배치 + 서라운드: 프레임 기반 계산
+          // 서라운드 세로패널과 가구는 붙으므로 벽쪽 이격(LEFT_GAP/RIGHT_GAP) 미적용
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
-          const LEFT_GAP = spaceInfo.gapConfig?.left ?? 0;
-          const RIGHT_GAP = spaceInfo.gapConfig?.right ?? 0;
 
           // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
-          // 단내림 시작이 커튼박스 뒤로 밀림
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
-          // 단내림구간(좌): 경계이격만큼 메인쪽으로 확장
-          // CB 있으면 프레임 불필요, CB 없으면 프레임+좌이격 차감
-          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.left + LEFT_GAP)) + BOUNDARY_GAP;
-          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : (frameThickness.left + LEFT_GAP));
+          // 단내림구간(좌): 서라운드 프레임 차감 + 경계이격만큼 메인쪽으로 확장
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : frameThickness.left) + BOUNDARY_GAP;
+          droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : frameThickness.left);
 
-          // 일반구간(우): 우측 프레임 + 우이격 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP - RIGHT_GAP;
-          normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 확장 후 메인 시작
-
-          // console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
-          //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
-          //   '좌이격': LEFT_GAP, '우이격': RIGHT_GAP,
-          //   '프레임 두께': frameThickness,
-          //   '단내림 내경': droppedAreaInternalWidth,
-          //   '메인 내경': normalAreaInternalWidth,
-          //   '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 좌측` : '없음',
-          // });
+          // 일반구간(우): 우측 프레임 + 중간이격 빼기
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
+          normalStartX = droppedStartX + droppedAreaInternalWidth;
         }
       } else {
         // 노서라운드: 엔드패널 고려하여 계산 (단내림 우측과 동일한 로직)
@@ -1236,31 +1224,20 @@ export class ColumnIndexer {
           //   '단내림 내경': droppedAreaInternalWidth,
           // });
         } else {
-          // 슬롯배치 + 서라운드: 기존 프레임 기반 계산
+          // 슬롯배치 + 서라운드: 프레임 기반 계산
+          // 서라운드 세로패널과 가구는 붙으므로 벽쪽 이격(LEFT_GAP/RIGHT_GAP) 미적용
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
-          const LEFT_GAP = spaceInfo.gapConfig?.left ?? 0;
-          const RIGHT_GAP = spaceInfo.gapConfig?.right ?? 0;
 
           // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
 
-          // 일반구간(좌): 좌측 프레임 + 좌이격 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP - LEFT_GAP;
-          normalStartX = internalStartX + LEFT_GAP;
+          // 일반구간(좌): 좌측 프레임 + 중간이격 빼기
+          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
+          normalStartX = internalStartX;
 
-          // 단내림구간(우): 경계이격만큼 메인쪽으로 확장
-          // CB 있으면 프레임 불필요, CB 없으면 프레임+우이격 차감
-          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : (frameThickness.right + RIGHT_GAP)) + BOUNDARY_GAP;
-          droppedStartX = normalStartX + normalAreaInternalWidth; // 단내림이 메인 바로 뒤에서 시작 (이격 흡수)
-
-          // console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
-          //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
-          //   '좌이격': LEFT_GAP, '우이격': RIGHT_GAP,
-          //   '프레임 두께': frameThickness,
-          //   '메인 내경': normalAreaInternalWidth,
-          //   '단내림 내경': droppedAreaInternalWidth,
-          //   '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 우측` : '없음',
-          // });
+          // 단내림구간(우): 서라운드 프레임 차감 + 경계이격만큼 메인쪽으로 확장
+          droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : frameThickness.right) + BOUNDARY_GAP;
+          droppedStartX = normalStartX + normalAreaInternalWidth;
         }
       } else {
         // 노서라운드: 엔드패널 고려하여 계산
