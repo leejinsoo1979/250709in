@@ -1976,8 +1976,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                   >
                     {(() => {
-                      // 3단: 내경 표시 — zoneSlotInfo 기반 (자유배치는 원 사이즈)
-                      const val = isFreePlacement ? mainWidth : zoneSlotInfoForDim.normal.width;
+                      // 3단: 슬롯 합산 (이격 반영된 실배치 공간)
+                      const val = isFreePlacement ? mainWidth : mainSlotTotalWidth;
                       const r = Math.round(val * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1);
                     })()}
                   </Text>
@@ -2045,8 +2045,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                   >
                     {(() => {
-                      // 3단: 내경 표시 — zoneSlotInfo 기반 (자유배치는 원 사이즈)
-                      const val = isFreePlacement ? droppedWidth : (zoneSlotInfoForDim.dropped?.width || droppedWidth);
+                      // 3단: 슬롯 합산 (이격 반영된 실배치 공간)
+                      const val = isFreePlacement ? droppedWidth : (droppedSlotTotalWidth || droppedWidth);
                       const r = Math.round(val * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1);
                     })()}
                   </Text>
@@ -7122,9 +7122,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {hasDC && renderZoneDim(droppedStartX, droppedEndX, String(Math.round(droppedWidth)), zoneDimZ)}
                   {hasCB && renderZoneDim(cbStartX, cbEndX, String(Math.round(cbWidth)), zoneDimZ)}
 
-                  {/* ===== 3단: 내경 (1997/901.5/147) ===== */}
+                  {/* ===== 3단: 슬롯 합산 (이격 반영된 실배치 공간) ===== */}
                   {renderZoneDim(mainStartX, mainEndX,
-                    String(isFreePlacement ? Math.round(mainWidth) : Math.round(zoneSlotInfo.normal.width)),
+                    String(isFreePlacement ? Math.round(mainWidth) : (() => {
+                      const sum = zoneSlotInfo.normal.slotWidths
+                        ? zoneSlotInfo.normal.slotWidths.reduce((s: number, w: number) => s + w, 0)
+                        : zoneSlotInfo.normal.columnWidth * zoneSlotInfo.normal.columnCount;
+                      return Math.round(sum);
+                    })()),
                     subDimensionZ
                   )}
                   {(hasDC || hasSC) && renderZoneDim(
@@ -7132,7 +7137,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     hasDC ? droppedEndX : scEndX,
                     String(isFreePlacement
                       ? Math.round(hasDC ? droppedWidth : scWidth)
-                      : Math.round(zoneSlotInfo.dropped?.width || (hasDC ? dcWidth : scWidth))),
+                      : (() => {
+                        const d = zoneSlotInfo.dropped;
+                        if (!d) return Math.round(hasDC ? dcWidth : scWidth);
+                        const sum = d.slotWidths
+                          ? d.slotWidths.reduce((s: number, w: number) => s + w, 0)
+                          : d.columnWidth * d.columnCount;
+                        return Math.round(sum);
+                      })()),
                     subDimensionZ
                   )}
                   {hasCB && (() => {
