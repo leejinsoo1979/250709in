@@ -1,14 +1,20 @@
-import { createContext, useContext } from 'react';
+import { create } from 'zustand';
 
 /**
- * 옵티마이저에서 체크 해제된 패널 이름을 BoxWithEdges에 전달하기 위한 Context.
- * PanelHighlight3DViewer → (Room → ... → BoxWithEdges) 전달 시
- * 중간 컴포넌트를 모두 수정하지 않고 Context로 직접 전달.
+ * 옵티마이저에서 체크 해제된 패널의 복합키(furnitureId::panelName)를 저장하는 Zustand store.
+ * React Context는 R3F <Canvas>의 별도 reconciler에서 접근 불가하므로 Zustand 사용.
  */
-const ExcludedPanelsContext = createContext<Set<string> | undefined>(undefined);
+interface ExcludedPanelsState {
+  excludedKeys: Set<string>;
+  setExcludedKeys: (keys: Set<string>) => void;
+}
 
-export const ExcludedPanelsProvider = ExcludedPanelsContext.Provider;
+export const useExcludedPanelsStore = create<ExcludedPanelsState>((set) => ({
+  excludedKeys: new Set<string>(),
+  setExcludedKeys: (keys) => set({ excludedKeys: keys }),
+}));
 
-export function useExcludedPanels(): Set<string> | undefined {
-  return useContext(ExcludedPanelsContext);
+/** BoxWithEdges에서 사용: 현재 제외된 패널 키 Set 반환 */
+export function useExcludedPanels(): Set<string> {
+  return useExcludedPanelsStore((s) => s.excludedKeys);
 }

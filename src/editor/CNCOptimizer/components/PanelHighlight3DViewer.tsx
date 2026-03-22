@@ -7,7 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import Room from '@/editor/shared/viewer3d/components/elements/Room';
 import ThreeCanvas from '@/editor/shared/viewer3d/components/base/ThreeCanvas';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
-import { ExcludedPanelsProvider } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
+import { useExcludedPanelsStore } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import { calculateOptimalDistance, mmToThreeUnits } from '@/editor/shared/viewer3d/components/base/utils/threeUtils';
 import styles from './PanelHighlight3DViewer.module.css';
 
@@ -223,11 +223,6 @@ const PanelDimmer: React.FC<{
           mat.transparent = true;
           mat.emissive.copy(orig.color);
           mat.emissiveIntensity = 0;
-        } else {
-          mat.opacity = 0.06;
-          mat.transparent = true;
-          mat.emissive.copy(orig.color);
-          mat.emissiveIntensity = 0;
         }
         mat.needsUpdate = true;
       }
@@ -275,6 +270,13 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const placedModules = useFurnitureStore((state) => state.placedModules);
   const setHighlightedPanel = useUIStore((state) => state.setHighlightedPanel);
+  const setExcludedKeys = useExcludedPanelsStore((s) => s.setExcludedKeys);
+
+  // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 접근 가능하게)
+  useEffect(() => {
+    setExcludedKeys(excludedMeshNames ?? new Set());
+    return () => setExcludedKeys(new Set());
+  }, [excludedMeshNames, setExcludedKeys]);
 
   // 지연 마운트: 이전 WebGL 컨텍스트 정리 대기
   const [ready, setReady] = useState(false);
@@ -363,47 +365,45 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
             renderMode="solid"
             cameraMode="perspective"
           >
-            <ExcludedPanelsProvider value={excludedMeshNames}>
-              <React.Suspense fallback={null}>
-                {/* 조명 — Space3DViewerReadOnly와 동일 */}
-                <directionalLight
-                  position={[5, 15, 20]}
-                  intensity={2.5}
-                  color="#ffffff"
-                  castShadow
-                  shadow-mapSize-width={4096}
-                  shadow-mapSize-height={4096}
-                  shadow-camera-far={50}
-                  shadow-camera-left={-25}
-                  shadow-camera-right={25}
-                  shadow-camera-top={25}
-                  shadow-camera-bottom={-25}
-                  shadow-bias={-0.0005}
-                  shadow-radius={12}
-                  shadow-normalBias={0.02}
-                />
-                <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
-                <ambientLight intensity={0.5} color="#ffffff" />
+            <React.Suspense fallback={null}>
+              {/* 조명 — Space3DViewerReadOnly와 동일 */}
+              <directionalLight
+                position={[5, 15, 20]}
+                intensity={2.5}
+                color="#ffffff"
+                castShadow
+                shadow-mapSize-width={4096}
+                shadow-mapSize-height={4096}
+                shadow-camera-far={50}
+                shadow-camera-left={-25}
+                shadow-camera-right={25}
+                shadow-camera-top={25}
+                shadow-camera-bottom={-25}
+                shadow-bias={-0.0005}
+                shadow-radius={12}
+                shadow-normalBias={0.02}
+              />
+              <directionalLight position={[-8, 10, 15]} intensity={0.6} color="#ffffff" />
+              <ambientLight intensity={0.5} color="#ffffff" />
 
-                {/* Room — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
-                <Room
-                  spaceInfo={spaceInfo}
-                  viewMode="3D"
-                  materialConfig={materialConfig}
-                  showAll={false}
-                  showFrame={true}
-                  showDimensions={false}
-                  isReadOnly={true}
-                  cameraModeOverride="perspective"
-                />
+              {/* Room — 에디터와 동일한 공간 구조 + 가구 렌더링 */}
+              <Room
+                spaceInfo={spaceInfo}
+                viewMode="3D"
+                materialConfig={materialConfig}
+                showAll={false}
+                showFrame={true}
+                showDimensions={false}
+                isReadOnly={true}
+                cameraModeOverride="perspective"
+              />
 
-                {/* 패널 하이라이트 */}
-                <PanelDimmer
-                  highlightedFurnitureId={highlightedFurnitureId}
-                  highlightedPanelName={highlightedPanelName}
-                />
-              </React.Suspense>
-            </ExcludedPanelsProvider>
+              {/* 패널 하이라이트 */}
+              <PanelDimmer
+                highlightedFurnitureId={highlightedFurnitureId}
+                highlightedPanelName={highlightedPanelName}
+              />
+            </React.Suspense>
           </ThreeCanvas>
         </Space3DViewProvider>
       </WebGLErrorBoundary>
