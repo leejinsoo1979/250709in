@@ -60,6 +60,7 @@ const BoxWithEdges: React.FC<{
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
+          name={`furniture-mesh${panelName ? `-${panelName}` : ''}`}
           geometry={geometry}
           material={material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
@@ -72,7 +73,7 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (
-        <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 10}>
+        <lineSegments name={`furniture-edge${panelName ? `-${panelName}` : ''}`} geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 10}>
           <lineBasicMaterial
             color={isEditMode ? getThemeColor() : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : "#505050")}
             transparent={renderMode !== 'wireframe'}

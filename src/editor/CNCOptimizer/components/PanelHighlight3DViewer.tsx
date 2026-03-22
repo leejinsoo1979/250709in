@@ -41,33 +41,44 @@ class WebGLErrorBoundary extends Component<
 }
 
 /**
- * panelName 접두사 제거 — mesh/edge 이름에서 패널명만 추출
+ * panelName 접두사 제거 — mesh/edge 이름에서 패널명만 추출.
+ * mesh: "furniture-mesh-좌측판" → "좌측판"
+ * edge: "furniture-edge-좌측판-0" → "좌측판" (라인 인덱스 제거)
+ * lineSegments: "furniture-edge-좌측판" → "좌측판"
  */
-const NAME_PREFIX_RE = /^(furniture-mesh-|back-panel-mesh-|furniture-edge-|back-panel-edge-)/;
+const MESH_PREFIX_RE = /^(furniture-mesh-|back-panel-mesh-)/;
+const EDGE_PREFIX_RE = /^(furniture-edge-|back-panel-edge-)/;
 function extractPanelName(objName: string): string | null {
-  const stripped = objName.replace(NAME_PREFIX_RE, '');
-  return stripped !== objName ? stripped : null;
+  // mesh 이름 처리
+  const meshStripped = objName.replace(MESH_PREFIX_RE, '');
+  if (meshStripped !== objName) return meshStripped || null;
+  // edge 이름 처리 — 끝의 "-숫자" (라인 인덱스) 제거
+  const edgeStripped = objName.replace(EDGE_PREFIX_RE, '');
+  if (edgeStripped !== objName) {
+    // "좌측판-0" → "좌측판", "좌측판" → "좌측판"
+    return edgeStripped.replace(/-\d+$/, '') || null;
+  }
+  return null;
 }
 
 /**
- * 제외 패널 숨김 — useFrame으로 매 프레임 mesh의 scale을 0으로 설정.
- * R3F는 visible을 복원할 수 있지만 scale은 props에 명시하지 않으면 건드리지 않음.
+ * 제외 패널 숨김 — useFrame으로 매 프레임 obj.visible = false 설정.
+ * BoxWithEdges/DoorModule의 <mesh>에 visible prop이 없으므로 R3F가 복원하지 않음.
  */
 const PanelHider: React.FC = () => {
   const { scene } = useThree();
   const excludedRef = useRef<Set<string>>(new Set());
+  const dumpedRef = useRef(false);
 
   // Zustand store 구독 (R3F reconciler와 무관하게 동작)
   useEffect(() => {
     const unsub = useExcludedPanelsStore.subscribe((state) => {
       excludedRef.current = state.excludedKeys;
+      dumpedRef.current = false; // re-dump on change
     });
     excludedRef.current = useExcludedPanelsStore.getState().excludedKeys;
     return unsub;
   }, []);
-
-  const zeroScale = useRef(new THREE.Vector3(0, 0, 0));
-  const oneScale = useRef(new THREE.Vector3(1, 1, 1));
 
   useFrame(() => {
     const excluded = excludedRef.current;
@@ -75,11 +86,39 @@ const PanelHider: React.FC = () => {
       // 모두 복원
       scene.traverse((obj) => {
         if (obj.userData.__hiddenByOptimizer) {
-          obj.scale.copy(oneScale.current);
+          obj.visible = true;
           obj.userData.__hiddenByOptimizer = false;
         }
       });
       return;
+    }
+
+    // 디버그: 한 번만 씬 전체 오브젝트 이름 덤프
+    if (!dumpedRef.current) {
+      dumpedRef.current = true;
+      const allNames: string[] = [];
+      const matchedNames: string[] = [];
+      const unmatchedExcluded: string[] = [];
+      scene.traverse((obj) => {
+        if (obj.name) allNames.push(obj.name);
+      });
+      const extractedSet = new Set<string>();
+      allNames.forEach(n => {
+        const pn = extractPanelName(n);
+        if (pn) extractedSet.add(pn);
+      });
+      excluded.forEach(key => {
+        if (extractedSet.has(key)) {
+          matchedNames.push(key);
+        } else {
+          unmatchedExcluded.push(key);
+        }
+      });
+      console.log('[PanelHider] 씬 오브젝트 중 furniture-mesh/back-panel-mesh 이름들:',
+        allNames.filter(n => n.startsWith('furniture-mesh') || n.startsWith('back-panel-mesh')).slice(0, 30));
+      console.log('[PanelHider] excluded 키:', [...excluded]);
+      console.log('[PanelHider] 매칭 성공:', matchedNames);
+      console.log('[PanelHider] 매칭 실패:', unmatchedExcluded);
     }
 
     scene.traverse((obj) => {
@@ -87,16 +126,13 @@ const PanelHider: React.FC = () => {
       const pn = extractPanelName(obj.name);
       if (pn === null) return;
 
-      if (excluded.has(pn)) {
-        if (!obj.userData.__hiddenByOptimizer) {
-          obj.scale.copy(zeroScale.current);
-          obj.userData.__hiddenByOptimizer = true;
-        }
-      } else {
-        if (obj.userData.__hiddenByOptimizer) {
-          obj.scale.copy(oneScale.current);
-          obj.userData.__hiddenByOptimizer = false;
-        }
+      const shouldHide = excluded.has(pn);
+      if (shouldHide) {
+        obj.visible = false;
+        obj.userData.__hiddenByOptimizer = true;
+      } else if (obj.userData.__hiddenByOptimizer) {
+        obj.visible = true;
+        obj.userData.__hiddenByOptimizer = false;
       }
     });
   });
