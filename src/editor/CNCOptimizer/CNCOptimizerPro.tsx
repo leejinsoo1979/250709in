@@ -619,31 +619,33 @@ function PageInner(){
   }, [livePanels, userHasModifiedPanels, setPanels]);
 
   // 제외 패널 ID → furnitureId::meshName 복합키 변환 (3D 뷰어 패널 숨김용)
+  // store panels에 meshName이 없으면 livePanels에서 폴백 조회
   const excludedMeshNames = useMemo(() => {
     const names = new Set<string>();
-    if (excludedPanelIds.size > 0) {
-      console.log('[CNCOptimizer] excludedPanelIds:', [...excludedPanelIds]);
-      console.log('[CNCOptimizer] panels count:', panels.length, 'first panel:', panels[0] ? { id: panels[0].id, meshName: panels[0].meshName, furnitureId: panels[0].furnitureId, label: panels[0].label } : 'none');
-    }
     excludedPanelIds.forEach(panelId => {
-      const panel = panels.find(p => p.id === panelId);
-      if (!panel) {
-        console.warn(`[CNCOptimizer] ❌ panel not found for id: "${panelId}"`);
-        return;
+      // store panels에서 먼저 찾기
+      let panel = panels.find(p => p.id === panelId);
+      let meshName = panel?.meshName;
+      let furnitureId = panel?.furnitureId;
+
+      // store panels에 meshName/furnitureId가 없으면 livePanels에서 폴백
+      if ((!meshName || !furnitureId) && livePanels.length > 0) {
+        const livePanel = livePanels.find(lp => lp.id === panelId);
+        if (livePanel) {
+          meshName = meshName || livePanel.meshName;
+          furnitureId = furnitureId || livePanel.furnitureId;
+        }
       }
-      if (!panel.meshName || !panel.furnitureId) {
-        console.warn(`[CNCOptimizer] ❌ panel missing meshName/furnitureId:`, { id: panel.id, label: panel.label, meshName: panel.meshName, furnitureId: panel.furnitureId });
-        return;
+
+      if (meshName && furnitureId) {
+        names.add(`${furnitureId}::${meshName}`);
       }
-      names.add(`${panel.furnitureId}::${panel.meshName}`);
     });
     if (names.size > 0) {
-      console.log('[CNCOptimizer] ✅ excludedMeshNames:', [...names]);
-    } else if (excludedPanelIds.size > 0) {
-      console.warn('[CNCOptimizer] ⚠️ excludedPanelIds 있지만 excludedMeshNames 비어있음!');
+      console.log('[CNCOptimizer] excludedMeshNames:', [...names]);
     }
     return names;
-  }, [excludedPanelIds, panels]);
+  }, [excludedPanelIds, panels, livePanels]);
 
   const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC', silent?: boolean) => {
     // overrideOptimizationType이 주어지면 그 값을 사용, 아니면 settings에서 가져옴
