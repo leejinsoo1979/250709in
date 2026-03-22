@@ -113,13 +113,13 @@ export default function PanelsTable(){
   // 패널 ID → meshName/furnitureId 매핑 (3D 하이라이트용)
   const panelHighlightMap = useMemo(() => {
     const map = new Map<string, { meshName: string; furnitureId: string }>();
-    livePanels.forEach(lp => {
-      if ((lp as any).meshName && (lp as any).furnitureId) {
-        map.set(lp.id, { meshName: (lp as any).meshName, furnitureId: (lp as any).furnitureId });
+    panels.forEach(p => {
+      if (p.meshName && p.furnitureId) {
+        map.set(p.id, { meshName: p.meshName, furnitureId: p.furnitureId });
       }
     });
     return map;
-  }, [livePanels]);
+  }, [panels]);
 
   // Auto-scroll to selected panel
   useEffect(() => {
