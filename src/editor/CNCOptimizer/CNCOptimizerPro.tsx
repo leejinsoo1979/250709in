@@ -1371,7 +1371,7 @@ function PageInner(){
       </div>
 
       {/* Main Content */}
-      <div className={`${styles.main} ${viewSwapped ? styles.mainSwapped : ''}`}>
+      <div className={styles.main}>
         {/* Left Sidebar */}
         <div className={styles.leftSidebar}>
           <PanelsTable />
@@ -1508,12 +1508,6 @@ function PageInner(){
                       }
                     }}
                     allowRotation={!settings.considerGrain}
-                    scale={viewerScale}
-                    rotation={viewerRotation}
-                    offset={viewerOffset}
-                    onScaleChange={setViewerScale}
-                    onRotationChange={setViewerRotation}
-                    onOffsetChange={setViewerOffset}
                     sheetInfo={{
                       currentIndex: currentSheetIndex,
                       totalSheets: optimizationResults.length,
