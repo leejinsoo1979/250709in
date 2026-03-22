@@ -33,7 +33,10 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   renderMode: _renderMode
 }) => {
   const { view2DDirection } = useUIStore();
-  const { viewMode, renderMode: contextRenderMode } = useSpace3DView();
+  const { viewMode, renderMode: contextRenderMode, hideAccessories } = useSpace3DView();
+
+  // 옵티마이저 뷰어에서는 환기캡 숨김
+  if (hideAccessories) return null;
 
   // wireframe 모드에서는 렌더링하지 않음
   if (contextRenderMode === 'wireframe') return null;
