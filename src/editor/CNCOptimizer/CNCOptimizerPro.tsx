@@ -370,23 +370,25 @@ function PageInner(){
           let length: number;
 
           if (isBackPanel) {
-            // 백패널: 무조건 높이(Y축) = Length, 가로(X축) = Width
-            // MDF 무결이지만 2440 원판에서 높이방향이 항상 Length
+            // 백패널: 높이(Y축) = Length, 가로(X축) = Width
+            length = p.height;
+            width = p.width;
+          } else if (p.grain === 'HORIZONTAL') {
+            // 수평 패널(상판/바닥/선반/서랍바닥/서랍측판/서랍앞뒷판/마이다):
+            // L = p.width(가구가로/폭/깊이), W = p.height(가구깊이/높이)
+            length = p.width;
+            width = p.height;
+          } else if (p.grain === 'VERTICAL') {
+            // 수직 패널(가구측판/칸막이/도어/서랍속장):
+            // L = p.height(가구높이), W = p.width(가구깊이/너비)
             length = p.height;
             width = p.width;
           } else {
-            // 일반 패널: 긴 쪽 = Length, 짧은 쪽 = Width
+            // NONE(무결): 긴 쪽 = Length, 짧은 쪽 = Width (회전 가능)
             width = Math.min(p.width, p.height);
             length = Math.max(p.width, p.height);
           }
 
-          // 결방향 매핑:
-          // - 백패널: 'H' (높이=Length 방향 고정, 회전 불가)
-          // - NONE → 'NONE' (결 무관, MDF 등 회전 허용)
-          // - VERTICAL/HORIZONTAL → 'H' (재단방향이 항상 Length 축과 평행)
-          //   측판: Y축=Length, 결=Y=Length → H
-          //   선반: X축=Length, 결=X=Length → H
-          //   서랍측판: Z축=Length, 결=Z=Length → H
           const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
 
           // 도어·엔드패널·프레임·서라운드는 PET 재질
@@ -542,15 +544,22 @@ function PageInner(){
         let length: number;
 
         if (isBackPanel) {
-          // 백패널: 무조건 높이(Y축) = Length, 가로(X축) = Width
+          length = p.height;
+          width = p.width;
+        } else if (p.grain === 'HORIZONTAL') {
+          // 수평 패널: L = p.width, W = p.height
+          length = p.width;
+          width = p.height;
+        } else if (p.grain === 'VERTICAL') {
+          // 수직 패널: L = p.height, W = p.width
           length = p.height;
           width = p.width;
         } else {
+          // NONE(무결): 긴 쪽 = Length, 짧은 쪽 = Width
           width = Math.min(p.width, p.height);
           length = Math.max(p.width, p.height);
         }
 
-        // 결방향: 백패널→H(높이고정), NONE→NONE, 그 외→H
         const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
         let material = p.material || 'PB';
         if (panelName.includes('도어') || panelName.includes('door') ||
