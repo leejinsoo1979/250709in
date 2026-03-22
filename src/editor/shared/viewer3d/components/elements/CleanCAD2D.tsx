@@ -2670,7 +2670,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                                 cursor: b.editable ? 'pointer' : 'default',
                                 userSelect: 'none',
                                 whiteSpace: 'nowrap',
-                                background: b.editable ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                                background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.85)' : 'rgba(255,255,255,0.85)',
                                 borderRadius: '3px',
                               }}
                               onClick={(e) => { if (b.editable) { e.stopPropagation(); handleGapEdit(b.gapSide as 'left' | 'right' | 'middle' | 'middle2', b.gapValue); } }}
