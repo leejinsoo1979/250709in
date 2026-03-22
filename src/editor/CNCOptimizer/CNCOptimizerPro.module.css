@@ -408,9 +408,9 @@
   align-items: start;
 }
 
-/* 스왑 모드: 중앙 가구뷰어 줄이고 우측 패널뷰어 넓히기 */
+/* 스왑 모드: 중앙 가구뷰어(4) : 우측 패널뷰어(3) */
 .mainSwapped {
-  grid-template-columns: 460px 1fr 480px;
+  grid-template-columns: 460px 4fr 3fr;
 }
 
 .leftSidebar {
