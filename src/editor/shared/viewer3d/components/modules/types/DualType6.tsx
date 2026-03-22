@@ -534,6 +534,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             position={[(leftWidth - rightWidth) / 2, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight)/2 - mmToThreeUnits(18), basicThickness/2 + shelfZOffset]}
             material={material}
             renderMode={useSpace3DView().renderMode}
+            furnitureId={placedFurnitureId}
             isDragging={isDragging}
             isEditMode={isEditMode}
           />
@@ -547,6 +548,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
+              furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
             />
@@ -609,6 +611,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               position={[0, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
+              furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
             />
@@ -725,6 +728,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[-width/2 + basicThickness/2, 0, 0]}
         material={material}
         renderMode={useSpace3DView().renderMode}
+        furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isEditMode={isEditMode}
       />
@@ -735,6 +739,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[width/2 - basicThickness/2, 0, 0]}
         material={material}
         renderMode={useSpace3DView().renderMode}
+        furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isEditMode={isEditMode}
       />
@@ -745,6 +750,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[0, height/2 - basicThickness/2, mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
+        furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isEditMode={isEditMode}
       />
@@ -757,6 +763,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           position={[leftXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={useSpace3DView().renderMode}
+          furnitureId={placedFurnitureId}
           isDragging={isDragging}
         />
 
@@ -766,6 +773,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           position={[rightXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={useSpace3DView().renderMode}
+          furnitureId={placedFurnitureId}
           isDragging={isDragging}
         />
         
@@ -836,6 +844,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               position={[0, 0, backPanelZ]}
               material={material}
               renderMode={useSpace3DView().renderMode}
+              furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
               isBackPanel={true} // 백패널임을 표시
@@ -851,6 +860,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   position={[0, -backPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   panelName="하단보강대"
@@ -861,6 +871,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   position={[0, backPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   panelName="상단보강대"

@@ -13,6 +13,7 @@ interface FinishingPanelWithTextureProps {
   doorColor: string;
   renderMode?: 'solid' | 'wireframe';
   isDragging?: boolean;
+  furnitureId?: string;
 }
 
 /**
@@ -27,7 +28,8 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
   spaceInfo,
   doorColor,
   renderMode = 'solid',
-  isDragging = false
+  isDragging = false,
+  furnitureId
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
 
@@ -106,6 +108,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       position={position}
       material={panelMaterial}
       renderMode={renderMode}
+      furnitureId={furnitureId}
       hideEdges={false}
     />
   );

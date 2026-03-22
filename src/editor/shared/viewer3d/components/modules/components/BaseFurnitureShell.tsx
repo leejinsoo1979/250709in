@@ -1060,6 +1060,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                             panelName="(하)보강대"
+                            furnitureId={placedFurnitureId}
                           />
                           {/* 하부 섹션 상단 보강대 */}
                           <BoxWithEdges
@@ -1072,6 +1073,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                             panelName="(하)보강대"
+                            furnitureId={placedFurnitureId}
                           />
                           {/* 상부 섹션 하단 보강대 */}
                           <BoxWithEdges
@@ -1084,6 +1086,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                             panelName="(상)보강대"
+                            furnitureId={placedFurnitureId}
                           />
                           {/* 상부 섹션 상단 보강대 */}
                           <BoxWithEdges
@@ -1096,6 +1099,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             isEditMode={isEditMode}
                             isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                             panelName="(상)보강대"
+                            furnitureId={placedFurnitureId}
                           />
                         </>
                       );
@@ -1172,6 +1176,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                             material={material}
                             renderMode={renderMode}
+                            furnitureId={placedFurnitureId}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             panelName="보강대"
@@ -1183,6 +1188,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                             material={material}
                             renderMode={renderMode}
+                            furnitureId={placedFurnitureId}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             panelName="보강대"

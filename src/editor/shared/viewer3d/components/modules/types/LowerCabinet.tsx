@@ -144,6 +144,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                       position={[0, 0, baseFurniture.shelfZOffset]}
                       material={baseFurniture.material}
                       renderMode={renderMode}
+                      furnitureId={placedFurnitureId}
                     />
                     
                     {/* 오른쪽 섹션 - 오른쪽 구획의 중앙에서 오른쪽으로 basicThickness/2만큼 이동 */}

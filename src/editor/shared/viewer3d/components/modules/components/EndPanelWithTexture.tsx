@@ -12,6 +12,7 @@ interface EndPanelWithTextureProps {
   spaceInfo: SpaceInfo;
   renderMode?: 'solid' | 'wireframe';
   useFrameColor?: boolean; // true면 프레임 색상 사용 (자유배치 EP)
+  furnitureId?: string;
 }
 
 /**
@@ -25,7 +26,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   position,
   spaceInfo,
   renderMode = 'solid',
-  useFrameColor = false
+  useFrameColor = false,
+  furnitureId
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
 
@@ -103,6 +105,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
       position={position}
       material={endPanelMaterial}
       renderMode={renderMode}
+      furnitureId={furnitureId}
     />
   );
 };

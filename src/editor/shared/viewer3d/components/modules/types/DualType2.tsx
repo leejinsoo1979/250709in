@@ -170,6 +170,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   position={[-width/2 + basicThickness/2, sectionCenterY, zOffset]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
@@ -184,6 +185,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   position={[width/2 - basicThickness/2, sectionCenterY, zOffset]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
@@ -213,6 +215,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                       position={[0, lowerTopPanelY, reducedZPosition]}
                       material={material}
                       renderMode={renderMode}
+                      furnitureId={placedFurnitureId}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
                       isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
@@ -250,6 +253,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         position={[0, lowerTopPanelY + basicThickness, reducedZPosition]}
                         material={material}
                         renderMode={renderMode}
+                        furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
@@ -274,6 +278,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             position={[-width/2 + basicThickness/2, 0, 0]}
             material={material}
             renderMode={renderMode}
+            furnitureId={placedFurnitureId}
             isDragging={isDragging}
             panelName="좌측판"
             panelGrainDirections={panelGrainDirections}
@@ -286,6 +291,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             position={[width/2 - basicThickness/2, 0, 0]}
             material={material}
             renderMode={renderMode}
+            furnitureId={placedFurnitureId}
             isDragging={isDragging}
             panelName="우측판"
             panelGrainDirections={panelGrainDirections}
@@ -300,6 +306,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         position={[0, height/2 - basicThickness/2, (sectionDepths && sectionDepths[1] ? ((depth - sectionDepths[1]) === 0 ? 0 : upperSectionDepthDirection === 'back' ? (depth - sectionDepths[1]) / 2 : -(depth - sectionDepths[1]) / 2) : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
+        furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isHighlighted={isMulti ? highlightedSection === `${placedFurnitureId}-${sectionHeights.length - 1}` : false}
         panelName={isMulti ? "(상)상판" : "상판"}
@@ -359,6 +366,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         position={[0, -height/2 + basicThickness/2, (sectionDepths && sectionDepths[0] ? ((depth - sectionDepths[0]) === 0 ? 0 : lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) / 2 : -(depth - sectionDepths[0]) / 2) : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
+        furnitureId={placedFurnitureId}
         isDragging={isDragging}
         isHighlighted={isMulti ? highlightedSection === `${placedFurnitureId}-0` : false}
         panelName={isMulti ? "(하)바닥" : "바닥판"}
@@ -403,6 +411,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   position={[0, lowerBackPanelY, -lowerSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + lowerZOffset]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
@@ -417,6 +426,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   position={[0, upperBackPanelY, -upperSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + upperZOffset]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
@@ -446,6 +456,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
+                        furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                         panelName="(하)하단보강대"
@@ -456,6 +467,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
+                        furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                         panelName="(하)상단보강대"
@@ -466,6 +478,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
+                        furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                         panelName="(상)하단보강대"
@@ -476,6 +489,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
+                        furnitureId={placedFurnitureId}
                         isDragging={isDragging}
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                         panelName="(상)상단보강대"
@@ -495,6 +509,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             position={[0, 0, -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1))]}
             material={material}
             renderMode={renderMode}
+            furnitureId={placedFurnitureId}
             isDragging={isDragging}
             isBackPanel={true}
             panelName="백패널"
@@ -522,6 +537,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   panelName="하단보강대"
                 />
@@ -531,6 +547,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}
+                  furnitureId={placedFurnitureId}
                   isDragging={isDragging}
                   panelName="상단보강대"
                 />

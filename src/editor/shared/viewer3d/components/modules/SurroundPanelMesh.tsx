@@ -18,12 +18,14 @@ interface SurroundPanelMeshProps {
   placedModule: PlacedModule;
   renderMode?: 'solid' | 'wireframe';
   viewMode?: '2D' | '3D';
+  furnitureId?: string;
 }
 
 const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
   placedModule,
   renderMode = 'solid',
   viewMode = '3D',
+  furnitureId,
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
@@ -100,6 +102,7 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
         position={position}
         material={material}
         renderMode={renderMode}
+        furnitureId={furnitureId}
         isHighlighted={isSelected}
         isEndPanel={true}
       />
