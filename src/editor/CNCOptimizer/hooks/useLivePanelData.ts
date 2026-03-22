@@ -590,10 +590,10 @@ export function useLivePanelData() {
         const topGroups = computeFrameMergeGroups(placedModules, 'top', 2420, frameTop);
         const baseGroups = computeFrameMergeGroups(placedModules, 'base', 2420, visualBaseH);
 
-        // 기존 개별 프레임 패널 제거
+        // 기존 개별 프레임 패널 제거 (상부 서라운드 프레임도 병합 상부프레임과 중복이므로 제거)
         const framePanelIndices: number[] = [];
         allPanels.forEach((p, idx) => {
-          if (p.name.includes('상부프레임') || p.name.includes('하부프레임')) {
+          if (p.name.includes('상부프레임') || p.name.includes('하부프레임') || p.name === '상부 서라운드 프레임') {
             framePanelIndices.push(idx);
           }
         });
