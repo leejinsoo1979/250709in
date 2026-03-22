@@ -178,7 +178,7 @@ export function useLivePanelData() {
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
-          placedModule.freeHeight,          // 자유배치 높이
+          placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
           topFrameH,                        // 상부프레임 높이
           visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
@@ -676,7 +676,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.hasLeftEndPanel,
         placedModule.hasRightEndPanel,
         (placedModule as any).endPanelThickness,
-        placedModule.freeHeight,
+        placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,

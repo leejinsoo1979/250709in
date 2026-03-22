@@ -378,7 +378,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     undefined, undefined, undefined, undefined, undefined, undefined, undefined,
     placedModule?.backPanelThickness, placedModule?.customConfig,
     placedModule?.hasLeftEndPanel, placedModule?.hasRightEndPanel,
-    placedModule?.endPanelThickness, placedModule?.freeHeight,
+    placedModule?.endPanelThickness, placedModule?.freeHeight || placedModule?.customHeight,
     topFrameHeightMm, visualBaseFrameHeightMm,
     placedModule?.hasTopFrame, placedModule?.hasBase,
     placedModule?.isDualSlot
