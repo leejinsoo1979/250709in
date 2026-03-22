@@ -2249,7 +2249,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 슬롯배치: ColumnIndexer 계산값 사용
                     // 프레임은 3단 치수선에 별도 표시 → 실배치에서 제외
                     mainPlacementWidth = floorValue(mainSlotTotalWidth, hasDualInMain);
-                    dcPlacementWidth = floorValue(droppedSlotTotalWidth, hasDualInDropped);
+                    dcPlacementWidth = zoneSlotInfoForDim.dropped?.width || droppedWidth;
                     // scSideFrame은 이미 0으로 초기화됨 (슬롯배치에서는 프레임 치수 없음)
                   }
 
@@ -2871,14 +2871,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 좌측 커튼박스 프레임 너비 치수선 (3단) — cbW - 3 (양쪽 1.5mm 이격 제외) */}
+      {/* 좌측 커튼박스 프레임 너비 치수선 (3단) — cbW - 1.5 (벽쪽 이격만 제외) */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
-              const cbFrameW = cbW - 3; // 프레임 너비 = CB 폭 - 양쪽 1.5mm 이격
+              const cbFrameW = cbW - 1.5; // 프레임 너비 = CB 폭 - 벽쪽 1.5mm 이격 (경계쪽 이격은 단내림 내경에 포함)
               const cbFrameStartX = leftOffset + mmToThreeUnits(1.5); // 벽쪽 1.5mm 이격 후
-              const cbFrameEndX = leftOffset + mmToThreeUnits(cbW - 1.5); // 경계쪽 1.5mm 이격 전
+              const cbFrameEndX = leftOffset + mmToThreeUnits(cbW); // 경계쪽은 이격 없음 (단내림 내경에 포함)
               return (<>
                 <Line points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
                 <Line points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.5} />
@@ -2887,7 +2887,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   position={[(cbFrameStartX + cbFrameEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                   fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                >{Math.round(cbFrameW)}</Text>
+                >{(() => { const r = Math.round(cbFrameW * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}</Text>
                 <NativeLine name="dimension_line"
                   points={[[cbFrameStartX, spaceHeight, 0.001], [cbFrameStartX, topDimensionY + mmToThreeUnits(40), 0.001]]}
                   color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
@@ -3147,14 +3147,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 우측 커튼박스 프레임 너비 치수선 (3단) — cbW - 3 (양쪽 1.5mm 이격 제외) */}
+      {/* 우측 커튼박스 프레임 너비 치수선 (3단) — cbW - 1.5 (벽쪽 이격만 제외) */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
-              const cbFrameW = cbW - 3; // 프레임 너비 = CB 폭 - 양쪽 1.5mm 이격
+              const cbFrameW = cbW - 1.5; // 프레임 너비 = CB 폭 - 벽쪽 1.5mm 이격 (경계쪽 이격은 단내림 내경에 포함)
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-              const cbFrameStartX = rightEdge - mmToThreeUnits(cbW - 1.5); // 경계쪽 1.5mm 이격 후
+              const cbFrameStartX = rightEdge - mmToThreeUnits(cbW); // 경계쪽은 이격 없음 (단내림 내경에 포함)
               const cbFrameEndX = rightEdge - mmToThreeUnits(1.5); // 벽쪽 1.5mm 이격 전
               return (<>
                 <Line points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.5} />
@@ -3164,7 +3164,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   position={[(cbFrameStartX + cbFrameEndX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
                   fontSize={baseFontSize} color={textColor} anchorX="center" anchorY="middle"
                   outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                >{Math.round(cbFrameW)}</Text>
+                >{(() => { const r = Math.round(cbFrameW * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })()}</Text>
                 <NativeLine name="dimension_line"
                   points={[[cbFrameStartX, spaceHeight, 0.001], [cbFrameStartX, slotTotalDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
                   color={dimensionColor} lineWidth={1.5} renderOrder={1000000} depthTest={false} depthWrite={false} transparent={true}
@@ -7132,18 +7132,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       : (() => {
                         const d = zoneSlotInfo.dropped;
                         if (!d) return Math.round(hasDC ? dcWidth : scWidth);
-                        const sum = d.slotWidths
-                          ? d.slotWidths.reduce((s: number, w: number) => s + w, 0)
-                          : d.columnWidth * d.columnCount;
-                        return Math.round(sum);
+                        // 3단: 이격 반영된 내경 (slotWidths 합산이 아닌 내경 원값)
+                        const val = d.width;
+                        const r = Math.round(val * 10) / 10;
+                        return r % 1 === 0 ? String(r) : r.toFixed(1);
                       })()),
                     subDimensionZ
                   )}
                   {hasCB && (() => {
-                    const cbInner = cbWidth - 3; // 양쪽 1.5mm 이격
-                    const cbInnerStartX = cbStartX + mmToThreeUnits(1.5);
-                    const cbInnerEndX = cbEndX - mmToThreeUnits(1.5);
-                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(Math.round(cbInner)), subDimensionZ);
+                    const cbInner = cbWidth - 1.5; // 벽쪽 1.5mm 이격만 (경계쪽 이격은 단내림 내경에 포함)
+                    const isCBLeft = spaceInfo.curtainBox?.position === 'left';
+                    // CB가 좌측이면 벽쪽(좌)만 이격, 우측이면 벽쪽(우)만 이격
+                    const cbInnerStartX = isCBLeft ? cbStartX + mmToThreeUnits(1.5) : cbStartX;
+                    const cbInnerEndX = isCBLeft ? cbEndX : cbEndX - mmToThreeUnits(1.5);
+                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(cbInner % 1 === 0 ? cbInner : cbInner.toFixed(1)), subDimensionZ);
                   })()}
 
                   {/* 구간 분리 가이드라인 */}
