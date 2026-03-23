@@ -72,8 +72,8 @@ function panelTypePriority(label: string, material?: string): number {
  */
 function leftRightPriority(label: string): number {
   const name = label.toLowerCase();
-  if (name.includes('좌측') || name.includes('left') || name.includes('좌측면')) return 0;
-  if (name.includes('우측') || name.includes('right') || name.includes('우측면')) return 1;
+  if (name.includes('좌측') || name.includes('left') || name.includes('좌측면') || name.includes('(좌)')) return 0;
+  if (name.includes('우측') || name.includes('right') || name.includes('우측면') || name.includes('(우)')) return 1;
   return 2;
 }
 
