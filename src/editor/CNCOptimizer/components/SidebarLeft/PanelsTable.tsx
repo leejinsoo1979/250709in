@@ -34,6 +34,14 @@ function panelTypePriority(label: string, material?: string): number {
   if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 90;
   if (name.includes('서라운드') || name.includes('surround')) return 91;
   if (name.includes('도어') || name.includes('door')) return 92;
+  // 서랍 세부 유형 (본체보다 먼저 체크 — '좌측판' 등이 본체 좌측과 겹침 방지)
+  // 날개벽 → 좌우측판 → 바닥판 → 앞뒤판 → 마이다
+  if (name.includes('서랍속장')) return 10;
+  if (name.includes('마이다')) return 14;
+  if (name.includes('서랍') && (name.includes('좌측판') || name.includes('우측판'))) return 11;
+  if (name.includes('서랍') && name.includes('바닥')) return 12;
+  if (name.includes('서랍') && (name.includes('앞판') || name.includes('뒷판'))) return 13;
+  if (name.includes('서랍')) return 15;
   // 본체 패널
   if (name.includes('좌측') || name.includes('left')) return 1;
   if (name.includes('우측') || name.includes('right')) return 2;
@@ -44,13 +52,6 @@ function panelTypePriority(label: string, material?: string): number {
   if (name.includes('백패널') || name.includes('뒷판')) return 7;
   if (name.includes('보강')) return 8;
   if (name.includes('프레임') || name.includes('프래임')) return 9;
-  // 서랍 세부 유형: 날개벽 → 좌우측판 → 바닥판 → 앞뒤판 → 마이다
-  if (name.includes('서랍속장')) return 10;
-  if (name.includes('서랍') && (name.includes('좌측판') || name.includes('우측판'))) return 11;
-  if (name.includes('서랍') && name.includes('바닥')) return 12;
-  if (name.includes('서랍') && (name.includes('앞판') || name.includes('뒷판'))) return 13;
-  if (name.includes('마이다')) return 14;
-  if (name.includes('서랍')) return 15;
   return 16;
 }
 
