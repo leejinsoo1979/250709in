@@ -30,10 +30,14 @@ function sectionPriority(label: string): number {
  */
 function panelTypePriority(label: string, material?: string): number {
   const name = label.toLowerCase();
-  // 프레임 → 서라운드 → 도어(맨 마지막) 순서로 하단 분리
+  // 하단 분리: 상부프레임 → 좌우서라운드 → 하부프레임 → 기타서라운드 → 도어(맨 마지막)
   if (name.includes('도어') || name.includes('door')) return 99;
-  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 90;
-  if (name.includes('서라운드') || name.includes('surround')) return 91;
+  if ((name.includes('상부프레임') || name.includes('상부 프레임') || name.includes('상부프래임')) && material === 'PET') return 90;
+  if (name.includes('좌측') && (name.includes('서라운드') || name.includes('프레임'))) return 91;
+  if (name.includes('우측') && (name.includes('서라운드') || name.includes('프레임'))) return 92;
+  if ((name.includes('하부프레임') || name.includes('하부 프레임') || name.includes('하부프래임')) && material === 'PET') return 93;
+  if (name.includes('서라운드') || name.includes('surround')) return 94;
+  if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 95;
   // 서랍속장(날개벽)은 서랍보다 위 (본체 뒤, 서랍 앞)
   if (name.includes('서랍속장')) return 10;
   // 서랍 세부 유형 (본체보다 먼저 체크 — '좌측판' 등이 본체 좌측과 겹침 방지)
