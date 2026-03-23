@@ -33,8 +33,13 @@ function panelTypePriority(label: string, material?: string): number {
   // 하단 분리: 상부프레임 → 좌우서라운드/커튼박스 → 하부프레임 → 기타서라운드 → 도어(맨 마지막)
   if (name.includes('도어') || name.includes('door')) return 99;
   if ((name.includes('상부프레임') || name.includes('상부 프레임') || name.includes('상부프래임')) && material === 'PET') return 90;
-  if (name.includes('좌측') && (name.includes('서라운드') || name.includes('프레임') || name.includes('커튼박스'))) return 91;
-  if (name.includes('우측') && (name.includes('서라운드') || name.includes('프레임') || name.includes('커튼박스'))) return 92;
+  // 좌서라운드 측면판 → 전면판 → 우서라운드 측면판 → 전면판
+  if (name.includes('좌측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('측면판')) return 91;
+  if (name.includes('좌측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('전면판')) return 91.1;
+  if (name.includes('좌측') && (name.includes('서라운드') || name.includes('프레임') || name.includes('커튼박스'))) return 91.2;
+  if (name.includes('우측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('측면판')) return 92;
+  if (name.includes('우측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('전면판')) return 92.1;
+  if (name.includes('우측') && (name.includes('서라운드') || name.includes('프레임') || name.includes('커튼박스'))) return 92.2;
   if ((name.includes('하부프레임') || name.includes('하부 프레임') || name.includes('하부프래임')) && material === 'PET') return 93;
   if (name.includes('서라운드') || name.includes('surround') || name.includes('커튼박스')) return 94;
   if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 95;
