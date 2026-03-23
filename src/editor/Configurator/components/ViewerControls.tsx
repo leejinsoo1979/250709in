@@ -323,12 +323,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <BiDoorOpen size={13} />
               {hasDoorsInstalled ? '도어제거' : '도어설치'}
             </button>
-            {hasDoorsInstalled && doorsOpen !== null && (
+            {hasDoorsInstalled && (
               <button
-                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen ? styles.segmentAccentActive : ''}`}
+                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen === true ? styles.segmentAccentActive : ''}`}
                 onClick={onDoorsToggle}
               >
-                {doorsOpen ? 'Close' : 'Open'}
+                {doorsOpen === true ? 'Close' : 'Open'}
               </button>
             )}
             {/* 도어 설치 안내 툴팁 */}
