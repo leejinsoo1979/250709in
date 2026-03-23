@@ -80,7 +80,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   // 옵티마이저 뷰어에서는 바닥판 하이라이트 시에만 조절발 표시
   if (space3DCtx?.hideAccessories) {
     const hp = space3DCtx.highlightedPanelName;
-    const isBottomPanel = hp && (hp === '바닥판' || hp === '바닥' || hp.includes('하부') && hp.includes('바닥'));
+    // 가구 본체 바닥판: "바닥판", "바닥", "(하)바닥", "(상)바닥" 등 (서랍 바닥 제외)
+    const isBottomPanel = hp && hp.includes('바닥') && !hp.includes('서랍');
     if (!isBottomPanel) return null;
   }
 
