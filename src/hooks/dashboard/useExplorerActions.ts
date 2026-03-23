@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
 import { saveFolderData, createDesignFile, createProject, getDesignFileById, getProject, softDeleteDesignFile, softDeleteProject, restoreDesignFile, restoreProject, permanentDeleteDesignFile, permanentDeleteProject, updateDesignFile } from '@/firebase/projects';
+import { revokeProjectAccess } from '@/firebase/shareLinks';
 import { DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
 import type { DragState, ExplorerItem, ClipboardState, SelectItemOptions, UseExplorerDataReturn, UseExplorerNavigationReturn, UseExplorerActionsReturn } from './types';
 
@@ -96,11 +97,28 @@ export function useExplorerActions(
 
   // --- 삭제 ---
 
-  // 휴지통으로 이동 (소프트 삭제)
+  // 휴지통으로 이동 (소프트 삭제) 또는 공유 해제
   const deleteItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
+    const isSharedMenu = nav.activeMenu === 'shared-with-me' || nav.activeMenu === 'shared-by-me';
+
     for (const item of items) {
       try {
-        if (item.type === 'project') {
+        // 공유받은/공유한 파일 메뉴에서 삭제 → 공유 해제
+        if (isSharedMenu && item.type === 'project' && user) {
+          if (nav.activeMenu === 'shared-with-me') {
+            // 공유받은 파일: 내 접근 권한 해제
+            const { success, message } = await revokeProjectAccess(item.id, user.uid);
+            if (!success) {
+              alert('공유 해제 실패: ' + message);
+            }
+          } else {
+            // 공유한 파일: 원본 프로젝트 소프트 삭제
+            const { error } = await softDeleteProject(item.id);
+            if (error) {
+              alert('프로젝트 삭제 실패: ' + error);
+            }
+          }
+        } else if (item.type === 'project') {
           const { error } = await softDeleteProject(item.id);
           if (error) {
             alert('프로젝트 삭제 실패: ' + error);
@@ -127,7 +145,7 @@ export function useExplorerActions(
       await data.refreshFolders(nav.currentProjectId);
     }
     clearSelection();
-  }, [data, nav.currentProjectId, clearSelection]);
+  }, [data, nav.currentProjectId, nav.activeMenu, user, clearSelection]);
 
   // 휴지통에서 복원
   const restoreItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
