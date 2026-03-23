@@ -761,6 +761,11 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  cursor: default;
+}
+
+.viewer * {
+  cursor: default !important;
 }
   
   /* 뷰어 상단 도어 토글 버튼 */

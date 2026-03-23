@@ -686,11 +686,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       }}
                       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
                         e.stopPropagation();
-                        document.body.style.cursor = 'pointer';
+                        // cursor 변경 제거
                       }}
                       onPointerOut={(e: ThreeEvent<PointerEvent>) => {
                         e.stopPropagation();
-                        document.body.style.cursor = 'auto';
+                        // cursor 변경 제거
                       }}
                     >
                       {Math.round(compartment.height * 100)}
@@ -845,11 +845,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   }}
                   onPointerOver={(e: ThreeEvent<PointerEvent>) => {
                     e.stopPropagation();
-                    document.body.style.cursor = 'pointer';
+                    // cursor 변경 제거
                   }}
                   onPointerOut={(e: ThreeEvent<PointerEvent>) => {
                     e.stopPropagation();
-                    document.body.style.cursor = 'auto';
+                    // cursor 변경 제거
                   }}
                 >
                   {compartmentHeightMm}

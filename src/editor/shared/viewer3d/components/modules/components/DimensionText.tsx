@@ -130,12 +130,12 @@ const DimensionText: React.FC<DimensionTextProps> = ({
       onPointerOver={(e) => {
         e.stopPropagation();
         setIsHovered(true);
-        document.body.style.cursor = 'pointer';
+        // cursor 변경 제거
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
         setIsHovered(false);
-        document.body.style.cursor = 'default';
+        // cursor 변경 제거
       }}
     >
       {displayText}
