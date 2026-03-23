@@ -4143,7 +4143,7 @@ const Configurator: React.FC = () => {
                 handleSpaceInfoUpdate({
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: false, bottom: false },
-                  doorTopGap: 3, // 양쪽서라운드: 상단갭 3mm
+                  doorTopGap: 5, // 양쪽서라운드: 상단갭 5mm (사용자 수정 가능)
                 });
                 // 양쪽서라운드: EP 옵셋을 0으로 리셋
                 placedModules.forEach(m => {
