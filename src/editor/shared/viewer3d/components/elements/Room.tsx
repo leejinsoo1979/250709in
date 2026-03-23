@@ -2128,6 +2128,42 @@ const Room: React.FC<RoomProps> = ({
             // solidThemeLines(X/Y축 뒷벽 실선)는 제거 — 이상한 윤곽선 원인
             const solidThemeLines: [number, number, number, number, number, number][] = [];
 
+            // === 단내림 천장 메쉬 z축 앞면(z=z2) 윤곽선 ===
+            if (hasDC && !isFreePlacement && spaceInfo.droppedCeiling) {
+              const dcW2 = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              const dcIsL = spaceInfo.droppedCeiling.position === 'left';
+              const dcDH = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
+              const droppedCY = cY - dcDH; // 단내림 천장 Y
+              const bx2 = dcIsL ? x1 + dcW2 : x2 - dcW2;
+
+              // 단내림 천장 앞면 가로선 (z=z2)
+              if (dcIsL) {
+                solidThemeLines.push([x1, droppedCY, z2, bx2, droppedCY, z2]);
+              } else {
+                solidThemeLines.push([bx2, droppedCY, z2, x2, droppedCY, z2]);
+              }
+              // 경계벽 앞면 수직선 (z=z2)
+              solidThemeLines.push([bx2, droppedCY, z2, bx2, cY, z2]);
+            }
+
+            // === 자유배치 stepCeiling z축 앞면 윤곽선 ===
+            if (isFreePlacement && spaceInfo.stepCeiling?.enabled) {
+              const scW2 = mmToThreeUnits(spaceInfo.stepCeiling.width || 900);
+              const scDH = mmToThreeUnits(spaceInfo.stepCeiling.dropHeight || 200);
+              const scIsL = spaceInfo.stepCeiling.position === 'left';
+              const scCeilingY = cY - scDH; // 단내림 천장 Y
+              // DC+SC 동시인 경우 오프셋 계산
+              const dcOffset = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
+              const scBx = scIsL ? x1 + dcOffset + scW2 : x2 - dcOffset - scW2;
+              const scStartX = scIsL ? x1 + dcOffset : scBx;
+              const scEndX = scIsL ? scBx : x2 - dcOffset;
+
+              // 단내림 천장 앞면 가로선 (z=z2)
+              solidThemeLines.push([scStartX, scCeilingY, z2, scEndX, scCeilingY, z2]);
+              // 경계벽 앞면 수직선 (z=z2)
+              solidThemeLines.push([scBx, scCeilingY, z2, scBx, cY, z2]);
+            }
+
             if (lines.length === 0 && solidThemeLines.length === 0) return null;
 
             const positions = new Float32Array(lines.length * 6);
