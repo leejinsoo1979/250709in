@@ -129,10 +129,18 @@ export default function PanelsTable(){
         const bBottom = b.tp >= 90 ? 1 : 0;
         if (aBottom !== bBottom) return aBottom - bBottom;
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
-        if (a.section !== b.section) return a.section - b.section; // 상부 → 하부
+        if (a.section !== b.section) return a.section - b.section; // 하부 → 상부
+        // 서랍 그룹(tp 10~15)은 서랍번호 우선: 서랍4 → 서랍3 → 서랍2 → 서랍1
+        const aDrawer = a.tp >= 10 && a.tp <= 15;
+        const bDrawer = b.tp >= 10 && b.tp <= 15;
+        if (aDrawer && bDrawer) {
+          if (a.drawerNum !== b.drawerNum) return b.drawerNum - a.drawerNum;
+          if (a.tp !== b.tp) return a.tp - b.tp;
+          if (a.lr !== b.lr) return a.lr - b.lr;
+          return a.label.localeCompare(b.label, 'ko');
+        }
         if (a.tp !== b.tp) return a.tp - b.tp;               // 패널유형 순서
         if (a.lr !== b.lr) return a.lr - b.lr;               // 좌측 → 우측
-        if (a.drawerNum !== b.drawerNum) return b.drawerNum - a.drawerNum; // 서랍3(위) → 서랍2 → 서랍1(아래)
         return a.label.localeCompare(b.label, 'ko');
       })
       .map(item => item.index);
