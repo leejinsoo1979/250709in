@@ -946,6 +946,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
       }
 
+      // 개별 상부프레임 보정: FurnitureItem이 가구 높이에서 topFrameDelta를 빼고
+      // 그룹 Y를 topFrameDelta/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
+      if (perFurnitureTopFrame !== undefined) {
+        const globalTopFrame = originalSpaceInfo.frameSize?.top || 30;
+        const topFrameDelta = perFurnitureTopFrame - globalTopFrame;
+        if (topFrameDelta !== 0) {
+          doorYPosition += mmToThreeUnits(topFrameDelta / 2);
+        }
+      }
+
       // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
       // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
       if (floorFinishForDoorY > 0) {
