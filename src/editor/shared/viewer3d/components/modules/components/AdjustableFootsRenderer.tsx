@@ -77,8 +77,12 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const effectiveView2DDirection =
     view2DDirection ?? (effectiveViewMode === '2D' ? storeView2DDirection : undefined);
 
-  // 옵티마이저 뷰어에서는 조절발 숨김
-  if (space3DCtx?.hideAccessories) return null;
+  // 옵티마이저 뷰어에서는 바닥판 하이라이트 시에만 조절발 표시
+  if (space3DCtx?.hideAccessories) {
+    const hp = space3DCtx.highlightedPanelName;
+    const isBottomPanel = hp && (hp === '바닥판' || hp === '바닥' || hp.includes('하부') && hp.includes('바닥'));
+    if (!isBottomPanel) return null;
+  }
 
   // 띄움배치일 때는 발통 렌더링 안 함
   if (effectiveIsFloating) {

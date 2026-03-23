@@ -473,6 +473,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
         <Space3DViewProvider
           hideAccessories={true}
           plainMaterial={true}
+          highlightedPanelName={highlightedPanelName}
           spaceInfo={spaceInfo}
           svgSize={{ width: 800, height: 600 }}
           renderMode="solid"
