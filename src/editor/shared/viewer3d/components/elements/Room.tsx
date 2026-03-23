@@ -2180,6 +2180,8 @@ const Room: React.FC<RoomProps> = ({
               // 단내림 천장 메쉬 z축 모서리 (z1→z2)
               solidThemeLines.push([dcStartX, droppedCY, z1, dcStartX, droppedCY, z2]); // 외벽쪽
               solidThemeLines.push([dcEndX, droppedCY, z1, dcEndX, droppedCY, z2]);     // 경계벽쪽
+              // 경계벽 위치에서 메인 천장 높이 z축 라인 (단내림↔일반 구간 경계)
+              solidThemeLines.push([bx2, cY, z1, bx2, cY, z2]);
             }
 
             // === 자유배치 stepCeiling z축 윤곽선 ===
@@ -2191,10 +2193,13 @@ const Room: React.FC<RoomProps> = ({
               const dcOffset = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
               const scStartX = scIsL ? x1 + dcOffset : x2 - dcOffset - scW2;
               const scEndX = scIsL ? x1 + dcOffset + scW2 : x2 - dcOffset;
+              const scBx = scIsL ? scEndX : scStartX; // 경계벽 X
 
               // 단내림 천장 메쉬 z축 모서리 (z1→z2)
               solidThemeLines.push([scStartX, scCeilingY, z1, scStartX, scCeilingY, z2]); // 외벽쪽
               solidThemeLines.push([scEndX, scCeilingY, z1, scEndX, scCeilingY, z2]);     // 경계벽쪽
+              // 경계벽 위치에서 메인 천장 높이 z축 라인 (단내림↔일반 구간 경계)
+              solidThemeLines.push([scBx, cY, z1, scBx, cY, z2]);
             }
 
             // === 커튼박스 천장 메쉬 z축 안쪽 모서리 윤곽선 ===
