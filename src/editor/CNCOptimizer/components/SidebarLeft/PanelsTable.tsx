@@ -42,14 +42,14 @@ function panelTypePriority(label: string, material?: string): number {
   if (name.includes('서랍') && name.includes('바닥')) return 12;
   if (name.includes('서랍') && (name.includes('앞판') || name.includes('뒷판'))) return 13;
   if (name.includes('서랍')) return 15;
-  // 본체 패널
-  if (name.includes('좌측') || name.includes('left')) return 1;
-  if (name.includes('우측') || name.includes('right')) return 2;
-  if (name.includes('측판')) return 3;
-  if (name.includes('상판')) return 4;
-  if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 5;
-  if (name.includes('바닥')) return 6;
-  if (name.includes('백패널') || name.includes('뒷판')) return 7;
+  // 본체 패널: 바닥판 → 좌우측판 → 백패널 → 상판 → 선반/칸막이 → 보강 → 프레임
+  if (name.includes('바닥')) return 1;
+  if (name.includes('좌측') || name.includes('left')) return 2;
+  if (name.includes('우측') || name.includes('right')) return 3;
+  if (name.includes('측판')) return 4;
+  if (name.includes('백패널') || name.includes('뒷판')) return 5;
+  if (name.includes('상판')) return 6;
+  if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 7;
   if (name.includes('보강')) return 8;
   if (name.includes('프레임') || name.includes('프래임')) return 9;
   return 16;
