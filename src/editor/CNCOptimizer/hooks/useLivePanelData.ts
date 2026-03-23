@@ -31,6 +31,9 @@ function toMeshName(cncName: string): string {
   if (cncName.includes('좌측 서라운드 프레임') || cncName === '좌측 서라운드') return 'left-surround-ep';
   if (cncName.includes('우측 서라운드 프레임') || cncName === '우측 서라운드') return 'right-surround-ep';
   if (cncName.includes('상부 서라운드 프레임')) return 'top-frame';
+  // 커튼박스 L자 프레임
+  if (cncName.includes('커튼박스 전면판')) return 'slot-cb-front-panel';
+  if (cncName.includes('커튼박스 측면판')) return 'slot-cb-border-panel';
   return cncName;
 }
 
@@ -55,6 +58,9 @@ function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' 
 
   // 서랍속장 (날개벽) - 세로 방향 (Y축 높이 = 재단방향)
   if (panelName.includes('서랍속장')) return 'VERTICAL';
+
+  // 커튼박스 L자 프레임 - 세로 방향
+  if (panelName.includes('커튼박스')) return 'VERTICAL';
 
   // 가구 구조 패널 - 세로 방향
   if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) return 'VERTICAL';
@@ -572,6 +578,37 @@ export function useLivePanelData() {
             thickness: surroundThickness, material: 'PET',
           });
         }
+      }
+
+      // 슬롯배치 커튼박스 L자 프레임 패널 추가
+      if (!isFreePlacement && spaceInfo.curtainBox?.enabled) {
+        const cbPos = spaceInfo.curtainBox.position || 'right';
+        const cbWidthMM = spaceInfo.curtainBox.width || 150;
+        const cbDropH = spaceInfo.curtainBox.dropHeight || 60;
+        const cbPanelThickness = 18;
+        const cbSideDepth = 40;
+        // 전면 가림판: CB폭 - 3mm (양쪽 1.5mm gap)
+        const cbFrontWidth = cbWidthMM - 3;
+        // 높이: 가구높이 + cbDropH
+        const cbPanelHeight = furnitureHeight + cbDropH;
+        const posLabel = cbPos === 'left' ? '좌측' : '우측';
+
+        // 전면 가림판
+        surroundPanelList.push({
+          name: `${posLabel} 커튼박스 전면판`,
+          width: cbFrontWidth,
+          height: cbPanelHeight,
+          thickness: cbPanelThickness,
+          material: 'PET',
+        });
+        // 경계면 칸막이 (측면판)
+        surroundPanelList.push({
+          name: `${posLabel} 커튼박스 측면판`,
+          width: cbSideDepth,
+          height: cbPanelHeight,
+          thickness: cbPanelThickness,
+          material: 'PET',
+        });
       }
 
       if (surroundPanelList.length > 0) {
@@ -1169,6 +1206,29 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           material: 'PET',
         });
       }
+    }
+
+    // 슬롯배치 커튼박스 L자 프레임 패널 추가
+    if (!isFreePlacement2 && spaceInfo.curtainBox?.enabled) {
+      const cbPos2 = spaceInfo.curtainBox.position || 'right';
+      const cbWidthMM2 = spaceInfo.curtainBox.width || 150;
+      const cbDropH2 = spaceInfo.curtainBox.dropHeight || 60;
+      const cbPanelThickness2 = 18;
+      const cbSideDepth2 = 40;
+      const cbFrontWidth2 = cbWidthMM2 - 3;
+      const cbPanelHeight2 = furnitureHeight2 + cbDropH2;
+      const posLabel2 = cbPos2 === 'left' ? '좌측' : '우측';
+
+      surroundPanelList2.push({
+        name: `${posLabel2} 커튼박스 전면판`,
+        width: cbFrontWidth2, height: cbPanelHeight2,
+        thickness: cbPanelThickness2, material: 'PET',
+      });
+      surroundPanelList2.push({
+        name: `${posLabel2} 커튼박스 측면판`,
+        width: cbSideDepth2, height: cbPanelHeight2,
+        thickness: cbPanelThickness2, material: 'PET',
+      });
     }
 
     if (surroundPanelList2.length > 0) {
