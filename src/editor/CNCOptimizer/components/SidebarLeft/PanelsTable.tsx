@@ -16,12 +16,12 @@ function extractFurnitureNumber(label: string): number {
 }
 
 /**
- * 섹션 우선순위: 상부(상) → 하부(하) → 기타
+ * 섹션 우선순위: 하부(하) → 상부(상) → 기타
  */
 function sectionPriority(label: string): number {
-  if (label.includes('(상)')) return 0;
-  if (label.includes('(하)')) return 1;
-  return 0; // 분리되지 않은 패널은 상부와 같은 순서
+  if (label.includes('(하)')) return 0;
+  if (label.includes('(상)')) return 1;
+  return 0; // 분리되지 않은 패널은 하부와 같은 순서
 }
 
 /**
