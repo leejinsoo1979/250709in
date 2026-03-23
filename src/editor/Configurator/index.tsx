@@ -6140,6 +6140,24 @@ const Configurator: React.FC = () => {
             />
           )}
 
+          {/* 도어 Close/Open 토글 — 뷰어 상단 중앙 */}
+          {hasDoorsInstalled && !isMobile && (
+            <div className={styles.doorToggleOverlay}>
+              <button
+                className={`${styles.viewerDoorButton} ${doorsOpen !== true ? styles.active : ''}`}
+                onClick={() => setDoorsOpen(false)}
+              >
+                Close
+              </button>
+              <button
+                className={`${styles.viewerDoorButton} ${doorsOpen === true ? styles.active : ''}`}
+                onClick={() => setDoorsOpen(true)}
+              >
+                Open
+              </button>
+            </div>
+          )}
+
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             <Space3DView

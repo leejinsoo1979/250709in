@@ -336,22 +336,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        {hasDoorsInstalled && (
-          <div className={styles.segmentedControl}>
-            <button
-              className={`${styles.segmentButton} ${doorsOpen !== true ? styles.segmentAccentActive : ''}`}
-              onClick={() => setDoorsOpen(false)}
-            >
-              Close
-            </button>
-            <button
-              className={`${styles.segmentButton} ${doorsOpen === true ? styles.segmentAccentActive : ''}`}
-              onClick={() => setDoorsOpen(true)}
-            >
-              Open
-            </button>
-          </div>
-        )}
+        {/* Close/Open → 뷰어 캔버스 상단 중앙에 별도 배치 (Configurator/index.tsx) */}
 
         {isFreePlacement && hasFurniture && !isFurniturePlacementMode && onSurroundGenerate && (
           <div className={styles.segmentedControl}>
