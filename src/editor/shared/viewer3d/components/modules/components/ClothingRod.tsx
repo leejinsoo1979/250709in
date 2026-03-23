@@ -48,16 +48,15 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   if (ctx.hideAccessories) {
     if (!furnitureId) return null;
     // 해당 가구의 선반이 제외되어 있으면 옷봉도 숨김
-    let shelfExcluded = false;
-    for (const key of excludedKeys) {
-      if (!key.startsWith(furnitureId + '::')) continue;
-      const meshName = key.slice(furnitureId.length + 2);
-      if (meshName.includes('선반') || meshName.includes('고정')) {
-        shelfExcluded = true;
-        break;
+    if (excludedKeys && excludedKeys.size > 0) {
+      for (const key of excludedKeys) {
+        if (!key.startsWith(furnitureId + '::')) continue;
+        const meshName = key.slice(furnitureId.length + 2);
+        if (meshName.includes('선반') || meshName.includes('고정')) {
+          return null;
+        }
       }
     }
-    if (shelfExcluded) return null;
   }
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
