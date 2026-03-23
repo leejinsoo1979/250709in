@@ -73,7 +73,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   frameMergeEnabled = false,
   onFrameMergeToggle
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
@@ -325,10 +325,18 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </button>
             {hasDoorsInstalled && (
               <button
-                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen === true ? styles.segmentAccentActive : ''}`}
-                onClick={onDoorsToggle}
+                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen !== true ? styles.segmentAccentActive : ''}`}
+                onClick={() => setDoorsOpen(false)}
               >
-                {doorsOpen === true ? 'Close' : 'Open'}
+                Close
+              </button>
+            )}
+            {hasDoorsInstalled && (
+              <button
+                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen === true ? styles.segmentAccentActive : ''}`}
+                onClick={() => setDoorsOpen(true)}
+              >
+                Open
               </button>
             )}
             {/* 도어 설치 안내 툴팁 */}
