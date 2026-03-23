@@ -171,7 +171,7 @@ export default function PanelsTable(){
         return next;
       });
       assemblyStepRef.current = step + 1;
-    }, 500);
+    }, 300);
 
     return () => {
       if (assemblyTimerRef.current) {
