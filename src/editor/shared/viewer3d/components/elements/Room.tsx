@@ -2134,14 +2134,16 @@ const Room: React.FC<RoomProps> = ({
               const dcIsL = spaceInfo.droppedCeiling.position === 'left';
               const dcDH = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
               const droppedCY = cY - dcDH; // 단내림 천장 Y
-              const bx2 = dcIsL ? x1 + dcW2 : x2 - dcW2;
+              // DC+CB 동시: 커튼박스 너비만큼 단내림 메쉬가 안쪽으로 이동
+              const hasCBWithDC2 = spaceInfo.curtainBox?.enabled;
+              const cbW2 = hasCBWithDC2 ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+              // 단내림 메쉬의 실제 X 범위 (천장 메쉬와 동일하게)
+              const dcStartX = dcIsL ? x1 + cbW2 : x2 - cbW2 - dcW2;
+              const dcEndX = dcIsL ? x1 + cbW2 + dcW2 : x2 - cbW2;
+              const bx2 = dcIsL ? dcEndX : dcStartX; // 경계벽 X
 
               // 단내림 천장 앞면 가로선 (z=z2)
-              if (dcIsL) {
-                solidThemeLines.push([x1, droppedCY, z2, bx2, droppedCY, z2]);
-              } else {
-                solidThemeLines.push([bx2, droppedCY, z2, x2, droppedCY, z2]);
-              }
+              solidThemeLines.push([dcStartX, droppedCY, z2, dcEndX, droppedCY, z2]);
               // 경계벽 앞면 수직선 (z=z2)
               solidThemeLines.push([bx2, droppedCY, z2, bx2, cY, z2]);
             }
