@@ -34,10 +34,11 @@ function panelTypePriority(label: string, material?: string): number {
   if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 90;
   if (name.includes('서라운드') || name.includes('surround')) return 91;
   if (name.includes('도어') || name.includes('door')) return 92;
-  // 서랍 세부 유형 (본체보다 먼저 체크 — '좌측판' 등이 본체 좌측과 겹침 방지)
-  // 날개벽 → 좌우측판 → 바닥판 → 뒷판 → 앞판 (서랍번호 우선 그룹: 10~14)
-  // 마이다는 모든 서랍 다음에 별도 (16)
+  // 서랍속장(날개벽)은 서랍보다 위 (본체 뒤, 서랍 앞)
   if (name.includes('서랍속장')) return 10;
+  // 서랍 세부 유형 (본체보다 먼저 체크 — '좌측판' 등이 본체 좌측과 겹침 방지)
+  // 좌우측판 → 바닥판 → 뒷판 → 앞판 (서랍번호 우선 그룹: 11~15)
+  // 마이다는 모든 서랍 다음에 별도 (16)
   if (name.includes('마이다')) return 16;
   if (name.includes('서랍') && (name.includes('좌측판') || name.includes('우측판'))) return 11;
   if (name.includes('서랍') && name.includes('바닥')) return 12;
@@ -132,9 +133,9 @@ export default function PanelsTable(){
         if (aBottom !== bBottom) return aBottom - bBottom;
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
         if (a.section !== b.section) return a.section - b.section; // 하부 → 상부
-        // 서랍 그룹(tp 10~15)은 서랍번호 우선: 서랍4 → 서랍3 → 서랍2 → 서랍1, 마이다(16)는 서랍 다음
-        const aDrawer = a.tp >= 10 && a.tp <= 15;
-        const bDrawer = b.tp >= 10 && b.tp <= 15;
+        // 서랍 그룹(tp 11~15)은 서랍번호 우선: 서랍4 → 서랍3 → 서랍2 → 서랍1, 날개벽(10)·마이다(16)는 별도
+        const aDrawer = a.tp >= 11 && a.tp <= 15;
+        const bDrawer = b.tp >= 11 && b.tp <= 15;
         if (aDrawer && bDrawer) {
           if (a.drawerNum !== b.drawerNum) return b.drawerNum - a.drawerNum;
           if (a.tp !== b.tp) return a.tp - b.tp;
