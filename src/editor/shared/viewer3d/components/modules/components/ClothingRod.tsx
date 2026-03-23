@@ -42,14 +42,14 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const ctx = useSpace3DView();
   const viewMode = ctx.viewMode;
 
-  // 옵티마이저 뷰어에서는 선반 하이라이트 시에만 옷봉 표시
+  // 옵티마이저 뷰어에서는 해당 가구의 선반 하이라이트 시에만 옷봉 표시
   if (ctx.hideAccessories) {
-    if (!furnitureId || !highlightedPanel) return null;
+    if (!highlightedPanel) return null;
     // highlightedPanel: "furnitureId-meshName" 형식
-    // 해당 가구의 선반이 하이라이트되었을 때만 표시
-    const isMyShelf = highlightedPanel.startsWith(`${furnitureId}-`) &&
-      (highlightedPanel.includes('선반') || highlightedPanel.includes('고정'));
-    if (!isMyShelf) return null;
+    const hasShelfKeyword = highlightedPanel.includes('선반') || highlightedPanel.includes('고정');
+    if (!hasShelfKeyword) return null;
+    // furnitureId가 있으면 해당 가구만, 없으면 모든 가구 표시
+    if (furnitureId && !highlightedPanel.startsWith(`${furnitureId}-`)) return null;
   }
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
