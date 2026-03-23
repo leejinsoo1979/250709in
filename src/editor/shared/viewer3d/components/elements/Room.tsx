@@ -2175,6 +2175,24 @@ const Room: React.FC<RoomProps> = ({
               solidThemeLines.push([scEndX, scCeilingY, z1, scEndX, scCeilingY, z2]);     // 경계벽쪽
             }
 
+            // === 커튼박스 천장 메쉬 z축 안쪽 모서리 윤곽선 ===
+            if (!isFreePlacement && spaceInfo.curtainBox?.enabled) {
+              const _cbW3 = mmToThreeUnits(spaceInfo.curtainBox.width || 150);
+              const _cbDH3 = mmToThreeUnits(spaceInfo.curtainBox.dropHeight || 20);
+              const _cbIsL3 = spaceInfo.curtainBox.position === 'left';
+              const _cbCY3 = cY + _cbDH3; // 커튼박스 천장 Y (위로 확장)
+              const _cbBx3 = _cbIsL3 ? x1 + _cbW3 : x2 - _cbW3; // 안쪽 경계 X
+
+              // 커튼박스 천장 안쪽 z축 모서리 (경계벽쪽, z1→z2)
+              solidThemeLines.push([_cbBx3, _cbCY3, z1, _cbBx3, _cbCY3, z2]);
+              // 커튼박스 천장 앞면 가로선 (z=z2)
+              const _cbStartX3 = _cbIsL3 ? x1 : _cbBx3;
+              const _cbEndX3 = _cbIsL3 ? _cbBx3 : x2;
+              solidThemeLines.push([_cbStartX3, _cbCY3, z2, _cbEndX3, _cbCY3, z2]);
+              // 경계벽 앞면 수직선 (z=z2, 메인천장~커튼박스천장)
+              solidThemeLines.push([_cbBx3, cY, z2, _cbBx3, _cbCY3, z2]);
+            }
+
             if (lines.length === 0 && solidThemeLines.length === 0) return null;
 
             const positions = new Float32Array(lines.length * 6);
