@@ -2069,7 +2069,10 @@ const Room: React.FC<RoomProps> = ({
             if (hasDC && spaceInfo.droppedCeiling) {
               const dcW = mmToThreeUnits(spaceInfo.droppedCeiling.width || (isFreePlacement ? 150 : 900));
               const dcIsL = spaceInfo.droppedCeiling.position === 'left';
-              const bx = dcIsL ? x1 + dcW : x2 - dcW;
+              // DC+CB 동시: 커튼박스 너비만큼 경계벽 X가 안쪽으로 이동
+              const _cbEnabled = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+              const _cbW = _cbEnabled ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+              const bx = dcIsL ? x1 + _cbW + dcW : x2 - _cbW - dcW;
               const droppedCY = isFreePlacement ? cY + dcDropH : cY - dcDropH;
               const stepSameSideAsDC = hasSC && ((dcIsL && scIsLeft) || (!dcIsL && scIsRight));
               const bwTop = isFreePlacement ? droppedCY : cY;
