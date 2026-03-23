@@ -83,22 +83,21 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const excludedKeys = useExcludedPanelsStore(state => state.excludedKeys);
   if (space3DCtx?.hideAccessories) {
     if (!placedFurnitureId) return null;
-    // 해당 가구의 바닥판 관련 키가 모두 제외되어 있으면 조절발 숨김
+    // 해당 가구의 바닥판 관련 키가 제외되어 있으면 조절발 숨김
     // meshName 예: "바닥판", "(하)바닥", "(상)바닥" 등
     const fid = placedFurnitureId;
-    let hasBottomPanel = false;
+    let bottomExcluded = false;
     for (const key of excludedKeys) {
       if (!key.startsWith(fid + '::')) continue;
       const meshName = key.slice(fid.length + 2);
       if (meshName.includes('바닥') && !meshName.includes('서랍')) {
-        // 바닥판이 하나라도 제외되어 있으면 조절발 숨김
-        hasBottomPanel = true;
+        bottomExcluded = true;
         break;
       }
     }
-    // excludedKeys에 바닥판이 없으면 → 바닥판이 체크된 상태 → 조절발 표시
-    // 하지만 바닥판이 제외되었으면 숨김
-    if (hasBottomPanel) return null;
+    console.log('[AdjFoots] fId:', fid, 'excludedKeys:', [...excludedKeys], 'bottomExcluded:', bottomExcluded);
+    if (bottomExcluded) return null;
+    // 바닥판이 체크(포함)되어 있으면 → 조절발 표시 (아래로 계속 진행)
   }
 
   // 띄움배치일 때는 발통 렌더링 안 함

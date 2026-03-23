@@ -4,6 +4,7 @@ import BoxWithEdges from './BoxWithEdges';
 import { Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 interface ClothingRodProps {
   innerWidth: number;
@@ -42,8 +43,22 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const ctx = useSpace3DView();
   const viewMode = ctx.viewMode;
 
-  // 옵티마이저 뷰어에서는 옷봉 숨김
-  if (ctx.hideAccessories) return null;
+  // 옵티마이저 뷰어에서는 선반 체크 상태에 따라 옷봉 표시/숨김
+  const excludedKeys = useExcludedPanelsStore(state => state.excludedKeys);
+  if (ctx.hideAccessories) {
+    if (!furnitureId) return null;
+    // 해당 가구의 선반이 제외되어 있으면 옷봉도 숨김
+    let shelfExcluded = false;
+    for (const key of excludedKeys) {
+      if (!key.startsWith(furnitureId + '::')) continue;
+      const meshName = key.slice(furnitureId.length + 2);
+      if (meshName.includes('선반') || meshName.includes('고정')) {
+        shelfExcluded = true;
+        break;
+      }
+    }
+    if (shelfExcluded) return null;
+  }
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
   const shouldDim = highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);
@@ -147,7 +162,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const shouldAddFillLight = viewMode === '3D' && (addFrontFillLight ?? yPosition < 0);
 
   return (
-    <group position={[0, yPosition, zPosition]}>
+    <group position={[0, yPosition, zPosition]} userData={{ skipDimmer: true }}>
       {shouldAddFillLight && (
         <>
           <spotLight
