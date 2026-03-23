@@ -3089,14 +3089,7 @@ const Configurator: React.FC = () => {
       // finalUpdates_baseConfig: finalUpdates.baseConfig,
       // depth: finalUpdates.baseConfig?.depth
     // });
-    // 전체서라운드 상태에서 상부프레임 두께 변경 시 doorTopGap 자동 연동
-    if (finalUpdates.frameSize?.top !== undefined && finalUpdates.doorTopGap === undefined) {
-      const currentFrameConfig = finalUpdates.frameConfig ?? inferFrameConfig(spaceInfo);
-      if (currentFrameConfig.top && currentFrameConfig.bottom) {
-        // 전체서라운드: doorTopGap = 상부프레임 + 3mm
-        finalUpdates.doorTopGap = finalUpdates.frameSize.top + 3;
-      }
-    }
+    // 도어 상하단갭은 상부프레임 높이 변경과 무관 — 우측바의 상하갭 컨트롤로만 조정
 
     setSpaceInfo(finalUpdates);
 
