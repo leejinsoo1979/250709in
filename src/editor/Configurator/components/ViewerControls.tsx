@@ -323,22 +323,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <BiDoorOpen size={13} />
               {hasDoorsInstalled ? '도어제거' : '도어설치'}
             </button>
-            {hasDoorsInstalled && (
-              <button
-                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen !== true ? styles.segmentAccentActive : ''}`}
-                onClick={() => setDoorsOpen(false)}
-              >
-                Close
-              </button>
-            )}
-            {hasDoorsInstalled && (
-              <button
-                className={`${styles.segmentButton} ${styles.segmentIconText} ${doorsOpen === true ? styles.segmentAccentActive : ''}`}
-                onClick={() => setDoorsOpen(true)}
-              >
-                Open
-              </button>
-            )}
             {/* 도어 설치 안내 툴팁 */}
             {showDoorGuide && !hasDoorsInstalled && (
               <div
@@ -349,6 +333,23 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 <PiHandTapThin className={styles.doorGuideFingerIcon} size={20} />
               </div>
             )}
+          </div>
+        )}
+
+        {hasDoorsInstalled && (
+          <div className={styles.doorToggleGroup}>
+            <button
+              className={`${styles.doorToggleButton} ${doorsOpen !== true ? styles.active : ''}`}
+              onClick={() => setDoorsOpen(false)}
+            >
+              Close
+            </button>
+            <button
+              className={`${styles.doorToggleButton} ${doorsOpen === true ? styles.active : ''}`}
+              onClick={() => setDoorsOpen(true)}
+            >
+              Open
+            </button>
           </div>
         )}
 
