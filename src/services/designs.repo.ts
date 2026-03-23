@@ -183,8 +183,10 @@ export async function listDesignFiles(
       });
     });
 
-    console.log('🎨 Found designs in legacy:', designs.length);
-    return { designs, error: null };
+    // 휴지통(소프트 삭제)된 파일 제외
+    const activeDesigns = designs.filter(d => !d.isDeleted);
+    console.log('🎨 Found designs in legacy:', designs.length, '(active:', activeDesigns.length, ')');
+    return { designs: activeDesigns, error: null };
     
   } catch (error) {
     console.error('Error listing design files:', error);
