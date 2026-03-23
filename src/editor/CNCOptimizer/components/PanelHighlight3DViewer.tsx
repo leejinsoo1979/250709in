@@ -242,8 +242,19 @@ const PanelDimmer: React.FC<{
       console.warn(`[PanelDimmer] 매칭 실패! 찾는: "${highlightedPanelName}" | 가구 내 메시:`, unmatchedMeshes.slice(0, 20));
     }
 
+    // skipDimmer 판별 — 자신 또는 부모에 skipDimmer userData가 있으면 건너뜀
+    const hasSkipDimmer = (obj: THREE.Object3D): boolean => {
+      let cur: THREE.Object3D | null = obj;
+      while (cur) {
+        if (cur.userData?.skipDimmer) return true;
+        cur = cur.parent;
+      }
+      return false;
+    };
+
     // ── 하이라이트 적용 ──
     scene.traverse((obj) => {
+      if (hasSkipDimmer(obj)) return;
       let orig = originals.current.get(obj.uuid);
       // originals에 아직 없으면 즉시 저장 (비동기 씬 로딩 대응)
       if (!orig) {
@@ -473,7 +484,6 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
         <Space3DViewProvider
           hideAccessories={true}
           plainMaterial={true}
-          highlightedPanelName={highlightedPanelName}
           spaceInfo={spaceInfo}
           svgSize={{ width: 800, height: 600 }}
           renderMode="solid"

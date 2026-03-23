@@ -23,9 +23,6 @@ export interface Space3DViewContextType {
   // 악세서리(옷봉, 환기캡 등) 숨김 여부 (옵티마이저 뷰어용)
   hideAccessories?: boolean;
 
-  // 옵티마이저 뷰어에서 현재 하이라이트된 패널명 (조절발 연동용)
-  highlightedPanelName?: string | null;
-
   // 재질/텍스처 미적용 (옵티마이저 뷰어용 — 기본 색상만 표시)
   plainMaterial?: boolean;
 }
