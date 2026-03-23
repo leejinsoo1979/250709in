@@ -2131,6 +2131,40 @@ const Room: React.FC<RoomProps> = ({
             // solidThemeLines(X/Y축 뒷벽 실선)는 제거 — 이상한 윤곽선 원인
             const solidThemeLines: [number, number, number, number, number, number][] = [];
 
+            // === 천장/바닥-벽 교차 z축 앞면(z=z2) 윤곽선 ===
+            // 좌벽-천장, 좌벽-바닥 앞면 수직/가로선
+            if (hasLW) {
+              let leftCY2 = cY;
+              if (isFreePlacement) {
+                if (dcIsLeft) leftCY2 = cY + dcDropH;
+                else if (scIsLeft) leftCY2 = cY - scDropHLine;
+              } else {
+                const _cbSL = hasCBStandalone && cbIsLeft;
+                if (dcIsLeft && _cbSL) leftCY2 = cY + cbDropHLine;
+                else if (dcIsLeft) leftCY2 = cY - dcDropH;
+                else if (_cbSL && !hasDC) leftCY2 = cY + cbDropHLine;
+              }
+              solidThemeLines.push([x1, fY, z2, x1, leftCY2, z2]); // 좌벽 앞면 수직선
+            }
+            // 우벽-천장, 우벽-바닥 앞면 수직선
+            if (hasRW) {
+              let rightCY2 = cY;
+              if (isFreePlacement) {
+                if (dcIsRight) rightCY2 = cY + dcDropH;
+                else if (scIsRight) rightCY2 = cY - scDropHLine;
+              } else {
+                const _cbSR = hasCBStandalone && cbIsRight;
+                if (dcIsRight && _cbSR) rightCY2 = cY + cbDropHLine;
+                else if (dcIsRight) rightCY2 = cY - dcDropH;
+                else if (_cbSR && !hasDC) rightCY2 = cY + cbDropHLine;
+              }
+              solidThemeLines.push([x2, fY, z2, x2, rightCY2, z2]); // 우벽 앞면 수직선
+            }
+            // 메인 천장 앞면 가로선 (z=z2, 벽이 없는 쪽까지 포함)
+            solidThemeLines.push([x1, cY, z2, x2, cY, z2]);
+            // 바닥 앞면 가로선 (z=z2)
+            solidThemeLines.push([x1, fY, z2, x2, fY, z2]);
+
             // === 단내림 천장 메쉬 z축 앞면(z=z2) 윤곽선 ===
             if (hasDC && !isFreePlacement && spaceInfo.droppedCeiling) {
               const dcW2 = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
