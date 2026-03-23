@@ -3412,8 +3412,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 metalness={0.0}
                 roughness={0.7}
                 reflectivity={0.2}
-                transparent={isDraggingThis || isEditMode}
-                opacity={isDraggingThis || isEditMode ? 0.35 : 1.0}
+                transparent={isDraggingThis}
+                opacity={isDraggingThis ? 0.35 : 1.0}
               />
             </Box>
             <Edges
@@ -3430,41 +3430,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               linewidth={columnCResize.isResizing ? 3 : 1}
             />
 
-            {/* 편집 모드일 때 안내 텍스트 */}
-            {isEditMode && (
-              <primitive
-                object={(() => {
-                  const canvas = document.createElement('canvas');
-                  const context = canvas.getContext('2d')!;
-                  canvas.width = 256;
-                  canvas.height = 128;
-                  context.fillStyle = 'rgba(255, 140, 0, 0.9)';
-                  context.fillRect(0, 0, 256, 128);
-                  context.fillStyle = '#ffffff';
-                  context.font = '16px Arial';
-                  context.textAlign = 'center';
-                  context.fillText('편집 모드', 128, 25);
-                  context.font = '12px Arial';
-                  context.fillText('더블클릭으로 진입', 128, 40);
-                  context.fillText('드래그: 이동', 128, 55);
-                  context.fillText('←→: 이동', 128, 70);
-                  context.fillText('Del: 삭제', 128, 85);
-                  context.fillText('Esc: 해제', 128, 100);
-
-                  const texture = new THREE.CanvasTexture(canvas);
-                  const material = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    transparent: true,
-                    depthTest: false
-                  });
-                  const geometry = new THREE.PlaneGeometry(3, 1.5);
-                  const mesh = new THREE.Mesh(geometry, material);
-                  mesh.position.set(0, height + 2, 0);
-                  mesh.renderOrder = 1002;
-                  return mesh;
-                })()}
-              />
-            )}
           </>
         )}
 
