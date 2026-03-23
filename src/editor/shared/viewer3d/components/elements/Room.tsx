@@ -4031,6 +4031,7 @@ const Room: React.FC<RoomProps> = ({
             const cbFrameMat = cbPos === 'left'
               ? (leftFrameMaterial ?? createFrameMaterial('left'))
               : (rightFrameMaterial ?? createFrameMaterial('right'));
+            const cbModuleId = cbPos === 'left' ? leftMostModuleId : rightMostModuleId;
 
             const spaceHalfW = (spaceInfo.width || 2400) / 2;
 
@@ -4058,13 +4059,15 @@ const Room: React.FC<RoomProps> = ({
                   name="slot-cb-front-panel"
                   args={[frontWidth, cbPanelH, mmToThreeUnits(panelThickMM)]}
                   position={[frontCenterX, cbCenterY, frontZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  excludeKey={`${cbModuleId}::slot-cb-front-panel`} />
                 {/* 경계면 칸막이 */}
                 <BoxWithEdges hideEdges={hideEdges} isOuterFrame
                   name="slot-cb-border-panel"
                   args={[mmToThreeUnits(panelThickMM), cbPanelH, mmToThreeUnits(SIDE_BASE_DEPTH_MM)]}
                   position={[borderX, cbCenterY, sideZ]}
-                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled} />
+                  material={cbFrameMat} renderMode={renderMode} shadowEnabled={shadowEnabled}
+                  excludeKey={`${cbModuleId}::slot-cb-border-panel`} />
               </group>
             );
           })()}
