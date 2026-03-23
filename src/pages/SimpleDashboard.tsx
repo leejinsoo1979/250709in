@@ -7,7 +7,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { checkCredits } from '@/firebase/userProfiles';
+import { checkCredits, getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import { useUIStore } from '@/store/uiStore';
 import Step1 from '../editor/Step1';
@@ -373,10 +373,58 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
 
+      // 유저 공간설정 기본값 로드 후 병합
+      let spaceConfig = { ...DEFAULT_SPACE_CONFIG };
+      try {
+        const defaults = await getSpaceConfigDefaults();
+        if (defaults) {
+          spaceConfig = {
+            ...spaceConfig,
+            ...(defaults.width !== undefined && { width: defaults.width }),
+            ...(defaults.height !== undefined && { height: defaults.height }),
+            gapConfig: {
+              left: defaults.gapLeft ?? spaceConfig.gapConfig?.left ?? 1.5,
+              right: defaults.gapRight ?? spaceConfig.gapConfig?.right ?? 1.5,
+            },
+            frameSize: {
+              ...spaceConfig.frameSize!,
+              top: defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
+              left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
+              right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
+            },
+            baseConfig: {
+              ...spaceConfig.baseConfig!,
+              height: defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
+            },
+            ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
+            ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
+            ...(defaults.surroundMode ? {
+              surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
+              frameConfig: defaults.surroundMode === 'full-surround'
+                ? { left: true, right: true, top: true, bottom: true }
+                : defaults.surroundMode === 'sides-only'
+                  ? { left: true, right: true, top: false, bottom: false }
+                  : { left: false, right: false, top: true, bottom: false },
+            } : {}),
+            ...(defaults.installType ? { installType: defaults.installType } : {}),
+            ...(defaults.droppedCeilingEnabled !== undefined ? {
+              droppedCeiling: {
+                enabled: defaults.droppedCeilingEnabled,
+                position: defaults.droppedCeilingPosition ?? 'right',
+                width: defaults.droppedCeilingWidth ?? 1300,
+                dropHeight: defaults.droppedCeilingDropHeight ?? 200,
+              },
+            } : {}),
+          };
+        }
+      } catch (e) {
+        console.error('유저 공간설정 기본값 로드 실패:', e);
+      }
+
       const createData: any = {
         name: newDesignName.trim(),
         projectId: nav.currentProjectId,
-        spaceConfig: DEFAULT_SPACE_CONFIG,
+        spaceConfig,
         furniture: { placedModules: [] },
       };
       // 폴더 안에서 생성 시 folderId 전달
