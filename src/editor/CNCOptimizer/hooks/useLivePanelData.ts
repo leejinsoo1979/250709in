@@ -589,8 +589,8 @@ export function useLivePanelData() {
         const cbSideDepth = 40;
         // 전면 가림판: CB폭 - 3mm (양쪽 1.5mm gap)
         const cbFrontWidth = cbWidthMM - 3;
-        // 높이: 가구높이 + cbDropH
-        const cbPanelHeight = furnitureHeight + cbDropH;
+        // 높이: 서라운드 높이(공간-바닥재-float) + cbDropH (3D Room.tsx와 동일)
+        const cbPanelHeight = surroundH + cbDropH;
         const posLabel = cbPos === 'left' ? '좌측' : '우측';
 
         // 전면 가림판
@@ -1216,7 +1216,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const cbPanelThickness2 = 18;
       const cbSideDepth2 = 40;
       const cbFrontWidth2 = cbWidthMM2 - 3;
-      const cbPanelHeight2 = furnitureHeight2 + cbDropH2;
+      const cbPanelHeight2 = surroundH2 + cbDropH2;
       const posLabel2 = cbPos2 === 'left' ? '좌측' : '우측';
 
       surroundPanelList2.push({
