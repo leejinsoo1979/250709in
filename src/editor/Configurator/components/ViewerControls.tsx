@@ -337,15 +337,15 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         )}
 
         {hasDoorsInstalled && (
-          <div className={styles.doorToggleGroup}>
+          <div className={styles.segmentedControl}>
             <button
-              className={`${styles.doorToggleButton} ${doorsOpen !== true ? styles.active : ''}`}
+              className={`${styles.segmentButton} ${doorsOpen !== true ? styles.segmentAccentActive : ''}`}
               onClick={() => setDoorsOpen(false)}
             >
               Close
             </button>
             <button
-              className={`${styles.doorToggleButton} ${doorsOpen === true ? styles.active : ''}`}
+              className={`${styles.segmentButton} ${doorsOpen === true ? styles.segmentAccentActive : ''}`}
               onClick={() => setDoorsOpen(true)}
             >
               Open
