@@ -118,16 +118,16 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       <div className={styles.section}>
         <div className={styles.toggleButtonGroup}>
           <button
-            className={`${styles.toggleButton} ${spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
-            onClick={() => handleFloorStatusChange(false)}
-          >
-            {t('common.enabled')}
-          </button>
-          <button
             className={`${styles.toggleButton} ${!spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
             onClick={() => handleFloorStatusChange(true)}
           >
-            {t('common.none')}
+            바닥재 시공완료
+          </button>
+          <button
+            className={`${styles.toggleButton} ${spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
+            onClick={() => handleFloorStatusChange(false)}
+          >
+            시공예정
           </button>
         </div>
       </div>
