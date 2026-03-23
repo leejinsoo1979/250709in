@@ -80,8 +80,10 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   // 옵티마이저 뷰어에서는 바닥판 하이라이트 시에만 조절발 표시
   // UIStore.highlightedPanel: "furnitureId-meshName" 형식 (Zustand → R3F Canvas 안에서도 리액티브)
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
+  console.log('[AdjustableFootsRenderer] hideAccessories:', space3DCtx?.hideAccessories, 'highlightedPanel:', highlightedPanel);
   if (space3DCtx?.hideAccessories) {
     const isBottomPanel = highlightedPanel && highlightedPanel.includes('바닥') && !highlightedPanel.includes('서랍');
+    console.log('[AdjustableFootsRenderer] isBottomPanel:', isBottomPanel, 'highlightedPanel:', highlightedPanel);
     if (!isBottomPanel) return null;
   }
 
