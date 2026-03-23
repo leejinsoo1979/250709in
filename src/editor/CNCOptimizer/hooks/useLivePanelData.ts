@@ -581,7 +581,7 @@ export function useLivePanelData() {
       }
 
       // 슬롯배치 커튼박스 L자 프레임 패널 추가
-      if (!isFreePlacement && spaceInfo.curtainBox?.enabled) {
+      if (spaceInfo.layoutMode !== 'free-placement' && spaceInfo.curtainBox?.enabled) {
         const cbPos = spaceInfo.curtainBox.position || 'right';
         const cbWidthMM = spaceInfo.curtainBox.width || 150;
         const cbDropH = spaceInfo.curtainBox.dropHeight || 60;
