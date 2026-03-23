@@ -710,24 +710,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 단내림 높이 조정 (싱글/듀얼 모두 동일하게 처리)
   // 키큰장(싱글/듀얼)이면서 단내림 구간에 배치된 경우
   const isFreePlacementMode = originalSpaceInfo.layoutMode === 'free-placement';
-
-  // 커튼박스 구간 내 도어 여부 판별 (대각선 등 가림판 뒤로 보이는 요소 숨김용)
-  const isInCurtainBoxZone = (() => {
-    if (isFreePlacementMode) {
-      // 자유배치: droppedCeiling이 커튼박스
-      return !!originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped';
-    }
-    // 슬롯배치: curtainBox 필드 사용, slotCenterX로 위치 판별
-    if (!originalSpaceInfo.curtainBox?.enabled || slotCenterX === undefined) return false;
-    const cbPos = originalSpaceInfo.curtainBox.position || 'right';
-    const cbWidthUnits = (originalSpaceInfo.curtainBox.width || 150) * 0.01;
-    const spaceHalfW = ((originalSpaceInfo.width || 2400) / 2) * 0.01;
-    if (cbPos === 'left') {
-      return slotCenterX < -spaceHalfW + cbWidthUnits;
-    }
-    return slotCenterX > spaceHalfW - cbWidthUnits;
-  })();
-
   if (isFreePlacementMode && originalSpaceInfo.stepCeiling?.enabled && effectiveZone === 'dropped') {
     // 자유배치: stepCeiling이 단내림 (droppedCeiling은 커튼박스)
     const dropHeight = originalSpaceInfo.stepCeiling.dropHeight || 0;
@@ -1389,7 +1371,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
-              {!isPlainMaterial && !isInCurtainBoxZone && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
+              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -1720,7 +1702,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
-              {!isPlainMaterial && !isInCurtainBoxZone && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
+              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -2166,7 +2148,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
             {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 정면은 항상, 측면은 열렸을 때만 */}
-            {!isPlainMaterial && !isInCurtainBoxZone && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
+            {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {
