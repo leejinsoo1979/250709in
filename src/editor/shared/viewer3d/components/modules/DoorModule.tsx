@@ -2016,20 +2016,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
             />
-            {/* 윤곽선 */}
-            <lineSegments>
-              <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
-              <lineBasicMaterial
-                color={
-                  viewMode === '2D' && renderMode === 'wireframe'
-                    ? getThemeColor()
-                    : (viewMode === '3D' ? "#505050" : "#666666")
-                }
-                transparent={viewMode === '3D'}
-                opacity={viewMode === '3D' ? 0.9 : 1}
-              />
-            </lineSegments>
-
 
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
