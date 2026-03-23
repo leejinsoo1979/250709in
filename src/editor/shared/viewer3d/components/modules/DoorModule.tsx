@@ -695,6 +695,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
   const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet');
 
+  // 패널 두께 - spaceInfo에서 동적으로 가져오기
+  const panelThickness = originalSpaceInfo.panelThickness ?? 18;
+
   let actualDoorHeight: number;
   let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
 
@@ -951,9 +954,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
   const isNoSurroundNoWallRight = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.right;
   const endPanelThickness = 18; // 엔드패널 두께 18mm
-
-  // 패널 두께 - spaceInfo에서 동적으로 가져오기
-  const panelThickness = originalSpaceInfo.panelThickness ?? 18;
 
   // 도어 Z 위치: doorDepth/2로 사용되므로 offset을 2배로 설정해야 함
   // 목표: 가구 앞면에서 5mm 떨어지고 + 도어 두께 절반(9mm) = 14mm
