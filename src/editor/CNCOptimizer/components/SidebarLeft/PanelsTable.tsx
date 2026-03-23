@@ -44,8 +44,14 @@ function panelTypePriority(label: string, material?: string): number {
   if (name.includes('백패널') || name.includes('뒷판')) return 7;
   if (name.includes('보강')) return 8;
   if (name.includes('프레임') || name.includes('프래임')) return 9;
-  if (name.includes('서랍') || name.includes('마이다')) return 10;
-  return 11;
+  // 서랍 세부 유형: 날개벽 → 좌우측판 → 바닥판 → 앞뒤판 → 마이다
+  if (name.includes('서랍속장')) return 10;
+  if (name.includes('서랍') && (name.includes('좌측판') || name.includes('우측판'))) return 11;
+  if (name.includes('서랍') && name.includes('바닥')) return 12;
+  if (name.includes('서랍') && (name.includes('앞판') || name.includes('뒷판'))) return 13;
+  if (name.includes('마이다')) return 14;
+  if (name.includes('서랍')) return 15;
+  return 16;
 }
 
 /**
