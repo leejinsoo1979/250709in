@@ -12,7 +12,7 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
-  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, dashboardLayout, setDashboardLayout } = useUIStore();
+  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, dashboardLayout, setDashboardLayout, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
   const [showSpaceDefaults, setShowSpaceDefaults] = useState(false);
   
   useEffect(() => {
@@ -172,6 +172,83 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           )}
+
+          {/* 표시 설정 */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>표시 설정</h3>
+            <div className={styles.settingGroup}>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>치수선</span>
+                  <span className={styles.settingDescription}>3D/2D 뷰에서 치수선 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showDimensions} onChange={() => setShowDimensions(!showDimensions)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>치수</span>
+                  <span className={styles.settingDescription}>치수 텍스트 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showDimensionsText} onChange={() => setShowDimensionsText(!showDimensionsText)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>컬럼</span>
+                  <span className={styles.settingDescription}>컬럼 가이드 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showAll} onChange={() => setShowAll(!showAll)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>가구</span>
+                  <span className={styles.settingDescription}>가구 표시/숨김</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showFurniture} onChange={() => setShowFurniture(!showFurniture)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>그리드</span>
+                  <span className={styles.settingDescription}>그리드 가이드 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showGuides} onChange={() => setShowGuides(!showGuides)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>축</span>
+                  <span className={styles.settingDescription}>축 가이드 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showAxis} onChange={() => setShowAxis(!showAxis)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>아이콘</span>
+                  <span className={styles.settingDescription}>가구 편집 아이콘 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showFurnitureEditHandles} onChange={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+            </div>
+          </div>
 
           {/* 언어 설정: 현재 한국어 고정, 추후 다국어 지원 시 활성화 */}
 

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
 import { PiHandTapThin } from 'react-icons/pi';
 import { TbBorderOuter } from 'react-icons/tb';
-import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal, Check, ChevronDown } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -44,9 +44,6 @@ interface ViewerControlsProps {
   frameMergeEnabled?: boolean;
   onFrameMergeToggle?: () => void;
 }
-
-/** Thin vertical separator */
-const Divider = () => <div className={styles.divider} />;
 
 const ViewerControls: React.FC<ViewerControlsProps> = ({
   viewMode,
@@ -98,8 +95,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showQRGenerator, setShowQRGenerator] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileOptions, setShowMobileOptions] = useState(false);
-  const [showDisplayMenu, setShowDisplayMenu] = useState(false);
-  const displayMenuRef = useRef<HTMLDivElement>(null);
   const [showDoorGuide, setShowDoorGuide] = useState(false);
 
   // 모든 슬롯이 채워지면 안내 표시, 빈 슬롯 생기면 숨김
@@ -124,18 +119,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       setShowDoorGuide(false);
     }
   }, [placedModules, hasDoorsInstalled, isFreePlacement, derivedColumnCount, spaceInfo?.customColumnCount, hasFurniture]);
-
-  // 표시 옵션 드롭다운 외부 클릭 감지
-  useEffect(() => {
-    if (!showDisplayMenu) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (displayMenuRef.current && !displayMenuRef.current.contains(e.target as Node)) {
-        setShowDisplayMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showDisplayMenu]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -289,70 +272,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   // ── Desktop UI ──
   return (
     <div className={styles.viewerControls}>
-
-      {/* ─── Left: Display toggle + options ─── */}
-      <div className={styles.toggleGroup}>
-        <span className={styles.toggleLabel}>ON</span>
-        <button
-          className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
-          onClick={onShowDimensionsToggle}
-          title={showDimensions ? 'Hide dimensions' : 'Show dimensions'}
-        >
-          <div className={styles.switchHandle} />
-        </button>
-      </div>
-
-      {showDimensions && (
-        <>
-          <Divider />
-          <div className={styles.displayMenuWrapper} ref={displayMenuRef}>
-            <button
-              className={`${styles.chip} ${showDisplayMenu ? styles.chipActive : ''}`}
-              onClick={() => setShowDisplayMenu(!showDisplayMenu)}
-            >
-              표시 <ChevronDown size={11} />
-            </button>
-            {showDisplayMenu && (
-              <div className={styles.displayDropdown}>
-                {viewMode === '2D' && (
-                  <button className={styles.displayMenuItem} onClick={onShowFurnitureToggle}>
-                    <Check size={13} strokeWidth={2.5} className={showFurniture ? styles.checkVisible : styles.checkHidden} />
-                    <span>{t('furniture.title')}</span>
-                  </button>
-                )}
-                {!isFreePlacement && (
-                  <button className={styles.displayMenuItem} onClick={onShowAllToggle}>
-                    <Check size={13} strokeWidth={2.5} className={showAll ? styles.checkVisible : styles.checkHidden} />
-                    <span>{t('viewer.column')}</span>
-                  </button>
-                )}
-                <button className={styles.displayMenuItem} onClick={onShowDimensionsTextToggle}>
-                  <Check size={13} strokeWidth={2.5} className={showDimensionsText ? styles.checkVisible : styles.checkHidden} />
-                  <span>{t('viewer.dimensions')}</span>
-                </button>
-                {viewMode === '3D' && (
-                  <button className={styles.displayMenuItem} onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}>
-                    <Check size={13} strokeWidth={2.5} className={showFurnitureEditHandles ? styles.checkVisible : styles.checkHidden} />
-                    <span>아이콘</span>
-                  </button>
-                )}
-                {viewMode === '2D' && (
-                  <>
-                    <button className={styles.displayMenuItem} onClick={onShowGuidesToggle}>
-                      <Check size={13} strokeWidth={2.5} className={showGuides ? styles.checkVisible : styles.checkHidden} />
-                      <span>{t('viewer.grid')}</span>
-                    </button>
-                    <button className={styles.displayMenuItem} onClick={onShowAxisToggle}>
-                      <Check size={13} strokeWidth={2.5} className={showAxis ? styles.checkVisible : styles.checkHidden} />
-                      <span>{t('viewer.axis')}</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      )}
 
       {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
       <div className={styles.centerAbsolute}>
