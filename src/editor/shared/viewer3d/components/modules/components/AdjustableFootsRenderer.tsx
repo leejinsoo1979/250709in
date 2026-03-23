@@ -78,10 +78,10 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     view2DDirection ?? (effectiveViewMode === '2D' ? storeView2DDirection : undefined);
 
   // 옵티마이저 뷰어에서는 바닥판 하이라이트 시에만 조절발 표시
+  // UIStore.highlightedPanel: "furnitureId-meshName" 형식 (Zustand → R3F Canvas 안에서도 리액티브)
+  const highlightedPanel = useUIStore(state => state.highlightedPanel);
   if (space3DCtx?.hideAccessories) {
-    const hp = space3DCtx.highlightedPanelName;
-    // 가구 본체 바닥판: "바닥판", "바닥", "(하)바닥", "(상)바닥" 등 (서랍 바닥 제외)
-    const isBottomPanel = hp && hp.includes('바닥') && !hp.includes('서랍');
+    const isBottomPanel = highlightedPanel && highlightedPanel.includes('바닥') && !highlightedPanel.includes('서랍');
     if (!isBottomPanel) return null;
   }
 
