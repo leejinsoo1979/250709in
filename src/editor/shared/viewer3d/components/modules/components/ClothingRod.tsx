@@ -4,7 +4,6 @@ import BoxWithEdges from './BoxWithEdges';
 import { Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
-import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 interface ClothingRodProps {
   innerWidth: number;
@@ -43,20 +42,14 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const ctx = useSpace3DView();
   const viewMode = ctx.viewMode;
 
-  // 옵티마이저 뷰어에서는 선반 체크 상태에 따라 옷봉 표시/숨김
-  const excludedKeys = useExcludedPanelsStore(state => state.excludedKeys);
+  // 옵티마이저 뷰어에서는 선반 하이라이트 시에만 옷봉 표시
   if (ctx.hideAccessories) {
-    if (!furnitureId) return null;
-    // 해당 가구의 선반이 제외되어 있으면 옷봉도 숨김
-    if (excludedKeys && excludedKeys.size > 0) {
-      for (const key of excludedKeys) {
-        if (!key.startsWith(furnitureId + '::')) continue;
-        const meshName = key.slice(furnitureId.length + 2);
-        if (meshName.includes('선반') || meshName.includes('고정')) {
-          return null;
-        }
-      }
-    }
+    if (!furnitureId || !highlightedPanel) return null;
+    // highlightedPanel: "furnitureId-meshName" 형식
+    // 해당 가구의 선반이 하이라이트되었을 때만 표시
+    const isMyShelf = highlightedPanel.startsWith(`${furnitureId}-`) &&
+      (highlightedPanel.includes('선반') || highlightedPanel.includes('고정'));
+    if (!isMyShelf) return null;
   }
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
