@@ -143,6 +143,7 @@ export default function PanelsTable(){
         if (aBottom && bBottom) {
           if (a.tp !== b.tp) return a.tp - b.tp;
           if (a.slot !== b.slot) return a.slot - b.slot;
+          if (a.lr !== b.lr) return a.lr - b.lr;
           return a.label.localeCompare(b.label, 'ko');
         }
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
