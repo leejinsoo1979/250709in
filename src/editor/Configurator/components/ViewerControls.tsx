@@ -348,17 +348,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        {allSlotsFilled && !isFurniturePlacementMode && onFrameMergeToggle && (
-          <div className={styles.segmentedControl}>
-            <button
-              className={`${styles.segmentButton} ${styles.segmentIconText} ${frameMergeEnabled ? styles.segmentAccentActive : ''}`}
-              onClick={onFrameMergeToggle}
-            >
-              <Layers size={13} />
-              {frameMergeEnabled ? '프레임분절' : '프레임병합'}
-            </button>
-          </div>
-        )}
+        {/* 프레임분절/병합 버튼 숨김 — CNC 옵티마이저 진입 시 팝업으로 대체 */}
       </div>
 
       <div className={styles.spacer} />
