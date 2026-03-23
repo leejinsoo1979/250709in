@@ -58,18 +58,6 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
           </button>
         </div>
       ))}
-      {onNewDesign && (
-        <button
-          className={styles.addTab}
-          onClick={onNewDesign}
-          title="새 디자인 추가"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M5 1V9M1 5H9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <span>디자인 생성</span>
-        </button>
-      )}
     </div>
   );
 };
