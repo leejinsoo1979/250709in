@@ -5,6 +5,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Space3DViewContext } from '../../../context/Space3DViewContextTypes';
+import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 interface AdjustableFootsRendererProps {
   width: number; // 가구 폭 (Three.js units)
@@ -77,13 +78,27 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const effectiveView2DDirection =
     view2DDirection ?? (effectiveViewMode === '2D' ? storeView2DDirection : undefined);
 
-  // 옵티마이저 뷰어에서는 바닥판 하이라이트 시 해당 가구의 조절발만 표시
-  // UIStore.highlightedPanel: "furnitureId-meshName" 형식 (Zustand → R3F Canvas 안에서도 리액티브)
-  const highlightedPanel = useUIStore(state => state.highlightedPanel);
+  // 옵티마이저 뷰어에서는 바닥판 체크 상태에 따라 조절발 표시/숨김
+  // excludedKeys: "furnitureId::meshName" 형식 (Zustand → R3F Canvas 안에서도 리액티브)
+  const excludedKeys = useExcludedPanelsStore(state => state.excludedKeys);
   if (space3DCtx?.hideAccessories) {
-    if (!highlightedPanel || !highlightedPanel.includes('바닥') || highlightedPanel.includes('서랍')) return null;
-    // 해당 가구의 바닥판인지 확인 (furnitureId-meshName 형식)
-    if (placedFurnitureId && !highlightedPanel.startsWith(placedFurnitureId)) return null;
+    if (!placedFurnitureId) return null;
+    // 해당 가구의 바닥판 관련 키가 모두 제외되어 있으면 조절발 숨김
+    // meshName 예: "바닥판", "(하)바닥", "(상)바닥" 등
+    const fid = placedFurnitureId;
+    let hasBottomPanel = false;
+    for (const key of excludedKeys) {
+      if (!key.startsWith(fid + '::')) continue;
+      const meshName = key.slice(fid.length + 2);
+      if (meshName.includes('바닥') && !meshName.includes('서랍')) {
+        // 바닥판이 하나라도 제외되어 있으면 조절발 숨김
+        hasBottomPanel = true;
+        break;
+      }
+    }
+    // excludedKeys에 바닥판이 없으면 → 바닥판이 체크된 상태 → 조절발 표시
+    // 하지만 바닥판이 제외되었으면 숨김
+    if (hasBottomPanel) return null;
   }
 
   // 띄움배치일 때는 발통 렌더링 안 함
