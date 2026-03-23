@@ -43,8 +43,10 @@ function panelTypePriority(label: string, material?: string): number {
   if ((name.includes('하부프레임') || name.includes('하부 프레임') || name.includes('하부프래임')) && material === 'PET') return 93;
   if (name.includes('서라운드') || name.includes('surround') || name.includes('커튼박스')) return 94;
   if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 95;
-  // 서랍속장(날개벽)은 서랍보다 위 (본체 뒤, 서랍 앞)
-  if (name.includes('서랍속장')) return 10;
+  // 서랍속장(날개벽)은 서랍보다 위: 후면 → 본체 → 전면
+  if (name.includes('서랍속장') && name.includes('후면')) return 10;
+  if (name.includes('서랍속장') && name.includes('전면')) return 10.2;
+  if (name.includes('서랍속장')) return 10.1;
   // 서랍 세부 유형 (본체보다 먼저 체크 — '좌측판' 등이 본체 좌측과 겹침 방지)
   // 좌우측판 → 바닥판 → 뒷판 → 앞판 (서랍번호 우선 그룹: 11~15)
   // 마이다는 모든 서랍 다음에 별도 (16)
