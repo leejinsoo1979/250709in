@@ -2149,6 +2149,9 @@ const Room: React.FC<RoomProps> = ({
               solidThemeLines.push([dcStartX, droppedCY, z2, dcEndX, droppedCY, z2]);
               // 경계벽 앞면 수직선 (z=z2)
               solidThemeLines.push([bx2, droppedCY, z2, bx2, cY, z2]);
+              // 단내림 천장 메쉬 z축 모서리 (z1→z2)
+              solidThemeLines.push([dcStartX, droppedCY, z1, dcStartX, droppedCY, z2]); // 외벽쪽
+              solidThemeLines.push([dcEndX, droppedCY, z1, dcEndX, droppedCY, z2]);     // 경계벽쪽
             }
 
             // === 자유배치 stepCeiling z축 앞면 윤곽선 ===
@@ -2167,6 +2170,9 @@ const Room: React.FC<RoomProps> = ({
               solidThemeLines.push([scStartX, scCeilingY, z2, scEndX, scCeilingY, z2]);
               // 경계벽 앞면 수직선 (z=z2)
               solidThemeLines.push([scBx, scCeilingY, z2, scBx, cY, z2]);
+              // 단내림 천장 메쉬 z축 모서리 (z1→z2)
+              solidThemeLines.push([scStartX, scCeilingY, z1, scStartX, scCeilingY, z2]); // 외벽쪽
+              solidThemeLines.push([scEndX, scCeilingY, z1, scEndX, scCeilingY, z2]);     // 경계벽쪽
             }
 
             if (lines.length === 0 && solidThemeLines.length === 0) return null;
