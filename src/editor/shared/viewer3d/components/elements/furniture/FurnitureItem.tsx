@@ -3575,6 +3575,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               topFrameThickness={placedModule.topFrameThickness}
               hasBase={placedModule.hasBase}
               individualFloatHeight={placedModule.individualFloatHeight}
+              individualBaseFrameHeight={placedModule.baseFrameHeight}
             />
           </group>
         )}

@@ -133,6 +133,7 @@ interface DoorModuleProps {
   topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm) — 도어 상단 갭 계산용
   hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 가구 Y오프셋 보정용
+  individualBaseFrameHeight?: number; // 개별 받침대 높이 (mm) - 슬롯별 하부프레임 높이 조정용
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -161,6 +162,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   topFrameThickness: perFurnitureTopFrame, // 개별 가구 상부프레임 두께
   hasBase: hasBaseProp, // 하부프레임 존재 여부
   individualFloatHeight: individualFloatHeightProp, // 개별 띄움 높이
+  individualBaseFrameHeight: individualBaseFrameHeightProp, // 개별 받침대 높이
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -769,7 +771,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 30;
     // 도어 높이 계산용 받침대: hasBase 토글에 관계없이 항상 기본 받침대 높이 사용
     // (hasBase=false 시 가구 본체가 받침대를 흡수하지만, 도어는 공간 기준이므로 불변)
-    const rawBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
+    // 개별 받침대 높이가 설정된 경우 해당 값 사용 (FurnitureItem의 furnitureHeightMm과 일치시키기 위해)
+    const globalBaseHeight = originalSpaceInfo.baseConfig?.height || 65;
+    const rawBaseHeight = placementType === 'float' ? floatHeight : (individualBaseFrameHeightProp ?? globalBaseHeight);
     const baseHeightValue = rawBaseHeight;
 
     // baseConfig.type === 'floor'일 때 baseConfig.height에는 이미 바닥마감재 높이가 포함됨
@@ -793,7 +797,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const topGap = doorTopGap;
     // 도어 위치 계산용 받침대: hasBase 토글에 관계없이 항상 기본값 사용
     // (가구 본체 Y는 FurnitureItem에서 hasBase에 따라 조정하지만, 도어 로컬 좌표는 불변)
-    const actualBase = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
+    // 개별 받침대 높이가 설정된 경우 해당 값 사용
+    const actualBase = placementType === 'float' ? floatHeight : (individualBaseFrameHeightProp ?? globalBaseHeight);
     // bottomGap: 항상 바닥 기준 (받침대/띄움 무관, 0이면 바닥에서 시작)
     // 바닥마감재가 있으면 하단갭에 바닥마감재 높이를 추가 (도어 Y 위치 자체는 불변)
     const floorFinishForDoor = (isFloorType && originalSpaceInfo.hasFloorFinish)
