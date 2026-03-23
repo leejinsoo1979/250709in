@@ -136,10 +136,15 @@ export default function PanelsTable(){
         };
       })
       .sort((a, b) => {
-        // 서라운드/프레임(상부하부)/도어(tp>=90)는 맨 아래로
+        // 하단 그룹(tp>=90): tp 우선 정렬 (상부프레임→서라운드→하부프레임→도어)
         const aBottom = a.tp >= 90 ? 1 : 0;
         const bBottom = b.tp >= 90 ? 1 : 0;
         if (aBottom !== bBottom) return aBottom - bBottom;
+        if (aBottom && bBottom) {
+          if (a.tp !== b.tp) return a.tp - b.tp;
+          if (a.slot !== b.slot) return a.slot - b.slot;
+          return a.label.localeCompare(b.label, 'ko');
+        }
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
         if (a.section !== b.section) return a.section - b.section; // 하부 → 상부
         // 서랍 그룹(tp 11~15)은 서랍번호 우선: 서랍4 → 서랍3 → 서랍2 → 서랍1, 날개벽(10)·마이다(16)는 별도
