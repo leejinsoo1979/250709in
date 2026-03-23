@@ -2177,31 +2177,21 @@ const Room: React.FC<RoomProps> = ({
               const dcEndX = dcIsL ? x1 + cbW2 + dcW2 : x2 - cbW2;
               const bx2 = dcIsL ? dcEndX : dcStartX; // 경계벽 X
 
-              // 단내림 천장 앞면 가로선 (z=z2)
-              solidThemeLines.push([dcStartX, droppedCY, z2, dcEndX, droppedCY, z2]);
-              // 경계벽 앞면 수직선 (z=z2)
-              solidThemeLines.push([bx2, droppedCY, z2, bx2, cY, z2]);
               // 단내림 천장 메쉬 z축 모서리 (z1→z2)
               solidThemeLines.push([dcStartX, droppedCY, z1, dcStartX, droppedCY, z2]); // 외벽쪽
               solidThemeLines.push([dcEndX, droppedCY, z1, dcEndX, droppedCY, z2]);     // 경계벽쪽
             }
 
-            // === 자유배치 stepCeiling z축 앞면 윤곽선 ===
+            // === 자유배치 stepCeiling z축 윤곽선 ===
             if (isFreePlacement && spaceInfo.stepCeiling?.enabled) {
               const scW2 = mmToThreeUnits(spaceInfo.stepCeiling.width || 900);
               const scDH = mmToThreeUnits(spaceInfo.stepCeiling.dropHeight || 200);
               const scIsL = spaceInfo.stepCeiling.position === 'left';
-              const scCeilingY = cY - scDH; // 단내림 천장 Y
-              // DC+SC 동시인 경우 오프셋 계산
+              const scCeilingY = cY - scDH;
               const dcOffset = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
-              const scBx = scIsL ? x1 + dcOffset + scW2 : x2 - dcOffset - scW2;
-              const scStartX = scIsL ? x1 + dcOffset : scBx;
-              const scEndX = scIsL ? scBx : x2 - dcOffset;
+              const scStartX = scIsL ? x1 + dcOffset : x2 - dcOffset - scW2;
+              const scEndX = scIsL ? x1 + dcOffset + scW2 : x2 - dcOffset;
 
-              // 단내림 천장 앞면 가로선 (z=z2)
-              solidThemeLines.push([scStartX, scCeilingY, z2, scEndX, scCeilingY, z2]);
-              // 경계벽 앞면 수직선 (z=z2)
-              solidThemeLines.push([scBx, scCeilingY, z2, scBx, cY, z2]);
               // 단내림 천장 메쉬 z축 모서리 (z1→z2)
               solidThemeLines.push([scStartX, scCeilingY, z1, scStartX, scCeilingY, z2]); // 외벽쪽
               solidThemeLines.push([scEndX, scCeilingY, z1, scEndX, scCeilingY, z2]);     // 경계벽쪽
@@ -2217,12 +2207,6 @@ const Room: React.FC<RoomProps> = ({
 
               // 커튼박스 천장 안쪽 z축 모서리 (경계벽쪽, z1→z2)
               solidThemeLines.push([_cbBx3, _cbCY3, z1, _cbBx3, _cbCY3, z2]);
-              // 커튼박스 천장 앞면 가로선 (z=z2)
-              const _cbStartX3 = _cbIsL3 ? x1 : _cbBx3;
-              const _cbEndX3 = _cbIsL3 ? _cbBx3 : x2;
-              solidThemeLines.push([_cbStartX3, _cbCY3, z2, _cbEndX3, _cbCY3, z2]);
-              // 경계벽 앞면 수직선 (z=z2, 메인천장~커튼박스천장)
-              solidThemeLines.push([_cbBx3, cY, z2, _cbBx3, _cbCY3, z2]);
             }
 
             if (lines.length === 0 && solidThemeLines.length === 0) return null;
