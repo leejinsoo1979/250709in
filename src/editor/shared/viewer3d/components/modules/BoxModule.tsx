@@ -88,6 +88,7 @@ interface BoxModuleProps {
   onPointerOver?: () => void;
   onPointerOut?: () => void;
   onDoubleClick?: (e: any) => void;
+  parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
 }
 
 /**
@@ -162,7 +163,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   onPointerUp,
   onPointerOver,
   onPointerOut,
-  onDoubleClick
+  onDoubleClick,
+  parentGroupY, // 부모 그룹 Y 위치
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   const spaceConfigStore = useSpaceConfigStore();
@@ -258,6 +260,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             topFrameThickness={topFrameThickness}
             hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+            parentGroupY={parentGroupY}
           />
         )}
       </>
@@ -851,6 +854,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               topFrameThickness={topFrameThickness} // 개별 가구 상부프레임 두께
               hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+            parentGroupY={parentGroupY}
             />
           );
         }

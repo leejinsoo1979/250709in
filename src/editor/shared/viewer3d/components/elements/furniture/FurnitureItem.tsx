@@ -3313,6 +3313,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   individualFloatHeight={placedModule.individualFloatHeight}
                   isCustomizable={placedModule.isCustomizable}
                   customConfig={placedModule.customConfig}
+                  parentGroupY={adjustedPosition.y}
                 />
               );
             })()}
@@ -3576,6 +3577,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               hasBase={placedModule.hasBase}
               individualFloatHeight={placedModule.individualFloatHeight}
               individualBaseFrameHeight={placedModule.baseFrameHeight}
+              parentGroupY={adjustedPosition.y}
             />
           </group>
         )}

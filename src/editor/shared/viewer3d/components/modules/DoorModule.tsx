@@ -134,6 +134,7 @@ interface DoorModuleProps {
   hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 가구 Y오프셋 보정용
   individualBaseFrameHeight?: number; // 개별 받침대 높이 (mm) - 슬롯별 하부프레임 높이 조정용
+  parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -163,6 +164,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   hasBase: hasBaseProp, // 하부프레임 존재 여부
   individualFloatHeight: individualFloatHeightProp, // 개별 띄움 높이
   individualBaseFrameHeight: individualBaseFrameHeightProp, // 개별 받침대 높이
+  parentGroupY: parentGroupYProp, // 부모 그룹 Y 위치
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -902,64 +904,59 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // });
   } else {
     // 키큰장 도어 Y 위치 계산
-    // Y=0은 Three.js 바닥 기준
-    //
-    // 계산 로직:
-    // 1. 가구 하단 = 받침대 + 바닥재
-    // 2. 가구 중심 = 가구 하단 + 가구 높이/2
-    // 3. 도어 중심 = 가구 중심 (동일) - 도어는 가구 중심 기준으로 위아래 확장
-    //
-    // Three.js에서 가구는 Y=0 중심으로 렌더링됨
-    // 도어도 가구 중심(Y=0) 기준 상대 좌표로 배치해야 함
+    // doorBottomLocal / doorTopLocal은 가구 로컬 좌표 (가구 중심=0)
+    // 이를 절대 공간 좌표로 변환 후, 부모 그룹 Y를 빼서 로컬 좌표로 되돌림
+    // → topFrame/baseFrame/floorFinish 등 어떤 프레임을 바꿔도 도어 위치가 안정적
 
     {
-      // 천장/바닥 기준
-      // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
-      // 플로팅 시: 도어 상단 고정, 하단만 올라감 (doorBottomLocal이 이미 올라감)
-      // 도어 중심 = 도어 하단 + (도어 높이 / 2)
+      // 도어 중심 (가구 로컬 좌표, tallCabinetFurnitureHeight 기준)
+      const doorCenterLocal = mmToThreeUnits(doorBottomLocal + actualDoorHeight / 2);
 
-      const doorBottom = doorBottomLocal;
-      const doorTop = doorTopLocal;
+      if (parentGroupYProp !== undefined) {
+        // === 절대 좌표 기반 보정 (parentGroupY가 전달된 경우) ===
+        // 도어의 로컬 좌표는 tallCabinetFurnitureHeight를 기준으로 계산됨
+        // tallCabinetFurnitureHeight의 중심 Y (절대) = baseHeight + tallCabinetFurnitureHeight/2
+        // 이것과 부모 그룹 Y(= parentGroupYProp)의 차이만큼 보정하면
+        // 프레임 변경에 의한 가구 그룹 Y 이동이 자동으로 상쇄됨
+        const isFloorType = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
+        const globalBaseHeight = originalSpaceInfo.baseConfig?.height || 65;
+        const baseForDoor = placementType === 'float'
+          ? floatHeight
+          : (individualBaseFrameHeightProp ?? globalBaseHeight);
+        const floorFinishForAbs = (isFloorType && originalSpaceInfo.hasFloorFinish)
+          ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
+        // 도어 기준 가구 중심 Y (절대 좌표, mm→Three.js)
+        const doorRefCenterY = mmToThreeUnits(floorFinishForAbs + baseForDoor + tallCabinetFurnitureHeight / 2);
+        // 부모 그룹 Y와의 차이 = 도어 로컬 Y 보정값
+        const yCorrection = doorRefCenterY - parentGroupYProp;
 
-      // 도어 중심 = 하단에서 도어 높이의 절반만큼 위 (플로팅 시 하단이 올라가므로 중심도 올라감)
-      doorYPosition = mmToThreeUnits(doorBottom + actualDoorHeight / 2);
+        doorYPosition = doorCenterLocal + yCorrection;
+      } else {
+        // === 레거시 폴백 (parentGroupY 미전달 시 기존 보정 유지) ===
+        doorYPosition = doorCenterLocal;
 
-      // 천장바닥 기준: 도어 좌표가 공간 높이 기준이지만 그룹은 가구 중심에 위치
-      // → 가구 중심과 공간 중심의 차이만큼 도어 Y 위치 보정
-      if (effectiveInternalHeight) {
-        let stableHeight = effectiveInternalHeight;
+        if (effectiveInternalHeight) {
+          let stableHeight = effectiveInternalHeight;
+          if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
+            const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
+            const indivFloat = individualFloatHeightProp ?? 0;
+            if (stableHeight > tallCabinetFurnitureHeight) {
+              stableHeight -= (hiddenBaseH - indivFloat);
+            }
+          }
+          const heightDiff = tallCabinetFurnitureHeight - stableHeight;
+          doorYPosition += mmToThreeUnits(heightDiff / 2);
+        }
+
         if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
           const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
           const indivFloat = individualFloatHeightProp ?? 0;
-          if (stableHeight > tallCabinetFurnitureHeight) {
-            stableHeight -= (hiddenBaseH - indivFloat);
-          }
+          doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
         }
-        const heightDiff = tallCabinetFurnitureHeight - stableHeight;
-        doorYPosition += mmToThreeUnits(heightDiff / 2);
-      }
 
-      // hasBase=false 시 가구 그룹 Y가 받침대/2만큼 내려가므로 도어를 그만큼 올려서 보정
-      if (hasBaseProp === false && originalSpaceInfo.baseConfig?.type === 'floor') {
-        const hiddenBaseH = originalSpaceInfo.baseConfig?.height ?? 65;
-        const indivFloat = individualFloatHeightProp ?? 0;
-        doorYPosition += mmToThreeUnits((hiddenBaseH - indivFloat) / 2);
-      }
-
-      // 개별 상부프레임 보정: FurnitureItem이 가구 높이에서 topFrameDelta를 빼고
-      // 그룹 Y를 topFrameDelta/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
-      if (perFurnitureTopFrame !== undefined) {
-        const globalTopFrame = originalSpaceInfo.frameSize?.top || 30;
-        const topFrameDelta = perFurnitureTopFrame - globalTopFrame;
-        if (topFrameDelta !== 0) {
-          doorYPosition += mmToThreeUnits(topFrameDelta / 2);
+        if (floorFinishForDoorY > 0) {
+          doorYPosition -= mmToThreeUnits(floorFinishForDoorY / 2);
         }
-      }
-
-      // 바닥마감재 보정: FurnitureItem이 가구 높이에서 바닥마감재를 빼고
-      // 그룹 Y를 floorFinish/2만큼 올리므로 도어를 그만큼 내려서 상단 위치 유지
-      if (floorFinishForDoorY > 0) {
-        doorYPosition -= mmToThreeUnits(floorFinishForDoorY / 2);
       }
 
     }
