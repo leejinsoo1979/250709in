@@ -3405,15 +3405,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             <Box
               args={[width, height, depth]}
             >
-              <meshPhysicalMaterial
-                color={furnitureColor}
-                clearcoat={0.1}
-                clearcoatRoughness={0.8}
+              <meshStandardMaterial
+                color={isEditMode ? selectionHighlightColor : furnitureColor}
+                transparent={isDraggingThis || isEditMode}
+                opacity={isDraggingThis ? 0.35 : isEditMode ? 0.15 : 1.0}
+                depthWrite={!(isDraggingThis || isEditMode)}
                 metalness={0.0}
                 roughness={0.7}
-                reflectivity={0.2}
-                transparent={isDraggingThis}
-                opacity={isDraggingThis ? 0.35 : 1.0}
               />
             </Box>
             <Edges
@@ -3518,12 +3516,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               moduleDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={spaceInfo}
-              color={(isDraggingThis || isEditMode) ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
+              color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               originalSlotWidth={originalSlotWidthForDoor}
               slotCenterX={doorXOffset}
               moduleData={actualModuleData}
-              isDragging={isDraggingThis || isEditMode}
+              isDragging={isDraggingThis}
               isEditMode={isEditMode}
               adjustedWidth={furnitureWidthMm}
               floatHeight={
