@@ -35,12 +35,14 @@ function panelTypePriority(label: string, material?: string): number {
   if (name.includes('서라운드') || name.includes('surround')) return 91;
   if (name.includes('도어') || name.includes('door')) return 92;
   // 서랍 세부 유형 (본체보다 먼저 체크 — '좌측판' 등이 본체 좌측과 겹침 방지)
-  // 날개벽 → 좌우측판 → 바닥판 → 앞뒤판 → 마이다
+  // 날개벽 → 좌우측판 → 바닥판 → 뒷판 → 앞판 (서랍번호 우선 그룹: 10~14)
+  // 마이다는 모든 서랍 다음에 별도 (16)
   if (name.includes('서랍속장')) return 10;
-  if (name.includes('마이다')) return 14;
+  if (name.includes('마이다')) return 16;
   if (name.includes('서랍') && (name.includes('좌측판') || name.includes('우측판'))) return 11;
   if (name.includes('서랍') && name.includes('바닥')) return 12;
-  if (name.includes('서랍') && (name.includes('앞판') || name.includes('뒷판'))) return 13;
+  if (name.includes('서랍') && name.includes('뒷판')) return 13;
+  if (name.includes('서랍') && name.includes('앞판')) return 14;
   if (name.includes('서랍')) return 15;
   // 본체 패널: 바닥판 → 좌우측판 → 백패널 → 상판 → 선반/칸막이 → 보강 → 프레임
   if (name.includes('바닥')) return 1;
@@ -52,7 +54,7 @@ function panelTypePriority(label: string, material?: string): number {
   if (name.includes('선반') || name.includes('칸막이') || name.includes('분할')) return 7;
   if (name.includes('보강')) return 8;
   if (name.includes('프레임') || name.includes('프래임')) return 9;
-  return 16;
+  return 17;
 }
 
 /**
@@ -130,7 +132,7 @@ export default function PanelsTable(){
         if (aBottom !== bBottom) return aBottom - bBottom;
         if (a.slot !== b.slot) return a.slot - b.slot;       // 왼쪽 가구부터
         if (a.section !== b.section) return a.section - b.section; // 하부 → 상부
-        // 서랍 그룹(tp 10~15)은 서랍번호 우선: 서랍4 → 서랍3 → 서랍2 → 서랍1
+        // 서랍 그룹(tp 10~15)은 서랍번호 우선: 서랍4 → 서랍3 → 서랍2 → 서랍1, 마이다(16)는 서랍 다음
         const aDrawer = a.tp >= 10 && a.tp <= 15;
         const bDrawer = b.tp >= 10 && b.tp <= 15;
         if (aDrawer && bDrawer) {
