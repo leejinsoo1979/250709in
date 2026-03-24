@@ -1369,7 +1369,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
                           }}
                           onHeightChange={(v) => {
-                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
+                            const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                            group.moduleIds.forEach(id => {
+                              const updates: Record<string, any> = { topFrameThickness: v };
+                              if (isFullSurround) {
+                                const mod = slotMods.find(m => m.id === id);
+                                if (mod?.hasDoor) updates.doorTopGap = v + 3;
+                              }
+                              updatePlacedModule(id, updates);
+                            });
                           }}
                           onOffsetChange={(v) => {
                             group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
@@ -1441,7 +1449,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         offset={mod.topFrameOffset ?? 0}
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                         onSizeChange={(v) => {
-                          updatePlacedModule(mod.id, { topFrameThickness: v });
+                          const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                          const updates: Record<string, any> = { topFrameThickness: v };
+                          if (isFullSurround && mod.hasDoor) updates.doorTopGap = v + 3;
+                          updatePlacedModule(mod.id, updates);
                         }}
                         onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                         hlKey={`top-${mod.id}`}

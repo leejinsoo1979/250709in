@@ -933,6 +933,19 @@ const Configurator: React.FC = () => {
         [property]: value
       }
     });
+
+    // 전체서라운드 + 상부프레임 변경 시 도어 이격 동기화: frameTop + 3
+    if (property === 'top') {
+      const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+      if (isFullSurround) {
+        const newGap = value + 3;
+        const currentModules = useFurnitureStore.getState().placedModules;
+        currentModules.filter(m => m.hasDoor).forEach(m => {
+          updatePlacedModule(m.id, { doorTopGap: newGap });
+        });
+        setSpaceInfo({ doorTopGap: newGap });
+      }
+    }
   };
 
   // 프레임 입력 핸들러 함수들
