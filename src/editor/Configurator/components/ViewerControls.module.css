@@ -5,8 +5,8 @@
 
 /* ── Base Container ── */
 .viewerControls {
-  background: var(--theme-surface);
-  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 60%, transparent);
+  background: transparent;
+  border-bottom: none;
   padding: 0 16px;
   display: flex;
   align-items: center;
