@@ -1369,18 +1369,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
                           }}
                           onHeightChange={(v) => {
-                            group.moduleIds.forEach(id => {
-                              const mod = slotMods.find(m => m.id === id);
-                              const oldTop = mod?.topFrameThickness ?? globalTop;
-                              const delta = v - oldTop;
-                              const updates: Record<string, any> = { topFrameThickness: v };
-                              // 도어 상단갭 자동 보정: 프레임 두께 변화만큼 doorTopGap 조정
-                              if (mod?.hasDoor && delta !== 0) {
-                                const oldGap = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5;
-                                updates.doorTopGap = Math.max(0, oldGap + delta);
-                              }
-                              updatePlacedModule(id, updates);
-                            });
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
                           }}
                           onOffsetChange={(v) => {
                             group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
@@ -1415,18 +1404,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             }));
                           }}
                           onHeightChange={(v) => {
-                            group.moduleIds.forEach(id => {
-                              const mod = slotMods.find(m => m.id === id);
-                              const oldBase = mod?.baseFrameHeight ?? globalBase;
-                              const delta = v - oldBase;
-                              const updates: Record<string, any> = { baseFrameHeight: v };
-                              // 도어 하단갭 자동 보정: 하부프레임 두께 변화만큼 doorBottomGap 조정
-                              if (mod?.hasDoor && delta !== 0) {
-                                const oldGap = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25;
-                                updates.doorBottomGap = Math.max(0, oldGap + delta);
-                              }
-                              updatePlacedModule(id, updates);
-                            });
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
                           }}
                           onOffsetChange={(v) => {
                             group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
@@ -1443,17 +1421,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
               // 비병합 모드: 기존 개별 행 렌더링
               let topNum = 0;
               let baseNum = 0;
-              // 하부프레임 높이 변경 시 doorBottomGap 자동 보정 헬퍼
-              const updateBaseFrameWithDoorGap = (mod: typeof sorted[0], newBaseHeight: number) => {
-                const oldBase = mod.baseFrameHeight ?? globalBase;
-                const delta = newBaseHeight - oldBase;
-                const updates: Record<string, any> = { baseFrameHeight: newBaseHeight };
-                if (mod.hasDoor && delta !== 0) {
-                  const oldGap = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 25;
-                  updates.doorBottomGap = Math.max(0, oldGap + delta);
-                }
-                updatePlacedModule(mod.id, updates);
-              };
               return (
                 <FormControl
                   label="상,하부프레임"
@@ -1474,14 +1441,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         offset={mod.topFrameOffset ?? 0}
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                         onSizeChange={(v) => {
-                          const oldTop = mod.topFrameThickness ?? globalTop;
-                          const delta = v - oldTop;
-                          const updates: Record<string, any> = { topFrameThickness: v };
-                          if (mod.hasDoor && delta !== 0) {
-                            const oldGap = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5;
-                            updates.doorTopGap = Math.max(0, oldGap + delta);
-                          }
-                          updatePlacedModule(mod.id, updates);
+                          updatePlacedModule(mod.id, { topFrameThickness: v });
                         }}
                         onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                         hlKey={`top-${mod.id}`}
@@ -1537,9 +1497,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               <input type="text" inputMode="numeric"
                                 value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
                                 onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? globalBase; updateBaseFrameWithDoorGap(mod, Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1)))); } }}
-                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updateBaseFrameWithDoorGap(mod, v === '' ? 0 : parseInt(v, 10)); }}
-                                onBlur={(e) => { setHighlightedFrame(null); updateBaseFrameWithDoorGap(mod, Math.max(0, Math.min(9999, parseInt(e.target.value) || 0))); }}
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? globalBase; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameHeight: v === '' ? 0 : parseInt(v, 10) }); }}
+                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                               />
                             </div>

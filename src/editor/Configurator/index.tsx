@@ -933,22 +933,6 @@ const Configurator: React.FC = () => {
         [property]: value
       }
     });
-
-    // 상부프레임 전역 변경 시 도어가 있는 가구의 doorTopGap 자동 보정
-    if (property === 'top') {
-      const oldTop = currentFrameSize.top ?? 30;
-      const delta = value - oldTop;
-      if (delta !== 0) {
-        const currentModules = useFurnitureStore.getState().placedModules;
-        currentModules.filter(m => m.hasDoor).forEach(m => {
-          const oldGap = m.doorTopGap ?? spaceInfo.doorTopGap ?? 1.5;
-          updatePlacedModule(m.id, { doorTopGap: Math.max(0, oldGap + delta) });
-        });
-        // 글로벌 doorTopGap도 동기화
-        const globalOldGap = spaceInfo.doorTopGap ?? 1.5;
-        setSpaceInfo({ doorTopGap: Math.max(0, globalOldGap + delta) });
-      }
-    }
   };
 
   // 프레임 입력 핸들러 함수들
