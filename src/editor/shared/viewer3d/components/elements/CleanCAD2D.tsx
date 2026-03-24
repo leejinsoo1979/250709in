@@ -1133,7 +1133,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 자유배치+단내림: 슬롯합계 불필요 → 3단으로 축소
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
   const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
-  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : hasCurtainBox ? 4 : isFreePlacement ? 4 : 3;
+  const hasFreeStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled;
+  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : hasCurtainBox ? 4 : hasFreeStepCeiling ? 4 : isFreePlacement ? 3 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)

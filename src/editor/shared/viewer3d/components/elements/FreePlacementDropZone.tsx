@@ -1538,7 +1538,8 @@ const FreePlacementDropZone: React.FC = () => {
       {/* 고스트 가구 너비 치수 (상단 CAD 스타일) + 전체 공간 폭 치수 */}
       {ghostPosition && effectiveDimensions && !isColliding && (() => {
         const slotDimY = spaceInfo.height * 0.01 + 120 * 0.01;
-        const topDimY = spaceInfo.height * 0.01 + 120 * 0.01 * 3; // 전체 폭 치수선 Y (3단)
+        const ghostDimLevels = spaceInfo.stepCeiling?.enabled ? 4 : 3;
+        const topDimY = spaceInfo.height * 0.01 + 120 * 0.01 * ghostDimLevels; // 전체 폭 치수선 Y
         const ghostLeftX = ghostPosition.x - (effectiveDimensions.width * 0.01) / 2;
         const ghostRightX = ghostPosition.x + (effectiveDimensions.width * 0.01) / 2;
         const ghostTopY = ghostPosition.y + (ghostEffectiveHeight * 0.01) / 2;
