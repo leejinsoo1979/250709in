@@ -5158,70 +5158,6 @@ const Configurator: React.FC = () => {
 
         {/* 하부프레임 높이/깊이 (글로벌) — 자유배치에서는 상하부프레임 섹션에서 개별 설정 가능하므로 숨김 */}
 
-        {/* 도어 셋팅: 자유배치 + 도어 가구 존재 시 */}
-        {showDoorSetup && (
-          <div className={styles.configSection}>
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>도어 셋팅</h3>
-              <HelpBtn title="도어 셋팅" text="상하부프레임 섹션에서 '상하프레임 가림' 또는 '상하프레임 노출'을 선택하면 도어 갭이 자동 계산됩니다." />
-            </div>
-
-            {/* Close/Open 토글 → ViewerControls 상단바로 이동됨 */}
-
-            {/* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */}
-            <div style={{ marginTop: '8px', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                {/* 헤더: 도어 1, 도어 2, ... */}
-                <thead>
-                  <tr>
-                    <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={doorGapAllSync}
-                          onChange={(e) => setDoorGapAllSync(e.target.checked)}
-                          style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                        />
-                        <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
-                      </label>
-                    </th>
-                    {doorNumberMap.map((info, idx) => (
-                      <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                        {info.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* 상단갭 행 */}
-                  <tr>
-                    <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
-                    {doorFurnitureList.map((mod) => (
-                      <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
-                        storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
-                        onCommit={handleIndividualDoorGapChange} />
-                    ))}
-                  </tr>
-                  {/* 하단갭 행 */}
-                  <tr>
-                    <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
-                    {doorFurnitureList.map((mod) => {
-                      const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
-                      return (
-                      <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                        storeValue={sv}
-                        onCommit={handleIndividualDoorGapChange} />
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-        )}
-
         {/* 슬롯배치: 모든 가구의 상,하부프레임 개별 설정 */}
         {!isFreeMode && (() => {
           const slotMods = placedModules.filter(m => !m.isSurroundPanel);
@@ -6145,19 +6081,19 @@ const Configurator: React.FC = () => {
 
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
-            {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
-            {hasDoorsInstalled && !isMobile && (
-              <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 100, background: 'transparent', border: 'none', padding: 0 }}>
-                <span
-                  onClick={() => setDoorsOpen(false)}
-                  style={{ fontSize: 11, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, fontWeight: doorsOpen !== true ? 700 : 500, color: (viewMode === '2D' && view2DTheme === 'dark') ? (doorsOpen !== true ? '#fff' : 'rgba(255,255,255,0.4)') : (doorsOpen !== true ? '#000' : 'rgba(0,0,0,0.35)') }}
-                >Close</span>
-                <span
-                  onClick={() => setDoorsOpen(true)}
-                  style={{ fontSize: 11, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, fontWeight: doorsOpen === true ? 700 : 500, color: (viewMode === '2D' && view2DTheme === 'dark') ? (doorsOpen === true ? '#fff' : 'rgba(255,255,255,0.4)') : (doorsOpen === true ? '#000' : 'rgba(0,0,0,0.35)') }}
-                >Open</span>
-              </div>
-            )}
+            {/* 도어 Open/Close 알약 토글 */}
+            {hasDoorsInstalled && !isMobile && (() => {
+              const isOpen = doorsOpen === true;
+              const dark = viewMode === '2D' && view2DTheme === 'dark';
+              return (
+                <div
+                  onClick={() => setDoorsOpen(!isOpen)}
+                  style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: 52, height: 26, borderRadius: 13, background: isOpen ? 'var(--theme-primary)' : dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box' }}
+                >
+                  <div style={{ width: 22, height: 22, borderRadius: 11, background: '#fff', transition: 'transform 0.2s', transform: isOpen ? 'translateX(26px)' : 'translateX(0)', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                </div>
+              );
+            })()}
             <Space3DView
               key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
               spaceInfo={spaceInfo}
