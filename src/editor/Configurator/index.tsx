@@ -6146,41 +6146,18 @@ const Configurator: React.FC = () => {
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
-            {hasDoorsInstalled && !isMobile && (() => {
-              const dark = viewMode === '2D' && view2DTheme === 'dark';
-              const base: React.CSSProperties = {
-                fontSize: 11,
-                fontWeight: 500,
-                cursor: 'pointer',
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)',
-              };
-              const active: React.CSSProperties = {
-                ...base,
-                fontWeight: 700,
-                color: dark ? '#ffffff' : '#000000',
-              };
-              return (
-                <div style={{
-                  position: 'absolute',
-                  top: 10,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  display: 'flex',
-                  gap: 8,
-                  zIndex: 100,
-                }}>
-                  <span onClick={() => setDoorsOpen(false)} style={doorsOpen !== true ? active : base}>
-                    Close
-                  </span>
-                  <span onClick={() => setDoorsOpen(true)} style={doorsOpen === true ? active : base}>
-                    Open
-                  </span>
-                </div>
-              );
-            })()}
+            {hasDoorsInstalled && !isMobile && (
+              <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 100, background: 'transparent', border: 'none', padding: 0 }}>
+                <span
+                  onClick={() => setDoorsOpen(false)}
+                  style={{ fontSize: 11, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, fontWeight: doorsOpen !== true ? 700 : 500, color: (viewMode === '2D' && view2DTheme === 'dark') ? (doorsOpen !== true ? '#fff' : 'rgba(255,255,255,0.4)') : (doorsOpen !== true ? '#000' : 'rgba(0,0,0,0.35)') }}
+                >Close</span>
+                <span
+                  onClick={() => setDoorsOpen(true)}
+                  style={{ fontSize: 11, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, fontWeight: doorsOpen === true ? 700 : 500, color: (viewMode === '2D' && view2DTheme === 'dark') ? (doorsOpen === true ? '#fff' : 'rgba(255,255,255,0.4)') : (doorsOpen === true ? '#000' : 'rgba(0,0,0,0.35)') }}
+                >Open</span>
+              </div>
+            )}
             <Space3DView
               key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
               spaceInfo={spaceInfo}
