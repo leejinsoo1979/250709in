@@ -16,7 +16,6 @@ import { getProject, updateProject, createProject, createDesignFile, getDesignFi
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectPermission } from '@/hooks/useProjectPermission';
-import { useTheme } from '@/contexts/ThemeContext';
 import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
@@ -358,8 +357,7 @@ const Configurator: React.FC = () => {
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
-  const { theme } = useTheme();
-  const isDarkTheme = theme.mode === 'dark';
+  const view2DTheme = useUIStore(s => s.view2DTheme);
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -6149,7 +6147,8 @@ const Configurator: React.FC = () => {
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
             {hasDoorsInstalled && !isMobile && (() => {
-              const dark = isDarkTheme;
+              // 3D 뷰어는 항상 밝은 배경, 2D는 view2DTheme에 따라 다름
+              const dark = viewMode === '2D' && view2DTheme === 'dark';
               const btnBase: React.CSSProperties = {
                 borderRadius: 14,
                 padding: '0 12px',
