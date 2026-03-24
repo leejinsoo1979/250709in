@@ -16,6 +16,7 @@ import { getProject, updateProject, createProject, createDesignFile, getDesignFi
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectPermission } from '@/hooks/useProjectPermission';
+import { useTheme } from '@/contexts/ThemeContext';
 import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
@@ -357,6 +358,8 @@ const Configurator: React.FC = () => {
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
+  const { theme } = useTheme();
+  const isDarkTheme = theme.mode === 'dark';
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -6145,72 +6148,50 @@ const Configurator: React.FC = () => {
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
-            {hasDoorsInstalled && !isMobile && (
-              <div style={{
-                position: 'absolute',
-                top: 12,
-                left: '50%',
-                transform: 'translateX(-50%)',
+            {hasDoorsInstalled && !isMobile && (() => {
+              const dark = isDarkTheme;
+              const btnBase: React.CSSProperties = {
+                borderRadius: 14,
+                padding: '0 12px',
+                height: 26,
+                fontSize: 11.5,
+                fontWeight: 500,
+                cursor: 'pointer',
+                minWidth: 44,
                 display: 'flex',
-                gap: 6,
-                zIndex: 100,
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+                transition: 'all 0.2s ease',
+                border: `1px solid ${dark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)'}`,
+                color: dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)',
                 background: 'none',
-                border: 'none',
-                padding: 0,
-                margin: 0,
-              }}>
-                <span
-                  onClick={() => setDoorsOpen(false)}
-                  style={{
-                    border: `1px solid ${viewMode === '2D' ? 'rgba(255,255,255,0.3)' : 'var(--theme-border)'}`,
-                    borderRadius: 14,
-                    padding: '0 12px',
-                    height: 26,
-                    fontSize: 11.5,
-                    fontWeight: doorsOpen !== true ? 600 : 500,
-                    color: doorsOpen !== true
-                      ? (viewMode === '2D' ? '#fff' : 'var(--theme-primary)')
-                      : (viewMode === '2D' ? 'rgba(255,255,255,0.8)' : 'var(--theme-text-secondary)'),
-                    borderColor: doorsOpen !== true ? 'var(--theme-primary)' : undefined,
-                    cursor: 'pointer',
-                    minWidth: 44,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: 1,
-                    background: viewMode === '2D' ? 'rgba(0,0,0,0.35)' : 'none',
-                    backdropFilter: viewMode === '2D' ? 'blur(8px)' : 'none',
-                  }}
-                >
-                  Close
-                </span>
-                <span
-                  onClick={() => setDoorsOpen(true)}
-                  style={{
-                    border: `1px solid ${viewMode === '2D' ? 'rgba(255,255,255,0.3)' : 'var(--theme-border)'}`,
-                    borderRadius: 14,
-                    padding: '0 12px',
-                    height: 26,
-                    fontSize: 11.5,
-                    fontWeight: doorsOpen === true ? 600 : 500,
-                    color: doorsOpen === true
-                      ? (viewMode === '2D' ? '#fff' : 'var(--theme-primary)')
-                      : (viewMode === '2D' ? 'rgba(255,255,255,0.8)' : 'var(--theme-text-secondary)'),
-                    borderColor: doorsOpen === true ? 'var(--theme-primary)' : undefined,
-                    cursor: 'pointer',
-                    minWidth: 44,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: 1,
-                    background: viewMode === '2D' ? 'rgba(0,0,0,0.35)' : 'none',
-                    backdropFilter: viewMode === '2D' ? 'blur(8px)' : 'none',
-                  }}
-                >
-                  Open
-                </span>
-              </div>
-            )}
+              };
+              const btnActive: React.CSSProperties = {
+                ...btnBase,
+                fontWeight: 600,
+                borderColor: 'var(--theme-primary)',
+                color: dark ? '#ffffff' : 'var(--theme-primary)',
+              };
+              return (
+                <div style={{
+                  position: 'absolute',
+                  top: 12,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  gap: 6,
+                  zIndex: 100,
+                }}>
+                  <span onClick={() => setDoorsOpen(false)} style={doorsOpen !== true ? btnActive : btnBase}>
+                    Close
+                  </span>
+                  <span onClick={() => setDoorsOpen(true)} style={doorsOpen === true ? btnActive : btnBase}>
+                    Open
+                  </span>
+                </div>
+              );
+            })()}
             <Space3DView
               key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
               spaceInfo={spaceInfo}
