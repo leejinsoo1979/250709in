@@ -5372,7 +5372,7 @@ const Configurator: React.FC = () => {
             );
           };
 
-          const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
+          const isMergeMode = false; // 설계 과정에서는 항상 분절 (병합은 CNC 내보내기 시에만)
 
           // 병합 모드 전용 렌더 함수 (너비 + 높이 + 옵셋)
           const renderMergedFrameRow = (

@@ -3827,9 +3827,8 @@ const Room: React.FC<RoomProps> = ({
                 });
 
                 // 병합 적용
-                const renderSegs = spaceInfo.frameMergeEnabled
-                  ? mergeFrameSegments(allTopSegments)
-                  : allTopSegments;
+                // 설계 과정에서는 항상 분절 표시 (병합은 CNC 내보내기 시에만 적용)
+                const renderSegs = allTopSegments;
 
                 return renderSegs.map((seg, idx) => {
                   const args: [number, number, number] = [
@@ -3842,8 +3841,8 @@ const Room: React.FC<RoomProps> = ({
                     seg.yPosition,
                     seg.zPosition
                   ];
-                  const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-top-${idx}`;
-                  const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
+                  const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
+                  const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
                   return (
                     <React.Fragment key={`free-top-merged-${idx}`}>
                       <BoxWithEdges
@@ -4307,9 +4306,8 @@ const Room: React.FC<RoomProps> = ({
                   });
                 });
 
-              const renderSlotTopSegs = spaceInfo.frameMergeEnabled
-                ? mergeFrameSegments(slotTopSegments)
-                : slotTopSegments;
+              // 설계 과정에서는 항상 분절 표시 (병합은 CNC 내보내기 시에만 적용)
+              const renderSlotTopSegs = slotTopSegments;
 
               return (
                 <>
@@ -4324,8 +4322,8 @@ const Room: React.FC<RoomProps> = ({
                       seg.yPosition,
                       seg.zPosition
                     ];
-                    const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-top-${idx}`;
-                    const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
+                    const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
+                    const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
                     return (
                       <React.Fragment key={`slot-top-merged-${idx}`}>
                         <BoxWithEdges
@@ -5221,9 +5219,8 @@ const Room: React.FC<RoomProps> = ({
             });
           });
 
-          const renderBaseSegs = spaceInfo.frameMergeEnabled
-            ? mergeFrameSegments(allBaseSegments)
-            : allBaseSegments;
+          // 설계 과정에서는 항상 분절 표시 (병합은 CNC 내보내기 시에만 적용)
+          const renderBaseSegs = allBaseSegments;
 
           return (
             <>
@@ -5238,8 +5235,8 @@ const Room: React.FC<RoomProps> = ({
                   seg.yPosition,
                   seg.zPosition
                 ];
-                const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-base-${idx}`;
-                const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
+                const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
+                const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
                 return (
                   <React.Fragment key={`free-base-merged-${idx}`}>
                     <BoxWithEdges
@@ -5394,9 +5391,8 @@ const Room: React.FC<RoomProps> = ({
                       });
                     });
 
-                  const renderSlotBaseSegs = spaceInfo.frameMergeEnabled
-                    ? mergeFrameSegments(slotBaseSegments)
-                    : slotBaseSegments;
+                  // 설계 과정에서는 항상 분절 표시 (병합은 CNC 내보내기 시에만 적용)
+                  const renderSlotBaseSegs = slotBaseSegments;
 
                   return (
                     <React.Fragment key={`base-frame-zone-${zoneIndex}`}>
@@ -5411,8 +5407,8 @@ const Room: React.FC<RoomProps> = ({
                           seg.yPosition,
                           seg.zPosition
                         ];
-                        const isMergedHighlighted = spaceInfo.frameMergeEnabled && highlightedFrame === `merged-base-${idx}`;
-                        const isIndividualHighlighted = !spaceInfo.frameMergeEnabled && seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
+                        const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
+                        const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
                         return (
                           <React.Fragment key={`slot-base-merged-${idx}`}>
                             <BoxWithEdges
