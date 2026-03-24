@@ -5057,7 +5057,7 @@ const Configurator: React.FC = () => {
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
-                      updatePlacedModule(mod.id, { freeHeight: newFreeHeight, topFrameThickness: v });
+                      updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
                     }}
                     onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                     highlightKey={`top-${mod.id}`}

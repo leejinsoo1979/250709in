@@ -345,10 +345,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     setDoorBottomGapInput((storeDoorBottomGap ?? 25).toString());
   }, [storeDoorTopGap, storeDoorBottomGap]);
 
-  // 전체서라운드: 프레임 두께 변경 시 doorTopGap = frameTop + 3 자동 동기화
-  const effectiveTopFrame = placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
-  // 슬롯배치: surroundType === 'surround' && frameConfig.top !== false
-  // 자유배치: hasTopFrame !== false (프레임이 서라운드와 독립적으로 존재)
+  // 전체서라운드/자유배치: 프레임 두께 변경 시 doorTopGap = frameTop + 3 자동 동기화
+  // 슬롯배치: topFrameThickness 또는 글로벌 frameSize.top 사용
+  // 자유배치: 실제 프레임 크기 = 공간높이 - 받침대 - 띄움높이 - freeHeight
+  const effectiveTopFrame = (() => {
+    if (placedModule.isFreePlacement && placedModule.freeHeight) {
+      const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      const standFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+      const floatH = standFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+      const isDroppedZone = placedModule.zone === 'dropped';
+      const stepDrop = (isDroppedZone && spaceInfo.stepCeiling?.enabled) ? (spaceInfo.stepCeiling?.dropHeight || 0) : 0;
+      const dcDrop = (isDroppedZone && spaceInfo.droppedCeiling?.enabled && !spaceInfo.stepCeiling?.enabled) ? (spaceInfo.droppedCeiling?.dropHeight || 0) : 0;
+      const effSpaceH = spaceInfo.height - stepDrop - dcDrop;
+      return Math.max(0, effSpaceH - baseH - floatH - placedModule.freeHeight);
+    }
+    return placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+  })();
   const isSlotSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
   const isFreeTopFrame = placedModule.isFreePlacement && placedModule.hasTopFrame !== false;
   const hasTopFrameActive = isSlotSurround || isFreeTopFrame;
