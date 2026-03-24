@@ -2902,8 +2902,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 서라운드 모드 좌측 프레임 치수선 - 자유배치/커튼박스 좌측 시 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (
+      {/* 서라운드 모드 좌측 프레임 치수선 - 커튼박스 좌측 시 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (
       <group>
             {/* 치수선 */}
             <Line
@@ -3179,8 +3179,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 서라운드 모드 우측 프레임 치수선 - 자유배치/커튼박스 우측 시 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (
+      {/* 서라운드 모드 우측 프레임 치수선 - 커튼박스 우측 시 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (
       <group>
             {/* 치수선 */}
             <Line
@@ -3241,8 +3241,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
 
 
-      {/* 전체 내부 너비 치수선 (자유배치/단내림 모드에서는 숨김) */}
-      {!isFreePlacement && !hasDroppedCeiling && (() => {
+      {/* 전체 내부 너비 치수선 (단내림 모드에서는 숨김, 자유배치에서는 stepCeiling 없을 때 표시) */}
+      {!(hasDroppedCeiling && !isFreePlacement) && !(isFreePlacement && spaceInfo.stepCeiling?.enabled) && (() => {
         const internalLeftX = threeUnitBoundaries[0];
         const internalRightX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
         const internalWidthMm = indexing.internalWidth;
