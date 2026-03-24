@@ -6146,16 +6146,66 @@ const Configurator: React.FC = () => {
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
             {hasDoorsInstalled && !isMobile && (
-              <div className={styles.doorToggleOverlay}>
+              <div style={{
+                position: 'absolute',
+                top: 12,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                gap: 6,
+                zIndex: 100,
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                margin: 0,
+              }}>
                 <span
-                  className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen !== true ? styles.active : ''}`}
                   onClick={() => setDoorsOpen(false)}
+                  style={{
+                    border: `1px solid ${viewMode === '2D' ? 'rgba(255,255,255,0.3)' : 'var(--theme-border)'}`,
+                    borderRadius: 14,
+                    padding: '0 12px',
+                    height: 26,
+                    fontSize: 11.5,
+                    fontWeight: doorsOpen !== true ? 600 : 500,
+                    color: doorsOpen !== true
+                      ? (viewMode === '2D' ? '#fff' : 'var(--theme-primary)')
+                      : (viewMode === '2D' ? 'rgba(255,255,255,0.8)' : 'var(--theme-text-secondary)'),
+                    borderColor: doorsOpen !== true ? 'var(--theme-primary)' : undefined,
+                    cursor: 'pointer',
+                    minWidth: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                    background: viewMode === '2D' ? 'rgba(0,0,0,0.35)' : 'none',
+                    backdropFilter: viewMode === '2D' ? 'blur(8px)' : 'none',
+                  }}
                 >
                   Close
                 </span>
                 <span
-                  className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen === true ? styles.active : ''}`}
                   onClick={() => setDoorsOpen(true)}
+                  style={{
+                    border: `1px solid ${viewMode === '2D' ? 'rgba(255,255,255,0.3)' : 'var(--theme-border)'}`,
+                    borderRadius: 14,
+                    padding: '0 12px',
+                    height: 26,
+                    fontSize: 11.5,
+                    fontWeight: doorsOpen === true ? 600 : 500,
+                    color: doorsOpen === true
+                      ? (viewMode === '2D' ? '#fff' : 'var(--theme-primary)')
+                      : (viewMode === '2D' ? 'rgba(255,255,255,0.8)' : 'var(--theme-text-secondary)'),
+                    borderColor: doorsOpen === true ? 'var(--theme-primary)' : undefined,
+                    cursor: 'pointer',
+                    minWidth: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                    background: viewMode === '2D' ? 'rgba(0,0,0,0.35)' : 'none',
+                    backdropFilter: viewMode === '2D' ? 'blur(8px)' : 'none',
+                  }}
                 >
                   Open
                 </span>
