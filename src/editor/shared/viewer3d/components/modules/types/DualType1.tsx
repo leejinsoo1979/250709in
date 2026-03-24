@@ -45,7 +45,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   backPanelThickness,
   zone, // 단내림 영역 정보
   hasBase,
-  individualFloatHeight
+  individualFloatHeight,
+  parentGroupY
 }) => {
   console.log('🔍🔍🔍 [DualType1] Props 확인 - 렌더링됨!');
   console.log('  moduleId:', moduleData.id);
@@ -141,6 +142,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         zone={zone}
         hasBase={hasBase}
         individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
   ) : null;
 

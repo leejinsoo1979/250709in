@@ -48,7 +48,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   hasBase,
   individualFloatHeight,
   doorTopGap,
-  doorBottomGap
+  doorBottomGap,
+  parentGroupY
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -1579,6 +1580,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           zone={zone}
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
+          parentGroupY={parentGroupY}
         />
       )}
     </>

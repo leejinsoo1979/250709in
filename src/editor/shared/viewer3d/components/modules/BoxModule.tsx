@@ -339,6 +339,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone}
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
         />
       </>
     );
@@ -395,6 +396,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -453,6 +455,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -502,6 +505,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone}
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -552,6 +556,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone}
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -598,6 +603,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone}
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -645,6 +651,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         individualFloatHeight={individualFloatHeight}
         doorTopGap={doorTopGap}
         doorBottomGap={doorBottomGap}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -702,6 +709,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         individualFloatHeight={individualFloatHeight}
         doorTopGap={doorTopGap}
         doorBottomGap={doorBottomGap}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -740,6 +748,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );
@@ -778,6 +787,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
       />
       </>
     );

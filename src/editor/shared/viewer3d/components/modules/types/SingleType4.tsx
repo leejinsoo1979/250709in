@@ -45,7 +45,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   zone,
   hasBase,
-  individualFloatHeight
+  individualFloatHeight,
+  parentGroupY
 }) => {
   // 공통 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -268,6 +269,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           zone={zone}
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
+          parentGroupY={parentGroupY}
         />
       )}
     </>

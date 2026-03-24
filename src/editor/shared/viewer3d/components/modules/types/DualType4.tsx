@@ -52,7 +52,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   zone, // 단내림 영역 정보
   hasBase,
-  individualFloatHeight
+  individualFloatHeight,
+  parentGroupY
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -758,6 +759,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           zone={zone}
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
+          parentGroupY={parentGroupY}
         />
       )}
     </>

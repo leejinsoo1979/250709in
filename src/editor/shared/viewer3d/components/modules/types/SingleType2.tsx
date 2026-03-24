@@ -51,7 +51,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   zone,
   hasBase,
-  individualFloatHeight
+  individualFloatHeight,
+  parentGroupY
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -819,6 +820,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           zone={zone}
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
+          parentGroupY={parentGroupY}
         />
       )}
 

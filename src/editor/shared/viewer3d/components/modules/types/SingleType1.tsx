@@ -39,7 +39,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   zone,
   hasBase,
-  individualFloatHeight
+  individualFloatHeight,
+  parentGroupY
 }) => {
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -279,6 +280,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           zone={zone}
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
+          parentGroupY={parentGroupY}
         />
       )}
     </>
