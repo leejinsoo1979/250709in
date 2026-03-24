@@ -1370,11 +1370,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           }}
                           onHeightChange={(v) => {
                             const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                            console.log('🔧 MergedFrameRow 상부프레임 높이 변경:', { v, isFullSurround, surroundType: spaceInfo.surroundType, frameConfigTop: spaceInfo.frameConfig?.top });
                             group.moduleIds.forEach(id => {
                               const updates: Record<string, any> = { topFrameThickness: v };
                               if (isFullSurround) {
                                 const mod = slotMods.find(m => m.id === id);
                                 if (mod?.hasDoor) updates.doorTopGap = v + 3;
+                                console.log('🔧 doorTopGap 업데이트:', { id, hasDoor: mod?.hasDoor, newGap: v + 3 });
                               }
                               updatePlacedModule(id, updates);
                             });
@@ -1450,6 +1452,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                         onSizeChange={(v) => {
                           const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                          console.log('🔧 FrameRow 상부프레임 변경:', { v, isFullSurround, hasDoor: mod.hasDoor });
                           const updates: Record<string, any> = { topFrameThickness: v };
                           if (isFullSurround && mod.hasDoor) updates.doorTopGap = v + 3;
                           updatePlacedModule(mod.id, updates);

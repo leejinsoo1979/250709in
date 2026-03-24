@@ -936,6 +936,7 @@ const Configurator: React.FC = () => {
 
     // 전체서라운드 + 상부프레임 변경 시 도어 이격 동기화: frameTop + 3
     if (property === 'top') {
+      console.log('🔧 updateFrameSize top 호출됨:', { value, surroundType: spaceInfo.surroundType, frameConfigTop: spaceInfo.frameConfig?.top });
       const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
       if (isFullSurround) {
         const newGap = value + 3;
@@ -5064,6 +5065,7 @@ const Configurator: React.FC = () => {
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
                     onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                     onSizeChange={(v) => {
+                      console.log('🔧 FrameOffsetRow 상부프레임 변경 (freeHeight):', { v, modId: mod.id });
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
