@@ -6142,26 +6142,25 @@ const Configurator: React.FC = () => {
             />
           )}
 
-          {/* 도어 Close/Open 토글 — 뷰어 상단 중앙 */}
-          {hasDoorsInstalled && !isMobile && (
-            <div className={styles.doorToggleOverlay}>
-              <span
-                className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen !== true ? styles.active : ''}`}
-                onClick={() => setDoorsOpen(false)}
-              >
-                Close
-              </span>
-              <span
-                className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen === true ? styles.active : ''}`}
-                onClick={() => setDoorsOpen(true)}
-              >
-                Open
-              </span>
-            </div>
-          )}
-
           {/* 3D 뷰어 */}
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
+            {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
+            {hasDoorsInstalled && !isMobile && (
+              <div className={styles.doorToggleOverlay}>
+                <span
+                  className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen !== true ? styles.active : ''}`}
+                  onClick={() => setDoorsOpen(false)}
+                >
+                  Close
+                </span>
+                <span
+                  className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen === true ? styles.active : ''}`}
+                  onClick={() => setDoorsOpen(true)}
+                >
+                  Open
+                </span>
+              </div>
+            )}
             <Space3DView
               key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
               spaceInfo={spaceInfo}
