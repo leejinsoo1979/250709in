@@ -765,6 +765,7 @@ export type SpaceConfigDefaults = {
   furnitureDualWidth?: number;
   surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
   installType?: 'builtin' | 'semistanding-left' | 'semistanding-right' | 'freestanding';
+  placementType?: 'slot' | 'free';
   droppedCeilingEnabled?: boolean;
   droppedCeilingPosition?: 'left' | 'right';
   droppedCeilingWidth?: number;

@@ -18,6 +18,7 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   baseHeight: 65,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
+  placementType: 'slot',
   surroundMode: 'full-surround',
   installType: 'builtin' as const,
   droppedCeilingEnabled: false,
@@ -225,14 +226,26 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
             )}
           </div>
 
-          {/* 가구 배치 기본 너비 */}
+          {/* 배치타입 */}
           <div className={styles.section}>
-            <div className={styles.sectionLabel}>가구 배치 기본 너비</div>
-            <div className={styles.row}>
-              <NumberInput label="싱글" value={values.furnitureSingleWidth} onChange={h('furnitureSingleWidth')} min={200} max={1200} step={10} />
-              <NumberInput label="듀얼" value={values.furnitureDualWidth} onChange={h('furnitureDualWidth')} min={400} max={2400} step={10} />
-            </div>
+            <div className={styles.sectionLabel}>배치타입</div>
+            <Toggle
+              options={[{ id: 'slot', label: '슬롯 배치' }, { id: 'free', label: '자유 배치' }]}
+              selected={values.placementType}
+              onChange={(id) => set('placementType', id as any)}
+            />
           </div>
+
+          {/* 가구 배치 기본 너비 (자유배치일 때만) */}
+          {values.placementType === 'free' && (
+            <div className={styles.section}>
+              <div className={styles.sectionLabel}>가구 배치 기본 너비</div>
+              <div className={styles.row}>
+                <NumberInput label="싱글" value={values.furnitureSingleWidth} onChange={h('furnitureSingleWidth')} min={200} max={1200} step={10} />
+                <NumberInput label="듀얼" value={values.furnitureDualWidth} onChange={h('furnitureDualWidth')} min={400} max={2400} step={10} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 푸터 */}
