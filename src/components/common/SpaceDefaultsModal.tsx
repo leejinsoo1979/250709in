@@ -19,7 +19,7 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
   surroundMode: 'full-surround',
-  installType: 'builtin',
+  installType: 'builtin' as const,
   droppedCeilingEnabled: false,
   droppedCeilingPosition: 'right',
   droppedCeilingWidth: 1300,
@@ -33,9 +33,10 @@ const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; 
 ];
 
 const INSTALL_OPTIONS: { id: NonNullable<SpaceConfigDefaults['installType']>; label: string }[] = [
-  { id: 'builtin', label: '빌트인' },
-  { id: 'semistanding', label: '반빌트인' },
-  { id: 'freestanding', label: '스탠딩' },
+  { id: 'builtin', label: '양쪽벽' },
+  { id: 'semistanding-left', label: '좌측벽' },
+  { id: 'semistanding-right', label: '우측벽' },
+  { id: 'freestanding', label: '벽없음' },
 ];
 
 /* ── NumberInput ── */

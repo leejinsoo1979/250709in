@@ -101,7 +101,20 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
                 : { left: false, right: false, top: true, bottom: false },
           } : {}),
           // 공간유형
-          ...(defaults.installType ? { installType: defaults.installType } : {}),
+          ...(defaults.installType ? (() => {
+            switch (defaults.installType) {
+              case 'builtin':
+                return { installType: 'builtin' as const, wallConfig: { left: true, right: true } };
+              case 'semistanding-left':
+                return { installType: 'semistanding' as const, wallConfig: { left: true, right: false } };
+              case 'semistanding-right':
+                return { installType: 'semistanding' as const, wallConfig: { left: false, right: true } };
+              case 'freestanding':
+                return { installType: 'freestanding' as const, wallConfig: { left: false, right: false } };
+              default:
+                return {};
+            }
+          })() : {}),
           // 단내림
           ...(defaults.droppedCeilingEnabled !== undefined ? {
             droppedCeiling: {

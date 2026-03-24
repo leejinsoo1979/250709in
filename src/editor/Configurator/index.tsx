@@ -1745,7 +1745,20 @@ const Configurator: React.FC = () => {
                   ? { left: true, right: true, top: false, bottom: false }
                   : { left: false, right: false, top: true, bottom: false },
             } : {}),
-            ...(defaults.installType ? { installType: defaults.installType } : {}),
+            ...(defaults.installType ? (() => {
+              switch (defaults.installType) {
+                case 'builtin':
+                  return { installType: 'builtin' as const, wallConfig: { left: true, right: true } };
+                case 'semistanding-left':
+                  return { installType: 'semistanding' as const, wallConfig: { left: true, right: false } };
+                case 'semistanding-right':
+                  return { installType: 'semistanding' as const, wallConfig: { left: false, right: true } };
+                case 'freestanding':
+                  return { installType: 'freestanding' as const, wallConfig: { left: false, right: false } };
+                default:
+                  return {};
+              }
+            })() : {}),
             ...(defaults.droppedCeilingEnabled !== undefined ? {
               droppedCeiling: {
                 enabled: defaults.droppedCeilingEnabled,
