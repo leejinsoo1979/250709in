@@ -6147,45 +6147,49 @@ const Configurator: React.FC = () => {
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
             {hasDoorsInstalled && !isMobile && (() => {
-              // 3D 뷰어는 항상 밝은 배경, 2D는 view2DTheme에 따라 다름
               const dark = viewMode === '2D' && view2DTheme === 'dark';
-              const btnBase: React.CSSProperties = {
+              const fg = dark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
+              const fgActive = dark ? '#fff' : 'var(--theme-primary)';
+              const bgActive = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
+              const pillStyle: React.CSSProperties = {
                 borderRadius: 14,
-                padding: '0 12px',
-                height: 26,
-                fontSize: 11.5,
+                padding: '0 10px',
+                height: 24,
+                fontSize: 11,
                 fontWeight: 500,
                 cursor: 'pointer',
-                minWidth: 44,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 lineHeight: 1,
-                transition: 'all 0.2s ease',
-                border: `1px solid ${dark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)'}`,
-                color: dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)',
+                transition: 'all 0.15s ease',
+                border: 'none',
                 background: 'none',
+                color: fg,
               };
-              const btnActive: React.CSSProperties = {
-                ...btnBase,
+              const pillActive: React.CSSProperties = {
+                ...pillStyle,
                 fontWeight: 600,
-                borderColor: 'var(--theme-primary)',
-                color: dark ? '#ffffff' : 'var(--theme-primary)',
+                color: fgActive,
+                background: bgActive,
               };
               return (
                 <div style={{
                   position: 'absolute',
-                  top: 12,
+                  top: 10,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   display: 'flex',
-                  gap: 6,
+                  gap: 2,
                   zIndex: 100,
+                  background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  borderRadius: 16,
+                  padding: 2,
                 }}>
-                  <span onClick={() => setDoorsOpen(false)} style={doorsOpen !== true ? btnActive : btnBase}>
+                  <span onClick={() => setDoorsOpen(false)} style={doorsOpen !== true ? pillActive : pillStyle}>
                     Close
                   </span>
-                  <span onClick={() => setDoorsOpen(true)} style={doorsOpen === true ? btnActive : btnBase}>
+                  <span onClick={() => setDoorsOpen(true)} style={doorsOpen === true ? pillActive : pillStyle}>
                     Open
                   </span>
                 </div>
