@@ -917,6 +917,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const bodyAbsCenter = (parentGroupYProp ?? 0) * 100;
 
       doorYPosition = mmToThreeUnits(doorAbsCenter - bodyAbsCenter);
+      console.log('🚪🔍 도어Y 절대좌표:', {
+        moduleId: moduleData?.id?.slice(0, 20),
+        doorTopGap, doorBottomGap, fullSpaceHeight, floorFinish,
+        doorAbsBottom, doorAbsTop, doorAbsCenter,
+        parentGroupYProp, bodyAbsCenter,
+        doorYPosition_mm: doorAbsCenter - bodyAbsCenter,
+        doorYPosition,
+        actualDoorHeight,
+      });
     }
   }
 
