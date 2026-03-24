@@ -348,10 +348,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 전체서라운드: 프레임 두께 변경 시 doorTopGap = frameTop + 3 자동 동기화
   const effectiveTopFrame = placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
   // 슬롯배치: surroundType === 'surround' && frameConfig.top !== false
-  // 자유배치: freeSurround.top.enabled && hasTopFrame !== false
+  // 자유배치: hasTopFrame !== false (프레임이 서라운드와 독립적으로 존재)
   const isSlotSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-  const isFreeSurroundTop = placedModule.isFreePlacement && spaceInfo.freeSurround?.top?.enabled && placedModule.hasTopFrame !== false;
-  const hasTopFrameActive = isSlotSurround || isFreeSurroundTop;
+  const isFreeTopFrame = placedModule.isFreePlacement && placedModule.hasTopFrame !== false;
+  const hasTopFrameActive = isSlotSurround || isFreeTopFrame;
   useEffect(() => {
     if (!hasTopFrameActive || !placedModule.hasDoor) return;
     const expectedGap = effectiveTopFrame + 3;
