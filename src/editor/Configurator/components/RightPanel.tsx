@@ -1369,17 +1369,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
                           }}
                           onHeightChange={(v) => {
-                            const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-                            console.log('🔧 MergedFrameRow 상부프레임 높이 변경:', { v, isFullSurround, surroundType: spaceInfo.surroundType, frameConfigTop: spaceInfo.frameConfig?.top });
-                            group.moduleIds.forEach(id => {
-                              const updates: Record<string, any> = { topFrameThickness: v };
-                              if (isFullSurround) {
-                                const mod = slotMods.find(m => m.id === id);
-                                if (mod?.hasDoor) updates.doorTopGap = v + 3;
-                                console.log('🔧 doorTopGap 업데이트:', { id, hasDoor: mod?.hasDoor, newGap: v + 3 });
-                              }
-                              updatePlacedModule(id, updates);
-                            });
+                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
+                            // doorTopGap 동기화는 FurnitureItem의 useEffect에서 자동 처리
                           }}
                           onOffsetChange={(v) => {
                             group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
@@ -1451,11 +1442,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         offset={mod.topFrameOffset ?? 0}
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                         onSizeChange={(v) => {
-                          const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-                          console.log('🔧 FrameRow 상부프레임 변경:', { v, isFullSurround, hasDoor: mod.hasDoor });
-                          const updates: Record<string, any> = { topFrameThickness: v };
-                          if (isFullSurround && mod.hasDoor) updates.doorTopGap = v + 3;
-                          updatePlacedModule(mod.id, updates);
+                          updatePlacedModule(mod.id, { topFrameThickness: v });
+                          // doorTopGap 동기화는 FurnitureItem의 useEffect에서 자동 처리
                         }}
                         onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                         hlKey={`top-${mod.id}`}
