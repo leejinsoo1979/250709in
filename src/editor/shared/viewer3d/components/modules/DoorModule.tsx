@@ -904,28 +904,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // });
   } else {
     // 키큰장 도어 Y 위치: 오직 doorTopGap/doorBottomGap으로만 결정
-    // 프레임 두께 등 다른 요소에 의해 변하지 않음
     // 도어 절대 위치(바닥 기준 mm)를 구한 뒤, body center와의 차이로 로컬 좌표 계산
     {
       const floorFinish = (isFloorTypeForDoor && originalSpaceInfo.hasFloorFinish)
         ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
-      const doorAbsBottom = doorBottomGap + floorFinish; // 바닥 기준 도어 하단
-      const doorAbsTop = fullSpaceHeight - doorTopGap;   // 바닥 기준 도어 상단
+      const doorAbsBottom = doorBottomGap + floorFinish;
+      const doorAbsTop = fullSpaceHeight - doorTopGap;
       const doorAbsCenter = (doorAbsBottom + doorAbsTop) / 2;
 
-      // body center 절대 위치 (parentGroupY는 Three.js 단위 = mm * 0.01)
-      const bodyAbsCenter = (parentGroupYProp ?? 0) * 100;
+      // body center 절대 위치
+      // parentGroupY가 전달된 경우 사용, 아니면 자체 계산
+      let bodyAbsCenter: number;
+      if (parentGroupYProp !== undefined) {
+        bodyAbsCenter = parentGroupYProp * 100; // Three.js → mm
+      } else {
+        // 자체 계산: floorFinish + base + furnitureHeight/2
+        const isFloorType = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
+        const floorForBody = isFloorType ? (floorFinish) : 0;
+        const baseForBody = placementType === 'float'
+          ? (floatHeight || 0)
+          : (individualBaseFrameHeightProp ?? originalSpaceInfo.baseConfig?.height ?? 65);
+        bodyAbsCenter = floorForBody + baseForBody + tallCabinetFurnitureHeight / 2;
+      }
 
       doorYPosition = mmToThreeUnits(doorAbsCenter - bodyAbsCenter);
-      console.log('🚪🔍 도어Y 절대좌표:', {
-        moduleId: moduleData?.id?.slice(0, 20),
-        doorTopGap, doorBottomGap, fullSpaceHeight, floorFinish,
-        doorAbsBottom, doorAbsTop, doorAbsCenter,
-        parentGroupYProp, bodyAbsCenter,
-        doorYPosition_mm: doorAbsCenter - bodyAbsCenter,
-        doorYPosition,
-        actualDoorHeight,
-      });
     }
   }
 
