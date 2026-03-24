@@ -6146,13 +6146,13 @@ const Configurator: React.FC = () => {
           {hasDoorsInstalled && !isMobile && (
             <div className={styles.doorToggleOverlay}>
               <span
-                className={`${styles.viewerDoorButton} ${doorsOpen !== true ? styles.active : ''}`}
+                className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen !== true ? styles.active : ''}`}
                 onClick={() => setDoorsOpen(false)}
               >
                 Close
               </span>
               <span
-                className={`${styles.viewerDoorButton} ${doorsOpen === true ? styles.active : ''}`}
+                className={`${styles.viewerDoorButton} ${viewMode === '2D' ? styles.viewerDoorButtonDark : ''} ${doorsOpen === true ? styles.active : ''}`}
                 onClick={() => setDoorsOpen(true)}
               >
                 Open
