@@ -220,10 +220,10 @@ export interface UserProfile {
     surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
     installType?: 'builtin' | 'semistanding-left' | 'semistanding-right' | 'freestanding';
     placementType?: 'slot' | 'free';
-    droppedCeilingEnabled?: boolean;
-    droppedCeilingPosition?: 'left' | 'right';
+    droppedCeilingMode?: 'none' | 'left' | 'right';
     droppedCeilingWidth?: number;
     droppedCeilingDropHeight?: number;
+    curtainBoxMode?: 'none' | 'left' | 'right';
   };
 
   createdAt: Timestamp;

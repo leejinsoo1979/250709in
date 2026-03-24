@@ -116,12 +116,21 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
             }
           })() : {}),
           // 단내림
-          ...(defaults.droppedCeilingEnabled !== undefined ? {
+          ...(defaults.droppedCeilingMode && defaults.droppedCeilingMode !== 'none' ? {
             droppedCeiling: {
-              enabled: defaults.droppedCeilingEnabled,
-              position: defaults.droppedCeilingPosition ?? 'right',
+              enabled: true,
+              position: defaults.droppedCeilingMode,
               width: defaults.droppedCeilingWidth ?? 1300,
               dropHeight: defaults.droppedCeilingDropHeight ?? 200,
+            },
+          } : {}),
+          // 커튼박스
+          ...(defaults.curtainBoxMode && defaults.curtainBoxMode !== 'none' ? {
+            curtainBox: {
+              enabled: true,
+              position: defaults.curtainBoxMode,
+              width: 100,
+              dropHeight: 200,
             },
           } : {}),
         });

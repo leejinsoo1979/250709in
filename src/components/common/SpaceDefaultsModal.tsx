@@ -21,10 +21,10 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   placementType: 'slot',
   surroundMode: 'full-surround',
   installType: 'builtin' as const,
-  droppedCeilingEnabled: false,
-  droppedCeilingPosition: 'right',
+  droppedCeilingMode: 'none',
   droppedCeilingWidth: 1300,
   droppedCeilingDropHeight: 200,
+  curtainBoxMode: 'none',
 };
 
 const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; label: string }[] = [
@@ -174,26 +174,26 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
           <div className={styles.section}>
             <div className={styles.sectionLabel}>단내림</div>
             <Toggle
-              options={[{ id: 'no', label: '없음' }, { id: 'yes', label: '있음' }]}
-              selected={values.droppedCeilingEnabled ? 'yes' : 'no'}
-              onChange={(id) => set('droppedCeilingEnabled', id === 'yes')}
+              options={[{ id: 'none', label: '없음' }, { id: 'left', label: '좌단내림' }, { id: 'right', label: '우단내림' }]}
+              selected={values.droppedCeilingMode}
+              onChange={(id) => set('droppedCeilingMode', id as any)}
             />
-            {values.droppedCeilingEnabled && (
-              <>
-                <div className={styles.row} style={{ marginTop: 6 }}>
-                  <div className={styles.numberInput}>
-                    <div className={styles.inputLabel}>위치</div>
-                    <Toggle
-                      options={[{ id: 'left', label: '좌측' }, { id: 'right', label: '우측' }]}
-                      selected={values.droppedCeilingPosition}
-                      onChange={(id) => set('droppedCeilingPosition', id as any)}
-                    />
-                  </div>
-                  <NumberInput label="내림높이" value={values.droppedCeilingDropHeight} onChange={h('droppedCeilingDropHeight')} min={50} max={500} step={10} />
-                </div>
+            {values.droppedCeilingMode !== 'none' && (
+              <div className={styles.row}>
+                <NumberInput label="내림높이" value={values.droppedCeilingDropHeight} onChange={h('droppedCeilingDropHeight')} min={50} max={500} step={10} />
                 <NumberInput label="단내림 너비" value={values.droppedCeilingWidth} onChange={h('droppedCeilingWidth')} min={600} max={2400} step={100} />
-              </>
+              </div>
             )}
+          </div>
+
+          {/* 커튼박스 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>커튼박스</div>
+            <Toggle
+              options={[{ id: 'none', label: '없음' }, { id: 'left', label: '좌측' }, { id: 'right', label: '우측' }]}
+              selected={values.curtainBoxMode}
+              onChange={(id) => set('curtainBoxMode', id as any)}
+            />
           </div>
 
           {/* 이격거리 */}

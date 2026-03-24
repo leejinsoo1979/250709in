@@ -766,10 +766,10 @@ export type SpaceConfigDefaults = {
   surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
   installType?: 'builtin' | 'semistanding-left' | 'semistanding-right' | 'freestanding';
   placementType?: 'slot' | 'free';
-  droppedCeilingEnabled?: boolean;
-  droppedCeilingPosition?: 'left' | 'right';
+  droppedCeilingMode?: 'none' | 'left' | 'right';
   droppedCeilingWidth?: number;
   droppedCeilingDropHeight?: number;
+  curtainBoxMode?: 'none' | 'left' | 'right';
 };
 
 // 공간설정 기본값 조회
