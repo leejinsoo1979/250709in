@@ -6147,10 +6147,8 @@ const Configurator: React.FC = () => {
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 도어 Close/Open 토글 — 뷰어 캔버스 위 오버레이 */}
             {hasDoorsInstalled && !isMobile && (() => {
+              // 2D 다크일 때만 다크 스타일, 그 외(3D 포함)는 항상 라이트 스타일
               const dark = viewMode === '2D' && view2DTheme === 'dark';
-              const fg = dark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
-              const fgActive = dark ? '#fff' : 'var(--theme-primary)';
-              const bgActive = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
               const pillStyle: React.CSSProperties = {
                 borderRadius: 14,
                 padding: '0 10px',
@@ -6165,13 +6163,13 @@ const Configurator: React.FC = () => {
                 transition: 'all 0.15s ease',
                 border: 'none',
                 background: 'none',
-                color: fg,
+                color: dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
               };
               const pillActive: React.CSSProperties = {
                 ...pillStyle,
                 fontWeight: 600,
-                color: fgActive,
-                background: bgActive,
+                color: dark ? '#ffffff' : '#000000',
+                background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
               };
               return (
                 <div style={{
@@ -6182,7 +6180,8 @@ const Configurator: React.FC = () => {
                   display: 'flex',
                   gap: 2,
                   zIndex: 100,
-                  background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  background: dark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
+                  backdropFilter: 'blur(8px)',
                   borderRadius: 16,
                   padding: 2,
                 }}>
