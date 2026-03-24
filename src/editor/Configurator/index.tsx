@@ -6149,18 +6149,17 @@ const Configurator: React.FC = () => {
             {hasDoorsInstalled && !isMobile && (() => {
               const isOpen = doorsOpen === true;
               const dark = viewMode === '2D' && view2DTheme === 'dark';
-              const labelColor = dark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)';
-              const labelActiveColor = dark ? '#fff' : '#000';
               return (
-                <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
-                  <span style={{ fontSize: 10, fontWeight: !isOpen ? 700 : 400, color: !isOpen ? labelActiveColor : labelColor, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }} onClick={() => setDoorsOpen(false)}>Close</span>
-                  <div
-                    onClick={() => setDoorsOpen(!isOpen)}
-                    style={{ width: 40, height: 22, borderRadius: 11, background: isOpen ? 'var(--theme-primary)' : dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', flexShrink: 0 }}
-                  >
-                    <div style={{ width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'transform 0.2s', transform: isOpen ? 'translateX(18px)' : 'translateX(0)', boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }} />
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: isOpen ? 700 : 400, color: isOpen ? labelActiveColor : labelColor, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }} onClick={() => setDoorsOpen(true)}>Open</span>
+                <div
+                  onClick={() => setDoorsOpen(!isOpen)}
+                  style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', position: 'absolute', userSelect: 'none' }}
+                >
+                  {/* 슬라이딩 활성 배경 */}
+                  <div style={{ position: 'absolute', top: 2, left: isOpen ? 46 : 2, width: 42, height: 24, borderRadius: 12, background: 'var(--theme-primary)', transition: 'left 0.2s' }} />
+                  {/* Close 라벨 */}
+                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)', zIndex: 1, lineHeight: '24px' }}>Close</span>
+                  {/* Open 라벨 */}
+                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)', zIndex: 1, lineHeight: '24px' }}>Open</span>
                 </div>
               );
             })()}
