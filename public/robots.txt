@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /configurator
+Disallow: /step0
+
+Sitemap: https://tttcraft.com/sitemap.xml
