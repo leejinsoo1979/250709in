@@ -920,6 +920,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       // 로컬 좌표 = 절대 도어 중심 - 절대 body 중심
       doorYPosition = mmToThreeUnits(doorAbsCenter - bodyAbsCenter);
+      console.log('🚪🔍 키큰장 도어 Y 디버그:', {
+        doorTopGap, doorBottomGap, floorFinish, fullSpaceHeight,
+        doorAbsBottom, doorAbsTop, doorAbsCenter,
+        parentGroupYProp, bodyAbsCenter,
+        doorLocalY_mm: doorAbsCenter - bodyAbsCenter,
+        doorYPosition,
+        actualDoorHeight,
+        tallCabinetFurnitureHeight,
+      });
     }
   }
 
