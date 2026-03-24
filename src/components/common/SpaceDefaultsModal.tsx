@@ -49,19 +49,46 @@ interface NumberInputProps {
   unit?: string;
 }
 
-const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, max, step = 1, unit = 'mm' }) => (
-  <div className={styles.numberInput}>
-    <div className={styles.inputLabel}>{label}</div>
-    <div className={styles.inputGroup}>
-      <button className={styles.inputButton} onClick={() => onChange(Math.max(min || 0, value - step))} disabled={value <= (min || 0)}>−</button>
-      <div className={styles.inputField}>
-        <input type="number" value={value} onChange={(e) => { const v = Number(e.target.value); onChange(Math.max(min || 0, Math.min(max || Infinity, v))); }} min={min} max={max} step={step} />
-        <span className={styles.inputUnit}>{unit}</span>
+const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, max, step = 1, unit = 'mm' }) => {
+  const [localValue, setLocalValue] = useState<string>(String(value));
+
+  // 외부 value 변경 시 로컬 동기화
+  useEffect(() => {
+    setLocalValue(String(value));
+  }, [value]);
+
+  const commit = (raw: string) => {
+    const v = Number(raw);
+    if (raw === '' || isNaN(v)) {
+      setLocalValue(String(value)); // 복원
+      return;
+    }
+    const clamped = Math.max(min ?? 0, Math.min(max ?? Infinity, v));
+    onChange(clamped);
+    setLocalValue(String(clamped));
+  };
+
+  return (
+    <div className={styles.numberInput}>
+      <div className={styles.inputLabel}>{label}</div>
+      <div className={styles.inputGroup}>
+        <button className={styles.inputButton} onClick={() => onChange(Math.max(min ?? 0, value - step))} disabled={value <= (min ?? 0)}>−</button>
+        <div className={styles.inputField}>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={localValue}
+            onChange={(e) => setLocalValue(e.target.value)}
+            onBlur={(e) => commit(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') commit((e.target as HTMLInputElement).value); }}
+          />
+          <span className={styles.inputUnit}>{unit}</span>
+        </div>
+        <button className={styles.inputButton} onClick={() => onChange(Math.min(max ?? Infinity, value + step))} disabled={value >= (max ?? Infinity)}>+</button>
       </div>
-      <button className={styles.inputButton} onClick={() => onChange(Math.min(max || Infinity, value + step))} disabled={value >= (max || Infinity)}>+</button>
     </div>
-  </div>
-);
+  );
+};
 
 /* ── ToggleGroup ── */
 const Toggle: React.FC<{ options: { id: string; label: string }[]; selected: string; onChange: (id: string) => void }> = ({ options, selected, onChange }) => (
