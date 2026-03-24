@@ -6157,9 +6157,9 @@ const Configurator: React.FC = () => {
                   {/* 슬라이딩 활성 배경 */}
                   <div style={{ position: 'absolute', top: 2, left: isOpen ? 46 : 2, width: 42, height: 24, borderRadius: 12, background: 'var(--theme-primary)', transition: 'left 0.2s' }} />
                   {/* Close 라벨 */}
-                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)', zIndex: 1, lineHeight: '24px' }}>Close</span>
+                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px' }}>Close</span>
                   {/* Open 라벨 */}
-                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)', zIndex: 1, lineHeight: '24px' }}>Open</span>
+                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px' }}>Open</span>
                 </div>
               );
             })()}
