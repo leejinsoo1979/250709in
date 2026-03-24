@@ -17,6 +17,7 @@ import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shar
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectPermission } from '@/hooks/useProjectPermission';
 import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
+import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
@@ -1700,7 +1701,8 @@ const Configurator: React.FC = () => {
 
     setIsCreatingNewDesign(true);
     try {
-      const defaultSpaceConfig = {
+      // 기본 spaceConfig
+      let defaultSpaceConfig: any = {
         width: DEFAULT_SPACE_VALUES.WIDTH,
         height: DEFAULT_SPACE_VALUES.HEIGHT,
         depth: DEFAULT_SPACE_VALUES.DEPTH,
@@ -1711,6 +1713,52 @@ const Configurator: React.FC = () => {
         walls: [],
         panelBs: []
       };
+
+      // 유저 공간설정 기본값 로드 후 병합
+      try {
+        const defaults = await getSpaceConfigDefaults();
+        if (defaults) {
+          defaultSpaceConfig = {
+            ...defaultSpaceConfig,
+            ...(defaults.width !== undefined && { width: defaults.width }),
+            ...(defaults.height !== undefined && { height: defaults.height }),
+            gapConfig: {
+              left: defaults.gapLeft ?? 1.5,
+              right: defaults.gapRight ?? 1.5,
+            },
+            frameSize: {
+              top: defaults.frameTop ?? 30,
+              left: defaults.frameLeft ?? 18,
+              right: defaults.frameRight ?? 18,
+            },
+            baseConfig: {
+              ...defaultSpaceConfig.baseConfig,
+              height: defaults.baseHeight ?? 65,
+            },
+            ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
+            ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
+            ...(defaults.surroundMode ? {
+              surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
+              frameConfig: defaults.surroundMode === 'full-surround'
+                ? { left: true, right: true, top: true, bottom: true }
+                : defaults.surroundMode === 'sides-only'
+                  ? { left: true, right: true, top: false, bottom: false }
+                  : { left: false, right: false, top: true, bottom: false },
+            } : {}),
+            ...(defaults.installType ? { installType: defaults.installType } : {}),
+            ...(defaults.droppedCeilingEnabled !== undefined ? {
+              droppedCeiling: {
+                enabled: defaults.droppedCeilingEnabled,
+                position: defaults.droppedCeilingPosition ?? 'right',
+                width: defaults.droppedCeilingWidth ?? 1300,
+                dropHeight: defaults.droppedCeilingDropHeight ?? 200,
+              },
+            } : {}),
+          };
+        }
+      } catch (e) {
+        console.error('유저 공간설정 기본값 로드 실패:', e);
+      }
 
       const createData: any = {
         name: newDesignName.trim(),
