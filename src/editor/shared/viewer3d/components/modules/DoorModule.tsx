@@ -903,33 +903,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 설명: '도어 상단 고정(' + (doorTop / 0.01).toFixed(1) + 'mm), 하단은 플로팅만큼 올라감'
     // });
   } else {
-    // 키큰장 도어 Y 위치: 절대 좌표 기반
-    // 도어의 절대 위치(바닥 기준)는 doorTopGap/doorBottomGap만으로 결정되므로
-    // 프레임 두께 변경 시에도 도어 절대 위치가 불변 →
-    // body center 이동분만큼 로컬 좌표가 자동 보정됨
-    {
-      // 도어 절대 위치 (mm, 바닥에서 측정)
-      const floorFinish = (isFloorTypeForDoor && originalSpaceInfo.hasFloorFinish)
-        ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
-      const doorAbsBottom = doorBottomGap + floorFinish;
-      const doorAbsTop = fullSpaceHeight - doorTopGap;
-      const doorAbsCenter = (doorAbsBottom + doorAbsTop) / 2;
-
-      // body 절대 중심 (parentGroupY는 Three.js 단위)
-      const bodyAbsCenter = (parentGroupYProp ?? 0) * 100; // Three.js → mm
-
-      // 로컬 좌표 = 절대 도어 중심 - 절대 body 중심
-      doorYPosition = mmToThreeUnits(doorAbsCenter - bodyAbsCenter);
-      console.log('🚪🔍 키큰장 도어 Y 디버그:', {
-        doorTopGap, doorBottomGap, floorFinish, fullSpaceHeight,
-        doorAbsBottom, doorAbsTop, doorAbsCenter,
-        parentGroupYProp, bodyAbsCenter,
-        doorLocalY_mm: doorAbsCenter - bodyAbsCenter,
-        doorYPosition,
-        actualDoorHeight,
-        tallCabinetFurnitureHeight,
-      });
-    }
+    // 키큰장 도어 Y 위치: doorTopLocal/doorBottomLocal 중간점 (body center 기준 로컬 좌표)
+    // DoorModule은 FurnitureItem group(position=adjustedPosition.y) 자식이므로
+    // 로컬 Y=0 = body center
+    doorYPosition = mmToThreeUnits((doorTopLocal + doorBottomLocal) / 2);
+    console.log('🚪🔍 키큰장 도어 Y 디버그:', {
+      doorTopGap, doorBottomGap, fullSpaceHeight,
+      tallCabinetFurnitureHeight,
+      doorTopLocal, doorBottomLocal,
+      actualDoorHeight,
+      doorYPosition,
+      doorYPosition_mm: (doorTopLocal + doorBottomLocal) / 2,
+      parentGroupYProp,
+    });
   }
 
 
