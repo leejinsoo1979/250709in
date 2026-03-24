@@ -6145,12 +6145,14 @@ const Configurator: React.FC = () => {
             <div className={styles.doorToggleOverlay}>
               <button
                 className={`${styles.viewerDoorButton} ${doorsOpen !== true ? styles.active : ''}`}
+                style={{ background: 'transparent', backgroundColor: 'transparent' }}
                 onClick={() => setDoorsOpen(false)}
               >
                 Close
               </button>
               <button
                 className={`${styles.viewerDoorButton} ${doorsOpen === true ? styles.active : ''}`}
+                style={{ background: 'transparent', backgroundColor: 'transparent' }}
                 onClick={() => setDoorsOpen(true)}
               >
                 Open
