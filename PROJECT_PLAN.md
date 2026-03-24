@@ -357,7 +357,63 @@
   - [ ] 공유 링크로 접근 → 읽기 전용 확인
   - [ ] 다국어 전환 후 모든 UI 텍스트 확인
 
-### 8.4 배포 (Day 42-43)
+### 8.4 도메인 및 SEO 설정 (Day 42-43)
+
+#### 도메인 연결
+- **도메인**: `www.tttcraft.com`
+- **작업**:
+  - [ ] Netlify에 커스텀 도메인 연결 (DNS 설정)
+  - [ ] SSL 인증서 자동 발급 확인 (Let's Encrypt)
+  - [ ] `tttcraft.com` → `www.tttcraft.com` 리다이렉트 설정
+  - [ ] HTTPS 강제 설정
+
+#### 검색엔진 등록
+- **구글 서치 콘솔**:
+  - [ ] Google Search Console에 `www.tttcraft.com` 사이트 등록
+  - [ ] 소유권 확인 (DNS TXT 레코드 또는 HTML 파일)
+  - [ ] `sitemap.xml` 제출
+  - [ ] 색인 요청
+  - [ ] Google Analytics 연동 (GA4 트래킹 코드 삽입)
+
+- **네이버 웹마스터 도구**:
+  - [ ] 네이버 서치어드바이저 (`searchadvisor.naver.com`)에 사이트 등록
+  - [ ] 소유권 확인 (HTML 메타태그 또는 파일 업로드)
+  - [ ] `sitemap.xml` 제출
+  - [ ] 네이버 신디케이션 API 설정 (선택)
+  - [ ] 네이버 애널리틱스 연동 (선택)
+
+- **기타 검색엔진**:
+  - [ ] Bing Webmaster Tools 등록
+  - [ ] Daum 검색 등록 확인
+
+#### SEO 메타태그 추가
+- **파일**: `index.html`
+- **현재 상태**: title만 있고 description, OG 태그 없음
+- **작업**:
+  - [ ] `<meta name="description">` 추가 (한국어/영어)
+  - [ ] `<meta name="keywords">` 추가
+  - [ ] Open Graph 태그 추가 (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`)
+  - [ ] Twitter Card 태그 추가 (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`)
+  - [ ] `<html lang="ko">` 로 변경 (한국어 기본)
+  - [ ] canonical URL 설정
+  - [ ] 구조화 데이터 (JSON-LD) 추가 — SoftwareApplication 스키마
+  - [ ] apple-touch-icon 설정
+  - [ ] manifest.json (PWA) 추가
+
+#### sitemap.xml 보강
+- **현재 상태**: 루트 URL 1개만 등록
+- **작업**:
+  - [ ] 랜딩 페이지, 주요 정적 페이지 URL 추가
+  - [ ] `<lastmod>` 날짜 추가
+  - [ ] 자동 sitemap 생성 스크립트 작성 (빌드 시 자동 갱신)
+
+#### robots.txt 점검
+- **현재 상태**: `/dashboard`, `/configurator`, `/step0` 차단 (올바름)
+- **작업**:
+  - [ ] 크롤링 정책 최종 확인
+  - [ ] 불필요한 리소스 차단 추가 (`/api/`, 정적 자산 등)
+
+### 8.5 배포 (Day 43-44)
 
 - **작업**:
   - [ ] Netlify 배포 설정 확인
@@ -366,6 +422,7 @@
   - [ ] CDN 캐시 설정
   - [ ] 모니터링 설정 (에러 트래킹)
   - [ ] 배포 후 스모크 테스트
+  - [ ] 구글/네이버 색인 확인
 
 ---
 
@@ -395,6 +452,7 @@
 | 챗봇/AI | 50% | 70% | 6 |
 | **코드 품질** | **40%** | **85%** | **1, 7** |
 | **테스트 커버리지** | **~20%** | **80%** | **7** |
+| **SEO/도메인/검색엔진** | **20%** | **100%** | **8** |
 
 ---
 
@@ -409,7 +467,7 @@
 | 5주차 | Phase 5 | 모바일 최적화, UX 개선 | 40h |
 | 6주차 | Phase 6 | AR 강화, GLB 최적화, 챗봇 결정 | 40h |
 | 7주차 | Phase 7 | 타입 안정성, 리팩토링, 테스트 작성 | 40h |
-| 8주차 | Phase 8 | 성능/보안 점검, 통합 테스트, 배포 | 40h |
+| 8주차 | Phase 8 | 성능/보안 점검, 통합 테스트, 도메인/SEO/검색엔진 등록, 배포 | 40h |
 
 ---
 
