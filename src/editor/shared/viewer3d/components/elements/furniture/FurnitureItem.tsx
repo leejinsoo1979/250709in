@@ -361,9 +361,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     return placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
   })();
+  // 슬롯배치: 전체서라운드(surround)일 때만 doorTopGap 연동 (양쪽서라운드/노서라운드는 연동 안 함)
+  // 자유배치: freeSurround.top이 활성화된 경우에만 연동
   const isSlotSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-  const isFreeTopFrame = placedModule.isFreePlacement && placedModule.hasTopFrame !== false;
-  const hasTopFrameActive = isSlotSurround || isFreeTopFrame;
+  const isFreeSurroundActive = placedModule.isFreePlacement && spaceInfo.freeSurround?.top?.enabled === true;
+  const hasTopFrameActive = isSlotSurround || isFreeSurroundActive;
   useEffect(() => {
     if (!hasTopFrameActive || !placedModule.hasDoor) return;
     const expectedGap = effectiveTopFrame + 3;
