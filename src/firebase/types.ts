@@ -212,7 +212,17 @@ export interface UserProfile {
     gapLeft?: number;
     gapRight?: number;
     frameTop?: number;
+    frameLeft?: number;
+    frameRight?: number;
     baseHeight?: number;
+    furnitureSingleWidth?: number;
+    furnitureDualWidth?: number;
+    surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
+    installType?: 'builtin' | 'semistanding' | 'freestanding';
+    droppedCeilingEnabled?: boolean;
+    droppedCeilingPosition?: 'left' | 'right';
+    droppedCeilingWidth?: number;
+    droppedCeilingDropHeight?: number;
   };
 
   createdAt: Timestamp;

@@ -132,8 +132,12 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
   const handleSave = async () => {
     setSaving(true);
     const { error } = await updateSpaceConfigDefaults(values);
-    setMessage(error ? { text: error, type: 'error' } : { text: '저장되었습니다.', type: 'success' });
     setSaving(false);
+    if (error) {
+      setMessage({ text: error, type: 'error' });
+    } else {
+      onClose();
+    }
   };
 
   if (loading) return null;

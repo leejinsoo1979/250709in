@@ -783,6 +783,7 @@ export const getSpaceConfigDefaults = async (): Promise<SpaceConfigDefaults | nu
     if (!profileSnap.exists()) return null;
 
     const data = profileSnap.data() as UserProfile;
+    console.log('📋 [Firebase] 공간설정 기본값 조회:', data.spaceConfigDefaults || null);
     return data.spaceConfigDefaults || null;
   } catch (error) {
     console.error('공간설정 기본값 조회 에러:', error);
@@ -812,6 +813,7 @@ export const updateSpaceConfigDefaults = async (
       updatedAt: serverTimestamp()
     });
 
+    console.log('✅ [Firebase] 공간설정 기본값 저장 완료:', defaults);
     return { error: null };
   } catch (error) {
     console.error('공간설정 기본값 저장 에러:', error);
