@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById, ModuleData } from '@/data/modules';
-import { calculateInternalSpace } from '../../../utils/geometry';
+import { calculateInternalSpace, END_PANEL_RENDER_THICKNESS } from '../../../utils/geometry';
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
@@ -1531,9 +1531,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 표준 모듈: EP 슬롯 두께(18mm)만큼 가구 본체 너비 축소
+  // 표준 모듈: EP 물리적 두께(18.5mm)만큼 가구 본체 너비 축소
   if (!placedModule.customConfig) {
-    const epThk = placedModule.endPanelThickness || 18;
+    const epThk = placedModule.endPanelThickness || END_PANEL_RENDER_THICKNESS;
     if (placedModule.hasLeftEndPanel) furnitureWidthMm -= epThk;
     if (placedModule.hasRightEndPanel) furnitureWidthMm -= epThk;
   }
