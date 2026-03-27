@@ -39,8 +39,8 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
         vertex.fromBufferAttribute(positions, i);
         vertex.applyMatrix4(worldMatrix);
 
-        // 중복 제거 (소수점 1자리까지 반올림 - 더 많은 꼭지점 포함)
-        const key = `${vertex.x.toFixed(1)},${vertex.y.toFixed(1)},${vertex.z.toFixed(1)}`;
+        // 중복 제거 (소수점 3자리까지 = 0.01mm 정밀도)
+        const key = `${vertex.x.toFixed(3)},${vertex.y.toFixed(3)},${vertex.z.toFixed(3)}`;
         if (!processedVertices.has(key)) {
           processedVertices.add(key);
           vertices.push([vertex.x, vertex.y, vertex.z]);
