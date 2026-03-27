@@ -340,11 +340,11 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   placeholder="Full Name"
                   required
                   className={`w-full rounded-full pl-11 pr-5 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
-                  style={isMobile ? { fontSize: '16px', minHeight: '48px' } : undefined}
                   style={{
                     background: isDark ? '#18181b' : '#f9fafb',
                     border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
                     color: isDark ? '#fff' : '#111',
+                    ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
                   }}
                 />
               </div>
@@ -358,11 +358,12 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
                 required
-                className="w-full rounded-full pl-11 pr-5 py-3.5 text-sm focus:outline-none transition-colors"
+                className={`w-full rounded-full pl-11 pr-5 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
                 style={{
                   background: isDark ? '#18181b' : '#f9fafb',
                   border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
                   color: isDark ? '#fff' : '#111',
+                  ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
                 }}
               />
             </div>
@@ -376,11 +377,11 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                 placeholder="Password"
                 required
                 className={`w-full rounded-full pl-11 pr-11 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
-                style={isMobile ? { fontSize: '16px', minHeight: '48px' } : undefined}
                 style={{
                   background: isDark ? '#18181b' : '#f9fafb',
                   border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
                   color: isDark ? '#fff' : '#111',
+                  ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
                 }}
               />
               <button
