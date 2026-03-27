@@ -88,7 +88,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 
     // 팀 자동 생성 (최초 로그인 시)
     if (FLAGS.teamScope) {
-      await ensurePersonalTeam(userCredential.user);
+      await ensurePersonalTeam(userCredential.user, '이메일 로그인');
     }
 
     return { user: userCredential.user, error: null };
@@ -134,14 +134,14 @@ export const signInWithGoogle = async () => {
       
       // 팀 자동 생성 (최초 로그인 시)
       if (FLAGS.teamScope) {
-        await ensurePersonalTeam(result.user);
+        await ensurePersonalTeam(result.user, '구글 로그인');
       }
-      
+
       return { user: result.user, error: null };
     }
   } catch (error) {
     const firebaseError = error as FirebaseError;
-    
+
     // 에러 상세 로깅
     console.error('🔥 구글 로그인 에러 발생');
     console.error('🔥 에러 코드:', firebaseError.code);
@@ -195,7 +195,7 @@ export const signUpWithEmail = async (email: string, password: string, displayNa
 
     // 팀 자동 생성 (신규 가입 시)
     if (FLAGS.teamScope) {
-      await ensurePersonalTeam(userCredential.user);
+      await ensurePersonalTeam(userCredential.user, '이메일 회원가입');
     }
 
     return { user: userCredential.user, error: null };
@@ -245,9 +245,9 @@ export const handleRedirectResult = async () => {
       
       // 팀 자동 생성 (최초 로그인 시)
       if (FLAGS.teamScope) {
-        await ensurePersonalTeam(result.user);
+        await ensurePersonalTeam(result.user, '구글 리다이렉트');
       }
-      
+
       return { user: result.user, error: null };
     }
     return { user: null, error: null };
@@ -258,8 +258,26 @@ export const handleRedirectResult = async () => {
   }
 };
 
+// 텔레그램 회원가입 알림 (fire-and-forget)
+function sendTelegramSignupNotification(user: User, method: string) {
+  const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+  const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+
+  const name = user.displayName || '(이름없음)';
+  const email = user.email || '(이메일없음)';
+  const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+  const text = `🎉 새 회원가입!\n\n👤 이름: ${name}\n📧 이메일: ${email}\n🔑 가입방법: ${method}\n🕐 시간: ${time}`;
+
+  fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  }).catch(() => {/* 알림 실패해도 무시 */});
+}
+
 // 개인 팀 자동 생성 헬퍼 함수
-async function ensurePersonalTeam(user: User) {
+async function ensurePersonalTeam(user: User, signupMethod?: string) {
   try {
     const { doc, getDoc, setDoc, serverTimestamp, Timestamp } = await import('firebase/firestore');
     const { db } = await import('./config');
@@ -332,6 +350,9 @@ async function ensurePersonalTeam(user: User) {
     }
 
     console.log('✅ Personal team created with member subcollection:', teamId);
+
+    // 신규 회원가입 텔레그램 알림
+    sendTelegramSignupNotification(user, signupMethod || 'unknown');
   } catch (error) {
     console.error('Failed to create personal team:', error);
   }
