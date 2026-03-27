@@ -77,15 +77,37 @@ export default function EnterpriseSignUpPage() {
         return;
       }
 
-      // 2. Firestore에 기업 정보 저장
+      // 2. Firestore에 기업 정보 저장 (승인 대기 상태)
       const { password: _pw, passwordConfirm: _pwc, ...formData } = form;
       await addDoc(collection(db, 'enterprise_inquiries'), {
         ...formData,
         uid: user.uid,
-        status: 'approved',
+        status: 'pending',
         accountType: 'enterprise',
         createdAt: serverTimestamp(),
       });
+
+      // 3. 텔레그램으로 승인 요청 전송 (InlineKeyboard 버튼 포함)
+      const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+      const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+      if (botToken && chatId) {
+        const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        const text = `🏢 기업계정 가입 신청\n\n👤 담당자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber || '미입력'}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n📱 연락처: ${form.contactPhone}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '✅ 승인', callback_data: `approve:${user.uid}` },
+                { text: '❌ 거절', callback_data: `reject:${user.uid}` },
+              ]],
+            },
+          }),
+        }).catch(() => {/* 알림 실패해도 무시 */});
+      }
 
       setSubmitted(true);
     } catch {
@@ -131,9 +153,9 @@ export default function EnterpriseSignUpPage() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">가입이 완료되었습니다</h2>
+            <h2 className="text-2xl font-bold text-white mb-3">가입 신청이 완료되었습니다</h2>
             <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
-              계정이 생성되었습니다.<br />등록하신 이메일과 비밀번호로 로그인하세요.
+              관리자 승인 후 이용 가능합니다.<br />승인이 완료되면 등록하신 이메일로 로그인하세요.
             </p>
             <button
               onClick={() => navigate('/login')}
