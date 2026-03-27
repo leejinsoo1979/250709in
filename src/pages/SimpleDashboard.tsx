@@ -8,7 +8,6 @@ import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG } from '@/store/core/spaceCon
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { checkCredits, getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import SettingsPanel from '@/components/common/SettingsPanel';
-import { useUIStore } from '@/store/uiStore';
 import Step1 from '../editor/Step1';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
@@ -27,7 +26,6 @@ import NavigationPane from '@/components/dashboard/NavigationPane';
 import ContentToolbar from '@/components/dashboard/ContentToolbar';
 import ContentPane from '@/components/dashboard/ContentPane';
 import StatusBar from '@/components/dashboard/StatusBar';
-import ClassicDashboard from '@/components/dashboard/ClassicDashboard';
 import DashboardMobileBottomNav from '@/components/dashboard/DashboardMobileBottomNav';
 
 // Explorer 훅
@@ -44,7 +42,6 @@ const SimpleDashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading } = useAuth();
   const { isMobile } = useResponsive();
-  const { dashboardLayout } = useUIStore();
 
   // --- 로컬 UI 상태 ---
   const [viewMode, setViewMode] = useState<ViewMode>('medium');
@@ -586,7 +583,6 @@ const SimpleDashboard: React.FC = () => {
 
   // --- 키보드 네비게이션 + 단축키 ---
   useEffect(() => {
-    if (dashboardLayout !== 'windows') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -673,7 +669,7 @@ const SimpleDashboard: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nav, actions, data.currentItems, handleItemDoubleClick, dashboardLayout, getSelectedExplorerItems]);
+  }, [nav, actions, data.currentItems, handleItemDoubleClick, getSelectedExplorerItems]);
 
   // --- 로딩/에러 상태 ---
 
@@ -696,41 +692,13 @@ const SimpleDashboard: React.FC = () => {
   // --- 렌더 ---
   return (
     <div className={styles.explorerLayout}>
-      {/* 헤더: 윈도우 모드에서만 표시 (SaaS는 자체 헤더 사용) */}
-      {dashboardLayout === 'windows' && (
-        <DashboardHeader
-          onLogoClick={() => nav.navigateToRoot()}
-          onProfileClick={() => setIsProfilePopupOpen(true)}
-          onOpenSettings={() => setIsSettingsPanelOpen(true)}
-        />
-      )}
+      <DashboardHeader
+        onLogoClick={() => nav.navigateToRoot()}
+        onProfileClick={() => setIsProfilePopupOpen(true)}
+        onOpenSettings={() => setIsSettingsPanelOpen(true)}
+      />
 
-      {/* 레이아웃 분기: SaaS vs 윈도우 */}
-      {dashboardLayout === 'saas' ? (
-        <ClassicDashboard
-          nav={nav}
-          data={data}
-          actions={actions}
-          onItemDoubleClick={handleItemDoubleClick}
-          onItemContextMenu={handleItemContextMenu}
-          onCreateProject={handleCreateProject}
-          onCreateDesign={handleSaasCreateDesign}
-          onBlankContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setBlankContextMenu({ x: e.clientX, y: e.clientY });
-          }}
-          onOpenEditor={(item) => {
-            // 디자인 카드 클릭 → 바로 에디터로 이동
-            const projectId = item.projectId || nav.currentProjectId;
-            if (projectId) {
-              handleDesignOpen(projectId, item.id, item.name);
-            }
-          }}
-        />
-      ) : (
-        <>
-          {/* 메인 바디: 좌측(트리) + 우측(컨텐츠) */}
+      {/* 메인 바디: 좌측(트리) + 우측(컨텐츠) */}
           <div className={styles.explorerBody}>
             {/* 좌측 칼럼: 네비게이션 트리 (데스크톱에서만, 모바일은 하단 탭바로 대체) */}
             {!isMobile && (
@@ -911,8 +879,6 @@ const SimpleDashboard: React.FC = () => {
               onProfileClick={() => setIsProfilePopupOpen(true)}
             />
           )}
-        </>
-      )}
 
       {/* ===== 모달들 ===== */}
 

@@ -12,7 +12,7 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
-  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, dashboardLayout, setDashboardLayout, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
+  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
   const [showSpaceDefaults, setShowSpaceDefaults] = useState(false);
   
   useEffect(() => {
@@ -74,33 +74,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
             <h3 className={styles.sectionTitle}>{t('settings.theme')}</h3>
             <div className={styles.themeContainer}>
               <ThemeSelector variant="sidebar" showLabel={false} />
-            </div>
-          </div>
-
-          {/* 대시보드 레이아웃 선택 */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>대시보드 레이아웃</h3>
-            <div className={styles.settingGroup}>
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>레이아웃 스타일</span>
-                  <span className={styles.settingDescription}>대시보드 화면 구성 방식</span>
-                </div>
-                <div className={styles.segmentedControl}>
-                  <button
-                    className={`${styles.segmentButton} ${dashboardLayout === 'saas' ? styles.segmentActive : ''}`}
-                    onClick={() => setDashboardLayout('saas')}
-                  >
-                    SaaS 스타일
-                  </button>
-                  <button
-                    className={`${styles.segmentButton} ${dashboardLayout === 'windows' ? styles.segmentActive : ''}`}
-                    onClick={() => setDashboardLayout('windows')}
-                  >
-                    윈도우 스타일
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
