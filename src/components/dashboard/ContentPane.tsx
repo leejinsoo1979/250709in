@@ -505,11 +505,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           {renderCheckbox(item)}
           <div className={styles.iconThumbnail}>
             {isMobile ? (
-              // 모바일: 48x48 작은 아이콘 또는 썸네일
+              // 모바일: 64x64 아이콘 또는 썸네일
               item.thumbnail ? (
-                <img src={item.thumbnail} alt={item.name} />
+                <img src={item.thumbnail} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
               ) : (
-                getItemIcon(item, 24)
+                getItemIcon(item, 32)
               )
             ) : viewMode === 'large' && item.type === 'project' && projectDesignFiles ? (
               (() => {
