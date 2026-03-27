@@ -272,7 +272,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const D = mmToUnit(depth);
 
   // 엔드패널(EP) 계산
-  const epThicknessMm = endPanelThicknessProp || 18;
+  const epThicknessMm = endPanelThicknessProp || 18.5; // PET 재질
   const leftEP = hasLeftEndPanel ? mmToUnit(epThicknessMm) : 0;
   const rightEP = hasRightEndPanel ? mmToUnit(epThicknessMm) : 0;
   const effectiveW = W - leftEP - rightEP; // EP만큼 본체 축소

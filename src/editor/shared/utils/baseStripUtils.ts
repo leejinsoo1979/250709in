@@ -49,7 +49,7 @@ export function getBaseFrameBoundsX(module: PlacedModule): { left: number; right
   const hasLeft = module.hasLeftEndPanel;
   const hasRight = module.hasRightEndPanel;
   if (hasLeft || hasRight) {
-    const epThk = module.endPanelThickness || 18;
+    const epThk = module.endPanelThickness || 18.5;
     const leftEpMM = hasLeft ? epThk : 0;
     const rightEpMM = hasRight ? epThk : 0;
     // 본체가 EP 두께만큼 줄어들고, 비대칭이면 중심이 이동

@@ -2284,7 +2284,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     doorWidthExpansion = 0;
     if (!placedModule.isFreePlacement && !placedModule.customConfig) {
       // 슬롯 모드: 본체가 epOffsetX만큼 이동하므로 도어를 역방향으로 되돌림
-      const epThkDoor = mmToThreeUnits(placedModule.endPanelThickness || 18);
+      const epThkDoor = mmToThreeUnits(placedModule.endPanelThickness || 18.5);
       const leftEpDoor = placedModule.hasLeftEndPanel ? epThkDoor : 0;
       const rightEpDoor = placedModule.hasRightEndPanel ? epThkDoor : 0;
       doorXOffset = -(leftEpDoor - rightEpDoor) / 2; // epOffsetX의 역방향
@@ -2703,7 +2703,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어는 본체 그룹 안에서 렌더링되므로 자동으로 따라감
   let epOffsetX = 0;
   if (!placedModule.customConfig) {
-    const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
+    const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18.5);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
     epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←

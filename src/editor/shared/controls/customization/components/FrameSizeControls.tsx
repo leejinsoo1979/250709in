@@ -111,7 +111,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   middleGap,
   onMiddleGapChange,
 }) => {
-  const END_PANEL_WIDTH = 18;
+  const END_PANEL_WIDTH = 18.5; // PET 재질
   const { setHighlightedFrame } = useUIStore();
 
   // 단내림 경계쪽은 프레임 대신 이격거리 표시

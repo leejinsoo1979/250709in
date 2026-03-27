@@ -414,7 +414,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // (도어는 원래 freeWidth 크기 그대로, 가구 중심에 위치해야 함)
   let freeEpReverseX = 0;
   if (isFree && storePlacedModule && !storePlacedModule.customConfig) {
-    const epThk = (storePlacedModule.endPanelThickness || 18) * 0.01; // mm → Three.js
+    const epThk = (storePlacedModule.endPanelThickness || 18.5) * 0.01; // mm → Three.js
     const leftEp = storePlacedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = storePlacedModule.hasRightEndPanel ? epThk : 0;
     freeEpReverseX = -(leftEp - rightEp) / 2; // 부모 offset의 반대
@@ -962,7 +962,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
   const isNoSurroundNoWallRight = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.right;
-  const endPanelThickness = 18; // 엔드패널 두께 18mm
+  const endPanelThickness = 18.5; // 엔드패널 두께 18.5mm (PET 재질)
 
   // 도어 Z 위치: doorDepth/2로 사용되므로 offset을 2배로 설정해야 함
   // 목표: 가구 앞면에서 5mm 떨어지고 + 도어 두께 절반(9mm) = 14mm

@@ -4656,7 +4656,7 @@ const Room: React.FC<RoomProps> = ({
                   const bounds = getModuleBoundsX(mod);
                   let modWidthMM = bounds.right - bounds.left;
                   let modCenterXmm = (bounds.left + bounds.right) / 2;
-                  const epThk = mod.endPanelThickness || 18;
+                  const epThk = mod.endPanelThickness || 18.5;
                   const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   if (isFullSurround) {
@@ -5765,7 +5765,7 @@ const Room: React.FC<RoomProps> = ({
                       const bounds = getModuleBoundsX(mod);
                       let modWidthMM = bounds.right - bounds.left;
                       let modCenterXmm = (bounds.left + bounds.right) / 2;
-                      const epThk = mod.endPanelThickness || 18;
+                      const epThk = mod.endPanelThickness || 18.5;
                       if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;

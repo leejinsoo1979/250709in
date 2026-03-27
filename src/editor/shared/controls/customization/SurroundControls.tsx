@@ -28,7 +28,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
   const hasLeftWall = spaceInfo.wallConfig.left;
   const hasRightWall = spaceInfo.wallConfig.right;
-  const END_PANEL_WIDTH = 18; // 고정 18mm
+  const END_PANEL_WIDTH = 18.5; // PET 재질 고정 18.5mm
 
   // frameSize는 spaceInfo에서 직접 가져옴 (FrameSizeControls가 자체 문자열 상태 관리)
   const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
