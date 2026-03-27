@@ -4927,23 +4927,24 @@ const Configurator: React.FC = () => {
 
         </div>
 
-        {/* 서라운드 섹션 — freeSurround 존재 시 표시 (surroundType가 surround/both-sides이면 슬롯 프레임이 좌우를 담당하므로 숨김) */}
-        {isFreeMode && spaceInfo.surroundType === 'no-surround' && (() => {
+        {/* 서라운드 섹션 — freeSurround 존재 시 표시 */}
+        {isFreeMode && (() => {
           const fs = spaceInfo.freeSurround;
           if (!fs) return null;
           const middleGaps = fs.middle || [];
+          const isNoSurround = spaceInfo.surroundType === 'no-surround';
 
-          // 서라운드 목록: 좌 → 중간들 → 우 (좌→우 순서)
+          // 서라운드 목록: 노서라운드면 좌/우/중간 모두, 전체/양쪽이면 중간만
           type SurroundItem =
             | { kind: 'left' }
             | { kind: 'right' }
             | { kind: 'middle'; idx: number };
           const surroundItems: SurroundItem[] = [];
-          if (fs.left.enabled) surroundItems.push({ kind: 'left' });
+          if (isNoSurround && fs.left.enabled) surroundItems.push({ kind: 'left' });
           middleGaps.forEach((_m, i) => {
             if (_m.enabled) surroundItems.push({ kind: 'middle', idx: i });
           });
-          if (fs.right.enabled) surroundItems.push({ kind: 'right' });
+          if (isNoSurround && fs.right.enabled) surroundItems.push({ kind: 'right' });
 
           // 활성된 서라운드 항목이 없으면 섹션 자체를 숨김
           if (surroundItems.length === 0) return null;
@@ -5030,7 +5031,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>좌,우 서라운드</h3>
+                <h3 className={styles.sectionTitle}>서라운드</h3>
                 <HelpBtn title="서라운드" text="서라운드 프레임의 상·하·좌·우 각 면의 두께를 개별 설정합니다. 벽면과 가구 사이의 마감재 역할을 하며, 값이 클수록 가구 배치 가능 공간이 줄어듭니다. 옵셋 기준을 '외경'으로 하면 전체 공간 기준, '내경'으로 하면 가구 기준으로 계산됩니다." />
               </div>
               <div className={styles.subSetting}>
