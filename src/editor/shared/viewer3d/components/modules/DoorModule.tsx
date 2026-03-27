@@ -667,17 +667,44 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 듀얼 가구인지 moduleData ID로 확실히 판단
   const isDualByModuleId = moduleData?.id?.startsWith('dual-') || false;
 
-  // 도어 크기 계산 — 현재 spaceInfo에서 직접 계산한 effectiveColumnWidth 사용
+  // 도어 크기 계산 — 가구 본체와 동일한 slotWidths(Math.floor) 기준 사용
+  // columnWidth는 소수점이 유지되지만, 가구 본체는 slotWidths(정수 내림)를 사용하므로
+  // 도어도 slotWidths 기준을 사용해야 doorGap이 정확히 3mm가 됨
   let actualDoorWidth: number;
 
   if (isFree) {
     // 자유배치: store에서 가져온 freeWidth 또는 props moduleWidth 사용
     actualDoorWidth = storeFreeWidth || moduleWidth;
   } else {
-    // 슬롯 배치: effectiveColumnWidth가 항상 최신 spaceInfo 기반이므로 직접 사용
-    actualDoorWidth = isDualByModuleId
-      ? effectiveColumnWidth * 2
-      : effectiveColumnWidth;
+    // 슬롯 배치: slotWidths(가구 본체와 동일 기준) 우선, 없으면 effectiveColumnWidth fallback
+    const storeSlotIndex = storePlacedModule?.slotIndex;
+    let slotBasedWidth: number | undefined;
+
+    if (originalSpaceInfo.droppedCeiling?.enabled && zone) {
+      // 단내림 구간: zoneInfo의 slotWidths 사용
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(originalSpaceInfo, originalSpaceInfo.customColumnCount);
+      const targetZone = zone === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+      if (targetZone?.slotWidths && storeSlotIndex !== undefined) {
+        // zone 내 로컬 인덱스 계산
+        const localIndex = zone === 'dropped'
+          ? storeSlotIndex - (zoneInfo.normal?.columnCount ?? 0)
+          : storeSlotIndex;
+        if (localIndex >= 0 && localIndex < targetZone.slotWidths.length) {
+          slotBasedWidth = targetZone.slotWidths[localIndex];
+        }
+      }
+    } else {
+      // 단내림 없는 일반 구간: indexing.slotWidths 사용
+      if (indexing.slotWidths && storeSlotIndex !== undefined && indexing.slotWidths[storeSlotIndex] !== undefined) {
+        slotBasedWidth = indexing.slotWidths[storeSlotIndex];
+      }
+    }
+
+    if (isDualByModuleId) {
+      actualDoorWidth = slotBasedWidth !== undefined ? slotBasedWidth * 2 : effectiveColumnWidth * 2;
+    } else {
+      actualDoorWidth = slotBasedWidth !== undefined ? slotBasedWidth : effectiveColumnWidth;
+    }
   }
 
   const effectiveFurnitureWidth = actualDoorWidth;
