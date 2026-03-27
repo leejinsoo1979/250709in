@@ -9,6 +9,8 @@ import { Eye, EyeOff } from 'lucide-react';
 interface EnterpriseForm {
   companyName: string;
   businessNumber: string;
+  businessType: string;
+  businessCategory: string;
   loginEmail: string;
   password: string;
   passwordConfirm: string;
@@ -24,10 +26,22 @@ const EXPECTED_USERS_OPTIONS = [
   '1~5명', '6~20명', '21~50명', '51~100명', '100명 이상',
 ];
 
+const BUSINESS_TYPE_OPTIONS = [
+  '제조업', '건설업', '도매 및 소매업', '숙박 및 음식점업', '정보통신업',
+  '부동산업', '전문·과학·기술 서비스업', '교육 서비스업', '예술·스포츠·여가',
+  '기타',
+];
+
+const BUSINESS_CATEGORY_OPTIONS = [
+  '인테리어·리모델링', '가구 제조', '건축 설계', '공간 디자인', '주방·욕실',
+  '사무가구', '수납·붙박이장', '전시·디스플레이', '홈스테이징', '기타',
+];
+
 export default function EnterpriseSignUpPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState<EnterpriseForm>({
-    companyName: '', businessNumber: '', loginEmail: '', password: '', passwordConfirm: '',
+    companyName: '', businessNumber: '', businessType: '', businessCategory: '',
+    loginEmail: '', password: '', passwordConfirm: '',
     contactName: '', contactEmail: '', contactPhone: '', department: '',
     expectedUsers: '', message: '',
   });
@@ -53,6 +67,16 @@ export default function EnterpriseSignUpPage() {
     }
     if (form.password.length < 6) {
       setError('비밀번호는 6자 이상이어야 합니다.');
+      setSubmitting(false);
+      return;
+    }
+    if (!form.businessType) {
+      setError('업종을 선택해주세요.');
+      setSubmitting(false);
+      return;
+    }
+    if (!form.businessCategory) {
+      setError('업태를 선택해주세요.');
       setSubmitting(false);
       return;
     }
@@ -92,7 +116,7 @@ export default function EnterpriseSignUpPage() {
       const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (botToken && chatId) {
         const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        const text = `🏢 기업계정 가입 신청\n\n👤 담당자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber || '미입력'}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n📱 연락처: ${form.contactPhone}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
+        const text = `🏢 기업계정 가입 신청\n\n👤 담당자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber}\n🏭 업종: ${form.businessType}\n📂 업태: ${form.businessCategory}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n📱 연락처: ${form.contactPhone}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
         fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -229,8 +253,44 @@ export default function EnterpriseSignUpPage() {
                 <Field label="회사명" required>
                   <Input value={form.companyName} onChange={(v) => update('companyName', v)} placeholder="주식회사 예시" required />
                 </Field>
-                <Field label="사업자등록번호">
-                  <Input value={form.businessNumber} onChange={(v) => update('businessNumber', v)} placeholder="000-00-00000" />
+                <Field label="사업자등록번호" required>
+                  <Input value={form.businessNumber} onChange={(v) => update('businessNumber', v)} placeholder="000-00-00000" required />
+                </Field>
+                <Field label="업종" required>
+                  <div className="flex flex-wrap gap-2">
+                    {BUSINESS_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => update('businessType', opt)}
+                        className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
+                          form.businessType === opt
+                            ? 'bg-white text-zinc-950 border-white'
+                            : 'text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="업태" required>
+                  <div className="flex flex-wrap gap-2">
+                    {BUSINESS_CATEGORY_OPTIONS.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => update('businessCategory', opt)}
+                        className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
+                          form.businessCategory === opt
+                            ? 'bg-white text-zinc-950 border-white'
+                            : 'text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 </Field>
                 <Field label="예상 사용 인원">
                   <div className="flex flex-wrap gap-2">
