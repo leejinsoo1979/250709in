@@ -4219,8 +4219,43 @@ const Configurator: React.FC = () => {
               }
 
               // freeSurround 재계산: 변경된 spaceInfo로 gap 재측정
+              // handleSpaceInfoUpdate 내부에서 surroundType 변경 시 frameSize/gapConfig을 재설정하므로
+              // generateSurround 호출 전에 동일한 로직을 updatedSpaceInfo에 미리 반영해야 정확한 gap 계산 가능
               if (spaceInfo.freeSurround && placedModules.some(m => m.isFreePlacement)) {
-                const updatedSpaceInfo = { ...spaceInfo, ...updates } as SpaceInfo;
+                const preUpdates: Record<string, unknown> = { ...updates };
+                const currentInstallType = spaceInfo.installType;
+                const currentWallConfig = spaceInfo.wallConfig || { left: true, right: true };
+                if (preUpdates.surroundType === 'no-surround' && spaceInfo.surroundType !== 'no-surround') {
+                  // 서라운드 → 노서라운드: gapConfig + frameSize 미리 반영
+                  const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+                  if (currentInstallType === 'builtin' || currentInstallType === 'built-in') {
+                    newFrameSize.left = 0; newFrameSize.right = 0;
+                  } else if (currentInstallType === 'semistanding' || currentInstallType === 'semi-standing') {
+                    newFrameSize.left = currentWallConfig.left ? 0 : 18;
+                    newFrameSize.right = currentWallConfig.right ? 0 : 18;
+                  } else {
+                    newFrameSize.left = 18; newFrameSize.right = 18;
+                  }
+                  preUpdates.frameSize = newFrameSize;
+                  preUpdates.gapConfig = {
+                    left: currentWallConfig.left ? 1.5 : 0,
+                    right: currentWallConfig.right ? 1.5 : 0,
+                    middle: spaceInfo.gapConfig?.middle ?? 1.5,
+                  };
+                } else if (preUpdates.surroundType === 'surround' && spaceInfo.surroundType !== 'surround') {
+                  // 노서라운드 → 서라운드: frameSize 미리 반영
+                  const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+                  if (currentInstallType === 'builtin' || currentInstallType === 'built-in') {
+                    newFrameSize.left = 50; newFrameSize.right = 50;
+                  } else if (currentInstallType === 'semistanding' || currentInstallType === 'semi-standing') {
+                    newFrameSize.left = currentWallConfig.left ? 50 : 18;
+                    newFrameSize.right = currentWallConfig.right ? 50 : 18;
+                  } else {
+                    newFrameSize.left = 18; newFrameSize.right = 18;
+                  }
+                  preUpdates.frameSize = newFrameSize;
+                }
+                const updatedSpaceInfo = { ...spaceInfo, ...preUpdates } as SpaceInfo;
                 const result = generateSurround(updatedSpaceInfo, placedModules);
                 if (result.success && result.config) {
                   // 기존 사용자 설정(offset, topGap, bottomGap) 보존하면서 gap만 재계산
