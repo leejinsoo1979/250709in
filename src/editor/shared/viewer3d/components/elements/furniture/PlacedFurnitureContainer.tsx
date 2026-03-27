@@ -38,13 +38,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
 
-  // 디버그: 서라운드 패널 존재 여부 확인
-  const surroundInStore = storePlacedModules.filter(m => m.isSurroundPanel);
-  const surroundInProp = propPlacedModules?.filter(m => m.isSurroundPanel);
-  if (surroundInStore.length > 0 || (surroundInProp && surroundInProp.length > 0)) {
-    console.warn('🟢🟢🟢 [Container] store서라운드:', surroundInStore.length, 'prop서라운드:', surroundInProp?.length ?? 'N/A', 'propPlacedModules?', !!propPlacedModules, 'viewMode:', viewMode);
-  }
-
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
 

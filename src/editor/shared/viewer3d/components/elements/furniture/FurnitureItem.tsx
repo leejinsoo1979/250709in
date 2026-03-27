@@ -278,9 +278,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onFurnitureClick,
   ghostHighlightSlotIndex
 }) => {
-  if (placedModule.isSurroundPanel) {
-    console.warn('🟡🟡🟡 [FurnitureItem] 서라운드 패널 렌더링 시작:', placedModule.id, placedModule.surroundPanelType);
-  }
   const FURNITURE_DEBUG = false;
   const debugLog = (...args: any[]) => {
     if (FURNITURE_DEBUG) {
@@ -2934,8 +2931,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const surroundDepth = placedModule.freeDepth || spaceInfo.depth;
     // group position이 이미 패널 중심이므로, 아이콘은 로컬 (0,0,앞쪽)
     const surroundFrontZ = surroundDepth * 0.01 / 2 + 0.3;
-    console.warn('🔴🔴🔴 [SurroundGear] isSurroundPanel 블록 진입!', placedModule.id, placedModule.surroundPanelType, viewMode);
-
     return (
       <group
         userData={{ furnitureId: placedModule.id }}

@@ -269,15 +269,6 @@ const FreePlacementDropZone: React.FC = () => {
 
     if (result.success && result.module) {
       addModule(result.module);
-      console.log('✅ [FreePlacement] 서라운드 패널 배치:', result.module.id, panelType);
-      // 즉시 store 상태 확인
-      setTimeout(() => {
-        const storeModules = useFurnitureStore.getState().placedModules;
-        const surrounds = storeModules.filter(m => m.isSurroundPanel);
-        console.warn('🔵🔵🔵 [Store확인] 전체:', storeModules.length, '서라운드:', surrounds.length, surrounds.map(s => s.id));
-      }, 100);
-    } else {
-      console.warn('❌ [FreePlacement] 서라운드 패널 배치 실패:', result.error);
     }
 
     // 배치 후 선택 해제
