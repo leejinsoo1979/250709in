@@ -26,16 +26,6 @@ const EXPECTED_USERS_OPTIONS = [
   '1~5명', '6~20명', '21~50명', '51~100명', '100명 이상',
 ];
 
-const BUSINESS_TYPE_OPTIONS = [
-  '제조업', '건설업', '도매 및 소매업', '숙박 및 음식점업', '정보통신업',
-  '부동산업', '전문·과학·기술 서비스업', '교육 서비스업', '예술·스포츠·여가',
-  '기타',
-];
-
-const BUSINESS_CATEGORY_OPTIONS = [
-  '인테리어·리모델링', '가구 제조', '건축 설계', '공간 디자인', '주방·욕실',
-  '사무가구', '수납·붙박이장', '전시·디스플레이', '홈스테이징', '기타',
-];
 
 export default function EnterpriseSignUpPage() {
   const navigate = useNavigate();
@@ -67,16 +57,6 @@ export default function EnterpriseSignUpPage() {
     }
     if (form.password.length < 6) {
       setError('비밀번호는 6자 이상이어야 합니다.');
-      setSubmitting(false);
-      return;
-    }
-    if (!form.businessType) {
-      setError('업종을 선택해주세요.');
-      setSubmitting(false);
-      return;
-    }
-    if (!form.businessCategory) {
-      setError('업태를 선택해주세요.');
       setSubmitting(false);
       return;
     }
@@ -256,42 +236,14 @@ export default function EnterpriseSignUpPage() {
                 <Field label="사업자등록번호" required>
                   <Input value={form.businessNumber} onChange={(v) => update('businessNumber', v)} placeholder="000-00-00000" required />
                 </Field>
-                <Field label="업종" required>
-                  <div className="flex flex-wrap gap-2">
-                    {BUSINESS_TYPE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => update('businessType', opt)}
-                        className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
-                          form.businessType === opt
-                            ? 'bg-white text-zinc-950 border-white'
-                            : 'text-zinc-400 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-                <Field label="업태" required>
-                  <div className="flex flex-wrap gap-2">
-                    {BUSINESS_CATEGORY_OPTIONS.map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => update('businessCategory', opt)}
-                        className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
-                          form.businessCategory === opt
-                            ? 'bg-white text-zinc-950 border-white'
-                            : 'text-zinc-400 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
+                <div className="grid grid-cols-2 gap-6">
+                  <Field label="업종" required>
+                    <Input value={form.businessType} onChange={(v) => update('businessType', v)} placeholder="예: 제조업, 건설업" required />
+                  </Field>
+                  <Field label="업태" required>
+                    <Input value={form.businessCategory} onChange={(v) => update('businessCategory', v)} placeholder="예: 가구제조, 인테리어" required />
+                  </Field>
+                </div>
                 <Field label="예상 사용 인원">
                   <div className="flex flex-wrap gap-2">
                     {EXPECTED_USERS_OPTIONS.map((opt) => (
