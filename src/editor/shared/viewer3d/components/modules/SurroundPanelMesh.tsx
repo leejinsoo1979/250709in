@@ -38,7 +38,7 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
 
   // 패널 치수 (Three.js 단위)
   const { args, position } = useMemo(() => {
-    const thickness = mmToThree(spaceInfo.panelThickness ?? 18);
+    const thickness = mmToThree(18.5); // 서라운드(PET) 항상 18.5mm
     const height = mmToThree(placedModule.freeHeight || spaceInfo.height);
     const depth = mmToThree(placedModule.freeDepth || spaceInfo.depth);
     const width = mmToThree(panelWidth);

@@ -1218,7 +1218,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const clamped = Math.max(widthMin, Math.min(widthMax, num));
       updatePlacedModule(currentPlacedModule.id, {
         surroundPanelWidth: clamped,
-        ...(isTopPanel ? { freeHeight: spaceInfo.panelThickness ?? 18 } : { freeWidth: spaceInfo.panelThickness ?? 18 }),
+        ...(isTopPanel ? { freeHeight: 18.5 } : { freeWidth: 18.5 }), // 서라운드(PET) 항상 18.5mm
       });
     };
 
@@ -1239,7 +1239,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <h4 className={styles.moduleName}>{panelTypeLabel}</h4>
                 <div className={styles.property}>
                   <span className={styles.propertyValue}>
-                    두께: {spaceInfo.panelThickness ?? 18}mm (고정) / 폭: {currentWidth}mm
+                    두께: 18.5mm (고정) / 폭: {currentWidth}mm
                   </span>
                 </div>
               </div>
@@ -1262,7 +1262,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               <div className={styles.property}>
                 <span className={styles.propertyLabel}>두께</span>
-                <span className={styles.propertyValue}>{spaceInfo.panelThickness ?? 18}mm (고정)</span>
+                <span className={styles.propertyValue}>18.5mm (고정)</span>
               </div>
             </div>
 

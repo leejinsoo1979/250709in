@@ -470,7 +470,7 @@ export function useLivePanelData() {
       } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
         const fs = spaceInfo.frameSize;
-        const surroundThickness = spaceInfo.panelThickness ?? 18;
+        const surroundThickness = 18.5; // 서라운드(PET) 항상 18.5mm
         const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
         // 서라운드 프레임은 항상 L자 구조 (전면판 + 측면판으로 재단)
         const isLeftLShape = true;
@@ -585,7 +585,7 @@ export function useLivePanelData() {
         const cbPos = spaceInfo.curtainBox.position || 'right';
         const cbWidthMM = spaceInfo.curtainBox.width || 150;
         const cbDropH = spaceInfo.curtainBox.dropHeight || 60;
-        const cbPanelThickness = 18;
+        const cbPanelThickness = 18.5; // 커튼박스(PET) 항상 18.5mm
         const cbSideDepth = 40;
         // 전면 가림판: CB폭 - 3mm (양쪽 1.5mm gap)
         const cbFrontWidth = cbWidthMM - 3;
@@ -721,7 +721,7 @@ export function useLivePanelData() {
               name: `${group.label} 상부프레임`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
-              thickness: 18,
+              thickness: 18.5, // 프레임(PET) 항상 18.5mm
               material: 'PET',
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
@@ -739,7 +739,7 @@ export function useLivePanelData() {
               name: `${group.label} 하부프레임`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
-              thickness: 18,
+              thickness: 18.5, // 프레임(PET) 항상 18.5mm
               material: 'PET',
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
@@ -1157,7 +1157,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2, spaceInfo.panelThickness ?? 18);
     } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
       const fs2 = spaceInfo.frameSize;
-      const surroundThickness2 = spaceInfo.panelThickness ?? 18;
+      const surroundThickness2 = 18.5; // 서라운드(PET) 항상 18.5mm
 
       if (dropH2 > 0) {
         const dropPosition2 = spaceInfo.droppedCeiling?.position || 'left';
@@ -1213,7 +1213,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const cbPos2 = spaceInfo.curtainBox.position || 'right';
       const cbWidthMM2 = spaceInfo.curtainBox.width || 150;
       const cbDropH2 = spaceInfo.curtainBox.dropHeight || 60;
-      const cbPanelThickness2 = 18;
+      const cbPanelThickness2 = 18.5; // 커튼박스(PET) 항상 18.5mm
       const cbSideDepth2 = 40;
       const cbFrontWidth2 = cbWidthMM2 - 3;
       const cbPanelHeight2 = surroundH2 + cbDropH2;

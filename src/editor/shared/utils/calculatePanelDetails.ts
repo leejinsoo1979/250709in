@@ -735,7 +735,7 @@ export const calculatePanelDetails = (
         name: '좌측 도어',
         width: singleDoorWidth,
         height: doorH,
-        thickness: basicThickness,
+        thickness: 18.5,  // PET 재질 항상 18.5mm
         material: 'PET',
         boringPositions: leftDoorBoring.boringPositions,
         boringDepthPositions: leftDoorBoring.boringDepthPositions,
@@ -749,7 +749,7 @@ export const calculatePanelDetails = (
         name: '우측 도어',
         width: singleDoorWidth,
         height: doorH,
-        thickness: basicThickness,
+        thickness: 18.5,  // PET 재질 항상 18.5mm
         material: 'PET',
         boringPositions: rightDoorBoring.boringPositions,
         boringDepthPositions: rightDoorBoring.boringDepthPositions,
@@ -770,7 +770,7 @@ export const calculatePanelDetails = (
         name: '도어',
         width: doorW,
         height: doorH,
-        thickness: basicThickness,
+        thickness: 18.5,  // PET 재질 항상 18.5mm
         material: 'PET',
         boringPositions: doorBoring.boringPositions,
         boringDepthPositions: doorBoring.boringDepthPositions,
@@ -1116,7 +1116,7 @@ export const calculatePanelDetails = (
   }
 
   // 엔드패널(EP) — 좌/우 독립
-  const epT = endPanelThickness || 18;
+  const epT = 18.5; // EP(엔드패널)는 PET 재질 항상 18.5mm
   if (hasLeftEndPanel) {
     result.push({
       name: '엔드패널(좌)',
@@ -1139,7 +1139,7 @@ export const calculatePanelDetails = (
   }
 
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
-  const FRAME_THICKNESS = 18; // 프레임 두께 고정 18mm
+  const FRAME_THICKNESS = 18.5; // 프레임(PET 재질) 두께 항상 18.5mm
 
   // 상부프레임
   if (hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
@@ -1177,9 +1177,9 @@ const SURROUND_SIDE_DEPTH = 40; // L자형 측면 패널 깊이 (mm)
 export const calculateSurroundPanels = (
   freeSurround: FreeSurroundConfig | undefined,
   surroundHeightMm: number, // 서라운드 높이 (mm) = 공간높이 - 바닥마감재 - 띄움높이
-  panelThicknessMm: number = 18 // 가구재 두께 (mm) — 서라운드 패널 두께로 사용
+  _panelThicknessMm?: number // deprecated: PET는 항상 18.5mm
 ): any[] => {
-  const SURROUND_PANEL_THICKNESS = panelThicknessMm;
+  const SURROUND_PANEL_THICKNESS = 18.5; // 서라운드(PET 재질) 항상 18.5mm
   if (!freeSurround) return [];
 
   const result: any[] = [];
