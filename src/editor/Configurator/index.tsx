@@ -1775,6 +1775,12 @@ const Configurator: React.FC = () => {
                 dropHeight: 200,
               },
             } : {}),
+            ...(defaults.hasFloorFinish !== undefined ? {
+              hasFloorFinish: defaults.hasFloorFinish,
+              ...(defaults.hasFloorFinish ? {
+                floorFinish: { height: defaults.floorFinishHeight ?? 15 },
+              } : { floorFinish: undefined }),
+            } : {}),
           };
         }
       } catch (e) {

@@ -770,6 +770,8 @@ export type SpaceConfigDefaults = {
   droppedCeilingWidth?: number;
   droppedCeilingDropHeight?: number;
   curtainBoxMode?: 'none' | 'left' | 'right';
+  hasFloorFinish?: boolean;
+  floorFinishHeight?: number;
 };
 
 // 공간설정 기본값 조회

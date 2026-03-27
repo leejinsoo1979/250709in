@@ -133,6 +133,13 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
               dropHeight: 200,
             },
           } : {}),
+          // 바닥마감재
+          ...(defaults.hasFloorFinish !== undefined ? {
+            hasFloorFinish: defaults.hasFloorFinish,
+            ...(defaults.hasFloorFinish ? {
+              floorFinish: { height: defaults.floorFinishHeight ?? 15 },
+            } : { floorFinish: undefined }),
+          } : {}),
         });
         console.log('✅ 유저 공간설정 기본값 적용:', defaults);
       }

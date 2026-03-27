@@ -25,6 +25,8 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   droppedCeilingWidth: 1300,
   droppedCeilingDropHeight: 200,
   curtainBoxMode: 'none',
+  hasFloorFinish: false,
+  floorFinishHeight: 15,
 };
 
 const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; label: string }[] = [
@@ -234,6 +236,21 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
               selected={values.placementType}
               onChange={(id) => set('placementType', id as any)}
             />
+          </div>
+
+          {/* 바닥마감재 상태 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>바닥마감재 상태</div>
+            <Toggle
+              options={[{ id: 'finished', label: '바닥재 시공완료' }, { id: 'pending', label: '시공예정' }]}
+              selected={values.hasFloorFinish ? 'pending' : 'finished'}
+              onChange={(id) => set('hasFloorFinish', id === 'pending')}
+            />
+            {values.hasFloorFinish && (
+              <div className={styles.row}>
+                <NumberInput label="두께" value={values.floorFinishHeight} onChange={h('floorFinishHeight')} min={5} max={100} step={1} />
+              </div>
+            )}
           </div>
 
           {/* 가구 배치 기본 너비 (자유배치일 때만) */}
