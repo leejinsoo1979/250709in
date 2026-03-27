@@ -3965,13 +3965,13 @@ const Room: React.FC<RoomProps> = ({
                       );
                     })()}
 
-                    {/* 좌측 서라운드 하단 연필 아이콘 */}
-                    {viewMode !== '2D' && showDimensions && !readOnly && (
+                    {/* 좌측 서라운드 전면 패널 기어 아이콘 */}
+                    {viewMode !== '2D' && showDimensions && (
                       <Html
-                        position={[frontPos[0], sideFrameStartY - 3.2, frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.5]}
+                        position={[frontPos[0], frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                         center
                         zIndexRange={[100, 0]}
-                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                       >
                         <div
                           data-surround-options-panel
@@ -3979,8 +3979,6 @@ const Room: React.FC<RoomProps> = ({
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
                             backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            opacity: surroundPopup === 'left' ? 1 : 0.8,
-                            transform: surroundPopup === 'left' ? 'scale(1.1)' : 'scale(1)',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -3992,31 +3990,31 @@ const Room: React.FC<RoomProps> = ({
                           onMouseDown={(e) => e.stopPropagation()}
                           title="서라운드 설정"
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                           </svg>
                         </div>
                       </Html>
                     )}
-                    {/* 좌측 서라운드 편집 팝업 (우측에 표시) */}
+                    {/* 좌측 서라운드 옵셋 팝업 */}
                     {surroundPopup === 'left' && (() => {
                       const fs = spaceInfo.freeSurround;
                       const d = fs?.left;
                       if (!d) return null;
                       return (
                         <Html
-                          position={[frontPos[0] + mmToThreeUnits(frontActualWidth) / 2 + 2.0, frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
+                          position={[frontPos[0] + mmToThreeUnits(frontActualWidth) / 2 + 1.5, frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                           center zIndexRange={[200, 0]}
                           style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                         >
-                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.97)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 8px 24px rgba(0,0,0,0.15)`, padding: '14px', minWidth: '180px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
+                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
                             onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: `1px solid ${colors.primary}22`, paddingBottom: '8px' }}>
-                              <span style={{ fontWeight: 600, fontSize: '14px', color: colors.primary }}>좌측 서라운드</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>좌측 서라운드</span>
                               <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
                             </div>
-                            <div style={{ marginBottom: '8px' }}>
+                            <div style={{ marginBottom: '6px' }}>
                               <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="text" inputMode="numeric" value={d.offset ?? 0}
@@ -4135,13 +4133,13 @@ const Room: React.FC<RoomProps> = ({
                       );
                     })()}
 
-                    {/* 우측 서라운드 하단 연필 아이콘 */}
-                    {viewMode !== '2D' && showDimensions && !readOnly && (
+                    {/* 우측 서라운드 전면 패널 기어 아이콘 */}
+                    {viewMode !== '2D' && showDimensions && (
                       <Html
-                        position={[rFrontPos[0], sideFrameStartY - 3.2, rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.5]}
+                        position={[rFrontPos[0], rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                         center
                         zIndexRange={[100, 0]}
-                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                       >
                         <div
                           data-surround-options-panel
@@ -4149,8 +4147,6 @@ const Room: React.FC<RoomProps> = ({
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
                             backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            opacity: surroundPopup === 'right' ? 1 : 0.8,
-                            transform: surroundPopup === 'right' ? 'scale(1.1)' : 'scale(1)',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -4162,31 +4158,31 @@ const Room: React.FC<RoomProps> = ({
                           onMouseDown={(e) => e.stopPropagation()}
                           title="서라운드 설정"
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                           </svg>
                         </div>
                       </Html>
                     )}
-                    {/* 우측 서라운드 편집 팝업 (좌측에 표시) */}
+                    {/* 우측 서라운드 옵셋 팝업 */}
                     {surroundPopup === 'right' && (() => {
                       const fs = spaceInfo.freeSurround;
                       const d = fs?.right;
                       if (!d) return null;
                       return (
                         <Html
-                          position={[rFrontPos[0] - mmToThreeUnits(rFrontActualWidth) / 2 - 2.0, rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
+                          position={[rFrontPos[0] - mmToThreeUnits(rFrontActualWidth) / 2 - 1.5, rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                           center zIndexRange={[200, 0]}
                           style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                         >
-                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.97)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 8px 24px rgba(0,0,0,0.15)`, padding: '14px', minWidth: '180px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
+                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
                             onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: `1px solid ${colors.primary}22`, paddingBottom: '8px' }}>
-                              <span style={{ fontWeight: 600, fontSize: '14px', color: colors.primary }}>우측 서라운드</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>우측 서라운드</span>
                               <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
                             </div>
-                            <div style={{ marginBottom: '8px' }}>
+                            <div style={{ marginBottom: '6px' }}>
                               <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="text" inputMode="numeric" value={d.offset ?? 0}
@@ -4295,13 +4291,13 @@ const Room: React.FC<RoomProps> = ({
                       );
                     })()}
 
-                    {/* 중간 서라운드 하단 연필 아이콘 */}
-                    {viewMode !== '2D' && showDimensions && !readOnly && (
+                    {/* 중간 서라운드 전면 패널 기어 아이콘 */}
+                    {viewMode !== '2D' && showDimensions && (
                       <Html
-                        position={[mFrontPos[0], sideFrameStartY - 3.2, mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.5]}
+                        position={[mFrontPos[0], mFrontPos[1], mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                         center
                         zIndexRange={[100, 0]}
-                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                       >
                         <div
                           data-surround-options-panel
@@ -4309,8 +4305,6 @@ const Room: React.FC<RoomProps> = ({
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
                             backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            opacity: surroundPopup === `middle-${idx}` ? 1 : 0.8,
-                            transform: surroundPopup === `middle-${idx}` ? 'scale(1.1)' : 'scale(1)',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -4322,6 +4316,38 @@ const Room: React.FC<RoomProps> = ({
                           onPointerDown={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
                           title="서라운드 설정"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                          </svg>
+                        </div>
+                      </Html>
+                    )}
+                    {/* 중간 서라운드 하단 연필 아이콘 (가구 편집용) */}
+                    {viewMode !== '2D' && showDimensions && !readOnly && (
+                      <Html
+                        position={[mFrontPos[0], sideFrameStartY - 3.2, mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.5]}
+                        center
+                        zIndexRange={[100, 0]}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                      >
+                        <div
+                          data-surround-edit-icon
+                          style={{
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
+                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            opacity: 0.8,
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            (window as any).__r3fClickHandled = true;
+                            // TODO: 가구 편집 팝업 연결
+                          }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          title="서라운드 편집"
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -4342,13 +4368,13 @@ const Room: React.FC<RoomProps> = ({
                           center zIndexRange={[200, 0]}
                           style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                         >
-                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.97)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 8px 24px rgba(0,0,0,0.15)`, padding: '14px', minWidth: '180px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
+                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
                             onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: `1px solid ${colors.primary}22`, paddingBottom: '8px' }}>
-                              <span style={{ fontWeight: 600, fontSize: '14px', color: colors.primary }}>중간 서라운드 {idx + 1}</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>중간 서라운드 {idx + 1}</span>
                               <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
                             </div>
-                            <div style={{ marginBottom: '8px' }}>
+                            <div style={{ marginBottom: '6px' }}>
                               <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="text" inputMode="numeric" value={d.offset ?? 0}
