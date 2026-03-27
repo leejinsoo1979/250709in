@@ -29,6 +29,8 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+  const view2DDirection = useUIStore(state => state.view2DDirection);
   const isSelected = selectedFurnitureId === placedModule.id;
 
   const panelType = placedModule.surroundPanelType;
@@ -107,6 +109,10 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
     return material;
   }, [spaceInfo.materialConfig]);
 
+  // 2D 뷰: 도어와 동일한 반투명 오버레이
+  const showOverlay = viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right');
+  const overlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
+
   return (
     <group>
       <BoxWithEdges
@@ -118,6 +124,13 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
         isHighlighted={isSelected}
         isEndPanel={true}
       />
+      {/* 2D 뷰: 서라운드 패널 반투명 overlay (도어와 동일한 스타일) */}
+      {showOverlay && (
+        <mesh position={[position[0], position[1], position[2] + args[2] / 2 + 0.001]} renderOrder={9999}>
+          <planeGeometry args={[args[0], args[1]]} />
+          <meshBasicMaterial color={overlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+        </mesh>
+      )}
     </group>
   );
 };

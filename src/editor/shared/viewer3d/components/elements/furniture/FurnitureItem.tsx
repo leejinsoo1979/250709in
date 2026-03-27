@@ -2946,14 +2946,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         <SurroundPanelMesh placedModule={placedModule} renderMode={renderMode} viewMode={viewMode} />
 
-        {/* 서라운드 패널 설정 톱니 아이콘 — 항상 표시 (3D 모드) */}
-        {viewMode !== '2D' && (
+        {/* 서라운드 패널 설정 톱니 아이콘 */}
+        {(
           <Html
             position={[0, 0, surroundFrontZ]}
             center
             zIndexRange={[100, 0]}
             style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
-            occlude={false}
           >
             <div
               data-surround-options-panel
@@ -2987,7 +2986,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         )}
 
         {/* 서라운드 옵셋 팝업 */}
-        {showSurroundOptions && viewMode !== '2D' && (
+        {showSurroundOptions && (
           <Html
             position={[1.5, 0, surroundFrontZ]}
             center
