@@ -306,6 +306,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const { getCustomFurnitureById } = useCustomFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const [showDoorOptions, setShowDoorOptions] = useState(false);
+  const [showSurroundOptions, setShowSurroundOptions] = useState(false);
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>((storeDoorTopGap ?? placedModule.doorTopGap ?? 5).toString());
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((storeDoorBottomGap ?? placedModule.doorBottomGap ?? 1.5).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
@@ -313,10 +314,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id && !isCustomEditing;
   const { theme: appTheme } = useTheme();
 
-  // 드래그/편집 시 도어 옵션 패널 닫기
+  // 드래그/편집 시 도어/서라운드 옵션 패널 닫기
   useEffect(() => {
     if (isDraggingThis || isEditMode) {
       setShowDoorOptions(false);
+      setShowSurroundOptions(false);
     }
   }, [isDraggingThis, isEditMode]);
 
@@ -338,6 +340,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       window.removeEventListener('pointerdown', handleOutsideClick);
     };
   }, [showDoorOptions]);
+
+  // 허공 클릭 시 서라운드 옵션 패널 닫기
+  useEffect(() => {
+    if (!showSurroundOptions) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-surround-options-panel]')) return;
+      setShowSurroundOptions(false);
+    };
+    const raf = requestAnimationFrame(() => {
+      window.addEventListener('pointerdown', handleOutsideClick);
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('pointerdown', handleOutsideClick);
+    };
+  }, [showSurroundOptions]);
 
   // store 갭 값 변경 시 입력 동기화
   useEffect(() => {
@@ -2909,6 +2928,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // ── 서라운드 패널: moduleData 불필요, 전용 메시로 렌더링 ──
   if (placedModule.isSurroundPanel) {
+    const surroundHeight = placedModule.freeHeight || spaceInfo.height;
+    const surroundDepth = placedModule.freeDepth || spaceInfo.depth;
+    const surroundCenterY = surroundHeight * 0.01 / 2;
+    const surroundFrontZ = surroundDepth * 0.01 / 2 + 0.3;
+
     return (
       <group
         userData={{ furnitureId: placedModule.id }}
@@ -2922,6 +2946,191 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }}
       >
         <SurroundPanelMesh placedModule={placedModule} renderMode={renderMode} viewMode={viewMode} />
+
+        {/* 서라운드 패널 설정 톱니 아이콘 */}
+        {viewMode !== '2D' && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
+          <Html
+            position={[0, surroundCenterY, surroundFrontZ]}
+            center
+            zIndexRange={[100, 0]}
+            style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+          >
+            <div
+              data-surround-options-panel
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                border: `2px solid ${getThemeColor()}`,
+                borderRadius: '50%',
+                backgroundColor: '#ffffff',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+                setShowSurroundOptions(prev => !prev);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title="서라운드 패널 설정"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={getThemeColor()} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </div>
+          </Html>
+        )}
+
+        {/* 서라운드 옵셋 팝업 */}
+        {showSurroundOptions && viewMode !== '2D' && (
+          <Html
+            position={[1.5, surroundCenterY, surroundFrontZ]}
+            center
+            zIndexRange={[200, 0]}
+            style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 200, background: 'transparent' }}
+          >
+            <div
+              data-surround-options-panel
+              style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '12px',
+                border: `2px solid ${getThemeColor()}`,
+                boxShadow: `0 4px 16px ${getThemeColor()}33`,
+                padding: '12px',
+                minWidth: '200px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                fontSize: '13px',
+                color: '#1f2937',
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 헤더 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>서라운드 옵셋</span>
+                <button
+                  onClick={() => setShowSurroundOptions(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}
+                >✕</button>
+              </div>
+
+              {/* 좌/우 옵셋 */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>좌 ←</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={placedModule.surroundOffsetLeft ?? 0}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        updatePlacedModule(placedModule.id, { surroundOffsetLeft: v });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetLeft ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetLeft: v }); }
+                        if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetLeft ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetLeft: v }); }
+                      }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>우 →</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={placedModule.surroundOffsetRight ?? 0}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        updatePlacedModule(placedModule.id, { surroundOffsetRight: v });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetRight ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetRight: v }); }
+                        if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetRight ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetRight: v }); }
+                      }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 상/하 옵셋 */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>상 ↑</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={placedModule.surroundOffsetTop ?? 0}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        updatePlacedModule(placedModule.id, { surroundOffsetTop: v });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetTop ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetTop: v }); }
+                        if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetTop ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetTop: v }); }
+                      }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>하 ↓</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={placedModule.surroundOffsetBottom ?? 0}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        updatePlacedModule(placedModule.id, { surroundOffsetBottom: v });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetBottom ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetBottom: v }); }
+                        if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetBottom ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetBottom: v }); }
+                      }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                    />
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 깊이 옵셋 */}
+              <div>
+                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={placedModule.surroundOffsetDepth ?? 0}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value) || 0;
+                      updatePlacedModule(placedModule.id, { surroundOffsetDepth: v });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetDepth ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetDepth: v }); }
+                      if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetDepth ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetDepth: v }); }
+                    }}
+                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                </div>
+              </div>
+            </div>
+          </Html>
+        )}
       </group>
     );
   }
