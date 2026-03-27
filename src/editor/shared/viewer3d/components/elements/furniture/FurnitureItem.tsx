@@ -2711,9 +2711,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
 
     // EP 18.5mm 보정: EP 방향으로 0.5mm 추가 이동
+    // 좌EP → 가구를 왼쪽(-)으로, 우EP → 가구를 오른쪽(+)으로
     const EP_EXTRA = mmToThreeUnits(0.5); // END_PANEL_RENDER_THICKNESS - END_PANEL_THICKNESS
-    if (placedModule.hasLeftEndPanel) epOffsetX += EP_EXTRA;
-    if (placedModule.hasRightEndPanel) epOffsetX -= EP_EXTRA;
+    if (placedModule.hasLeftEndPanel) epOffsetX -= EP_EXTRA;
+    if (placedModule.hasRightEndPanel) epOffsetX += EP_EXTRA;
   }
 
   const furnitureGroupPosition: [number, number, number] = [
