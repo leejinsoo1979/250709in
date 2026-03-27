@@ -1006,6 +1006,23 @@ const Room: React.FC<RoomProps> = ({
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
+  // 서라운드 기어 아이콘 팝업 state
+  const [surroundPopup, setSurroundPopup] = useState<string | null>(null);
+  const setSpaceInfo = useSpaceConfigStore((state) => state.setSpaceInfo);
+
+  // 서라운드 팝업 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!surroundPopup) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest?.('[data-surround-options-panel]')) return;
+      setSurroundPopup(null);
+      setHighlightedFrame(null);
+    };
+    window.addEventListener('pointerdown', handler);
+    return () => window.removeEventListener('pointerdown', handler);
+  }, [surroundPopup, setHighlightedFrame]);
+
   // useEffect+useState로 material을 관리
   const [baseFrameMaterial, setBaseFrameMaterial] = useState<THREE.Material>();
   const [baseDroppedFrameMaterial, setBaseDroppedFrameMaterial] = useState<THREE.Material>();
@@ -3964,8 +3981,8 @@ const Room: React.FC<RoomProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             (window as any).__r3fClickHandled = true;
-                            const cur = useUIStore.getState().highlightedFrame;
-                            setHighlightedFrame(cur === 'surround-left' ? null : 'surround-left');
+                            setSurroundPopup(surroundPopup === 'left' ? null : 'left');
+                            setHighlightedFrame(surroundPopup === 'left' ? null : 'surround-left');
                           }}
                           onPointerDown={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
@@ -3978,6 +3995,36 @@ const Room: React.FC<RoomProps> = ({
                         </div>
                       </Html>
                     )}
+                    {/* 좌측 서라운드 옵셋 팝업 */}
+                    {surroundPopup === 'left' && (() => {
+                      const fs = spaceInfo.freeSurround;
+                      const d = fs?.left;
+                      if (!d) return null;
+                      return (
+                        <Html
+                          position={[frontPos[0] + mmToThreeUnits(frontActualWidth) / 2 + 1.5, frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
+                          center zIndexRange={[200, 0]}
+                          style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
+                        >
+                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
+                            onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>좌측 서라운드</span>
+                              <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
+                            </div>
+                            <div style={{ marginBottom: '6px' }}>
+                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>옵셋 (앞뒤)</label>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <input type="text" inputMode="numeric" value={d.offset ?? 0}
+                                  onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }); }}
+                                  style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Html>
+                      );
+                    })()}
                   </>
                 );
               })()}
@@ -4080,8 +4127,8 @@ const Room: React.FC<RoomProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             (window as any).__r3fClickHandled = true;
-                            const cur = useUIStore.getState().highlightedFrame;
-                            setHighlightedFrame(cur === 'surround-right' ? null : 'surround-right');
+                            setSurroundPopup(surroundPopup === 'right' ? null : 'right');
+                            setHighlightedFrame(surroundPopup === 'right' ? null : 'surround-right');
                           }}
                           onPointerDown={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
@@ -4094,6 +4141,36 @@ const Room: React.FC<RoomProps> = ({
                         </div>
                       </Html>
                     )}
+                    {/* 우측 서라운드 옵셋 팝업 */}
+                    {surroundPopup === 'right' && (() => {
+                      const fs = spaceInfo.freeSurround;
+                      const d = fs?.right;
+                      if (!d) return null;
+                      return (
+                        <Html
+                          position={[rFrontPos[0] - mmToThreeUnits(rFrontActualWidth) / 2 - 1.5, rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
+                          center zIndexRange={[200, 0]}
+                          style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
+                        >
+                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
+                            onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>우측 서라운드</span>
+                              <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
+                            </div>
+                            <div style={{ marginBottom: '6px' }}>
+                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>옵셋 (앞뒤)</label>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <input type="text" inputMode="numeric" value={d.offset ?? 0}
+                                  onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }); }}
+                                  style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Html>
+                      );
+                    })()}
                   </>
                 );
               })()}
@@ -4186,8 +4263,9 @@ const Room: React.FC<RoomProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             (window as any).__r3fClickHandled = true;
-                            const cur = useUIStore.getState().highlightedFrame;
-                            setHighlightedFrame(cur === `surround-middle-${idx}` ? null : `surround-middle-${idx}`);
+                            const key = `middle-${idx}`;
+                            setSurroundPopup(surroundPopup === key ? null : key);
+                            setHighlightedFrame(surroundPopup === key ? null : `surround-middle-${idx}`);
                           }}
                           onPointerDown={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
@@ -4200,6 +4278,42 @@ const Room: React.FC<RoomProps> = ({
                         </div>
                       </Html>
                     )}
+                    {/* 중간 서라운드 옵셋 팝업 */}
+                    {surroundPopup === `middle-${idx}` && (() => {
+                      const fs = spaceInfo.freeSurround;
+                      const midArr = fs?.middle;
+                      const d = midArr?.[idx];
+                      if (!d || !midArr) return null;
+                      return (
+                        <Html
+                          position={[mFrontPos[0] + mmToThreeUnits(mFrontActualWidth) / 2 + 1.5, mFrontPos[1], mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
+                          center zIndexRange={[200, 0]}
+                          style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
+                        >
+                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
+                            onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ fontWeight: 600, fontSize: '14px' }}>중간 서라운드 {idx + 1}</span>
+                              <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
+                            </div>
+                            <div style={{ marginBottom: '6px' }}>
+                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>옵셋 (앞뒤)</label>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <input type="text" inputMode="numeric" value={d.offset ?? 0}
+                                  onChange={(e) => {
+                                    const v = parseInt(e.target.value) || 0;
+                                    const newMiddle = [...midArr];
+                                    newMiddle[idx] = { ...d, offset: v };
+                                    setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                                  }}
+                                  style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Html>
+                      );
+                    })()}
                   </group>
                 );
               })}
