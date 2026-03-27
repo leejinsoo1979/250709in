@@ -41,19 +41,31 @@ const SurroundPanelMesh: React.FC<SurroundPanelMeshProps> = ({
     const depth = mmToThree(placedModule.freeDepth || spaceInfo.depth);
     const width = mmToThree(panelWidth);
 
+    // 옵셋 값 (mm → Three.js 단위)
+    const offsetLeft = mmToThree(placedModule.surroundOffsetLeft ?? 0);
+    const offsetRight = mmToThree(placedModule.surroundOffsetRight ?? 0);
+    const offsetTop = mmToThree(placedModule.surroundOffsetTop ?? 0);
+    const offsetBottom = mmToThree(placedModule.surroundOffsetBottom ?? 0);
+    const offsetDepth = mmToThree(placedModule.surroundOffsetDepth ?? 0);
+
+    // 옵셋 적용: left→-X, right→+X, top→+Y, bottom→-Y, depth→-Z
+    const posX = -offsetLeft + offsetRight;
+    const posY = offsetTop - offsetBottom;
+    const posZ = -offsetDepth;
+
     if (panelType === 'left' || panelType === 'right') {
       // 좌/우 패널: 두께(X) × 높이(Y) × 깊이(Z)
       // 실제 폭은 surroundPanelWidth이지만 패널 자체의 두께는 18mm
       return {
         args: [thickness, height, depth] as [number, number, number],
-        position: [0, 0, 0] as [number, number, number],
+        position: [posX, posY, posZ] as [number, number, number],
       };
     } else {
       // 상단 패널: 너비(X) × 두께(Y) × 깊이(Z)
       const topWidth = mmToThree(placedModule.freeWidth || 0);
       return {
         args: [topWidth, thickness, depth] as [number, number, number],
-        position: [0, 0, 0] as [number, number, number],
+        position: [posX, posY, posZ] as [number, number, number],
       };
     }
   }, [panelType, panelWidth, placedModule, spaceInfo]);
