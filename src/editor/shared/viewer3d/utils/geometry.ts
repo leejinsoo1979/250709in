@@ -51,6 +51,13 @@ export const END_PANEL_THICKNESS = 18;
 export const END_PANEL_RENDER_THICKNESS = 18.5;
 
 /**
+ * EP 렌더링 보정값 (0.5mm)
+ * END_PANEL_RENDER_THICKNESS - END_PANEL_THICKNESS
+ * EP/가구 위치 및 너비 보정에 사용
+ */
+export const EP_RENDER_OFFSET = END_PANEL_RENDER_THICKNESS - END_PANEL_THICKNESS;
+
+/**
  * 실제 치수를 기반으로 3D 공간의 방 치수 계산 (mm 단위)
  * 바닥재가 있는 경우 실제 공간 높이는 전체 높이에서 바닥재 두께를 뺀 값
  */

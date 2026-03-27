@@ -16,7 +16,8 @@ import {
   calculateBaseFrameWidth,
   calculateTopBottomFrameHeight,
   calculateBaseFrameHeight,
-  calculateInternalSpace
+  calculateInternalSpace,
+  EP_RENDER_OFFSET
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
@@ -61,7 +62,6 @@ const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
 const END_PANEL_THICKNESS = 18; // 슬롯/프레임 계산 기준
 const END_PANEL_RENDER_THICKNESS = 18.5; // 물리적 렌더링 두께 (PET)
-const EP_OFFSET = END_PANEL_RENDER_THICKNESS - END_PANEL_THICKNESS; // 0.5mm 보정값
 
 // 전역 렌더링 카운터 (컴포넌트 마운트/언마운트에 영향받지 않음)
 if (typeof window !== 'undefined') {
@@ -3909,7 +3909,7 @@ const Room: React.FC<RoomProps> = ({
 
                 if (method === 'ep') {
                   const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_RENDER_THICKNESS), surrH, mmToThreeUnits(END_PANEL_RENDER_THICKNESS)];
-                  const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
+                  const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2 - EP_RENDER_OFFSET), surrCenterY, frontZ];
                   return (
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
@@ -4077,7 +4077,7 @@ const Room: React.FC<RoomProps> = ({
 
                 if (method === 'ep') {
                   const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_RENDER_THICKNESS), surrH, mmToThreeUnits(END_PANEL_RENDER_THICKNESS)];
-                  const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
+                  const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2 + EP_RENDER_OFFSET), surrCenterY, frontZ];
                   return (
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
