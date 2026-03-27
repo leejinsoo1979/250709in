@@ -55,7 +55,6 @@ import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurn
 import CustomizableFurnitureLibrary from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import CustomizablePropertiesPanel from '@/editor/shared/controls/furniture/CustomizablePropertiesPanel';
 import MyCabinetGallery from '@/editor/shared/controls/furniture/MyCabinetGallery';
-import SurroundPanelGallery from '@/editor/shared/controls/furniture/SurroundPanelGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -3448,11 +3447,6 @@ const Configurator: React.FC = () => {
                   hideTabMenu
                 />
               </div>
-
-              {/* 자유배치 모드일 때 서라운드 패널 갤러리 표시 */}
-              {(spaceInfo.layoutMode || 'equal-division') === 'free-placement' && (
-                <SurroundPanelGallery />
-              )}
 
               {/* 커스텀 캐비닛 만들기는 My캐비넷 탭으로 이동 */}
             </div>
