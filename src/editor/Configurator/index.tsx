@@ -5037,25 +5037,28 @@ const Configurator: React.FC = () => {
                 {surroundItems.map((si) => {
                   if (si.kind === 'left') {
                     const d = fs.left;
-                    return <React.Fragment key="surround-left">{renderOffsetRow(getSurroundLabel('left'), d.enabled, d.gap || 0, d.offset,
+                    const panelSize = Math.max(0, (d.gap || 0) - 3);
+                    return <React.Fragment key="surround-left">{renderOffsetRow(getSurroundLabel('left'), d.enabled, panelSize, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, enabled: !d.enabled } } }),
-                      (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, gap: v } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, gap: v + 3 } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }),
                       'surround-left',
                     )}</React.Fragment>;
                   }
                   if (si.kind === 'right') {
                     const d = fs.right;
-                    return <React.Fragment key="surround-right">{renderOffsetRow(getSurroundLabel('right'), d.enabled, d.gap || 0, d.offset,
+                    const panelSize = Math.max(0, (d.gap || 0) - 3);
+                    return <React.Fragment key="surround-right">{renderOffsetRow(getSurroundLabel('right'), d.enabled, panelSize, d.offset,
                       () => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, enabled: !d.enabled } } }),
-                      (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, gap: v } } }),
+                      (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, gap: v + 3 } } }),
                       (v) => setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }),
                       'surround-right',
                     )}</React.Fragment>;
                   }
                   if (si.kind === 'middle') {
                     const midCfg = middleGaps[si.idx];
-                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(`중간${middleGaps.length > 1 ? si.idx + 1 : ''}`, midCfg.enabled, midCfg.gap || 0, midCfg.offset || 0,
+                    const panelSize = Math.max(0, (midCfg.gap || 0) - 3);
+                    return <React.Fragment key={`surround-middle-${si.idx}`}>{renderOffsetRow(`중간${middleGaps.length > 1 ? si.idx + 1 : ''}`, midCfg.enabled, panelSize, midCfg.offset || 0,
                       () => {
                         const newMiddle = [...middleGaps];
                         newMiddle[si.idx] = { ...newMiddle[si.idx], enabled: !newMiddle[si.idx].enabled };
@@ -5063,7 +5066,7 @@ const Configurator: React.FC = () => {
                       },
                       (v) => {
                         const newMiddle = [...middleGaps];
-                        newMiddle[si.idx] = { ...newMiddle[si.idx], gap: v };
+                        newMiddle[si.idx] = { ...newMiddle[si.idx], gap: v + 3 };
                         setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
                       },
                       (v) => {
