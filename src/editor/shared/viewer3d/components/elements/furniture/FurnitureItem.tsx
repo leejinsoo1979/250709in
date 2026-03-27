@@ -2928,9 +2928,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // ── 서라운드 패널: moduleData 불필요, 전용 메시로 렌더링 ──
   if (placedModule.isSurroundPanel) {
-    const surroundHeight = placedModule.freeHeight || spaceInfo.height;
     const surroundDepth = placedModule.freeDepth || spaceInfo.depth;
-    const surroundCenterY = surroundHeight * 0.01 / 2;
+    // group position이 이미 패널 중심이므로, 아이콘은 로컬 (0,0,앞쪽)
     const surroundFrontZ = surroundDepth * 0.01 / 2 + 0.3;
 
     return (
@@ -2950,7 +2949,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         {/* 서라운드 패널 설정 톱니 아이콘 */}
         {viewMode !== '2D' && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
           <Html
-            position={[0, surroundCenterY, surroundFrontZ]}
+            position={[0, 0, surroundFrontZ]}
             center
             zIndexRange={[100, 0]}
             style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
@@ -2989,7 +2988,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         {/* 서라운드 옵셋 팝업 */}
         {showSurroundOptions && viewMode !== '2D' && (
           <Html
-            position={[1.5, surroundCenterY, surroundFrontZ]}
+            position={[1.5, 0, surroundFrontZ]}
             center
             zIndexRange={[200, 0]}
             style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 200, background: 'transparent' }}
