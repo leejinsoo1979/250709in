@@ -279,8 +279,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const bodyOffsetX = (leftEP - rightEP) / 2; // 비대칭 EP일 때 본체 X 보정
 
   // 내부 너비 (측판 두께 제외) - 기존 BaseFurnitureShell과 동일
-  const innerW = effectiveW - 2 * t;
-  const innerWidthMm = width - 2 * panelThickness - (hasLeftEndPanel ? epThicknessMm : 0) - (hasRightEndPanel ? epThicknessMm : 0);
+  // 18.5/15.5mm는 양면 접합 두께이므로 innerWidth는 정수 두께(18/15)로 계산 (슬롯폭 유지)
+  const innerWidthThickness = (panelThickness === 18.5 || panelThickness === 15.5) ? Math.floor(panelThickness) : panelThickness;
+  const innerWThickness = mmToUnit(innerWidthThickness);
+  const innerW = effectiveW - 2 * innerWThickness;
+  const innerWidthMm = width - 2 * innerWidthThickness - (hasLeftEndPanel ? epThicknessMm : 0) - (hasRightEndPanel ? epThicknessMm : 0);
 
   // 재질 설정
   const materialConfig = spaceInfo.materialConfig || {
@@ -545,7 +548,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
     // 섹션 내경 (mm)
     const sectionInnerHeightMm = section.height;
-    const sectionInnerWidthMm = width - 2 * panelThickness;
+    const sectionInnerWidthMm = width - 2 * innerWidthThickness;
 
     // 섹션 중심 Y 계산
     let sectionCenterY = 0;

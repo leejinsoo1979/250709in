@@ -50,8 +50,11 @@ export const calculatePanelDetails = (
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
   const heightRatio = freeHeight && originalHeight > 0 ? freeHeight / originalHeight : 1;
-  const innerWidth = customWidth - (basicThickness * 2);
-  const _innerHeight = height - (basicThickness * 2);
+  // 18.5/15.5mm는 실제 18/15mm 보드에 양면 접합한 두께이므로
+  // innerWidth 계산 시 정수 두께(18/15)를 사용하여 슬롯폭 동일하게 유지
+  const innerWidthThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? Math.floor(basicThickness) : basicThickness;
+  const innerWidth = customWidth - (innerWidthThickness * 2);
+  const _innerHeight = height - (innerWidthThickness * 2);
   
   // 섹션 정보 가져오기
   // 듀얼 타입5,6 특별 처리 (leftSections/rightSections 구조)
@@ -894,7 +897,8 @@ export const calculatePanelDetails = (
 
     customConfig.sections.forEach((section, secIdx) => {
       const sectionPrefix = customConfig.sections.length > 1 ? `섹션${secIdx + 1} ` : '';
-      const sectionInnerWidth = customWidth - (basicThicknessCC * 2);
+      const innerWidthThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? Math.floor(basicThicknessCC) : basicThicknessCC;
+      const sectionInnerWidth = customWidth - (innerWidthThicknessCC * 2);
 
       // 칸막이 (세로 칸막이) → 별도 패널
       if (section.hasPartition && section.partitionPosition) {

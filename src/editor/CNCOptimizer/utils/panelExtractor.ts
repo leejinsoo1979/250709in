@@ -22,7 +22,9 @@ export const calculatePanelDetails = (
   const drawerBottomThickness = 5;
   
   const height = moduleData.dimensions.height;
-  const innerWidth = customWidth - (basicThickness * 2);
+  // 18.5/15.5mm는 양면 접합 두께이므로 innerWidth는 정수 두께로 계산 (슬롯폭 유지)
+  const innerWidthThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? Math.floor(basicThickness) : basicThickness;
+  const innerWidth = customWidth - (innerWidthThickness * 2);
   const innerHeight = height - (basicThickness * 2);
   
   // 섹션 정보 가져오기
