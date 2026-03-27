@@ -27,6 +27,7 @@ const SurroundPanelGallery: React.FC = () => {
 
   // 카드 클릭 → 배치 모드 활성화
   const handleCardClick = useCallback((panel: SurroundPanelModuleData) => {
+    console.warn('🔶🔶🔶 [SurroundGallery] 클릭:', panel.id, panel.panelType, '이미배치:', placedPanelTypes.has(panel.panelType));
     // 이미 배치된 타입은 클릭 불가
     if (placedPanelTypes.has(panel.panelType)) return;
 
@@ -39,6 +40,7 @@ const SurroundPanelGallery: React.FC = () => {
 
     setSelectedFurnitureId(panel.id);
     setFurniturePlacementMode(true);
+    console.warn('🔶 [SurroundGallery] selectedFurnitureId 설정:', panel.id);
   }, [selectedFurnitureId, placedPanelTypes, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   return (
