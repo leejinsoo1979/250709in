@@ -39,11 +39,16 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
         vertex.fromBufferAttribute(positions, i);
         vertex.applyMatrix4(worldMatrix);
 
-        // 중복 제거 (소수점 3자리까지 = 0.01mm 정밀도)
-        const key = `${vertex.x.toFixed(3)},${vertex.y.toFixed(3)},${vertex.z.toFixed(3)}`;
+        // 부동소수점 오차 제거: 소수점 4자리로 반올림 (0.01mm 정밀도)
+        // Float32 행렬 변환 후 발생하는 미세 오차를 제거하여 정확한 스냅 보장
+        const rx = Math.round(vertex.x * 10000) / 10000;
+        const ry = Math.round(vertex.y * 10000) / 10000;
+        const rz = Math.round(vertex.z * 10000) / 10000;
+
+        const key = `${rx},${ry},${rz}`;
         if (!processedVertices.has(key)) {
           processedVertices.add(key);
-          vertices.push([vertex.x, vertex.y, vertex.z]);
+          vertices.push([rx, ry, rz]);
         }
       }
     }
