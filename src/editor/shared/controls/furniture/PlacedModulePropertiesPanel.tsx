@@ -1263,6 +1263,71 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
 
+            {/* 서라운드 옵셋 설정 */}
+            <div className={styles.propertySection}>
+              <h5 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: 600 }}>옵셋 조정</h5>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>좌 ←</span>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={currentPlacedModule.surroundOffsetLeft ?? 0}
+                    onChange={(e) => updatePlacedModule(currentPlacedModule.id, { surroundOffsetLeft: parseInt(e.target.value) || 0 })}
+                    style={{ width: 70, textAlign: 'right' }}
+                  />
+                  <span>mm</span>
+                </div>
+              </div>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>우 →</span>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={currentPlacedModule.surroundOffsetRight ?? 0}
+                    onChange={(e) => updatePlacedModule(currentPlacedModule.id, { surroundOffsetRight: parseInt(e.target.value) || 0 })}
+                    style={{ width: 70, textAlign: 'right' }}
+                  />
+                  <span>mm</span>
+                </div>
+              </div>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>상 ↑</span>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={currentPlacedModule.surroundOffsetTop ?? 0}
+                    onChange={(e) => updatePlacedModule(currentPlacedModule.id, { surroundOffsetTop: parseInt(e.target.value) || 0 })}
+                    style={{ width: 70, textAlign: 'right' }}
+                  />
+                  <span>mm</span>
+                </div>
+              </div>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>하 ↓</span>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={currentPlacedModule.surroundOffsetBottom ?? 0}
+                    onChange={(e) => updatePlacedModule(currentPlacedModule.id, { surroundOffsetBottom: parseInt(e.target.value) || 0 })}
+                    style={{ width: 70, textAlign: 'right' }}
+                  />
+                  <span>mm</span>
+                </div>
+              </div>
+              <div className={styles.property}>
+                <span className={styles.propertyLabel}>깊이</span>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={currentPlacedModule.surroundOffsetDepth ?? 0}
+                    onChange={(e) => updatePlacedModule(currentPlacedModule.id, { surroundOffsetDepth: parseInt(e.target.value) || 0 })}
+                    style={{ width: 70, textAlign: 'right' }}
+                  />
+                  <span>mm</span>
+                </div>
+              </div>
+            </div>
+
             <div style={{ padding: '12px 0', borderTop: '1px solid var(--theme-border, #eee)' }}>
               <button
                 className={`${styles.deleteButton}`}
