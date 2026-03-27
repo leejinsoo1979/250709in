@@ -138,12 +138,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
+    console.warn('🟣🟣🟣 [addModule] 호출됨:', module.id, 'isSurround:', module.isSurroundPanel, 'isFree:', module.isFreePlacement);
 
     set((state) => {
       // ID 중복 체크
       const existing = state.placedModules.find(m => m.id === module.id);
       if (existing) {
-
+        console.warn('🟣 [addModule] ID 중복! 무시:', module.id);
         return state; // 변경 없음
       }
 
@@ -184,6 +185,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 자유배치 가구는 슬롯 충돌 체크 불필요 (X 좌표 기반 충돌 검사는 배치 시점에 이미 완료됨)
       if (module.isFreePlacement) {
         const newModules = [...state.placedModules, module];
+        console.warn('🟣 [addModule] 자유배치 추가 완료. 총:', newModules.length, '서라운드:', newModules.filter(m => m.isSurroundPanel).length);
         notifyR3F(newModules);
         return {
           placedModules: newModules
