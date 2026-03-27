@@ -3798,9 +3798,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const epDepthMmSlot = placedModule.endPanelDepth ?? (actualDepthMm || 580);
         const endPanelDepth = mmToThreeUnits(epDepthMmSlot);
 
-        // 엔드패널 X 위치 계산 (가구의 줄어든 너비 고려)
-        // EP 위치는 슬롯 경계 기준(18mm 중심)으로 고정, 메시 크기만 18.5mm
-        const epSlotHalf = mmToThreeUnits(END_PANEL_THICKNESS) / 2; // 슬롯 기준 9mm
+        // 엔드패널 X 위치 계산
+        // EP 안쪽 면이 슬롯 18mm 경계에 딱 맞도록 배치
+        // → EP 중심 = 슬롯경계 + 18mm - endPanelWidth/2 (바깥쪽으로 0.25mm 밀림)
+        const epSlotWidth = mmToThreeUnits(END_PANEL_THICKNESS); // 슬롯 기준 18mm
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
 
@@ -3809,8 +3810,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         // 왼쪽 엔드패널 렌더링 (endPanelSide만 존중 - 바깥쪽 엔드패널 중복 방지)
         if ((endPanelSide === 'left' || endPanelSide === 'both') && slotBoundaries) {
-          // 엔드패널은 슬롯 왼쪽 경계 + 슬롯기준 18mm 중심에 고정
-          const leftPanelX = slotBoundaries.left + epSlotHalf;
+          // EP 안쪽 면 = slotLeft + 18mm → EP 중심 = slotLeft + 18mm - EP두께/2
+          const leftPanelX = slotBoundaries.left + epSlotWidth - endPanelWidth / 2;
 
           endPanelXPositions.push({
             x: leftPanelX,
@@ -3841,10 +3842,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 : indexing.columnWidth * 0.01;
             }
 
-            rightPanelX = slotBoundaries.right + secondSlotWidth - epSlotHalf;
+            // EP 안쪽 면 = slotRight + secondSlotWidth - 18mm → EP 중심 = 그 + EP두께/2
+            rightPanelX = slotBoundaries.right + secondSlotWidth - epSlotWidth + endPanelWidth / 2;
           } else {
-            // 싱글장: 현재 슬롯의 오른쪽 경계 - 슬롯기준 18mm 중심
-            rightPanelX = slotBoundaries.right - epSlotHalf;
+            // 싱글장: EP 안쪽 면 = slotRight - 18mm → EP 중심 = 그 + EP두께/2
+            rightPanelX = slotBoundaries.right - epSlotWidth + endPanelWidth / 2;
           }
 
           endPanelXPositions.push({
