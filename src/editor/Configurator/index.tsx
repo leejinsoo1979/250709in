@@ -54,6 +54,7 @@ import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFur
 import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurnitureUpload';
 import CustomizableFurnitureLibrary from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import CustomizablePropertiesPanel from '@/editor/shared/controls/furniture/CustomizablePropertiesPanel';
+import SurroundEditPanel from '@/editor/shared/controls/furniture/SurroundEditPanel';
 import MyCabinetGallery from '@/editor/shared/controls/furniture/MyCabinetGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
@@ -6684,6 +6685,7 @@ const Configurator: React.FC = () => {
       <ModulePropertiesPanel />
       <PlacedModulePropertiesPanel />
       <CustomizablePropertiesPanel />
+      <SurroundEditPanel />
 
       {/* 기둥 편집 모달 */}
       <ColumnEditModal

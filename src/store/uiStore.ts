@@ -78,7 +78,7 @@ interface UIState {
   
   // 활성 팝업 상태 (가구, 가구 편집, 기둥, 기둥 편집, 가벽, 가벽 편집, 패널B, 패널B 편집 모달 중 하나만 활성화)
   activePopup: {
-    type: 'furniture' | 'furnitureEdit' | 'customizableEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null;
+    type: 'furniture' | 'furnitureEdit' | 'customizableEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | 'surroundEdit' | null;
     id: string | null;
     sectionIndex?: number; // 커스터마이징 가구 톱니 아이콘에서 특정 섹션만 편집
     areaSide?: 'left' | 'center' | 'right'; // 칸막이 좌/우/중앙 영역 중 특정 영역만 편집
@@ -235,6 +235,7 @@ interface UIState {
   openWallEditModal: (wallId: string) => void;
   openPanelBPopup: (panelBId: string) => void;
   openPanelBEditModal: (panelBId: string) => void;
+  openSurroundEditPopup: (surroundId: string) => void;
   closeAllPopups: () => void;
   
   setHighlightedFrame: (frame: HighlightedFrame) => void;
@@ -305,7 +306,7 @@ const initialUIState = {
   showFurnitureEditHandles: true, // 기본값: 가구 편집 아이콘 표시
   renderMode: 'solid' as const, // 기본값: 솔리드 렌더링
   activePopup: {
-    type: null as 'furniture' | 'furnitureEdit' | 'customizableEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null,
+    type: null as 'furniture' | 'furnitureEdit' | 'customizableEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | 'surroundEdit' | null,
     id: null
   },
   highlightedFrame: null as HighlightedFrame,  // 기본값: 강조 없음
@@ -602,6 +603,12 @@ export const useUIStore = create<UIState>()(
           selectedPanelBId: panelBId
         }),
       
+      // 서라운드 편집 팝업 열기 (다른 모든 팝업 닫기)
+      openSurroundEditPopup: (surroundId) =>
+        set({
+          activePopup: { type: 'surroundEdit', id: surroundId },
+        }),
+
       // 모든 팝업 닫기 (selectedFurnitureId는 유지 — 우측바 도어 셋팅 등에서 참조)
       closeAllPopups: () =>
         set({

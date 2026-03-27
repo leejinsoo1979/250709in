@@ -361,7 +361,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup } = useUIStore();
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
@@ -4343,9 +4343,8 @@ const Room: React.FC<RoomProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             (window as any).__r3fClickHandled = true;
-                            const key = `middle-edit-${idx}`;
-                            setSurroundPopup(surroundPopup === key ? null : key);
-                            setHighlightedFrame(surroundPopup === key ? null : `surround-middle-${idx}`);
+                            openSurroundEditPopup(`middle-${idx}`);
+                            setHighlightedFrame(`surround-middle-${idx}`);
                           }}
                           onPointerDown={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
@@ -4388,86 +4387,6 @@ const Room: React.FC<RoomProps> = ({
                                   }}
                                   style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
                                 <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>천장 이격</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <input type="text" inputMode="numeric" value={d.topGap ?? 0}
-                                    onChange={(e) => {
-                                      const v = parseInt(e.target.value) || 0;
-                                      const newMiddle = [...midArr];
-                                      newMiddle[idx] = { ...d, topGap: v };
-                                      setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
-                                    }}
-                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
-                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
-                                </div>
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>바닥 이격</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <input type="text" inputMode="numeric" value={d.bottomGap ?? 0}
-                                    onChange={(e) => {
-                                      const v = parseInt(e.target.value) || 0;
-                                      const newMiddle = [...midArr];
-                                      newMiddle[idx] = { ...d, bottomGap: v };
-                                      setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
-                                    }}
-                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
-                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Html>
-                      );
-                    })()}
-                    {/* 중간 서라운드 연필 편집 팝업 (우측에 표시) */}
-                    {surroundPopup === `middle-edit-${idx}` && (() => {
-                      const fs = spaceInfo.freeSurround;
-                      const midArr = fs?.middle;
-                      const d = midArr?.[idx];
-                      if (!d || !midArr) return null;
-                      return (
-                        <Html
-                          position={[mFrontPos[0] + mmToThreeUnits(mFrontActualWidth) / 2 + 2.0, sideFrameStartY - 3.2, mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
-                          center zIndexRange={[200, 0]}
-                          style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
-                        >
-                          <div data-surround-options-panel style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 16px ${colors.primary}33`, padding: '12px', minWidth: '160px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: '13px', color: '#1f2937' }}
-                            onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                              <span style={{ fontWeight: 600, fontSize: '14px' }}>중간 서라운드 {idx + 1} 편집</span>
-                              <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
-                            </div>
-                            <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>gap 폭</label>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 500, color: '#374151' }}>{Math.round(d.gap)} mm</span>
-                              </div>
-                            </div>
-                            <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>서라운드 방식</label>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 500, color: '#374151' }}>{d.method === 'lshape' ? 'L자형' : d.method || 'L자형'}</span>
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <input type="text" inputMode="numeric" value={d.offset ?? 0}
-                                    onChange={(e) => {
-                                      const v = parseInt(e.target.value) || 0;
-                                      const newMiddle = [...midArr];
-                                      newMiddle[idx] = { ...d, offset: v };
-                                      setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
-                                    }}
-                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
-                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
-                                </div>
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
