@@ -197,6 +197,11 @@ export interface PlacedModule {
   isSurroundPanel?: boolean;              // 서라운드 패널 여부
   surroundPanelType?: 'left' | 'right' | 'top';  // 패널 방향
   surroundPanelWidth?: number;            // 패널 폭 (mm, 사용자 지정)
+  surroundOffsetLeft?: number;            // 좌측 옵셋 (mm)
+  surroundOffsetRight?: number;           // 우측 옵셋 (mm)
+  surroundOffsetTop?: number;             // 상단 옵셋 (mm)
+  surroundOffsetBottom?: number;          // 하단 옵셋 (mm)
+  surroundOffsetDepth?: number;           // 깊이 옵셋 (mm)
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입
