@@ -24,6 +24,8 @@ export interface FreeSurroundSide {
   offset: number;  // 옵셋 (mm)
   method?: SurroundMethod;  // 서라운드 생성 방식
   gap?: number;             // 실측 gap (mm)
+  topGap?: number;          // 천장 이격 (mm)
+  bottomGap?: number;       // 바닥 이격 (mm)
 }
 
 // 자유배치 가구 간 중간 gap 서라운드 설정
@@ -34,6 +36,8 @@ export interface FreeSurroundMiddle {
   rightX: number;    // 우측 가구의 왼쪽 edge (mm)
   method: SurroundMethod;
   offset: number;    // Z축 옵셋 (mm) — 양수=앞, 음수=뒤
+  topGap?: number;   // 천장 이격 (mm)
+  bottomGap?: number; // 바닥 이격 (mm)
 }
 
 export interface FreeSurroundConfig {

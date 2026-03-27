@@ -3898,8 +3898,10 @@ const Room: React.FC<RoomProps> = ({
                 // 단내림이 왼쪽에 있으면 서라운드 높이를 단내림 천장에 맞춤
                 const _hasLeftStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'left';
                 const leftStepDropH = _hasLeftStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
-                const surrH = _hasLeftStepCeiling ? adjustedPanelHeight - leftStepDropH : adjustedPanelHeight;
-                const surrCenterY = sideFrameStartY + surrH / 2;
+                const lTopGap = mmToThreeUnits(leftCfg.topGap || 0);
+                const lBottomGap = mmToThreeUnits(leftCfg.bottomGap || 0);
+                const surrH = (_hasLeftStepCeiling ? adjustedPanelHeight - leftStepDropH : adjustedPanelHeight) - lTopGap - lBottomGap;
+                const surrCenterY = sideFrameStartY + lBottomGap + surrH / 2;
                 const leftSurrMat = leftFrameMaterial ?? createFrameMaterial('left');
                 const isLeftHighlighted = highlightedFrame === 'surround-left';
 
@@ -4013,12 +4015,32 @@ const Room: React.FC<RoomProps> = ({
                               <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
                             </div>
                             <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>옵셋 (앞뒤)</label>
+                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="text" inputMode="numeric" value={d.offset ?? 0}
                                   onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, left: { ...d, offset: v } } }); }}
                                   style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
                                 <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>천장 이격</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input type="text" inputMode="numeric" value={d.topGap ?? 0}
+                                    onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, left: { ...d, topGap: v } } }); }}
+                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>바닥 이격</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input type="text" inputMode="numeric" value={d.bottomGap ?? 0}
+                                    onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, left: { ...d, bottomGap: v } } }); }}
+                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -4044,8 +4066,10 @@ const Room: React.FC<RoomProps> = ({
                 // 단내림이 오른쪽에 있으면 서라운드 높이를 단내림 천장에 맞춤
                 const _hasRightStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled && spaceInfo.stepCeiling?.position === 'right';
                 const rightStepDropH = _hasRightStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
-                const surrH = _hasRightStepCeiling ? adjustedPanelHeight - rightStepDropH : adjustedPanelHeight;
-                const surrCenterY = sideFrameStartY + surrH / 2;
+                const rTopGap = mmToThreeUnits(rightCfg.topGap || 0);
+                const rBottomGap = mmToThreeUnits(rightCfg.bottomGap || 0);
+                const surrH = (_hasRightStepCeiling ? adjustedPanelHeight - rightStepDropH : adjustedPanelHeight) - rTopGap - rBottomGap;
+                const surrCenterY = sideFrameStartY + rBottomGap + surrH / 2;
                 const rightSurrMat = rightFrameMaterial ?? createFrameMaterial('right');
                 const isRightHighlighted = highlightedFrame === 'surround-right';
 
@@ -4159,12 +4183,32 @@ const Room: React.FC<RoomProps> = ({
                               <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
                             </div>
                             <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>옵셋 (앞뒤)</label>
+                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="text" inputMode="numeric" value={d.offset ?? 0}
                                   onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, right: { ...d, offset: v } } }); }}
                                   style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
                                 <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>천장 이격</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input type="text" inputMode="numeric" value={d.topGap ?? 0}
+                                    onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, right: { ...d, topGap: v } } }); }}
+                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>바닥 이격</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input type="text" inputMode="numeric" value={d.bottomGap ?? 0}
+                                    onChange={(e) => { const v = parseInt(e.target.value) || 0; setSpaceInfo({ freeSurround: { ...fs, right: { ...d, bottomGap: v } } }); }}
+                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -4182,8 +4226,10 @@ const Room: React.FC<RoomProps> = ({
                 if (!midCfg.enabled || midMethod === 'none') return null;
                 const gapMM = midCfg.gap;
                 const centerXmm = (midCfg.leftX + midCfg.rightX) / 2;
-                const surrH = adjustedPanelHeight;
-                const surrCenterY = sideFrameStartY + surrH / 2;
+                const mTopGap = mmToThreeUnits(midCfg.topGap || 0);
+                const mBottomGap = mmToThreeUnits(midCfg.bottomGap || 0);
+                const surrH = adjustedPanelHeight - mTopGap - mBottomGap;
+                const surrCenterY = sideFrameStartY + mBottomGap + surrH / 2;
                 const SIDE_DEPTH_MM = 40;
 
                 // 전면패널: gap 너비만큼 앞면 가림 (offset 반영)
@@ -4297,7 +4343,7 @@ const Room: React.FC<RoomProps> = ({
                               <button onClick={() => { setSurroundPopup(null); setHighlightedFrame(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', fontSize: '16px', lineHeight: 1 }}>✕</button>
                             </div>
                             <div style={{ marginBottom: '6px' }}>
-                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>옵셋 (앞뒤)</label>
+                              <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>깊이 (앞뒤)</label>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <input type="text" inputMode="numeric" value={d.offset ?? 0}
                                   onChange={(e) => {
@@ -4308,6 +4354,36 @@ const Room: React.FC<RoomProps> = ({
                                   }}
                                   style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
                                 <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>천장 이격</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input type="text" inputMode="numeric" value={d.topGap ?? 0}
+                                    onChange={(e) => {
+                                      const v = parseInt(e.target.value) || 0;
+                                      const newMiddle = [...midArr];
+                                      newMiddle[idx] = { ...d, topGap: v };
+                                      setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                                    }}
+                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>바닥 이격</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input type="text" inputMode="numeric" value={d.bottomGap ?? 0}
+                                    onChange={(e) => {
+                                      const v = parseInt(e.target.value) || 0;
+                                      const newMiddle = [...midArr];
+                                      newMiddle[idx] = { ...d, bottomGap: v };
+                                      setSpaceInfo({ freeSurround: { ...fs, middle: newMiddle } });
+                                    }}
+                                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }} />
+                                  <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
+                                </div>
                               </div>
                             </div>
                           </div>
