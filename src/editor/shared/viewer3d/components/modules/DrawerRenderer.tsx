@@ -384,11 +384,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const drawerZOffset = mmToThreeUnits(0);
   
   // 서랍 구조 상수
-  // 손잡이 판 두께(마이다) - 15mm
-  const SPECIAL_PANEL_THICKNESS = 15; // mm
+  // 가구재 18.5/15.5mm일 때 서랍재도 15.5mm, 아니면 15mm
+  const basicThicknessMm = basicThickness / 0.01;
+  const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
+  // 손잡이 판 두께(마이다)
+  const SPECIAL_PANEL_THICKNESS = drawerPanelThicknessMm; // mm
   const HANDLE_PLATE_THICKNESS = mmToThreeUnits(SPECIAL_PANEL_THICKNESS);
-  // 서랍 옆면(앞, 뒤, 좌, 우) 두께 상수 (15mm)
-  const DRAWER_SIDE_THICKNESS = mmToThreeUnits(15); // mm 단위 변환 일관 적용
+  // 서랍 옆면(앞, 뒤, 좌, 우) 두께 상수
+  const DRAWER_SIDE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm); // mm 단위 변환 일관 적용
   // 서랍 바닥 두께 상수 (9mm)
   const DRAWER_BOTTOM_THICKNESS = mmToThreeUnits(9); // mm 단위 변환 일관 적용
   

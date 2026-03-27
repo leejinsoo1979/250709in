@@ -64,8 +64,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     // 실제 3D 렌더링과 동일한 두께 값들
     const basicThickness = moduleData.modelConfig?.basicThickness || 18;
     const backPanelThickness = 9;
-    const drawerHandleThickness = 15;
-    const drawerSideThickness = 15;
+    const drawerHandleThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+    const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
     const drawerBottomThickness = 5;
     
     const height = moduleData.dimensions.height;
