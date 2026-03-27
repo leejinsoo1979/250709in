@@ -3,10 +3,11 @@
  * activePopup.type === 'surroundEdit' 일 때 렌더
  * CNC 재단리스트에 반영되는 서라운드 패널 목록 표시
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
+import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 const SurroundEditPanel: React.FC = () => {
@@ -14,6 +15,7 @@ const SurroundEditPanel: React.FC = () => {
   const setSpaceInfo = useSpaceConfigStore((s) => s.setSpaceInfo);
   const activePopup = useUIStore((s) => s.activePopup);
   const closeAllPopups = useUIStore((s) => s.closeAllPopups);
+  const [activeTab, setActiveTab] = useState<'edit' | 'panels'>('edit');
 
   // surroundEdit 타입이 아니면 렌더하지 않음
   if (activePopup.type !== 'surroundEdit' || !activePopup.id) return null;
@@ -64,13 +66,19 @@ const SurroundEditPanel: React.FC = () => {
   return (
     <div className={styles.overlay}>
       <div className={styles.panel}>
-        {/* 헤더 */}
+        {/* 헤더 — 탭 전환 */}
         <div className={styles.header}>
           <div className={styles.headerTabs}>
-            <button className={`${styles.tabButton} ${styles.activeTab}`}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'edit' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('edit')}
+            >
               서라운드 편집
             </button>
-            <button className={`${styles.tabButton}`} style={{ cursor: 'default' }}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'panels' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('panels')}
+            >
               패널 목록
             </button>
           </div>
@@ -79,105 +87,131 @@ const SurroundEditPanel: React.FC = () => {
 
         {/* 콘텐츠 */}
         <div className={styles.content}>
-          {/* 서라운드 정보 */}
-          <div className={styles.moduleInfo}>
-            <div className={styles.moduleDetails}>
-              <h4 className={styles.moduleName}>
-                {isMiddle ? `중간 서라운드 ${midIdx + 1}` : `${label} 서라운드`}
-              </h4>
-              <div className={styles.property}>
-                <span className={styles.propertyValue}>
-                  L자형 | gap: {Math.round(gapMM)}mm | 높이: {actualH}mm
-                </span>
+          {activeTab === 'edit' ? (
+            <>
+              {/* 서라운드 정보 */}
+              <div className={styles.moduleInfo}>
+                <div className={styles.moduleDetails}>
+                  <h4 className={styles.moduleName}>
+                    {isMiddle ? `중간 서라운드 ${midIdx + 1}` : `${label} 서라운드`}
+                  </h4>
+                  <div className={styles.property}>
+                    <span className={styles.propertyValue}>
+                      L자형 | gap: {Math.round(gapMM)}mm | 높이: {actualH}mm
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* 설정 섹션 */}
-          {isMiddle && midCfg && (
-            <div className={styles.propertySection}>
-              <div className={styles.property}>
-                <span className={styles.propertyLabel}>깊이 (앞뒤 옵셋)</span>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="number"
-                    value={midCfg.offset ?? 0}
-                    onChange={(e) => updateMiddleCfg({ offset: parseInt(e.target.value) || 0 })}
-                    style={{ width: 70, textAlign: 'right' }}
-                  />
-                  <span>mm</span>
-                </div>
-              </div>
-              <div className={styles.property}>
-                <span className={styles.propertyLabel}>천장 이격</span>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="number"
-                    value={midCfg.topGap ?? 0}
-                    onChange={(e) => updateMiddleCfg({ topGap: parseInt(e.target.value) || 0 })}
-                    style={{ width: 70, textAlign: 'right' }}
-                  />
-                  <span>mm</span>
-                </div>
-              </div>
-              <div className={styles.property}>
-                <span className={styles.propertyLabel}>바닥 이격</span>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="number"
-                    value={midCfg.bottomGap ?? 0}
-                    onChange={(e) => updateMiddleCfg({ bottomGap: parseInt(e.target.value) || 0 })}
-                    style={{ width: 70, textAlign: 'right' }}
-                  />
-                  <span>mm</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* CNC 재단 패널 목록 */}
-          <div className={styles.propertySection}>
-            <div className={styles.panelSectionHeader}>CNC 재단 패널 ({filteredPanels.length}개)</div>
-            <div className={styles.panelList}>
-              {filteredPanels.map((panel: any, i: number) => (
-                <div key={i} className={styles.panelItem}>
-                  <span className={styles.panelName}>{panel.name}</span>
-                  <span className={styles.panelDimensions}>
-                    {panel.width} × {panel.height} × {panel.thickness}mm
-                  </span>
-                </div>
-              ))}
-              {filteredPanels.length === 0 && (
-                <div style={{ color: 'var(--theme-text-secondary)', fontSize: '12px', padding: '8px 0' }}>
-                  해당 서라운드에 패널이 없습니다
+              {/* 설정 섹션 */}
+              {isMiddle && midCfg && (
+                <div className={styles.propertySection}>
+                  <div className={styles.property}>
+                    <span className={styles.propertyLabel}>깊이 (앞뒤 옵셋)</span>
+                    <div className={styles.inputWithUnit}>
+                      <input
+                        type="number"
+                        value={midCfg.offset ?? 0}
+                        onChange={(e) => updateMiddleCfg({ offset: parseInt(e.target.value) || 0 })}
+                        style={{ width: 70, textAlign: 'right' }}
+                      />
+                      <span>mm</span>
+                    </div>
+                  </div>
+                  <div className={styles.property}>
+                    <span className={styles.propertyLabel}>천장 이격</span>
+                    <div className={styles.inputWithUnit}>
+                      <input
+                        type="number"
+                        value={midCfg.topGap ?? 0}
+                        onChange={(e) => updateMiddleCfg({ topGap: parseInt(e.target.value) || 0 })}
+                        style={{ width: 70, textAlign: 'right' }}
+                      />
+                      <span>mm</span>
+                    </div>
+                  </div>
+                  <div className={styles.property}>
+                    <span className={styles.propertyLabel}>바닥 이격</span>
+                    <div className={styles.inputWithUnit}>
+                      <input
+                        type="number"
+                        value={midCfg.bottomGap ?? 0}
+                        onChange={(e) => updateMiddleCfg({ bottomGap: parseInt(e.target.value) || 0 })}
+                        style={{ width: 70, textAlign: 'right' }}
+                      />
+                      <span>mm</span>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* 재질 정보 */}
-          <div className={styles.propertySection}>
-            <div className={styles.property}>
-              <span className={styles.propertyLabel}>재질</span>
-              <span className={styles.propertyValue}>PET (고정)</span>
-            </div>
-            <div className={styles.property}>
-              <span className={styles.propertyLabel}>두께</span>
-              <span className={styles.propertyValue}>18mm (고정)</span>
-            </div>
-            {isMiddle && (
-              <>
+              {/* 재질 정보 */}
+              <div className={styles.propertySection}>
                 <div className={styles.property}>
-                  <span className={styles.propertyLabel}>측면판 깊이</span>
-                  <span className={styles.propertyValue}>{SIDE_DEPTH}mm</span>
+                  <span className={styles.propertyLabel}>재질</span>
+                  <span className={styles.propertyValue}>PET (고정)</span>
                 </div>
                 <div className={styles.property}>
-                  <span className={styles.propertyLabel}>전면판 폭</span>
-                  <span className={styles.propertyValue}>{Math.max(0, gapMM - 3)}mm</span>
+                  <span className={styles.propertyLabel}>두께</span>
+                  <span className={styles.propertyValue}>18mm (고정)</span>
                 </div>
-              </>
-            )}
-          </div>
+                {isMiddle && (
+                  <>
+                    <div className={styles.property}>
+                      <span className={styles.propertyLabel}>측면판 깊이</span>
+                      <span className={styles.propertyValue}>{SIDE_DEPTH}mm</span>
+                    </div>
+                    <div className={styles.property}>
+                      <span className={styles.propertyLabel}>전면판 폭</span>
+                      <span className={styles.propertyValue}>{Math.max(0, gapMM - 3)}mm</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* 패널 목록 탭 */}
+              <div className={styles.propertySection}>
+                <div className={styles.panelSectionHeader}>
+                  {isMiddle ? `중간 서라운드 ${midIdx + 1}` : `${label} 서라운드`} — 재단 패널 ({filteredPanels.length}개)
+                </div>
+                <div className={styles.panelList}>
+                  {filteredPanels.map((panel: any, i: number) => {
+                    const grain = getDefaultGrainDirection(panel.name);
+                    return (
+                      <div key={i} className={styles.panelItem}>
+                        <span className={styles.panelName}>{panel.name}</span>
+                        <span className={styles.panelDimensions}>
+                          {panel.height} × {panel.width} × {panel.thickness} | {panel.material} | {grain}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {filteredPanels.length === 0 && (
+                    <div style={{ color: 'var(--theme-text-secondary)', fontSize: '12px', padding: '8px 0' }}>
+                      해당 서라운드에 패널이 없습니다
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 패널 치수 요약 */}
+              {filteredPanels.length > 0 && (
+                <div className={styles.propertySection}>
+                  <div className={styles.panelSectionHeader}>치수 요약</div>
+                  {filteredPanels.map((panel: any, i: number) => (
+                    <div key={i} className={styles.property}>
+                      <span className={styles.propertyLabel}>{panel.name}</span>
+                      <span className={styles.propertyValue}>
+                        L{panel.height} × W{panel.width} × T{panel.thickness}mm
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
