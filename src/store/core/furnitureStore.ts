@@ -138,7 +138,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
-    console.warn('🟣🟣🟣 [addModule] 호출됨:', module.id, 'isSurround:', module.isSurroundPanel, 'isFree:', module.isFreePlacement);
+    console.warn('🟣🟣🟣 [addModule] 호출됨:', module.id, 'isSurround:', module.isSurroundPanel, 'isFree:', module.isFreePlacement, 'moduleId:', module.moduleId);
+    console.trace('🟣 addModule 호출 스택');
 
     set((state) => {
       // ID 중복 체크
