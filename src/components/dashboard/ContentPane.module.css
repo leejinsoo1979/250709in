@@ -716,7 +716,7 @@
 
 /* ===== 모바일 반응형 ===== */
 @media (max-width: 767px) {
-  /* 모든 그리드 뷰를 단일 컬럼으로 강제 */
+  /* 모든 그리드 뷰를 단일 컬럼 리스트로 강제 */
   .iconGrid {
     display: flex !important;
     flex-direction: column;
@@ -725,7 +725,7 @@
     padding-bottom: 90px; /* 하단 네비 높이 확보 */
   }
 
-  /* 아이콘 카드를 가로 배치 */
+  /* 아이콘 카드를 가로 배치 (리스트 스타일) */
   .iconCard {
     flex-direction: row;
     align-items: center;
@@ -740,22 +740,47 @@
     transition: transform 0.1s ease;
   }
 
-  /* 썸네일 크기 고정 */
-  .iconCard .iconArea {
+  /* 썸네일 크기 고정 (가로 배치에서 정사각 유지) */
+  .iconThumbnail {
     width: 48px !important;
     height: 48px !important;
+    min-width: 48px;
+    aspect-ratio: unset !important;
     flex-shrink: 0;
+    border-radius: 8px;
   }
 
-  /* 이름/메타 정보 가로 배치 */
-  .iconCard .iconLabel {
-    text-align: left;
+  /* 이름/메타 정보 영역: 좌측 정렬, 남은 공간 차지 */
+  .iconInfo {
+    align-items: flex-start !important;
     flex: 1;
     min-width: 0;
+    max-width: none !important;
+  }
+
+  .iconName {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .iconMeta {
+    text-align: left;
+  }
+
+  .iconSpaceSize {
+    text-align: left;
+  }
+
+  .iconFileCount {
+    text-align: left;
   }
 
   /* 목록/상세 뷰도 하단 패딩 */
-  .listTable {
+  .detailsTable {
+    padding-bottom: 90px;
+  }
+
+  .listView {
     padding-bottom: 90px;
   }
 
@@ -765,6 +790,23 @@
     padding-bottom: 90px;
   }
 
+  /* SaaS 카드 뷰도 단일 컬럼 */
+  .saasGrid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    padding: 12px 8px;
+    padding-bottom: 90px;
+  }
+
+  .saasCard:hover {
+    transform: none;
+  }
+
+  .saasCard:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
   /* 환영 화면 하단 패딩 */
   .welcomeState {
     padding-bottom: 90px;
@@ -772,5 +814,10 @@
 
   .emptyState {
     padding-bottom: 90px;
+  }
+
+  /* 체크박스 모바일에서 항상 표시 (호버 없으므로) */
+  .iconCard .itemCheckbox {
+    opacity: 0.6;
   }
 }

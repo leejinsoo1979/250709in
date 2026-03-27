@@ -5,6 +5,7 @@ import { IoBanOutline } from 'react-icons/io5';
 import { FaFilePowerpoint } from 'react-icons/fa6';
 import { FcFolder } from 'react-icons/fc';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
+import { useResponsive } from '@/hooks/useResponsive';
 import type { ExplorerItem, ViewMode, SortBy, SortDirection, DragState, SelectItemOptions } from '@/hooks/dashboard/types';
 import { VIEW_MODE_ICON_SIZE } from '@/hooks/dashboard/types';
 import styles from './ContentPane.module.css';
@@ -59,6 +60,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   onCreateProject,
   activeMenu,
 }) => {
+  const { isMobile } = useResponsive();
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
 
   // 검색 + 정렬
@@ -548,7 +550,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
             )}
           </div>
-          <div className={styles.iconInfo} style={{ maxWidth: thumbSize + 20 }}>
+          <div className={styles.iconInfo} style={isMobile ? undefined : { maxWidth: thumbSize + 20 }}>
             <div className={`${styles.iconName} ${item.type === 'project' ? styles.projectName : ''}`} title={item.name}>
               {item.name}
             </div>
