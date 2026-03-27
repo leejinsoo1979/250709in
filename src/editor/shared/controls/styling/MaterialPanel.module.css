@@ -238,9 +238,30 @@
     padding: 8px 12px;
   }
 
-  /* 재질 카드 그리드 - 모바일 */
+  /* 재질 카드 그리드 - 모바일: 3열, 작은 썸네일 */
   .materialGrid {
-    max-height: 200px;
+    grid-template-columns: 1fr 1fr 1fr;
+    max-height: none;
     gap: 6px;
+  }
+
+  .materialThumbnail {
+    aspect-ratio: 1;
+  }
+
+  .materialInfo {
+    padding: 4px 6px;
+  }
+
+  .materialType {
+    font-size: 9px;
+  }
+
+  .materialName {
+    font-size: 11px;
+  }
+
+  .materialManufacturer {
+    font-size: 9px;
   }
 }

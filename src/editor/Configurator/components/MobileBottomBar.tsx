@@ -1,4 +1,5 @@
 import React from 'react';
+import { HiOutlineColorSwatch } from 'react-icons/hi';
 import styles from './MobileBottomBar.module.css';
 
 export type MobileTab = 'modules' | 'material' | 'column';
@@ -11,7 +12,7 @@ interface MobileBottomBarProps {
 
 /**
  * 모바일용 하단 탭바 컴포넌트
- * 모듈, 재질, 기둥, 기타 탭 제공
+ * 모듈, 재질 탭 제공 (PC와 동일 구성)
  */
 const MobileBottomBar: React.FC<MobileBottomBarProps> = ({ activeTab, onTabChange, onSettingsClick }) => {
   const tabs: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
@@ -19,33 +20,18 @@ const MobileBottomBar: React.FC<MobileBottomBarProps> = ({ activeTab, onTabChang
       id: 'modules',
       label: '모듈',
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8"/>
         </svg>
       ),
     },
     {
       id: 'material',
       label: '재질',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" />
-        </svg>
-      ),
-    },
-    {
-      id: 'column',
-      label: '기둥',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="4" y="2" width="6" height="20" rx="1" />
-          <rect x="14" y="2" width="6" height="20" rx="1" />
-        </svg>
-      ),
+      icon: <HiOutlineColorSwatch size={22} />,
     },
   ];
 
