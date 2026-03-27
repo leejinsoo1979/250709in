@@ -1144,7 +1144,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
       ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
     const surroundH = spaceH - floorFinishH - floatH;
-    const allSurroundPanels = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+    const allSurroundPanels = calculateSurroundPanels(spaceInfo.freeSurround, surroundH, spaceInfo.panelThickness ?? 18);
     if (allSurroundPanels.length === 0) return [];
 
     // 맨 좌측/우측 가구 판별
@@ -1218,7 +1218,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const clamped = Math.max(widthMin, Math.min(widthMax, num));
       updatePlacedModule(currentPlacedModule.id, {
         surroundPanelWidth: clamped,
-        ...(isTopPanel ? { freeHeight: SURROUND_PANEL_THICKNESS } : { freeWidth: SURROUND_PANEL_THICKNESS }),
+        ...(isTopPanel ? { freeHeight: spaceInfo.panelThickness ?? 18 } : { freeWidth: spaceInfo.panelThickness ?? 18 }),
       });
     };
 
@@ -1239,7 +1239,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <h4 className={styles.moduleName}>{panelTypeLabel}</h4>
                 <div className={styles.property}>
                   <span className={styles.propertyValue}>
-                    두께: {SURROUND_PANEL_THICKNESS}mm (고정) / 폭: {currentWidth}mm
+                    두께: {spaceInfo.panelThickness ?? 18}mm (고정) / 폭: {currentWidth}mm
                   </span>
                 </div>
               </div>
@@ -1262,7 +1262,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               <div className={styles.property}>
                 <span className={styles.propertyLabel}>두께</span>
-                <span className={styles.propertyValue}>{SURROUND_PANEL_THICKNESS}mm (고정)</span>
+                <span className={styles.propertyValue}>{spaceInfo.panelThickness ?? 18}mm (고정)</span>
               </div>
             </div>
 

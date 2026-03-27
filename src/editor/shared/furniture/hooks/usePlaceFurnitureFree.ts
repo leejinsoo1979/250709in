@@ -254,14 +254,14 @@ function placeSurroundPanel(
     // 좌측 패널: 공간 좌측 벽에 붙임
     xMM = spaceBounds.startX - panelWidth / 2; // 벽 바로 바깥쪽 (내경 왼쪽 경계 바로 왼쪽)
     yMM = floorFinishMM + panelHeight / 2;
-    freeW = SURROUND_PANEL_THICKNESS; // 두께 = 가구 너비(X축)
+    freeW = spaceInfo.panelThickness ?? 18; // 두께 = 가구 너비(X축)
     freeH = panelHeight;
     freeD = panelDepth;
   } else if (panelType === 'right') {
     // 우측 패널: 공간 우측 벽에 붙임
     xMM = spaceBounds.endX + panelWidth / 2; // 내경 오른쪽 경계 바로 오른쪽
     yMM = floorFinishMM + panelHeight / 2;
-    freeW = SURROUND_PANEL_THICKNESS;
+    freeW = spaceInfo.panelThickness ?? 18;
     freeH = panelHeight;
     freeD = panelDepth;
   } else {
@@ -275,7 +275,7 @@ function placeSurroundPanel(
     xMM = (leftEdge + rightEdge) / 2;
     yMM = floorFinishMM + panelHeight - panelWidth / 2; // 천장에서 폭/2 아래
     freeW = topWidth;
-    freeH = SURROUND_PANEL_THICKNESS; // 두께 = Y축 높이
+    freeH = spaceInfo.panelThickness ?? 18; // 두께 = Y축 높이
     freeD = panelDepth;
   }
 

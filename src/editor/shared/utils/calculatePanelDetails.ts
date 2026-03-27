@@ -1174,12 +1174,12 @@ export const calculatePanelDetails = (
 
 // === 서라운드 패널 목록 생성 (공간 전체 단위) ===
 const SURROUND_SIDE_DEPTH = 40; // L자형 측면 패널 깊이 (mm)
-const SURROUND_PANEL_THICKNESS = 18; // 서라운드 패널 두께 (mm)
-
 export const calculateSurroundPanels = (
   freeSurround: FreeSurroundConfig | undefined,
-  surroundHeightMm: number // 서라운드 높이 (mm) = 공간높이 - 바닥마감재 - 띄움높이
+  surroundHeightMm: number, // 서라운드 높이 (mm) = 공간높이 - 바닥마감재 - 띄움높이
+  panelThicknessMm: number = 18 // 가구재 두께 (mm) — 서라운드 패널 두께로 사용
 ): any[] => {
+  const SURROUND_PANEL_THICKNESS = panelThicknessMm;
   if (!freeSurround) return [];
 
   const result: any[] = [];

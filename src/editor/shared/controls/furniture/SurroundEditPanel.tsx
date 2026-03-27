@@ -45,7 +45,7 @@ const SurroundEditPanel: React.FC = () => {
   const actualH = surroundH - topGap - bottomGap;
 
   // CNC 재단리스트에 표시될 패널 목록 계산
-  const allPanels = calculateSurroundPanels(fs, surroundH);
+  const allPanels = calculateSurroundPanels(fs, surroundH, spaceInfo.panelThickness ?? 18);
   // 현재 서라운드에 해당하는 패널만 필터
   const label = isMiddle
     ? (midArr && midArr.length > 1 ? `중간${midIdx + 1}` : '중간')

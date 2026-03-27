@@ -393,7 +393,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
     return spaceH - floorFinishH - floatH;
   })();
-  const surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundHeightMm);
+  const surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundHeightMm, spaceInfo.panelThickness ?? 18);
   const allPanels = surroundPanelList.length > 0
     ? [...panels, { name: '=== 서라운드 ===' }, ...surroundPanelList]
     : panels;

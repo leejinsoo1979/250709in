@@ -466,11 +466,11 @@ export function useLivePanelData() {
 
       if (spaceInfo.freeSurround) {
         // 자유배치 서라운드
-        surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH);
+        surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH, spaceInfo.panelThickness ?? 18);
       } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
         const fs = spaceInfo.frameSize;
-        const surroundThickness = 18;
+        const surroundThickness = spaceInfo.panelThickness ?? 18;
         const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
         // 서라운드 프레임은 항상 L자 구조 (전면판 + 측면판으로 재단)
         const isLeftLShape = true;
@@ -1154,10 +1154,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
     const surroundHDropped2 = surroundH2 - dropH2;
 
     if (spaceInfo.freeSurround) {
-      surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2);
+      surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2, spaceInfo.panelThickness ?? 18);
     } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
       const fs2 = spaceInfo.frameSize;
-      const surroundThickness2 = 18;
+      const surroundThickness2 = spaceInfo.panelThickness ?? 18;
 
       if (dropH2 > 0) {
         const dropPosition2 = spaceInfo.droppedCeiling?.position || 'left';
