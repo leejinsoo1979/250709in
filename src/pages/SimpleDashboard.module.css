@@ -244,3 +244,78 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 767px) {
+  /* 모달을 바텀시트 스타일로 */
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    animation: mobileModalSlideUp 0.3s ease;
+  }
+
+  @keyframes mobileModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modalInput {
+    font-size: 16px;
+    min-height: 48px;
+    border-radius: 10px;
+  }
+
+  .modalActions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modalCancelBtn,
+  .modalCreateBtn {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 10px;
+    font-size: 15px;
+  }
+
+  /* 기존 모바일 네비 토글 제거 (하단 탭바로 대체) */
+  .mobileNavToggle {
+    display: none;
+  }
+
+  .mobileNavOverlay {
+    display: none;
+  }
+
+  .mobileNavBackdrop {
+    display: none;
+  }
+
+  /* 준비중 모달 바텀시트 */
+  .comingSoonModal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 32px 20px;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+    animation: mobileModalSlideUp 0.3s ease;
+  }
+}
+
+/* Pull-to-refresh 스핀 애니메이션 */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

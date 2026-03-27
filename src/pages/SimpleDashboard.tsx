@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
 import { PlusIcon, UsersIcon } from '../components/common/Icons';
 import { createProject, createDesignFile, saveFolderData, updateProject, FolderData } from '@/firebase/projects';
 import { useAuth } from '@/auth/AuthProvider';
@@ -19,6 +18,7 @@ import CreditErrorModal from '@/components/common/CreditErrorModal';
 import { PopupManager } from '@/components/PopupManager';
 // import { Chatbot } from '@/components/Chatbot';
 import { useResponsive } from '@/hooks/useResponsive';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 // Explorer 컴포넌트
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -28,6 +28,7 @@ import ContentToolbar from '@/components/dashboard/ContentToolbar';
 import ContentPane from '@/components/dashboard/ContentPane';
 import StatusBar from '@/components/dashboard/StatusBar';
 import ClassicDashboard from '@/components/dashboard/ClassicDashboard';
+import DashboardMobileBottomNav from '@/components/dashboard/DashboardMobileBottomNav';
 
 // Explorer 훅
 import { useExplorerNavigation } from '@/hooks/dashboard/useExplorerNavigation';
@@ -112,8 +113,19 @@ const SimpleDashboard: React.FC = () => {
   const [shareDesignFileId, setShareDesignFileId] = useState<string | null>(null);
   const [shareDesignFileName, setShareDesignFileName] = useState('');
 
-  // 모바일 네비게이션 토글
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // 모바일 뷰모드 강제 (중간 아이콘)
+  const effectiveViewMode = isMobile ? 'medium' as ViewMode : viewMode;
+
+  // Pull-to-refresh (모바일에서만)
+  const { isRefreshing, pullDistance, pullIndicatorStyle, containerRef: pullContainerRef } = usePullToRefresh({
+    onRefresh: async () => {
+      await data.refreshProjects();
+      if (nav.currentProjectId) {
+        await data.refreshDesignFiles(nav.currentProjectId);
+      }
+    },
+    enabled: isMobile,
+  });
 
   // 이름 변경 모달
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -720,20 +732,9 @@ const SimpleDashboard: React.FC = () => {
         <>
           {/* 메인 바디: 좌측(트리) + 우측(컨텐츠) */}
           <div className={styles.explorerBody}>
-            {/* 모바일 햄버거 버튼 */}
-            {isMobile && (
-              <button
-                className={styles.mobileNavToggle}
-                onClick={() => setMobileNavOpen(prev => !prev)}
-                aria-label="네비게이션 토글"
-              >
-                {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-            )}
-
-            {/* 좌측 칼럼: 네비게이션 트리 */}
-            {(!isMobile || mobileNavOpen) && (
-              <div className={isMobile ? styles.mobileNavOverlay : styles.leftColumn}>
+            {/* 좌측 칼럼: 네비게이션 트리 (데스크톱에서만, 모바일은 하단 탭바로 대체) */}
+            {!isMobile && (
+              <div className={styles.leftColumn}>
                 <NavigationPane
                   projects={
                     nav.activeMenu === 'in-progress'
@@ -754,11 +755,9 @@ const SimpleDashboard: React.FC = () => {
                   activeMenu={nav.activeMenu}
                   onNavigate={(projectId, folderId, label) => {
                     nav.navigateTo(projectId, folderId, label);
-                    if (isMobile) setMobileNavOpen(false);
                   }}
                   onMenuChange={(menu) => {
                     nav.setActiveMenu(menu);
-                    if (isMobile) setMobileNavOpen(false);
                   }}
                   onCreateProject={nav.activeMenu === 'trash' ? undefined : handleCreateProject}
                   onItemContextMenu={handleItemContextMenu}
@@ -770,16 +769,17 @@ const SimpleDashboard: React.FC = () => {
                     'trash': data.projects.filter(p => p.isDeleted).length + Object.values(data.projectDesignFiles).flat().filter((df: any) => df.isDeleted).length,
                   }}
                 />
-                {isMobile && (
-                  <div className={styles.mobileNavBackdrop} onClick={() => setMobileNavOpen(false)} />
-                )}
               </div>
             )}
 
             {/* 우측 컨텐츠 영역 */}
             <div
-              ref={contentAreaRef}
+              ref={(el) => {
+                (contentAreaRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+                if (isMobile) (pullContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+              }}
               className={styles.explorerContent}
+              style={{ position: 'relative' }}
               onContextMenu={(e) => {
                 // 아이템 위에서 클릭한 경우 무시 (아이템 자체 컨텍스트 메뉴 우선)
                 const target = e.target as HTMLElement;
@@ -788,10 +788,27 @@ const SimpleDashboard: React.FC = () => {
                 e.stopPropagation();
                 setBlankContextMenu({ x: e.clientX, y: e.clientY });
               }}
-              {...marqueeHandlers}
+              {...(isMobile ? {} : marqueeHandlers)}
             >
+              {/* Pull-to-refresh 인디케이터 (모바일) */}
+              {isMobile && pullDistance > 0 && (
+                <div style={pullIndicatorStyle}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      border: '2px solid var(--theme-border)',
+                      borderTopColor: 'var(--theme-primary)',
+                      animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none',
+                      transform: isRefreshing ? 'none' : `rotate(${pullDistance * 3}deg)`,
+                    }}
+                  />
+                </div>
+              )}
+
               <ContentToolbar
-                viewMode={viewMode}
+                viewMode={effectiveViewMode}
                 sortBy={sortBy}
                 onViewModeChange={setViewMode}
                 onSortChange={setSortBy}
@@ -837,7 +854,7 @@ const SimpleDashboard: React.FC = () => {
 
               <ContentPane
                 items={data.currentItems}
-                viewMode={viewMode}
+                viewMode={effectiveViewMode}
                 sortBy={sortBy}
                 sortDirection={sortDirection}
                 searchTerm={searchTerm}
@@ -858,8 +875,8 @@ const SimpleDashboard: React.FC = () => {
                 activeMenu={nav.activeMenu}
               />
 
-              {/* 마키 선택 오버레이 */}
-              {marqueeRect && (
+              {/* 마키 선택 오버레이 (데스크톱에서만) */}
+              {!isMobile && marqueeRect && (
                 <div
                   style={{
                     position: 'fixed',
@@ -877,11 +894,23 @@ const SimpleDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* 하단 상태바 */}
-          <StatusBar
-            itemCount={data.currentItems.length}
-            selectedCount={actions.selectedItems.size}
-          />
+          {/* 하단 상태바 (데스크톱에서만, CSS에서도 숨김) */}
+          {!isMobile && (
+            <StatusBar
+              itemCount={data.currentItems.length}
+              selectedCount={actions.selectedItems.size}
+            />
+          )}
+
+          {/* 모바일 하단 탭바 */}
+          {isMobile && (
+            <DashboardMobileBottomNav
+              activeMenu={nav.activeMenu}
+              onMenuChange={(menu) => nav.setActiveMenu(menu)}
+              onCreateProject={handleCreateProject}
+              onProfileClick={() => setIsProfilePopupOpen(true)}
+            />
+          )}
         </>
       )}
 
