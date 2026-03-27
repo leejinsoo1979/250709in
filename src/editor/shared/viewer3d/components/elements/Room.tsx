@@ -3904,7 +3904,8 @@ const Room: React.FC<RoomProps> = ({
                 const frontX = mmToThreeUnits(minLeftMM - gapMM / 2);
                 const sideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
                 const sidePos: [number, number, number] = [sideX, surrCenterY, sideZ];
-                const frontArgs: [number, number, number] = [mmToThreeUnits(gapMM), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                const frontActualWidth = Math.max(0, gapMM - 3); // 양쪽 1.5mm씩 이격
+                const frontArgs: [number, number, number] = [mmToThreeUnits(frontActualWidth), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
                 const frontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
                 return (
                   <>
@@ -3964,7 +3965,8 @@ const Room: React.FC<RoomProps> = ({
                 const frontX = mmToThreeUnits(maxRightMM + gapMM / 2);
                 const rSideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
                 const rSidePos: [number, number, number] = [sideX, surrCenterY, sideZ];
-                const rFrontArgs: [number, number, number] = [mmToThreeUnits(gapMM), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                const rFrontActualWidth = Math.max(0, gapMM - 3); // 양쪽 1.5mm씩 이격
+                const rFrontArgs: [number, number, number] = [mmToThreeUnits(rFrontActualWidth), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
                 const rFrontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
                 return (
                   <>
@@ -4012,7 +4014,8 @@ const Room: React.FC<RoomProps> = ({
                 const mLSidePos: [number, number, number] = [leftSideX, surrCenterY, leftSideZ];
                 const mRSideArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(SIDE_DEPTH_MM)];
                 const mRSidePos: [number, number, number] = [rightSideX, surrCenterY, rightSideZ];
-                const mFrontArgs: [number, number, number] = [mmToThreeUnits(gapMM), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                const mFrontActualWidth = Math.max(0, gapMM - 3); // 양쪽 1.5mm씩 이격
+                const mFrontArgs: [number, number, number] = [mmToThreeUnits(mFrontActualWidth), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
                 const mFrontPos: [number, number, number] = [frontX, surrCenterY, frontZ];
 
                 return (

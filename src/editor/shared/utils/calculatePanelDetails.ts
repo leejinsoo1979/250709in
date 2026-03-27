@@ -1193,7 +1193,7 @@ export const calculateSurroundPanels = (
       });
       result.push({
         name: '좌측 서라운드 전면판',
-        width: gapMm,
+        width: Math.max(0, gapMm - 3), // 양쪽 1.5mm씩 이격
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
@@ -1225,7 +1225,7 @@ export const calculateSurroundPanels = (
       });
       result.push({
         name: '우측 서라운드 전면판',
-        width: gapMm,
+        width: Math.max(0, gapMm - 3), // 양쪽 1.5mm씩 이격
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
@@ -1269,7 +1269,7 @@ export const calculateSurroundPanels = (
       // 전면판
       result.push({
         name: `${label} 서라운드 전면판`,
-        width: gapMm,
+        width: Math.max(0, gapMm - 3), // 양쪽 1.5mm씩 이격
         height: surroundHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',

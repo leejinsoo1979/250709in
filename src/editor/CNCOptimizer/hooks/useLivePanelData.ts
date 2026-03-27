@@ -493,7 +493,7 @@ export function useLivePanelData() {
               });
               surroundPanelList.push({
                 name: '좌측 서라운드 전면판',
-                width: fs.left, height: leftH,
+                width: Math.max(0, fs.left - 3), height: leftH,
                 thickness: surroundThickness, material: 'PET',
               });
             } else {
@@ -515,7 +515,7 @@ export function useLivePanelData() {
               });
               surroundPanelList.push({
                 name: '우측 서라운드 전면판',
-                width: fs.right, height: rightH,
+                width: Math.max(0, fs.right - 3), height: rightH,
                 thickness: surroundThickness, material: 'PET',
               });
             } else {
@@ -538,7 +538,7 @@ export function useLivePanelData() {
               });
               surroundPanelList.push({
                 name: '좌측 서라운드 전면판',
-                width: fs.left, height: panelH,
+                width: Math.max(0, fs.left - 3), height: panelH,
                 thickness: surroundThickness, material: 'PET',
               });
             } else {
@@ -558,7 +558,7 @@ export function useLivePanelData() {
               });
               surroundPanelList.push({
                 name: '우측 서라운드 전면판',
-                width: fs.right, height: panelH,
+                width: Math.max(0, fs.right - 3), height: panelH,
                 thickness: surroundThickness, material: 'PET',
               });
             } else {
