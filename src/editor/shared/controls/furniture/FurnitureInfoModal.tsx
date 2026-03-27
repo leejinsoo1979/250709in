@@ -313,14 +313,14 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
           name: '좌측 도어',
           width: doorWidth,
           height: height - doorGap * 2,
-          thickness: basicThickness,
+          thickness: 18.5,  // 도어는 PET 항상 18.5mm
           material: 'PET'
         });
         panels.door.push({
           name: '우측 도어',
           width: doorWidth,
           height: height - doorGap * 2,
-          thickness: basicThickness,
+          thickness: 18.5,  // 도어는 PET 항상 18.5mm
           material: 'PET'
         });
       } else {
@@ -328,7 +328,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
           name: '도어',
           width: customWidth - doorGap * 2,
           height: height - doorGap * 2,
-          thickness: basicThickness,
+          thickness: 18.5,  // 도어는 PET 항상 18.5mm
           material: 'PET'
         });
       }

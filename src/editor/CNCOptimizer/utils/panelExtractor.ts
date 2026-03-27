@@ -386,7 +386,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 좌측 도어`,
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: basicThickness,  // 18mm
+        thickness: 18.5,  // 도어는 PET 항상 18.5mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1,
@@ -397,7 +397,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 우측 도어`,
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: basicThickness,  // 18mm
+        thickness: 18.5,  // 도어는 PET 항상 18.5mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1,
@@ -409,7 +409,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 도어`,
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
-        thickness: basicThickness,  // 18mm
+        thickness: 18.5,  // 도어는 PET 항상 18.5mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1,

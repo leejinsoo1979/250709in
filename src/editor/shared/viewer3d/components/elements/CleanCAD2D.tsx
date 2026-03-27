@@ -8141,7 +8141,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const panelDepthMm = spaceInfo.depth || 600;
           const furnitureDepthMm = Math.min(panelDepthMm, 600);
           const stylerDepthMm = 660; // 스타일러장 깊이
-          const doorThicknessMm = 18;
+          const doorThicknessMm = 18.5;
           
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);

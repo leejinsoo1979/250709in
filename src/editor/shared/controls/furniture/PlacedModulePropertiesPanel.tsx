@@ -419,23 +419,23 @@ const getFurnitureImagePath = (moduleId: string) => {
         name: '좌측 도어',
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: basicThickness,
-        material: 'PET'  // 도어는 PET 재질
+        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        material: 'PET'
       });
       panels.door.push({
         name: '우측 도어',
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: basicThickness,
-        material: 'PET'  // 도어는 PET 재질
+        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        material: 'PET'
       });
     } else {
       panels.door.push({
         name: '도어',
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
-        thickness: basicThickness,
-        material: 'PET'  // 도어는 PET 재질
+        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        material: 'PET'
       });
     }
   }
