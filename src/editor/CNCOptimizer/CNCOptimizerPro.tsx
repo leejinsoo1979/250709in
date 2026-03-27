@@ -413,7 +413,7 @@ function PageInner(){
             label: p.name || `Panel_${p.id}`,
             width: width,   // 백패널: X축 가로 / 일반: 짧은 쪽
             length: length, // 백패널: Y축 높이 / 일반: 긴 쪽
-            thickness: p.thickness || 18,
+            thickness: p.thickness || (material === 'PET' ? 18.5 : 18),
             quantity: p.quantity || 1,
             material: material,
             grain: grain,
@@ -469,12 +469,12 @@ function PageInner(){
           quantity: 999,
           material: 'PB'
         },
-        // 18mm PET - 도어 및 엔드패널용
+        // 18.5mm PET - 도어, 프레임, 엔드패널용 (PET 재질 항상 18.5mm)
         {
-          label: 'PET_18T_2440x1220',
+          label: 'PET_18.5T_2440x1220',
           width: 1220,
           length: 2440,
-          thickness: 18,
+          thickness: 18.5,
           quantity: 999,
           material: 'PET'
         },
@@ -588,7 +588,7 @@ function PageInner(){
           label: p.name || `Panel_${p.id}`,
           width: width,
           length: length,
-          thickness: p.thickness || 18,
+          thickness: p.thickness || (material === 'PET' ? 18.5 : 18),
           quantity: p.quantity || 1,
           material: material,
           grain: grain,

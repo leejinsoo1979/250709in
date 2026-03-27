@@ -23,7 +23,7 @@
 import { LayoutNode } from './types';
 import { CustomFurnitureConfig, CustomSection, CustomElement } from '@/editor/shared/furniture/types';
 
-const DEFAULT_PANEL_THICKNESS = 18;
+const DEFAULT_PANEL_THICKNESS = 18.5; // PET 재질 기본 두께
 const DEFAULT_ELEMENT: CustomElement[] = [{ type: 'open' }];
 
 interface Dimensions {

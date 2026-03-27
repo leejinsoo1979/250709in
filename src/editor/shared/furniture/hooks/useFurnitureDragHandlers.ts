@@ -204,7 +204,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           if (spaceInfo.surroundType === 'no-surround') {
             const lastSlotIndex = indexing.columnCount - 1;
             const isEndSlot = targetSlotIndex === 0 || targetSlotIndex === lastSlotIndex;
-            const END_PANEL_THICKNESS = 18;
+            const END_PANEL_THICKNESS = 18.5; // PET 재질
 
             if (isEndSlot) {
               const wallConfig = spaceInfo.wallConfig || { left: true, right: true };

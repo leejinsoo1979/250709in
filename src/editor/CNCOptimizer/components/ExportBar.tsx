@@ -263,7 +263,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       panelName: panel.name,
       width: panel.width,
       height: panel.height,
-      thickness: panel.thickness || 18,
+      thickness: panel.thickness || ((panel.material === 'PET') ? 18.5 : 18),
       material: panel.material || 'PB',
       grain: panel.grain === 'HORIZONTAL' ? 'H' : panel.grain === 'VERTICAL' ? 'V' : 'N',
       borings,

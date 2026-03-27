@@ -15,7 +15,7 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
   const isLeftDropped = position === 'left';
   
-  const END_PANEL_THICKNESS = 18;
+  const END_PANEL_THICKNESS = 18.5; // PET 재질
   let droppedStartX;
   let actualDroppedWidth = droppedWidth;
   
@@ -134,7 +134,7 @@ export const getDroppedZoneThreeBounds = (spaceInfo: SpaceInfo) => {
  * 일반 영역의 경계 정보를 계산 (전체 공간 기준)
  */
 export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
-  const END_PANEL_THICKNESS = 18;
+  const END_PANEL_THICKNESS = 18.5; // PET 재질
   
   // 단내림이 없는 경우 전체 영역에 대한 오프셋 계산
   if (!spaceInfo.droppedCeiling?.enabled) {

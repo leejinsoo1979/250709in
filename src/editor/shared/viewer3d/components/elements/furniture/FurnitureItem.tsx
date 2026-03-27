@@ -21,8 +21,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 
-// 엔드패널 두께 상수
-const END_PANEL_THICKNESS = 18; // mm
+// 엔드패널 두께 상수 (PET 재질 항상 18.5mm)
+const END_PANEL_THICKNESS = 18.5; // mm
 
 // 커스텀 가구 ID인지 확인하는 함수
 const isCustomFurnitureId = (moduleId: string): boolean => {

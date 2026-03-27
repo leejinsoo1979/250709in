@@ -13,12 +13,12 @@ export interface SurroundPanelModuleData {
   defaultWidth: number; // 기본 폭 (mm) - 좌/우: 40, 상단: 0 (공간너비 자동)
 }
 
-export const SURROUND_PANEL_THICKNESS = 18; // mm 고정
+export const SURROUND_PANEL_THICKNESS = 18.5; // mm 고정 (PET 재질)
 
 export const surroundPanelModules: SurroundPanelModuleData[] = [
-  { id: 'surround-left',  name: '좌측 패널', panelType: 'left',  thickness: 18, defaultWidth: 40 },
-  { id: 'surround-right', name: '우측 패널', panelType: 'right', thickness: 18, defaultWidth: 40 },
-  { id: 'surround-top',   name: '상단 패널', panelType: 'top',   thickness: 18, defaultWidth: 0 }, // 0 = 공간너비 자동
+  { id: 'surround-left',  name: '좌측 패널', panelType: 'left',  thickness: 18.5, defaultWidth: 40 },
+  { id: 'surround-right', name: '우측 패널', panelType: 'right', thickness: 18.5, defaultWidth: 40 },
+  { id: 'surround-top',   name: '상단 패널', panelType: 'top',   thickness: 18.5, defaultWidth: 0 }, // 0 = 공간너비 자동
 ];
 
 /**

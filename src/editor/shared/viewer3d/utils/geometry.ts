@@ -39,9 +39,9 @@ export const INNER_DEPTH = 580;
 export const SURROUND_FRAME_THICKNESS = 30;
 
 /**
- * 엔드 패널 두께 (18mm)
+ * 엔드 패널 두께 (18.5mm, PET 재질)
  */
-export const END_PANEL_THICKNESS = 18;
+export const END_PANEL_THICKNESS = 18.5;
 
 /**
  * 실제 치수를 기반으로 3D 공간의 방 치수 계산 (mm 단위)

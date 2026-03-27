@@ -59,7 +59,7 @@ interface RoomProps {
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
-const END_PANEL_THICKNESS = 18; // 18mm로 통일
+const END_PANEL_THICKNESS = 18.5; // PET 재질 항상 18.5mm
 
 // 전역 렌더링 카운터 (컴포넌트 마운트/언마운트에 영향받지 않음)
 if (typeof window !== 'undefined') {
