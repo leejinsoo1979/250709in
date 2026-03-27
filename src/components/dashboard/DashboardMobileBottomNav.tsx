@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Share2, Plus, Trash2, User } from 'lucide-react';
+import { PlayCircle, CheckCircle2, Download, Upload, Trash2 } from 'lucide-react';
 import styles from './DashboardMobileBottomNav.module.css';
 
 type MenuType = 'all' | 'in-progress' | 'completed' | 'shared-with-me' | 'shared-by-me' | 'trash';
@@ -14,56 +14,50 @@ interface DashboardMobileBottomNavProps {
 const DashboardMobileBottomNav: React.FC<DashboardMobileBottomNavProps> = ({
   activeMenu,
   onMenuChange,
-  onCreateProject,
-  onProfileClick,
 }) => {
-  const isHomeActive = activeMenu === 'all' || activeMenu === 'in-progress' || activeMenu === 'completed';
-  const isShareActive = activeMenu === 'shared-with-me' || activeMenu === 'shared-by-me';
-  const isTrashActive = activeMenu === 'trash';
+  const tabs: { menu: MenuType; label: string; icon: (active: boolean) => React.ReactNode }[] = [
+    {
+      menu: 'in-progress',
+      label: '진행중',
+      icon: (active) => <PlayCircle size={20} strokeWidth={active ? 2.2 : 1.6} />,
+    },
+    {
+      menu: 'completed',
+      label: '완료',
+      icon: (active) => <CheckCircle2 size={20} strokeWidth={active ? 2.2 : 1.6} />,
+    },
+    {
+      menu: 'shared-with-me',
+      label: '공유받은',
+      icon: (active) => <Download size={20} strokeWidth={active ? 2.2 : 1.6} />,
+    },
+    {
+      menu: 'shared-by-me',
+      label: '공유한',
+      icon: (active) => <Upload size={20} strokeWidth={active ? 2.2 : 1.6} />,
+    },
+    {
+      menu: 'trash',
+      label: '휴지통',
+      icon: (active) => <Trash2 size={20} strokeWidth={active ? 2.2 : 1.6} />,
+    },
+  ];
 
   return (
     <nav className={styles.bottomNav}>
-      <button
-        className={`${styles.tabItem} ${isHomeActive ? styles.tabItemActive : ''}`}
-        onClick={() => onMenuChange('all')}
-      >
-        <span className={styles.tabIcon}><Home size={20} strokeWidth={isHomeActive ? 2.2 : 1.6} /></span>
-        <span className={styles.tabLabel}>프로젝트</span>
-      </button>
-
-      <button
-        className={`${styles.tabItem} ${isShareActive ? styles.tabItemActive : ''}`}
-        onClick={() => onMenuChange('shared-with-me')}
-      >
-        <span className={styles.tabIcon}><Share2 size={20} strokeWidth={isShareActive ? 2.2 : 1.6} /></span>
-        <span className={styles.tabLabel}>공유</span>
-      </button>
-
-      <button
-        className={styles.fabItem}
-        onClick={onCreateProject}
-      >
-        <div className={styles.fabCircle}>
-          <Plus size={22} strokeWidth={2.5} />
-        </div>
-        <span className={styles.fabLabel}>새 프로젝트</span>
-      </button>
-
-      <button
-        className={`${styles.tabItem} ${isTrashActive ? styles.tabItemActive : ''}`}
-        onClick={() => onMenuChange('trash')}
-      >
-        <span className={styles.tabIcon}><Trash2 size={20} strokeWidth={isTrashActive ? 2.2 : 1.6} /></span>
-        <span className={styles.tabLabel}>휴지통</span>
-      </button>
-
-      <button
-        className={styles.tabItem}
-        onClick={onProfileClick}
-      >
-        <span className={styles.tabIcon}><User size={20} strokeWidth={1.6} /></span>
-        <span className={styles.tabLabel}>프로필</span>
-      </button>
+      {tabs.map((tab) => {
+        const isActive = activeMenu === tab.menu;
+        return (
+          <button
+            key={tab.menu}
+            className={`${styles.tabItem} ${isActive ? styles.tabItemActive : ''}`}
+            onClick={() => onMenuChange(tab.menu)}
+          >
+            <span className={styles.tabIcon}>{tab.icon(isActive)}</span>
+            <span className={styles.tabLabel}>{tab.label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 };

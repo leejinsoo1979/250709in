@@ -7,7 +7,6 @@
   display: flex;
   align-items: stretch;
   justify-content: space-around;
-  background: var(--theme-surface);
   border-top: 0.5px solid var(--theme-border);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 1000;
@@ -59,49 +58,9 @@
 .tabLabel {
   font-weight: 500;
   line-height: 1;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
 }
 
 .tabItemActive .tabLabel {
   font-weight: 600;
-}
-
-/* 중앙 FAB (생성 버튼) */
-.fabItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  flex: 1;
-  padding: 6px 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.fabCircle {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  background: var(--theme-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: transform 0.15s, opacity 0.15s;
-}
-
-.fabItem:active .fabCircle {
-  transform: scale(0.92);
-  opacity: 0.85;
-}
-
-.fabLabel {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--theme-primary);
-  line-height: 1;
-  letter-spacing: -0.2px;
 }
