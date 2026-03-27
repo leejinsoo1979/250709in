@@ -71,10 +71,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   floatOffsetMm = 0,
   shelfFrontInsetMm = 0,
 }) => {
-  // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
-  const basicThicknessMm = basicThickness / 0.01;
-  const sidePanelGap = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : mmToThreeUnits(1);
-
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
@@ -84,6 +80,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
   const textColor = dimensionColor;
   const mmToThreeUnits = (mm: number) => mm / 100;
+
+  // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
+  const basicThicknessMm = basicThickness / 0.01;
+  const sidePanelGap = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : mmToThreeUnits(1);
 
   // 2D 측면뷰에서 치수 가이드 Y 오프셋 보정 (띄움 배치 시 바닥 기준 유지)
   const dimensionYOffset = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
