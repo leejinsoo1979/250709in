@@ -234,8 +234,10 @@ export const calculatePanelDetails = (
       }
 
       // === 수평 패널 너비 계산 (상판, 바닥판, 선반 공통) ===
-      // 좌우 측판과 각각 0.5mm 갭 → 총 1mm 감소
-      const horizontalPanelWidth = innerWidth - 1;
+      // 15mm/18mm: 좌우 측판과 각각 0.5mm 갭 → 총 1mm 감소
+      // 15.5mm/18.5mm: 갭 없음 (0mm)
+      const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+      const horizontalPanelWidth = innerWidth - sidePanelGap;
 
       // === 하판 (첫 번째 섹션만) - 뒤에서 26mm 줄임 ===
       if (sectionIndex === 0) {
@@ -301,10 +303,10 @@ export const calculatePanelDetails = (
       });
 
       // 백패널 보강대 (상단/하단) - 60mm 높이, 15mm 깊이
-      // 양쪽 0.5mm씩 축소 (총 1mm)
+      // 15mm/18mm: 양쪽 0.5mm씩 축소 (총 1mm), 15.5mm/18.5mm: 갭 없음
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = 15; // mm
-      const reinforcementWidth = innerWidth - 1; // 양쪽 0.5mm씩 축소
+      const reinforcementWidth = innerWidth - sidePanelGap;
       targetPanel.push({
         name: `${sectionPrefix}후면 보강대 1`,
         width: reinforcementWidth,
@@ -912,7 +914,8 @@ export const calculatePanelDetails = (
         areaWidth: number
       ) => {
         if (!elements) return;
-        const horizontalW = areaWidth - 1; // 좌우 0.5mm 갭
+        const ccGap = (basicThicknessCC === 15.5 || basicThicknessCC === 18.5) ? 0 : 1;
+        const horizontalW = areaWidth - ccGap; // 좌우 0.5mm 갭 (15.5/18.5mm는 갭 없음)
 
         for (const el of elements) {
           switch (el.type) {

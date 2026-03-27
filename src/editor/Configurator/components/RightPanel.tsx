@@ -1570,7 +1570,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 가구재 두께 설정 (15mm / 18mm) — 15mm는 슈퍼어드민만 */}
+            {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) — 슈퍼어드민만 */}
             {user?.email === 'sbbc212@gmail.com' && (
             <FormControl
               label="가구재 두께"
@@ -1578,7 +1578,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               onToggle={() => toggleSection('panelThickness')}
             >
               <div className={doorStyles.doorTabSelector}>
-                {[15, 18].map((thickness) => (
+                {[15, 15.5, 18, 18.5].map((thickness) => (
                   <button
                     key={thickness}
                     className={`${doorStyles.doorTab} ${(spaceInfo.panelThickness ?? 18) === thickness ? doorStyles.activeDoorTab : ''}`}

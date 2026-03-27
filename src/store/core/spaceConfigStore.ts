@@ -173,7 +173,7 @@ export interface SpaceInfo {
   // 상하부 프레임 병합 활성화 (기본: false)
   frameMergeEnabled?: boolean;
 
-  // 가구재 두께 (15mm 또는 18mm, 기본: 18)
+  // 가구재 두께 (15 / 15.5 / 18 / 18.5 mm, 기본: 18)
   panelThickness?: number;
 }
 

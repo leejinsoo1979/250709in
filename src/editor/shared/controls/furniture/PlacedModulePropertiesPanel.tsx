@@ -245,10 +245,11 @@ const getFurnitureImagePath = (moduleId: string) => {
       });
 
       // 백패널 보강대 (상단/하단) - 60mm 높이, 15mm 깊이
-      // 양쪽 0.5mm씩 축소 (총 1mm)
+      // 15mm/18mm: 양쪽 0.5mm씩 축소 (총 1mm), 15.5mm/18.5mm: 갭 없음
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = 15; // mm
-      const reinforcementWidth = innerWidth - 1; // 양쪽 0.5mm씩 축소
+      const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+      const reinforcementWidth = innerWidth - sidePanelGap;
       targetPanel.push({
         name: `${sectionName} 후면 보강대`,
         width: reinforcementWidth,

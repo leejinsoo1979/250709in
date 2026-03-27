@@ -5690,7 +5690,7 @@ const Configurator: React.FC = () => {
           />
         </div>
 
-        {/* 가구재 두께 설정 (15mm / 18mm) — 15mm는 슈퍼어드민만 */}
+        {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) — 슈퍼어드민만 */}
         {user?.email === 'sbbc212@gmail.com' && (
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
@@ -5698,7 +5698,7 @@ const Configurator: React.FC = () => {
             <h3 className={styles.sectionTitle}>가구재 두께</h3>
           </div>
           <div className={styles.toggleButtonGroup}>
-            {[15, 18].map((thickness) => (
+            {[15, 15.5, 18, 18.5].map((thickness) => (
               <button
                 key={thickness}
                 className={`${styles.toggleButton} ${(spaceInfo.panelThickness ?? 18) === thickness ? styles.toggleButtonActive : ''}`}

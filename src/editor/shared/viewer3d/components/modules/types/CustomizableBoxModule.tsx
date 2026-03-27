@@ -257,7 +257,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const backPanelT = mmToUnit(backPanelThicknessMm);
   const backReductionMm = backPanelThicknessMm + 17; // 상/하판/선반 깊이 줄임 (백패널 + 오프셋)
   const backReduction = mmToUnit(backReductionMm);
-  const widthReductionMm = 1; // 좌우 0.5mm씩 줄임
+  // 15mm/18mm: 좌우 0.5mm씩 줄임 (총 1mm), 15.5mm/18.5mm: 갭 없음
+  const widthReductionMm = (panelThickness === 15.5 || panelThickness === 18.5) ? 0 : 1;
   const widthReduction = mmToUnit(widthReductionMm);
   const backPanelWidthExtMm = 10; // 백패널 너비 확장 (좌우 5mm씩)
   const backPanelHeightExtMm = 26; // 백패널 높이 확장 (상하 13mm씩)
