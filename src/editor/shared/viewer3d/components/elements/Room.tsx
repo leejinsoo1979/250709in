@@ -3961,8 +3961,14 @@ const Room: React.FC<RoomProps> = ({
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
                             backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                           }}
-                          onClick={(e) => { e.stopPropagation(); (window as any).__r3fClickHandled = true; setHighlightedFrame(highlightedFrame === 'surround-left' ? null : 'surround-left'); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            (window as any).__r3fClickHandled = true;
+                            const cur = useUIStore.getState().highlightedFrame;
+                            setHighlightedFrame(cur === 'surround-left' ? null : 'surround-left');
+                          }}
                           onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           title="서라운드 설정"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4071,8 +4077,14 @@ const Room: React.FC<RoomProps> = ({
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
                             backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                           }}
-                          onClick={(e) => { e.stopPropagation(); (window as any).__r3fClickHandled = true; setHighlightedFrame(highlightedFrame === 'surround-right' ? null : 'surround-right'); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            (window as any).__r3fClickHandled = true;
+                            const cur = useUIStore.getState().highlightedFrame;
+                            setHighlightedFrame(cur === 'surround-right' ? null : 'surround-right');
+                          }}
                           onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           title="서라운드 설정"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4171,8 +4183,14 @@ const Room: React.FC<RoomProps> = ({
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
                             backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                           }}
-                          onClick={(e) => { e.stopPropagation(); (window as any).__r3fClickHandled = true; setHighlightedFrame(highlightedFrame === `surround-middle-${idx}` ? null : `surround-middle-${idx}`); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            (window as any).__r3fClickHandled = true;
+                            const cur = useUIStore.getState().highlightedFrame;
+                            setHighlightedFrame(cur === `surround-middle-${idx}` ? null : `surround-middle-${idx}`);
+                          }}
                           onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           title="서라운드 설정"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
