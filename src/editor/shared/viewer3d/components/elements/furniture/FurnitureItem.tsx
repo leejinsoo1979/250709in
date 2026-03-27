@@ -2931,6 +2931,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const surroundDepth = placedModule.freeDepth || spaceInfo.depth;
     // group position이 이미 패널 중심이므로, 아이콘은 로컬 (0,0,앞쪽)
     const surroundFrontZ = surroundDepth * 0.01 / 2 + 0.3;
+    console.log('[SurroundGear] 렌더링됨', {
+      id: placedModule.id,
+      isSurroundPanel: placedModule.isSurroundPanel,
+      surroundPanelType: placedModule.surroundPanelType,
+      position: placedModule.position,
+      surroundFrontZ,
+      surroundDepth,
+      viewMode,
+    });
 
     return (
       <group
