@@ -5738,7 +5738,20 @@ const Configurator: React.FC = () => {
               <button
                 key={thickness}
                 className={`${styles.toggleButton} ${(spaceInfo.panelThickness ?? 18) === thickness ? styles.toggleButtonActive : ''}`}
-                onClick={() => handleSpaceInfoUpdate({ panelThickness: thickness })}
+                onClick={() => {
+                  handleSpaceInfoUpdate({ panelThickness: thickness });
+                  // 가구재 두께 변경 시 백패널 두께도 자동 매핑
+                  const isHalf = thickness === 18.5 || thickness === 15.5;
+                  const bpMap: Record<number, number> = isHalf
+                    ? { 3: 3.5, 5: 5.5, 9: 9.5, 3.5: 3.5, 5.5: 5.5, 9.5: 9.5 }
+                    : { 3.5: 3, 5.5: 5, 9.5: 9, 3: 3, 5: 5, 9: 9 };
+                  const allMods = placedModules.filter(m => !m.isSurroundPanel);
+                  allMods.forEach(m => {
+                    const cur = m.backPanelThickness ?? 9;
+                    const mapped = bpMap[cur] ?? (isHalf ? 9.5 : 9);
+                    if (cur !== mapped) updatePlacedModule(m.id, { backPanelThickness: mapped });
+                  });
+                }}
               >
                 {thickness}mm
               </button>
@@ -5759,7 +5772,7 @@ const Configurator: React.FC = () => {
                 <h3 className={styles.sectionTitle}>백패널 두께</h3>
               </div>
               <div className={styles.toggleButtonGroup}>
-                {[3, 5, 9].map((thickness) => (
+                {((spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? [3.5, 5.5, 9.5] : [3, 5, 9]).map((thickness) => (
                   <button
                     key={thickness}
                     className={`${styles.toggleButton} ${currentBpThickness === thickness ? styles.toggleButtonActive : ''}`}
