@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ChevronLeft } from "lucide-react";
 import { motion, useAnimation } from "motion/react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive } from "@/hooks/useResponsive";
 
 /* ── Exported Props ── */
 export interface SignInFloProps {
@@ -52,6 +53,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const nav = useNavigate();
   const { theme } = useTheme();
   const isDark = theme.mode === 'dark';
+  const { isMobile } = useResponsive();
   const loading = externalLoading || isSubmitting;
 
   // think thing thank: 3초 간격 자동 애니메이션
@@ -121,8 +123,9 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-row" style={{ background: isDark ? '#000000' : '#ffffff' }}>
-      {/* Left Panel - Animated Branding (from LandingPage) */}
+    <div className="min-h-screen flex" style={{ flexDirection: isMobile ? 'column' : 'row', background: isDark ? '#000000' : '#ffffff' }}>
+      {/* Left Panel - Animated Branding (desktop only) */}
+      {!isMobile && (
       <div className="w-1/2 relative overflow-hidden flex flex-col"
         style={{
           background: isDark ? '#000000' : '#ffffff',
@@ -260,9 +263,32 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           </motion.div>
         </div>
       </div>
+      )}
 
       {/* Right Panel - Login Form */}
-      <div className="w-full flex flex-col" style={{ width: '50%' }}>
+      <div className="w-full flex flex-col" style={{ width: isMobile ? '100%' : '50%' }}>
+
+      {/* Mobile Header: Back + CRAFT logo */}
+      {isMobile && (
+        <header className="flex items-center px-4 py-3" style={{ background: isDark ? '#000000' : '#ffffff' }}>
+          <button
+            type="button"
+            onClick={onNavigateHome}
+            className="flex items-center justify-center w-10 h-10 rounded-full transition-colors"
+            style={{ color: isDark ? '#a1a1aa' : '#111', background: 'transparent' }}
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <div className="flex items-center gap-1.5 ml-2">
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
+            </div>
+            <span className="font-black text-base ml-1" style={{ color: isDark ? '#fff' : '#000' }}>CRAFT</span>
+          </div>
+        </header>
+      )}
 
       {/* Google Loading Overlay */}
       {googleLoading && (
@@ -276,10 +302,15 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-6">
+      <div className={`flex-1 flex items-center justify-center ${isMobile ? 'px-4' : 'px-6'}`}
+        style={isMobile ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
+      >
         <motion.div
-          className="w-full max-w-md rounded-2xl p-10"
-          style={{
+          className={`w-full max-w-md ${isMobile ? 'p-5' : 'rounded-2xl p-10'}`}
+          style={isMobile ? {
+            border: 'none',
+            background: 'transparent',
+          } : {
             border: `1.5px solid ${isDark ? '#71717a' : '#000000'}`,
             background: isDark ? 'rgba(24,24,27,0.4)' : '#ffffff',
           }}
@@ -308,7 +339,8 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Full Name"
                   required
-                  className="w-full rounded-full pl-11 pr-5 py-3.5 text-sm focus:outline-none transition-colors"
+                  className={`w-full rounded-full pl-11 pr-5 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
+                  style={isMobile ? { fontSize: '16px', minHeight: '48px' } : undefined}
                   style={{
                     background: isDark ? '#18181b' : '#f9fafb',
                     border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
@@ -343,7 +375,8 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 required
-                className="w-full rounded-full pl-11 pr-11 py-3.5 text-sm focus:outline-none transition-colors"
+                className={`w-full rounded-full pl-11 pr-11 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
+                style={isMobile ? { fontSize: '16px', minHeight: '48px' } : undefined}
                 style={{
                   background: isDark ? '#18181b' : '#f9fafb',
                   border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
@@ -381,7 +414,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-full font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className={`w-full py-3.5 rounded-full font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2 ${isMobile ? 'text-base min-h-[48px]' : 'text-sm'}`}
               style={{
                 background: isDark ? '#fff' : '#111',
                 color: isDark ? '#09090b' : '#fff',
@@ -401,7 +434,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               <div className="w-full" style={{ borderTop: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}` }} />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 text-xs uppercase tracking-wider" style={{ background: isDark ? '#000000' : '#ffffff', color: isDark ? '#52525b' : '#555' }}>
+              <span className="px-3 text-xs uppercase tracking-wider" style={{ background: isDark ? '#000000' : '#ffffff', color: isDark ? '#52525b' : '#555', ...(isMobile ? { background: isDark ? '#000000' : '#ffffff' } : {}) }}>
                 Or continue with
               </span>
             </div>
@@ -412,7 +445,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             type="button"
             onClick={onGoogleLogin}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full flex items-center justify-center gap-3 py-3.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isMobile ? 'min-h-[48px]' : ''}`}
             style={{
               border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
               background: isDark ? '#18181b' : '#fff',
@@ -431,7 +464,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
           <button
             type="button"
             onClick={() => nav('/enterprise-signup')}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full transition-colors mt-3"
+            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full transition-colors mt-3 ${isMobile ? 'min-h-[48px]' : ''}`}
             style={{
               border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
               background: isDark ? '#18181b' : '#fff',
