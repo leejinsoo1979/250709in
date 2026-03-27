@@ -3949,13 +3949,13 @@ const Room: React.FC<RoomProps> = ({
                     {/* 좌측 서라운드 전면 패널 기어 아이콘 */}
                     {viewMode !== '2D' && showDimensions && (
                       <Html
-                        position={[frontPos[0], frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.02]}
+                        position={[frontPos[0], frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                         center
                         zIndexRange={[100, 0]}
-                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                       >
                         <div
-                          data-surround-gear
+                          data-surround-options-panel
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
@@ -4065,13 +4065,13 @@ const Room: React.FC<RoomProps> = ({
                     {/* 우측 서라운드 전면 패널 기어 아이콘 */}
                     {viewMode !== '2D' && showDimensions && (
                       <Html
-                        position={[rFrontPos[0], rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.02]}
+                        position={[rFrontPos[0], rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                         center
                         zIndexRange={[100, 0]}
-                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                       >
                         <div
-                          data-surround-gear
+                          data-surround-options-panel
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
@@ -4171,13 +4171,13 @@ const Room: React.FC<RoomProps> = ({
                     {/* 중간 서라운드 전면 패널 기어 아이콘 */}
                     {viewMode !== '2D' && showDimensions && (
                       <Html
-                        position={[mFrontPos[0], mFrontPos[1], mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.02]}
+                        position={[mFrontPos[0], mFrontPos[1], mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.3]}
                         center
                         zIndexRange={[100, 0]}
-                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 9999, background: 'transparent' }}
                       >
                         <div
-                          data-surround-gear
+                          data-surround-options-panel
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
