@@ -713,8 +713,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  // 도어 두께 (요구사항: 18mm)
-  const doorThickness = 18;
+  // 도어 두께 (PET 도어는 항상 18.5mm)
+  const doorThickness = 18.5;
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 도어 확장 설정 (변수화) ===
@@ -987,7 +987,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
   // 도어 열림 상태 계산 - 성능 최적화
-  const shouldOpenDoors = useMemo(() => isDoorOpen || isEditMode, [isDoorOpen, isEditMode]);
+  // 2D 모드에서는 편집 모드여도 도어를 열지 않음 (치수 측정 방해 방지)
+  const shouldOpenDoors = useMemo(() => isDoorOpen || (isEditMode && viewMode !== '2D'), [isDoorOpen, isEditMode, viewMode]);
   
   // 도어 애니메이션 상태 추적
   const [isAnimating, setIsAnimating] = useState(false);
