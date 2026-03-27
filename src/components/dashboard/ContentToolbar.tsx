@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Search, FileText, Trash2, RotateCcw } from 'lucide-react';
+import { Plus, FolderPlus, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, LayoutGrid, List, Table, Grid3X3, Image, Clock, Search, FileText, Trash2, RotateCcw, X } from 'lucide-react';
+import { useResponsive } from '@/hooks/useResponsive';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
 import type { ProjectSummary } from '@/firebase/types';
@@ -66,11 +67,14 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   onRestore,
   onEmptyTrash,
 }) => {
+  const { isMobile } = useResponsive();
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [treeOpen, setTreeOpen] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!viewMenuOpen) return;
@@ -405,8 +409,8 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         </div>
       )}
 
-      {/* 검색바 */}
-      {onSearchChange !== undefined && (
+      {/* 검색바 (데스크톱) */}
+      {onSearchChange !== undefined && !isMobile && (
         <div className={styles.searchBox}>
           <Search size={16} className={styles.searchIcon} />
           <input
@@ -416,6 +420,44 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
             value={searchTerm || ''}
             onChange={e => onSearchChange(e.target.value)}
           />
+        </div>
+      )}
+
+      {/* 모바일 검색 토글 버튼 */}
+      {onSearchChange !== undefined && isMobile && (
+        <button
+          className={styles.mobileSearchBtn}
+          onClick={() => {
+            setMobileSearchOpen(true);
+            setTimeout(() => mobileSearchInputRef.current?.focus(), 100);
+          }}
+        >
+          <Search size={16} />
+        </button>
+      )}
+
+      {/* 모바일 검색 오버레이 */}
+      {isMobile && mobileSearchOpen && onSearchChange !== undefined && (
+        <div className={styles.searchBoxMobileVisible}>
+          <Search size={16} className={styles.searchIcon} style={{ position: 'static', marginRight: 8 }} />
+          <input
+            ref={mobileSearchInputRef}
+            type="text"
+            className={styles.searchInput}
+            placeholder="검색..."
+            value={searchTerm || ''}
+            onChange={e => onSearchChange(e.target.value)}
+            style={{ fontSize: '16px' }}
+          />
+          <button
+            onClick={() => {
+              setMobileSearchOpen(false);
+              onSearchChange('');
+            }}
+            style={{ border: 'none', background: 'none', color: 'var(--theme-text-secondary)', padding: 4, cursor: 'pointer' }}
+          >
+            <X size={18} />
+          </button>
         </div>
       )}
 

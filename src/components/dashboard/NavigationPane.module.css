@@ -235,6 +235,13 @@
   /* No extra padding needed, treeItemNested handles it */
 }
 
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 767px) {
+  .pane {
+    display: none;
+  }
+}
+
 /* 리사이즈 핸들 */
 .resizeHandle {
   position: absolute;

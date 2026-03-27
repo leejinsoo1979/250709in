@@ -134,3 +134,41 @@
 .searchInput::placeholder {
   color: var(--theme-text-muted);
 }
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 767px) {
+  .header {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .left {
+    width: auto;
+    padding-right: 0;
+  }
+
+  .right {
+    gap: 4px;
+  }
+
+  .searchBox {
+    display: none;
+  }
+
+  .settingsBtn,
+  .themeToggleBtn,
+  .profileBtn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .avatarFallback {
+    width: 32px;
+    height: 32px;
+  }
+}

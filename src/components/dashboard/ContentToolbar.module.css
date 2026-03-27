@@ -479,3 +479,90 @@
 .searchInput::placeholder {
   color: var(--theme-text-muted);
 }
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 767px) {
+  .toolbar {
+    padding: 0 8px;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  /* 보기 모드 드롭다운 숨김 */
+  .viewDropdown {
+    display: none;
+  }
+
+  /* 정렬 셀렉트 숨김 */
+  .sortSelect {
+    display: none;
+  }
+
+  /* 브레드크럼 간소화: 현재 위치만 표시 */
+  .navGroup {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .breadcrumb {
+    overflow: hidden;
+  }
+
+  /* 검색바 숨김 (아이콘 토글로 대체 - ContentToolbar.tsx에서 처리) */
+  .searchBox {
+    display: none;
+  }
+
+  .searchBoxMobileVisible {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    background: var(--theme-surface);
+    padding: 0 8px;
+  }
+
+  .searchBoxMobileVisible .searchInput {
+    width: 100%;
+    flex: 1;
+  }
+
+  /* 생성 버튼 텍스트 숨김 */
+  .createBtn span {
+    display: none;
+  }
+
+  .createBtn {
+    padding: 0 8px;
+    min-width: 28px;
+  }
+
+  .createBtnPrimary span {
+    display: none;
+  }
+}
+
+/* 모바일 검색 토글 버튼 */
+.mobileSearchBtn {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobileSearchBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--theme-border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}

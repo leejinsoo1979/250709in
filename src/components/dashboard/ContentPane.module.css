@@ -713,3 +713,64 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 767px) {
+  /* 모든 그리드 뷰를 단일 컬럼으로 강제 */
+  .iconGrid {
+    display: flex !important;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    padding-bottom: 90px; /* 하단 네비 높이 확보 */
+  }
+
+  /* 아이콘 카드를 가로 배치 */
+  .iconCard {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    min-height: 64px;
+    border-radius: 10px;
+  }
+
+  .iconCard:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  /* 썸네일 크기 고정 */
+  .iconCard .iconArea {
+    width: 48px !important;
+    height: 48px !important;
+    flex-shrink: 0;
+  }
+
+  /* 이름/메타 정보 가로 배치 */
+  .iconCard .iconLabel {
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* 목록/상세 뷰도 하단 패딩 */
+  .listTable {
+    padding-bottom: 90px;
+  }
+
+  /* 타일 뷰도 단일 컬럼 */
+  .tileGrid {
+    grid-template-columns: 1fr !important;
+    padding-bottom: 90px;
+  }
+
+  /* 환영 화면 하단 패딩 */
+  .welcomeState {
+    padding-bottom: 90px;
+  }
+
+  .emptyState {
+    padding-bottom: 90px;
+  }
+}
