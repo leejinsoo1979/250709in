@@ -138,8 +138,10 @@
 /* ===== 모바일 반응형 ===== */
 @media (max-width: 767px) {
   .header {
-    height: 48px;
+    height: 44px;
     padding: 0 12px;
+    border-bottom: none;
+    background: var(--theme-surface);
   }
 
   .left {
@@ -148,27 +150,37 @@
   }
 
   .right {
-    gap: 4px;
+    gap: 2px;
   }
 
   .searchBox {
     display: none;
   }
 
-  .settingsBtn,
-  .themeToggleBtn,
+  /* 설정 버튼은 모바일에서 숨김 (프로필 팝업에서 접근) */
+  .settingsBtn {
+    display: none;
+  }
+
+  .themeToggleBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
+
   .profileBtn {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
+    border-width: 1.5px;
   }
 
   .avatar {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
   }
 
   .avatarFallback {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
   }
 }

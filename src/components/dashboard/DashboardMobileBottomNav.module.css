@@ -1,18 +1,19 @@
-/* 모바일 하단 탭바 */
+/* 모바일 하단 탭바 — iOS 스타일 */
 .bottomNav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-around;
   background: var(--theme-surface);
-  border-top: 1px solid var(--theme-border);
-  padding-top: 6px;
+  border-top: 0.5px solid var(--theme-border);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 1000;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: color-mix(in srgb, var(--theme-surface) 85%, transparent);
 }
 
 .tabItem {
@@ -20,27 +21,24 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   flex: 1;
-  padding: 4px 0;
+  padding: 8px 0 6px;
   border: none;
   background: none;
   color: var(--theme-text-muted);
   font-size: 10px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color 0.2s;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 
 .tabItem:active {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .tabItemActive {
-  color: var(--theme-primary);
-}
-
-.tabItemActive .tabIcon {
   color: var(--theme-primary);
 }
 
@@ -48,13 +46,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  transition: background 0.2s;
+}
+
+.tabItemActive .tabIcon {
+  background: color-mix(in srgb, var(--theme-primary) 12%, transparent);
 }
 
 .tabLabel {
   font-weight: 500;
   line-height: 1;
+  letter-spacing: -0.2px;
+}
+
+.tabItemActive .tabLabel {
+  font-weight: 600;
 }
 
 /* 중앙 FAB (생성 버튼) */
@@ -63,9 +72,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   flex: 1;
-  padding: 4px 0;
+  padding: 6px 0;
   border: none;
   background: none;
   cursor: pointer;
@@ -73,21 +82,20 @@
 }
 
 .fabCircle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   background: var(--theme-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: transform 0.15s, box-shadow 0.15s;
-  margin-top: -14px;
+  transition: transform 0.15s, opacity 0.15s;
 }
 
-.fabCircle:active {
-  transform: scale(0.95);
+.fabItem:active .fabCircle {
+  transform: scale(0.92);
+  opacity: 0.85;
 }
 
 .fabLabel {
@@ -95,5 +103,5 @@
   font-weight: 600;
   color: var(--theme-primary);
   line-height: 1;
-  margin-top: -2px;
+  letter-spacing: -0.2px;
 }

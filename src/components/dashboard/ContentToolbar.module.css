@@ -483,10 +483,12 @@
 /* ===== 모바일 반응형 ===== */
 @media (max-width: 767px) {
   .toolbar {
-    padding: 0 8px;
-    gap: 4px;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
     flex-wrap: nowrap;
     overflow-x: auto;
+    border-bottom: 0.5px solid var(--theme-border);
   }
 
   /* 보기 모드 드롭다운 숨김 */
@@ -499,7 +501,12 @@
     display: none;
   }
 
-  /* 브레드크럼 간소화: 현재 위치만 표시 */
+  /* 네비 버튼 (뒤로/앞으로/상위) 숨김 — 하단 탭바 + 브레드크럼으로 대체 */
+  .navBtn {
+    display: none;
+  }
+
+  /* 브레드크럼 간소화 */
   .navGroup {
     flex: 1;
     min-width: 0;
@@ -507,15 +514,37 @@
 
   .breadcrumb {
     overflow: hidden;
+    height: 28px;
+    border: none;
+    background: transparent;
+    padding: 0 4px;
+    gap: 1px;
   }
 
-  /* 검색바 숨김 (아이콘 토글로 대체 - ContentToolbar.tsx에서 처리) */
+  .breadcrumbItem {
+    font-size: 13px;
+    padding: 2px 4px;
+  }
+
+  .breadcrumbCurrent,
+  .breadcrumbCurrent:hover {
+    font-size: 13px;
+    font-weight: 600 !important;
+  }
+
+  .breadcrumbSep {
+    font-size: 10px;
+    margin: 0 1px;
+  }
+
+  /* 검색바 숨김 (아이콘 토글로 대체) */
   .searchBox {
     display: none;
   }
 
   .searchBoxMobileVisible {
     display: flex;
+    align-items: center;
     position: absolute;
     top: 0;
     left: 0;
@@ -523,26 +552,41 @@
     bottom: 0;
     z-index: 10;
     background: var(--theme-surface);
-    padding: 0 8px;
+    padding: 0 12px;
   }
 
   .searchBoxMobileVisible .searchInput {
     width: 100%;
     flex: 1;
+    font-size: 16px;
   }
 
-  /* 생성 버튼 텍스트 숨김 */
+  /* 생성 버튼 텍스트 숨김, 아이콘만 */
   .createBtn span {
     display: none;
   }
 
   .createBtn {
-    padding: 0 8px;
+    padding: 0;
     min-width: 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
   }
 
   .createBtnPrimary span {
     display: none;
+  }
+
+  /* 선택 바 모바일 */
+  .selectionBar {
+    height: 26px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  .actions {
+    gap: 4px;
   }
 }
 
@@ -558,11 +602,16 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    border: 1px solid var(--theme-border);
-    border-radius: 6px;
+    border: none;
+    border-radius: 50%;
     background: transparent;
-    color: var(--theme-text-secondary);
+    color: var(--theme-text-muted);
     cursor: pointer;
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobileSearchBtn:active {
+    background: var(--theme-background-secondary);
   }
 }

@@ -27,7 +27,7 @@ const DashboardMobileBottomNav: React.FC<DashboardMobileBottomNavProps> = ({
         className={`${styles.tabItem} ${isHomeActive ? styles.tabItemActive : ''}`}
         onClick={() => onMenuChange('all')}
       >
-        <span className={styles.tabIcon}><Home size={22} /></span>
+        <span className={styles.tabIcon}><Home size={20} strokeWidth={isHomeActive ? 2.2 : 1.6} /></span>
         <span className={styles.tabLabel}>프로젝트</span>
       </button>
 
@@ -35,7 +35,7 @@ const DashboardMobileBottomNav: React.FC<DashboardMobileBottomNavProps> = ({
         className={`${styles.tabItem} ${isShareActive ? styles.tabItemActive : ''}`}
         onClick={() => onMenuChange('shared-with-me')}
       >
-        <span className={styles.tabIcon}><Share2 size={22} /></span>
+        <span className={styles.tabIcon}><Share2 size={20} strokeWidth={isShareActive ? 2.2 : 1.6} /></span>
         <span className={styles.tabLabel}>공유</span>
       </button>
 
@@ -44,16 +44,16 @@ const DashboardMobileBottomNav: React.FC<DashboardMobileBottomNavProps> = ({
         onClick={onCreateProject}
       >
         <div className={styles.fabCircle}>
-          <Plus size={24} />
+          <Plus size={22} strokeWidth={2.5} />
         </div>
-        <span className={styles.fabLabel}>생성</span>
+        <span className={styles.fabLabel}>새 프로젝트</span>
       </button>
 
       <button
         className={`${styles.tabItem} ${isTrashActive ? styles.tabItemActive : ''}`}
         onClick={() => onMenuChange('trash')}
       >
-        <span className={styles.tabIcon}><Trash2 size={22} /></span>
+        <span className={styles.tabIcon}><Trash2 size={20} strokeWidth={isTrashActive ? 2.2 : 1.6} /></span>
         <span className={styles.tabLabel}>휴지통</span>
       </button>
 
@@ -61,7 +61,7 @@ const DashboardMobileBottomNav: React.FC<DashboardMobileBottomNavProps> = ({
         className={styles.tabItem}
         onClick={onProfileClick}
       >
-        <span className={styles.tabIcon}><User size={22} /></span>
+        <span className={styles.tabIcon}><User size={20} strokeWidth={1.6} /></span>
         <span className={styles.tabLabel}>프로필</span>
       </button>
     </nav>
