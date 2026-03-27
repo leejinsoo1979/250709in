@@ -59,7 +59,9 @@ interface RoomProps {
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
-const END_PANEL_THICKNESS = 18.5; // PET 재질 항상 18.5mm
+const END_PANEL_THICKNESS = 18; // 슬롯/프레임 계산 기준
+const END_PANEL_RENDER_THICKNESS = 18.5; // 물리적 렌더링 두께 (PET)
+const EP_OFFSET = END_PANEL_RENDER_THICKNESS - END_PANEL_THICKNESS; // 0.5mm 보정값
 
 // 전역 렌더링 카운터 (컴포넌트 마운트/언마운트에 영향받지 않음)
 if (typeof window !== 'undefined') {
@@ -3906,7 +3908,7 @@ const Room: React.FC<RoomProps> = ({
                 const isLeftHighlighted = highlightedFrame === 'surround-left';
 
                 if (method === 'ep') {
-                  const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                  const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_RENDER_THICKNESS), surrH, mmToThreeUnits(END_PANEL_RENDER_THICKNESS)];
                   const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
                     <>
@@ -4074,7 +4076,7 @@ const Room: React.FC<RoomProps> = ({
                 const isRightHighlighted = highlightedFrame === 'surround-right';
 
                 if (method === 'ep') {
-                  const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_THICKNESS), surrH, mmToThreeUnits(END_PANEL_THICKNESS)];
+                  const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_RENDER_THICKNESS), surrH, mmToThreeUnits(END_PANEL_RENDER_THICKNESS)];
                   const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
                     <>
@@ -4499,7 +4501,7 @@ const Room: React.FC<RoomProps> = ({
           {isCurtainBoxSlot && spaceInfo.curtainBox?.enabled && (() => {
             const cbPos = spaceInfo.curtainBox!.position || 'right';
             const cbWidthMM = spaceInfo.curtainBox!.width || 150;
-            const panelThickMM = END_PANEL_THICKNESS; // 18mm
+            const panelThickMM = END_PANEL_RENDER_THICKNESS; // 18.5mm (PET 재질 물리적 두께)
 
             // CB 프레임 높이: 커튼박스 천장(height + cbDropH)까지
             const cbDropH = spaceInfo.curtainBox!.dropHeight || 60;
@@ -5054,10 +5056,12 @@ const Room: React.FC<RoomProps> = ({
               let adjustedSubFrameX = topBottomPanelX;
 
               if (spaceInfo.surroundType === 'no-surround') {
-                // 엔드패널이 있는 쪽의 서브프레임을 18mm씩 안쪽으로 조정
+                // 엔드패널이 있는 쪽의 서브프레임 조정
+                // EP(18.5mm)일 때 상부프레임은 EP방향으로 1mm 확장 → 18 - 1 = 17mm 줄임
                 const isFreestanding = spaceInfo.installType === 'freestanding';
-                const leftAdjustment = (isFreestanding || endPanelPositions.left) ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
-                const rightAdjustment = (isFreestanding || endPanelPositions.right) ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
+                const EP_FRAME_EXTEND = 1; // EP 방향 상부프레임 확장량 (mm)
+                const leftAdjustment = (isFreestanding || endPanelPositions.left) ? mmToThreeUnits(END_PANEL_THICKNESS - EP_FRAME_EXTEND) : 0;
+                const rightAdjustment = (isFreestanding || endPanelPositions.right) ? mmToThreeUnits(END_PANEL_THICKNESS - EP_FRAME_EXTEND) : 0;
 
                 adjustedSubFrameWidth = finalPanelWidth - leftAdjustment - rightAdjustment;
                 adjustedSubFrameX = topBottomPanelX + (leftAdjustment - rightAdjustment) / 2;

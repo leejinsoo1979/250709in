@@ -2056,7 +2056,7 @@ export const generateExternalDimensions = (
     }
 
     // 우측 치수선: 상부프레임 | 가구영역 | 받침대
-    const frameSize = spaceInfo.frameSize || { left: 18.5, right: 18.5, top: 30 };
+    const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 30 };
     const topFrameThick = frameSize.top || 30;
     const rightDimX = halfWidth + dimensionOffset;
     const rightDimX2 = rightDimX + 40;

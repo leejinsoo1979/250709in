@@ -1252,7 +1252,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           );
 
           if (hasEndPanel) {
-            const END_PANEL_THICKNESS = 18.5; // PET 재질
+            const END_PANEL_THICKNESS = 18; // 슬롯 계산 기준
             const isFirstSlot = zoneSlotIndex === 0;
 
             // zone별 마지막 슬롯 판단 - zone이 있으면 해당 zone의 columnCount 사용

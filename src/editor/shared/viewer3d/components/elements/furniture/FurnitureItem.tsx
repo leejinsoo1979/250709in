@@ -21,8 +21,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 
-// 엔드패널 두께 상수 (PET 재질 항상 18.5mm)
-const END_PANEL_THICKNESS = 18.5; // mm
+// 엔드패널 두께 상수
+const END_PANEL_THICKNESS = 18; // mm — 슬롯/너비 계산 기준 (공간 배분)
+const END_PANEL_RENDER_THICKNESS = 18.5; // mm — 물리적 렌더링 두께 (PET 재질)
 
 // 커스텀 가구 ID인지 확인하는 함수
 const isCustomFurnitureId = (moduleId: string): boolean => {
@@ -2701,12 +2702,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정
   // 도어는 본체 그룹 안에서 렌더링되므로 자동으로 따라감
+  // + EP 18.5mm일 때 EP방향으로 0.5mm 추가 이동 (슬롯 기준 18mm와의 차이)
   let epOffsetX = 0;
   if (!placedModule.customConfig) {
-    const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18.5);
+    const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
     epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
+
+    // EP 18.5mm 보정: EP 방향으로 0.5mm 추가 이동
+    const EP_EXTRA = mmToThreeUnits(0.5); // END_PANEL_RENDER_THICKNESS - END_PANEL_THICKNESS
+    if (placedModule.hasLeftEndPanel) epOffsetX += EP_EXTRA;
+    if (placedModule.hasRightEndPanel) epOffsetX -= EP_EXTRA;
   }
 
   const furnitureGroupPosition: [number, number, number] = [
@@ -3583,7 +3590,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const hasRight = placedModule.hasRightEndPanel;
               if (!hasLeft && !hasRight) return null;
 
-              const epThicknessMm = placedModule.endPanelThickness || 18;
+              const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
               const leftEpOffsetZ = mmToThreeUnits(placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
               const rightEpOffsetZ = mmToThreeUnits(placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
@@ -3790,8 +3797,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         if (!shouldRender) return null;
 
-        // 엔드패널 위치 계산
-        const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
+        // 엔드패널 위치 계산 (물리적 렌더링은 18.5mm)
+        const endPanelWidth = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
         const epDepthMmSlot = placedModule.endPanelDepth ?? (actualDepthMm || 580);
         const endPanelDepth = mmToThreeUnits(epDepthMmSlot);

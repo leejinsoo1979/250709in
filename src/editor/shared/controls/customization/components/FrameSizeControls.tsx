@@ -111,7 +111,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   middleGap,
   onMiddleGapChange,
 }) => {
-  const END_PANEL_WIDTH = 18.5; // PET 재질
+  const END_PANEL_WIDTH = 18; // frameSize 기준값 (물리적 두께 18.5mm, 슬롯 계산은 18mm)
   const { setHighlightedFrame } = useUIStore();
 
   // 단내림 경계쪽은 프레임 대신 이격거리 표시

@@ -39,9 +39,16 @@ export const INNER_DEPTH = 580;
 export const SURROUND_FRAME_THICKNESS = 30;
 
 /**
- * 엔드 패널 두께 (18.5mm, PET 재질)
+ * 엔드 패널 슬롯/프레임 계산 기준 두께 (18mm)
+ * frameSize, 슬롯 너비 계산에 사용
  */
-export const END_PANEL_THICKNESS = 18.5;
+export const END_PANEL_THICKNESS = 18;
+
+/**
+ * 엔드 패널 물리적 렌더링 두께 (18.5mm, PET 재질)
+ * 3D 렌더링, CNC 패널 두께에 사용
+ */
+export const END_PANEL_RENDER_THICKNESS = 18.5;
 
 /**
  * 실제 치수를 기반으로 3D 공간의 방 치수 계산 (mm 단위)
