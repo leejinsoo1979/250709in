@@ -428,7 +428,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
                     >
-                      {Math.round(basicThickness * 100)}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
                     </Text>
 
                     {/* 구분 패널 두께 수직선 */}
@@ -474,7 +474,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
                     >
-                      {Math.round(basicThickness * 100)}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
                     </Text>
 
                     {/* 상판 두께 수직선 */}
@@ -601,7 +601,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
                     >
-                      {Math.round(basicThickness * 100)}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
                     </Text>
 
                     {/* 하부 프레임 두께 수직선 - 측면뷰에서는 위아래로 18mm씩 연장 */}
@@ -760,7 +760,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
                     >
-                      {Math.round(basicThickness * 100)}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
                     </Text>
 
                     {/* 하부 프레임 두께 수직선 - 측면뷰에서는 위아래로 18mm씩 연장 */}
@@ -810,7 +810,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
                     >
-                      {Math.round(basicThickness * 100)}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
                     </Text>
                     
                     {/* 상판 두께 수직선 */}

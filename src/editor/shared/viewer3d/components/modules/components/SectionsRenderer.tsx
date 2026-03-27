@@ -916,7 +916,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 renderOrder={1000}
                 depthTest={false}
               >
-                {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))((basicThickness > 0 ? basicThickness : 0.18) * 100)}
               </Text>
               
               {/* 하단 프레임 두께 수직선 - 왼쪽으로 이동 */}
@@ -969,7 +969,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 renderOrder={999}
                 depthTest={false}
               >
-                {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))((basicThickness > 0 ? basicThickness : 0.18) * 100)}
               </Text>
               
               {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}

@@ -321,7 +321,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                       renderOrder={999}
                       depthTest={false}
                     >
-                      {Math.round(threeUnitsToMm(basicThickness))}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(threeUnitsToMm(basicThickness))}
                     </Text>
 
                     {/* 하부 프레임 두께 수직선 */}
@@ -580,7 +580,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   renderOrder={999}
                   depthTest={false}
                 >
-                  {Math.round(basicThickness / 0.01)}
+                  {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness / 0.01)}
                 </Text>
 
                 {/* 중단선반 두께 수직선 */}
@@ -644,7 +644,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   renderOrder={999}
                   depthTest={false}
                 >
-                  {Math.round(basicThickness / 0.01)}
+                  {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness / 0.01)}
                 </Text>
 
                 {/* 안전선반 두께 수직선 */}
@@ -694,7 +694,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               renderOrder={999}
               depthTest={false}
             >
-              {Math.round(basicThickness / 0.01)}
+              {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness / 0.01)}
             </Text>
 
             {/* 상단 프레임 두께 수직선 */}

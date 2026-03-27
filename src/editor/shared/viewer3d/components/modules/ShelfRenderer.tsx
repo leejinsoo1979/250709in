@@ -228,7 +228,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               renderOrder={999}
               depthTest={false}
             >
-              {Math.round(basicThickness * 100)}
+              {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
             </Text>
 
             {/* 상판 두께 수직선 */}
@@ -464,7 +464,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       renderOrder={1000}
                       depthTest={false}
                     >
-                      {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                     </Text>
 
                     {/* 선반 두께 수직선 */}
@@ -537,7 +537,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     renderOrder={1000}
                     depthTest={false}
                   >
-                    {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                    {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                   </Text>
 
                   {/* 상단 프레임 두께 수직선 */}

@@ -382,7 +382,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             renderOrder={999}
             depthTest={false}
           >
-            {Math.round(basicThickness * 100)}
+            {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
           </Text>
           
           {/* 상판 두께 수직선 */}
