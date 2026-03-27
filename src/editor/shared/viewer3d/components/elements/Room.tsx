@@ -3828,7 +3828,7 @@ const Room: React.FC<RoomProps> = ({
                     const modFrameCenterY = effectiveTopY - modFrameHeight / 2;
 
                     const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
-                    const DOOR_THICKNESS_MM = 18;
+                    const DOOR_THICKNESS_MM = 18.5; // PET 재질
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
@@ -4437,7 +4437,7 @@ const Room: React.FC<RoomProps> = ({
                 const dcWidthMM = spaceInfo.droppedCeiling!.width || 150;
                 const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 100;
                 const dcTotalH = heightMm + dcDropH; // 커튼박스 전체 높이(mm)
-                const panelThickMM = 18;
+                const panelThickMM = 18.5; // PET 재질
 
                 const panelH = mmToThreeUnits(dcTotalH);
                 const panelCenterY = panelH / 2; // 바닥(0)부터 커튼박스 천장까지
