@@ -71,6 +71,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   floatOffsetMm = 0,
   shelfFrontInsetMm = 0,
 }) => {
+  // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
+  const basicThicknessMm = basicThickness / 0.01;
+  const sidePanelGap = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : mmToThreeUnits(1);
+
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
@@ -195,7 +199,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       <group position={[0, yOffset, 0]}>
         <BoxWithEdges
           key={`top-finish-${topFinishMat.uuid}`}
-          args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - basicThickness]}
+          args={[innerWidth - sidePanelGap, basicThickness, depth - basicThickness]}
           position={[0, topPosition, basicThickness/2 + zOffset]}
           material={topFinishMat}
           renderMode={renderMode}
@@ -289,7 +293,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           return (
             <BoxWithEdges
               key={`shelf-${i}-${shelfMat.uuid}`}
-              args={[innerWidth - mmToThreeUnits(1), basicThickness, shelfDepth]}
+              args={[innerWidth - sidePanelGap, basicThickness, shelfDepth]}
               position={[0, relativeYPosition, shelfZPosition]}
               material={shelfMat}
               renderMode={renderMode}
@@ -733,7 +737,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         return (
           <BoxWithEdges
             key={`shelf-${i}-${shelfMat.uuid}`}
-            args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - basicThickness - mmToThreeUnits(shelfFrontInsetMm)]}
+            args={[innerWidth - sidePanelGap, basicThickness, depth - basicThickness - mmToThreeUnits(shelfFrontInsetMm)]}
             position={[0, relativeYPosition, basicThickness/2 + zOffset - mmToThreeUnits(shelfFrontInsetMm) / 2]}
             material={shelfMat}
             renderMode={renderMode}
