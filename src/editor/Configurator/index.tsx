@@ -5651,8 +5651,8 @@ const Configurator: React.FC = () => {
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>바닥마감재</h3>
-            <HelpBtn title="바닥마감재" text="가구 설치 후 바닥에 마감재(마루, 타일 등)를 시공할 예정인지 설정합니다. '있음'으로 설정하면 가구 하단에 바닥재 두께(약 10~15mm)만큼 여유 공간을 확보하여, 나중에 마감재를 가구 아래로 밀어넣을 수 있도록 합니다." />
+            <h3 className={styles.sectionTitle}>바닥마감재 상태</h3>
+            <HelpBtn title="바닥마감재 상태" text="가구 설치 후 바닥에 마감재(마루, 타일 등)를 시공할 예정인지 설정합니다. '있음'으로 설정하면 가구 하단에 바닥재 두께(약 10~15mm)만큼 여유 공간을 확보하여, 나중에 마감재를 가구 아래로 밀어넣을 수 있도록 합니다." />
           </div>
           <FloorFinishControls
             spaceInfo={spaceInfo}
